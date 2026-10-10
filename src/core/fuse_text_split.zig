@@ -2,6 +2,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
+const views = @import("fuse_slice_key.zig");
 
 const Candidate = struct {
     loop: ir.Loop,
@@ -23,6 +24,8 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module) std.mem.Allocator.Error
         for (function.loops.items) |loop| {
             const graph = try facts.shape(arena, &function);
             const candidate = find(&function, module, loop, graph) orelse continue;
+            const source = function.operands(function.inst(candidate.split).data)[0];
+            if (try views.updated(arena, &function, module, function.resolve(source))) continue;
             try rewrite(arena, &function, module, candidate);
         }
         module.functions.items[index] = function;
@@ -84,17 +87,22 @@ fn candidateFor(f: *const ir.Function, module: *const ir.Module, seed: Candidate
     if (!dominates(graph, block, out.loop.latch)) return null;
     if (!onlyUses(f, out.counter, &.{ condition, out.element, out.next })) return null;
     if (!onlyUses(f, out.length, &.{bound}) or !onlyUses(f, bound, &.{condition})) return null;
-    if (!keyUses(f, module, out.element)) return null;
+    if (whitespace(f, module, out.split) and !keyUses(f, module, out.element)) return null;
     return out;
 }
 
 fn splitCall(f: *const ir.Function, module: *const ir.Module, ref: ir.Ref) bool {
     const inst = f.inst(ref);
-    if (inst.op != .call or inst.a.index() >= module.functions.items.len or f.operands(inst.data).len != 1) return false;
+    if (inst.op != .call or inst.a.index() >= module.functions.items.len or f.operands(inst.data).len == 0) return false;
     const target = module.functions.items[inst.a.index()];
-    if (target.signature.linkage != .runtime_c or target.signature.owned != 0 or target.signature.views != 0) return false;
-    if (!std.mem.eql(u8, target.name, "myl_core_str_split_whitespace")) return false;
-    return std.mem.eql(ir.Type, target.signature.params, &.{.str}) and module.kind(target.signature.ret) == .list and module.compound(target.signature.ret).list == .str;
+    if (target.signature.linkage == .internal or target.signature.owned != 0 or target.signature.views != 0) return false;
+    const explicit = std.mem.eql(u8, target.name, "myl_core_str_split");
+    if (!explicit and !std.mem.eql(u8, target.name, "myl_core_str_split_whitespace")) return false;
+    return std.mem.eql(ir.Type, target.signature.params, if (explicit) &.{ .str, .str } else &.{.str}) and module.kind(target.signature.ret) == .list and module.compound(target.signature.ret).list == .str;
+}
+
+fn whitespace(f: *const ir.Function, module: *const ir.Module, ref: ir.Ref) bool {
+    return std.mem.eql(u8, module.functions.items[f.inst(ref).a.index()].name, "myl_core_str_split_whitespace");
 }
 
 fn privateElement(f: *const ir.Function, split: ir.Ref, length: ir.Ref, counter: ir.Ref) ?ir.Ref {
@@ -187,6 +195,7 @@ fn before(arena: std.mem.Allocator, f: *ir.Function, ref: ir.Ref, added: []const
 }
 
 fn rewrite(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, candidate: Candidate) std.mem.Allocator.Error!void {
+    if (!whitespace(f, module, candidate.split)) return explicitRewrite(arena, f, module, candidate);
     const list_type = f.inst(candidate.split).ty;
     const source = f.operands(f.inst(candidate.split).data)[0];
     const start_fn = try runtime(arena, module, "myl_core_split_ws_start");
@@ -224,9 +233,56 @@ fn materializeInsertions(arena: std.mem.Allocator, f: *ir.Function, element: ir.
         if (inst.op != .dict_insert or f.resolve(f.operands(inst.data)[0]) != element) continue;
         const value = f.operands(inst.data)[1];
         const key = try append(arena, f, .{ .op = .str_from_view, .ty = .str, .a = element, .span = inst.span });
-        const probe = try append(arena, f, .{ .op = .dict_find, .ty = .i64, .a = inst.a, .b = key, .span = inst.span });
-        try before(arena, f, @fromBackingInt(@intCast(index)), &.{ key, probe });
-        f.insts.items[index].b = probe;
+        try before(arena, f, @fromBackingInt(@intCast(index)), &.{key});
         f.insts.items[index].data = try extra(arena, f, &.{ key, value });
+    }
+}
+
+fn splitRuntime(arena: std.mem.Allocator, module: *ir.Module, symbol: []const u8) std.mem.Allocator.Error!ir.Ref {
+    for (module.functions.items, 0..) |function, index| {
+        if (std.mem.eql(u8, function.name, symbol)) return @fromBackingInt(@intCast(index));
+    }
+    const ref: ir.Ref = @fromBackingInt(@intCast(module.functions.items.len));
+    try module.functions.append(arena, .{ .name = symbol, .signature = .{ .params = &.{ .str, .str, .i64 }, .ret = .i64, .linkage = .runtime_c } });
+    return ref;
+}
+
+fn explicitRewrite(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, candidate: Candidate) std.mem.Allocator.Error!void {
+    const list_type = f.inst(candidate.split).ty;
+    const split_args = f.operands(f.inst(candidate.split).data);
+    const source = split_args[0];
+    const separator = split_args[1];
+    const start_fn = try splitRuntime(arena, module, "myl_core_split_start");
+    const end_fn = try splitRuntime(arena, module, "myl_core_split_end");
+    const next_fn = try splitRuntime(arena, module, "myl_core_split_next");
+    const readable = views.onlyReads(f, module, candidate.element);
+    const zero = try append(arena, f, .{ .op = .iconst, .ty = .i64 });
+    f.insts.items[candidate.split.index()] = .{ .op = .call, .ty = .i64, .a = start_fn, .data = try extra(arena, f, &.{ source, separator, zero }) };
+    const phi = f.inst(candidate.counter);
+    const phi_args = ir.ExtraSlice.unpack(phi.data);
+    f.extra.items[phi_args.start + candidate.start_slot] = candidate.split;
+    f.insts.items[candidate.length.index()] = .{ .op = .iconst, .ty = .u64 };
+    for (f.blocks.items[candidate.loop.header.index()].insts.items) |ref| {
+        const inst = &f.insts.items[ref.index()];
+        if (inst.op == .cmp and f.resolve(inst.a) == candidate.counter) inst.data = @backingInt(ir.Predicate.ge);
+    }
+    const end = try append(arena, f, .{ .op = .call, .ty = .i64, .a = end_fn, .data = try extra(arena, f, &.{ source, separator, candidate.counter }) });
+    const offset = try append(arena, f, .{ .op = .convert, .ty = .u64, .a = candidate.counter, .check = .exact });
+    const width = try append(arena, f, .{ .op = .sub, .ty = .i64, .a = end, .b = candidate.counter, .check = .exact });
+    const length = try append(arena, f, .{ .op = .convert, .ty = .u64, .a = width, .check = .exact });
+    try before(arena, f, candidate.element, &.{ end, offset, width, length });
+    const view: ir.Inst = .{ .op = .str_view_of, .ty = .str_view, .a = source, .b = offset, .data = try extra(arena, f, &.{length}), .span = f.inst(candidate.element).span };
+    if (readable) {
+        f.insts.items[candidate.element.index()] = view;
+        try views.rewriteUses(arena, f, module, candidate.element);
+    } else {
+        const borrowed = try append(arena, f, view);
+        try before(arena, f, candidate.element, &.{borrowed});
+        f.insts.items[candidate.element.index()] = .{ .op = .str_from_view, .ty = .str, .a = borrowed, .span = view.span };
+    }
+    f.insts.items[candidate.next.index()] = .{ .op = .call, .ty = .i64, .a = next_fn, .data = try extra(arena, f, &.{ source, separator, end }) };
+    const empty = try append(arena, f, .{ .op = .undef, .ty = list_type });
+    for (f.insts.items) |*inst| {
+        if (inst.op == .copy and f.resolve(inst.a) == candidate.split) inst.a = empty;
     }
 }

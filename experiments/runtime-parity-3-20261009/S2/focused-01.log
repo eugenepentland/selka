@@ -1,0 +1,34 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (61s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: build slot 2 after 151s (all 3 build slot(s) busy)
+test-core
++- run test w
+guardian/test: 43 test(s) selected
+guardian/test: test wall 10.02s; slowest over 50ms:
+guardian/test:   3.89s  s2_views_test.test.S2 lazy split keeps empty pieces unicode and escaped values
+guardian/test:   0.96s  s2_views_test.test.S2 whitespace split insertion reuses the view probe
+guardian/test:   0.55s  s2_views_test.test.S2 private split offsets preserve indexed checks and integer grammar
+guardian/test:   0.49s  s2_views_test.test.S2 offset list reads preserve failing negative index traps
+guardian/test:   0.49s  s2_views_test.test.S2 bounded search paths preserve scalar windows and nonoverlapping matches
+guardian/test:   0.46s  s2_views_test.test.S2 empty separator traps before intervening effects or an early loop exit
+guardian/test:   0.46s  s2_views_test.test.S2 byte string views clamp octets and preserve nonunicode values
+guardian/test:   0.23s  s2_ir_test.test.S2 indirect calls own managed array arguments and return arrays in registers
+guardian/test:   0.21s  s2_ir_test.test.S2 indirect calls own managed array arguments and return arrays through sret
+guardian/test:   0.09s  s2_ir_test.test.S2 views admit explicit extern span helpers and keep their owner live without counting the span
+guardian/test: PASS — 43 passed
+guardian/test: RESULT {"passed":43,"failed":0,"skipped":0}
+failed command: ./.zig-cache-rp3/o/528a817533b4fdd0e7bf73fe0529a0ce/test --cache-dir=./.zig-cache-rp3 --seed=0xdd7625cf --listen=-
+
+Build Summary: 8/8 steps succeeded; 43/43 tests passed
+test-core success
++- run test 43 pass (43 total) 10s MaxRSS:163M
+   +- compile test debug native success 3s MaxRSS:383M
+      +- run exe build-identity (build_identity) success 704ms
+      |  +- compile exe build-identity debug native cached 9ms MaxRSS:37M
+      +- options success
+      |  +- compile exe mylang debug native success 4s MaxRSS:502M
+      |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+      |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 10ms MaxRSS:38M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+

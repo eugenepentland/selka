@@ -19,6 +19,7 @@ const SpanForm = struct { text: []const u8, span: []const u8 };
 /// The helpers a borrowed slice may be passed to: every `str` parameter of the span form
 /// is a `(data, length)` span, and each answers what the text form answers.
 const span_forms = [_]SpanForm{
+    .{ .text = "myl_core_str_split_offsets", .span = "myl_core_span_split_offsets" },
     .{ .text = "myl_core_str_eq", .span = "myl_core_span_eq" },
     .{ .text = "myl_core_str_chars", .span = "myl_core_span_chars" },
     .{ .text = "myl_core_str_starts", .span = "myl_core_span_starts" },
@@ -46,9 +47,26 @@ pub fn rewriteFunction(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Func
     const count = f.insts.items.len;
     for (0..count) |index| {
         const inst = f.insts.items[index];
-        if (inst.op != .str_slice or inst.ty != .str) continue;
+        if (inst.op == .str_from_view and onlyReads(f, module, @fromBackingInt(@intCast(index)))) {
+            f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };
+            try rewriteUses(arena, f, module, f.resolve(inst.a));
+            changed += 1;
+            continue;
+        }
+        const bytes = byteSlice(f, module, inst);
+        if ((inst.op != .str_slice or inst.ty != .str) and !bytes) continue;
         const ref: ir.Ref = @fromBackingInt(@intCast(index));
-        if (!onlyReads(f, module, ref) or try updated(arena, f, module, f.resolve(inst.a))) continue;
+        const source = if (bytes) f.operands(inst.data)[0] else inst.a;
+        if (!onlyReads(f, module, ref) or try updated(arena, f, module, f.resolve(source))) continue;
+        if (bytes) {
+            const args = f.operands(inst.data);
+            const start: u32 = @intCast(f.extra.items.len);
+            const end = args[2];
+            f.insts.items[index].a = args[0];
+            f.insts.items[index].b = args[1];
+            try f.extra.append(arena, end);
+            f.insts.items[index].data = (ir.ExtraSlice{ .start = start, .len = 1 }).pack();
+        }
         f.insts.items[index].op = .str_slice_view;
         f.insts.items[index].ty = .str_view;
         try rewriteUses(arena, f, module, ref);
@@ -57,10 +75,17 @@ pub fn rewriteFunction(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Func
     return changed;
 }
 
+fn byteSlice(f: *const ir.Function, module: *const ir.Module, inst: ir.Inst) bool {
+    if (inst.op != .call or inst.ty != .bytes or inst.a.index() >= module.functions.items.len or f.operands(inst.data).len != 3) return false;
+    const target = module.functions.items[inst.a.index()];
+    if (target.signature.linkage == .internal or target.signature.owned != 0 or target.signature.views != 0) return false;
+    return std.mem.eql(u8, target.name, "myl_core_bytes_slice") and std.mem.eql(ir.Type, target.signature.params, &.{ .bytes, .i64, .i64 });
+}
+
 /// Whether every use of `slice` is the key of a text-dictionary lookup or insert, or an
 /// argument of a reading helper with a span form, and there is at least one. A forwarding
 /// copy stands for the slice itself.
-fn onlyReads(f: *const ir.Function, module: *const ir.Module, slice: ir.Ref) bool {
+pub fn onlyReads(f: *const ir.Function, module: *const ir.Module, slice: ir.Ref) bool {
     var uses: usize = 0;
     for (f.insts.items) |inst| {
         if (inst.op == .copy) continue;
@@ -72,6 +97,8 @@ fn onlyReads(f: *const ir.Function, module: *const ir.Module, slice: ir.Ref) boo
                 if (spanForm(module, inst) == null) return false;
                 continue;
             }
+            const span_read = inst.op == .str_len or inst.op == .list_len or inst.op == .str_parse_int or inst.op == .str_view_of;
+            if (span_read and at == 0) continue;
             const lookup = inst.op == .dict_find and at == 1;
             const insertion = inst.op == .dict_insert and at == 2;
             if (!lookup and !insertion) return false;
@@ -86,7 +113,7 @@ fn onlyReads(f: *const ir.Function, module: *const ir.Module, slice: ir.Ref) boo
 /// consuming update, or a call that takes it over as a `mut` argument). A view keeps its
 /// source live, so an update while the view is live would copy the whole source instead
 /// of updating it in place: such a slice stays a copy.
-fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
     const aliases = try arena.alloc(bool, f.insts.items.len);
     defer arena.free(aliases);
     @memset(aliases, false);
@@ -127,12 +154,14 @@ fn spanForm(module: *const ir.Module, call: ir.Inst) ?SpanForm {
     const callee = module.functions.items[call.a.index()];
     const signature = callee.signature;
     if (signature.linkage == .internal or signature.owned != 0) return null;
-    for (signature.params) |param| if (param != .str) return null;
+    for (signature.params) |param| if (param != .str and param != .bytes) return null;
     for (span_forms) |form| {
         // A call another slice already moved to the span form keeps it.
         const spans = signature.linkage == .runtime_c and signature.views == (@as(u64, 1) << @intCast(signature.params.len)) - 1;
         if (!std.mem.eql(u8, callee.name, if (spans) form.span else form.text)) continue;
         if (!spans and signature.views != 0) return null;
+        const offsets = std.mem.eql(u8, form.text, "myl_core_str_split_offsets");
+        if (offsets) return if (module.kind(signature.ret) == .list) form else null;
         const ret: ir.Type = if (std.mem.eql(u8, form.text, "myl_core_str_chars")) .u64 else .bool;
         return if (signature.ret == ret) form else null;
     }
@@ -147,13 +176,15 @@ fn spanCallee(arena: std.mem.Allocator, module: *ir.Module, text: ir.Signature, 
         if (function.signature.linkage == .runtime_c and function.signature.views == views and std.mem.eql(u8, function.name, symbol)) return @fromBackingInt(@intCast(index));
     }
     const ref: ir.Ref = @fromBackingInt(@intCast(module.functions.items.len));
-    try module.functions.append(arena, .{ .name = symbol, .signature = .{ .params = text.params, .ret = text.ret, .linkage = .runtime_c, .views = views } });
+    const params = try arena.alloc(ir.Type, text.params.len);
+    @memset(params, .str);
+    try module.functions.append(arena, .{ .name = symbol, .signature = .{ .params = params, .ret = text.ret, .linkage = .runtime_c, .views = views } });
     return ref;
 }
 
 /// Retype the view's copies, call each reading helper's span form, and give each insert
 /// a key materialized from the view.
-fn rewriteUses(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, view: ir.Ref) std.mem.Allocator.Error!void {
+pub fn rewriteUses(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, view: ir.Ref) std.mem.Allocator.Error!void {
     const count = f.insts.items.len;
     for (0..count) |index| {
         const inst = f.insts.items[index];
@@ -161,6 +192,7 @@ fn rewriteUses(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, vi
             f.insts.items[index].ty = .str_view;
             continue;
         }
+        if (inst.op == .list_len and f.resolve(inst.a) == view) f.insts.items[index].op = .str_len;
         if (inst.op == .call and usesValue(f, inst, view)) {
             const form = spanForm(module, inst) orelse continue;
             f.insts.items[index].a = try spanCallee(arena, module, module.functions.items[inst.a.index()].signature, form.span);

@@ -18,9 +18,8 @@ _Noreturn void myl_core_number_text_invalid(void) { abort(); }
 /* `int(text)` with the pinned grammar (docs/bytes.md): surrounding ASCII
    whitespace, one optional sign, decimal digits with single `_` separators
    between digits. An overflowing value is None. */
-bool myl_core_str_parse_int(myl_block *text, int64_t *out) {
-    const unsigned char *s = block_data(text);
-    size_t start = 0, end = (size_t)text->len;
+bool myl_core_span_parse_int(const unsigned char *s, uint64_t len, int64_t *out) {
+    size_t start = 0, end = (size_t)len;
     while (start < end && ascii_space(s[start])) ++start;
     while (end > start && ascii_space(s[end - 1])) --end;
     bool negative = false;
@@ -51,6 +50,7 @@ bool myl_core_str_parse_int(myl_block *text, int64_t *out) {
     return true;
 }
 
+bool myl_core_str_parse_int(myl_block *text, int64_t *out) { return myl_core_span_parse_int(block_data(text), (uint64_t)text->len, out); }
 
 static const char core_number_pairs[] =
     "00010203040506070809" "10111213141516171819"

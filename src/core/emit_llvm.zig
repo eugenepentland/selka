@@ -554,6 +554,7 @@ const ModuleState = struct {
             \\declare void @myl_core_s2_unsupported(i32) noreturn nounwind cold
             \\declare ptr @myl_core_dict_new(i64, ptr) nounwind
             \\declare i32 @llvm.cttz.i32(i32, i1 immarg) nounwind readnone
+            \\declare ptr @memchr(ptr, i32, i64) nounwind willreturn memory(argmem: read)
             \\declare zeroext i1 @myl_core_str_eq(ptr, ptr) nounwind
             \\declare i32 @myl_core_str_hash(ptr) nounwind
             \\declare void @llvm.memset.p0.i64(ptr, i8, i64, i1) nounwind
@@ -579,6 +580,7 @@ const ModuleState = struct {
             \\declare ptr @myl_core_s2_sort_in_place(ptr, i64, i1 zeroext) nounwind
             \\declare ptr @myl_core_list_copy(ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_parse_int(ptr, ptr) nounwind
+            \\declare zeroext i1 @myl_core_span_parse_int(ptr, i64, ptr) nounwind
             \\declare void @myl_core_print_i64(i64, i64) nounwind
             \\declare void @myl_core_print_u64(i64, i64) nounwind
             \\declare void @myl_core_print_bool(i64, i1 zeroext) nounwind
@@ -2098,7 +2100,13 @@ const FunctionEmitter = struct {
                 const parsed = try self.fresh("%int");
                 const tag = try self.fresh("%tag");
                 const partial = try self.fresh("%opt");
-                try out.print(self.a(), "  {s} = call fastcc i1 @myl_core_parse_int_inline(ptr {s}, ptr %slot)\n  {s} = load i64, ptr %slot, align 8\n  {s} = zext i1 {s} to i8\n", .{ ok, try self.value(inst.a), parsed, tag, ok });
+                if (self.typeOf(inst.a) == .str_view) {
+                    const data = try self.fresh("%parsedata");
+                    const len = try self.fresh("%parselen");
+                    try out.print(self.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n" ++
+                        "  {s} = call fastcc i1 @myl_core_parse_span_inline(ptr {s}, i64 {s}, ptr %slot)\n", .{ data, try self.value(inst.a), len, try self.value(inst.a), ok, data, len });
+                } else try out.print(self.a(), "  {s} = call fastcc i1 @myl_core_parse_int_inline(ptr {s}, ptr %slot)\n", .{ ok, try self.value(inst.a) });
+                try out.print(self.a(), "  {s} = load i64, ptr %slot, align 8\n  {s} = zext i1 {s} to i8\n", .{ parsed, tag, ok });
                 try out.print(self.a(), "  {s} = insertvalue {{ i8, i64 }} poison, i8 {s}, 0\n  {s} = insertvalue {{ i8, i64 }} {s}, i64 {s}, 1\n", .{ partial, tag, name, partial, parsed });
             },
             .union_make => if (!self.memory.fused[ref.index()]) try self.unionMake(out, name, inst),
@@ -3706,6 +3714,7 @@ const FunctionEmitter = struct {
         if (inst.op == .call) try self.state.dependency(@intCast(inst.a.index()));
         if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
         if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+        if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;

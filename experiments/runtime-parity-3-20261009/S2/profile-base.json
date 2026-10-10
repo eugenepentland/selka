@@ -1,0 +1,344 @@
+{
+  "labstation": {
+    "sampled_instruction_period": 336510095,
+    "materialization_period": 23300699,
+    "materialization_share": 0.06924219910846954,
+    "exclusive": {
+      "my.sexpr_parser::next_token": {
+        "period": 59801794,
+        "share": 0.17771173848439822
+      },
+      "myl_core_bytes_slice": {
+        "period": 11000330,
+        "share": 0.03268945022288262
+      },
+      "myl_core_bytes_concat": {
+        "period": 6700201,
+        "share": 0.01991084695393759
+      },
+      "myl_core_bytes_decode_text": {
+        "period": 3000090,
+        "share": 0.008915304606240713
+      },
+      "my.sexpr_tokenizer::is_unit_letter": {
+        "period": 2600078,
+        "share": 0.007726597325408618
+      },
+      "core_text_append_bytes": {
+        "period": 2500075,
+        "share": 0.007429420505200594
+      },
+      "myl_core_ir_str_slice_span": {
+        "period": 200006,
+        "share": 0.0005943536404160475
+      },
+      "core_text_known": {
+        "period": 100003,
+        "share": 0.00029717682020802375
+      },
+      "my.placement_pin_roles::is_strap_token": {
+        "period": 100003,
+        "share": 0.00029717682020802375
+      }
+    },
+    "top_exclusive": [
+      [
+        "my.sexpr_parser::next_token",
+        59801794
+      ],
+      [
+        "block_alloc",
+        42801284
+      ],
+      [
+        "my.sexpr_parser::parse_node",
+        32200966
+      ],
+      [
+        "myl_core_free_block",
+        21300639
+      ],
+      [
+        "reference_at",
+        18400552
+      ],
+      [
+        "myl_core_parse_float_range",
+        11700351
+      ],
+      [
+        "myl_core_bytes_slice",
+        11000330
+      ],
+      [
+        "myl_core_bytes_concat",
+        6700201
+      ],
+      [
+        "fmt.parse_float.parseFloat__anon_1373",
+        6400192
+      ],
+      [
+        "my.support_sha256::compress",
+        6300189
+      ],
+      [
+        "myl_core_str_eq",
+        5900177
+      ],
+      [
+        "my.kicad_sch_compose::join_sites",
+        4800144
+      ],
+      [
+        "my.kicad_sch_verify::grid_scan",
+        4700141
+      ],
+      [
+        "block_free",
+        4600138
+      ],
+      [
+        "memcpy@plt",
+        3900117
+      ],
+      [
+        "my.kicad_sch_verify::check",
+        3800114
+      ],
+      [
+        "myl_core_buffer_push_checked",
+        3700111
+      ],
+      [
+        "myl_core_bytes_decode_text",
+        3000090
+      ],
+      [
+        "myl_core_list_grow",
+        3000090
+      ],
+      [
+        "0x0000000000197a4d",
+        2800084
+      ],
+      [
+        "my.sexpr_tokenizer::is_unit_letter",
+        2600078
+      ],
+      [
+        "core_text_append_bytes",
+        2500075
+      ],
+      [
+        "myl_core_bytes_from_list",
+        2400072
+      ],
+      [
+        "myl_core_str_from_i64",
+        2200066
+      ],
+      [
+        "0x0000000000197a3f",
+        2000060
+      ],
+      [
+        "my.kicad_sch_emit::mm",
+        1800054
+      ],
+      [
+        "myl_core_retain_slow",
+        1800054
+      ],
+      [
+        "my.flat_netlist::uuid_from_id",
+        1600048
+      ],
+      [
+        "myl_core_bytes_valid_list",
+        1600048
+      ],
+      [
+        "my.kicad_sch_verify::scan_top",
+        1500045
+      ]
+    ],
+    "perf_data": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-profile/base/labstation.perf",
+    "limitation": "DWARF call chains do not unwind guest code. These are exclusive symbol shares; allocation and library memcpy callers are not attributed. No zero inclusive share is inferred."
+  },
+  "rds3+flat": {
+    "sampled_instruction_period": 531715951,
+    "materialization_period": 31800954,
+    "materialization_share": 0.05980816249764905,
+    "exclusive": {
+      "my.sexpr_parser::next_token": {
+        "period": 84002520,
+        "share": 0.15798382546548806
+      },
+      "myl_core_bytes_slice": {
+        "period": 15900477,
+        "share": 0.029904081248824526
+      },
+      "myl_core_bytes_concat": {
+        "period": 8900267,
+        "share": 0.016738762460033852
+      },
+      "myl_core_bytes_decode_text": {
+        "period": 3200096,
+        "share": 0.006018431446304307
+      },
+      "core_text_append_bytes": {
+        "period": 2800084,
+        "share": 0.005266127515516268
+      },
+      "my.sexpr_tokenizer::is_unit_letter": {
+        "period": 2800084,
+        "share": 0.005266127515516268
+      },
+      "core_text_known": {
+        "period": 700021,
+        "share": 0.001316531878879067
+      },
+      "myl_core_ir_str_slice_span": {
+        "period": 700021,
+        "share": 0.001316531878879067
+      },
+      "myl_core_ir_str_slice": {
+        "period": 300009,
+        "share": 0.0005642279480910288
+      },
+      "my.placement_pin_roles::is_strap_token": {
+        "period": 200006,
+        "share": 0.0003761519653940192
+      },
+      "my.sexpr_ast::token_text": {
+        "period": 100003,
+        "share": 0.0001880759826970096
+      }
+    },
+    "top_exclusive": [
+      [
+        "my.sexpr_parser::next_token",
+        84002520
+      ],
+      [
+        "block_alloc",
+        55001650
+      ],
+      [
+        "my.sexpr_parser::parse_node",
+        43901317
+      ],
+      [
+        "my.kicad_sch_verify::check",
+        34401032
+      ],
+      [
+        "myl_core_free_block",
+        32100963
+      ],
+      [
+        "my.kicad_sch_compose::join_sites",
+        29200876
+      ],
+      [
+        "reference_at",
+        28300849
+      ],
+      [
+        "myl_core_parse_float_range",
+        17600528
+      ],
+      [
+        "myl_core_bytes_slice",
+        15900477
+      ],
+      [
+        "fmt.parse_float.parseFloat__anon_1373",
+        12200366
+      ],
+      [
+        "myl_core_str_eq",
+        12200366
+      ],
+      [
+        "my.kicad_sch_verify::grid_scan",
+        11900357
+      ],
+      [
+        "myl_core_bytes_concat",
+        8900267
+      ],
+      [
+        "my.support_sha256::compress",
+        8200246
+      ],
+      [
+        "block_free",
+        5100153
+      ],
+      [
+        "myl_core_list_grow",
+        4900147
+      ],
+      [
+        "memcpy@plt",
+        4500135
+      ],
+      [
+        "my.kicad_sch_compose::compose",
+        3800114
+      ],
+      [
+        "myl_core_buffer_push_checked",
+        3700111
+      ],
+      [
+        "myl_core_bytes_valid_list",
+        3500105
+      ],
+      [
+        "myl_core_bytes_from_list",
+        3400102
+      ],
+      [
+        "my.kicad_sch_verify::on_grid",
+        3300099
+      ],
+      [
+        "my.kicad_sch_textbox::read_top",
+        3200096
+      ],
+      [
+        "myl_core_bytes_decode_text",
+        3200096
+      ],
+      [
+        "my.flat_netlist::uuid_from_id",
+        2900087
+      ],
+      [
+        "core_text_append_bytes",
+        2800084
+      ],
+      [
+        "my.sexpr_tokenizer::is_unit_letter",
+        2800084
+      ],
+      [
+        "0x0000000000197a3f",
+        2600078
+      ],
+      [
+        "myl_core_bytes_find",
+        2500075
+      ],
+      [
+        "myl_core_str_from_i64",
+        2400072
+      ]
+    ],
+    "perf_data": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-profile/base/rds3+flat.perf",
+    "limitation": "DWARF call chains do not unwind guest code. These are exclusive symbol shares; allocation and library memcpy callers are not attributed. No zero inclusive share is inferred."
+  }
+}

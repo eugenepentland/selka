@@ -30,7 +30,10 @@ pub fn instruction(context: anytype, out: anytype, name: []const u8, inst: ir.In
             const pointer = try context.fresh("%view");
             const data = try context.fresh("%view");
             const partial = try context.fresh("%view");
-            try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ data, try context.value(inst.a), pointer, data, try context.value(inst.b) });
+            if (context.function.inst(context.function.resolve(inst.a)).ty == .str_view) {
+                try out.print(a, "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n", .{ data, try context.value(inst.a) });
+            } else try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n", .{ data, try context.value(inst.a) });
+            try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ pointer, data, try context.value(inst.b) });
             try out.print(a, "  {s} = insertvalue {{ ptr, i64 }} poison, ptr {s}, 0\n  {s} = insertvalue {{ ptr, i64 }} {s}, i64 {s}, 1\n", .{ partial, pointer, name, partial, try context.value(context.function.operands(inst.data)[0]) });
         },
         .str_slice_view => try sliceView(@TypeOf(context), @TypeOf(out), context, out, name, inst),
@@ -53,6 +56,7 @@ fn sourceAscii(comptime Context: type, comptime Output: type, context: Context, 
     const f = context.function;
     const borrow = f.inst(f.resolve(view));
     if (borrow.op != .str_view_of and borrow.op != .str_slice_view) return null;
+    if (f.inst(f.resolve(borrow.a)).ty == .str_view) return sourceAscii(Context, Output, context, out, borrow.a);
     const kind_at = try context.fresh("%viewkind");
     const kind = try context.fresh("%viewkind");
     const bit = try context.fresh("%viewascii");
@@ -78,8 +82,9 @@ fn sliceView(comptime Context: type, comptime Output: type, context: Context, ou
     const fast = try context.fresh("slicefast");
     const slow = try context.fresh("sliceslow");
     const join = try context.fresh("slicejoin");
+    const byte_source = context.function.inst(context.function.resolve(inst.a)).ty == .bytes;
     try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 4\n  {s} = load i32, ptr {s}, align 4\n" ++
-        "  {s} = and i32 {s}, 256\n  {s} = icmp ne i32 {s}, 0\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ kind_at, text, kind, kind_at, ascii_bit, kind, ascii, ascii_bit, ascii, fast, slow, fast });
+        "  {s} = and i32 {s}, 256\n  {s} = icmp ne i32 {s}, 0\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ kind_at, text, kind, kind_at, ascii_bit, kind, ascii, ascii_bit, if (byte_source) "true" else ascii, fast, slow, fast });
     const len_at = try context.fresh("%slicelen");
     const len = try context.fresh("%slicelen");
     try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n  {s} = load i64, ptr {s}, align 8\n", .{ len_at, text, len, len_at });
@@ -199,4 +204,28 @@ fn scalarIndex(context: anytype, access: Access) ?struct { ref: ir.Ref, normaliz
     const args = f.operands(offset.data);
     if (args.len != 2 or f.resolve(args[0]) != f.resolve(access.receiver)) return null;
     return .{ .ref = args[1], .normalized = kind == .normalized and signature.params[1] == .i64 };
+}
+
+/// An ASCII source proves a borrowed piece's scalar length equals its byte length.
+pub fn runtimeCall(comptime Context: type, comptime Output: type, context: Context, out: Output, name: []const u8, inst: ir.Inst) Error!bool {
+    if (inst.op != .call) return false;
+    const callee = context.state.module.functions.items[inst.a.index()];
+    const sig = callee.signature;
+    if (sig.linkage != .runtime_c or sig.views != 1 or sig.owned != 0) return false;
+    if (!@import("std").mem.eql(u8, callee.name, "myl_core_span_chars")) return false;
+    const arg = context.function.operands(inst.data)[0];
+    if (context.function.inst(context.function.resolve(arg)).ty != .str_view) return false;
+    const ascii = try sourceAscii(Context, Output, context, out, arg) orelse return false;
+    const view = try context.value(arg);
+    const data = try context.fresh("%charsdata");
+    const len = try context.fresh("%charslen");
+    const slow = try context.fresh("charsslow");
+    const join = try context.fresh("charsjoin");
+    const scalars = try context.fresh("%charsscalars");
+    const previous = context.label;
+    try out.print(context.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ data, view, len, view });
+    try out.print(context.a(), "  br i1 {s}, label %{s}, label %{s}\n{s}:\n  {s} = call i64 @myl_core_span_chars(ptr {s}, i64 {s})\n", .{ ascii, join, slow, slow, scalars, data, len });
+    try out.print(context.a(), "  br label %{s}\n{s}:\n  {s} = phi i64 [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ join, join, name, len, previous, scalars, slow });
+    context.label = join;
+    return true;
 }

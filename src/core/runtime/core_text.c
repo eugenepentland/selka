@@ -431,6 +431,10 @@ myl_block *myl_core_str_join(const myl_block *separator, myl_block *parts) {
 static int64_t core_span_find(const unsigned char *data, int64_t len, const unsigned char *wanted, int64_t wanted_len, int64_t start) {
     if (!wanted_len) return start;
     if (wanted_len > len - start) return -1;
+    if (wanted_len == 1) {
+        const unsigned char *hit = memchr(data + start, wanted[0], (size_t)(len - start));
+        return hit ? hit - data : -1;
+    }
     for (unsigned tried = 0; tried < 8; ++tried) {
         const unsigned char *hit = memchr(data + start, wanted[0], (size_t)(len - wanted_len - start + 1));
         if (!hit) return -1;
@@ -488,6 +492,45 @@ bool myl_core_str_starts(myl_block *text, myl_block *needle) { return needle->le
 bool myl_core_str_ends(myl_block *text, myl_block *needle) { return needle->len <= text->len && memcmp(block_data(text) + text->len - needle->len, block_data(needle), (size_t)needle->len) == 0; }
 
 static const int32_t core_text_list_layout[] = {8, 1, 0, 0, 0};
+/* Offset-only lists are private to a compiler-proven nonescaping split. */
+myl_block *myl_core_span_split_offsets(const unsigned char *text, uint64_t len, const unsigned char *separator, uint64_t separator_len) {
+    if (!separator_len) myl_core_s2_unsupported(-1);
+    myl_block *list = myl_core_list_new_slow(0, 16);
+    int64_t at = 0;
+    for (;;) {
+        int64_t hit = core_span_find(text, (int64_t)len, separator, (int64_t)separator_len, at);
+        int64_t end = hit < 0 ? (int64_t)len : hit;
+        if (list->len == list->cap) list = myl_core_list_grow(list, 16);
+        uint64_t *piece = (uint64_t *)block_data(list) + 2 * list->len++;
+        piece[0] = (uint64_t)at; piece[1] = (uint64_t)(end - at);
+        if (hit < 0) break;
+        at = hit + (int64_t)separator_len;
+    }
+    return list;
+}
+myl_block *myl_core_str_split_offsets(myl_block *text, myl_block *separator) {
+    return myl_core_span_split_offsets(block_data(text), (uint64_t)text->len, block_data(separator), (uint64_t)separator->len);
+}
+uint64_t myl_core_str_split_count(myl_block *text, myl_block *separator) {
+    if (!separator->len) myl_core_s2_unsupported(-1);
+    uint64_t pieces = 1;
+    int64_t at = 0, hit;
+    while ((hit = core_text_find_bytes(text, separator, at)) >= 0) { ++pieces; at = hit + separator->len; }
+    return pieces;
+}
+/* Private lazy split cursors include leading, adjacent and trailing empty pieces. */
+int64_t myl_core_split_start(myl_block *text, myl_block *separator, int64_t unused) {
+    (void)text; (void)unused;
+    if (!separator->len) myl_core_s2_unsupported(-1);
+    return 0;
+}
+int64_t myl_core_split_end(myl_block *text, myl_block *separator, int64_t start) {
+    int64_t hit = core_text_find_bytes(text, separator, start);
+    return hit < 0 ? text->len : hit;
+}
+int64_t myl_core_split_next(myl_block *text, myl_block *separator, int64_t end) {
+    return end == text->len ? -1 : end + separator->len;
+}
 myl_block *myl_core_str_split(myl_block *text, myl_block *separator) {
     if (!separator->len) myl_core_s2_unsupported(-1);
     myl_block *list = myl_core_list_new_slow(0, 8);
@@ -771,11 +814,10 @@ static int64_t core_search_octets(core_octets input, core_octets needle, int mod
     if (mode == CORE_COUNT) {
         int64_t count = 0;
         size_t at = 0;
-        extern void *memmem(const void *, size_t, const void *, size_t);
         while (at <= input.length - needle.length) {
-            const unsigned char *hit = memmem(input.data + at, input.length - at, needle.data, needle.length);
-            if (!hit) break;
-            count++; at = (size_t)(hit - input.data) + needle.length;
+            int64_t hit = core_span_find(input.data, (int64_t)input.length, needle.data, (int64_t)needle.length, (int64_t)at);
+            if (hit < 0) break;
+            count++; at = (size_t)hit + needle.length;
         }
         return count;
     }
@@ -787,9 +829,8 @@ static int64_t core_search_octets(core_octets input, core_octets needle, int mod
     if (mode == CORE_RFIND || mode == CORE_RINDEX) {
         input.reverse = needle.reverse = true; found = core_reverse_find(input, needle);
     } else {
-        extern void *memmem(const void *, size_t, const void *, size_t);
-        const unsigned char *hit = memmem(input.data, input.length, needle.data, needle.length);
-        found = hit ? (size_t)(hit - input.data) : SIZE_MAX;
+        int64_t hit = core_span_find(input.data, (int64_t)input.length, needle.data, (int64_t)needle.length, 0);
+        found = hit < 0 ? SIZE_MAX : (size_t)hit;
     }
     return found == SIZE_MAX ? -1 : (int64_t)found;
 }
