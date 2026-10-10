@@ -197,3 +197,17 @@ test "Juice SHA256 covers empty short and final partial streaming buffers" {
     try hashFiles(&c);
     try t.expectEqual(@as(usize, 0), c.message.len);
 }
+
+// spec: JUICE-RUNTIME-1
+test "Juice runtime counters require the entire unscaled group" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    var c = try context(arena.allocator());
+    const complete = "100;;instructions:u;12;100.00\n200;;cycles:u;12;100.00\n150;;ref-cycles:u;12;100.00\n";
+    const measured = try profiles.runtime(&c, complete, "instructions:u");
+    try t.expectEqual(@as(f64, 150), try d.num(d.get(measured, "reference_cycles")));
+    try t.expectError(error.InvalidExperiment, profiles.runtime(&c, "100;;instructions:u;12;100\n200;;cycles:u;12;100\n", "instructions:u"));
+    try t.expectError(error.InvalidExperiment, profiles.runtime(&c, complete ++ "150;;ref-cycles:u;12;100\n", "instructions:u"));
+    try t.expectError(error.InvalidExperiment, profiles.runtime(&c, "100;;instructions:u;12;100\n200;;cycles:u;12;100\n150;;ref-cycles:u;12;99.99\n", "instructions:u"));
+    try t.expectError(error.InvalidExperiment, profiles.runtime(&c, "100;;instructions:u;12;100\n200;;cycles:u;12;100\n0;;ref-cycles:u;12;100\n", "instructions:u"));
+}

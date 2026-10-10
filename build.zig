@@ -722,6 +722,9 @@ pub fn build(b: *std.Build) void {
     juice_native_run.addArgs(&.{ "python3", "tests/test_juice_native.py" });
     juice_native_run.addArtifactArg(exe);
     juice_step.dependOn(&juice_native_run.step);
+    const juice_runtime_run = bounded(b.addSystemCommand(&.{ "python3", "tests/test_juice_runtime_bench.py" }), rss.script);
+    juice_runtime_run.setCwd(b.path("."));
+    juice_step.dependOn(&juice_runtime_run.step);
     test_step.dependOn(juice_step);
     // The compiler's `compiler_identity` comes from a make-phase run of
     // `build_identity.zig`. This driver runs that file on throwaway trees that

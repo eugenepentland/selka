@@ -1,0 +1,572 @@
+{
+  "cases": [
+    {
+      "version": "juice-runtime-validation-v1",
+      "workload": "work",
+      "comparison_sha256": "6fbe5714eda8b5578e4fe2b3604afd14209fe9cd370ba9db95f71da0a3ab4e80",
+      "timing_sha256": "25211401b6b04c99de3792bcee611f5bc11fbb537a3dfbe1aff2360eb09fd947",
+      "passed": false,
+      "status": "uncertain",
+      "target_relative_error": 0.05,
+      "relative_error": null,
+      "instruction_relative_error": 0.0008326231155494357,
+      "estimated_ratio": null,
+      "timing_ratio": 1.0008333140803347,
+      "timing_ratios": {
+        "samples": [
+          1.0881034025552905,
+          0.9996582789424366,
+          1.004320956471576,
+          1.0008333140803347,
+          0.9488724204159862,
+          0.9919136723167585,
+          1.1161101117129277,
+          1.0015235200653623,
+          0.9969158677966108
+        ],
+        "median": 1.0008333140803347,
+        "min": 0.9488724204159862,
+        "max": 1.1161101117129277,
+        "spread": 0.16709844580924665
+      },
+      "timing_repeatable": false,
+      "missed_regression": false,
+      "false_alarm": false,
+      "scope": "this measured change and scenario only; does not qualify unseen changes, workloads or machines",
+      "name": "identical",
+      "family": "control",
+      "counter_proxy": {
+        "status": "uncertain",
+        "estimated_ratio": null,
+        "reference_cycles": {
+          "ratio": 0.9325993105845805,
+          "observed_range": [
+            0.8916352579748669,
+            1.0117193159378361
+          ],
+          "max_spread": 0.12876275652369623,
+          "pair_ratios": [
+            0.9986160415986122,
+            0.908645286124229,
+            0.8916352579748669,
+            1.0117193159378361,
+            0.9325993105845805
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cycles": {
+          "ratio": 1.0000275797403146,
+          "observed_range": [
+            0.999826390416691,
+            1.0000920008344893
+          ],
+          "max_spread": 0.00026560309253405984,
+          "pair_ratios": [
+            1.0000920008344893,
+            1.0000039740798705,
+            1.0000275797403146,
+            0.999826390416691,
+            1.0000648054920978
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cpi_ratio": 1.000027580817262,
+        "target_relative_error": 0.05,
+        "accuracy_validated": false,
+        "spread_limit": 0.03,
+        "meaning": "reference cycles per completed unit; CPU-bound same-hardware runtime proxy, excluding kernel work and time descheduled or waiting for I/O",
+        "range_meaning": "observed counter or paired-ratio range, not a runtime error bound or confidence interval"
+      },
+      "instruction_ratio": 0.9999999971282195,
+      "diagnostic_relative_error": 0.06817719048296711
+    },
+    {
+      "version": "juice-runtime-validation-v1",
+      "workload": "work",
+      "comparison_sha256": "7f29ba7750c02a385d00c4c39da93b1ccaa572d1dd92582fa20c0bd7a972d380",
+      "timing_sha256": "41e072c31a76fdff40b91f8670a8e66170ce22c00e1c361921c131a40c542c51",
+      "passed": false,
+      "status": "uncertain",
+      "target_relative_error": 0.05,
+      "relative_error": null,
+      "instruction_relative_error": 0.12861853384979116,
+      "estimated_ratio": null,
+      "timing_ratio": 0.12606477304735467,
+      "timing_ratios": {
+        "samples": [
+          0.1272453796018631,
+          0.12750811955151684,
+          0.12339221399773818,
+          0.12490092884227896,
+          0.12670504645008707,
+          0.12606477304735467,
+          0.12468962234234612,
+          0.12368423535249928,
+          0.12780474901553648
+        ],
+        "median": 0.12606477304735467,
+        "min": 0.12339221399773818,
+        "max": 0.12780474901553648,
+        "spread": 0.035002125583019024
+      },
+      "timing_repeatable": false,
+      "missed_regression": false,
+      "false_alarm": false,
+      "scope": "this measured change and scenario only; does not qualify unseen changes, workloads or machines",
+      "name": "algorithm",
+      "family": "bit-count",
+      "counter_proxy": {
+        "status": "uncertain",
+        "estimated_ratio": null,
+        "reference_cycles": {
+          "ratio": 0.11831190364164973,
+          "observed_range": [
+            0.11263394757038132,
+            0.12742660608424333
+          ],
+          "max_spread": 0.12503102442394057,
+          "pair_ratios": [
+            0.11626216880760717,
+            0.11263394757038132,
+            0.12563967512742533,
+            0.11831190364164973,
+            0.12742660608424333
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cycles": {
+          "ratio": 0.12243814708887144,
+          "observed_range": [
+            0.12228703271964185,
+            0.12262420472515873
+          ],
+          "max_spread": 0.0027538149958455335,
+          "pair_ratios": [
+            0.1224379204901914,
+            0.12243814708887144,
+            0.12228703271964185,
+            0.12262420472515873,
+            0.12261084713021259
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cpi_ratio": 0.8605494351758127,
+        "target_relative_error": 0.05,
+        "accuracy_validated": false,
+        "spread_limit": 0.03,
+        "meaning": "reference cycles per completed unit; CPU-bound same-hardware runtime proxy, excluding kernel work and time descheduled or waiting for I/O",
+        "range_meaning": "observed counter or paired-ratio range, not a runtime error bound or confidence interval"
+      },
+      "instruction_ratio": 0.1422790393268121,
+      "diagnostic_relative_error": 0.06149909461854719
+    },
+    {
+      "version": "juice-runtime-validation-v1",
+      "workload": "work",
+      "comparison_sha256": "286e3331284ad98ff9822d63c3cf6c81bede1b9e8759d591570f4a54b13b1be6",
+      "timing_sha256": "e263d9019ee29afccf4a47a775d1cb6354e0d280aa7f267aeedd7bea9247e915",
+      "passed": false,
+      "status": "uncertain",
+      "target_relative_error": 0.05,
+      "relative_error": null,
+      "instruction_relative_error": 0.7294152176956509,
+      "estimated_ratio": null,
+      "timing_ratio": 3.804379549502606,
+      "timing_ratios": {
+        "samples": [
+          3.7386645949045514,
+          3.56306293484017,
+          3.83795049581352,
+          3.7116692938488205,
+          3.8220005695663475,
+          3.804379549502606,
+          3.871809064684738,
+          3.8180309638725367,
+          3.7255779594554554
+        ],
+        "median": 3.804379549502606,
+        "min": 3.56306293484017,
+        "max": 3.871809064684738,
+        "spread": 0.08115544882605995
+      },
+      "timing_repeatable": false,
+      "missed_regression": false,
+      "false_alarm": false,
+      "scope": "this measured change and scenario only; does not qualify unseen changes, workloads or machines",
+      "name": "atomic",
+      "family": "synchronization",
+      "counter_proxy": {
+        "status": "uncertain",
+        "estimated_ratio": null,
+        "reference_cycles": {
+          "ratio": 3.925392279105936,
+          "observed_range": [
+            3.8327627725300566,
+            4.596260784620716
+          ],
+          "max_spread": 0.19450234723153756,
+          "pair_ratios": [
+            3.901991402469199,
+            4.011388103762963,
+            4.596260784620716,
+            3.925392279105936,
+            3.8327627725300566
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cycles": {
+          "ratio": 4.1604769991316575,
+          "observed_range": [
+            4.158491176806666,
+            4.16486903580083
+          ],
+          "max_spread": 0.001532963406718859,
+          "pair_ratios": [
+            4.1604769991316575,
+            4.158654364862442,
+            4.158491176806666,
+            4.161259223977272,
+            4.16486903580083
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cpi_ratio": 4.04162412374255,
+        "target_relative_error": 0.05,
+        "accuracy_validated": false,
+        "spread_limit": 0.03,
+        "meaning": "reference cycles per completed unit; CPU-bound same-hardware runtime proxy, excluding kernel work and time descheduled or waiting for I/O",
+        "range_meaning": "observed counter or paired-ratio range, not a runtime error bound or confidence interval"
+      },
+      "instruction_ratio": 1.0294072122052804,
+      "diagnostic_relative_error": 0.031808795108035914
+    },
+    {
+      "version": "juice-runtime-validation-v1",
+      "workload": "work",
+      "comparison_sha256": "b6f6272c082bd6924f53e8a646aa1f146c9138df07c861d1c6adc41b77da84b7",
+      "timing_sha256": "414ac432720082e6a497815e3e005b4dbb281b4a4f38e955c4cecc7f4291c0d7",
+      "passed": false,
+      "status": "uncertain",
+      "target_relative_error": 0.05,
+      "relative_error": null,
+      "instruction_relative_error": 0.04608665205161522,
+      "estimated_ratio": null,
+      "timing_ratio": 2.164744489699798,
+      "timing_ratios": {
+        "samples": [
+          2.1566799453019563,
+          2.0565645604183835,
+          2.2431728264946136,
+          2.2095215100775105,
+          2.066593525433695,
+          2.204433650125933,
+          2.164744489699798,
+          2.1685865043426498,
+          2.128040087248214
+        ],
+        "median": 2.164744489699798,
+        "min": 2.0565645604183835,
+        "max": 2.2431728264946136,
+        "spread": 0.08620336809454518
+      },
+      "timing_repeatable": false,
+      "missed_regression": false,
+      "false_alarm": false,
+      "scope": "this measured change and scenario only; does not qualify unseen changes, workloads or machines",
+      "name": "copy",
+      "family": "memory-copy",
+      "counter_proxy": {
+        "status": "uncertain",
+        "estimated_ratio": null,
+        "reference_cycles": {
+          "ratio": 2.1972226800234305,
+          "observed_range": [
+            2.0843498574928305,
+            2.218512083526495
+          ],
+          "max_spread": 0.06105991315920419,
+          "pair_ratios": [
+            2.199721878838036,
+            2.0843498574928305,
+            2.218512083526495,
+            2.1972226800234305,
+            2.1442343191403914
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cycles": {
+          "ratio": 2.1838245099146993,
+          "observed_range": [
+            2.1589914979511793,
+            2.2527053024385264
+          ],
+          "max_spread": 0.04291269928599144,
+          "pair_ratios": [
+            2.1783711265830163,
+            2.2527053024385264,
+            2.186453734741048,
+            2.1838245099146993,
+            2.1589914979511793
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cpi_ratio": 0.9643694221690561,
+        "target_relative_error": 0.05,
+        "accuracy_validated": false,
+        "spread_limit": 0.03,
+        "meaning": "reference cycles per completed unit; CPU-bound same-hardware runtime proxy, excluding kernel work and time descheduled or waiting for I/O",
+        "range_meaning": "observed counter or paired-ratio range, not a runtime error bound or confidence interval"
+      },
+      "instruction_ratio": 2.264510315777244,
+      "diagnostic_relative_error": 0.01500324425269084
+    },
+    {
+      "version": "juice-runtime-validation-v1",
+      "workload": "work",
+      "comparison_sha256": "2e3c087cb7fb9e17ce3c47989d5641453bcddcf7361bd4bf6da25e53d693d7dc",
+      "timing_sha256": "a823276d5e81331ffc38deae080ee76125e2472ed07ca7775d1d2931a7b170bf",
+      "passed": false,
+      "status": "uncertain",
+      "target_relative_error": 0.05,
+      "relative_error": null,
+      "instruction_relative_error": 0.09212518642221712,
+      "estimated_ratio": null,
+      "timing_ratio": 1.52260039357238,
+      "timing_ratios": {
+        "samples": [
+          1.52260039357238,
+          1.515135122932591,
+          1.4728735262843575,
+          1.404984544955171,
+          1.5073660296109086,
+          1.5521181688538284,
+          1.5708076726313174,
+          1.5392053215435424,
+          1.5496615572507568
+        ],
+        "median": 1.52260039357238,
+        "min": 1.404984544955171,
+        "max": 1.5708076726313174,
+        "spread": 0.10890784501052582
+      },
+      "timing_repeatable": false,
+      "missed_regression": false,
+      "false_alarm": false,
+      "scope": "this measured change and scenario only; does not qualify unseen changes, workloads or machines",
+      "name": "optimization",
+      "family": "compiler-flags",
+      "counter_proxy": {
+        "status": "uncertain",
+        "estimated_ratio": null,
+        "reference_cycles": {
+          "ratio": 1.5816849005238747,
+          "observed_range": [
+            1.528747757972528,
+            1.6172983820912814
+          ],
+          "max_spread": 0.0559849968153735,
+          "pair_ratios": [
+            1.6078860613787247,
+            1.528747757972528,
+            1.5816849005238747,
+            1.5558835352713127,
+            1.6172983820912814
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cycles": {
+          "ratio": 1.4998558087870513,
+          "observed_range": [
+            1.4991423240351198,
+            1.5020165863316393
+          ],
+          "max_spread": 0.001916359079106332,
+          "pair_ratios": [
+            1.5000823807915535,
+            1.5020165863316393,
+            1.4998558087870513,
+            1.4996148122270294,
+            1.4991423240351198
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cpi_ratio": 1.085019653164968,
+        "target_relative_error": 0.05,
+        "accuracy_validated": false,
+        "spread_limit": 0.03,
+        "meaning": "reference cycles per completed unit; CPU-bound same-hardware runtime proxy, excluding kernel work and time descheduled or waiting for I/O",
+        "range_meaning": "observed counter or paired-ratio range, not a runtime error bound or confidence interval"
+      },
+      "instruction_ratio": 1.3823305484679833,
+      "diagnostic_relative_error": 0.0388049991323518
+    },
+    {
+      "version": "juice-runtime-validation-v1",
+      "workload": "work",
+      "comparison_sha256": "d575fc62d66f4d416747f481633504ae72acf6dc2a46bb6c69a94e44629148af",
+      "timing_sha256": "f690a021f191ed47e1b5661e305f360031ca41ca99addccd8c5d4e957ba9e60c",
+      "passed": false,
+      "status": "uncertain",
+      "target_relative_error": 0.05,
+      "relative_error": null,
+      "instruction_relative_error": 0.0003414398292487242,
+      "estimated_ratio": null,
+      "timing_ratio": 2.260820702236019,
+      "timing_ratios": {
+        "samples": [
+          2.260820702236019,
+          2.227795265828254,
+          2.1928537520508553,
+          2.2885144699354263,
+          2.196354521759796,
+          2.251895922823143,
+          2.279268636279458,
+          2.315192173457978,
+          2.279664238347219
+        ],
+        "median": 2.260820702236019,
+        "min": 2.1928537520508553,
+        "max": 2.315192173457978,
+        "spread": 0.05411239435578693
+      },
+      "timing_repeatable": false,
+      "missed_regression": false,
+      "false_alarm": false,
+      "scope": "this measured change and scenario only; does not qualify unseen changes, workloads or machines",
+      "name": "large-copy",
+      "family": "memory-copy",
+      "counter_proxy": {
+        "status": "uncertain",
+        "estimated_ratio": null,
+        "reference_cycles": {
+          "ratio": 2.2695818163240467,
+          "observed_range": [
+            2.147177291918937,
+            2.361935579334299
+          ],
+          "max_spread": 0.09462460699618999,
+          "pair_ratios": [
+            2.2695818163240467,
+            2.34015848555559,
+            2.183484890039806,
+            2.147177291918937,
+            2.361935579334299
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cycles": {
+          "ratio": 2.2497959704935586,
+          "observed_range": [
+            2.2346560461136686,
+            2.292040070223778
+          ],
+          "max_spread": 0.025506323623435273,
+          "pair_ratios": [
+            2.245173514407697,
+            2.2497959704935586,
+            2.2346560461136686,
+            2.292040070223778,
+            2.2849614450932085
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cpi_ratio": 0.9947839121370142,
+        "target_relative_error": 0.05,
+        "accuracy_validated": false,
+        "spread_limit": 0.03,
+        "meaning": "reference cycles per completed unit; CPU-bound same-hardware runtime proxy, excluding kernel work and time descheduled or waiting for I/O",
+        "range_meaning": "observed counter or paired-ratio range, not a runtime error bound or confidence interval"
+      },
+      "instruction_ratio": 2.2615926364705525,
+      "diagnostic_relative_error": 0.003875191906798525
+    },
+    {
+      "version": "juice-runtime-validation-v1",
+      "workload": "work",
+      "comparison_sha256": "805e8aba91704b7e4ab4b651a47c5071e63bfeb6a87a5e81484ad7b63aaa02b8",
+      "timing_sha256": "342619b2c3a102717c573639c371b84c1ffdc0ac727dec33008ec3bc1ea81644",
+      "passed": false,
+      "status": "uncertain",
+      "target_relative_error": 0.05,
+      "relative_error": null,
+      "instruction_relative_error": 0.06562910345743622,
+      "estimated_ratio": null,
+      "timing_ratio": 1.0380518904456777,
+      "timing_ratios": {
+        "samples": [
+          1.0627167411629606,
+          1.0510369455908923,
+          1.0390735657041141,
+          1.0366414939025572,
+          0.9987495986057795,
+          1.0380518904456777,
+          1.0214937826734576,
+          1.0236173365357764,
+          1.0495533109155917
+        ],
+        "median": 1.0380518904456777,
+        "min": 0.9987495986057795,
+        "max": 1.0627167411629606,
+        "spread": 0.06162229763843248
+      },
+      "timing_repeatable": false,
+      "missed_regression": false,
+      "false_alarm": false,
+      "scope": "this measured change and scenario only; does not qualify unseen changes, workloads or machines",
+      "name": "wave3-tree",
+      "family": "tree-walk",
+      "counter_proxy": {
+        "status": "uncertain",
+        "estimated_ratio": null,
+        "reference_cycles": {
+          "ratio": 1.08278842337551,
+          "observed_range": [
+            0.9885387438204107,
+            1.1106212942792648
+          ],
+          "max_spread": 0.11274829673397418,
+          "pair_ratios": [
+            1.097678598191774,
+            1.1106212942792648,
+            0.9885387438204107,
+            1.08278842337551,
+            1.0488209495104643
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cycles": {
+          "ratio": 1.0573547034461745,
+          "observed_range": [
+            1.0453611424766862,
+            1.058207774358075
+          ],
+          "max_spread": 0.012149784589332607,
+          "pair_ratios": [
+            1.0573547034461745,
+            1.0453611424766862,
+            1.0554876148718606,
+            1.0573929278116907,
+            1.058207774358075
+          ],
+          "method": "median of alternating capture-pair ratios"
+        },
+        "cpi_ratio": 1.0901401419371242,
+        "target_relative_error": 0.05,
+        "accuracy_validated": false,
+        "spread_limit": 0.03,
+        "meaning": "reference cycles per completed unit; CPU-bound same-hardware runtime proxy, excluding kernel work and time descheduled or waiting for I/O",
+        "range_meaning": "observed counter or paired-ratio range, not a runtime error bound or confidence interval"
+      },
+      "instruction_ratio": 0.9699254755334311,
+      "diagnostic_relative_error": 0.04309662488127186
+    }
+  ],
+  "passed": 0,
+  "total": 7,
+  "uncertain": 7,
+  "diagnostic_median_relative_error": 0.0388049991323518,
+  "diagnostic_max_relative_error": 0.06817719048296711,
+  "compiler_sha256": "0f7249cc1e9dbf17f63e5696d1776fdb39a0e62a8ba5fae688a96fe3197c7201",
+  "source_suite_sha256": "90aba7c993fd5dd6bafdb6b31c0b362f8f0afda625e891e4a6332d19e785bb71",
+  "scope": "exploratory paired reanalysis of all observations, not held-out validation; diagnostic errors include uncertain cases"
+}

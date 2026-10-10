@@ -1,0 +1,80 @@
+build-slot: build slot 1, FIFO ticket 18 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 229ad2f6a0040ccea27d314b27524ffb3285d6f2: 6/616 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 16 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 97 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 229ad2f6a0040ccea27d314b27524ffb3285d6f2, 6 file(s) in scope
+test-core
++- run test w
+guardian/test: 7 test(s) selected
+guardian/test: test wall 1.17s; slowest over 50ms:
+guardian/test:   1.03s  juice.tests.test.Juice native captureImpl retains failed builds and refuses record overwrite
+guardian/test:   0.09s  juice.tests.test.Juice SHA256 covers empty short and final partial streaming buffers
+guardian/test: PASS — 7 passed
+guardian/test: RESULT {"passed":7,"failed":0,"skipped":0}
+failed command: ./.zig-cache-juice/o/90e29c933174f639518d1bfdb3f4d43e/test --cache-dir=./.zig-cache-juice --seed=0xf58268af --listen=-
+
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.105s
+
+OK
+test-juice
++- python3 tests/test_juice.py w
+.............................juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+..juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+..juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+.
+----------------------------------------------------------------------
+Ran 38 tests in 0.716s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_juice.py
+
+test-juice
++- python3 tests/test_juice_native.py w
+................
+----------------------------------------------------------------------
+Ran 16 tests in 1.619s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_juice_native.py ./zig-out/bin/mylang
+
+Build Summary: 19/19 steps succeeded; 7/7 tests passed
+test-core success
++- run test 7 pass (7 total) 1s MaxRSS:7M
+   +- compile test debug native success 396ms MaxRSS:200M
+      +- run exe build-identity (build_identity) success 30ms
+      |  +- compile exe build-identity debug native cached 8ms MaxRSS:38M
+      +- options success
+      |  +- compile exe mylang debug native success 3s MaxRSS:532M
+      |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+      |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 8ms MaxRSS:40M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+test-juice success
++- python3 tests/test_juice.py success 773ms
+|  +- install success
+|  |  +- install mylang success
+|  |  |  +- compile exe mylang debug native (+2 more reused dependencies)
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 198ms
+|  +- record the test environment success 4ms
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- python3 tests/test_juice_native.py success 1s
+|  +- install (+2 more reused dependencies)
+|  +- hash declared test inputs (reused)
+|  +- record the test environment (reused)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
+|  +- compile exe mylang debug native (+2 more reused dependencies)
++- run python3 success 160ms
+   +- install (+2 more reused dependencies)

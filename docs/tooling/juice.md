@@ -6,7 +6,7 @@ Juice compares **instructions per completed application unit**, with baseline
 generated code, source attribution and repeat variability help explain the
 result. Ordinary use needs neither an idle machine nor a full production run.
 
-Juice is built into the installed compiler: `mylang juice --help`. All six
+Juice is built into the installed compiler: `mylang juice --help`. All seven
 commands run native Zig code; no Python interpreter, repository checkout or
 companion script is needed. It supports generic native programs and mylang
 applications. Capture currently requires Linux x86_64, a build toolchain and
@@ -14,6 +14,120 @@ applications. Capture currently requires Linux x86_64, a build toolchain and
 loaded libraries. Comparing, validating and calibrating saved JSON needs only
 the compiler binary. The original `scripts/juice` Python tool remains a developer
 reference for differential tests, not an installed dependency.
+
+## Runtime proxy and the 5% target
+
+`record --profile runtime` adds a separate CPU runtime proxy. The default
+`work` profile and baseline-100 instruction score retain their existing meaning.
+The runtime profile requires Linux perf and collects a simultaneous group of
+user-mode instructions, cycles and reference cycles on the selected CPU. All
+three events must be positive, occur exactly once and report 100% running with
+`--no-scale`; missing or multiplexed events leave an incomplete record. Hardware
+that cannot supply the complete group cannot use this profile.
+
+Ordinary cycles capture the cost of instruction mix, stalls and memory access.
+Reference cycles run at a fixed reference frequency while the process executes,
+which makes their ratio a useful first estimate of CPU-bound elapsed time even
+when the core frequency changes. See Intel's
+[reference-cycle definition](https://perfmon-events.intel.com/platforms/haswell/core-events/core/).
+The report includes both ratios and the change in cycles per instruction (CPI).
+It does not add separate stall or allocation penalties on top of cycles.
+
+The estimate is candidate reference cycles per completed unit divided by the
+baseline's. Both captures must have matching contexts and contracts. For independent captures, a spread
+above 3% in either arm suppresses the estimate. For explicitly paired captures,
+Juice uses the median of candidate/baseline ratios and applies the same 3% limit
+to those ratios, so shared drift need not cause an automatic abstention. Both
+arms must name the same pairing session and have at least five complete,
+equal-sized groups; pairing is never inferred from unrelated records. A stable estimate still has
+`accuracy_validated: false`: the **5% relative error is a target, not an error
+bound**. Repeat ranges are observations, not confidence intervals. User-mode
+counters exclude kernel work, descheduling and I/O waits; different machines,
+contention, changed working sets and very short programs need separate checks.
+
+```bash
+mylang juice doctor --profile runtime --cpu 10
+# Use the same cache, CPU and profile for both captures; choose representative work.
+scripts/build-slot.sh build mylang juice record app/juice.toml \
+  --name before --profile runtime --cpu 10 --repeats 9
+# Build/capture the candidate, then compare its record with before/record.json.
+mylang juice validate-runtime comparison.json timing.json --output validation.json
+```
+
+`timing.json` uses the existing `juice-timing-evidence-v1` format: `base_id`,
+`candidate_id` and `context_id` copied from the comparison, a `workload` name,
+a nonempty `method`, and `pairs` of `[baseline_seconds, candidate_seconds]`.
+Use at least five independent, alternating baseline/candidate executions of
+the exact compared artifacts, on the same CPU, inputs, environment and scope.
+Do not use the collector's `wall_seconds` as timing evidence. The caller is
+responsible for the timing method; the validator checks identities, positive
+finite durations, repeatability and the fixed target. It returns 0 only when
+`abs(estimated_ratio / measured_ratio - 1) <= 0.05` and the estimate and timings
+are repeatable. It returns 1 for outside-target or uncertain results, and 2 for
+invalid evidence. A pass applies to that measured case only.
+
+The developer driver `scripts/juice_runtime_bench.py` runs this process on a
+declared suite of prebuilt executable pairs. It verifies SHA-256 identities,
+alternates counter captures, records scheduling/frequency policy, reuses cached
+builds, retains original and aggregated
+records, checks output oracles on every execution, and measures elapsed time in
+separate alternating runs. It takes a nonblocking shared runtime timing lock, so
+a busy timing runner produces an immediate error. Example:
+
+```bash
+python3 scripts/juice_runtime_bench.py suite.json --compiler /path/to/mylang \
+  --cpu 10 --output /new/evidence/directory
+```
+
+The suite's `cases` each contain `name`, `family`, `base` and `candidate` objects
+with absolute `binary` paths and `sha256`, an `args` array and `expected_stdout`.
+Optional `stdout_regex` follows the manifest's single-group normalization;
+`units` defaults to one. This driver currently handles standalone executables
+without external input files. It uses five alternating counter pairs (two
+samples per arm per pair), nine independent timing pairs, and one discarded
+warmup pair per phase. All failed or uncertain cases remain in the results.
+
+For eventual merge screening, use short scenarios that preserve production
+working sets and algorithm boundaries. Use independent longer runs on nightly
+builds to test new changes and families and track error, missed regressions,
+false alarms and abstentions. Until that held-out evidence exists, the runtime
+proxy is advisory. `--fail-above` remains an instruction-work gate; it does not
+certify runtime performance. No recurring job is installed by these commands.
+
+### Initial evaluation (2026-10-10)
+
+The [retained experiment](../../experiments/juice-runtime-proxy-20261010/method.json)
+contains seven selected changes: an identical build, bit-count optimization,
+added atomics, copying at two working-set sizes, disabled compiler optimization,
+and the preserved Wave 3 tree regression. It uses five alternating counter pairs
+and nine independent elapsed-time pairs per case on CPU 10 of an i7-12700H.
+The first shared-host run was uncertain in all seven cases.
+
+A follow-up used a faster capture executable and a process-local utilization
+clamp (`uclampset -m 1024 -M 1024`); no global frequency settings changed. Paired
+aggregation was added after seeing the initial drift, so this remains exploratory
+analysis, **not held-out validation**. All observations remain in the archive.
+The diagnostic median error was 2.86%, with maximum 4.23%, but only two cases met
+both the accuracy target and repeatability rules:
+
+| Case | Diagnostic relative error | Validation |
+|---|---:|---|
+| Identical executable | 0.29% | Within target |
+| Bit-count optimization | 3.57% | Within target |
+| Added atomics | 2.86% | Uncertain |
+| Added copying | 0.95% | Uncertain |
+| Disabled optimization | 4.23% | Uncertain |
+| Larger copying working set | 2.88% | Uncertain |
+| Wave 3 tree regression | 0.73% | Uncertain |
+
+Diagnostic errors include unstable point estimates; they are not accepted accuracy
+claims. [Full results](../../experiments/juice-runtime-proxy-20261010/results-02.json)
+retain the counter and timing spreads and every validation verdict. The fixed
+5% target is promising on these cases, but **not established as a reliable merge
+gate**. A 5% prediction-error budget also cannot reliably enforce a 3%
+regression limit. The next qualification needs stable independent timings and unseen changes
+and workload families, including memory pressure, system calls, concurrency and
+I/O. Broad runtime checks remain necessary until that evidence exists.
 
 ## First comparison
 
