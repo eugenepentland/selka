@@ -1,0 +1,365 @@
+import full_model
+import full_values
+import full_migration_types
+import syntax_problem
+import syntax_recovery
+import syntax_value
+
+func repair(mut p: full_model.State, start: int, end: int, text: bytes, message: str) -> bool fails syntax_value.Problem:
+    const issue = syntax_value.Problem(code="E_FRONTEND_VARIANT", start=start, end=end, message=message)
+    const edit = syntax_problem.Edit(start=start, end=end, text=text)
+    _ = try syntax_recovery.annotated(mut p, syntax_problem.repaired(issue, [edit]))
+    return True
+
+
+func nominal(p: full_model.State, span: full_model.Token) -> int:
+    const original = full_values.text(p, span)
+    mut end = len(original)
+    for index in range(len(original)):
+        if original[index] == 91:
+            end = index
+            break
+    mut start = 0
+    while start < end and (original[start] == 32 or original[start] == 9 or original[start] == 10 or original[start] == 13):
+        start = start + 1
+    while end > start and (original[end - 1] == 32 or original[end - 1] == 9 or original[end - 1] == 10 or original[end - 1] == 13):
+        end = end - 1
+    const base = original[start:end]
+    for variant in p.catalog.types.variants:
+        const name = full_values.span(p, full_values.field(p, variant, "name"))
+        if base == full_values.text(p, name):
+            return variant
+    return -1
+
+
+func case_of(p: full_model.State, variant: int, name: full_model.Token) -> int:
+    for value in full_values.items(p, full_values.field(p, variant, "cases")):
+        if full_values.text(p, full_values.span(p, full_values.field(p, value, "name"))) == full_values.text(p, name):
+            return value
+    return -1
+
+
+func declaration_end(p: full_model.State, name: full_model.Token) -> int:
+    for index in range(len(p.tokens)):
+        if p.tokens[index].start != name.start:
+            continue
+        mut depth = 0
+        mut at = index
+        while p.tokens[at].kind != "eof":
+            const kind = p.tokens[at].kind
+            at = at + 1
+            if kind == "indent" or kind == "lbrace" or kind == "lparen" or kind == "lbracket":
+                depth = depth + 1
+            elif kind == "dedent" or kind == "rbrace" or kind == "rparen" or kind == "rbracket":
+                if depth > 0:
+                    depth = depth - 1
+                if kind == "dedent" and depth == 0:
+                    return p.tokens[at].start
+            elif kind == "semicolon" and depth == 0:
+                return p.tokens[at].start
+        return p.tokens[at].start
+    return len(p.source)
+
+
+func case_indent(p: full_model.State, cases: int[]) -> bytes:
+    if len(cases) == 0:
+        return b"    "
+    const start = full_values.span(p, full_values.field(p, cases[0], "name")).start
+    mut line = 0
+    for index in range(start):
+        if p.source[index] == 10:
+            line = index + 1
+    return p.source[line:start]
+
+
+func case_commas(mut p: full_model.State, start: int, end: int, indent: bytes) -> bool fails syntax_value.Problem:
+    mut depth = 0
+    for index in range(len(p.tokens)):
+        const t = p.tokens[index]
+        if t.start < start or t.start >= end:
+            continue
+        if t.kind == "lparen" or t.kind == "lbracket" or t.kind == "lbrace":
+            depth = depth + 1
+        elif t.kind == "rparen" or t.kind == "rbracket" or t.kind == "rbrace":
+            if depth > 0:
+                depth = depth - 1
+        elif t.kind == "comma" and depth == 0:
+            const next = p.tokens[index + 1]
+            const gap = p.source[t.end:next.start]
+            if next.start == end and not full_values.contains(gap, b"\n") and next.kind == "ident":
+                const text = full_migration_types.join([b"\n", indent])
+                _ = try repair(mut p, t.start, next.start, text, "put each enum case on its own line")
+            else:
+                _ = try repair(mut p, t.start, t.end, b"", "enum cases end at newlines")
+    return True
+
+
+func declarations(mut p: full_model.State) -> bool fails syntax_value.Problem:
+    for variant in p.catalog.types.variants:
+        if full_values.flag(p, full_values.field(p, variant, "fallible")):
+            continue
+        const name = full_values.span(p, full_values.field(p, variant, "name"))
+        for index in range(len(p.tokens) - 1):
+            const t = p.tokens[index]
+            if t.kind == "kw_union" and p.tokens[index + 1].start == name.start:
+                _ = try repair(mut p, t.start, t.end, b"enum", "declare all non-result variants with `enum`")
+        const cases = full_values.items(p, full_values.field(p, variant, "cases"))
+        for index in range(len(cases)):
+            const value = cases[index]
+            const case_name = full_values.span(p, full_values.field(p, value, "name"))
+            const payload = full_values.field(p, value, "payload")
+            if not full_values.absent(p, payload):
+                const payload_span = full_values.span(p, payload)
+                const rendered = try full_migration_types.render(p, payload_span)
+                const text = full_migration_types.join([b"(value: ", rendered, b")"])
+                _ = try repair(mut p, case_name.end, payload_span.end, text, "declare a variant payload as a named field")
+            mut end = declaration_end(p, name)
+            if index + 1 < len(cases):
+                end = full_values.span(p, full_values.field(p, cases[index + 1], "name")).start
+            _ = try case_commas(mut p, case_name.end, end, case_indent(p, cases))
+    return True
+
+
+func field_name(p: full_model.State, value: int, index: int) -> bytes:
+    if not full_values.absent(p, full_values.field(p, value, "payload")):
+        if index == 0:
+            return b"value"
+        return b""
+    const fields = full_values.items(p, full_values.field(p, value, "fields"))
+    if index >= len(fields):
+        return b""
+    return full_values.text(p, full_values.span(p, full_values.field(p, fields[index], "name")))
+
+
+func arguments(mut p: full_model.State, value: int, values: int[], names: int[]) -> bool fails syntax_value.Problem:
+    for index in range(len(values)):
+        if index < len(names) and not full_values.absent(p, names[index]):
+            continue
+        const label = field_name(p, value, index)
+        if len(label) == 0:
+            continue
+        const span = full_values.node_span(p, full_values.integer(p, values[index]))
+        const text = full_migration_types.join([label, b"="])
+        _ = try repair(mut p, span.start, span.start, text, "name the enum payload field at its construction")
+    return True
+
+
+func function_at(p: full_model.State, point: int) -> int:
+    for function in p.catalog.functions:
+        const body = full_values.statement_span(p, full_values.integer(p, full_values.field(p, function, "body")))
+        if point >= body.start and point < body.end:
+            return function
+    return -1
+
+
+func visible(p: full_model.State, declaration: int, use: int) -> bool:
+    mut start = -1
+    mut end = -1
+    for index in range(len(p.stmts)):
+        const span = full_values.statement_span(p, index)
+        if full_values.tag(p, full_values.statement_data(p, index)) != b"block" or declaration < span.start or declaration >= span.end:
+            continue
+        if start < 0 or span.end - span.start < end - start:
+            start = span.start
+            end = span.end
+    return start >= 0 and use >= start and use < end
+
+
+func local_type(p: full_model.State, name: full_model.Token, point: int, presence: bool) -> int:
+    const function = function_at(p, point)
+    if function < 0:
+        return -1
+    const signature = full_values.field(p, function, "signature")
+    for parameter in full_values.items(p, full_values.field(p, signature, "parameters")):
+        if full_values.text(p, full_values.span(p, full_values.field(p, parameter, "name"))) == full_values.text(p, name):
+            return full_values.field(p, parameter, "ty")
+    const function_start = full_values.span(p, full_values.field(p, function, "name")).start
+    for index in range(len(p.stmts)):
+        const span = full_values.statement_span(p, index)
+        if span.start >= point or span.start < function_start:
+            continue
+        const data = full_values.statement_data(p, index)
+        const value = full_values.payload(p, data)
+        if full_values.tag(p, data) != b"assignment" and full_values.tag(p, data) != b"binding":
+            continue
+        const value_name = full_values.field(p, value, "name")
+        if full_values.text(p, full_values.span(p, value_name)) != full_values.text(p, name) or not visible(p, span.start, point):
+            continue
+        if presence:
+            return value_name
+        if full_values.tag(p, data) == b"binding":
+            const annotation = full_values.field(p, value, "annotation")
+            if not full_values.absent(p, annotation):
+                return annotation
+        return value_type(p, full_values.integer(p, full_values.field(p, value, "value")), span.start, 1)
+    return -1
+
+
+func call_type(p: full_model.State, call: int) -> int:
+    const owner = full_values.field(p, call, "owner")
+    if not full_values.absent(p, owner) and nominal(p, full_values.span(p, owner)) >= 0:
+        return owner
+    for function in p.catalog.functions:
+        if full_values.absent(p, owner) and full_values.text(p, full_values.span(p, full_values.field(p, function, "name"))) == full_values.text(p, full_values.span(p, full_values.field(p, call, "name"))):
+            const signature = full_values.field(p, function, "signature")
+            return full_values.field(p, signature, "return_type")
+    return -1
+
+
+func value_type(p: full_model.State, id: int, point: int, depth: int) -> int:
+    if depth > 32:
+        return -1
+    const data = full_values.node_data(p, id)
+    const value = full_values.payload(p, data)
+    const tag = full_values.tag(p, data)
+    if tag == b"name":
+        return local_type(p, full_values.span(p, value), point, False)
+    if tag == b"propagate":
+        return value_type(p, full_values.integer(p, value), point, depth + 1)
+    if tag == b"call":
+        return call_type(p, value)
+    if tag == b"variant":
+        return full_values.field(p, value, "ty")
+    return -1
+
+
+func expected_type(p: full_model.State, span: full_model.Token) -> int:
+    for index in range(len(p.stmts)):
+        const data = full_values.statement_data(p, index)
+        const value = full_values.payload(p, data)
+        mut node = -1
+        if full_values.tag(p, data) == b"binding":
+            node = full_values.integer(p, full_values.field(p, value, "value"))
+        elif full_values.tag(p, data) == b"ret":
+            node = full_values.integer(p, value)
+        if node < 0:
+            continue
+        const other = full_values.node_span(p, node)
+        if span.start != other.start or span.end != other.end:
+            continue
+        if full_values.tag(p, data) == b"binding":
+            const annotation = full_values.field(p, value, "annotation")
+            if full_values.absent(p, annotation):
+                return -1
+            return annotation
+        const function = function_at(p, span.start)
+        if function < 0:
+            return -1
+        return full_values.field(p, full_values.field(p, function, "signature"), "return_type")
+    return -1
+
+
+func constructor(mut p: full_model.State, id: int) -> bool fails syntax_value.Problem:
+    const data = full_values.node_data(p, id)
+    const value = full_values.payload(p, data)
+    const span = full_values.node_span(p, id)
+    mut owner = -1
+    const tag = full_values.tag(p, data)
+    if tag == b"call":
+        owner = full_values.field(p, value, "owner")
+        if not full_values.absent(p, owner):
+            if local_type(p, full_values.span(p, owner), span.start, True) >= 0:
+                return False
+        else:
+            owner = expected_type(p, span)
+    elif tag == b"method_call":
+        const base = full_values.integer(p, full_values.field(p, value, "base"))
+        const base_data = full_values.node_data(p, base)
+        if full_values.tag(p, base_data) != b"name":
+            return False
+        owner = full_values.payload(p, base_data)
+        if local_type(p, full_values.span(p, owner), span.start, True) >= 0:
+            return False
+    elif tag == b"variant":
+        owner = full_values.field(p, value, "ty")
+    else:
+        return False
+    if owner < 0:
+        return False
+    const variant = nominal(p, full_values.span(p, owner))
+    if variant < 0 or full_values.flag(p, full_values.field(p, variant, "fallible")):
+        return False
+    const selected = case_of(p, variant, full_values.span(p, full_values.field(p, value, "name")))
+    if selected < 0:
+        return False
+    if tag == b"variant":
+        const single = full_values.field(p, value, "value")
+        if not full_values.absent(p, single):
+            _ = try arguments(mut p, selected, [single], [])
+        _ = try arguments(mut p, selected, full_values.items(p, full_values.field(p, value, "values")), full_values.items(p, full_values.field(p, value, "value_names")))
+    else:
+        _ = try arguments(mut p, selected, full_values.items(p, full_values.field(p, value, "arguments")), full_values.items(p, full_values.field(p, value, "argument_names")))
+    return True
+
+
+func pattern_fields(mut p: full_model.State, value: int, fields: int[]) -> bool fails syntax_value.Problem:
+    for index in range(len(fields)):
+        const field = fields[index]
+        if not full_values.absent(p, full_values.field(p, field, "name")):
+            continue
+        const label = field_name(p, value, index)
+        if len(label) == 0:
+            continue
+        const pattern = full_values.field(p, field, "pattern")
+        const span = full_values.span(p, full_values.field(p, pattern, "span"))
+        const text = full_migration_types.join([label, b"="])
+        _ = try repair(mut p, span.start, span.start, text, "name the enum field bound by this pattern")
+    return True
+
+
+func nested_pattern(mut p: full_model.State, pattern: int) -> bool fails syntax_value.Problem:
+    const data = full_values.field(p, pattern, "data")
+    if full_values.tag(p, data) != b"variant":
+        return False
+    const value = full_values.payload(p, data)
+    const variant = nominal(p, full_values.span(p, full_values.field(p, value, "ty")))
+    if variant < 0:
+        return False
+    const selected = case_of(p, variant, full_values.span(p, full_values.field(p, value, "name")))
+    if selected < 0:
+        return False
+    const fields = full_values.items(p, full_values.field(p, value, "fields"))
+    if not full_values.flag(p, full_values.field(p, variant, "fallible")):
+        _ = try pattern_fields(mut p, selected, fields)
+    for field in fields:
+        _ = try nested_pattern(mut p, full_values.field(p, field, "pattern"))
+    return True
+
+
+func arms(mut p: full_model.State, matched: int, cases: int[]) -> bool fails syntax_value.Problem:
+    const expected = value_type(p, matched, full_values.node_span(p, matched).start, 0)
+    for arm in cases:
+        const fields = full_values.items(p, full_values.field(p, arm, "payload_patterns"))
+        for field in fields:
+            _ = try nested_pattern(mut p, full_values.field(p, field, "pattern"))
+        mut owner = full_values.field(p, arm, "ty")
+        const span = full_values.span(p, owner)
+        if span.start == span.end:
+            owner = expected
+        if owner < 0:
+            continue
+        const variant = nominal(p, full_values.span(p, owner))
+        if variant < 0:
+            continue
+        const selected = case_of(p, variant, full_values.span(p, full_values.field(p, arm, "name")))
+        if selected >= 0 and not full_values.flag(p, full_values.field(p, variant, "fallible")):
+            _ = try pattern_fields(mut p, selected, fields)
+    return True
+
+
+public func publish(mut p: full_model.State) -> bool fails syntax_value.Problem:
+    const before = len(p.catalog.problems)
+    _ = try declarations(mut p)
+    for index in range(len(p.exprs)):
+        _ = try constructor(mut p, index)
+    for index in range(len(p.stmts)):
+        const data = full_values.statement_data(p, index)
+        if full_values.tag(p, data) == b"match":
+            const value = full_values.payload(p, data)
+            _ = try arms(mut p, full_values.integer(p, full_values.field(p, value, "value")), full_values.items(p, full_values.field(p, value, "arms")))
+    for index in range(len(p.exprs)):
+        const data = full_values.node_data(p, index)
+        if full_values.tag(p, data) == b"match_expression":
+            const value = full_values.payload(p, data)
+            _ = try arms(mut p, full_values.integer(p, full_values.field(p, value, "value")), full_values.items(p, full_values.field(p, value, "arms")))
+    return len(p.catalog.problems) != before

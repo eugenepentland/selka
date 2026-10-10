@@ -1,0 +1,57 @@
+import full_model
+import full_migration_types
+import full_migration_expressions
+import full_migration_variants
+import lexer
+import source
+import syntax_value
+import type_parser
+
+func state(raw: bytes) -> full_model.State fails syntax_value.Problem:
+    mut tokens: full_model.Token[] = []
+    match lexer.lex(source.make(raw)):
+        case Ok(items):
+            for item in items:
+                tokens.append(full_model.Token(kind=item.kind, start=item.start, end=item.end))
+        case Err(problem):
+            fail syntax_value.Problem(code=problem.code, start=problem.start, end=problem.end, message=problem.message)
+    return full_model.State(tokens=tokens, source=raw, cursor=full_model.Cursor(pos=0, depth=0, delimiters=0, module_syntax=False, trusted_intrinsics=False, path=b"migration_tests.my"), pool=syntax_value.empty(), exprs=[], stmts=[], catalog=full_model.empty_catalog())
+
+
+public func test_migration_nested_type_render() -> bool fails syntax_value.Problem:
+    mut p = try state(b"list[Option[None]]")
+    const id = try type_parser.type_name(mut p)
+    const rendered = try full_migration_types.render(p, id)
+    return rendered == b"Unit?[]"
+
+
+public func test_migration_semicolon_exact_edit() -> bool fails syntax_value.Problem:
+    mut p = try state(b"a; b\n")
+    _ = try full_migration_expressions.publish(mut p)
+    if len(p.catalog.problems) != 1:
+        return False
+    const issue = p.catalog.problems[0]
+    return issue.problem.code == "E_FRONTEND_EXPRESSION" and issue.problem.start == 1 and issue.problem.end == 3 and issue.notes.edits[0].text == b"\n"
+
+
+public func test_migration_trailing_semicolon_empty_edit() -> bool fails syntax_value.Problem:
+    mut p = try state(b"a;\n")
+    _ = try full_migration_expressions.publish(mut p)
+    if len(p.catalog.problems) != 1:
+        return False
+    return p.catalog.problems[0].notes.edits[0].text == b"" and p.catalog.problems[0].problem.end == 2
+
+
+public func test_migration_raw_unicode_replacement_join() -> bool:
+    return full_migration_types.join([b"[for x in xs yield ", b"\xc3\xa9", b"]"]) == b"[for x in xs yield \xc3\xa9]"
+
+
+public func test_migration_no_guess_for_unresolved_variant() -> bool fails syntax_value.Problem:
+    mut p = try state(b"Imported.C(1)")
+    const name = try syntax_value.span(mut p.pool, 9, 10)
+    const owner = try syntax_value.span(mut p.pool, 0, 8)
+    const empty = try syntax_value.sequence(mut p.pool, [])
+    const payload = try syntax_value.object(mut p.pool, ["argument_names", "evaluation_order", "owner", "type_arguments", "name", "arguments"], [empty, empty, owner, empty, name, empty])
+    _ = try full_model.node(mut p, 0, 13, b"call", payload)
+    _ = try full_migration_variants.publish(mut p)
+    return len(p.catalog.problems) == 0

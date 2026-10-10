@@ -1,0 +1,81 @@
+import full_model
+import full_values
+import syntax_value
+
+public func join(parts: bytes[]) -> bytes:
+    mut size = 0
+    for part in parts:
+        size = size + len(part)
+    mut out = byte_buffer([])
+    _ = out.reserve(size)
+    for part in parts:
+        _ = out.append_range(part, 0, len(part))
+    return bytes(out)
+
+
+public func text(p: full_model.State, span: full_model.Token) -> bytes:
+    return p.source[span.start:span.end]
+
+
+func same(a: full_model.Token, b: full_model.Token) -> bool:
+    return a.start == b.start and a.end == b.end
+
+
+public func render(p: full_model.State, location: full_model.Token) -> bytes fails syntax_value.Problem:
+    return try render_inner(p, location, 0)
+
+
+func render_inner(p: full_model.State, location: full_model.Token, depth: int) -> bytes fails syntax_value.Problem:
+    if depth > 256:
+        fail full_model.problem(location, "P_SYNTAX_LIMIT", "P_SYNTAX_LIMIT")
+    const original = text(p, location)
+    if original == b"None":
+        return b"Unit"
+    for value in p.catalog.types.expressions.suffixes:
+        if not same(full_values.span(p, full_values.field(p, value, "span")), location):
+            continue
+        const base_span = full_values.span(p, full_values.field(p, value, "base"))
+        const base = try render_inner(p, base_span, depth + 1)
+        if base == text(p, base_span):
+            return original
+        mut suffix = b"?"
+        if p.pool.values[full_values.field(p, value, "kind")].data == b"growable":
+            suffix = b"[]"
+        return join([base, suffix])
+    for value in p.catalog.types.expressions.arrays:
+        if not same(full_values.span(p, full_values.field(p, value, "span")), location):
+            continue
+        const index = full_values.field(p, value, "index")
+        if full_values.tag(p, index) != b"length":
+            return original
+        const length = full_values.span(p, full_values.payload(p, index))
+        const element_span = full_values.span(p, full_values.field(p, value, "element"))
+        const element = try render_inner(p, element_span, depth + 1)
+        if len(original) > 0 and original[0] != 91 and element == text(p, element_span):
+            return original
+        return join([b"FixedArray[", element, b", ", text(p, length), b"]"])
+    for value in p.catalog.types.expressions.applications:
+        if not same(full_values.span(p, full_values.field(p, value, "span")), location):
+            continue
+        const name = text(p, full_values.span(p, full_values.field(p, value, "name")))
+        const arguments = p.pool.values[full_values.field(p, value, "arguments")].children
+        if len(arguments) == 1 and (name == b"list" or name == b"Option"):
+            const element = try render_inner(p, full_values.span(p, arguments[0]), depth + 1)
+            mut suffix = b"?"
+            if name == b"list":
+                suffix = b"[]"
+            return join([element, suffix])
+        mut parts: bytes[] = [name, b"["]
+        mut changed = False
+        for index in range(len(arguments)):
+            if index != 0:
+                parts.append(b", ")
+            const argument = full_values.span(p, arguments[index])
+            const rendered = try render_inner(p, argument, depth + 1)
+            changed = changed or rendered != text(p, argument)
+            parts.append(rendered)
+        parts.append(b"]")
+        if not changed:
+            return original
+        return join(parts)
+    return original

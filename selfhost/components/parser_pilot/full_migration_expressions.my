@@ -1,0 +1,204 @@
+import full_model
+import full_values
+import full_migration_types
+import syntax_problem
+import syntax_recovery
+import syntax_value
+
+record SourceText:
+    found: bool
+    data: bytes
+
+
+func repair(mut p: full_model.State, span: full_model.Token, text: bytes, message: str) -> bool fails syntax_value.Problem:
+    const issue = full_model.problem(span, "E_FRONTEND_EXPRESSION", message)
+    const edit = syntax_problem.Edit(start=span.start, end=span.end, text=text)
+    _ = try syntax_recovery.annotated(mut p, syntax_problem.repaired(issue, [edit]))
+    return True
+
+
+func reject(mut p: full_model.State, span: full_model.Token, message: str) -> bool fails syntax_value.Problem:
+    const issue = full_model.problem(span, "E_FRONTEND_EXPRESSION", message)
+    _ = try syntax_recovery.annotated(mut p, syntax_problem.plain(issue))
+    return True
+
+
+func source_first(p: full_model.State, span: full_model.Token) -> bool:
+    for index in range(len(p.tokens)):
+        const t = p.tokens[index]
+        if t.start == span.start:
+            return t.kind == "lbracket" and index + 1 < len(p.tokens) and p.tokens[index + 1].kind == "kw_for"
+    return False
+
+
+func nested_legacy(p: full_model.State, span: full_model.Token) -> bool:
+    for index in range(len(p.exprs)):
+        const other = full_values.node_span(p, index)
+        if other.start <= span.start or other.end >= span.end:
+            continue
+        const data = full_values.node_data(p, index)
+        const tag = full_values.tag(p, data)
+        const value = full_values.payload(p, data)
+        if tag == b"comprehension" and not full_values.flag(p, full_values.field(p, value, "set")) and not source_first(p, other):
+            return True
+        if tag == b"gather" and full_values.octets(p, full_values.field(p, value, "shape")) == b"list" and not source_first(p, other):
+            return True
+    return False
+
+
+func has_comments(p: full_model.State, span: full_model.Token) -> bool:
+    mut cursor = span.start
+    for t in p.tokens:
+        if t.start < span.start or t.end > span.end:
+            continue
+        if full_values.contains(p.source[cursor:t.start], b"#"):
+            return True
+        cursor = t.end
+    return False
+
+
+func trim(data: bytes) -> bytes:
+    mut start = 0
+    mut end = len(data)
+    while start < end and (data[start] == 32 or data[start] == 9 or data[start] == 10 or data[start] == 13):
+        start = start + 1
+    while end > start and (data[end - 1] == 32 or data[end - 1] == 9 or data[end - 1] == 10 or data[end - 1] == 13):
+        end = end - 1
+    return data[start:end]
+
+
+func source_text(p: full_model.State, span: full_model.Token, name: full_model.Token) -> SourceText:
+    mut start = -1
+    mut depth = 0
+    for index in range(len(p.tokens)):
+        const t = p.tokens[index]
+        if t.start < name.end or t.start >= span.end:
+            continue
+        if start < 0:
+            if t.kind == "kw_in" and index + 1 < len(p.tokens):
+                start = p.tokens[index + 1].start
+            continue
+        if depth == 0 and (t.kind == "kw_if" or t.kind == "kw_for" or t.kind == "rbracket"):
+            return SourceText(found=True, data=trim(p.source[start:t.start]))
+        if t.kind == "lparen" or t.kind == "lbracket" or t.kind == "lbrace":
+            depth = depth + 1
+        elif (t.kind == "rparen" or t.kind == "rbracket" or t.kind == "rbrace") and depth > 0:
+            depth = depth - 1
+    return SourceText(found=False, data=b"")
+
+
+func comprehension(mut p: full_model.State, span: full_model.Token, name: full_model.Token, output: int, filters: int[], input: int) -> bool fails syntax_value.Problem:
+    if nested_legacy(p, span):
+        return False
+    if has_comments(p, span):
+        return try reject(mut p, span, "rewrite this comprehension in source-first order while preserving its comments")
+    mut source = b""
+    if input >= 0:
+        source = full_values.text(p, full_values.node_span(p, input))
+    else:
+        const original = source_text(p, span, name)
+        if not original.found:
+            return try reject(mut p, span, "rewrite the comprehension as `[for name in source yield value]`")
+        source = original.data
+    mut parts: bytes[] = [b"[for ", full_values.text(p, name), b" in ", source]
+    if len(filters) > 0:
+        parts.append(b" if ")
+    for index in range(len(filters)):
+        if index != 0:
+            parts.append(b" and ")
+        if len(filters) > 1:
+            parts.append(b"(")
+        parts.append(full_values.text(p, full_values.node_span(p, filters[index])))
+        if len(filters) > 1:
+            parts.append(b")")
+    parts.append(b" yield ")
+    parts.append(full_values.text(p, full_values.node_span(p, output)))
+    parts.append(b"]")
+    return try repair(mut p, span, full_migration_types.join(parts), "write array comprehensions in source-first order")
+
+
+func gather(mut p: full_model.State, span: full_model.Token, value: int) -> bool fails syntax_value.Problem:
+    const loop_id = full_values.integer(p, full_values.field(p, value, "loop"))
+    const data = full_values.statement_data(p, loop_id)
+    const loop = full_values.payload(p, data)
+    mut name = full_model.Token(kind="", start=0, end=0)
+    mut body = -1
+    mut input = -1
+    if full_values.tag(p, data) == b"for_each":
+        if not full_values.absent(p, full_values.field(p, loop, "index_name")):
+            return try reject(mut p, span, "rewrite destructuring comprehensions as an explicit loop with named locals")
+        name = full_values.span(p, full_values.field(p, loop, "name"))
+        body = full_values.integer(p, full_values.field(p, loop, "body"))
+        input = full_values.integer(p, full_values.field(p, loop, "iterable"))
+    elif full_values.tag(p, data) == b"for_range":
+        name = full_values.span(p, full_values.field(p, loop, "name"))
+        body = full_values.integer(p, full_values.field(p, loop, "body"))
+    else:
+        return try reject(mut p, span, "rewrite this comprehension as an explicit loop")
+    mut filters: int[] = []
+    while True:
+        const next = full_values.statement_data(p, body)
+        const statement = full_values.payload(p, next)
+        if full_values.tag(p, next) == b"branch":
+            if not full_values.absent(p, full_values.field(p, statement, "else_body")):
+                return try reject(mut p, span, "rewrite this comprehension as an explicit loop")
+            filters.append(full_values.integer(p, full_values.field(p, statement, "condition")))
+            body = full_values.integer(p, full_values.field(p, statement, "then_body"))
+        elif full_values.tag(p, next) == b"gather_step":
+            const output = full_values.integer(p, full_values.field(p, statement, "value"))
+            return try comprehension(mut p, span, name, output, filters, input)
+        else:
+            return try reject(mut p, span, "nested comprehension generators require explicit loops; use one source per `[for ... yield ...]` expression")
+
+
+func indentation(p: full_model.State, point: int) -> bytes:
+    mut line = 0
+    for index in range(point):
+        if p.source[index] == 10:
+            line = index + 1
+    mut end = line
+    while end < point and p.source[end] == 32:
+        end = end + 1
+    return p.source[line:end]
+
+
+public func publish(mut p: full_model.State) -> bool fails syntax_value.Problem:
+    const before = len(p.catalog.problems)
+    for index in range(len(p.exprs)):
+        const data = full_values.node_data(p, index)
+        const value = full_values.payload(p, data)
+        const span = full_values.node_span(p, index)
+        if full_values.tag(p, data) == b"comprehension" and not full_values.flag(p, full_values.field(p, value, "set")) and not source_first(p, span):
+            const filter = full_values.field(p, value, "filter")
+            mut filters: int[] = []
+            if not full_values.absent(p, filter):
+                filters.append(full_values.integer(p, filter))
+            const source = full_values.field(p, value, "source")
+            mut input = -1
+            if full_values.tag(p, source) == b"iterable":
+                input = full_values.integer(p, full_values.payload(p, source))
+            const name = full_values.span(p, full_values.field(p, value, "name"))
+            const output = full_values.integer(p, full_values.field(p, value, "output"))
+            _ = try comprehension(mut p, span, name, output, filters, input)
+        elif full_values.tag(p, data) == b"gather" and full_values.octets(p, full_values.field(p, value, "shape")) == b"list":
+            _ = try gather(mut p, span, value)
+    mut depth = 0
+    for index in range(len(p.tokens)):
+        const t = p.tokens[index]
+        if t.kind == "lparen" or t.kind == "lbracket" or t.kind == "lbrace":
+            depth = depth + 1
+        elif (t.kind == "rparen" or t.kind == "rbracket" or t.kind == "rbrace") and depth > 0:
+            depth = depth - 1
+        elif t.kind == "semicolon" and p.source[t.start:t.end] == b";":
+            if depth != 0:
+                _ = try reject(mut p, t, "statements cannot be separated by semicolons inside expression delimiters")
+                continue
+            const next = p.tokens[index + 1]
+            const gap = p.source[t.end:next.start]
+            if next.kind == "dedent" or next.kind == "eof" or full_values.contains(gap, b"\n") or full_values.contains(gap, b"#"):
+                _ = try repair(mut p, t, b"", "statements end at newlines; remove this semicolon")
+            else:
+                const span = full_model.Token(kind="", start=t.start, end=next.start)
+                const replacement = full_migration_types.join([b"\n", indentation(p, t.start)])
+                _ = try repair(mut p, span, replacement, "write each statement on its own line")
+    return len(p.catalog.problems) != before
