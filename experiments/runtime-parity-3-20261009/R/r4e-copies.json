@@ -1,0 +1,791 @@
+{
+ "compiler_sha256": "860e9d55062d6de93c88cf7f19b7d8656ff352d1831c108e8ca796b4ad761dfc",
+ "tag": "r4e",
+ "p6_bytes": 444833472,
+ "p6_base_bytes": 444833472,
+ "p6_fraction": 1.0,
+ "cells": {
+  "eda-Cyclops-Flex": {
+   "p6_bytes": 8172232,
+   "parse_list_p6_bytes": 7707312,
+   "record_copy": {
+    "count": 379716,
+    "bytes": 14784744,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 160569,
+     "bytes": 7707312,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-adf5901": {
+   "p6_bytes": 8939728,
+   "parse_list_p6_bytes": 8419920,
+   "record_copy": {
+    "count": 430514,
+    "bytes": 17087544,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 175415,
+     "bytes": 8419920,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-barracuda": {
+   "p6_bytes": 19180128,
+   "parse_list_p6_bytes": 17973888,
+   "record_copy": {
+    "count": 1090430,
+    "bytes": 46138744,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 374456,
+     "bytes": 17973888,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-barracuda-base": {
+   "p6_bytes": 20447792,
+   "parse_list_p6_bytes": 19137024,
+   "record_copy": {
+    "count": 1171882,
+    "bytes": 49867048,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 398688,
+     "bytes": 19137024,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-barracuda-via-fence": {
+   "p6_bytes": 16923128,
+   "parse_list_p6_bytes": 15893136,
+   "record_copy": {
+    "count": 945521,
+    "bytes": 39590120,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 331107,
+     "bytes": 15893136,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-black-canyon": {
+   "p6_bytes": 13120200,
+   "parse_list_p6_bytes": 12337008,
+   "record_copy": {
+    "count": 698019,
+    "bytes": 28530232,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 257021,
+     "bytes": 12337008,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-black-canyon+flat": {
+   "p6_bytes": 12670992,
+   "parse_list_p6_bytes": 11910960,
+   "record_copy": {
+    "count": 704732,
+    "bytes": 29023120,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 248145,
+     "bytes": 11910960,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-blinky-breakout": {
+   "p6_bytes": 760768,
+   "parse_list_p6_bytes": 686784,
+   "record_copy": {
+    "count": 50210,
+    "bytes": 2273248,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 14308,
+     "bytes": 686784,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-analog": {
+   "p6_bytes": 16512128,
+   "parse_list_p6_bytes": 15403632,
+   "record_copy": {
+    "count": 947444,
+    "bytes": 40226552,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 320909,
+     "bytes": 15403632,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-analog+no-vendor-symbols": {
+   "p6_bytes": 8782384,
+   "parse_list_p6_bytes": 8118672,
+   "record_copy": {
+    "count": 570330,
+    "bytes": 25413344,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 169139,
+     "bytes": 8118672,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-breakout": {
+   "p6_bytes": 9577288,
+   "parse_list_p6_bytes": 9049632,
+   "record_copy": {
+    "count": 506783,
+    "bytes": 20447584,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 188534,
+     "bytes": 9049632,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-digital-pcb": {
+   "p6_bytes": 16839472,
+   "parse_list_p6_bytes": 15650688,
+   "record_copy": {
+    "count": 1301358,
+    "bytes": 58167304,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 326056,
+     "bytes": 15650688,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-interposer": {
+   "p6_bytes": 12328992,
+   "parse_list_p6_bytes": 11583744,
+   "record_copy": {
+    "count": 688878,
+    "bytes": 28706096,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 241328,
+     "bytes": 11583744,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-kband": {
+   "p6_bytes": 15528896,
+   "parse_list_p6_bytes": 14536080,
+   "record_copy": {
+    "count": 894194,
+    "bytes": 37706840,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 302835,
+     "bytes": 14536080,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-kband-breakout": {
+   "p6_bytes": 13102656,
+   "parse_list_p6_bytes": 12294960,
+   "record_copy": {
+    "count": 760346,
+    "bytes": 31958336,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 256145,
+     "bytes": 12294960,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-kband-pcb": {
+   "p6_bytes": 13565488,
+   "parse_list_p6_bytes": 12660240,
+   "record_copy": {
+    "count": 908516,
+    "bytes": 39182144,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 263755,
+     "bytes": 12660240,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-cyclops-xband-sip": {
+   "p6_bytes": 12010600,
+   "parse_list_p6_bytes": 11315136,
+   "record_copy": {
+    "count": 648660,
+    "bytes": 26551880,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 235732,
+     "bytes": 11315136,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-dual-flash": {
+   "p6_bytes": 8695336,
+   "parse_list_p6_bytes": 8195808,
+   "record_copy": {
+    "count": 416081,
+    "bytes": 16419912,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 170746,
+     "bytes": 8195808,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-labstation": {
+   "p6_bytes": 24534304,
+   "parse_list_p6_bytes": 22813920,
+   "record_copy": {
+    "count": 1501408,
+    "bytes": 65272120,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 475290,
+     "bytes": 22813920,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-labstation+no-vendor-symbols": {
+   "p6_bytes": 16350224,
+   "parse_list_p6_bytes": 15110976,
+   "record_copy": {
+    "count": 1106330,
+    "bytes": 49719872,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 314812,
+     "bytes": 15110976,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-lmk05318b-clock": {
+   "p6_bytes": 10460648,
+   "parse_list_p6_bytes": 9853968,
+   "record_copy": {
+    "count": 529171,
+    "bytes": 21482352,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 205291,
+     "bytes": 9853968,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-max860-inverter": {
+   "p6_bytes": 8374712,
+   "parse_list_p6_bytes": 7902000,
+   "record_copy": {
+    "count": 390664,
+    "bytes": 15245560,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 164625,
+     "bytes": 7902000,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-poe-pd-flyback-tps23757": {
+   "p6_bytes": 9870264,
+   "parse_list_p6_bytes": 9269136,
+   "record_copy": {
+    "count": 484588,
+    "bytes": 19419824,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 193107,
+     "bytes": 9269136,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-rds3": {
+   "p6_bytes": 29664616,
+   "parse_list_p6_bytes": 27653712,
+   "record_copy": {
+    "count": 1885484,
+    "bytes": 82170544,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 576119,
+     "bytes": 27653712,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-rds3+flat": {
+   "p6_bytes": 25721560,
+   "parse_list_p6_bytes": 23911344,
+   "record_copy": {
+    "count": 2334874,
+    "bytes": 105143328,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 498153,
+     "bytes": 23911344,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-rds3-rf-selector": {
+   "p6_bytes": 8456712,
+   "parse_list_p6_bytes": 7973472,
+   "record_copy": {
+    "count": 396404,
+    "bytes": 15532808,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 166114,
+     "bytes": 7973472,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-remora-base": {
+   "p6_bytes": 15420248,
+   "parse_list_p6_bytes": 14430720,
+   "record_copy": {
+    "count": 858024,
+    "bytes": 35898056,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 300640,
+     "bytes": 14430720,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-remora-rf": {
+   "p6_bytes": 14838896,
+   "parse_list_p6_bytes": 13852752,
+   "record_copy": {
+    "count": 815838,
+    "bytes": 34490936,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 288599,
+     "bytes": 13852752,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-rf-switch-8way": {
+   "p6_bytes": 9442928,
+   "parse_list_p6_bytes": 8892528,
+   "record_copy": {
+    "count": 473647,
+    "bytes": 18994632,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 185261,
+     "bytes": 8892528,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-rf-switch-eval": {
+   "p6_bytes": 9907560,
+   "parse_list_p6_bytes": 9339168,
+   "record_copy": {
+    "count": 502204,
+    "bytes": 20073432,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 194566,
+     "bytes": 9339168,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-stm32n6": {
+   "p6_bytes": 19672008,
+   "parse_list_p6_bytes": 18406752,
+   "record_copy": {
+    "count": 1169252,
+    "bytes": 50356400,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 383474,
+     "bytes": 18406752,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-straps": {
+   "p6_bytes": 15316112,
+   "parse_list_p6_bytes": 14343360,
+   "record_copy": {
+    "count": 881973,
+    "bytes": 37039832,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 298820,
+     "bytes": 14343360,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-straps-base": {
+   "p6_bytes": 19570552,
+   "parse_list_p6_bytes": 18333696,
+   "record_copy": {
+    "count": 1441772,
+    "bytes": 62686584,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 381952,
+     "bytes": 18333696,
+     "extra": 0
+    }
+   ]
+  },
+  "eda-w55rp20": {
+   "p6_bytes": 10515984,
+   "parse_list_p6_bytes": 9871344,
+   "record_copy": {
+    "count": 540149,
+    "bytes": 22048632,
+    "extra": 0
+   },
+   "parse_list_sites": [
+    {
+     "function": "sexpr_parser::parse_list",
+     "origin": "sexpr_parser::parse_list",
+     "path": "sexpr_parser.my",
+     "line": 225,
+     "column": 9,
+     "kind": "record_copy",
+     "detail": "list_push",
+     "count": 205653,
+     "bytes": 9871344,
+     "extra": 0
+    }
+   ]
+  }
+ }
+}

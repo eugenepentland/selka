@@ -1,0 +1,317 @@
+{
+ "compiler_sha256": "f2c6337d8fc3760a4b3032738de577afe139ad0c1da79055822c5b7fcde6fb11",
+ "tag": "r4a",
+ "p6_bytes": 444833472,
+ "p6_base_bytes": 444833472,
+ "p6_fraction": 1.0,
+ "cells": {
+  "eda-Cyclops-Flex": {
+   "p6_bytes": 8172232,
+   "parse_list_p6_bytes": 7707312,
+   "record_copy": {
+    "count": 204822,
+    "bytes": 9887712,
+    "extra": 0
+   }
+  },
+  "eda-adf5901": {
+   "p6_bytes": 8940400,
+   "parse_list_p6_bytes": 8419920,
+   "record_copy": {
+    "count": 240440,
+    "bytes": 11765808,
+    "extra": 0
+   }
+  },
+  "eda-barracuda": {
+   "p6_bytes": 19182200,
+   "parse_list_p6_bytes": 17973888,
+   "record_copy": {
+    "count": 677067,
+    "bytes": 34565616,
+    "extra": 0
+   }
+  },
+  "eda-barracuda-base": {
+   "p6_bytes": 20450592,
+   "parse_list_p6_bytes": 19137024,
+   "record_copy": {
+    "count": 732378,
+    "bytes": 37562336,
+    "extra": 0
+   }
+  },
+  "eda-barracuda-via-fence": {
+   "p6_bytes": 16925088,
+   "parse_list_p6_bytes": 15893136,
+   "record_copy": {
+    "count": 577384,
+    "bytes": 29283264,
+    "extra": 0
+   }
+  },
+  "eda-black-canyon": {
+   "p6_bytes": 13120704,
+   "parse_list_p6_bytes": 12337008,
+   "record_copy": {
+    "count": 407792,
+    "bytes": 20404128,
+    "extra": 0
+   }
+  },
+  "eda-black-canyon+flat": {
+   "p6_bytes": 12671496,
+   "parse_list_p6_bytes": 11910960,
+   "record_copy": {
+    "count": 423971,
+    "bytes": 21162064,
+    "extra": 0
+   }
+  },
+  "eda-blinky-breakout": {
+   "p6_bytes": 760768,
+   "parse_list_p6_bytes": 686784,
+   "record_copy": {
+    "count": 34556,
+    "bytes": 1834936,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-analog": {
+   "p6_bytes": 16514984,
+   "parse_list_p6_bytes": 15403632,
+   "record_copy": {
+    "count": 598955,
+    "bytes": 30470288,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-analog+no-vendor-symbols": {
+   "p6_bytes": 8785184,
+   "parse_list_p6_bytes": 8118672,
+   "record_copy": {
+    "count": 386228,
+    "bytes": 20259888,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-breakout": {
+   "p6_bytes": 9577288,
+   "parse_list_p6_bytes": 9049632,
+   "record_copy": {
+    "count": 300707,
+    "bytes": 14677456,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-digital-pcb": {
+   "p6_bytes": 16841376,
+   "parse_list_p6_bytes": 15650688,
+   "record_copy": {
+    "count": 953910,
+    "bytes": 48439712,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-interposer": {
+   "p6_bytes": 12329888,
+   "parse_list_p6_bytes": 11583744,
+   "record_copy": {
+    "count": 427880,
+    "bytes": 21398600,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-kband": {
+   "p6_bytes": 15531304,
+   "parse_list_p6_bytes": 14536080,
+   "record_copy": {
+    "count": 561523,
+    "bytes": 28393256,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-kband-breakout": {
+   "p6_bytes": 13103552,
+   "parse_list_p6_bytes": 12294960,
+   "record_copy": {
+    "count": 483228,
+    "bytes": 24199480,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-kband-pcb": {
+   "p6_bytes": 13565488,
+   "parse_list_p6_bytes": 12660240,
+   "record_copy": {
+    "count": 625876,
+    "bytes": 31268224,
+    "extra": 0
+   }
+  },
+  "eda-cyclops-xband-sip": {
+   "p6_bytes": 12012000,
+   "parse_list_p6_bytes": 11315136,
+   "record_copy": {
+    "count": 386403,
+    "bytes": 19209384,
+    "extra": 0
+   }
+  },
+  "eda-dual-flash": {
+   "p6_bytes": 8695560,
+   "parse_list_p6_bytes": 8195808,
+   "record_copy": {
+    "count": 230633,
+    "bytes": 11227480,
+    "extra": 0
+   }
+  },
+  "eda-labstation": {
+   "p6_bytes": 24537160,
+   "parse_list_p6_bytes": 22813920,
+   "record_copy": {
+    "count": 981001,
+    "bytes": 50702152,
+    "extra": 0
+   }
+  },
+  "eda-labstation+no-vendor-symbols": {
+   "p6_bytes": 16352968,
+   "parse_list_p6_bytes": 15110976,
+   "record_copy": {
+    "count": 760145,
+    "bytes": 40028064,
+    "extra": 0
+   }
+  },
+  "eda-lmk05318b-clock": {
+   "p6_bytes": 10461432,
+   "parse_list_p6_bytes": 9853968,
+   "record_copy": {
+    "count": 307589,
+    "bytes": 15278448,
+    "extra": 0
+   }
+  },
+  "eda-max860-inverter": {
+   "p6_bytes": 8374824,
+   "parse_list_p6_bytes": 7902000,
+   "record_copy": {
+    "count": 211398,
+    "bytes": 10226168,
+    "extra": 0
+   }
+  },
+  "eda-poe-pd-flyback-tps23757": {
+   "p6_bytes": 9870376,
+   "parse_list_p6_bytes": 9269136,
+   "record_copy": {
+    "count": 274086,
+    "bytes": 13525824,
+    "extra": 0
+   }
+  },
+  "eda-rds3": {
+   "p6_bytes": 29669040,
+   "parse_list_p6_bytes": 27653712,
+   "record_copy": {
+    "count": 1262419,
+    "bytes": 64726936,
+    "extra": 0
+   }
+  },
+  "eda-rds3+flat": {
+   "p6_bytes": 25725984,
+   "parse_list_p6_bytes": 23911344,
+   "record_copy": {
+    "count": 1796445,
+    "bytes": 90069528,
+    "extra": 0
+   }
+  },
+  "eda-rds3-rf-selector": {
+   "p6_bytes": 8456880,
+   "parse_list_p6_bytes": 7973472,
+   "record_copy": {
+    "count": 215879,
+    "bytes": 10478192,
+    "extra": 0
+   }
+  },
+  "eda-remora-base": {
+   "p6_bytes": 15421704,
+   "parse_list_p6_bytes": 14430720,
+   "record_copy": {
+    "count": 521546,
+    "bytes": 26477400,
+    "extra": 0
+   }
+  },
+  "eda-remora-rf": {
+   "p6_bytes": 14840464,
+   "parse_list_p6_bytes": 13852752,
+   "record_copy": {
+    "count": 506312,
+    "bytes": 25824992,
+    "extra": 0
+   }
+  },
+  "eda-rf-switch-8way": {
+   "p6_bytes": 9443040,
+   "parse_list_p6_bytes": 8892528,
+   "record_copy": {
+    "count": 271639,
+    "bytes": 13338464,
+    "extra": 0
+   }
+  },
+  "eda-rf-switch-eval": {
+   "p6_bytes": 9907616,
+   "parse_list_p6_bytes": 9339168,
+   "record_copy": {
+    "count": 286735,
+    "bytes": 14040328,
+    "extra": 0
+   }
+  },
+  "eda-stm32n6": {
+   "p6_bytes": 19675088,
+   "parse_list_p6_bytes": 18406752,
+   "record_copy": {
+    "count": 760223,
+    "bytes": 38905128,
+    "extra": 0
+   }
+  },
+  "eda-straps": {
+   "p6_bytes": 15316504,
+   "parse_list_p6_bytes": 14343360,
+   "record_copy": {
+    "count": 548000,
+    "bytes": 27688784,
+    "extra": 0
+   }
+  },
+  "eda-straps-base": {
+   "p6_bytes": 19571896,
+   "parse_list_p6_bytes": 18333696,
+   "record_copy": {
+    "count": 1018292,
+    "bytes": 50829816,
+    "extra": 0
+   }
+  },
+  "eda-w55rp20": {
+   "p6_bytes": 10517104,
+   "parse_list_p6_bytes": 9871344,
+   "record_copy": {
+    "count": 318005,
+    "bytes": 15829160,
+    "extra": 0
+   }
+  }
+ },
+ "all_list_push_bytes": 475322184,
+ "attribution": "P6 is parse_list list_push only, consistent with M0 baseline; all other list_push sites reported separately."
+}

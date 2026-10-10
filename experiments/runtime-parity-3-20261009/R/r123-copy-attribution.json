@@ -1,0 +1,54 @@
+{
+ "parity-fannkuch_redux_array": {
+  "totals": {
+   "count": 0,
+   "bytes": 0,
+   "extra": 0
+  },
+  "sites": [],
+  "counts_sha256": "fb7162b47874f36757170300f167d43a6285682ec79d754adf2783a9d0da8e72",
+  "llvm_sha256": {
+   "plain": "8d3b24a9c4d4e917b20217a8cf003d7767f70a99f374d619760f1059e9250a26",
+   "count": "1751e21e4c0a499298c75e64dddf88541ce96332cbba6b49f158c4f7ebec3fa6"
+  }
+ },
+ "parity-fannkuch_redux_tuned": {
+  "totals": {
+   "count": 3628800,
+   "bytes": 290304000,
+   "extra": 0
+  },
+  "sites": [
+   {
+    "function": "fannkuch",
+    "origin": "fannkuch",
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/bench/parity/suite/fannkuch_redux_tuned.my",
+    "line": 16,
+    "column": 6,
+    "kind": "record_copy",
+    "detail": "jump",
+    "count": 3628800,
+    "bytes": 290304000,
+    "extra": 0
+   }
+  ],
+  "counts_sha256": "63431103eb38c6778d69ea12c72b4d0feeec27b5a359596a90710fca0a486497",
+  "llvm_sha256": {
+   "plain": "6b3c4c61efcf04776e069984bdbbd66df06b57b9adb85d3f5d4522071086a138",
+   "count": "28caea9c44433d737e27512d8472ca3206f841b851e3a848c21c343ecd38bfa9"
+  }
+ },
+ "row-record_pass": {
+  "totals": {
+   "count": 0,
+   "bytes": 0,
+   "extra": 0
+  },
+  "sites": [],
+  "counts_sha256": "d16b02c3dc1792b38c92391f7ba5bfb7e8dd271de353f410c8f71fedf89ad626",
+  "llvm_sha256": {
+   "plain": "5a9604c31e334099e028e965fa95274df61c24bc5383edfa046cd13e65cfafed",
+   "count": "8904706f7e453320a9fea2d45e8b34f1e77e4d49c33328a309d928a9e40c3ae4"
+  }
+ }
+}

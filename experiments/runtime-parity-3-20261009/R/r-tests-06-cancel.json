@@ -1,0 +1,5 @@
+{
+ "pid": 3997502,
+ "reason": "Redundant focused run still waiting for a slot; current full repository gate and upcoming 64-shard qualification include all seven R fixtures. No test failure suppressed.",
+ "admitted": false
+}

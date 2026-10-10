@@ -1,0 +1,3 @@
+guardian: run-all: whole-tree run — no diff base could be resolved (no main/master, or no commits yet)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: environmental analysis failure at 41ed360fb361c49938488ad111795bad8a726b73/.guardian/benchmarks.txt: FileNotFound — check file permissions, filesystem state, and generated-file exclusions

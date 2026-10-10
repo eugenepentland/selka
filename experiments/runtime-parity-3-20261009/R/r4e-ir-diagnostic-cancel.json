@@ -1,0 +1,7 @@
+{
+  "time": 1791597188.5130925,
+  "pid": 2138445,
+  "command": "bash scripts/build-slot.sh build python3 experiments/runtime-parity-3-20261009/R/dump_payload_ir.py ",
+  "reason": "Cancelled still-queued diagnostic. Existing generated LLVM already proves the concrete destination-list release before the error payload read; no diagnostic compiler or source edit is needed.",
+  "source_print_changed": false
+}
