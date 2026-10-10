@@ -1,0 +1,18 @@
+import model
+import resolve
+import indexes
+import signatures
+import depth
+
+public func check(request: model.Request) -> model.Outcome fails model.Problem:
+    mut state = try indexes.prepare(request)
+    _ = try depth.validate(state)
+    for module in request.order:
+        match signatures.check(mut state, module):
+            case Ok(done):
+                pass
+            case Err(problem):
+                if problem.code == "P_TRANSPORT" or problem.code == "P_DEPTH":
+                    fail problem
+                return model.Outcome(order=[], usage=[], receipts=[], problem=problem)
+    return model.Outcome(order=request.order, usage=state.usage, receipts=state.receipts, problem=model.empty_problem())

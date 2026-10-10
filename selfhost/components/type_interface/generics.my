@@ -1,0 +1,146 @@
+import model
+import resolve
+import prelude
+
+public record Bound:
+    identity: model.Identity
+    span: model.Span
+
+
+public func structural(p: resolve.State, module: int, parameter: model.Generic, copyable: bool) -> bool fails model.Problem:
+    if len(parameter.fields) > 0 and not copyable:
+        fail resolve.problem(module, parameter.name, "E_GENERIC_REQUIREMENT", "structural field contracts require copy to exclude hidden ownership and result obligations", model.absent_site())
+    mut field_names: bytes[] = []
+    for field in parameter.fields:
+        field_names.append(resolve.text(p, module, field.name))
+    const field_index = try resolve.make_index(field_names)
+    for i in range(len(parameter.fields)):
+        const found = try resolve.lookup(field_index, field_names[i])
+        if found != i:
+            fail resolve.problem(module, parameter.fields[i].name, "E_GENERIC_REQUIREMENT", "duplicate structural field requirement", model.absent_site())
+    mut operation_names: bytes[] = []
+    for operation in parameter.operations:
+        operation_names.append(resolve.text(p, module, operation.name))
+    const operation_index = try resolve.make_index(operation_names)
+    for i in range(len(parameter.operations)):
+        const operation = parameter.operations[i]
+        const found = try resolve.lookup(operation_index, operation_names[i])
+        if found != i:
+            fail resolve.problem(module, operation.name, "E_GENERIC_REQUIREMENT", "duplicate structural operation requirement", model.absent_site())
+        mut input_names: bytes[] = []
+        for input in operation.parameters:
+            input_names.append(resolve.text(p, module, input.name))
+        const input_index = try resolve.make_index(input_names)
+        for j in range(len(operation.parameters)):
+            const input_found = try resolve.lookup(input_index, input_names[j])
+            if input_found != j:
+                fail resolve.problem(module, operation.parameters[j].name, "E_GENERIC_REQUIREMENT", "duplicate structural operation parameter", model.absent_site())
+    return True
+
+
+public func explicit_copy(p: resolve.State, module: int, parameter: model.Generic) -> bool:
+    for span in parameter.requirements:
+        const name = resolve.text(p, module, span)
+        if name == b"copy" or name == b"equality" or name == b"integer":
+            return True
+    return False
+
+
+public func parameter_copy(p: resolve.State, module: int, parameter: model.Generic) -> bool:
+    return parameter.default_copy or explicit_copy(p, module, parameter)
+
+
+public func shadow(p: resolve.State, module: int, parameter: model.Generic) -> bool fails model.Problem:
+    const name = resolve.text(p, module, parameter.name)
+    if prelude.builtin(name):
+        fail resolve.problem(module, parameter.name, "E_GENERIC_PARAMETER", "type parameter cannot shadow a builtin type", model.absent_site())
+    const local = try resolve.symbol_id(p, module, name)
+    if local >= 0:
+        fail resolve.problem(module, parameter.name, "E_SHADOWING", "type parameter shadows a module declaration", model.Site(module=module, span=p.request.modules[module].symbols[local].span))
+    for imported in p.request.modules[module].imports:
+        if name == imported.alias:
+            fail resolve.problem(module, parameter.name, "E_SHADOWING", "type parameter shadows an import alias", model.Site(module=module, span=imported.span))
+    return True
+
+
+public func reference_span(reference: model.Reference) -> model.Span:
+    if reference.alias.start >= 0:
+        return model.Span(start=reference.alias.start, end=reference.name.end)
+    return reference.name
+
+
+public func constraint(mut p: resolve.State, module: int, reference: model.Reference) -> model.Identity fails model.Problem:
+    mut alias = b""
+    if reference.alias.start >= 0:
+        alias = resolve.text(p, module, reference.alias)
+    match resolve.resolve(mut p, module, alias, resolve.text(p, module, reference.name), 2, reference.name):
+        case Ok(identity):
+            return identity
+        case Err(problem):
+            if problem.code == "E_UNKNOWN_SYMBOL":
+                fail resolve.problem(module, reference.name, "E_GENERIC_REQUIREMENT", "unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint", model.absent_site())
+            fail resolve.problem(module, problem.site.span, problem.code, problem.message, model.absent_site())
+
+
+public func definition(p: resolve.State, identity: model.Identity) -> model.Constraint fails model.Problem:
+    const symbol = p.request.modules[identity.module].symbols[identity.symbol]
+    const found = try resolve.lookup(p.tables[identity.module].constraints, resolve.span_key(0, symbol.span))
+    if found < 0:
+        fail resolve.bad()
+    return p.request.modules[identity.module].syntax.declarations.constraints[found]
+
+
+public func validate(mut p: resolve.State, module: int, parameters: model.Generic[]) -> Bound[] fails model.Problem:
+    if len(parameters) > 16:
+        fail resolve.problem(module, parameters[16].name, "E_GENERIC_LIMIT", "at most 16 type parameters are permitted", model.absent_site())
+    mut bounds: Bound[] = []
+    for i in range(len(parameters)):
+        const parameter = parameters[i]
+        const name = resolve.text(p, module, parameter.name)
+        if prelude.builtin(name):
+            fail resolve.problem(module, parameter.name, "E_GENERIC_PARAMETER", "type parameter cannot shadow a builtin type", model.absent_site())
+        for j in range(i):
+            if name == resolve.text(p, module, parameters[j].name):
+                fail resolve.problem(module, parameter.name, "E_GENERIC_PARAMETER", "duplicate type parameter", model.absent_site())
+        if parameter.constant_length:
+            if len(parameter.requirements) > 0 or len(parameter.fields) > 0 or len(parameter.operations) > 0 or len(parameter.named) > 0:
+                fail resolve.problem(module, parameter.name, "E_GENERIC_REQUIREMENT", "constant-length parameters cannot declare requirements", model.absent_site())
+            continue
+        mut seen: bytes[] = []
+        for span in parameter.requirements:
+            const spelling = resolve.text(p, module, span)
+            if spelling != b"copy" and spelling != b"equality" and spelling != b"integer" and spelling != b"codec" and spelling != b"storable":
+                fail resolve.problem(module, span, "E_GENERIC_REQUIREMENT", "unknown requirement; expected copy, equality, integer, codec, or storable", model.absent_site())
+            for previous in seen:
+                if previous == spelling:
+                    fail resolve.problem(module, span, "E_GENERIC_REQUIREMENT", "duplicate type requirement", model.absent_site())
+            seen.append(spelling)
+        mut copyable = explicit_copy(p, module, parameter)
+        mut identities: model.Identity[] = []
+        mut named_count = 0
+        for reference in parameter.named:
+            const identity = try constraint(mut p, module, reference)
+            bounds.append(Bound(identity=identity, span=reference_span(reference)))
+            const declared = try definition(p, identity)
+            copyable = copyable or explicit_copy(p, identity.module, declared.subject)
+            for previous in identities:
+                if previous == identity:
+                    fail resolve.problem(module, reference.name, "E_GENERIC_REQUIREMENT", "duplicate named constraint requirement", model.absent_site())
+            identities.append(identity)
+            if len(declared.subject.named) > 0:
+                fail resolve.problem(module, reference.name, "E_GENERIC_REQUIREMENT", "nested named constraints are not supported in this version", model.absent_site())
+            named_count = named_count + len(declared.subject.requirements) + len(declared.subject.fields) + len(declared.subject.operations)
+        _ = try structural(p, module, parameter, copyable)
+        if not parameter.default_copy and len(seen) == 0 and len(parameter.fields) == 0 and len(parameter.operations) == 0 and named_count == 0:
+            fail resolve.problem(module, parameter.name, "E_GENERIC_REQUIREMENT", "type parameter requires an explicit requirement", model.absent_site())
+    return bounds
+
+
+public func nominal(mut p: resolve.State, module: int, parameters: model.Generic[]) -> bool fails model.Problem:
+    for parameter in parameters:
+        if len(parameter.named) > 0:
+            fail resolve.problem(module, reference_span(parameter.named[0]), "E_GENERIC_REQUIREMENT", "named constraints may only bound function type parameters", model.absent_site())
+    _ = try validate(mut p, module, parameters)
+    for parameter in parameters:
+        _ = try shadow(p, module, parameter)
+    return True

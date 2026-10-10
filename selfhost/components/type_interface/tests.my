@@ -1,0 +1,300 @@
+import model
+import checking
+import resolve
+import codec
+import generics
+import indexes
+import qualified
+
+func at(start: int, end: int) -> model.Span:
+    return model.Span(start=start, end=end)
+
+
+func symbol(name: bytes, kind: int, span: model.Span, exported: bool) -> model.Symbol:
+    return model.Symbol(name=name, kind=kind, span=span, exported=exported, owner=b"", restricted=False, re_export=model.absent_identity())
+
+
+func base() -> model.Request:
+    const module = model.Module(context=model.Context(module=0, name=b"input", path=b"input.my", source=b"f A B T copy int", trusted_intrinsics=False, imported=False), imports=[], symbols=[symbol(b"f", 1, at(0, 1), True), symbol(b"A", 0, at(2, 3), True), symbol(b"B", 0, at(4, 5), False)], import_used=[], syntax=model.empty_catalog())
+    return model.Request(order=[0], modules=[module])
+
+
+func function(return_type: model.Span) -> model.Function:
+    return model.Function(name=at(0, 1), owner=model.absent_span(), type_parameters=[], parameters=[], return_type=return_type, failure_type=model.absent_span())
+
+
+func parameter() -> model.Generic:
+    return model.Generic(name=at(6, 7), default_copy=False, constant_length=False, requirements=[at(8, 12)], fields=[], operations=[], named=[])
+
+
+public func test_empty_signature_batch_acknowledges_order() -> bool fails model.Problem:
+    const result = try checking.check(base())
+    return result.problem.code == "" and result.order == [0] and result.usage[0].used == [] and result.receipts == []
+
+
+public func test_resolves_exported_nominal_type_and_receipt() -> bool fails model.Problem:
+    mut request = base()
+    request.modules[0].syntax.declarations.functions = [function(at(2, 3))]
+    const result = try checking.check(request)
+    return result.problem.code == "" and result.receipts == [model.Receipt(from=0, alias=b"", name=b"A", kind=0, span=at(2, 3), identity=model.Identity(module=0, symbol=1))]
+
+
+public func test_exported_private_type_reports_related_site() -> bool fails model.Problem:
+    mut request = base()
+    request.modules[0].syntax.declarations.functions = [function(at(4, 5))]
+    const result = try checking.check(request)
+    return result.problem.code == "E_PRIVATE_INTERFACE" and result.problem.related == model.Site(module=0, span=at(4, 5))
+
+
+public func test_private_function_skips_signature_but_validates_generics() -> bool fails model.Problem:
+    mut request = base()
+    request.modules[0].symbols[0].exported = False
+    mut item = function(at(4, 5))
+    mut param = parameter()
+    param.requirements = []
+    item.type_parameters = [param]
+    request.modules[0].syntax.declarations.functions = [item]
+    const result = try checking.check(request)
+    return result.problem.code == "E_GENERIC_REQUIREMENT" and result.problem.site.span == at(6, 7)
+
+
+public func test_generic_parameter_leaf_and_suffix() -> bool fails model.Problem:
+    mut request = base()
+    mut item = function(at(6, 7))
+    item.type_parameters = [parameter()]
+    request.modules[0].syntax.declarations.functions = [item]
+    request.modules[0].syntax.types.suffixes = [model.Suffix(span=at(6, 8), base=at(6, 7))]
+    request.modules[0].syntax.declarations.functions[0].return_type = at(6, 8)
+    const result = try checking.check(request)
+    return result.problem.code == "" and len(result.receipts) == 0
+
+
+public func test_builtin_application_arity() -> bool fails model.Problem:
+    mut request = base()
+    request.modules[0].context.source = b"f A B T copy int list"
+    request.modules[0].syntax.declarations.functions = [function(at(17, 21))]
+    request.modules[0].syntax.types.applications = [model.Application(span=at(17, 21), name=at(17, 21), arguments=[])]
+    const result = try checking.check(request)
+    return result.problem.code == "E_GENERIC_ARITY" and result.problem.message == "builtin type argument count does not match"
+
+
+public func test_nominal_template_requires_arguments() -> bool fails model.Problem:
+    mut request = base()
+    request.modules[0].syntax.declarations.records = [model.Record(name=at(2, 3), type_parameters=[parameter()], fields=[])]
+    request.modules[0].syntax.declarations.functions = [function(at(2, 3))]
+    const result = try checking.check(request)
+    return result.problem.code == "E_GENERIC_ARITY" and result.problem.related.span == at(2, 3)
+
+
+public func test_type_parameter_constructor_rejected() -> bool fails model.Problem:
+    mut request = base()
+    mut item = function(at(6, 7))
+    item.type_parameters = [parameter()]
+    request.modules[0].syntax.declarations.functions = [item]
+    request.modules[0].syntax.types.applications = [model.Application(span=at(6, 7), name=at(6, 7), arguments=[at(13, 16)])]
+    # An exact binder spelling wins before application, matching native ordering.
+    request.modules[0].syntax.types.applications[0].span = at(6, 8)
+    request.modules[0].syntax.declarations.functions[0].return_type = at(6, 8)
+    const result = try checking.check(request)
+    return result.problem.code == "E_TYPE_APPLICATION"
+
+
+public func test_default_copy_does_not_make_structural_function_copyable() -> bool fails model.Problem:
+    mut request = base()
+    mut item = function(at(13, 16))
+    mut param = parameter()
+    param.default_copy = True
+    param.requirements = []
+    param.fields = [model.Field(name=at(2, 3), ty=at(13, 16))]
+    item.type_parameters = [param]
+    request.modules[0].syntax.declarations.functions = [item]
+    const result = try checking.check(request)
+    return result.problem.message == "structural field contracts require copy to exclude hidden ownership and result obligations"
+
+
+public func test_default_copy_with_explicit_copy_is_not_duplicate() -> bool fails model.Problem:
+    mut request = base()
+    mut item = function(at(13, 16))
+    mut param = parameter()
+    param.default_copy = True
+    item.type_parameters = [param]
+    request.modules[0].syntax.declarations.functions = [item]
+    const result = try checking.check(request)
+    return result.problem.code == ""
+
+
+public func test_duplicate_builtins_keep_exact_site() -> bool fails model.Problem:
+    mut request = base()
+    mut item = function(at(13, 16))
+    mut param = parameter()
+    param.requirements = [at(8, 12), at(8, 12)]
+    item.type_parameters = [param]
+    request.modules[0].syntax.declarations.functions = [item]
+    const result = try checking.check(request)
+    return result.problem.message == "duplicate type requirement" and result.problem.site.span == at(8, 12)
+
+
+public func test_constant_length_contract_is_not_valid() -> bool fails model.Problem:
+    mut request = base()
+    mut item = function(at(13, 16))
+    mut param = parameter()
+    param.constant_length = True
+    item.type_parameters = [param]
+    request.modules[0].syntax.declarations.functions = [item]
+    const result = try checking.check(request)
+    return result.problem.message == "constant-length parameters cannot declare requirements"
+
+
+public func test_nominal_named_bound_precedes_shadowing() -> bool fails model.Problem:
+    mut request = base()
+    mut param = parameter()
+    param.name = at(13, 16)
+    param.named = [model.Reference(alias=model.absent_span(), name=at(2, 3))]
+    request.modules[0].syntax.declarations.records = [model.Record(name=at(2, 3), type_parameters=[param], fields=[])]
+    const result = try checking.check(request)
+    return result.problem.message == "named constraints may only bound function type parameters"
+
+
+public func test_unknown_named_constraint_transforms_and_strips_related() -> bool fails model.Problem:
+    mut request = base()
+    mut param = parameter()
+    param.named = [model.Reference(alias=model.absent_span(), name=at(6, 7))]
+    mut item = function(at(13, 16))
+    item.type_parameters = [param]
+    request.modules[0].syntax.declarations.functions = [item]
+    const result = try checking.check(request)
+    const wire = try codec.encode(result)
+    return wire[:8] == b"SLKTYR01" and result.problem.code == "E_GENERIC_REQUIREMENT" and result.problem.message == "unknown requirement; expected copy, equality, integer, codec, storable, or a declared constraint" and result.problem.related == model.absent_site()
+
+
+public func test_wrong_kind_named_constraint_strips_related() -> bool fails model.Problem:
+    mut request = base()
+    mut param = parameter()
+    param.named = [model.Reference(alias=model.absent_span(), name=at(2, 3))]
+    mut item = function(at(13, 16))
+    item.type_parameters = [param]
+    request.modules[0].syntax.declarations.functions = [item]
+    const result = try checking.check(request)
+    return result.problem.code == "E_SYMBOL_KIND" and result.problem.related == model.absent_site()
+
+
+public func test_callback_checks_inputs_before_return() -> bool fails model.Problem:
+    mut request = base()
+    request.modules[0].syntax.declarations.functions = [function(at(6, 7))]
+    request.modules[0].syntax.types.callbacks = [model.Callback(span=at(6, 7), parameters=[at(4, 5)], return_type=at(2, 3), failure_type=model.absent_span())]
+    const result = try checking.check(request)
+    return result.problem.site.span == at(4, 5) and result.problem.code == "E_PRIVATE_INTERFACE"
+
+
+public func test_qualified_normalization_preserves_alias_spelling() -> bool fails model.Problem:
+    const first = try qualified.parse(b"pkg . child . Name")
+    const second = try qualified.parse(b"pkg::Name")
+    return first.alias == b"pkg . child" and first.name == b"Name" and second.alias == b"pkg"
+
+
+public func test_cycle_is_bounded_transport_failure() -> bool:
+    mut request = base()
+    request.modules[0].syntax.declarations.functions = [function(at(2, 3))]
+    request.modules[0].syntax.types.suffixes = [model.Suffix(span=at(2, 3), base=at(2, 3))]
+    match checking.check(request):
+        case Err(problem):
+            return problem.code == "P_DEPTH"
+        case Ok(result):
+            return False
+
+
+public func test_bad_order_rejected_before_checking() -> bool:
+    mut request = base()
+    request.order = [1]
+    match checking.check(request):
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+        case Ok(result):
+            return False
+
+
+public func test_codec_refuses_truncation_and_boolean() -> bool:
+    match codec.decode(b"SLKTYI01"):
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+        case Ok(result):
+            return False
+
+
+public func test_codec_success_and_numeric_diagnostic_encoding() -> bool fails model.Problem:
+    const result = try checking.check(base())
+    const wire = try codec.encode(result)
+    const bad = model.Outcome(order=[], usage=[], receipts=[], problem=resolve.problem(0, at(0, 1), "E_GENERIC_LIMIT", "at most 16 type parameters are permitted", model.absent_site()))
+    const error_wire = try codec.encode(bad)
+    return wire[:8] == b"SLKTYR01" and len(wire) == 32 and error_wire[:8] == b"SLKTYR01"
+
+
+public func test_private_test_module_resolves_canonical_origin_and_usage() -> bool fails model.Problem:
+    mut request = base()
+    request.modules[0].context.name = b"dep_test"
+    mut dep = request.modules[0]
+    dep.context.module = 1
+    dep.context.name = b"dep"
+    dep.context.imported = True
+    dep.symbols[1].exported = False
+    request.modules.append(dep)
+    request.order = [1, 0]
+    request.modules[0].imports = [model.Import(name=b"dep", alias=b"p", span=at(0, 1), target=1)]
+    request.modules[0].import_used = [False]
+    request.modules[0].context.source = b"f A B T copy int p.A"
+    request.modules[0].syntax.declarations.functions = [function(at(17, 20))]
+    # Visibility permits resolution, but public interface exposure still refuses.
+    const result = try checking.check(request)
+    return result.problem.code == "E_PRIVATE_INTERFACE" and result.problem.related.module == 1
+
+
+public func test_first_alias_fullname_match_and_canonical_receipt() -> bool fails model.Problem:
+    mut request = base()
+    mut dep = request.modules[0]
+    dep.context.module = 1
+    dep.context.name = b"dep"
+    dep.context.imported = True
+    request.modules.append(dep)
+    request.order = [1, 0]
+    mut origin = dep
+    origin.context.module = 2
+    origin.context.name = b"origin"
+    origin.context.imported = False
+    request.modules.append(origin)
+    request.modules[1].symbols[1].re_export = model.Identity(module=2, symbol=1)
+    request.order = [2, 1, 0]
+    request.modules[0].context.source = b"f A B T copy int dep.A"
+    request.modules[0].imports = [model.Import(name=b"dep", alias=b"p", span=at(0, 1), target=1), model.Import(name=b"other", alias=b"dep", span=at(0, 1), target=0)]
+    request.modules[0].context.imported = True
+    request.modules[0].import_used = [False, True]
+    request.modules[0].syntax.declarations.functions = [function(at(17, 22))]
+    const result = try checking.check(request)
+    return result.problem.code == "" and result.usage[0].used == [True, True] and result.receipts[0].identity == model.Identity(module=2, symbol=1)
+
+
+public func test_depth_256_leaf_inclusive_then_257_refusal() -> bool fails model.Problem:
+    mut request = base()
+    mut raw = byte_buffer([])
+    for i in range(256):
+        _ = raw.append_byte(65)
+    request.modules[0].context.source = bytes(raw)
+    request.modules[0].symbols = []
+    for i in range(255):
+        request.modules[0].syntax.types.suffixes.append(model.Suffix(span=at(i, i + 1), base=at(i + 1, i + 2)))
+    const accepted = try checking.check(request)
+    request.modules[0].syntax.types.suffixes.append(model.Suffix(span=at(255, 256), base=at(0, 0)))
+    match checking.check(request):
+        case Err(problem):
+            return accepted.problem.code == "" and problem.code == "P_DEPTH"
+        case Ok(result):
+            return False
+
+
+public func test_forged_imported_context_flag_is_transport_failure() -> bool:
+    mut request = base()
+    request.modules[0].context.imported = True
+    match checking.check(request):
+        case Err(problem):
+            return problem.code == "P_TRANSPORT"
+        case Ok(result):
+            return False

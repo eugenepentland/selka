@@ -1,0 +1,33 @@
+import model
+import resolve
+import lexer
+import source
+import token
+
+public record Name:
+    alias: bytes
+    name: bytes
+
+
+public func parse(raw: bytes) -> Name fails model.Problem:
+    mut tokens: token.Token[] = []
+    match lexer.lex(source.make(raw)):
+        case Ok(result):
+            tokens = result
+        case Err(problem):
+            fail resolve.bad()
+    if len(tokens) < 2 or tokens[0].kind != "ident":
+        fail resolve.bad()
+    const first = raw[tokens[0].start:tokens[0].end]
+    if len(tokens) == 2 and tokens[1].kind == "eof":
+        return Name(alias=b"", name=first)
+    if len(tokens) == 5 and tokens[1].kind == "colon" and tokens[2].kind == "colon" and tokens[3].kind == "ident" and tokens[4].kind == "eof":
+        return Name(alias=first, name=raw[tokens[3].start:tokens[3].end])
+    mut cursor = 1
+    mut dot = -1
+    while cursor + 1 < len(tokens) and tokens[cursor].kind == "dot" and tokens[cursor + 1].kind == "ident":
+        dot = cursor
+        cursor = cursor + 2
+    if dot < 0 or cursor + 1 != len(tokens) or tokens[cursor].kind != "eof":
+        fail resolve.bad()
+    return Name(alias=raw[tokens[0].start:tokens[dot - 1].end], name=raw[tokens[dot + 1].start:tokens[dot + 1].end])

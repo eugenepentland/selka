@@ -1,0 +1,228 @@
+import model
+import resolve
+import qualified
+import prelude
+import generics
+
+func identity(mut p: resolve.State, module: int, span: model.Span) -> model.Identity fails model.Problem:
+    const name = try qualified.parse(resolve.text(p, module, span))
+    return try resolve.resolve(mut p, module, name.alias, name.name, 0, span)
+
+
+func public_type(p: resolve.State, module: int, span: model.Span, id: model.Identity) -> bool fails model.Problem:
+    const symbol = p.request.modules[id.module].symbols[id.symbol]
+    if not symbol.exported:
+        fail resolve.problem(module, span, "E_PRIVATE_INTERFACE", "exported interface exposes an unexported type", model.Site(module=id.module, span=symbol.span))
+    return True
+
+
+func arity(p: resolve.State, id: model.Identity) -> int fails model.Problem:
+    const symbol = p.request.modules[id.module].symbols[id.symbol]
+    const found = try resolve.lookup(p.tables[id.module].nominals, resolve.number(symbol.span.start))
+    if found < 0:
+        return 0
+    const declarations = p.request.modules[id.module].syntax.declarations
+    if found < len(declarations.records):
+        return len(declarations.records[found].type_parameters)
+    return len(declarations.variants[found - len(declarations.records)].type_parameters)
+
+
+func application(mut p: resolve.State, module: int, item: model.Application, parameters: model.Generic[]) -> bool fails model.Problem:
+    const name = resolve.text(p, module, item.name)
+    for parameter in parameters:
+        if resolve.text(p, module, parameter.name) == name:
+            fail resolve.problem(module, item.name, "E_TYPE_APPLICATION", "type parameters cannot be used as type constructors", model.absent_site())
+    const local = try resolve.symbol_id(p, module, name)
+    if local < 0:
+        if name == b"FixedArray":
+            if len(item.arguments) != 2:
+                fail resolve.problem(module, item.span, "E_GENERIC_ARITY", "FixedArray requires an element type and length", model.absent_site())
+            return try generic_type(mut p, module, item.arguments[0], parameters)
+        const count = prelude.arity(name)
+        if count >= 0:
+            if len(item.arguments) != count:
+                fail resolve.problem(module, item.span, "E_GENERIC_ARITY", "builtin type argument count does not match", model.absent_site())
+            for argument in item.arguments:
+                _ = try generic_type(mut p, module, argument, parameters)
+            return True
+    _ = try resolve.enter(mut p)
+    p.depth = p.depth - 1
+    const id = try identity(mut p, module, item.name)
+    _ = try public_type(p, module, item.name, id)
+    const count = try arity(p, id)
+    if count != len(item.arguments):
+        fail resolve.problem(module, item.span, "E_GENERIC_ARITY", "type application argument count does not match its declaration", model.Site(module=id.module, span=p.request.modules[id.module].symbols[id.symbol].span))
+    for argument in item.arguments:
+        _ = try generic_type(mut p, module, argument, parameters)
+    return True
+
+
+func signature_inner(mut p: resolve.State, module: int, span: model.Span) -> bool fails model.Problem:
+    const types = p.request.modules[module].syntax.types
+    const suffix = try resolve.type_position(p, module, 0, span)
+    if suffix >= 0:
+        return try signature_type(mut p, module, types.suffixes[suffix].base)
+    const callback = try resolve.type_position(p, module, 1, span)
+    if callback >= 0:
+        const item = types.callbacks[callback]
+        for input in item.parameters:
+            _ = try signature_type(mut p, module, input)
+        _ = try signature_type(mut p, module, item.return_type)
+        if item.failure_type.start >= 0:
+            _ = try signature_type(mut p, module, item.failure_type)
+        return True
+    const array = try resolve.type_position(p, module, 2, span)
+    if array >= 0:
+        const item = types.arrays[array]
+        if item.index.start >= 0:
+            _ = try signature_type(mut p, module, item.index)
+        return try signature_type(mut p, module, item.element)
+    const tuple = try resolve.type_position(p, module, 4, span)
+    if tuple >= 0:
+        for element in types.tuples[tuple].elements:
+            _ = try signature_type(mut p, module, element)
+        return True
+    const text = resolve.text(p, module, span)
+    if span.start == span.end or text == b"Unit" or text == b"()" or prelude.builtin(text):
+        return True
+    const local = try resolve.symbol_id(p, module, text)
+    if local < 0 and prelude.scalar(text):
+        return True
+    const applied = try resolve.type_position(p, module, 3, span)
+    if applied >= 0:
+        return try application(mut p, module, types.applications[applied], [])
+    const id = try identity(mut p, module, span)
+    _ = try public_type(p, module, span, id)
+    const count = try arity(p, id)
+    if count > 0:
+        fail resolve.problem(module, span, "E_GENERIC_ARITY", "nominal type template requires explicit type arguments", model.Site(module=id.module, span=p.request.modules[id.module].symbols[id.symbol].span))
+    return True
+
+
+public func signature_type(mut p: resolve.State, module: int, span: model.Span) -> bool fails model.Problem:
+    _ = try resolve.enter(mut p)
+    const result = try signature_inner(mut p, module, span)
+    p.depth = p.depth - 1
+    return result
+
+
+func generic_inner(mut p: resolve.State, module: int, span: model.Span, parameters: model.Generic[]) -> bool fails model.Problem:
+    const types = p.request.modules[module].syntax.types
+    const suffix = try resolve.type_position(p, module, 0, span)
+    if suffix >= 0:
+        return try generic_type(mut p, module, types.suffixes[suffix].base, parameters)
+    for parameter in parameters:
+        if resolve.text(p, module, parameter.name) == resolve.text(p, module, span):
+            return True
+    const applied = try resolve.type_position(p, module, 3, span)
+    if applied >= 0:
+        return try application(mut p, module, types.applications[applied], parameters)
+    const callback = try resolve.type_position(p, module, 1, span)
+    if callback >= 0:
+        const item = types.callbacks[callback]
+        for input in item.parameters:
+            _ = try generic_type(mut p, module, input, parameters)
+        _ = try generic_type(mut p, module, item.return_type, parameters)
+        if item.failure_type.start >= 0:
+            _ = try generic_type(mut p, module, item.failure_type, parameters)
+        return True
+    const array = try resolve.type_position(p, module, 2, span)
+    if array >= 0:
+        const item = types.arrays[array]
+        if item.index.start >= 0:
+            _ = try generic_type(mut p, module, item.index, parameters)
+        return try generic_type(mut p, module, item.element, parameters)
+    const tuple = try resolve.type_position(p, module, 4, span)
+    if tuple >= 0:
+        for element in types.tuples[tuple].elements:
+            _ = try generic_type(mut p, module, element, parameters)
+        return True
+    return try signature_inner(mut p, module, span)
+
+
+public func generic_type(mut p: resolve.State, module: int, span: model.Span, parameters: model.Generic[]) -> bool fails model.Problem:
+    _ = try resolve.enter(mut p)
+    const result = try generic_inner(mut p, module, span, parameters)
+    p.depth = p.depth - 1
+    return result
+
+
+func exported(p: resolve.State, module: int, span: model.Span, owner: model.Span) -> bool fails model.Problem:
+    mut name = resolve.text(p, module, span)
+    if owner.start >= 0:
+        name = resolve.joined(resolve.text(p, module, owner), name)
+    const id = try resolve.symbol_id(p, module, name)
+    if id < 0:
+        fail resolve.bad()
+    return p.request.modules[module].symbols[id].exported
+
+
+func check_constraint(mut p: resolve.State, module: int, item: model.Constraint) -> bool fails model.Problem:
+    if item.subject.name.start == item.subject.name.end:
+        fail resolve.problem(module, item.name, "E_GENERIC_REQUIREMENT", "constraint requires exactly one subject binder", model.absent_site())
+    if len(item.subject.named) > 0:
+        fail resolve.problem(module, generics.reference_span(item.subject.named[0]), "E_GENERIC_REQUIREMENT", "a constraint right-hand side may not reference another named constraint", model.absent_site())
+    _ = try generics.shadow(p, module, item.subject)
+    _ = try generics.structural(p, module, item.subject, generics.parameter_copy(p, module, item.subject))
+    const visible = try exported(p, module, item.name, model.absent_span())
+    if not visible:
+        return True
+    const parameters = [item.subject]
+    for field in item.subject.fields:
+        _ = try generic_type(mut p, module, field.ty, parameters)
+    for operation in item.subject.operations:
+        for input in operation.parameters:
+            _ = try generic_type(mut p, module, input.ty, parameters)
+        _ = try generic_type(mut p, module, operation.return_type, parameters)
+    return True
+
+
+public func check(mut p: resolve.State, module: int) -> bool fails model.Problem:
+    const declarations = p.request.modules[module].syntax.declarations
+    for record_item in declarations.records:
+        _ = try generics.nominal(mut p, module, record_item.type_parameters)
+        const visible = try exported(p, module, record_item.name, model.absent_span())
+        if visible:
+            for field in record_item.fields:
+                _ = try generic_type(mut p, module, field, record_item.type_parameters)
+    for variant_item in declarations.variants:
+        _ = try generics.nominal(mut p, module, variant_item.type_parameters)
+        const visible = try exported(p, module, variant_item.name, model.absent_span())
+        if visible:
+            for variant_case in variant_item.cases:
+                if variant_case.payload.start >= 0:
+                    _ = try generic_type(mut p, module, variant_case.payload, variant_item.type_parameters)
+                for field in variant_case.fields:
+                    _ = try generic_type(mut p, module, field, variant_item.type_parameters)
+    for alias in declarations.aliases:
+        const visible = try exported(p, module, alias.name, model.absent_span())
+        if visible:
+            _ = try signature_type(mut p, module, alias.target)
+    for domain_item in declarations.domains:
+        const visible = try exported(p, module, domain_item.name, model.absent_span())
+        if visible:
+            _ = try signature_type(mut p, module, domain_item.backing)
+    for constraint_item in declarations.constraints:
+        _ = try check_constraint(mut p, module, constraint_item)
+    for function_item in declarations.functions:
+        const bounds = try generics.validate(mut p, module, function_item.type_parameters)
+        const visible = try exported(p, module, function_item.name, function_item.owner)
+        if not visible:
+            continue
+        for bound in bounds:
+            const symbol = p.request.modules[bound.identity.module].symbols[bound.identity.symbol]
+            if not symbol.exported:
+                fail resolve.problem(module, bound.span, "E_PRIVATE_INTERFACE", "exported generic function exposes an unexported constraint", model.Site(module=bound.identity.module, span=symbol.span))
+        for parameter in function_item.type_parameters:
+            for field in parameter.fields:
+                _ = try generic_type(mut p, module, field.ty, function_item.type_parameters)
+            for operation in parameter.operations:
+                for input in operation.parameters:
+                    _ = try generic_type(mut p, module, input.ty, function_item.type_parameters)
+                _ = try generic_type(mut p, module, operation.return_type, function_item.type_parameters)
+        for input in function_item.parameters:
+            _ = try generic_type(mut p, module, input, function_item.type_parameters)
+        _ = try generic_type(mut p, module, function_item.return_type, function_item.type_parameters)
+        if function_item.failure_type.start >= 0:
+            _ = try generic_type(mut p, module, function_item.failure_type, function_item.type_parameters)
+    return True

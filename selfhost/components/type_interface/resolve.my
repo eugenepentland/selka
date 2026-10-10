@@ -1,0 +1,141 @@
+import model
+import indexed
+
+public record Tables:
+    names: indexed.Index
+    qualifiers: indexed.Index
+    types: indexed.Index
+    constraints: indexed.Index
+    nominals: indexed.Index
+
+
+public record State:
+    request: model.Request
+    tables: Tables[]
+    usage: model.Usage[]
+    receipts: model.Receipt[]
+    depth: int
+    receipt_bytes: int
+
+
+public func bad() -> model.Problem:
+    return model.Problem(code="P_TRANSPORT", message="malformed type interface projection", site=model.absent_site(), related=model.absent_site())
+
+
+public func problem(module: int, span: model.Span, code: str, message: str, related: model.Site) -> model.Problem:
+    return model.Problem(code=code, message=message, site=model.Site(module=module, span=span), related=related)
+
+
+public func text(p: State, module: int, span: model.Span) -> bytes:
+    return p.request.modules[module].context.source[span.start:span.end]
+
+
+public func number(value: int) -> bytes:
+    mut remaining = value
+    mut buffer = byte_buffer([])
+    for i in range(4):
+        _ = buffer.append_byte(remaining % 256)
+        remaining = remaining // 256
+    return bytes(buffer)
+
+
+public func span_key(kind: int, span: model.Span) -> bytes:
+    mut buffer = byte_buffer([])
+    _ = buffer.append_byte(kind)
+    const start = number(span.start)
+    const end = number(span.end)
+    _ = buffer.append_range(start, 0, 4)
+    _ = buffer.append_range(end, 0, 4)
+    return bytes(buffer)
+
+
+public func make_index(names: bytes[]) -> indexed.Index fails model.Problem:
+    match indexed.make(names):
+        case Ok(result):
+            return result
+        case Err(error):
+            fail bad()
+
+
+public func lookup(table: indexed.Index, name: bytes) -> int fails model.Problem:
+    match indexed.lookup(table, name):
+        case Ok(result):
+            return result.id
+        case Err(error):
+            fail bad()
+
+
+public func type_position(p: State, module: int, kind: int, span: model.Span) -> int fails model.Problem:
+    const found = try lookup(p.tables[module].types, span_key(kind, span))
+    if found < 0:
+        return -1
+    const types = p.request.modules[module].syntax.types
+    mut offset = 0
+    if kind > 0:
+        offset = offset + len(types.suffixes)
+    if kind > 1:
+        offset = offset + len(types.callbacks)
+    if kind > 2:
+        offset = offset + len(types.arrays)
+    if kind > 3:
+        offset = offset + len(types.applications)
+    return found - offset
+
+
+public func symbol_id(p: State, module: int, name: bytes) -> int fails model.Problem:
+    return try lookup(p.tables[module].names, name)
+
+
+public func tests_module(p: State, from: int, target: int) -> bool:
+    if p.request.modules[from].context.imported:
+        return False
+    mut buffer = byte_buffer([])
+    const name = p.request.modules[target].context.name
+    _ = buffer.append_range(name, 0, len(name))
+    _ = buffer.append_range(b"_test", 0, 5)
+    return p.request.modules[from].context.name == bytes(buffer)
+
+
+public func resolve(mut p: State, from: int, alias: bytes, name: bytes, kind: int, span: model.Span) -> model.Identity fails model.Problem:
+    mut target = from
+    if len(alias) > 0:
+        const import_hit = try lookup(p.tables[from].qualifiers, alias)
+        if import_hit < 0:
+            fail problem(from, span, "E_UNKNOWN_IMPORT", "name does not identify a direct import alias", model.absent_site())
+        const import_id = import_hit // 2
+        target = p.request.modules[from].imports[import_id].target
+        p.usage[from].used[import_id] = True
+    const symbol = try symbol_id(p, target, name)
+    if symbol < 0:
+        fail problem(from, span, "E_UNKNOWN_SYMBOL", "declaration is not present in the resolved module", model.absent_site())
+    const item = p.request.modules[target].symbols[symbol]
+    const related = model.Site(module=target, span=item.span)
+    if target != from and not item.exported and not tests_module(p, from, target):
+        fail problem(from, span, "E_PRIVATE_SYMBOL", "declaration is private to its module", related)
+    if item.restricted:
+        fail problem(from, span, "E_PRIVATE_FUNCTION", "private domain function requires the same declaring domain", related)
+    if item.kind != kind:
+        fail problem(from, span, "E_SYMBOL_KIND", "declaration has the wrong kind for this reference", related)
+    mut identity = model.Identity(module=target, symbol=symbol)
+    if item.re_export.module >= 0:
+        identity = item.re_export
+    p.receipt_bytes = p.receipt_bytes + len(alias) + len(name)
+    if len(p.receipts) >= 65536 or p.receipt_bytes > 8388608:
+        fail bad()
+    p.receipts.append(model.Receipt(from=from, alias=alias, name=name, kind=kind, span=span, identity=identity))
+    return identity
+
+
+public func joined(owner: bytes, name: bytes) -> bytes:
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(owner, 0, len(owner))
+    _ = buffer.append_byte(46)
+    _ = buffer.append_range(name, 0, len(name))
+    return bytes(buffer)
+
+
+public func enter(mut p: State) -> bool fails model.Problem:
+    if p.depth >= 256:
+        fail model.Problem(code="P_DEPTH", message="type interface depth exceeds 256", site=model.absent_site(), related=model.absent_site())
+    p.depth = p.depth + 1
+    return True

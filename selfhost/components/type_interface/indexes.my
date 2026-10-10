@@ -1,0 +1,247 @@
+import model
+import resolve
+
+record Budget:
+    sources: int
+    strings: int
+    symbols: int
+    imports: int
+    types: int
+    declarations: int
+    edges: int
+
+
+func valid_span(span: model.Span, size: int, optional: bool) -> bool fails model.Problem:
+    if optional and span.start == -1 and span.end == -1:
+        return True
+    if span.start < 0 or span.end < span.start or span.end > size:
+        fail resolve.bad()
+    return True
+
+
+func name(span: model.Span, size: int) -> bool fails model.Problem:
+    _ = try valid_span(span, size, False)
+    if span.start == span.end:
+        fail resolve.bad()
+    return True
+
+
+func edges(mut budget: Budget, count: int) -> bool fails model.Problem:
+    budget.edges = budget.edges + count
+    if budget.edges > 65536:
+        fail resolve.bad()
+    return True
+
+
+func fields(mut budget: Budget, values: model.Field[], size: int) -> bool fails model.Problem:
+    _ = try edges(mut budget, len(values))
+    for field in values:
+        _ = try name(field.name, size)
+        _ = try valid_span(field.ty, size, False)
+    return True
+
+
+func generics(mut budget: Budget, values: model.Generic[], size: int) -> bool fails model.Problem:
+    _ = try edges(mut budget, len(values))
+    for parameter in values:
+        _ = try valid_span(parameter.name, size, False)
+        _ = try spans(mut budget, parameter.requirements, size)
+        _ = try fields(mut budget, parameter.fields, size)
+        _ = try edges(mut budget, len(parameter.operations))
+        for operation in parameter.operations:
+            _ = try name(operation.name, size)
+            _ = try fields(mut budget, operation.parameters, size)
+            _ = try valid_span(operation.return_type, size, False)
+        _ = try edges(mut budget, len(parameter.named))
+        for reference in parameter.named:
+            _ = try valid_span(reference.alias, size, True)
+            _ = try name(reference.name, size)
+    return True
+
+
+func spans(mut budget: Budget, values: model.Span[], size: int) -> bool fails model.Problem:
+    _ = try edges(mut budget, len(values))
+    for value in values:
+        _ = try valid_span(value, size, False)
+    return True
+
+
+func catalog(mut budget: Budget, syntax: model.Catalog, size: int) -> bool fails model.Problem:
+    const declarations = syntax.declarations
+    const types = syntax.types
+    budget.declarations = budget.declarations + len(declarations.records) + len(declarations.variants) + len(declarations.aliases) + len(declarations.domains) + len(declarations.constraints) + len(declarations.functions)
+    budget.types = budget.types + len(types.suffixes) + len(types.callbacks) + len(types.arrays) + len(types.applications) + len(types.tuples)
+    if budget.declarations > 65536 or budget.types > 65536:
+        fail resolve.bad()
+    for item in declarations.records:
+        _ = try name(item.name, size)
+        _ = try generics(mut budget, item.type_parameters, size)
+        _ = try spans(mut budget, item.fields, size)
+    for item in declarations.variants:
+        _ = try name(item.name, size)
+        _ = try generics(mut budget, item.type_parameters, size)
+        _ = try edges(mut budget, len(item.cases))
+        for variant_case in item.cases:
+            _ = try valid_span(variant_case.payload, size, True)
+            _ = try spans(mut budget, variant_case.fields, size)
+    for item in declarations.aliases:
+        _ = try name(item.name, size)
+        _ = try valid_span(item.target, size, False)
+    for item in declarations.domains:
+        _ = try name(item.name, size)
+        _ = try valid_span(item.backing, size, False)
+    for item in declarations.constraints:
+        _ = try name(item.name, size)
+        _ = try valid_span(item.span, size, False)
+        _ = try generics(mut budget, [item.subject], size)
+    for item in declarations.functions:
+        _ = try name(item.name, size)
+        _ = try valid_span(item.owner, size, True)
+        _ = try generics(mut budget, item.type_parameters, size)
+        _ = try spans(mut budget, item.parameters, size)
+        _ = try valid_span(item.return_type, size, False)
+        _ = try valid_span(item.failure_type, size, True)
+    for item in types.suffixes:
+        _ = try valid_span(item.span, size, False)
+        _ = try valid_span(item.base, size, False)
+    for item in types.callbacks:
+        _ = try valid_span(item.span, size, False)
+        _ = try spans(mut budget, item.parameters, size)
+        _ = try valid_span(item.return_type, size, False)
+        _ = try valid_span(item.failure_type, size, True)
+    for item in types.arrays:
+        _ = try valid_span(item.span, size, False)
+        _ = try valid_span(item.index, size, True)
+        _ = try valid_span(item.element, size, False)
+    for item in types.applications:
+        _ = try valid_span(item.span, size, False)
+        _ = try valid_span(item.name, size, False)
+        _ = try spans(mut budget, item.arguments, size)
+    for item in types.tuples:
+        _ = try valid_span(item.span, size, False)
+        _ = try spans(mut budget, item.elements, size)
+    return True
+
+
+public func prepare(request: model.Request) -> resolve.State fails model.Problem:
+    if len(request.modules) > 4096 or len(request.order) != len(request.modules):
+        fail resolve.bad()
+    mut seen: bool[] = []
+    for module in request.modules:
+        seen.append(False)
+    for module in request.order:
+        if module < 0 or module >= len(seen):
+            fail resolve.bad()
+        if seen[module]:
+            fail resolve.bad()
+        seen[module] = True
+    mut imported_flags: bool[] = []
+    for module in request.modules:
+        imported_flags.append(False)
+    for module in request.modules:
+        for edge in module.imports:
+            if edge.target < 0 or edge.target >= len(request.modules):
+                fail resolve.bad()
+            imported_flags[edge.target] = True
+    for i in range(len(request.modules)):
+        if request.modules[i].context.imported != imported_flags[i]:
+            fail resolve.bad()
+    mut budget = Budget(sources=0, strings=0, symbols=0, imports=0, types=0, declarations=0, edges=0)
+    for i in range(len(request.modules)):
+        const module = request.modules[i]
+        const size = len(module.context.source)
+        if module.context.module != i or size > 1048576 or len(module.context.path) > 16384 or len(module.context.name) == 0 or len(module.imports) > 4096 or len(module.import_used) != len(module.imports):
+            fail resolve.bad()
+        budget.sources = budget.sources + size
+        budget.strings = budget.strings + len(module.context.name) + len(module.context.path)
+        budget.symbols = budget.symbols + len(module.symbols)
+        budget.imports = budget.imports + len(module.imports)
+        for imported in module.imports:
+            _ = try name(imported.span, size)
+            if imported.target < 0 or imported.target >= len(request.modules) or len(imported.name) == 0 or len(imported.alias) == 0:
+                fail resolve.bad()
+            budget.strings = budget.strings + len(imported.name) + len(imported.alias)
+        for symbol in module.symbols:
+            _ = try name(symbol.span, size)
+            if symbol.kind < 0 or symbol.kind > 2 or len(symbol.name) == 0 or (symbol.restricted and (len(symbol.owner) == 0 or symbol.kind != 1)):
+                fail resolve.bad()
+            budget.strings = budget.strings + len(symbol.name) + len(symbol.owner)
+            const id = symbol.re_export
+            if id.module != -1 or id.symbol != -1:
+                if id.module < 0 or id.module >= len(request.modules):
+                    fail resolve.bad()
+                if id.symbol < 0 or id.symbol >= len(request.modules[id.module].symbols):
+                    fail resolve.bad()
+        for symbol in module.symbols:
+            const origin = symbol.re_export
+            if origin.module >= 0:
+                const target = request.modules[origin.module].symbols[origin.symbol]
+                if target.kind != symbol.kind or target.re_export.module >= 0 or target.name != symbol.name or len(symbol.owner) > 0 or symbol.restricted or not symbol.exported:
+                    fail resolve.bad()
+            else:
+                const leaf = module.context.source[symbol.span.start:symbol.span.end]
+                if len(symbol.owner) > 0:
+                    if symbol.kind != 1 or symbol.name != resolve.joined(symbol.owner, leaf):
+                        fail resolve.bad()
+                elif symbol.name != leaf:
+                    fail resolve.bad()
+        if budget.sources > 8388608 or budget.strings > 8388608 or budget.symbols > 65536 or budget.imports > 65536:
+            fail resolve.bad()
+        _ = try catalog(mut budget, module.syntax, size)
+    mut tables: resolve.Tables[] = []
+    mut usage: model.Usage[] = []
+    for module in request.modules:
+        mut names: bytes[] = []
+        for symbol in module.symbols:
+            names.append(symbol.name)
+        const name_index = try resolve.make_index(names)
+        for i in range(len(names)):
+            const found = try resolve.lookup(name_index, names[i])
+            if found != i:
+                fail resolve.bad()
+        mut qualifiers: bytes[] = []
+        for imported in module.imports:
+            qualifiers.append(imported.alias)
+            qualifiers.append(imported.name)
+        mut import_names: bytes[] = []
+        mut import_aliases: bytes[] = []
+        for imported in module.imports:
+            import_names.append(imported.name)
+            import_aliases.append(imported.alias)
+        const import_name_index = try resolve.make_index(import_names)
+        const import_alias_index = try resolve.make_index(import_aliases)
+        for i in range(len(module.imports)):
+            const first_name = try resolve.lookup(import_name_index, import_names[i])
+            const first_alias = try resolve.lookup(import_alias_index, import_aliases[i])
+            if first_name != i or first_alias != i:
+                fail resolve.bad()
+        const qualifier_index = try resolve.make_index(qualifiers)
+        mut types: bytes[] = []
+        for item in module.syntax.types.suffixes:
+            types.append(resolve.span_key(0, item.span))
+        for item in module.syntax.types.callbacks:
+            types.append(resolve.span_key(1, item.span))
+        for item in module.syntax.types.arrays:
+            types.append(resolve.span_key(2, item.span))
+        for item in module.syntax.types.applications:
+            types.append(resolve.span_key(3, item.span))
+        for item in module.syntax.types.tuples:
+            types.append(resolve.span_key(4, item.span))
+        const type_index = try resolve.make_index(types)
+        for i in range(len(types)):
+            const first = try resolve.lookup(type_index, types[i])
+            if first != i:
+                fail resolve.bad()
+        mut constraints: bytes[] = []
+        for item in module.syntax.declarations.constraints:
+            constraints.append(resolve.span_key(0, item.name))
+        const constraint_index = try resolve.make_index(constraints)
+        mut nominals: bytes[] = []
+        for item in module.syntax.declarations.records:
+            nominals.append(resolve.number(item.name.start))
+        for item in module.syntax.declarations.variants:
+            nominals.append(resolve.number(item.name.start))
+        const nominal_index = try resolve.make_index(nominals)
+        tables.append(resolve.Tables(names=name_index, qualifiers=qualifier_index, types=type_index, constraints=constraint_index, nominals=nominal_index))
+        usage.append(model.Usage(module=module.context.module, used=module.import_used))
+    return resolve.State(request=request, tables=tables, usage=usage, receipts=[], depth=0, receipt_bytes=0)

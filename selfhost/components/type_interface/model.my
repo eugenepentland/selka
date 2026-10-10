@@ -1,0 +1,219 @@
+public record Span:
+    start: int
+    end: int
+
+
+public record Site:
+    module: int
+    span: Span
+
+
+public record Identity:
+    module: int
+    symbol: int
+
+
+public record Problem:
+    code: str
+    message: str
+    site: Site
+    related: Site
+
+
+public record Context:
+    module: int
+    name: bytes
+    path: bytes
+    source: bytes
+    trusted_intrinsics: bool
+    imported: bool
+
+
+public record Import:
+    name: bytes
+    alias: bytes
+    span: Span
+    target: int
+
+
+public record Symbol:
+    name: bytes
+    kind: int
+    span: Span
+    exported: bool
+    owner: bytes
+    restricted: bool
+    re_export: Identity
+
+
+public record Field:
+    name: Span
+    ty: Span
+
+
+public record Operation:
+    name: Span
+    parameters: Field[]
+    return_type: Span
+
+
+public record Reference:
+    alias: Span
+    name: Span
+
+
+public record Generic:
+    name: Span
+    default_copy: bool
+    constant_length: bool
+    requirements: Span[]
+    fields: Field[]
+    operations: Operation[]
+    named: Reference[]
+
+
+public record Record:
+    name: Span
+    type_parameters: Generic[]
+    fields: Span[]
+
+
+public record Case:
+    payload: Span
+    fields: Span[]
+
+
+public record Variant:
+    name: Span
+    type_parameters: Generic[]
+    cases: Case[]
+
+
+public record Alias:
+    name: Span
+    target: Span
+
+
+public record Domain:
+    name: Span
+    backing: Span
+
+
+public record Constraint:
+    name: Span
+    span: Span
+    subject: Generic
+
+
+public record Function:
+    name: Span
+    owner: Span
+    type_parameters: Generic[]
+    parameters: Span[]
+    return_type: Span
+    failure_type: Span
+
+
+public record Suffix:
+    span: Span
+    base: Span
+
+
+public record Callback:
+    span: Span
+    parameters: Span[]
+    return_type: Span
+    failure_type: Span
+
+
+public record Array:
+    span: Span
+    index: Span
+    element: Span
+
+
+public record Application:
+    span: Span
+    name: Span
+    arguments: Span[]
+
+
+public record Tuple:
+    span: Span
+    elements: Span[]
+
+
+public record Declarations:
+    records: Record[]
+    variants: Variant[]
+    aliases: Alias[]
+    domains: Domain[]
+    constraints: Constraint[]
+    functions: Function[]
+
+
+public record Types:
+    suffixes: Suffix[]
+    callbacks: Callback[]
+    arrays: Array[]
+    applications: Application[]
+    tuples: Tuple[]
+
+
+public record Catalog:
+    declarations: Declarations
+    types: Types
+
+
+public record Module:
+    context: Context
+    imports: Import[]
+    symbols: Symbol[]
+    import_used: bool[]
+    syntax: Catalog
+
+
+public record Request:
+    order: int[]
+    modules: Module[]
+
+
+public record Receipt:
+    from: int
+    alias: bytes
+    name: bytes
+    kind: int
+    span: Span
+    identity: Identity
+
+
+public record Usage:
+    module: int
+    used: bool[]
+
+
+public record Outcome:
+    order: int[]
+    usage: Usage[]
+    receipts: Receipt[]
+    problem: Problem
+
+
+public func absent_span() -> Span:
+    return Span(start=-1, end=-1)
+
+
+public func absent_identity() -> Identity:
+    return Identity(module=-1, symbol=-1)
+
+
+public func absent_site() -> Site:
+    return Site(module=-1, span=absent_span())
+
+
+public func empty_problem() -> Problem:
+    return Problem(code="", message="", site=absent_site(), related=absent_site())
+
+
+public func empty_catalog() -> Catalog:
+    return Catalog(declarations=Declarations(records=[], variants=[], aliases=[], domains=[], constraints=[], functions=[]), types=Types(suffixes=[], callbacks=[], arrays=[], applications=[], tuples=[]))

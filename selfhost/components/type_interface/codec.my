@@ -1,0 +1,389 @@
+import model
+import resolve
+
+record Reader:
+    data: bytes
+    pos: int
+    strings: int
+    sources: int
+    counts: int[]
+
+
+func transport() -> model.Problem:
+    return resolve.bad()
+
+
+func read_u32(mut reader: Reader) -> int fails model.Problem:
+    if len(reader.data) - reader.pos < 4:
+        fail transport()
+    const at = reader.pos
+    reader.pos = reader.pos + 4
+    return reader.data[at] + reader.data[at + 1] * 256 + reader.data[at + 2] * 65536 + reader.data[at + 3] * 16777216
+
+
+func take(mut reader: Reader, size: int) -> bytes fails model.Problem:
+    if size < 0 or size > len(reader.data) - reader.pos:
+        fail transport()
+    const data = reader.data[reader.pos:reader.pos + size]
+    reader.pos = reader.pos + size
+    return data
+
+
+func blob(mut reader: Reader) -> bytes fails model.Problem:
+    const size = try read_u32(mut reader)
+    reader.strings = reader.strings + size
+    if reader.strings > 8388608:
+        fail transport()
+    return try take(mut reader, size)
+
+
+func boolean(mut reader: Reader) -> bool fails model.Problem:
+    const value = try read_u32(mut reader)
+    if value > 1:
+        fail transport()
+    return value == 1
+
+
+func span(mut reader: Reader) -> model.Span fails model.Problem:
+    const start = try read_u32(mut reader)
+    const end = try read_u32(mut reader)
+    return model.Span(start=start, end=end)
+
+
+func symbol(mut reader: Reader) -> model.Symbol fails model.Problem:
+    const name = try blob(mut reader)
+    const kind = try read_u32(mut reader)
+    const location = try span(mut reader)
+    const exported = try boolean(mut reader)
+    const has_owner = try boolean(mut reader)
+    mut owner = b""
+    if has_owner:
+        owner = try blob(mut reader)
+        if len(owner) == 0:
+            fail transport()
+    const restricted = try boolean(mut reader)
+    const has_origin = try boolean(mut reader)
+    mut origin = model.absent_identity()
+    if has_origin:
+        const module = try read_u32(mut reader)
+        const id = try read_u32(mut reader)
+        origin = model.Identity(module=module, symbol=id)
+    return model.Symbol(name=name, kind=kind, span=location, exported=exported, owner=owner, restricted=restricted, re_export=origin)
+
+
+func count(mut reader: Reader, category: int) -> int fails model.Problem:
+    const value = try read_u32(mut reader)
+    if value > 65536 or value > len(reader.data) - reader.pos:
+        fail transport()
+    reader.counts[category] = reader.counts[category] + value
+    if reader.counts[category] > 65536:
+        fail transport()
+    return value
+
+
+func optional_span(mut reader: Reader) -> model.Span fails model.Problem:
+    const present = try boolean(mut reader)
+    if present:
+        return try span(mut reader)
+    return model.absent_span()
+
+
+func spans(mut reader: Reader) -> model.Span[] fails model.Problem:
+    const size = try count(mut reader, 0)
+    mut result: model.Span[] = []
+    for i in range(size):
+        const value = try span(mut reader)
+        result.append(value)
+    return result
+
+
+func fields(mut reader: Reader) -> model.Field[] fails model.Problem:
+    const size = try count(mut reader, 0)
+    mut result: model.Field[] = []
+    for i in range(size):
+        const name = try span(mut reader)
+        const ty = try span(mut reader)
+        result.append(model.Field(name=name, ty=ty))
+    return result
+
+
+func generic(mut reader: Reader) -> model.Generic fails model.Problem:
+    const name = try span(mut reader)
+    const default_copy = try boolean(mut reader)
+    const constant_length = try boolean(mut reader)
+    const requirements = try spans(mut reader)
+    const members = try fields(mut reader)
+    const op_count = try count(mut reader, 0)
+    mut operations: model.Operation[] = []
+    for i in range(op_count):
+        const op_name = try span(mut reader)
+        const parameters = try fields(mut reader)
+        const result = try span(mut reader)
+        operations.append(model.Operation(name=op_name, parameters=parameters, return_type=result))
+    const named_count = try count(mut reader, 0)
+    mut named: model.Reference[] = []
+    for i in range(named_count):
+        const alias = try optional_span(mut reader)
+        const ref_name = try span(mut reader)
+        named.append(model.Reference(alias=alias, name=ref_name))
+    return model.Generic(name=name, default_copy=default_copy, constant_length=constant_length, requirements=requirements, fields=members, operations=operations, named=named)
+
+
+func generics(mut reader: Reader) -> model.Generic[] fails model.Problem:
+    const size = try count(mut reader, 0)
+    mut result: model.Generic[] = []
+    for i in range(size):
+        const value = try generic(mut reader)
+        result.append(value)
+    return result
+
+
+func cases(mut reader: Reader) -> model.Case[] fails model.Problem:
+    const size = try count(mut reader, 0)
+    mut result: model.Case[] = []
+    for i in range(size):
+        const payload = try optional_span(mut reader)
+        const members = try spans(mut reader)
+        result.append(model.Case(payload=payload, fields=members))
+    return result
+
+
+func catalog(mut reader: Reader) -> model.Catalog fails model.Problem:
+    const records_count = try count(mut reader, 2)
+    mut records: model.Record[] = []
+    for i in range(records_count):
+        const value0 = try span(mut reader)
+        const value1 = try generics(mut reader)
+        const value2 = try spans(mut reader)
+        records.append(model.Record(name=value0, type_parameters=value1, fields=value2))
+    const variants_count = try count(mut reader, 2)
+    mut variants: model.Variant[] = []
+    for i in range(variants_count):
+        const value0 = try span(mut reader)
+        const value1 = try generics(mut reader)
+        const value2 = try cases(mut reader)
+        variants.append(model.Variant(name=value0, type_parameters=value1, cases=value2))
+    const aliases_count = try count(mut reader, 2)
+    mut aliases: model.Alias[] = []
+    for i in range(aliases_count):
+        const value0 = try span(mut reader)
+        const value1 = try span(mut reader)
+        aliases.append(model.Alias(name=value0, target=value1))
+    const domains_count = try count(mut reader, 2)
+    mut domains: model.Domain[] = []
+    for i in range(domains_count):
+        const value0 = try span(mut reader)
+        const value1 = try span(mut reader)
+        domains.append(model.Domain(name=value0, backing=value1))
+    const constraints_count = try count(mut reader, 2)
+    mut constraints: model.Constraint[] = []
+    for i in range(constraints_count):
+        const value0 = try span(mut reader)
+        const value1 = try span(mut reader)
+        const value2 = try generic(mut reader)
+        constraints.append(model.Constraint(name=value0, span=value1, subject=value2))
+    const functions_count = try count(mut reader, 2)
+    mut functions: model.Function[] = []
+    for i in range(functions_count):
+        const value0 = try span(mut reader)
+        const value1 = try optional_span(mut reader)
+        const value2 = try generics(mut reader)
+        const value3 = try spans(mut reader)
+        const value4 = try span(mut reader)
+        const value5 = try optional_span(mut reader)
+        functions.append(model.Function(name=value0, owner=value1, type_parameters=value2, parameters=value3, return_type=value4, failure_type=value5))
+    const suffixes_count = try count(mut reader, 1)
+    mut suffixes: model.Suffix[] = []
+    for i in range(suffixes_count):
+        const value0 = try span(mut reader)
+        const value1 = try span(mut reader)
+        suffixes.append(model.Suffix(span=value0, base=value1))
+    const callbacks_count = try count(mut reader, 1)
+    mut callbacks: model.Callback[] = []
+    for i in range(callbacks_count):
+        const value0 = try span(mut reader)
+        const value1 = try spans(mut reader)
+        const value2 = try span(mut reader)
+        const value3 = try optional_span(mut reader)
+        callbacks.append(model.Callback(span=value0, parameters=value1, return_type=value2, failure_type=value3))
+    const arrays_count = try count(mut reader, 1)
+    mut arrays: model.Array[] = []
+    for i in range(arrays_count):
+        const value0 = try span(mut reader)
+        const value1 = try optional_span(mut reader)
+        const value2 = try span(mut reader)
+        arrays.append(model.Array(span=value0, index=value1, element=value2))
+    const applications_count = try count(mut reader, 1)
+    mut applications: model.Application[] = []
+    for i in range(applications_count):
+        const value0 = try span(mut reader)
+        const value1 = try span(mut reader)
+        const value2 = try spans(mut reader)
+        applications.append(model.Application(span=value0, name=value1, arguments=value2))
+    const tuples_count = try count(mut reader, 1)
+    mut tuples: model.Tuple[] = []
+    for i in range(tuples_count):
+        const value0 = try span(mut reader)
+        const value1 = try spans(mut reader)
+        tuples.append(model.Tuple(span=value0, elements=value1))
+    return model.Catalog(declarations=model.Declarations(records=records, variants=variants, aliases=aliases, domains=domains, constraints=constraints, functions=functions), types=model.Types(suffixes=suffixes, callbacks=callbacks, arrays=arrays, applications=applications, tuples=tuples))
+
+
+public func decode(data: bytes) -> model.Request fails model.Problem:
+    if len(data) > 67108800 or len(data) < 8 or data[:8] != b"SLKTYI01":
+        fail transport()
+    mut reader = Reader(data=data, pos=8, strings=0, sources=0, counts=[0, 0, 0, 0, 0])
+    const order_count = try read_u32(mut reader)
+    if order_count > 4096 or order_count * 4 > len(data) - reader.pos:
+        fail transport()
+    mut order: int[] = []
+    for i in range(order_count):
+        const value = try read_u32(mut reader)
+        order.append(value)
+    const module_count = try read_u32(mut reader)
+    if module_count > 4096 or module_count != order_count:
+        fail transport()
+    mut modules: model.Module[] = []
+    for i in range(module_count):
+        const module = try read_u32(mut reader)
+        const name = try blob(mut reader)
+        const path = try blob(mut reader)
+        const trusted = try boolean(mut reader)
+        const imported = try boolean(mut reader)
+        const source_size = try read_u32(mut reader)
+        reader.sources = reader.sources + source_size
+        if source_size > 1048576 or reader.sources > 8388608 or len(path) > 16384:
+            fail transport()
+        const raw = try take(mut reader, source_size)
+        const context = model.Context(module=module, name=name, path=path, source=raw, trusted_intrinsics=trusted, imported=imported)
+        const import_count = try count(mut reader, 4)
+        if import_count > 4096:
+            fail transport()
+        mut imports: model.Import[] = []
+        for j in range(import_count):
+            const import_name = try blob(mut reader)
+            const alias = try blob(mut reader)
+            const location = try span(mut reader)
+            const target = try read_u32(mut reader)
+            imports.append(model.Import(name=import_name, alias=alias, span=location, target=target))
+        const symbol_count = try count(mut reader, 3)
+        mut symbols: model.Symbol[] = []
+        for j in range(symbol_count):
+            const value = try symbol(mut reader)
+            symbols.append(value)
+        const usage_count = try read_u32(mut reader)
+        if usage_count != import_count:
+            fail transport()
+        mut used: bool[] = []
+        for j in range(usage_count):
+            const value = try boolean(mut reader)
+            used.append(value)
+        const syntax = try catalog(mut reader)
+        modules.append(model.Module(context=context, imports=imports, symbols=symbols, import_used=used, syntax=syntax))
+    if reader.pos != len(data):
+        fail transport()
+    return model.Request(order=order, modules=modules)
+
+
+func put(mut buffer: byte_buffer, value: int):
+    mut rest = value
+    for octet in range(4):
+        _ = buffer.append_byte(rest % 256)
+        rest = rest // 256
+
+
+func write_blob(mut buffer: byte_buffer, data: bytes):
+    put(mut buffer, len(data))
+    _ = buffer.append_range(data, 0, len(data))
+
+
+func ascii(text: str) -> bytes fails model.Problem:
+    const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+    mut buffer = byte_buffer([])
+    for ch in text:
+        mut found = False
+        for i in range(len(alphabet)):
+            if ch == alphabet[i]:
+                _ = buffer.append_byte(32 + i)
+                found = True
+                break
+        if not found:
+            fail transport()
+    return bytes(buffer)
+
+
+func write_span(mut buffer: byte_buffer, at: model.Span):
+    put(mut buffer, at.start)
+    put(mut buffer, at.end)
+
+
+func write_site(mut buffer: byte_buffer, site: model.Site):
+    put(mut buffer, site.module)
+    write_span(mut buffer, site.span)
+
+
+public func encode(result: model.Outcome) -> bytes fails model.Problem:
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(b"SLKTYR01", 0, 8)
+    if result.problem.code != "":
+        put(mut buffer, 1)
+        const code = try ascii(result.problem.code)
+        const message = try ascii(result.problem.message)
+        write_blob(mut buffer, code)
+        write_blob(mut buffer, message)
+        write_site(mut buffer, result.problem.site)
+        put(mut buffer, if result.problem.related.module < 0 then 0 else 1)
+        if result.problem.related.module >= 0:
+            write_site(mut buffer, result.problem.related)
+    else:
+        put(mut buffer, 0)
+        put(mut buffer, len(result.order))
+        for module in result.order:
+            put(mut buffer, module)
+        put(mut buffer, len(result.usage))
+        for usage in result.usage:
+            put(mut buffer, len(usage.used))
+            for flag in usage.used:
+                put(mut buffer, if flag then 1 else 0)
+        put(mut buffer, len(result.receipts))
+        for receipt in result.receipts:
+            put(mut buffer, receipt.from)
+            put(mut buffer, if len(receipt.alias) == 0 then 0 else 1)
+            if len(receipt.alias) > 0:
+                write_blob(mut buffer, receipt.alias)
+            write_blob(mut buffer, receipt.name)
+            put(mut buffer, receipt.kind)
+            write_span(mut buffer, receipt.span)
+            put(mut buffer, receipt.identity.module)
+            put(mut buffer, receipt.identity.symbol)
+    if len(buffer) > 67108800:
+        fail transport()
+    return bytes(buffer)
+
+
+public func request_payload(data: bytes) -> bytes fails model.Problem:
+    if len(data) < 64 or len(data) > 67108864 or data[:8] != b"SLKTIF01":
+        fail transport()
+    mut reader = Reader(data=data, pos=8, strings=0, sources=0, counts=[0, 0, 0, 0, 0])
+    const protocol = try read_u32(mut reader)
+    const schema = try read_u32(mut reader)
+    const direction = try read_u32(mut reader)
+    const size = try read_u32(mut reader)
+    if protocol != 1 or schema != 1 or direction != 0 or size != len(data) - 64:
+        fail transport()
+    return data[64:]
+
+
+public func framed_reply(request: bytes, payload: bytes) -> bytes fails model.Problem:
+    _ = try request_payload(request)
+    if len(payload) > 67108800:
+        fail transport()
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(b"SLKTIF01", 0, 8)
+    put(mut buffer, 1)
+    put(mut buffer, 1)
+    put(mut buffer, 1)
+    put(mut buffer, len(payload))
+    _ = buffer.append_range(request, 24, 64)
+    _ = buffer.append_range(payload, 0, len(payload))
+    return bytes(buffer)

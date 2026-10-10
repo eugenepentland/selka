@@ -1,0 +1,88 @@
+import model
+import resolve
+
+record Walker:
+    state: resolve.State
+    module: int
+    cached: int[]
+    active: bool[]
+
+
+func limit() -> model.Problem:
+    return model.Problem(code="P_DEPTH", message="type interface depth exceeds 256", site=model.absent_site(), related=model.absent_site())
+
+
+func visit(mut walker: Walker, span: model.Span, nesting: int) -> int fails model.Problem:
+    if nesting > 256:
+        fail limit()
+    mut tag = -1
+    mut row = -1
+    for kind in range(5):
+        const found = try resolve.lookup(walker.state.tables[walker.module].types, resolve.span_key(kind, span))
+        if found >= 0:
+            tag = kind
+            row = found
+            break
+    if row < 0:
+        return 1
+    if walker.active[row]:
+        fail limit()
+    if walker.cached[row] > 0:
+        if nesting - 1 + walker.cached[row] > 256:
+            fail limit()
+        return walker.cached[row]
+    walker.active[row] = True
+    const types = walker.state.request.modules[walker.module].syntax.types
+    const position = try resolve.type_position(walker.state, walker.module, tag, span)
+    mut children: model.Span[] = []
+    mut maximum = 0
+    if tag == 0:
+        children = [types.suffixes[position].base]
+    elif tag == 1:
+        const item = types.callbacks[position]
+        children = item.parameters
+        children.append(item.return_type)
+        if item.failure_type.start >= 0:
+            children.append(item.failure_type)
+    elif tag == 2:
+        const item = types.arrays[position]
+        if item.index.start >= 0:
+            children.append(item.index)
+        children.append(item.element)
+    elif tag == 3:
+        children = types.applications[position].arguments
+        # Constructor resolution reads its name directly: one logical leaf.
+        maximum = 1
+    else:
+        children = types.tuples[position].elements
+    for child in children:
+        const child_depth = try visit(mut walker, child, nesting + 1)
+        if child_depth > maximum:
+            maximum = child_depth
+    const result = maximum + 1
+    if nesting - 1 + result > 256:
+        fail limit()
+    walker.active[row] = False
+    walker.cached[row] = result
+    return result
+
+
+public func validate(state: resolve.State) -> bool fails model.Problem:
+    for module in range(len(state.request.modules)):
+        const names = state.tables[module].types.names
+        mut walker = Walker(state=state, module=module, cached=[], active=[])
+        for name in names:
+            walker.cached.append(0)
+            walker.active.append(False)
+        const types = state.request.modules[module].syntax.types
+        for item in types.suffixes:
+            _ = try visit(mut walker, item.span, 1)
+        for item in types.callbacks:
+            _ = try visit(mut walker, item.span, 1)
+        for item in types.arrays:
+            _ = try visit(mut walker, item.span, 1)
+        for item in types.applications:
+            _ = try visit(mut walker, item.span, 1)
+        for item in types.tuples:
+            _ = try visit(mut walker, item.span, 1)
+    return True
