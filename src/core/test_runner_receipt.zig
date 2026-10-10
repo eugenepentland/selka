@@ -736,7 +736,7 @@ fn frontendFixture(a: std.mem.Allocator, directory: std.Io.Dir, bytes: []const u
     try executable.setPermissions(std.testing.io, .fromMode(0o700));
     var digest: Digest = undefined;
     std.crypto.hash.sha2.Sha256.hash(bytes, &digest, .{});
-    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"parser-pilot\",\"protocol\":1,\"schema\":1,\"artifact\":\"parser-pilot\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
+    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"parser-pilot\",\"protocol\":1,\"schema\":2,\"artifact\":\"parser-pilot\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
     try directory.writeFile(std.testing.io, .{ .sub_path = "parser-pilot.json", .data = manifest });
 }
 // spec-case: SELFHOST-FRONTEND-CACHE-1
@@ -760,6 +760,7 @@ test "frontendVerified rejects a valid replacement producer before test hit or p
         .entry = .{ .path = "fixture", .root = ".", .name = "fixture" },
         .identity = .{ .tool = undefined, .frontend = frontend_snapshot },
     };
+    _ = try frontendVerified(context);
     try frontendFixture(a, temporary.dir, "#!/bin/sh\nexit 2\n");
     try std.testing.expectError(error.ComponentChanged, hit(context, @splat(1)));
     try std.testing.expectError(error.ComponentChanged, save(context, @splat(1)));
