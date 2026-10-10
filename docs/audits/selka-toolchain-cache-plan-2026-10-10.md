@@ -1,8 +1,10 @@
 # Selka toolchain caching plan
 
 Status: Wave 1 implemented and qualified on the integration branch, 2026-10-10.
-Later waves remain proposals. The implementation evidence below is separate
-from the original baseline review.
+Wave 2 re-reviewed against committed `main` at `e9011d9c6` on 2026-10-10:
+proceed with the revised scope below after integrating and qualifying Wave 1.
+Wave 1 is not yet on `main`. Later waves remain proposals; this review changes
+the plan only and does not qualify the combined implementation.
 
 ## Objective and contract
 
@@ -32,7 +34,102 @@ function results. Live external services require fresh observations. These
 distinctions belong in the result model, rather than appearing as exceptions to
 an unconditional “everything passed” cache.
 
-## Reviewed baseline
+## Current main review — 2026-10-10
+
+Reviewed committed `main` at
+`e9011d9c6513f63ae02881d0cfc8258c668e6b5e`, using the clean checkout at
+`/home/epentland/ai/canopy/mylang-debug-speedup-main`. There are 114 commits
+reachable from this revision beyond the original shared baseline `ef6e0144f`.
+The reviewed Wave 1 implementation is `c3107e4cf`; neither it nor its self-hosting
+foundation `c2eea010b` is an ancestor of reviewed `main`. The original baseline
+and Wave 1 measurements below remain historical evidence, not current-main
+measurements.
+
+### What is already implemented
+
+| Main changes | Effect on this plan |
+| --- | --- |
+| Packed stage storage and source relocation proofs (`b363bcd0b`, integrated by `2c1167c99`) | Use the existing `stage_store` / `stage_pack` backend. Packing is no longer an unqualified dependency or a new Wave 2 deliverable. |
+| Recursive return/field summary receipts, post-fusion checkpoints, exact helper-request ordering, narrower raw source-prefix guards and validated generic instances (`72f16706a`, `aff944405`) | Preserve these guards and expose their existing evidence through adapters. Do not build a second optimizer invalidation system. |
+| Portable checked-body type recipes, external source proofs, more omitted typed bodies and direct replay into final arrays (`9a77dc754`) | Preserve `semantic-cache-v6`, current-slot contract checks and conservative nominal-type misses. General nominal reconstruction is separate frontend work. |
+| Warning-preserving test report replay and allocation diagnostics | Reuse includes observable warnings. Combine this with Wave 1's planner identity and cache explanations in every replay path. |
+| Live `.my` formatting, allocation-contract lint and embedded-migration gate steps | Preserve these when integrating the component build and test steps; qualify component sources against the current formatting corpus and the qualified seed. |
+
+The pinned Zig is still `0.17.0-dev.1683+5ceec001b`. Keep the existing component
+build and sealed-launch workarounds; this review supplies no reason to replace
+the pin or to remove them.
+
+The latest retained evidence is
+`experiments/frontend-demand-20261010/{README.md,summary.json,validation.json}`
+on `main`, supplemented by `experiments/incremental-gap-20261010/README.md`.
+For a helper edit at 510,436 lines, the latest candidate reports 100 freshly
+checked bodies, 4,751 replayed typed bodies, 32,850 omitted typed bodies, 30 raw
+IR materializations and 44 final IR materializations. It compiles one native
+unit. Median wall time is 4.880 s and peak process RSS 1.639 GiB; frontend time
+is 3.266 s. These are three-sample, populated-cache reachable-EDA-replica results
+with compression explicitly disabled, not cold-build results or a guarantee for
+arbitrary applications. The default pack compression is still zlib.
+
+That evidence records 97/97 gate steps, 2,475 executed tests and all 88 Guardian
+checks passing. This review inspected the committed code and evidence; it did
+not rerun those gates. Earlier compressed-cache measurements of about 1 GiB and
+42k files at 510k lines supersede the old loose-cache motivation, but are not a
+new capacity measurement of `e9011d9c6` after revision history has accumulated.
+
+### What still needs Wave 2
+
+`src/core/test_runner.zig:sharedKeys` still calls `buildRootsSource` and
+`test_runner_identity.Shared.build` after a report replay miss. The latter
+digests all functions in that lowering, then walks reachable calls/references
+for each test. Current build-cache improvements do not persist those test-key
+facts or eliminate this repeated derivation. The new raw/optimized/emission
+receipts are useful producer evidence, not interchangeable test identities:
+test keys still bind canonical pre-pass Core, ordered roots, invariant roots,
+source locations, schemas, providers and execution settings.
+
+`docs/audits/test-keys-once-plan-2026-10-08.md` on main overlaps this work. Its
+proposed `test_runner_union_keys.zig` is absent and per-root key derivation is
+still present. Fold its measurement and directory-sharing opportunities into
+Wave 2; do not run it as an independent competing key pipeline. Preserve its
+warning about root-specific source locators for the synthetic first segment,
+and keep post-execution source validation per root.
+
+Global declaration/catalog preparation and effect/origin/mutation validation
+still run. Ordinary native units still group source-module functions;
+`emit_units.Kind` remains module/generic/helper/entry/program. Nothing in the
+new evidence means all work is confined to the edited function.
+
+### Integration prerequisite
+
+A `git merge-tree --write-tree --name-only c3107e4cf e9011d9c6` preview reports
+conflicts in exactly `build.zig`, `build_test_inputs.zig` and
+`src/core/test_runner.zig`. No branch or worktree was merged. A clean textual
+merge elsewhere is not proof of runtime compatibility.
+
+As a focused compatibility check, all eight `.my` files under
+`selfhost/components/{cache_plan,test_index}` pass `fmt --check` with main's
+recorded shipping compiler. Its SHA-256 was verified against
+`experiments/frontend-demand-20261010/validation.json` before running it. This
+checks formatting only; it does not replace combined build/runtime qualification.
+
+Before changing caching behavior, integrate on a separate branch and:
+
+1. Combine both build graphs and fixture declarations, retaining component
+   qualification and all new main gate steps. Check live component formatting
+   without weakening seed compatibility or the formatting policy.
+2. Adapt every test replay wrapper to main's `receipt.Replay { report, warnings }`
+   while retaining verified planner binding, directory tickets and explanations.
+   Exercise warnings on cold, file-replay and directory-replay paths, including
+   a planner-only identity change. Neither diagnostics nor admission checks may
+   disappear during conflict resolution.
+3. Run the combined full gate and Wave 1's independent component, reference /
+   shadow, edit-invalidation, corruption and empty-`PATH` qualifications. Check
+   the current frontend demand/recursive-summary/source-proof regressions too.
+   Record the resulting commit and component/host identities as the Wave 2
+   baseline. Until this passes, readiness is architectural, not an assertion
+   that the combined implementation is already qualified.
+
+## Original reviewed baseline
 
 Primary review: `/home/epentland/ai/canopy/mylang-worktrees/codex-frontend-packed-20261010`,
 branch `codex/frontend-packed-20261010`, committed HEAD
@@ -122,7 +219,7 @@ launch now uses a verified, sealed memory-file snapshot whose descriptor remains
 alive through child completion, preventing that inherited-writer race without
 retrying failed process creation or weakening artifact verification.
 
-The incremental worktree already contains:
+At the original baseline, the incremental and self-hosting worktrees contained:
 
 | Area | Existing implementation | Remaining opportunity |
 | --- | --- | --- |
@@ -134,7 +231,9 @@ The incremental worktree already contains:
 | Performance | Native Juice build cache, immutable measurements, input/oracle identities and comparison checks | Select affected workloads and reuse compatible evidence automatically |
 | Self-hosting | Independently built Selka test-index component, verified manifest and bounded protocol | That component is informational; it does not authorize test skipping |
 
-Important integration locations in the incremental worktree:
+Important integration locations from that baseline (also use the newer
+`lowering_demand.zig`, `demand_sources.zig`, `optimizer_shortcut.zig` and
+`stage_pack*.zig` on current main):
 
 - `src/incremental.zig`, `semantic_cache.zig`, `semantic_copy.zig`,
   `cache_key.zig`, `dependency_report.zig` and `function_identity.zig`.
@@ -158,9 +257,9 @@ Two distinctions must survive the integration:
    while still materializing substantially more bodies. A native unit is not
    necessarily one function. Preserve that distinction in every claim.
 
-The retained experiment also reports 237,589 files and 3.234 GiB allocated cache
-space after a fully cold 510k-line fixture build. That is evidence for compact
-metadata and packing, not a measurement of the unfinished packed worktree.
+The original retained experiment reports 237,589 files and 3.234 GiB allocated
+cache space after a fully cold 510k-line fixture build. This is the historical
+loose-cache baseline, superseded by the packed-storage evidence discussed above.
 See its `experiments/checkpoint-reuse-20261009/README.md` and
 `experiments/demand-artifacts-20261009/README.md` for methods and limitations.
 
@@ -344,8 +443,8 @@ component's own unverified skip decisions.
 
 ### Wave 1 — Establish the reuse contract and self-host Core traversal
 
-This is the recommended next stopping point. It creates a sound extension point
-without rewriting the compiler caches or waiting for packed storage to finish.
+Implemented on the Wave 1 branch. It creates the extension point used below;
+its original qualification does not cover integration with newer main changes.
 
 1. Pin the latest qualified incremental and self-hosting revisions on an
    integration branch. Record baseline work counts and current cache admission.
@@ -374,38 +473,110 @@ helper reruns its dependent tests and reuses unrelated receipts; callback,
 constant, provider, discovery, planner-only and corrupt-cache changes behave
 correctly. A component edit rebuilds independently of the Zig host.
 
-### Wave 2 — Persist dependency facts and make planning proportional to edits
+### Wave 2 — Persist validated dependency facts and reuse test-key derivation
 
-Adapt existing frontend/Core caches to the shared protocol. Publish compact
-function summaries, typed dependency facets and output fingerprints while doing
-the work already required by the incremental compiler. Persist reverse edges
-and test-root closure summaries. Batch closure calculation and use recursive
-groups so every test does not walk the entire program again.
+Start with the integration prerequisite above. Then deliver the following
+changes in order, with a reference path available throughout.
 
-An unchanged test's key should become verifiable from those records without
-lowering its whole program. Keep the current reachable-IR key path as an oracle
-until equivalence is demonstrated. Never drop global validation merely because
-body checking was reused: move each required effect, mutation and resolution
-analysis into a correctly invalidated query first.
+**2A. Publish compact producer facts.** Add records while frontend/lowering
+already performs its required work, or when an existing validated receipt
+provides complete evidence. Start with canonical pre-pass function digests,
+complete `.call` / `.func_ref` edges, stable declaration/specialization/helper
+identities, source provenance and the input facets that authorize their reuse.
+Represent untracked or ambiguous metadata explicitly and take the existing
+complete-lowering fallback. Optimized outgoing edges or an informational
+source call graph cannot substitute for the pre-pass test graph.
 
-Integrate the packed-stage work behind the store interface once qualified.
-Separate logical query schemas from pack/compression versions. Use bounded,
-independently readable blocks and compact indexes so a cache hit does not require
-decompressing unrelated IR. Extend streaming hashing to store operations that
-still allocate complete artifacts; the component coordinator already streams.
+Adapt existing semantic summaries, lowering-demand receipts and Core headers;
+do not replace the stores or infer validity just from unchanged body text.
+Keep full compiler identity, relevant target/options/provider contracts and
+schema identity. Remap persisted logical identities to current snapshot-local
+IDs only after validating discovery. Position-sensitive canonical digests must
+reflect current source locations, including directory-root locator differences.
 
-Treat native granularity as a separate measured change. Prototype stable
-function or small-group units for the development mode, including symbol,
-constant, debug and linkage ownership. Compare native process count, linker
-time, object count, cold build, edit build and runtime. One object per function
-can make the overall build slower. Keep whole-program Release until a separately
-qualified incremental optimization/link strategy preserves its intended quality.
+Store these records through the existing packed backend under distinct logical
+schemas. Keep metadata independently addressable from body payloads, split
+oversized metadata collections and measure block read/decode amplification.
+Current packing groups small records and can still decode neighboring records;
+do not claim arbitrary hits read only the requested bytes. Preserve checksum,
+corruption, concurrent-reader and publication guarantees. Streaming hashing is
+a targeted follow-up where measured full-artifact allocation remains, not a
+rewrite of the new packing layer or its serialization contracts.
 
-Exit: small private edits only recompute dependent queries; metadata work,
-restored bodies and bytes read are measured separately from fresh compilation.
-The 191k/510k fixtures must show scaling improvements without changing program,
-trap or debugger behavior. No “one function recompiled” claim while a whole
-module still goes through native compilation.
+**2B. Persist the graph and affected test summaries.** Retain generation-bound
+forward/reverse edges and test-root closure summaries. Publish a coherent graph
+revision only after its facts validate; a reverse index alone is not reuse
+authority. Additions, removals, changed indirect targets and negative discovery
+results update the graph before a suite can be admitted. Replace obsolete
+dependency reads rather than accumulating them forever.
+
+Selka owns graph planning and closure reuse; Zig continues to extract and
+validate facts, hash canonical values, access storage and execute work. Use
+recursive groups to share closure work, handling both cycle creation and cycle
+splitting. Preserve ordered root contributions, repeated roots, distinct nodes
+with equal digests and sorted non-root digest multiplicity. Group fingerprints
+may index the work but cannot silently change the legacy key contribution.
+Stop downstream propagation only when every observed facet remains equal.
+
+Do not resend or serialize the complete graph for every test. Measure one
+bounded batch per affected planning operation and share immutable records
+across directory roots where valid. Wave 1's 16 MiB request, 64 MiB reply and
+16-million traversal-work bounds are not an incremental graph protocol. If
+new operations or revision handles are needed, version and qualify the protocol
+and all early replay identities explicitly. First use persisted records with
+one-shot processes; a resident planner is optional and requires measurement.
+
+**2C. Consume facts in the guest test runner.** After a source edit, derive
+unchanged eligible test keys from validated metadata instead of lowering and
+digesting their entire reachable program again. Lower changed or unsupported
+parts conservatively. Keep the canonical test-key contribution bit-identical
+under the same planner identity, source snapshot and execution contract; any
+deliberate component/schema identity change still invalidates prior evidence.
+Retain the current full-lowering key path as an independent oracle in shadow
+qualification, with the new metadata reuse disabled in that oracle.
+
+Measure the directory runner before introducing shared union lowering, schemas
+or source digests from the older TK proposal. Share only work the measurements
+justify, account for root-specific source positions, and preserve each root's
+post-execution input checks. Cover both shared-directory and single-file paths,
+providers, generated-parameter invariants, unknown-metadata fallback, warnings
+and whole-report replay. A metadata miss recomputes; malformed or failed planner
+execution keeps Wave 1's explicit error/reference-recovery behavior.
+
+**Stopping point and qualification.** End this wave when a selected set of
+eligible edits reuses unaffected tests' canonical facts and closure summaries,
+and the independent oracle produces identical keys and verdicts. Do not require
+conversion of every compiler analysis into queries before delivering this win.
+Global effect, mutation, origin, allocation and resolution validation continues
+to run until a later change gives each a complete, independently qualified
+invalidation contract. Retain current conservative type and source-proof misses.
+
+Use the integrated baseline for cold, identical rerun, first private edit, shared
+callee edit, comment/source movement, signature/layout/effect/embed changes,
+callback/recursive-edge changes, test addition/deletion, revert, corrupt/evicted
+metadata and concurrent-edit comparisons. Include a previously passing test made
+failing by a transitive edit. Run reference/shadow differentials and independent
+forced execution, then the full gate. Packed zlib and raw encodings must agree;
+benchmark the default encoding as well as any diagnostic policy used for comparison.
+
+Report key-derivation CPU and wall time, canonical digests computed, graph records
+visited/reused, reverse-index work, transport bytes/startups, bodies restored,
+bytes hashed/read/decoded, tests executed, native units, link work, peak memory
+and retained cache growth. Use directory workloads plus the existing 191k/510k
+fixtures. For independent additions, eligible key/closure recomputation should
+follow the affected closure rather than total program size; measure remaining
+source validation, pack indexing and global frontend work separately. Require
+work-count and end-to-end evidence, not just zero test executions or a planner
+microbenchmark. Preserve program, warning, trap and debug behavior.
+
+**Separate follow-up: native unit granularity.** Function or small-group native
+units remain useful to investigate, with explicit symbol, constant, debug and
+linkage ownership. They are outside Wave 2's acceptance criteria and do not
+block Wave 3. Compare native process count, linker time, object count, cold and
+edit builds and runtime before adopting them. One object per function can make
+builds slower. Keep whole-program Release until a separate qualification proves
+its intended optimization quality. Do not describe one module unit as one
+function recompiled.
 
 ### Wave 3 — Cover the entire verification command
 
@@ -628,9 +799,11 @@ under the repository's build slots and timing isolation, with the same hardware,
 cache state and fixtures on both sides. Define numerical latency budgets from
 those baselines rather than inventing a universal sub-millisecond target.
 
-The first implementation should end at Wave 1, including the future durability
-contract boundaries but not an application workflow runtime. Waves 2 and 3
-produce the main edit-loop savings; fuzzing and Juice can then consume the same
-dependency facts.
+Wave 1 has ended at the reuse and future-durability contract boundary. The next
+implementation starts with integration qualification, then ends at Wave 2's
+persisted-facts and test-key reuse milestone. An application workflow runtime
+remains Wave 7: the packed cache's recovery journal is disposable cache storage,
+not durable application progress. Waves 2 and 3 produce the main edit-loop
+savings; fuzzing and Juice can then consume the same dependency facts.
 The later storage, daemon and public memo work should be driven by measured
 overhead and reuse, not prerequisites for getting the first safe wins.
