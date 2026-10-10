@@ -1,0 +1,96 @@
+import full_model
+import full_resource
+import syntax_value
+
+func state() -> full_model.State:
+    return full_model.State(tokens=[], source=b"", cursor=full_model.Cursor(pos=0, depth=0, delimiters=0, module_syntax=False, trusted_intrinsics=True, path=b"resource_tests.my"), pool=syntax_value.empty(), exprs=[], stmts=[], catalog=full_model.empty_catalog())
+
+
+func field(pool: syntax_value.Pool, id: int, name: str) -> int:
+    const value = pool.values[id]
+    for index in range(len(value.names)):
+        if value.names[index] == name:
+            return value.children[index]
+    return -1
+
+
+public func test_resource_signatures() -> bool fails syntax_value.Problem:
+    if not (full_resource.kind("kw_clock_advance")):
+        return False
+    if not (not full_resource.kind("ident")):
+        return False
+    if not (not full_resource.signature("kw_clock_advance").typed):
+        return False
+    if not (full_resource.signature("kw_write_resource").owner):
+        return False
+    if not (full_resource.signature("kw_read_resource").arguments == 0):
+        return False
+    if not (full_resource.signature("kw_codec_encode").variadic):
+        return False
+    return True
+
+
+public func test_resource_io_values() -> bool fails syntax_value.Problem:
+    mut p = state()
+    const ty = try syntax_value.span(mut p.pool, 10, 13)
+    const owner = try syntax_value.span(mut p.pool, 15, 19)
+    const read = try full_resource.build(mut p, full_model.Token(kind="kw_read_resource", start=0, end=9), 20, ty, owner, [])
+    if not (full_model.node_tag(p, read) == b"resource_io"):
+        return False
+    const data = p.pool.values[p.exprs[read]].children[1]
+    const payload = p.pool.values[data].children[0]
+    if not (p.pool.values[field(p.pool, payload, "value")].kind == 0):
+        return False
+    if not (p.pool.values[field(p.pool, payload, "kind")].data == b"read"):
+        return False
+    const write = try full_resource.build(mut p, full_model.Token(kind="kw_write_resource", start=0, end=9), 24, ty, owner, [read])
+    const written_data = p.pool.values[p.exprs[write]].children[1]
+    const written = p.pool.values[written_data].children[0]
+    if not (p.pool.values[field(p.pool, written, "value")].integer == read):
+        return False
+    const clock = try full_resource.build(mut p, full_model.Token(kind="kw_clock_now", start=0, end=9), 20, ty, owner, [read])
+    if not (full_model.node_tag(p, clock) == b"external_read"):
+        return False
+    return True
+
+
+public func test_resource_variants() -> bool fails syntax_value.Problem:
+    mut p = state()
+    const ty = try syntax_value.span(mut p.pool, 10, 13)
+    const absent = try syntax_value.absent(mut p.pool)
+    const tags: str[] = ["kw_environment_get", "kw_acquire_resource", "kw_clock_advance"]
+    const expected: bytes[] = [b"environment_get", b"acquire_resource", b"stand_in"]
+    for index in range(len(tags)):
+        const id = try full_resource.build(mut p, full_model.Token(kind=tags[index], start=0, end=9), 20, ty, absent, [0, 1])
+        if not (full_model.node_tag(p, id) == expected[index]):
+            return False
+    const one: str[] = ["kw_random_u64", "kw_stand_in", "kw_complete_resource", "kw_codec_decode"]
+    for tag in one:
+        _ = try full_resource.build(mut p, full_model.Token(kind=tag, start=0, end=9), 20, ty, absent, [0])
+    if not (len(p.exprs) == 7):
+        return False
+    return True
+
+
+public func test_resource_trusted_gate() -> bool fails syntax_value.Problem:
+    mut p = state()
+    p.cursor.trusted_intrinsics = False
+    mut rejected = False
+    match full_resource.guard(p, full_model.Token(kind="kw_environment_get", start=7, end=22)):
+        case Ok(value):
+            return False
+        case Err(issue):
+            rejected = issue.code == "E_INTERNAL_NAME" and issue.start == 7 and issue.end == 22
+    if not (rejected):
+        return False
+    p.cursor.trusted_intrinsics = True
+    _ = try full_resource.guard(p, full_model.Token(kind="kw_environment_get", start=7, end=22))
+    mut removed = False
+    match full_resource.guard(p, full_model.Token(kind="kw_restrict_resource", start=0, end=17)):
+        case Ok(value):
+            return False
+        case Err(issue):
+            removed = issue.code == "E_REMOVED_SPELLING"
+    if not (removed):
+        return False
+    return True

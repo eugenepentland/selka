@@ -1,0 +1,90 @@
+import full_model
+import syntax_value
+
+public record Signature:
+    typed: bool
+    owner: bool
+    arguments: int
+    variadic: bool
+
+
+public func kind(tag: str) -> bool:
+    return tag == "kw_read_resource" or tag == "kw_write_resource" or tag == "kw_environment_get" or tag == "kw_clock_now" or tag == "kw_random_u64" or tag == "kw_stand_in" or tag == "kw_clock_advance" or tag == "kw_acquire_resource" or tag == "kw_complete_resource" or tag == "kw_codec_encode" or tag == "kw_codec_decode" or tag == "kw_restrict_resource"
+
+
+public func signature(tag: str) -> Signature:
+    mut count = 1
+    if tag == "kw_environment_get" or tag == "kw_acquire_resource" or tag == "kw_clock_advance":
+        count = 2
+    if tag == "kw_read_resource":
+        count = 0
+    return Signature(typed=tag != "kw_clock_advance", owner=tag == "kw_read_resource" or tag == "kw_write_resource", arguments=count, variadic=tag == "kw_codec_encode" or tag == "kw_codec_decode")
+
+
+# Called before consuming any token, so diagnostic spans match the native head.
+public func guard(p: full_model.State, t: full_model.Token) -> bool fails syntax_value.Problem:
+    if t.kind == "kw_restrict_resource":
+        fail full_model.problem(t, "E_REMOVED_SPELLING", "`restrict_resource[...]` was removed; use `fs.read_only()`")
+    if p.cursor.trusted_intrinsics:
+        return True
+    if t.kind == "kw_environment_get":
+        fail full_model.problem(t, "E_INTERNAL_NAME", "`environment_get[...]` is reserved for compiler-internal standard-library sources; use `env.get(\"NAME\")`")
+    if t.kind == "kw_clock_now" or t.kind == "kw_random_u64":
+        fail full_model.problem(t, "E_INTERNAL_NAME", "`clock_now[...]` and `random_u64[...]` are reserved for compiler-internal standard-library sources; use the `time` or `random` standard module")
+    if t.kind == "kw_stand_in" or t.kind == "kw_clock_advance":
+        fail full_model.problem(t, "E_INTERNAL_NAME", "`__stand_in[...]` and `__clock_advance(...)` are reserved for compiler-internal standard-library sources; use `time.simulated_clock`, `random.seeded_entropy`, `filesystem.memory`, `environment.fixed` or `network.denied`")
+    return True
+
+
+# ty and owner are pool span/absent values; arguments are raw expression IDs.
+# The caller consumes the exact grammar (including commas and closing paren).
+public func build(mut p: full_model.State, t: full_model.Token, end: int, ty: int, owner: int, arguments: int[]) -> int fails syntax_value.Problem:
+    const spec = signature(t.kind)
+    if not kind(t.kind) or t.kind == "kw_restrict_resource" or (not spec.variadic and len(arguments) != spec.arguments):
+        fail full_model.problem(t, "P_RESOURCE_SHAPE", "invalid resource intrinsic argument shape")
+    mut args: int[] = []
+    for arg in arguments:
+        const value = try syntax_value.integer(mut p.pool, arg)
+        args.append(value)
+    mut payload = try syntax_value.absent(mut p.pool)
+    mut tag = b""
+    if t.kind == "kw_read_resource" or t.kind == "kw_write_resource":
+        mut io_kind = b"read"
+        mut value = try syntax_value.absent(mut p.pool)
+        if t.kind == "kw_write_resource":
+            io_kind = b"write"
+            value = args[0]
+        const io = try syntax_value.enumeration(mut p.pool, io_kind)
+        payload = try syntax_value.object(mut p.pool, ["kind", "owner", "ty", "value"], [io, owner, ty, value])
+        tag = b"resource_io"
+    elif t.kind == "kw_environment_get":
+        payload = try syntax_value.object(mut p.pool, ["ty", "capability", "name"], [ty, args[0], args[1]])
+        tag = b"environment_get"
+    elif t.kind == "kw_clock_now" or t.kind == "kw_random_u64":
+        mut external_kind = b"clock"
+        if t.kind == "kw_random_u64":
+            external_kind = b"random"
+        const external = try syntax_value.enumeration(mut p.pool, external_kind)
+        payload = try syntax_value.object(mut p.pool, ["kind", "ty", "capability"], [external, ty, args[0]])
+        tag = b"external_read"
+    elif t.kind == "kw_stand_in" or t.kind == "kw_clock_advance":
+        mut second = try syntax_value.absent(mut p.pool)
+        if t.kind == "kw_clock_advance":
+            second = args[1]
+        payload = try syntax_value.object(mut p.pool, ["ty", "first", "second"], [ty, args[0], second])
+        tag = b"stand_in"
+    elif t.kind == "kw_acquire_resource":
+        payload = try syntax_value.object(mut p.pool, ["ty", "capability", "request"], [ty, args[0], args[1]])
+        tag = b"acquire_resource"
+    elif t.kind == "kw_complete_resource":
+        payload = try syntax_value.object(mut p.pool, ["ty", "value"], [ty, args[0]])
+        tag = b"complete_resource"
+    else:
+        const name = try syntax_value.span(mut p.pool, t.start, t.end)
+        const types = try syntax_value.sequence(mut p.pool, [ty])
+        const values = try syntax_value.sequence(mut p.pool, args)
+        const names = try syntax_value.sequence(mut p.pool, [])
+        const order = try syntax_value.sequence(mut p.pool, [])
+        payload = try syntax_value.object(mut p.pool, ["argument_names", "evaluation_order", "owner", "type_arguments", "name", "arguments"], [names, order, owner, types, name, values])
+        tag = b"call"
+    return try full_model.node(mut p, t.start, end, tag, payload)
