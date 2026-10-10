@@ -10,7 +10,10 @@
 # `test-byte-io`). A job is admitted only when both hold:
 #   * a slot of its kind is free (flock on a per-slot lock file), and
 #   * MemAvailable is at least the kind's threshold.
-# Otherwise it waits, polling, and reports how long it waited. An admitted job
+# Waiters receive FIFO tickets per kind; later tickets cannot overtake a live
+# earlier waiter, even when it polls less often. Dead/cancelled tickets are reaped.
+# Otherwise it waits, polling, and reports its position and how long it waited.
+# An admitted job
 # runs under `taskset` with the reserved timing CPUs removed from its affinity,
 # so benchmarks pinned to those CPUs are not disturbed by builds.
 #
@@ -50,6 +53,91 @@ bytes() {
 available() { awk '$1 == "MemAvailable:" { print $2 * 1024; exit }' /proc/meminfo; }
 
 human() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
+
+# PID plus /proc start time distinguishes a waiter from a reused PID. The boot
+# identity also covers persistent slot directories surviving a reboot.
+process_start() {
+  local stat rest
+  local -a fields
+  { IFS= read -r stat <"/proc/$1/stat"; } 2>/dev/null || return 1
+  rest=${stat##*) }
+  read -r -a fields <<<"$rest"
+  [ ${#fields[@]} -ge 20 ] || return 1
+  [[ ${fields[0]} != Z && ${fields[0]} != X ]] || return 1
+  proc_start=${fields[19]}
+}
+
+# Caller holds queue.lock. Glob order is numeric because tickets are padded.
+reap_queue() {
+  local entry pid birth boot enqueued LC_COLLATE=C
+  for entry in "$queue_dir"/[0-9]*.wait; do
+    [ -f "$entry" ] || continue
+    if ! read -r pid birth boot enqueued <"$entry" ||
+       [[ ! $pid =~ ^[1-9][0-9]*$ || ! $birth =~ ^[0-9]+$ ||
+          ! $enqueued =~ ^[0-9]+$ || $boot != "$boot_id" ]] ||
+       ! process_start "$pid" || [ "$proc_start" != "$birth" ]; then
+      rm -f -- "$entry" || die "cannot remove stale FIFO ticket"
+    fi
+  done
+}
+
+queue_lock() {
+  exec 7>"$queue_dir/queue.lock" || die "cannot open FIFO queue lock"
+  flock 7 || die "cannot lock FIFO queue"
+}
+
+cleanup_ticket() {
+  [ -z "${ticket:-}" ] || rm -f -- "$ticket"
+  rm -f -- "$queue_dir/sequence.tmp.$$"
+}
+
+enqueue() {
+  local last=0
+  mkdir -p "$queue_dir" || die "cannot create FIFO queue"
+  trap cleanup_ticket EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  queue_lock
+  reap_queue
+  if [ -e "$queue_dir/sequence" ]; then
+    read -r last <"$queue_dir/sequence" || die "cannot read FIFO sequence"
+    [[ $last =~ ^[0-9]{1,18}$ ]] || die "invalid FIFO sequence"
+  fi
+  ticket_number=$((10#$last + 1))
+  printf '%s\n' "$ticket_number" >"$queue_dir/sequence.tmp.$$" &&
+    mv -f -- "$queue_dir/sequence.tmp.$$" "$queue_dir/sequence" || die "cannot save FIFO sequence"
+  printf -v ticket '%s/%020d.wait' "$queue_dir" "$ticket_number"
+  process_start "$$" || die "cannot identify waiter process"
+  printf '%s %s %s %s\n' "$$" "$proc_start" "$boot_id" "$started" >"$ticket" || die "cannot create FIFO ticket"
+  exec 7>&-
+}
+
+queue_position() {
+  local entry LC_COLLATE=C
+  position=0
+  for entry in "$queue_dir"/[0-9]*.wait; do
+    [ -f "$entry" ] || continue
+    position=$((position + 1))
+    [ "$entry" != "$ticket" ] || return 0
+  done
+  die "FIFO ticket disappeared"
+}
+
+queue_status() {
+  local queue_dir=$1 entry pid birth boot enqueued position=0 now LC_COLLATE=C
+  [ -d "$queue_dir" ] || return 0
+  queue_lock
+  reap_queue
+  now=$(date +%s)
+  for entry in "$queue_dir"/[0-9]*.wait; do
+    [ -f "$entry" ] || continue
+    read -r pid birth boot enqueued <"$entry" || continue
+    position=$((position + 1))
+    echo "$kind queue $position: pid $pid, waiting $((now - enqueued))s"
+  done
+  exec 7>&-
+}
 
 slot_dir() {
   if [ -n "${MYLANG_SLOT_DIR:-}" ]; then echo "$MYLANG_SLOT_DIR"
@@ -97,9 +185,12 @@ status() {
         echo "$kind$i: free"
       fi
     done
+    queue_status "$dir/queue-$kind"
   done
 }
 
+[ -r /proc/sys/kernel/random/boot_id ] || die "Linux /proc is required"
+read -r boot_id </proc/sys/kernel/random/boot_id
 [ $# -ge 1 ] || die "usage: build-slot.sh build|gate [--] CMD...  |  build-slot.sh status"
 kind=$1; shift
 case $kind in
@@ -123,36 +214,53 @@ settle=${MYLANG_SLOT_SETTLE:-5}
 waited=0
 reason=""
 started=$(date +%s)
+queue_dir="$dir/queue-$kind"
+ticket=""
+enqueue
 while :; do
-  for i in $(seq 1 "$slots"); do
-    exec 9>"$dir/$kind$i.lock"
-    if flock -n 9; then
-      # Admissions are serialized, and each admitted job keeps the admission
-      # lock for MYLANG_SLOT_SETTLE seconds, so the next job's memory check sees
-      # this one's footprint instead of the idle moment before it grew.
-      exec 8>"$dir/admit.lock"
-      flock 8
-      free=$(available)
-      if [ "$free" -ge "$need" ]; then
-        if [ $waited -gt 0 ]; then
-          echo "build-slot: $kind slot $i after ${waited}s ($reason)" >&2
+  queue_lock
+  reap_queue
+  queue_position
+  if [ "$position" -eq 1 ]; then
+    for i in $(seq 1 "$slots"); do
+      exec 9>"$dir/$kind$i.lock"
+      if flock -n 9; then
+        # Admissions are serialized, and each admitted job keeps the admission
+        # lock for MYLANG_SLOT_SETTLE seconds, so the next job's memory check sees
+        # this one's footprint instead of the idle moment before it grew.
+        exec 8>"$dir/admit.lock"
+        if ! flock -n 8; then
+          exec 8>&-
+          exec 9>&-
+          reason="waiting for memory-accounting settle delay"
+          break
         fi
-        if [ "$settle" -gt 0 ]; then sleep "$settle" 9>&- & fi
+        free=$(available)
+        if [ "$free" -ge "$need" ]; then
+          echo "build-slot: $kind slot $i, FIFO ticket $ticket_number after ${waited}s" >&2
+          rm -f -- "$ticket" || die "cannot retire FIFO ticket"
+          ticket=""
+          exec 7>&-
+          if [ "$settle" -gt 0 ]; then sleep "$settle" 9>&- & fi
+          exec 8>&-
+          # Hold the slot lock (fd 9, inherited) for the job's lifetime; exec keeps
+          # the job's exit status and signals exactly as if it ran directly.
+          exec taskset -c "$cpus" "$@"
+        fi
         exec 8>&-
-        # Hold the slot lock (fd 9, inherited) for the job's lifetime; exec keeps
-        # the job's exit status and signals exactly as if it ran directly.
-        exec taskset -c "$cpus" "$@"
+        reason="waiting for memory: $(human "$free") available, $kind needs $(human "$need")"
+        exec 9>&-
+        break
       fi
-      exec 8>&-
-      reason="waiting for memory: $(human "$free") available, $kind needs $(human "$need")"
       exec 9>&-
-      break
-    fi
-    exec 9>&-
-    reason="all $slots $kind slot(s) busy"
-  done
+      reason="all $slots $kind slot(s) busy"
+    done
+  else
+    reason="earlier $kind tickets must run first"
+  fi
+  exec 7>&-
   if [ $waited -eq 0 ] || [ $((waited % 60)) -lt "$poll" ]; then
-    echo "build-slot: $reason; waiting (${waited}s so far)" >&2
+    echo "build-slot: FIFO ticket $ticket_number, position $position; $reason; waiting (${waited}s so far)" >&2
   fi
   sleep "$poll"
   waited=$(( $(date +%s) - started ))
