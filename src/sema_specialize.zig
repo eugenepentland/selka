@@ -146,7 +146,7 @@ fn registerInstance(
     }
     return @fromBackingInt(index);
 }
-/// Canonical `specialization-v1` fingerprint of one fresh instance. Null
+/// Canonical `specialization-v2` fingerprint of one fresh instance. Null
 /// when no semantic cache (and therefore no prepared declaration facts) is
 /// attached. The template identity, ordered positional descriptors, resolved
 /// provider contracts, template constraint dependency, declared

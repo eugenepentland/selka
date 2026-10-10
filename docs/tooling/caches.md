@@ -204,7 +204,7 @@ checked program without summaries (above), and native-test preparation use the
 same checked-body query path. The durable store lives under
 `<cache-dir>/semantic/` when `--cache-dir` (or `MYLANG_FRONTEND_CACHE`) is given
 and `.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
-versioned `semantic-cache-v4` files. Each file contains one stable declaration
+versioned `semantic-cache-v5` files. Each file contains one stable declaration
 key, the dependency context, the checked contract digest, the owned relocatable
 `typed.Function`/node/statement tree, referenced stable identities, source
 region/body bytes, the body-local binding-warning notes (code, severity, span and
@@ -234,7 +234,7 @@ $ mylang check app/main.my --cache-dir=.mylang-cache/demo --report
 ```
 
 Retained in-memory storage is governed by one shared budget: ordinary checked
-bodies, `symbolic-template-v1` templates and `specialization-v1` instances all
+bodies, `symbolic-template-v1` templates and `specialization-v2` instances all
 charge their owned entry rows, exact arena backing allocations including
 per-chunk allocator bookkeeping, stable keys, and the exact stable-key
 hash-index backing allocation — including the standard map's minimum capacity,
@@ -255,17 +255,18 @@ abstract-checker version. Scoped-bound resolution, structural validation and the
 whole-graph effect propagation still run on every request, so a replayed template
 never carries a stale transitive verdict.
 
-A third entry kind, `specialization-v1`, stores one checked concrete
+A third entry kind, `specialization-v2`, stores one checked concrete
 specialization under the canonical key over the template identity, ordered
 positional type/length descriptors, transitive name-ordered provider contracts,
 template constraint dependencies, declared effect/mutation/return-origin
 contracts and build context. Replay additionally requires the defining template's
 declaration region/body to be byte-identical and every stored function/record
 reference to remap to exactly one fresh identity. Ordinary callees remap by
-stable declaration key; nested specializations remap by canonical fingerprint
-only when the fresh run has already instantiated them, so a nested or mutually
-recursive chain is a conservative miss when its dependency is not yet present,
-while a self-recursive specialization remaps to its own fresh instance. Missing,
+stable declaration key; nested specializations remap by canonical fingerprint. Missing instances may
+be preregistered from a validated durable recipe only after matching the fresh
+template, source bytes, context, current type arguments and re-derived fingerprint.
+Registration uses the normal bounded instance registry, so recursive references
+resolve to their existing fresh instance without recursively checking bodies. Missing,
 ambiguous, interned-catalog or synthesized-lambda references fall back to a fresh
 check. The specialization payload stores no effect or mutation verdict: the whole
 graph `effects.check` and `origins.check` passes always rerun over the combined

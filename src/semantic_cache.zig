@@ -174,7 +174,7 @@ pub const Retention = struct {
     /// namespace so it can never collide with an ordinary checked body.
     symbolic: generic_cache.Table = .{},
     /// C3 concrete-specialization results. Same durable store and retention
-    /// budget, under the `specialization-v1` kind and its own key namespace.
+    /// budget, under the `specialization-v2` kind and its own key namespace.
     specializations: generic_specializations.Table = .{},
 };
 

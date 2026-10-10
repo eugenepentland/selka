@@ -4,7 +4,7 @@ const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
 // Mirror src/semantic_store.zig's directory format: this CLI test cannot
 // import files outside its Zig module root.
-const semantic_cache_version = "semantic-cache-v4";
+const semantic_cache_version = "semantic-cache-v5";
 
 // spec: VALUE-SEMANTICS-11
 test "a scalar-only mut record parameter writes the caller" {
@@ -8100,7 +8100,7 @@ fn c3sCheckReport(path: []const u8, cache_argument: []const u8, no_cache: bool) 
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
 
-/// First semantic file whose payload carries the `specialization-v1` stable-key
+/// First semantic file whose payload carries the `specialization-v2` stable-key
 /// prefix. The durable file name is a hash, so the kind marker is the discriminator.
 fn c3sFirstSpecializationFile(allocator: std.mem.Allocator, cache_base: []const u8) ![]u8 {
     const version_dir = try std.fs.path.join(allocator, &.{ cache_base, "semantic", semantic_cache_version });
@@ -8123,7 +8123,7 @@ fn c3sFirstSpecializationFile(allocator: std.mem.Allocator, cache_base: []const 
                 continue;
             };
             defer allocator.free(bytes);
-            if (std.mem.indexOf(u8, bytes, "spec\x1fv1\x1f") != null) return path;
+            if (std.mem.indexOf(u8, bytes, "spec\x1fv2\x1f") != null) return path;
             allocator.free(path);
         }
     }
