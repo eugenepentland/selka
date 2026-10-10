@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import random
+import re
 import resource
 import shutil
 import statistics
@@ -21,6 +22,7 @@ def main():
     parser.add_argument('--base', type=Path, required=True)
     parser.add_argument('--candidate', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--base-runtime', type=Path, required=True)
     args = parser.parse_args()
     assert Path(os.readlink('/proc/self/fd/9')).name.startswith('build')
     rows = []
@@ -40,7 +42,9 @@ def main():
                 # Runtime and guest units share a parent store. Copy only the
                 # runtime files, never units-v1: a fresh --cache-dir alone
                 # would still reuse guest LLVM objects from the shared store.
-                for artifact in lane.runtime_cache.iterdir():
+                runtime_seed = args.base_runtime if tag == 'base' else lane.runtime_cache
+                assert any(runtime_seed.glob('*.o')), runtime_seed
+                for artifact in runtime_seed.iterdir():
                     if artifact.is_file():
                         shutil.copy2(artifact, runtime / artifact.name)
                 output = root / name
@@ -54,12 +58,15 @@ def main():
                 row = {'program': name, 'tag': tag, 'round': round_no, 'status': status, 'wall_seconds': wall,
                     'cpu_seconds': after.ru_utime + after.ru_stime - before.ru_utime - before.ru_stime,
                     'compiler_sha256': ce.digest(compiler), 'binary_sha256': ce.digest(output) if output.exists() else None,
-                    'load_before': load, 'load_after': os.getloadavg(), 'command': list(map(str, command)), 'runtime_cache': str(runtime.relative_to(ROOT)), 'stderr': stderr.decode()[-2000:]}
+                    'load_before': load, 'load_after': os.getloadavg(), 'command': list(map(str, command)), 'runtime_seed': str(runtime_seed), 'runtime_cache': str(runtime.relative_to(ROOT)), 'stderr': stderr.decode()[-2000:]}
+                report = re.search(r'cache: (\d+) units, (\d+) reused, (\d+) compiled, (\d+) verified; program (\w+); (\d+) processes', stderr.decode())
+                row['cache_report'] = dict(zip(('units', 'reused', 'compiled', 'verified', 'program', 'processes'), report.groups())) if report else None
                 rows.append(row)
                 args.out.write_text(json.dumps({'rows': rows}, indent=1) + '\n')
                 if status:
                     args.out.write_text(json.dumps({'rows': rows}, indent=1) + '\n')
                     raise RuntimeError(str(row))
+                assert row['cache_report'] == {'units': '1', 'reused': '0', 'compiled': '1', 'verified': '0', 'program': 'linked', 'processes': '2'}, row
                 print(name, tag, round_no, wall, flush=True)
     medians = {}
     for name in ('lox', 'eda'):

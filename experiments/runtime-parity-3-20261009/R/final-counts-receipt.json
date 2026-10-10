@@ -1,0 +1,33 @@
+{
+ "compiler": {
+  "source_commit": "09ed227098f3b5447643317ab640eec85c4f6772",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+  "compiler_sha256": "00e854ac6d7f759fb3bfa2d64b21b8d703460261e1465a674244af4ac119bdf3",
+  "optimization": "ReleaseFast",
+  "build_log": "R/build-final-01.log.gz"
+ },
+ "cells": 199,
+ "groups": {
+  "lox": {
+   "cells": 74,
+   "all_passed": true,
+   "sha256": "9243f321c7d5ef6ac19f0f09d7f10b30eeed024fc8d7331f923101d1a3a75c8b"
+  },
+  "eda": {
+   "cells": 34,
+   "all_passed": true,
+   "sha256": "27197e3a27f973e25788b767c22e226ead318186373e9efbd9fcebbd833fc264"
+  },
+  "parity": {
+   "cells": 45,
+   "all_passed": true,
+   "sha256": "3febc10883b84b15b37bc41ad6142398855d001f3172c9d70cdb10278a6a8140"
+  },
+  "rows": {
+   "cells": 46,
+   "all_passed": true,
+   "sha256": "ca34de420759cc3cf93d5c401605560b1bbe7fb906f0bfbf98d9fff987d74eb9"
+  }
+ },
+ "postprocessing_correction": "Initial archive validation used nonexistent golden_files_match key and raised KeyError before writing receipt; corrected to actual golden_mismatch list, required empty for every EDA design. No workload or source changes."
+}

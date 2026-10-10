@@ -1,0 +1,19 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 2 after 65s (all 3 build slot(s) busy)
+lox base 0 6.581484487047419
+lox r 0 6.65898696705699
+lox r 1 6.644553794991225
+lox base 1 4.863291497109458
+lox r 2 4.438639873173088
+lox base 2 4.919436339056119
+lox base 3 4.700295224785805
+lox r 3 4.566601915052161
+eda base 0 23.156015733955428
+eda r 0 22.806309713982046
+eda base 1 18.088542002951726
+eda r 1 16.628049593884498
+eda base 2 17.501861269120127
+eda r 2 16.166193046141416
+eda base 3 16.376990289893
+eda r 3 16.125612267991528

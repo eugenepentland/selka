@@ -1,0 +1,131 @@
+{
+ "method": "Lossless gzip of completed receipts; original content SHA256 retained. No failed or rejected outcomes removed.",
+ "files": [
+  {
+   "original": "final-fixtures.json",
+   "archive": "final-fixtures.json.gz",
+   "sha256": "fa22959693082b6d7ff355329c8df313e0a3740be23cc268a383ea6fa514e0c7",
+   "bytes": 39931,
+   "compressed_bytes": 2939
+  },
+  {
+   "original": "r4e-attribution.json",
+   "archive": "r4e-attribution.json.gz",
+   "sha256": "92e08bbcd647fa935e9071fc8b83558f4b0f238d2a0fd1bb3f8c3b71f621ae00",
+   "bytes": 56380,
+   "compressed_bytes": 5645
+  },
+  {
+   "original": "r4e-fixtures.json",
+   "archive": "r4e-fixtures.json.gz",
+   "sha256": "2a3a304e17a5dc4f9fc4a126849baf3ef87382c95fc7fbe67cc1d86d5e044e73",
+   "bytes": 35573,
+   "compressed_bytes": 2668
+  },
+  {
+   "original": "r4g-fixtures.json",
+   "archive": "r4g-fixtures.json.gz",
+   "sha256": "8b2690c1c73cbe34d2fd8d569e99d435f9103fcfe90571b2427a547a4112d2bc",
+   "bytes": 39531,
+   "compressed_bytes": 2940
+  },
+  {
+   "original": "results/r/lox.json",
+   "archive": "results/r/lox.json.gz",
+   "sha256": "9243f321c7d5ef6ac19f0f09d7f10b30eeed024fc8d7331f923101d1a3a75c8b",
+   "bytes": 25771,
+   "compressed_bytes": 3723
+  },
+  {
+   "original": "results/r/rows.json",
+   "archive": "results/r/rows.json.gz",
+   "sha256": "ca34de420759cc3cf93d5c401605560b1bbe7fb906f0bfbf98d9fff987d74eb9",
+   "bytes": 12522,
+   "compressed_bytes": 3209
+  },
+  {
+   "original": "results/r/eda.json",
+   "archive": "results/r/eda.json.gz",
+   "sha256": "27197e3a27f973e25788b767c22e226ead318186373e9efbd9fcebbd833fc264",
+   "bytes": 19538,
+   "compressed_bytes": 3560
+  },
+  {
+   "original": "results/r/parity.json",
+   "archive": "results/r/parity.json.gz",
+   "sha256": "3febc10883b84b15b37bc41ad6142398855d001f3172c9d70cdb10278a6a8140",
+   "bytes": 15724,
+   "compressed_bytes": 2398
+  },
+  {
+   "original": "r4-isolation-summary.json",
+   "archive": "r4-isolation-summary.json.gz",
+   "sha256": "b84832f04e828f467e5b30efa48726544523ce4c5d71aa673e548cd03650d031",
+   "bytes": 46480,
+   "compressed_bytes": 9295
+  },
+  {
+   "original": "r4e-copies.json",
+   "archive": "r4e-copies.json.gz",
+   "sha256": "804958c47e3145d51a4768f1e0e76c51ef8377c250670cbbca53e74d56b03b54",
+   "bytes": 16929,
+   "compressed_bytes": 1863
+  },
+  {
+   "original": "final-eda-copy-attribution.json",
+   "archive": "final-eda-copy-attribution.json.gz",
+   "sha256": "5ae2aee03801266641981f1b4dd7cdd13cb442d3aab86f060cd992960df91395",
+   "bytes": 19493,
+   "compressed_bytes": 3278
+  },
+  {
+   "original": "r123-cpu8.json",
+   "archive": "r123-cpu8.json.gz",
+   "sha256": "ea6355bb69fab256866db6275107b1741b28f759bff5e9f7321a357d7ac8346d",
+   "bytes": 18138,
+   "compressed_bytes": 2397
+  },
+  {
+   "original": "r4e-eda.json",
+   "archive": "r4e-eda.json.gz",
+   "sha256": "dd473ff09db3dde53aedbbe6cf0ac9ccf51a25db896bb6189d3e5a6a2749b5a8",
+   "bytes": 19537,
+   "compressed_bytes": 3563
+  },
+  {
+   "original": "r12-cpu8.json",
+   "archive": "r12-cpu8.json.gz",
+   "sha256": "04f576e167e07bfcbdc0d1b5563b21fad599ccc9e2274ddf12f270a31d098f65",
+   "bytes": 10589,
+   "compressed_bytes": 1559
+  },
+  {
+   "original": "compile-final.json",
+   "archive": "compile-final.json.gz",
+   "sha256": "fcdb684043abee59ed6f1522d18dfdd7c9a854e76cbb72bfc8469015863f2690",
+   "bytes": 24098,
+   "compressed_bytes": 2151
+  },
+  {
+   "original": "base-probes-cpu8.json",
+   "archive": "base-probes-cpu8.json.gz",
+   "sha256": "3f0512ea9af4e24a939f12f6fe2a030536af051566c1f0dddda082ff49440267",
+   "bytes": 15525,
+   "compressed_bytes": 2003
+  },
+  {
+   "original": "r4a-eda.json",
+   "archive": "r4a-eda.json.gz",
+   "sha256": "dd473ff09db3dde53aedbbe6cf0ac9ccf51a25db896bb6189d3e5a6a2749b5a8",
+   "bytes": 19537,
+   "compressed_bytes": 3563
+  },
+  {
+   "original": "final-instructions.json",
+   "archive": "final-instructions.json.gz",
+   "sha256": "c4b3a19fed172ef153ed24a10a1b0a740489585e2f84233b7c1c3a6149fee831",
+   "bytes": 113166,
+   "compressed_bytes": 18599
+  }
+ ]
+}

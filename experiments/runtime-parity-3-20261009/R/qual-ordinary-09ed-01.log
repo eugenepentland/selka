@@ -1,0 +1,17 @@
+install-core: /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/qual-ordinary-09ed-01-raw/install-core.log
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 64, in <module>
+    if __name__=='__main__': main()
+                             ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 43, in main
+    _,install=run('install-core',['zig','build',a.install,'--summary','all'],True)
+              ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/new-core-s5-20261007/tools/qualify_merge.py", line 40, in run
+    if status or seconds is None: raise RuntimeError(name+' failed; retained '+str(log))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: install-core failed; retained /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/qual-ordinary-09ed-01-raw/install-core.log
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/qualify.py", line 12, in <module>
+    summary=json.loads((evidence/'summary.json').read_text());assert len(summary['results'])==3 and all(s['status']==0 for s in summary['results'][:2]),summary
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'source_commit': '09ed227098f3b5447643317ab640eec85c4f6772', 'references_sha256': 'b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc', 'compiler': 'zig-out/bin/mylang', 'core_shards': 64, 'results': [{'command': ['scripts/build-slot.sh', 'gate', '--', 'bash', '-c', '"$@"; result=$?; exit "$result"', '--', 'scripts/build-slot.sh', 'build', '--', 'python3', 'experiments/new-core-s3-20261006/wave-a/exclusive_core.py', '--', '/usr/bin/time', '-q', '-f', '%e', '-o', '/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/qual-ordinary-09ed-01-raw/install-core.seconds', 'zig', 'build', 'install', '--summary', 'all'], 'log': 'experiments/runtime-parity-3-20261009/R/qual-ordinary-09ed-01-raw/install-core.log', 'status': -15, 'seconds': None, 'wall_including_admission': 1311.9829366330523}], 'qualified': False, 'error': 'install-core failed; retained /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/qual-ordinary-09ed-01-raw/install-core.log'}
