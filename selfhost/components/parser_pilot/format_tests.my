@@ -1,0 +1,46 @@
+import full_format
+import full_model
+import syntax_value
+
+func split(data: bytes) -> full_format.Piece[] fails syntax_value.Problem:
+    return try full_format.split(data, full_model.Token(kind="format", start=0, end=len(data)))
+
+
+public func test_format_literal_and_empty() -> bool fails syntax_value.Problem:
+    const empty = try split(b"f\"\"")
+    const text = try split(b"f\"abc\"")
+    return len(empty) == 1 and empty[0].start == 2 and empty[0].end == 2 and text[0].start == 2 and text[0].end == 5
+
+
+public func test_format_braces_and_spec() -> bool fails syntax_value.Problem:
+    const parts = try split(b"f\"{{x}}{value:>8.2f}\"")
+    return len(parts) == 5 and parts[0].kind == "brace" and parts[1].kind == "literal" and parts[2].kind == "brace" and parts[3].kind == "hole" and parts[4].kind == "spec" and parts[4].start == 14 and parts[4].end == 19
+
+
+public func test_format_nested_expression_and_quotes() -> bool fails syntax_value.Problem:
+    const parts = try split(b"f\"{f('}', [x])}\"")
+    return len(parts) == 1 and parts[0].kind == "hole" and parts[0].start == 3 and parts[0].end == 14
+
+
+public func test_format_unmatched_brace() -> bool:
+    match split(b"f\"a}b\""):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_FORMAT_STRING" and problem.start == 3 and problem.end == 4
+
+
+public func test_format_empty_hole() -> bool:
+    match split(b"f\"{}\""):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.start == 3 and problem.end == 3 and problem.message == "a format string interpolation needs an expression"
+
+
+public func test_format_nested_spec_rejected() -> bool:
+    match split(b"f\"{value:{width}}\""):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_FORMAT_STRING" and problem.start == 9 and problem.end == 10

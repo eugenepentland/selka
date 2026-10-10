@@ -1,0 +1,98 @@
+import full_model
+import syntax_value
+
+public record Piece:
+    kind: str
+    start: int
+    end: int
+
+
+func issue(start: int, end: int, message: str) -> syntax_value.Problem:
+    return syntax_value.Problem(code="E_FORMAT_STRING", start=start, end=end, message=message)
+
+
+func quoted(source: bytes, start: int, stop: int) -> int:
+    mut at = start + 1
+    while at < stop and source[at] != source[start]:
+        if source[at] == 92:
+            at = at + 1
+        at = at + 1
+    if at >= stop:
+        return stop - 1
+    return at
+
+
+func hole(source: bytes, start: int, stop: int) -> Piece fails syntax_value.Problem:
+    mut depth = 0
+    mut at = start
+    while at < stop:
+        const ch = source[at]
+        if ch == 92:
+            at = at + 1
+        elif ch == 34 or ch == 39:
+            at = quoted(source, at, stop)
+        elif ch == 40 or ch == 91 or ch == 123:
+            depth = depth + 1
+        elif ch == 41 or ch == 93:
+            if depth > 0:
+                depth = depth - 1
+        elif ch == 125:
+            if depth == 0:
+                return Piece(kind="hole", start=start, end=at)
+            depth = depth - 1
+        elif ch == 58 and depth == 0:
+            return Piece(kind="hole", start=start, end=at)
+        at = at + 1
+    fail issue(start - 1, stop, "unterminated interpolation in a format string")
+
+
+func specification(source: bytes, start: int, stop: int) -> Piece fails syntax_value.Problem:
+    mut at = start
+    while at < stop:
+        if source[at] == 125:
+            return Piece(kind="spec", start=start, end=at)
+        if source[at] == 123:
+            fail issue(at, at + 1, "a nested `{...}` inside a format specification is not supported; a specification is literal text such as `{value:>8.2f}`")
+        at = at + 1
+    fail issue(start - 1, stop, "unterminated format specification in a format string")
+
+
+# Token is an already validated native-compatible format literal span.
+# All piece offsets remain absolute source byte offsets, including empty chunks.
+public func split(source: bytes, token: full_model.Token) -> Piece[] fails syntax_value.Problem:
+    mut pieces: Piece[] = []
+    const stop = token.end - 1
+    mut at = token.start + 2
+    mut start = at
+    while at < stop:
+        const ch = source[at]
+        if ch == 92:
+            at = at + 2
+            continue
+        if ch != 123 and ch != 125:
+            at = at + 1
+            continue
+        if at + 1 < stop and source[at + 1] == ch:
+            if at > start:
+                pieces.append(Piece(kind="literal", start=start, end=at))
+            pieces.append(Piece(kind="brace", start=at, end=at + 2))
+            at = at + 2
+            start = at
+            continue
+        if ch == 125:
+            fail issue(at, at + 1, "unmatched '}' in a format string; write '}}' for a literal brace")
+        if at > start:
+            pieces.append(Piece(kind="literal", start=start, end=at))
+        const inner = try hole(source, at + 1, stop)
+        if inner.end == inner.start:
+            fail issue(inner.start, inner.end, "a format string interpolation needs an expression")
+        pieces.append(inner)
+        at = inner.end + 1
+        if source[inner.end] == 58:
+            const spec = try specification(source, at, stop)
+            pieces.append(spec)
+            at = spec.end + 1
+        start = at
+    if at > start or len(pieces) == 0:
+        pieces.append(Piece(kind="literal", start=start, end=stop))
+    return pieces
