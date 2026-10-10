@@ -52,6 +52,26 @@ Final head: pending X.
 - U2's full repository gate passes 95/95 steps, with 2,336 tests passed and 21,597 shard-routing skips. EDA tests pass 310/310. The corrected source reconfirms zero read_constant count traffic; frame-copy bytes remain unchanged. Raw/additive conformance, frozen fuzz, complete counting/instruction coverage and final profiles still precede hand-off.
 - S2 correction `73ee7212a` restores the whitespace split's runtime-only authorization while retaining the explicit-separator builder path. A new mixed-declaration IR test raises focused coverage to 49 selected host tests; the 12 language fixtures still run in all five modes. The failed full-suite receipt and provisional compiler/corpus evidence are retained separately, and final qualification is restarting on the corrected source.
 - R's forwarded payload ABI now requires identical detached type, size and offset in both home retention and destination forwarding. A Core IR fixture seeds 40-byte and 56-byte union variants independently and checks the larger suffix through a forwarded return. It accompanies the list-growth lifetime and wider managed-error fixtures in the queued current-source checks.
+- U2 completes all 199 counting/output cells and its paired 151-program instruction matrix with zero ratios above 1.03 (maximum approximately 1.002907 on rows/string_split). Instruction geomeans are VM 0.912445×, tree 0.990001×, EDA 0.928156×, parity 0.995482× and rows 0.988198× base. These are CPU-8 instruction results; shared-load cycle samples do not replace X's binding wall measurements.
+
+## Lane exits at current checkpoints
+
+These checkpoints precede final hand-offs and integration. X's CPU-10 column remains pending.
+
+| lane / exit | current measured result | remaining validation or blocker |
+|---|---|---|
+| U2 / read_constant counts | 0 retains and 0 releases for 97,500,072 invocation and 95,333,377 method_call executions | Final integrated counters still required. |
+| U2 / frame copies at least 80% lower | 10,080,000,224 invocation bytes and 4,853,334,440 method_call bytes, unchanged | The accepted changes eliminate no frame copies. Whole-frame phis and later writebacks need fieldwise ownership/lifetime reasoning before their storage can be lent safely. |
+| U2 / four counterfactual cell exits | CPU-8 instruction ratios: invocation 0.927197, fib 0.902411, method_call 0.910069, tree/equality 0.997735 | Binding final/base wall limits are 0.803193, 0.863836, 0.816397 and 0.761930 respectively; no wall exit is claimed. |
+| U2 / EDA at most 0.93× base | 34-design instruction geomean 0.928156× | CPU-10 wall time and final allocation/free share are pending. |
+| S2 / split and text_ops exits | Stack-prefix checkpoint text_ops instructions 0.7049× base; scan_split 0.3281× | Corrected-source full corpus and final CPU-10 results remain pending. text_ops must also be within 1.15× of the best reachable C ladder. |
+| S2 / EDA materialization at most half / 6% | Rejected substring prototype: 12.122% rds3+flat, 13.434% labstation, with 12.62% / 15.24% more instructions | Representation removed. Final retained-view profiles remain pending; the rejected prototype is a negative bound. |
+| R1 / array arms at most 1.05× my | Development CPU-8 cycles: array 1.158× my, tuned 1.055× my | Final source, full gates and CPU-10 confirmation remain pending. |
+| R2 / sort_builtin at most 1.2× rust-checked | Development cycles approximately 0.296× M0 | Final reference-relative timing and sort_records review remain pending. |
+| R3 / sharing with zero copies and no regression | Rejected prototype: zero record_pass copies, 1.2065× instructions and 1.1741× cycles | Original disabled sharing retained; removing copies alone does not meet the exit. |
+| R4 / P6 copies at least 90% lower | Original prototype unchanged at 444,833,472 bytes | Generalized payload ABI passes 45 language fixture/mode checks; larger/smaller forwarding and EDA attribution are still being validated. |
+| R5 / both rows within 1.02× no-barrier | Reconstructed base and no-barrier probes are byte-identical | F1 barrier retained. X will compare actual M0, both reconstruction controls and final with the inherited row method. |
+| R6 / investigation levers | No accepted nbody/floor-mod/quick-sort/matmul implementation yet | Fixed-N C ladder gave no 5% nbody gain; nonnegative floor-mod already lowers to urem. Remaining quick-sort and nested-matrix checks need stronger facts. X confirms the final gaps and records next steps. |
 
 ## M0 outcome
 
