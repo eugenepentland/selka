@@ -1,0 +1,66 @@
+{
+  "status": "completed",
+  "affinity": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "measurement_script_sha256": "16c856a5a3ba1ee064f137c6287009305eff21d529480ec4537e2d250330156b",
+  "qualification_script_sha256": "99d897b1a5ead79c55c79cdaf616b9a36a7de3aacc7c1973679e3f91be0244ad",
+  "runs": [
+    {
+      "label": "baseline",
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_declaration_adoption.py",
+        "--isolated",
+        "--label",
+        "baseline",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--compiler",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-release/bin/mylang",
+        "--builder",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-release/tools/selka-components",
+        "--component-dir",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-release/libexec/mylang/components",
+        "--source-root",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-baseline-source",
+        "--output",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-timing-baseline.json",
+        "--baseline"
+      ],
+      "host_sha256": "4f41c951fa3dd9e5b2b6f17e12cc958d91e3858734f1a3439549e4b3211bdfec",
+      "source_root": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/hardening-baseline-source",
+      "exit_status": 0,
+      "output_sha256": "5aef79861d0f74cc137efac2d9a51c92bd8110405354e3536d8df6dd1eab03ad"
+    },
+    {
+      "label": "candidate",
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_declaration_adoption.py",
+        "--isolated",
+        "--label",
+        "candidate",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--compiler",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-release/bin/mylang",
+        "--builder",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-release/tools/selka-components",
+        "--component-dir",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-release/libexec/mylang/components",
+        "--source-root",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+        "--output",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-timing-candidate.json"
+      ],
+      "host_sha256": "9d4390768195d5b2022f7cc910c753c6dbb0e0487bf965536574cf1c07feb5ee",
+      "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+      "exit_status": 0,
+      "output_sha256": "c69336facab8f9b83e6cd9581a49301306b31cd1ef15f6bf87cbe6abd352a28e"
+    }
+  ]
+}

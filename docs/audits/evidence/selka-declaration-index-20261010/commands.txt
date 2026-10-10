@@ -1,0 +1,21 @@
+Production source: d470c4958 (branch codex/selka-declaration-index-20261010)
+Private TMPDIR: /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots
+Private ZIG_LOCAL_CACHE_DIR: /home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots
+Shared ZIG_GLOBAL_CACHE_DIR: /home/epentland/ai/canopy/.zig-global-cache
+Pinned Zig: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+
+scripts/build-slot.sh build zig build test-units -Dtest-filter=declaration --summary all -j2 --maxrss 6442450944
+scripts/build-slot.sh build zig build --summary all -j2 --maxrss 6442450944
+scripts/build-slot.sh build zig build test-components test-verification-cache fmt-check --summary all -j2 --maxrss 6442450944
+scripts/build-slot.sh build zig build test-selfhost-declarations --summary all -j2 --maxrss 6442450944
+scripts/build-slot.sh gate /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+scripts/build-slot.sh gate zig build test --summary all -j2 --maxrss 10737418240
+scripts/build-slot.sh build zig build -Doptimize=ReleaseFast --prefix /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/declaration-release --summary all -j2 --maxrss 6442450944
+
+The release-host-qualification.json was produced by the standalone installed driver
+with the declaration-release compiler/builder/component-dir, --release and --report.
+
+Correct timing invocation, from the probes worktree:
+scripts/build-slot.sh gate python3 .tmp/frontend-qualification/declaration_isolated_measure.py taskset -c 2,3,10,11 python3 .tmp/frontend-qualification/declaration_matched_measure.py
+The launcher reserves three build slots before pinning the measurement command.
+The matched runner records exact baseline/candidate commands in timing-receipt.json.

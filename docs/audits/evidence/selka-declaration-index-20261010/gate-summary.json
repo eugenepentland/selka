@@ -1,0 +1,22 @@
+{
+  "source_commit": "d470c4958",
+  "exit_status": 0,
+  "build_summary": [
+    "Build Summary: 125/125 steps succeeded; 2666/26977 tests passed (24311 skipped)"
+  ],
+  "native_verdicts": 29,
+  "native_passed": 2666,
+  "native_failed": 0,
+  "native_selected_skipped": 0,
+  "qualification_lines": [
+    "declaration qualification: 30 workflows, 120 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped",
+    "declaration transport: 1 valid, 19 malformed; 0 failed, 0 skipped",
+    "declaration forged replies: 8 rejected; 0 failed, 0 skipped",
+    "declaration qualification: 30 workflows, 60 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped",
+    "declaration transport: 1 valid, 19 malformed; 0 failed, 0 skipped",
+    "declaration forged replies: 8 rejected; 0 failed, 0 skipped",
+    "declaration gate: 39 pure tests per mode; complete qualification passed",
+    "frontend qualification: 34 workflows, 68 comparisons, 60 warm deployment checks, 8 live session checks; 0 failed, 0 skipped",
+    "frontend qualification: 34 workflows, 136 comparisons, 60 warm deployment checks, 8 live session checks; 0 failed, 0 skipped"
+  ]
+}
