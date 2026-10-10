@@ -35,6 +35,7 @@ Final head: pending X.
 - X: pending lane hand-offs.
 - X preparation: complete-coverage comparison tooling validates all 197 cells, retains M0 and paired-base reference columns, and produces the >1.03 review queue. Regression review uses the exact timed guest binaries and both registered row sizes. A synthetic base-control check validated coverage and rejection of incomplete Lox timing; it is scratch validation only, not X evidence. X remains unmeasured.
 - U2 first source checkpoint: `df53b2d08`, nested-field borrow forwarding through path-preserving record updates. Coordinator source review found no actionable issue in the path/dominance logic; focused tests include live aliases, overlapping snapshots and trap ordering. Full Lox counters, lane gates and hand-off remain pending. The hot-count extractor now accepts an explicit compiler tag/output directory; its base output is byte-identical to M0's saved JSON.
+- X preparation also validates the exact 199-cell counting registry against M0's outputs, including row checksums, parity expectations and EDA golden files. The standalone EDA output wrapper now requires exit status zero as well as matching files. Ladder-bound confirmation checks every warmup/timed output and will run against the final binaries; no X speed result is claimed yet.
 
 ## M0 outcome
 

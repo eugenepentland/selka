@@ -4,7 +4,7 @@ scripts/build-slot.sh):
   outputs.py --compiler PATH --tag TAG build   lox-plain and eda-plain (--release), every parity .my
   outputs.py --compiler PATH --tag TAG eda     the 34 EDA golden cases, both output dirs byte-identical
   outputs.py --compiler PATH --tag TAG parity  every parity program's stdout equals its .expected, status 0
-Binaries land in .mylang-cache/rp3/outputs/bin/TAG; results in experiments/fu-port-20261009/results/TAG-*.json."""
+Binaries land in .mylang-cache/rp3/outputs/bin/TAG; results in experiments/runtime-parity-3-20261009/results/TAG-*.json."""
 import argparse, concurrent.futures, hashlib, importlib.util, json, os, pathlib, shutil, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
@@ -92,7 +92,7 @@ def main():
 
         with concurrent.futures.ThreadPoolExecutor(4) as pool:
             results = dict(pool.map(one, cases))
-        bad = sorted(k for k, v in results.items() if not v["golden"])
+        bad = sorted(k for k, v in results.items() if v["status"] != 0 or not v["golden"])
         (AREA / "results" / f"{args.tag}-eda.json").write_text(json.dumps(results, indent=1) + "\n")
         print(f"eda: {len(results)} cases, {len(results) - len(bad)} byte-identical to the goldens, differing: {bad}", flush=True)
         sys.exit(1 if bad else 0)

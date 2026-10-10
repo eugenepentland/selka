@@ -167,3 +167,11 @@
 - Evidence: row timing receipts retain every binary, size, iteration count and seed; parity build receipts identify the exact output binary, and Lox/EDA receipts retain their binary commands. M0's sort_records result already demonstrated that instruction and cycle evidence must be attributed precisely.
 - Choice: x_gap.py validates every expected arm and sample, retains paired ratios, and lists every final/base result above 1.03. review_perf.py uses the actual timed binaries (hashed before and after), exact row sizes/iterations, and matching Lox/EDA workloads for interleaved CPU-8 instructions, cycles and branch misses. It requires build-slot admission. No automatic noise classification is made; the coordinator reviews the evidence. X timing scripts require an explicit final compiler instead of silently defaulting to the base.
 - Reversibility: additive validation/reporting only; no runtime, workloads, or thresholds change.
+
+## X-002 — validate outputs as well as counter agreement
+
+- Question: a counting-on/off comparison alone could accept two identical wrong answers; the standalone EDA wrapper also selected failures by golden-file mismatch without including process status.
+- Options: rely on later timing qualification alone, or verify each counting receipt's exact registry and M0's already-qualified outputs too.
+- Evidence: the saved M0 receipts contain all 199 cell identities and plain-output hashes; row stdout includes a checksum followed by variable native-clock time. EDA records both process status and golden comparison separately.
+- Choice: validate_counts.py requires every registered cell, zero plain/counting status, counter presence, matching on/off output, and matching M0 output (checksum only for rows). Parity expectations and EDA golden files remain explicit checks. outputs.py's EDA branch additionally rejects nonzero status even if files happen to match. The complete M0 receipt passes this validation unchanged.
+- Reversibility: stricter receipt validation only; no oracle, workload, or threshold changes.
