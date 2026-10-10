@@ -131,7 +131,8 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
     const from = try context.fresh("%apf");
     const grown = try context.fresh("%apg");
     try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ to, buffer, to, to, len.value });
-    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ from, source, from, from, start });
+    try context.octetData(out, from, inst.b);
+    try out.print(a, "  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ from, from, start });
     try out.print(a, "  call void @llvm.memmove.p0.p0.i64(ptr {s}.at, ptr {s}.at, i64 {s}, i1 false)\n", .{ to, from, count });
     const tag = if (slots == null) ", !tbaa !5" else "";
     try out.print(a, "  {s} = add i64 {s}, {s}\n  store i64 {s}, ptr {s}, align 8{s}\n  br label %{s}\n", .{ grown, len.value, count, grown, len.at, tag, join });

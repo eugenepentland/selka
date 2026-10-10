@@ -2506,7 +2506,12 @@ const FunctionEmitter = struct {
         // A read nothing uses is only its bounds check: the element is never loaded (a verify
         // build still loads it, for the fact assertions that name it).
         if (self.memory.uses[self.current.index()] == 0 and inst.data == 0 and self.knownFacts() == null) return;
-        const slot = try self.elementSlot(out, list, index, inst.ty);
+        const slot = if (self.typeOf(inst.a) == .bytes) slot: {
+            const data = try self.fresh("%bydata");
+            const pointer = try self.fresh("%byelt");
+            try out.print(self.a(), "  {s} = call ptr @myl_core_bytes_data(ptr {s})\n  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ data, list, pointer, data, index });
+            break :slot pointer;
+        } else try self.elementSlot(out, list, index, inst.ty);
         // A lent element (`lentElements`) is its slot: no copy.
         if (self.lent(self.current)) return out.print(self.a(), identity_line, .{ name, slot });
         const saved = self.tagElements(true);
@@ -3777,6 +3782,12 @@ const FunctionEmitter = struct {
         return self.typedValue(argument);
     }
 
+    /// Resolve a bytes leaf's flat or retained substring data; strings remain flat.
+    pub fn octetData(self: *FunctionEmitter, out: *Out, name: []const u8, ref: ir.Ref) Error!void {
+        if (self.typeOf(ref) == .bytes) return out.print(self.a(), "  {s} = call ptr @myl_core_bytes_data(ptr {s})\n", .{ name, try self.value(ref) });
+        try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n", .{ name, try self.value(ref) });
+    }
+
     /// A borrowed `(data, byte_length)` span argument of an extern-C `str` parameter.
     fn spanArgument(self: *FunctionEmitter, out: *Out, argument: ir.Ref) ![]const u8 {
         const data = try self.fresh("%span");
@@ -3786,7 +3797,8 @@ const FunctionEmitter = struct {
             try out.print(self.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ data, text, len, text });
         } else {
             const at = try self.fresh("%span");
-            try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n  {s} = load i64, ptr {s}, align 8\n", .{ data, text, at, text, len, at });
+            try self.octetData(out, data, argument);
+            try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n  {s} = load i64, ptr {s}, align 8\n", .{ at, text, len, at });
         }
         return std.fmt.allocPrint(self.a(), "ptr {s}, i64 {s}", .{ data, len });
     }
@@ -4049,6 +4061,22 @@ const runtime_fast_paths =
     \\  %room = call ptr @myl_core_list_reserve(ptr %list, i64 %size)
     \\  ret ptr %room
     \\}
+    \\define internal ptr @myl_core_bytes_data(ptr %block) alwaysinline nounwind {
+    \\entry:
+    \\  %kind_at = getelementptr inbounds i8, ptr %block, i64 4
+    \\  %kind = load i32, ptr %kind_at, align 4
+    \\  %flag = and i32 %kind, 8192
+    \\  %child = icmp ne i32 %flag, 0
+    \\  %flat = getelementptr inbounds i8, ptr %block, i64 32
+    \\  br i1 %child, label %substring, label %join
+    \\substring:
+    \\  %at = getelementptr inbounds i8, ptr %block, i64 40
+    \\  %borrowed = load ptr, ptr %at, align 8
+    \\  br label %join
+    \\join:
+    \\  %data = phi ptr [ %flat, %entry ], [ %borrowed, %substring ]
+    \\  ret ptr %data
+    \\}
     \\define internal void @myl_core_free(ptr %block) alwaysinline nounwind {
     \\entry:
     \\  %kind_at = getelementptr inbounds i8, ptr %block, i64 4
@@ -4057,7 +4085,10 @@ const runtime_fast_paths =
     \\  %reserved_at = getelementptr inbounds i8, ptr %block, i64 24
     \\  %reserved = load i64, ptr %reserved_at, align 8, !tbaa !5
     \\  %small = icmp ne i32 %class32, 0
-    \\  %plain = icmp eq i64 %reserved, 0
+    \\  %nocache = icmp eq i64 %reserved, 0
+    \\  %substring = and i32 %kind, 8192
+    \\  %leaf = icmp eq i32 %substring, 0
+    \\  %plain = and i1 %nocache, %leaf
     \\  %fast = and i1 %small, %plain
     \\  br i1 %fast, label %push, label %call, !prof !10
     \\push:

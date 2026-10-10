@@ -65,7 +65,7 @@ uint32_t myl_core_span_hash(const unsigned char *bytes, uint64_t length) {
 
 uint32_t myl_core_str_hash(const myl_block *text) {
     if (text->kind & MYL_TEXT_HASHED) return (uint32_t)text->reserved;
-    uint32_t folded = myl_core_span_hash((const unsigned char *)text + MYL_HEADER, (uint64_t)text->len);
+    uint32_t folded = myl_core_span_hash(block_data(text), (uint64_t)text->len);
     if (count_can_cache(text)) {
         myl_block *mutable = (myl_block *)text;
         mutable->reserved = (int64_t)(((uint64_t)text->reserved & UINT64_C(0xffffffff00000000)) | folded);
@@ -84,7 +84,7 @@ bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
     if (a->len != b->len) return false;
     if ((a->kind & b->kind & MYL_TEXT_HASHED) && (uint32_t)a->reserved != (uint32_t)b->reserved) return false;
     const size_t count = (size_t)a->len;
-    const unsigned char *left = (const unsigned char *)a + MYL_HEADER, *right = (const unsigned char *)b + MYL_HEADER;
+    const unsigned char *left = block_data(a), *right = block_data(b);
     if (count > 256) {
         uint64_t first_a, first_b, last_a, last_b;
         memcpy(&first_a, left, 8); memcpy(&first_b, right, 8);
@@ -97,7 +97,7 @@ bool myl_core_str_eq(const myl_block *a, const myl_block *b) {
 uint64_t myl_core_str_chars(const myl_block *text) {
     if (text->kind & MYL_TEXT_ASCII) return (uint64_t)text->len;
     if (text->kind & MYL_TEXT_SCALARS) return (uint64_t)text->reserved >> 32;
-    const unsigned char *bytes = (const unsigned char *)text + MYL_HEADER;
+    const unsigned char *bytes = block_data(text);
     uint64_t scalars = 0;
     core_text_walked += (uint64_t)text->len;
     for (int64_t i = 0; i < text->len; ++i) scalars += (bytes[i] & 0xc0) != 0x80;
@@ -192,7 +192,7 @@ static void core_text_nearer(core_anchor *best, uint64_t *gap, uint64_t target, 
    is cached, its cursor and the caller's `hint`. A walk records where it ended, so
    a scan that moves its index either way pays for the distance moved. */
 static uint64_t core_text_locate(const myl_block *text, uint64_t scalar, core_anchor hint) {
-    const unsigned char *bytes = (const unsigned char *)text + MYL_HEADER;
+    const unsigned char *bytes = block_data(text);
     const uint64_t len = (uint64_t)text->len;
     core_anchor best = {0, 0}, cursor;
     uint64_t gap = scalar;
@@ -283,8 +283,8 @@ static myl_block *str_new(int64_t len) {
 
 myl_block *myl_core_str_concat(const myl_block *a, const myl_block *b) {
     myl_block *text = str_new(a->len + b->len);
-    memcpy(block_data(text), (const unsigned char *)a + MYL_HEADER, (size_t)a->len);
-    memcpy(block_data(text) + a->len, (const unsigned char *)b + MYL_HEADER, (size_t)b->len);
+    memcpy(block_data(text), block_data(a), (size_t)a->len);
+    memcpy(block_data(text) + a->len, block_data(b), (size_t)b->len);
     core_text_publish(text);
     return text;
 }
@@ -334,7 +334,7 @@ static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned cha
 
 myl_block *myl_core_ir_str_append(myl_block *a, const myl_block *b) {
     bool ascii = (a->kind & b->kind & MYL_TEXT_ASCII) != 0;
-    return core_text_append_bytes(a, (const unsigned char *)b + MYL_HEADER, b->len, ascii);
+    return core_text_append_bytes(a, block_data(b), b->len, ascii);
 }
 
 myl_block *myl_core_ir_str_append_char(myl_block *a, myl_block *text, uint64_t offset) {
@@ -388,7 +388,7 @@ static inline void core_text_copy(unsigned char *output, const unsigned char *in
         } \
         const myl_block *part=items[i]; \
         const size_t bytes=part->len; \
-        if (bytes) core_text_copy_short(output,(const unsigned char *)part + MYL_HEADER,bytes); \
+        if (bytes) core_text_copy_short(output,block_data(part),bytes); \
         output+=bytes; \
     } \
     return; \
@@ -403,7 +403,7 @@ static __attribute__((noinline)) void core_text_join_short(unsigned char *output
     for (size_t i=0;i<length;i++) {
         const myl_block *part=items[i];
         const size_t bytes=part->len;
-        if (bytes) core_text_copy_short(output,(const unsigned char *)part + MYL_HEADER,bytes);
+        if (bytes) core_text_copy_short(output,block_data(part),bytes);
         output+=bytes;
     }
 }
@@ -416,10 +416,10 @@ myl_block *myl_core_str_join(const myl_block *separator, myl_block *parts) {
     for (int64_t i = 0; i < parts->len; ++i) { total += items[i]->len; ascii = ascii && (items[i]->kind & MYL_TEXT_ASCII); short_copies = short_copies && items[i]->len <= 16; }
     myl_block *text = str_new(total);
     unsigned char *at = block_data(text);
-    if (short_copies) core_text_join_short(at, items, (size_t)parts->len, (const unsigned char *)separator + MYL_HEADER, (size_t)separator->len);
+    if (short_copies) core_text_join_short(at, items, (size_t)parts->len, block_data(separator), (size_t)separator->len);
     else for (int64_t i = 0; i < parts->len; ++i) {
-        if (i) { core_text_copy(at, (const unsigned char *)separator + MYL_HEADER, (size_t)separator->len); at += separator->len; }
-        core_text_copy(at, (const unsigned char *)items[i] + MYL_HEADER, (size_t)items[i]->len); at += items[i]->len;
+        if (i) { core_text_copy(at, block_data(separator), (size_t)separator->len); at += separator->len; }
+        core_text_copy(at, block_data(items[i]), (size_t)items[i]->len); at += items[i]->len;
     }
     if (ascii) text->kind |= MYL_TEXT_ASCII;
     return text;
@@ -455,7 +455,7 @@ static int64_t core_span_find(const unsigned char *data, int64_t len, const unsi
 }
 
 static int64_t core_text_find_bytes(const myl_block *text, const myl_block *needle, int64_t start) {
-    return core_span_find((const unsigned char *)text + MYL_HEADER, text->len, (const unsigned char *)needle + MYL_HEADER, needle->len, start);
+    return core_span_find(block_data(text), text->len, block_data(needle), needle->len, start);
 }
 
 /* Scalars that start in bytes [from, to): every byte that is not a UTF-8 continuation. */
@@ -565,9 +565,22 @@ myl_block *myl_core_bytes_from_list(myl_block *list) {
 myl_block *myl_core_bytes_concat(const myl_block *a, const myl_block *b) { myl_block *out = myl_core_str_concat(a, b); out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES; return out; }
 myl_block *myl_core_bytes_slice(myl_block *text, int64_t start, int64_t end) {
     start = core_text_clamp(start, text->len); end = core_text_clamp(end, text->len);
-    /* Octets need no ASCII flag; a slice of an ASCII block keeps it, without a scan. */
-    myl_block *out = core_octets_copy(block_data(text) + start, (size_t)(end > start ? end - start : 0), (text->kind & MYL_TEXT_ASCII) != 0);
-    out->kind = (out->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+    int64_t length = end > start ? end - start : 0;
+    if (!length) {
+        myl_block *empty = core_octets_copy((const unsigned char *)"", 0, true);
+        empty->kind = (empty->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+        return empty;
+    }
+    unsigned char *data = block_data(text) + start;
+    myl_block *parent = text;
+    if (text->kind & MYL_TEXT_SUBSTRING) parent = *(myl_block **)((unsigned char *)text + MYL_HEADER);
+    myl_block *out = block_new(MYL_KIND_BYTES, 16, 1);
+    out->len = length;
+    out->kind |= MYL_TEXT_SUBSTRING | (text->kind & MYL_TEXT_ASCII);
+    count_retain(parent);
+    myl_block **payload = (myl_block **)((unsigned char *)out + MYL_HEADER);
+    payload[0] = parent;
+    ((unsigned char **)payload)[1] = data;
     return out;
 }
 

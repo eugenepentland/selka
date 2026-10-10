@@ -102,6 +102,7 @@ typedef struct {
 
 enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1, MYL_KIND_BOX = 2, MYL_KIND_BYTES = 3, MYL_KIND_DICT = 4 };
 enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
+#define MYL_TEXT_SUBSTRING (1u << 13)
 /* A saturated count (D4): the block is immortal, never written and never freed. */
 #define MYL_SATURATED UINT32_MAX
 #define MYL_SHARED UINT32_C(0x80000000)
@@ -186,7 +187,12 @@ __attribute__((cold, noinline, preserve_most)) void myl_core_release_slow(myl_bl
     if (count_release_shared(block)) count_free_shared(block);
 }
 
-static unsigned char *block_data(myl_block *block) { return (unsigned char *)block + MYL_HEADER; }
+/* Immutable substring blocks carry {parent, resolved data}; flattening nested
+   substrings keeps data lookup and the eventual parent walk bounded. */
+static unsigned char *block_data(const myl_block *block) {
+    unsigned char *payload = (unsigned char *)block + MYL_HEADER;
+    return (block->kind & MYL_TEXT_SUBSTRING) ? ((unsigned char **)payload)[1] : payload;
+}
 
 static void out_of_memory(void);
 /* Set by a test executable (`myl_core_test_open`): every trap writes a record. */
@@ -714,6 +720,10 @@ __attribute__((always_inline)) static inline void core_children(myl_block *block
     unsigned kind = kind_of(block);
     if (kind == MYL_KIND_DICT) {
         core_dict_children(block, visit, context);
+        return;
+    }
+    if (block->kind & MYL_TEXT_SUBSTRING) {
+        visit(*(myl_block **)((unsigned char *)block + MYL_HEADER), context);
         return;
     }
     if (kind == MYL_KIND_STR || kind == MYL_KIND_BYTES) return;

@@ -172,3 +172,27 @@ const search_source =
 test "S2 bounded search paths preserve scalar windows and nonoverlapping matches" {
     try check(std.testing.allocator, search_source, "0 2 True True True Z😀Z\n0 3 True True True ZZZ\n21 1 False True True aaaaaaaaaaaaaaaaaaaaaZ\n-1 0 False False False abc\n2 3 False\n");
 }
+
+const substring_source =
+    \\record Piece:
+    \\    value: bytes
+    \\func saved(data: bytes) -> Piece:
+    \\    mut first = data[1:-1]
+    \\    return Piece(value=first[1:4])
+    \\func make() -> Piece:
+    \\    return saved(b"a" + b"bcdef")
+    \\func main(out: Stream) -> int:
+    \\    mut p = make()
+    \\    mut alias = p.value
+    \\    mut d: dict[bytes, int] = {}
+    \\    d[p.value] = 7
+    \\    out.print(p.value, len(p.value), p.value[0], p.value[-1], p.value == b"cde", d[b"cde"])
+    \\    out.print(p.value.hex(), p.value * 2, p.value + b"!", p.value.find(b"d"), p.value < b"zzz")
+    \\    out.print(alias[1:], p.value[9:1], p.value.decode())
+    \\    return 0
+;
+
+// spec: NEW-CORE-S2-VIEW-2
+test "S2 stored byte substrings own their parent across nested slices and aliases" {
+    try check(std.testing.allocator, substring_source, "b'cde' 3 99 101 True 7\n636465 b'cdecde' b'cde!' 1 True\nb'de' b'' Ok('cde')\n");
+}
