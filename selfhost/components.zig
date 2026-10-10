@@ -195,16 +195,15 @@ fn snapshot(ctx: *Context, source: []const u8, destination: []const u8) !void {
     }
 }
 
-const Component = struct { source: []const u8, name: []const u8, entry: []const u8 = "main.my" };
+const Component = struct { source: []const u8, name: []const u8, entry: []const u8 = "main.my", protocol: i64 = 1, schema: i64 = 1 };
 const components = [_]Component{
     .{ .source = "test_index", .name = "test-index" },
-    .{ .source = "cache_plan", .name = "cache-plan" },
-    .{ .source = "lexer_pilot", .name = "lexer-pilot" },
-    .{ .source = "parser_pilot", .name = "parser-pilot", .entry = "full_adapter.my" },
+    .{ .source = "cache_plan", .name = "cache-plan", .protocol = 2, .schema = 2 },
+    .{ .source = "lexer_pilot", .name = "lexer-pilot", .schema = 2 },
+    .{ .source = "parser_pilot", .name = "parser-pilot", .entry = "full_adapter.my", .schema = 2 },
 };
 
 fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {
-    const version: i64 = if (std.mem.eql(u8, descriptor.name, "cache-plan")) 2 else 1;
     const sources = try ctx.path(&.{ config.root, "selfhost", "components", descriptor.source });
     const tool = try std.process.executablePathAlloc(ctx.io, ctx.a);
     var flags = std.json.Array.init(ctx.a);
@@ -215,8 +214,8 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         .{ .name = "format", .value = files.integer(2) },
         .{ .name = "component", .value = files.string(descriptor.name) },
         .{ .name = "build_cache_root", .value = files.string(config.cache) },
-        .{ .name = "protocol", .value = files.integer(version) },
-        .{ .name = "schema", .value = files.integer(version) },
+        .{ .name = "protocol", .value = files.integer(descriptor.protocol) },
+        .{ .name = "schema", .value = files.integer(descriptor.schema) },
         .{ .name = "target", .value = try nativeTarget(ctx) },
         .{ .name = "flags", .value = .{ .array = flags } },
         .{ .name = "seed", .value = seed.qualification },
@@ -286,9 +285,9 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         if (!try digestEquals(ctx.io, installed, expected)) return ctx.fail("installed component digest mismatch");
     } else try files.copy(ctx.io, executable, installed, 0o555);
     const manifest = try files.object(ctx.a, &.{
-        .{ .name = "format", .value = files.integer(1) },                    .{ .name = "component", .value = files.string(descriptor.name) },
-        .{ .name = "protocol", .value = files.integer(version) },            .{ .name = "schema", .value = files.integer(version) },
-        .{ .name = "artifact", .value = files.string(name) },                .{ .name = "sha256", .value = files.string(expected) },
+        .{ .name = "format", .value = files.integer(1) },                     .{ .name = "component", .value = files.string(descriptor.name) },
+        .{ .name = "protocol", .value = files.integer(descriptor.protocol) }, .{ .name = "schema", .value = files.integer(descriptor.schema) },
+        .{ .name = "artifact", .value = files.string(name) },                 .{ .name = "sha256", .value = files.string(expected) },
         .{ .name = "key", .value = files.string(try ctx.a.dupe(u8, &key)) },
     });
     try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ config.install, try std.fmt.allocPrint(ctx.a, "{s}.json", .{descriptor.name}) }), manifest, 0o644);
