@@ -205,7 +205,7 @@ test "type interface admits exact source aggregate and path budgets rejects firs
         item.* = module();
         item.context.module = id;
         item.context.source = raw[0..1048576];
-        item.context.name = "";
+        item.context.name = "m";
         item.context.path = raw[0..16384];
         item.symbols = &.{};
         item.syntax = .{};
@@ -309,7 +309,7 @@ test "type interface permits empty project and rejects module first excess" {
         item.* = module();
         item.context.module = position;
         item.context.source = "";
-        item.context.name = "";
+        item.context.name = "m";
         item.context.path = "";
         item.symbols = &.{};
         item.syntax = .{};

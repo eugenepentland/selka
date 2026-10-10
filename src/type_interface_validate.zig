@@ -64,6 +64,7 @@ pub fn input(a: std.mem.Allocator, in: value.Input) Error!void {
     var budget: Budget = .{};
     for (in.modules, 0..) |module, id| {
         try require(module.context.module == id and module.context.source.len <= 1048576);
+        try require(module.context.name.len != 0);
         try require(module.context.path.len <= 16384 and module.context.is_imported == imported[id]);
         try add(&budget.storage.sources, module.context.source.len, strings_limit);
         try add(&budget.storage.strings, module.context.name.len, strings_limit);

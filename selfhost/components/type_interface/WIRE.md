@@ -16,7 +16,8 @@ at16, payload length at20, nonce8 at24 and request payload SHA256 at32. Reply ec
 bytes24..64 exactly. Payload length must match, with no trailing bytes.
 
 Request `SLKTYI01`, order(slice u32), modules(slice Module). Module IDs are array
-indices, Context.module must match, and order is an exact permutation.
+indices, Context.module must match, names are nonempty, is_imported equals the
+incoming-edge fact, and order is an exact permutation.
 
 - Module: context, imports(slice Import), symbols(slice Symbol), import_used(slice Boolean), catalog.
 - Context: module, name(bytes), path(bytes), trusted_intrinsics(Boolean), is_imported(Boolean), source(bytes).
