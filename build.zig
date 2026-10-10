@@ -812,6 +812,23 @@ pub fn build(b: *std.Build) void {
     pilot_checks.addArgs(&.{ "python3", "selfhost/test_pilots_test.py" });
     pilots_step.dependOn(&pilot_checks.step);
     test_step.dependOn(pilots_step);
+    const frontend_step = b.step("test-selfhost-frontend", "Qualify installed frontend consumers, warm reuse and coordinator edits");
+    for ([_]bool{ false, true }) |release| {
+        const frontend_run = driver(b, if (release) "frontend workflows release/facts/leaks" else "frontend workflows and coordinator edit", rss.driver, "frontend_qualification");
+        frontend_run.has_side_effects = true;
+        frontend_run.addArgs(&.{ "python3", "selfhost/tests/run_frontend_qualification.py", "--component", "--zig", b.graph.zig_exe, "--compiler" });
+        frontend_run.addArtifactArg(exe);
+        frontend_run.addArg("--builder");
+        frontend_run.addArtifactArg(component_tool);
+        frontend_run.addArg("--component-dir");
+        frontend_run.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+        frontend_run.addArg(if (release) "--release" else "--edit-check");
+        frontend_step.dependOn(&frontend_run.step);
+    }
+    const frontend_checks = driver(b, "frontend qualification verdict accounting", rss.script, "frontend_qualification_self");
+    frontend_checks.addArgs(&.{ "python3", "selfhost/tests/frontend_qualification_test.py" });
+    frontend_step.dependOn(&frontend_checks.step);
+    test_step.dependOn(frontend_step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
     const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
     selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });

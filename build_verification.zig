@@ -138,7 +138,7 @@ pub const Registry = struct {
 };
 
 fn requiresQualifiedSeed(list: []const u8) bool {
-    for ([_][]const u8{ "pilot_lexer", "pilot_parser", "pilot_probes" }) |lane| {
+    for ([_][]const u8{ "pilot_lexer", "pilot_parser", "pilot_probes", "frontend_qualification" }) |lane| {
         if (std.mem.eql(u8, list, lane)) return true;
     }
     return false;
@@ -148,6 +148,7 @@ test "qualified pilot seed checks stay fresh across action receipt reuse" {
     try std.testing.expect(requiresQualifiedSeed("pilot_lexer"));
     try std.testing.expect(requiresQualifiedSeed("pilot_parser"));
     try std.testing.expect(requiresQualifiedSeed("pilot_probes"));
+    try std.testing.expect(requiresQualifiedSeed("frontend_qualification"));
     try std.testing.expect(!requiresQualifiedSeed("pilot_registration"));
     try std.testing.expect(!requiresQualifiedSeed("unit"));
 }

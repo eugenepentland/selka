@@ -217,3 +217,9 @@ pub const pilot_probes = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/pro
 
 /// Adversarial pilot admission and directory-membership invalidation evidence.
 pub const pilot_registration = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/test_pilots_test.py", "build_test_inputs.zig", "tests/input_manifest.py", "tests/test_inputs_coverage.py" };
+
+/// Installed frontend workflows and real coordinator edit qualification.
+pub const frontend_qualification = [_][]const u8{"selfhost/"};
+
+/// Adversarial checks of the frontend qualification driver's verdict accounting.
+pub const frontend_qualification_self = [_][]const u8{ "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/frontend_qualification_test.py", "selfhost/tests/fixtures/frontend_qualification/" };
