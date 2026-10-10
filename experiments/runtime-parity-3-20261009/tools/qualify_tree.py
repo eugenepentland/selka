@@ -47,6 +47,8 @@ class Gates:
         if git('status', '--porcelain', '--untracked-files=no'):
             raise RuntimeError('tracked tree must be clean')
         self.head = git('rev-parse', 'HEAD')
+        self.main = git('rev-parse', 'main')
+        subprocess.run(['git', 'merge-base', '--is-ancestor', self.main, self.head], cwd=ROOT, check=True)
         self.area = AREA / 'X' / ('gates-' + tag)
         self.area.mkdir(parents=True, exist_ok=False)
         self.scratch = ROOT / '.tmp/rp3' / ('gates-' + tag)
@@ -57,10 +59,13 @@ class Gates:
                         TMPDIR=str(self.scratch), ZIG_LOCAL_CACHE_DIR=str(ROOT / '.zig-cache-rp3'),
                         MYLANG_CORE_RUNTIME_CACHE=str(ROOT / '.mylang-cache' / ('runtime-' + tag)))
         Path(self.env['MYLANG_CORE_RUNTIME_CACHE']).mkdir(parents=True, exist_ok=True)
-        self.receipt = {'source_commit': self.head, 'tag': tag, 'complete': False, 'steps': self.records}
+        self.receipt = {'source_commit': self.head, 'main_commit': self.main,
+                        'tag': tag, 'complete': False, 'steps': self.records}
         self.receipt['corpora'] = corpora_identity()
 
     def unchanged(self):
+        if git('rev-parse', 'main') != self.main:
+            raise RuntimeError('main advanced during qualification; merge it and rerun this step')
         if git('rev-parse', 'HEAD') != self.head or git('status', '--porcelain', '--untracked-files=no'):
             raise RuntimeError('source changed during qualification')
 

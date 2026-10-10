@@ -1,0 +1,42 @@
+{
+  "benchmark": "/home/epentland/ai/canopy/mylang-frontend-packed-20261010/paired-raw",
+  "method": "Header/index bounds and encoding-marker inspection after all edits. Does not independently validate BLAKE3 checksums or decode payloads; compiler reads and focused tests perform those checks.",
+  "caches": {
+    "12/baseline": {
+      "packs": 103,
+      "records": 82238,
+      "raw_blocks": 17,
+      "zlib_blocks": 2485,
+      "encoded_bytes": 216080907,
+      "plain_bytes": 989452095,
+      "compiler_identity": "8738898192c79a78773b7233bc0b17fe0ae93a1b1798ae2ff250a0b488d2ccc5"
+    },
+    "12/candidate": {
+      "packs": 103,
+      "records": 82238,
+      "raw_blocks": 2502,
+      "zlib_blocks": 0,
+      "encoded_bytes": 989454597,
+      "plain_bytes": 989452095,
+      "compiler_identity": "8738898192c79a78773b7233bc0b17fe0ae93a1b1798ae2ff250a0b488d2ccc5"
+    },
+    "32/baseline": {
+      "packs": 250,
+      "records": 218678,
+      "raw_blocks": 36,
+      "zlib_blocks": 6570,
+      "encoded_bytes": 572333243,
+      "plain_bytes": 2626465275,
+      "compiler_identity": "8738898192c79a78773b7233bc0b17fe0ae93a1b1798ae2ff250a0b488d2ccc5"
+    },
+    "32/candidate": {
+      "packs": 250,
+      "records": 218678,
+      "raw_blocks": 6606,
+      "zlib_blocks": 0,
+      "encoded_bytes": 2626471881,
+      "plain_bytes": 2626465275,
+      "compiler_identity": "8738898192c79a78773b7233bc0b17fe0ae93a1b1798ae2ff250a0b488d2ccc5"
+    }
+  }
+}

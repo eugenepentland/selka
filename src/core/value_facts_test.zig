@@ -221,3 +221,100 @@ test "a plain condition is evaluated before the blocks of its branch are made: t
     try std.testing.expect(contains(body, "branch %16, b4, b6"));
     try std.testing.expect(contains(body, "branch %6, b2, b3"));
 }
+
+const loop_record_fields =
+    \\record Pair:
+    \\    x: int
+    \\    y: int
+    \\func walk(n: int) -> int:
+    \\    mut p = Pair(x=0, y=7)
+    \\    for j in range(n):
+    \\        p.x = p.x + 1
+    \\    return p.x + p.y
+    \\func main(out: Stream) -> int:
+    \\    out.print(walk(100))
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-FACTS-6
+test "record facts and counted loops survive reclaimed analysis scratch and cloned result storage" {
+    const facts = @import("facts.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var transient = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer transient.deinit();
+    var work = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer work.deinit();
+    const a = arena.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var records = try support.buildSource(a, record_fields, &refusal);
+    var loops = try support.buildSource(a, nested_lengths, &refusal);
+    var record_loop = try support.buildSource(a, loop_record_fields, &refusal);
+    var widened_record_phis: usize = 0;
+    var fields_seen: usize = 0;
+    var loops_seen: usize = 0;
+    for ([_]*@import("ir.zig").Module{ &records, &loops, &record_loop }) |module| {
+        for (module.functions.items) |*function| {
+            if (function.signature.linkage != .internal) continue;
+            const known = try facts.analyzeWithScratch(transient.allocator(), work.allocator(), function, .{ .mark = false });
+            const expected = try known.clone(a);
+            // Overwrite the entire reusable scratch region. Output must contain
+            // neither dominator/worklist slices nor the record transfer buffer.
+            _ = work.reset(.retain_capacity);
+            @memset(try work.allocator().alloc(u8, 1024 * 1024), 0xa5);
+            const retained = try known.clone(a);
+            for (known.aggregates.fields, retained.aggregates.fields) |old, copy| {
+                if (old) |table| {
+                    fields_seen += 1;
+                    try std.testing.expect(copy.?.ptr != table.ptr);
+                    for (table, copy.?) |before, after| try std.testing.expect(std.meta.eql(before, after));
+                }
+            }
+            loops_seen += retained.counted.len;
+            _ = transient.reset(.retain_capacity);
+            @memset(try transient.allocator().alloc(u8, 1024 * 1024), 0xa5);
+            // Reads after poisoning cover every escaping fact table, including
+            // nested record fields and counted-loop descriptors.
+            for (function.insts.items, retained.ranges, retained.aggregates.fields, 0..) |inst, range, fields, index| {
+                if (inst.op == .iconst and inst.ty.integer() != null) {
+                    const point = facts.Interval.point(@as(i64, @bitCast(inst.data)));
+                    // Builder constants are detached from blocks, so analysis
+                    // leaves their dense table entries null. A present entry
+                    // must agree; valueRange derives their exact point either way.
+                    if (range) |interval| try std.testing.expect(std.meta.eql(interval, point));
+                    try std.testing.expect(std.meta.eql(facts.valueRange(&retained, function, @fromBackingInt(@intCast(index))), point));
+                }
+                if (fields) |table| {
+                    for (table) |field| {
+                        if (field) |interval| try std.testing.expect(interval.lo <= interval.hi);
+                    }
+                    if (module == &record_loop and inst.op == .phi and table.len == 2) {
+                        try std.testing.expectEqual(@as(?facts.Interval, null), table[0]);
+                        try std.testing.expect(std.meta.eql(table[1], facts.Interval.point(7)));
+                        widened_record_phis += 1;
+                    }
+                }
+            }
+            for (retained.counted) |counted| {
+                try std.testing.expect(counted.loop.header.index() < function.blocks.items.len);
+                try std.testing.expect(counted.counter.index() < function.insts.items.len);
+            }
+            try std.testing.expectEqualDeep(expected.ranges, retained.ranges);
+            try std.testing.expectEqualDeep(expected.aggregates, retained.aggregates);
+            try std.testing.expectEqualDeep(expected.floats, retained.floats);
+            try std.testing.expectEqualDeep(expected.bounds, retained.bounds);
+            try std.testing.expectEqualDeep(expected.reachable, retained.reachable);
+            try std.testing.expectEqualDeep(expected.counted, retained.counted);
+            try std.testing.expectEqual(function.insts.items.len, retained.aggregates.lists.len);
+            try std.testing.expectEqual(function.insts.items.len, retained.aggregates.dicts.len);
+            try std.testing.expectEqual(function.insts.items.len, retained.floats.len);
+            try std.testing.expectEqual(function.insts.items.len, retained.bounds.len);
+            try std.testing.expect(retained.reachable[0]);
+            _ = transient.reset(.retain_capacity);
+            _ = work.reset(.retain_capacity);
+        }
+    }
+    try std.testing.expect(fields_seen > 0);
+    try std.testing.expect(loops_seen > 0);
+    try std.testing.expect(widened_record_phis > 0);
+}

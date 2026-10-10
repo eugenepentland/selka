@@ -1,6 +1,6 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2, S2 and R complete. X is in progress. The real U2 merge passes all merged-tree correctness and instruction checks. S2 is now merged; its merged-tree gates, the R merge and final CPU-10 timing remain.
+Status: M0, U2, S2 and R complete. X is in progress. The real U2 merge passes all merged-tree correctness and instruction checks. S2 is merged. Main advanced to `1ab0d92e7`; its mandatory integration and fresh combined gates are in progress. The R merge and final CPU-10 timing remain.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
@@ -84,6 +84,8 @@ Historical checkpoints are retained below; the current state is stated above.
 - X second real merge: qualified S2 hand-off `04c1f88807def016245a20140a57506ad8425ec0`, with U2 and both histories retained. Textual merge succeeds. `qualify_tree.py --tag merge-s2-01` runs the complete merged-tree correctness/instruction sequence, including another 9×200 frozen matrix; results are pending.
 
 - S2 integration attempt `merge-s2-01` passes build 9/9, repository 95/95 (2,349 tests; 21,688 routing skips) and formatting. Conformance does not execute: the inherited qualifier keys temporary storage only by evidence basename, so `raw`/`additive` collide with the prior U2 run. Exit status 1 alone is not qualification; this attempt remains incomplete. The owned driver now uses globally unique leaf names and validates raw totals immediately. `merge-s2-02` reruns the entire sequence on the unchanged compiler implementation. Failure logs and analysis remain committed.
+
+- Main advances to `1ab0d92e7a7120abaffba358933d8401b953251a` with incremental stage/frontend caches and reclaimable analysis/emission storage. `merge-s2-02` is canceled while its repository wrapper is verified unadmitted; no repository/conformance result is claimed. Integrate new main with a real merge, preserve accepted U2/S2 behavior in ownership and pass-pipeline conflicts, and rerun complete combined gates. The original M0 base/compiler/corpora stay fixed. All three implementation lanes are complete; their branches and accepted hand-offs remain unchanged.
 
 ## Lane exits at current checkpoints
 

@@ -111,7 +111,7 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
     var ranges: std.ArrayList(u8) = .empty;
     var result_known: []const ?facts.Facts = &.{};
     if (with_facts) {
-        const result = try passes.run(allocator, &module, .trusted);
+        const result = try passes.runWithScratch(allocator, init.gpa, &module, .trusted);
         result_known = result.known;
         for (module.functions.items, result.known) |function, maybe| {
             const known = maybe orelse continue;

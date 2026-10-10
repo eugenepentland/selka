@@ -113,7 +113,7 @@ pub fn measure(a: std.mem.Allocator, module: *const ir.Module, result: *const pa
             for (block.insts.items) |ref| {
                 const inst = function.inst(ref);
                 if (inst.op == .copy) continue;
-                if (inst.check == .exact or (result.verifying and inst.check == .proven)) local.checks.kept += 1;
+                if (inst.check == .exact or (result.emission.verifying and inst.check == .proven)) local.checks.kept += 1;
                 switch (allocation(module, function, inst)) {
                     .never => {},
                     .may => local.allocation.sites += 1,

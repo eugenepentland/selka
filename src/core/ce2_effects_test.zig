@@ -612,3 +612,85 @@ test "a by-value argument sharing a call's sret result is written whole by the c
     const release = try support.runOwned(a, &again, .{ .release = true });
     try std.testing.expectEqualStrings(debug.stdout, release.stdout);
 }
+
+fn effectBytes(a: std.mem.Allocator, summaries: effects.Summaries) ![]const u8 {
+    var writer = @import("mylang").persist_codec.Writer.init(a);
+    defer writer.deinit();
+    for (summaries.params, summaries.may) |params, answers| {
+        try writer.write([2]bool, answers);
+        try writer.write(u64, params.len);
+        for (params) |effect| {
+            inline for (.{ "reads", "writes", "when_true", "when_false" }) |field| {
+                const paths = @field(effect, field);
+                try writer.write(bool, paths.whole);
+                try writer.write([]const effects.Path, paths.items.items);
+            }
+        }
+    }
+    return writer.bytes.toOwnedSlice(a);
+}
+
+fn sameEffectSets(expected: effects.Summaries, actual: effects.Summaries) !void {
+    try std.testing.expectEqualDeep(expected.may, actual.may);
+    for (expected.params, actual.params) |left, right| {
+        for (left, right) |old, new| {
+            inline for (.{ "reads", "writes", "when_true", "when_false" }) |field| {
+                try std.testing.expect(@field(old, field).same(&@field(new, field)));
+            }
+        }
+    }
+}
+
+fn effectsCallerFirst(a: std.mem.Allocator, module: *ir.Module) !void {
+    const preferred = [_]usize{ try functionIndex(module, "caller"), try functionIndex(module, "left"), try functionIndex(module, "right") };
+    const mapping = try a.alloc(u32, module.functions.items.len);
+    @memset(mapping, std.math.maxInt(u32));
+    var ordered: std.ArrayList(ir.Function) = .empty;
+    for (preferred) |index| {
+        mapping[index] = @intCast(ordered.items.len);
+        try ordered.append(a, module.functions.items[index]);
+    }
+    for (module.functions.items, mapping) |function, *index| {
+        if (index.* != std.math.maxInt(u32)) continue;
+        index.* = @intCast(ordered.items.len);
+        try ordered.append(a, function);
+    }
+    for (ordered.items) |*function| for (function.insts.items) |*inst| switch (inst.op) {
+        .call => inst.a = @fromBackingInt(mapping[inst.a.index()]),
+        .func_ref => inst.data = mapping[@intCast(inst.data)],
+        else => {},
+    };
+    module.entry = mapping[module.entry];
+    module.functions = ordered;
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "seeded effects fixed points retain canonical path ordering for cache identities" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a,
+        \\record R:
+        \\    x: int
+        \\    y: int
+        \\func caller(r: R) -> int:
+        \\    return right(r) + left(r)
+        \\func left(r: R) -> int:
+        \\    return r.y
+        \\func right(r: R) -> int:
+        \\    return r.x
+        \\func main() -> int:
+        \\    return caller(R(x=1, y=2))
+    , &refusal);
+    try effectsCallerFirst(a, &module);
+    const caller = try functionIndex(&module, "caller");
+    const eager = try effects.analyze(a, &module);
+    const reused = try a.alloc(?effects.Reused, module.functions.items.len);
+    for (eager.params, eager.may, reused, 0..) |params, answers, *slot, index| {
+        slot.* = if (index == caller) null else try effects.retain(a, .{ .params = params, .may = answers });
+    }
+    const seeded = try effects.analyzeReused(a, &module, reused);
+    try sameEffectSets(eager, seeded);
+    try std.testing.expectEqualSlices(u8, try effectBytes(a, eager), try effectBytes(a, seeded));
+}

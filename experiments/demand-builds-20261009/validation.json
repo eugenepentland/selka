@@ -1,0 +1,44 @@
+{
+  "compiler_sha256": "4008bc7bbc2e023f8d423d395d871ec3910598597bd9c0dc88bd2b599200939d",
+  "full_test": {
+    "command": "scripts/build-slot.sh gate zig build test fmt-check --summary all",
+    "steps": "93/93",
+    "passed": 2275,
+    "skipped_shard_assignments": 21040
+  },
+  "guardian": {
+    "command": "guardian-check all . --full --quiet",
+    "passed": 88
+  },
+  "benchmark": {
+    "builds": 40,
+    "executable_checks": 40,
+    "paired_executables": 20,
+    "byte_identical_executable_pairs": 20,
+    "edited_object_pairs": 30,
+    "byte_identical_edited_object_pairs": 30,
+    "candidate_fallbacks": 0
+  },
+  "logs": {
+    "full-test-suffix-index.log": {
+      "path": "/home/epentland/.cache/mylang-demand-builds-20261009/full-test-suffix-index.log",
+      "sha256": "3e6191092d49612f1c89dee803d2aedc4fe140a7fe27fe073fed6369c36a0472"
+    },
+    "guardian-suffix-index.log": {
+      "path": "/home/epentland/.cache/mylang-demand-builds-20261009/guardian-suffix-index.log",
+      "sha256": "8089ea33c8e03a2d88090f0ca43b8329b2a5e90a2507bd8fb7f6209789219b97"
+    },
+    "install-suffix-index-final.log": {
+      "path": "/home/epentland/.cache/mylang-demand-builds-20261009/install-suffix-index-final.log",
+      "sha256": "9e4af1ddf69e77dfca355325581350de82e40abfc781fc8e1f359e9aa6f7bb7a"
+    },
+    "paired-complete.log": {
+      "path": "/home/epentland/.cache/mylang-demand-builds-20261009/paired-complete.log",
+      "sha256": "3751330de912780fadca9e323f43ca2d79400d99cb62c35082399ec344dda7a7"
+    },
+    "guardian-closure.log": {
+      "path": "/home/epentland/.cache/mylang-demand-builds-20261009/guardian-closure.log",
+      "sha256": "8089ea33c8e03a2d88090f0ca43b8329b2a5e90a2507bd8fb7f6209789219b97"
+    }
+  }
+}

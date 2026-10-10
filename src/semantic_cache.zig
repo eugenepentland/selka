@@ -14,6 +14,7 @@ const generic_cache = @import("generic_cache.zig");
 const generic_specializations = @import("generic_specializations.zig");
 const timings = @import("timings.zig");
 const summary = @import("semantic_summary.zig");
+const sources = @import("semantic_sources.zig");
 
 /// Re-exported so host wiring can bind the full contract without depending on
 /// the compiler module's internal file layout.
@@ -111,11 +112,19 @@ pub const Statistics = struct {
     /// alignment. This is the field `check-session` reports as
     /// `functions.retained_bytes`.
     retained_bytes: usize = 0,
-    /// Conservative per-reason miss counts for bodies that were not reused. These
-    /// name an exact cause even when the body is checked fresh.
-    misses: MissCounts = @splat(0),
+    /// Lookup rejection and retention eligibility are distinct observations.
+    rejections: MissDetail = .{},
     /// Per-kind breakdown and eviction count for the shared budget.
     retention: RetentionDetail = .{},
+};
+
+/// Conservative reasons split by lookup and retention, with a legacy total.
+pub const MissDetail = struct {
+    total: MissCounts = @splat(0),
+    lookup: MissCounts = @splat(0),
+    retention: MissCounts = @splat(0),
+    /// First rejected identity by semantic_copy.Failure tag (none is slot zero).
+    relocation: [copy.failure_count]usize = @splat(0),
 };
 
 /// Per-kind retained storage and eviction detail exposed beside the existing
@@ -337,12 +346,15 @@ pub const Cache = struct {
         const recall = if (self.context.summaries) |request| if (request.previous) |previous| summary.recall(previous) else null else null;
         const prepared = try key.prepare(allocator, src, syntax, .{ .build = self.context.contract, .mutation = self.context.mutation_contract }, self.resolution, recall);
         if (profile) |p| p.addSince("dependency_key_preparation", prepare_start, false);
+        const needs_trees = if (self.context.summaries) |request|
+            request.body_policy == .concrete and self.context.retain_summary_trees
+        else
+            true;
+        // Demand requests decode only bodies their host cannot replace, after
+        // summary planning; Session.lookup retains the ordinary lazy miss path.
+        const lazy_trees = if (self.context.summaries) |request| request.policy.demand != null else false;
         if (self.context.persistent) |persistent| {
-            const needs_trees = if (self.context.summaries) |request|
-                request.body_policy == .concrete and self.context.retain_summary_trees
-            else
-                true;
-            if (self.entries.len == 0 and needs_trees) {
+            if (self.entries.len == 0 and needs_trees and !lazy_trees) {
                 const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
                 try self.loadPersistent(persistent, prepared);
                 if (profile) |p| p.addSince("retention_store_io", io_start, false);
@@ -351,7 +363,8 @@ pub const Cache = struct {
         // Per-function eligibility: an unrelated generic, alias, constant or
         // callback no longer disables ordinary-body reuse. A zero-retention cache
         // still reports a bypass because reuse was never consulted.
-        const enabled = self.reuse.max_bytes != 0 and self.entries.len != 0;
+        const enabled = self.reuse.max_bytes != 0 and
+            (self.entries.len != 0 or (needs_trees and self.context.persistent != null));
         if (self.reuse.max_bytes == 0) self.statistics.bypassed += 1;
         const count = prepared.ordinary_ast.len;
         const ranges = try allocator.alloc(copy.Range, count);
@@ -380,6 +393,7 @@ pub const Cache = struct {
                 .functions = function_map,
                 .records = record_map,
                 .initial_record_count = records.len,
+                .sources = try sources.Catalog.init(allocator, src),
                 .shapes = .{ .allocator = allocator, .records = try allocator.dupe(typed.Record, records) },
             },
         };
@@ -397,6 +411,7 @@ const Remap = struct {
     initial_record_count: usize,
     /// Transitive shape digests of the fresh catalog's records.
     shapes: key.Shapes,
+    sources: sources.Catalog,
 };
 
 /// Per-function reuse state for one check request.
@@ -412,14 +427,24 @@ pub const Session = struct {
     /// Copy one unchanged checked local tree, remapping declaration and catalog
     /// identities. Any missing or ambiguous remap is a miss.
     pub fn lookup(self: *Session, allocator: std.mem.Allocator, index: usize, nodes: *std.ArrayList(typed.Node), statements: *std.ArrayList(typed.Statement)) error{ OutOfMemory, InternalError }!?typed.Function {
-        // A disabled cache or a first request with no retained snapshot is a
-        // whole-cache bypass already counted by `begin`; do not manufacture a
-        // per-body reason when reuse was never a candidate.
+        // Do not manufacture per-body misses when retention is disabled or
+        // neither retained entries nor an eligible durable store is available.
         if (!self.reuse.enabled) return null;
         if (index >= self.prepared.ordinary_ast.len) return self.reason(.not_ordinary);
         const ast_index = self.prepared.ordinary_ast[index];
-        const entry_index = self.cache.index.get(self.prepared.keys[ast_index]) orelse return self.reason(.no_entry);
-        const entry = &self.cache.entries[entry_index];
+        if (self.cache.index.get(self.prepared.keys[ast_index])) |entry_index| {
+            return self.copyEntry(allocator, index, &self.cache.entries[entry_index], nodes, statements);
+        }
+        const persistent = self.cache.context.persistent orelse return self.reason(.no_entry);
+        var entry = (try persistent.lookup(self.cache.allocator, self.prepared.keys[ast_index], self.prepared.contexts[ast_index])) orelse return self.reason(.no_entry);
+        defer entry.deinit();
+        // Restore only this body's independently owned tree. It need not fit
+        // the retention budget, and no decoded storage survives the copy.
+        return self.copyEntry(allocator, index, &entry, nodes, statements);
+    }
+
+    fn copyEntry(self: *Session, allocator: std.mem.Allocator, index: usize, entry: *const owned.Entry, nodes: *std.ArrayList(typed.Node), statements: *std.ArrayList(typed.Statement)) error{ OutOfMemory, InternalError }!?typed.Function {
+        const ast_index = self.prepared.ordinary_ast[index];
         // Cheap rejections first. The dependency digest is a 32-byte compare that
         // also carries the mutation and effect contract, and both stored lengths
         // are integer compares; only a request that survives all three touches
@@ -454,16 +479,21 @@ pub const Session = struct {
         copy.sortFunctionRemaps(functions);
         const records = try allocator.alloc(copy.RecordRemap, entry.meta.record_refs.len);
         for (entry.meta.record_refs, records) |reference, *out| {
-            const fresh = self.remap.records.get(reference.key) orelse return self.reason(.missing_record);
-            if (fresh == std.math.maxInt(usize)) return self.reason(.ambiguous_record);
+            var fresh = self.remap.records.get(reference.key) orelse return self.reason(.missing_record);
+            if (fresh == std.math.maxInt(usize)) fresh = (try uniqueRecordShape(&self.remap.shapes, reference.key, reference.shape)) orelse return self.reason(.ambiguous_record);
             const shape = (try self.remap.shapes.digest(fresh)) orelse return self.reason(.missing_record);
             if (!std.mem.eql(u8, &shape, &reference.shape)) return self.reason(.record_shape_changed);
             out.* = .{ .old = reference.index, .fresh = @fromBackingInt(fresh + typed.Type.record_base) };
         }
         copy.sortRecordRemaps(records);
-        var segment = [_]copy.Segment{.{ .before = old_region, .after = new_region.start }};
+        var proven_region = old_region;
+        const trailing = entry.source.trailing_bytes;
+        if (trailing.len <= self.src.bytes.len - new_region.end and std.mem.eql(u8, trailing, self.src.bytes[new_region.end..][0..trailing.len])) {
+            proven_region.end += trailing.len;
+        }
+        const segments = try self.remap.sources.segments(allocator, entry.source.modules, .{ .before = proven_region, .after = new_region.start });
         const mapper: copy.Mapper = .{
-            .segments = &segment,
+            .segments = segments,
             .before = entry.range,
             .after = .{
                 .nodes = .{ .start = nodes.items.len, .end = nodes.items.len + entry.nodes.len },
@@ -472,19 +502,52 @@ pub const Session = struct {
             .function_remaps = functions,
             .record_remaps = records,
         };
-        const function = mapper.copy(allocator, typed.Function, entry.function) catch |err| return self.relocationMiss(err);
-        const copied_nodes = mapper.copy(allocator, []const typed.Node, entry.nodes) catch |err| return self.relocationMiss(err);
-        const copied_statements = mapper.copy(allocator, []const typed.Statement, entry.statements) catch |err| return self.relocationMiss(err);
+        var failure: copy.Failure = .none;
+        const function = mapper.copyWithFailure(allocator, typed.Function, entry.function, &failure) catch |err| {
+            return self.relocationMiss(err, failure);
+        };
+        const copied_nodes = mapper.copyWithFailure(allocator, []const typed.Node, entry.nodes, &failure) catch |err| {
+            return self.relocationMiss(err, failure);
+        };
+        const copied_statements = mapper.copyWithFailure(allocator, []const typed.Statement, entry.statements, &failure) catch |err| {
+            return self.relocationMiss(err, failure);
+        };
         try nodes.appendSlice(allocator, copied_nodes);
         try statements.appendSlice(allocator, copied_statements);
         self.reuse.functions[index] = true;
         self.cache.statistics.reused += 1;
         return function;
     }
-    /// The transitive shape digest of the fresh catalog record named `name`, or
-    /// null when no record, or more than one, has that name.
-    pub fn shapeOf(self: *Session, name: []const u8) error{OutOfMemory}!?[32]u8 {
-        const index = self.remap.records.get(name) orelse return null;
+    /// A summary identity names nominal records directly. Callable spellings
+    /// omit return origins, so include their exact schema to distinguish them.
+    pub fn recordIdentity(self: *Session, allocator: std.mem.Allocator, index: usize) error{OutOfMemory}!?[]const u8 {
+        if (index >= self.remap.shapes.records.len) return null;
+        const record = self.remap.shapes.records[index];
+        if (record.contract.callback == null) return record.name;
+        const digest = (try self.remap.shapes.digest(index)) orelse return null;
+        const named = self.remap.records.get(record.name) orelse return null;
+        if (named == std.math.maxInt(usize) and (try uniqueRecordShape(&self.remap.shapes, record.name, digest)) == null) return null;
+        const hex = std.fmt.bytesToHex(digest, .lower);
+        const identity = try std.fmt.allocPrint(allocator, "{s}\x00{s}", .{ record.name, hex });
+        return identity;
+    }
+    /// Resolve a stored nominal name or callable name plus exact schema.
+    /// Old name-only summaries remain conservative for ambiguous spellings.
+    pub fn shapeOf(self: *Session, identity: []const u8) error{OutOfMemory}!?[32]u8 {
+        if (std.mem.indexOfScalar(u8, identity, 0)) |separator| {
+            const hex = identity[separator + 1 ..];
+            if (hex.len != 64) return null;
+            var expected: [32]u8 = undefined;
+            _ = std.fmt.hexToBytes(&expected, hex) catch return null;
+            const name = identity[0..separator];
+            var index = self.remap.records.get(name) orelse return null;
+            if (index == std.math.maxInt(usize)) index = (try uniqueRecordShape(&self.remap.shapes, name, expected)) orelse return null;
+            if (self.remap.shapes.records[index].contract.callback == null) return null;
+            const digest = (try self.remap.shapes.digest(index)) orelse return null;
+            if (!std.mem.eql(u8, &digest, &expected)) return null;
+            return digest;
+        }
+        const index = self.remap.records.get(identity) orelse return null;
         if (index == std.math.maxInt(usize)) return null;
         return self.remap.shapes.digest(index);
     }
@@ -495,12 +558,16 @@ pub const Session = struct {
         self.cache.statistics.reused += 1;
     }
     fn reason(self: *Session, why: MissReason) ?typed.Function {
-        self.cache.statistics.misses[@backingInt(why)] += 1;
+        self.cache.statistics.rejections.lookup[@backingInt(why)] += 1;
+        self.cache.statistics.rejections.total[@backingInt(why)] += 1;
         return null;
     }
-    fn relocationMiss(self: *Session, err: copy.Error) error{ OutOfMemory, InternalError }!?typed.Function {
+    fn relocationMiss(self: *Session, err: copy.Error, failure: copy.Failure) error{ OutOfMemory, InternalError }!?typed.Function {
         return switch (err) {
-            error.InvalidRelocation => self.reason(.relocation_failed),
+            error.InvalidRelocation => blk: {
+                self.cache.statistics.rejections.relocation[@backingInt(std.meta.activeTag(failure))] += 1;
+                break :blk self.reason(.relocation_failed);
+            },
             error.OutOfMemory => error.OutOfMemory,
             error.InternalError => error.InternalError,
         };
@@ -514,6 +581,8 @@ pub const Session = struct {
         const ast_index = self.prepared.ordinary_ast[i];
         const stable_key = self.prepared.keys[ast_index];
         var refs = copy.RefSet.init(cache.allocator);
+        refs.sources.enabled = true;
+        refs.sources.local = self.prepared.regions[ast_index];
         defer refs.deinit();
         try copy.collectRefs(cache.allocator, program.functions[i], program.nodes[range.nodes.start..range.nodes.end], program.statements[range.statements.start..range.statements.end], &refs);
         // A body that references a concrete specialization cannot be reused
@@ -556,13 +625,19 @@ pub const Session = struct {
                 break;
             }
             const name = program.records[index.*].name;
-            const fresh_index = self.remap.records.get(name) orelse {
+            var fresh_index = self.remap.records.get(name) orelse {
                 unstable = .missing_record;
                 break;
             };
             if (fresh_index == std.math.maxInt(usize)) {
-                unstable = .ambiguous_record;
-                break;
+                const expected = (try self.remap.shapes.digest(index.*)) orelse {
+                    unstable = .missing_record;
+                    break;
+                };
+                fresh_index = (try uniqueRecordShape(&self.remap.shapes, name, expected)) orelse {
+                    unstable = .ambiguous_record;
+                    break;
+                };
             }
             const shape = (try self.remap.shapes.digest(fresh_index)) orelse {
                 unstable = .missing_record;
@@ -572,7 +647,10 @@ pub const Session = struct {
             record_count += 1;
         }
         if (unstable) |why| return self.freshMiss(why);
+        const source_refs = try self.remap.sources.capture(cache.allocator, self.prepared.regions[ast_index], &refs.sources.items);
+        defer cache.allocator.free(source_refs);
         const spec: owned.Spec = .{
+            .source_refs = source_refs,
             .identity = .{
                 .key = stable_key,
                 .context = self.prepared.contexts[ast_index],
@@ -588,7 +666,8 @@ pub const Session = struct {
     }
     /// Count one body that cannot be retained, with the exact conservative reason.
     fn freshMiss(self: *Session, why: MissReason) ?owned.Entry {
-        self.cache.statistics.misses[@backingInt(why)] += 1;
+        self.cache.statistics.rejections.retention[@backingInt(why)] += 1;
+        self.cache.statistics.rejections.total[@backingInt(why)] += 1;
         return null;
     }
 
@@ -598,8 +677,8 @@ pub const Session = struct {
     /// specialization tables, so this request keeps the longest leading prefix
     /// of stable ordinary bodies whose owned storage plus the exact
     /// hash-index backing allocation fits the share of the budget the generic
-    /// tables leave. A body that does not fit is a fresh miss on its next
-    /// request rather than a reason to disable reuse for every body.
+    /// tables leave. Bodies outside that prefix can still be restored one at
+    /// a time from the durable store without growing retained storage.
     pub fn remember(self: *Session, program: typed.Program) error{ OutOfMemory, InternalError }!void {
         const cache = self.cache;
         if (cache.reuse.max_bytes == 0) return;
@@ -631,6 +710,9 @@ pub const Session = struct {
             if (self.reuse.stood_in[i]) continue;
             const ast_index = self.prepared.ordinary_ast[i];
             const stable_key = self.prepared.keys[ast_index];
+            // An on-demand durable hit was already copied and released. Leave
+            // its existing file alone rather than rebuilding a retained entry.
+            if (self.reuse.functions[i] and !cache.index.contains(stable_key)) continue;
             if (self.reuse.functions[i]) if (cache.index.get(stable_key)) |old_index| if (!used[old_index]) {
                 const cost = owned.entryCost(cache.entries[old_index]);
                 if (!fitsOrdinaryBudget(running, cost, pending.items.len + 1, ordinary_budget)) {
@@ -682,6 +764,7 @@ pub const Session = struct {
             const previous = owned.retained(cache.entries) + owned.hashIndexBytes(cache.index.capacity());
             if (previous <= ordinary_budget) {
                 cache.statistics.bypassed += 1;
+                try self.persistUnretained(program, stopped_at);
                 return;
             }
             cache.statistics.retention.evicted += cache.entries.len;
@@ -707,6 +790,33 @@ pub const Session = struct {
         published = true;
         cache.recountRetention();
         try persistFresh(cache, fresh.items);
+        try self.persistUnretained(program, stopped_at);
+    }
+
+    /// Persist checked bodies beyond the in-memory prefix, with one temporary
+    /// owned entry at a time. Successful durable hits need no publication.
+    fn persistUnretained(self: *Session, program: typed.Program, start: usize) error{ OutOfMemory, InternalError }!void {
+        const persistent = self.cache.context.persistent orelse return;
+        var started = false;
+        errdefer if (started) {
+            persistent.endBatch() catch |err| switch (err) {
+                // Preserve the original publication/check error during cleanup.
+                error.OutOfMemory => {},
+            };
+        };
+        for (start..self.prepared.ordinary_ast.len) |i| {
+            if (self.reuse.stood_in[i] or self.reuse.functions[i]) continue;
+            const range = self.ranges[i];
+            if (range.nodes.end > program.nodes.len or range.statements.end > program.statements.len) return error.InternalError;
+            var entry = (try self.buildFreshEntry(program, i, range)) orelse continue;
+            defer entry.deinit();
+            if (!started) {
+                try persistent.beginBatch();
+                started = true;
+            }
+            _ = try persistent.put(&entry);
+        }
+        if (started) try persistent.endBatch();
     }
 };
 
@@ -787,4 +897,36 @@ const Reuse = struct {
 /// contracts interned while checking are handled as `interned_record` misses.
 fn declaredCallback(records: []const typed.Record, index: usize) bool {
     return index < records.len and records[index].contract.callback != null;
+}
+
+/// A duplicate spelling can still identify one catalog record by its exact
+/// transitive schema. Multiple matching records remain conservative misses.
+fn uniqueRecordShape(shapes: *key.Shapes, name: []const u8, expected: [32]u8) error{OutOfMemory}!?usize {
+    var found: ?usize = null;
+    for (shapes.records, 0..) |record, index| {
+        if (record.contract.callback == null) continue;
+        if (!std.mem.eql(u8, record.name, name)) continue;
+        const digest = (try shapes.digest(index)) orelse continue;
+        if (!std.mem.eql(u8, &digest, &expected)) continue;
+        if (found != null) return null;
+        found = index;
+    }
+    return found;
+}
+
+test "semantic cache duplicate callable names require one exact shape" {
+    const t = std.testing;
+    const callback: typed.Callable = .{ .parameters = &.{}, .return_type = .i64, .effects = 0 };
+    var records = [_]typed.Record{
+        .{ .id = @fromBackingInt(typed.Type.record_base), .name = "func() -> i64", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{}, .shape = .{ .domain = .u64 }, .contract = .{ .callback = callback } },
+        .{ .id = @fromBackingInt(typed.Type.record_base + 1), .name = "func() -> i64", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{}, .shape = .{ .domain = .u64 }, .contract = .{ .callback = callback } },
+    };
+    records[1].contract.callback.?.return_origin = .fresh;
+    var shapes: key.Shapes = .{ .allocator = t.allocator, .records = &records };
+    defer shapes.deinit();
+    const first = (try shapes.digest(0)).?;
+    try t.expectEqual(@as(?usize, 0), try uniqueRecordShape(&shapes, records[0].name, first));
+    records[1].contract.callback.?.return_origin = .unknown;
+    shapes.memo.clearRetainingCapacity();
+    try t.expectEqual(@as(?usize, null), try uniqueRecordShape(&shapes, records[0].name, first));
 }

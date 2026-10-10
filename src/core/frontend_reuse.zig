@@ -75,6 +75,7 @@ pub const State = struct {
     /// Attach summaries from this entry's last successful project check.
     pub fn begin(self: *State, project: *const language.project.Project, allocator: std.mem.Allocator) error{OutOfMemory}!void {
         self.frontend.fitProject(project.counts.bytes);
+        fitBodyStore(&self.store.limits, project.counts.bytes);
         if (try self.frontend.lookupSummaries(project)) |bytes| {
             defer self.semantic.allocator.free(bytes);
             if (language.semantic_summary.decode(allocator, bytes)) |decoded| {
@@ -108,3 +109,11 @@ pub const State = struct {
         };
     }
 };
+
+/// Typed trees are larger than source text. Fit durable retention to the loaded
+/// project, with hard ceilings; this never changes the 16 MiB memory budget or
+/// the single-body decoding bound. Eviction remains a correct cache miss.
+pub fn fitBodyStore(limits: *@FieldType(language.semantic_cache.Store, "limits"), source_bytes: usize) void {
+    limits.max_bytes = @min(@as(usize, 4) << 30, @max(limits.max_bytes, 64 *| source_bytes));
+    limits.max_entries = @min(@as(usize, 1) << 20, @max(limits.max_entries, source_bytes));
+}

@@ -1,0 +1,21 @@
+{
+ "scope": "Read-only U2 accepted-source follow-on; counts are full-size lane results, not final X timing or time shares. Current sampled attribution is missing for ten cells other than the two string-equality baseline profiles.",
+ "common_frames": "Eight call-heavy VM cells retain M0 frame bytes: 88-byte reloads vm.my:496/503/510/525 and 48-byte vm.my:135; exclude heap.my:144. U2 lox-final.ir:1515 loads/retains whole frame and carries a whole-record phi. Investigate fieldwise SSA for loop-carried frame snapshots, then lifetime-proven borrowing/selective materialization. Preserve checks, uniqueness, old-child release and trap order.",
+ "accessor_ir": "lox-final.ir:10194 loads/retains {bytes, hash}; :10285 calls it, extracts scalar hash and releases aggregate. Program snapshots at :7420 and :2786 retain all four lists before dispatch.",
+ "cells": {
+  "lox/vm/equality": "Only136 frame bytes. string_obj 24,000,037 retains, string_hash24,000,009 releases, byte reads672,000,032 bounds. Probe scalar-result projection through checked aggregate accessors, then IP/stack bounds facts; frame copies are not priority.",
+  "lox/vm/fib": "4.134GB frames,369.100M retains; M0 norc .747x instructions. Recursive call/return frame SSA then repeated IP/stack checks. Counts-removed diagnostic does not prove counts safely removable.",
+  "lox/vm/instantiation": "3.360GB frames;15M allocations in vm::call_value. vm.my:154 empty instance table becomes list_new0 at IR:5925. Investigate immutable empty representation with correct detach/growth plus frames; frequency is not allocator time.",
+  "lox/vm/invocation": "10.080GB frames,141,000,138 string_obj retains; M0 norc .662x instructions. Frame SSA then scalar hash projection through method lookup.",
+  "lox/vm/method_call": "4.853GB frames; table::set13,333,338 allocations and3,413,334,528 copied list bytes. M0 norc .688x instructions. Besides frames trace vm.my:330 through table.my:95 getter/union/update/writeback for ownership transfer while preserving live instance snapshots.",
+  "lox/vm/properties": "6.720GB frames,188,000,414 table-probe bounds,124,000,201 string_obj retains. Frames and scalar hashes, then masked probing facts at table.my:41 preserving invalid-input traps.",
+  "lox/vm/string_equality": "Only360 frame bytes. Baseline99.06% instructions exclusive vm::run, no runtime string-equality samples. norc .993x; checks+norc .811x. Probe IP increments, byte reads, stack access, dispatch writeback at vm.my:252/429-534; address/branch-miss attribution missing to separate checks from layout.",
+  "lox/vm/trees": "4.484GB frames; table::set124,999,936 copied bytes, allocations across instance creation/table adjustment/copying. Frames for recursive traversal and property writeback for construction. Separate once-only construction from repeated walks before attributing time.",
+  "lox/vm/zoo": "6.720GB frames,140,000,057 string_obj retains,899 total allocations. Frames/hash/probe facts; few allocations do not support prioritizing allocation elimination.",
+  "lox/vm/zoo_batch": "5.376GB frames,104,001,662 string_obj retains,1,014 allocations. Independently supports frames/hash/probe investigation; do not borrow zoo timing attribution.",
+  "lox/tree/equality": "evaluate130,800,044 retains/releases each, execute73,200,024 each; M0 norc .573x instructions. Borrow immutable four-list Program through recursive interpreter mutation with transitive path effect proof, indexed/union views and CFG lifetimes. These are whole Program snapshots, not merely AST nodes.",
+  "lox/tree/string_equality": "Program snapshots evaluate128,560,088 and execute76,960,064 each count direction; env_obj51,320,016 retains. Baseline instruction shares evaluate35.03%,execute17.28%,env_obj10.46%. Program borrowing then borrowed/scalar environment .enclosing at interpreter.my:111 and slot at:144. Baseline6.85% list_copy share is whole-process:233.55MB of238.46MB copies are resolver setup, not all environment updates."
+ },
+ "string_equality": "Both engines compare interned IDs (value.my:33), so faster byte comparisons lack supporting evidence.",
+ "evidence": ["U2/counts-summary.json.gz", "M0/counterfactuals.md", "S2/equality-base-profile.json", "codex-rp3-u2/.mylang-cache/u2/lox-final.ir"]
+}

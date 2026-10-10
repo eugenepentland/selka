@@ -238,11 +238,11 @@ test "a same-length body edit misses the retained body and reuses its neighbours
     try compare(t.allocator, &cache, original, 42);
     const checked = cache.statistics.checked;
     const reused = cache.statistics.reused;
-    const misses = cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)];
+    const misses = cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)];
     try compare(t.allocator, &cache, mutated, 44);
     try t.expectEqual(checked + 1, cache.statistics.checked);
     try t.expectEqual(reused + 2, cache.statistics.reused);
-    try t.expectEqual(misses + 1, cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)]);
+    try t.expectEqual(misses + 1, cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.region_bytes_changed)]);
 }
 
 // spec-case: SEMANTIC-CACHE-16
@@ -253,12 +253,12 @@ test "a same-length declaration edit misses with the dependency reason it always
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     try compare(t.allocator, &cache, original, 41);
-    const misses = cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.context_changed)];
+    const misses = cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.context_changed)];
     try compare(t.allocator, &cache, mutated, 41);
     // The renamed parameter changes the edited declaration's own region text and
     // the fingerprint its caller depends on, so both miss as a dependency change
     // and neither is served from the retained pair.
-    try t.expectEqual(misses + 2, cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.context_changed)]);
+    try t.expectEqual(misses + 2, cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.context_changed)]);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
 }
 // spec: SEMANTIC-CACHE-3
@@ -637,7 +637,7 @@ test "declared callback slots and matching function values reuse when the contra
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
     // The declared callback parameter is interned before checking and `one`'s
     // contract matches it exactly, so the callable slot has a stable remap.
-    try t.expectEqual(@as(usize, 0), cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.function_value)]);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.function_value)]);
 
     // Only the callee body changes: `main` still stores the same declared
     // callback contract, so its body reuses and revalidates globally.
@@ -678,7 +678,7 @@ test "a function value with no matching declared callback misses with its exact 
     try compare(t.allocator, &cache, program, 42);
     // `one`'s own contract differs from the declared callback parameter, so its
     // callable contract record is interned while checking and cannot be remapped.
-    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.function_value)] > 0);
+    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.function_value)] > 0);
     const before = cache.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
     // `apply` and `one` reuse; `main` is rechecked with its reported reason.
@@ -703,7 +703,7 @@ test "generic specialization bodies reuse while their callers miss with their ex
         \\    return identity[i64](42)
     ;
     try compare(t.allocator, &cache, program, 42);
-    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
     const before = cache.statistics.reused;
     const before_specialization = cache.reuse.specializations.statistics.reused;
     try compare(t.allocator, &cache, program, 42);
@@ -712,7 +712,7 @@ test "generic specialization bodies reuse while their callers miss with their ex
     // are not retained without a validated instance-key remap.
     try t.expectEqual(before + 1, cache.statistics.reused);
     try t.expectEqual(before_specialization + 1, cache.reuse.specializations.statistics.reused);
-    try t.expect(cache.statistics.misses[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
+    try t.expect(cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.generic_specialization)] > 0);
 }
 
 // spec-case: SEMANTIC-CACHE-7
@@ -822,6 +822,194 @@ test "durable semantic entries survive a new cache process and roll back cleanly
         try t.expectEqual(@as(usize, 3), cache.statistics.reused);
         try t.expectEqual(@as(usize, 0), cache.statistics.checked);
     }
+}
+
+const durable_body_source =
+    \\record Item:
+    \\    n: i64
+    \\
+    \\func helper(n: i64) -> i64:
+    \\    return Item(n=n).n + 1
+    \\
+    \\
+++ suffix;
+
+/// Keep less than one ordinary entry in memory, while keeping durable files.
+const DurableWork = struct { checked: usize, reused: usize, stored: usize, damaged: usize, misses: language.semantic_cache.MissCounts };
+fn transientDurableRun(root: []const u8, bytes: []const u8, expected: i64) !DurableWork {
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var store = semantic_store.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var cache = Cache.initWithContract(t.allocator, 1, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    try compare(t.allocator, &cache, bytes, expected);
+    try t.expectEqual(@as(usize, 0), cache.entries.len);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+    return .{
+        .checked = cache.statistics.checked,
+        .reused = cache.statistics.reused,
+        .stored = store.statistics.stored,
+        .damaged = store.statistics.damaged,
+        .misses = cache.statistics.rejections.total,
+    };
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-3
+test "copyEntry restores exact default source proofs outside declaration region" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const bytes =
+        \\record Item:
+        \\    n: i64 = 42
+        \\
+        \\func get() -> i64:
+        \\    return Item().n
+        \\
+        \\func main() -> i64:
+        \\    return get()
+    ;
+    _ = try transientDurableRun(root, bytes, 42);
+    const warm = try transientDurableRun(root, bytes, 42);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 2), warm.reused);
+    try t.expectEqual(@as(usize, 0), warm.misses[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+    const edited = try t.allocator.dupe(u8, bytes);
+    defer t.allocator.free(edited);
+    edited[std.mem.indexOf(u8, edited, "42").? + 1] = '3';
+    const changed = try transientDurableRun(root, edited, 43);
+    try t.expect(changed.checked > 0);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+test "durable bodies restore beyond the retention budget with edits and remapped identities" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const cold = try transientDurableRun(root, durable_body_source, 42);
+    try t.expectEqual(@as(usize, 3), cold.checked);
+    try t.expectEqual(@as(usize, 3), cold.stored);
+    const warm = try transientDurableRun(root, durable_body_source, 42);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 3), warm.reused);
+    try t.expectEqual(@as(usize, 0), warm.stored);
+    // Same-length edits must compare body bytes even on an on-demand hit.
+    const edited = try t.allocator.dupe(u8, durable_body_source);
+    defer t.allocator.free(edited);
+    edited[std.mem.indexOf(u8, edited, ".n + 1").? + 5] = '2';
+    const changed = try transientDurableRun(root, edited, 43);
+    try t.expectEqual(@as(usize, 1), changed.checked);
+    try t.expectEqual(@as(usize, 2), changed.reused);
+    try t.expectEqual(@as(usize, 1), changed.stored);
+    // Shift source, function and nominal type ordinals before restoring every
+    // old body; the fresh comparison checks values, facts and warning spans.
+    const shifted = try std.mem.concat(t.allocator, u8, &.{
+        "record Unrelated:\n    n: bool\n\nfunc uncalled() -> i64:\n    return 0\n\n",
+        edited,
+    });
+    defer t.allocator.free(shifted);
+    const moved = try transientDurableRun(root, shifted, 43);
+    try t.expectEqual(@as(usize, 1), moved.checked);
+    try t.expectEqual(@as(usize, 3), moved.reused);
+    const repeated = try transientDurableRun(root, shifted, 43);
+    try t.expectEqual(@as(usize, 0), repeated.checked);
+    try t.expectEqual(@as(usize, 4), repeated.reused);
+    try t.expectEqual(@as(usize, 0), repeated.stored);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+test "durable bodies restore persistUnretained closes its batch on allocation failure" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var seed = Cache.initWithContract(t.allocator, 4 << 20, fingerprint);
+    defer seed.deinit();
+    var unit = try language.Compilation.init(t.allocator, "edited.my", prefix ++ suffix);
+    defer unit.deinit();
+    try unit.checkWithCache(&seed);
+    var failures = t.FailingAllocator.init(t.allocator, .{});
+    var store = semantic_store.Store.init(failures.allocator(), t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var cache = Cache.initWithContract(t.allocator, 1, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    var session = try cache.begin(unit.arena.allocator(), unit.src, unit.syntax.?, unit.program.?.records);
+    try t.expectEqual(seed.entries.len, session.ranges.len);
+    for (seed.entries, session.ranges) |entry, *range| range.* = entry.range;
+    // beginBatch's namespace-existence probe allocates once; fail the first
+    // publication allocation after the batch is active, exercising cleanup.
+    failures.fail_index = failures.alloc_index + 1;
+    try t.expectError(error.OutOfMemory, session.remember(unit.program.?));
+    try t.expect(store.batch == null);
+    try t.expectEqual(@as(usize, 0), cache.entries.len);
+    failures.fail_index = std.math.maxInt(usize);
+    try session.remember(unit.program.?);
+    try t.expect(store.batch == null);
+    try t.expectEqual(@as(usize, 3), store.statistics.stored);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+}
+
+// spec-case: SEMANTIC-CACHE-15
+test "a damaged on-demand body rechecks and republishes without retaining trees" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    _ = try transientDurableRun(root, durable_body_source, 42);
+    try t.expect(try truncateFirstEntry(t.allocator, root, cache_key.Contract.default));
+    const repaired = try transientDurableRun(root, durable_body_source, 42);
+    try t.expectEqual(@as(usize, 1), repaired.checked);
+    try t.expectEqual(@as(usize, 2), repaired.reused);
+    try t.expectEqual(@as(usize, 1), repaired.stored);
+    try t.expect(repaired.damaged > 0);
+    const warm = try transientDurableRun(root, durable_body_source, 42);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 3), warm.reused);
+    try t.expectEqual(@as(usize, 0), warm.stored);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+test "durable restore combines a retained prefix with temporary body hits" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const contract = cache_key.Contract.default;
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var store = semantic_store.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    var seed = Cache.initWithContract(t.allocator, 4 * 1024 * 1024, fingerprint);
+    defer seed.deinit();
+    seed.context.persistent = &store;
+    try compare(t.allocator, &seed, durable_body_source, 42);
+    // Allow the first entry and some arena growth variation, while excluding
+    // the complete snapshot. Both memory and durable paths must supply trees.
+    const budget = prefixRetainedCost(seed.entries[0..1]) + 1024;
+    try t.expect(budget < seed.statistics.retained_bytes);
+    var warm_store = semantic_store.Store.init(t.allocator, t.io, root, contract, language.semantic_cache.mutation_contract_version);
+    defer warm_store.deinit();
+    var warm = Cache.initWithContract(t.allocator, budget, fingerprint);
+    defer warm.deinit();
+    warm.context.persistent = &warm_store;
+    try compare(t.allocator, &warm, durable_body_source, 42);
+    try t.expect(warm.entries.len > 0 and warm.entries.len < 3);
+    try t.expect(warm.statistics.retained_bytes <= budget);
+    try t.expectEqual(@as(usize, 0), warm.statistics.checked);
+    try t.expectEqual(@as(usize, 3), warm.statistics.reused);
+    try t.expectEqual(@as(usize, 0), warm_store.statistics.stored);
 }
 
 const DurableRun = struct { checked: usize, reused: usize, evicted: usize = 0 };
@@ -1989,4 +2177,169 @@ test "resolved argument descriptors distinguish schema changes and survive catal
     const unrelated = try semantic_key.argumentDescriptor(t.allocator, first, null, &reordered);
     defer t.allocator.free(unrelated);
     try t.expect(!std.mem.eql(u8, descriptor, unrelated));
+}
+
+test "summary callable record identities distinguish return origins and reject shape changes" {
+    var unit = try language.Compilation.init(t.allocator, "edited.my", prefix ++ suffix);
+    defer unit.deinit();
+    try unit.check();
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    const callback: checked_typed.Callable = .{ .parameters = &.{}, .return_type = .i64, .effects = 0 };
+    var records = [_]checked_typed.Record{
+        .{ .id = @fromBackingInt(checked_typed.Type.record_base), .name = "func() -> i64", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{}, .shape = .{ .domain = .u64 }, .contract = .{ .callback = callback } },
+        .{ .id = @fromBackingInt(checked_typed.Type.record_base + 1), .name = "func() -> i64", .declaration = .{ .start = 0, .end = 0 }, .fields = &.{}, .shape = .{ .domain = .u64 }, .contract = .{ .callback = callback } },
+    };
+    records[1].contract.callback.?.return_origin = .fresh;
+    const a = unit.arena.allocator();
+    var before = try cache.begin(a, unit.src, unit.syntax.?, &records);
+    const identity = (try before.recordIdentity(a, 0)).?;
+    const other = (try before.recordIdentity(a, 1)).?;
+    try t.expect(!std.mem.eql(u8, identity, other));
+    try t.expect((try before.shapeOf(records[0].name)) == null);
+    const expected = (try before.shapeOf(identity)).?;
+    std.mem.swap(checked_typed.Record, &records[0], &records[1]);
+    records[0].id = @fromBackingInt(checked_typed.Type.record_base);
+    records[1].id = @fromBackingInt(checked_typed.Type.record_base + 1);
+    var reordered = try cache.begin(a, unit.src, unit.syntax.?, &records);
+    try t.expectEqualSlices(u8, &expected, &(try reordered.shapeOf(identity)).?);
+    records[1].contract.callback.?.effects = 1;
+    var changed = try cache.begin(a, unit.src, unit.syntax.?, &records);
+    try t.expect((try changed.shapeOf(identity)) == null);
+}
+
+const DefaultFiles = struct {
+    main: []const u8,
+    model: []const u8,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+        const self: *DefaultFiles = @ptrCast(@alignCast(context.?));
+        const bytes = if (std.mem.eql(u8, path, "main.my")) self.main else if (std.mem.eql(u8, path, "model.my")) self.model else return error.NotFound;
+        if (bytes.len > limit) return error.TooLarge;
+        return allocator.dupe(u8, bytes);
+    }
+};
+
+fn compareDefaults(cache: *Cache, files: *DefaultFiles, expected: i64) !void {
+    var cached_project = language.project.Project.init(t.allocator);
+    defer cached_project.deinit();
+    try cached_project.load(.{ .context = files, .read = DefaultFiles.read }, "main", .{});
+    var cached_index = try language.interfaces.build(&cached_project);
+    var cached = try language.project_compile.Compilation.init(&cached_index);
+    try cached.checkWithCache(cache);
+    var fresh_project = language.project.Project.init(t.allocator);
+    defer fresh_project.deinit();
+    try fresh_project.load(.{ .context = files, .read = DefaultFiles.read }, "main", .{});
+    var fresh_index = try language.interfaces.build(&fresh_project);
+    var fresh = try language.project_compile.Compilation.init(&fresh_index);
+    try fresh.check();
+    try t.expectEqual(expected, (try native.run(&cached)).value);
+    try t.expectEqual(expected, (try native.run(&fresh)).value);
+    try t.expectEqual(fresh.diagnostics.items.items.len, cached.diagnostics.items.items.len);
+    for (fresh.diagnostics.items.items, cached.diagnostics.items.items) |left, right| {
+        const a = try language.diagnostic_output.render(t.allocator, left, fresh.src, .json);
+        defer t.allocator.free(a);
+        const b = try language.diagnostic_output.render(t.allocator, right, cached.src, .json);
+        defer t.allocator.free(b);
+        try t.expectEqualStrings(a, b);
+    }
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "imported defaults retain exact source proof across importer edits and invalidate changed defaults" {
+    var files: DefaultFiles = .{
+        .main = "import model\nfunc helper() -> i64:\n    return 0\n\nfunc main() -> i64:\n    return model.Item().n + helper()\n",
+        .model = "public record Item:\n    n: i64 = 42\n",
+    };
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try compareDefaults(&cache, &files, 42);
+    const checked = cache.statistics.checked;
+    try compareDefaults(&cache, &files, 42);
+    try t.expectEqual(checked, cache.statistics.checked);
+    files.main = "import model\nfunc helper() -> i64:\n    return 1\n\nfunc main() -> i64:\n    return model.Item().n + helper()\n";
+    try compareDefaults(&cache, &files, 43);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    files.model = "# moved default\npublic record Item:\n    n: i64 = 43\n";
+    try compareDefaults(&cache, &files, 44);
+    try t.expect(cache.statistics.checked > checked + 1);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "copyEntry parser trailing span proof reuses matched body after another body changes" {
+    var files: DefaultFiles = .{
+        .main = "import model\nfunc helper() -> i64:\n    return 42\n\nfunc main() -> i64:\n    return model.keep(Some(helper()))\n",
+        .model = "public func keep(n: i64?) -> i64:\n    match n:\n        case Some(value):\n            return value\n        case None:\n            return 0\n\n\npublic func unused() -> i64:\n    return 0\n",
+    };
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    try compareDefaults(&cache, &files, 42);
+    var saw_trailing_span = false;
+    for (cache.entries) |entry| {
+        var refs = @import("semantic_copy.zig").RefSet.init(t.allocator);
+        defer refs.deinit();
+        refs.sources.enabled = true;
+        try refs.collect([]const checked_typed.Node, entry.nodes);
+        try refs.collect([]const checked_typed.Statement, entry.statements);
+        var spans = refs.sources.items.keyIterator();
+        while (spans.next()) |span| {
+            if (span.end == entry.meta.identity.region.end + 3) saw_trailing_span = true;
+        }
+    }
+    try t.expect(saw_trailing_span);
+    const checked = cache.statistics.checked;
+    files.model = "public func keep(n: i64?) -> i64:\n    match n:\n        case Some(value):\n            return value\n        case None:\n            return 0\n\n\npublic func unused() -> i64:\n    return 1\n";
+    try compareDefaults(&cache, &files, 42);
+    try t.expectEqual(checked + 1, cache.statistics.checked);
+    try t.expectEqual(@as(usize, 0), cache.statistics.rejections.total[@backingInt(language.semantic_cache.MissReason.relocation_failed)]);
+}
+
+// spec-case: SEMANTIC-CACHE-9
+// spec-case: SEMANTIC-CACHE-15
+// spec-case: SEMANTIC-CACHE-3
+test "source proof rejects renamed ambiguous edited and malformed module provenance" {
+    const source = @import("source.zig");
+    const provenance = @import("semantic_sources.zig");
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const model = try source.Source.init(a, "model.my", "n=42");
+    const main = try source.Source.init(a, "main.my", "get()");
+    const original = try source.Source.initMapped(a, &.{ model, main });
+    var before = try provenance.Catalog.init(t.allocator, original);
+    defer before.deinit();
+    var spans: std.AutoHashMapUnmanaged(source.Span, void) = .empty;
+    defer spans.deinit(t.allocator);
+    try spans.put(t.allocator, .{ .start = 2, .end = 4 }, {});
+    const refs = try before.capture(t.allocator, .{ .start = 5, .end = 10 }, &spans);
+    defer t.allocator.free(refs);
+    try t.expectEqual(@as(usize, 1), refs.len);
+    const moved = try source.Source.initMapped(a, &.{ main, model });
+    var after = try provenance.Catalog.init(t.allocator, moved);
+    defer after.deinit();
+    const local: @import("semantic_copy.zig").Segment = .{ .before = .{ .start = 5, .end = 10 }, .after = 0 };
+    const mapped = try after.segments(t.allocator, refs, local);
+    defer t.allocator.free(mapped);
+    try t.expectEqual(@as(usize, 2), mapped.len);
+    try t.expectEqual(@as(usize, 6), mapped[0].after);
+    const changed = try source.Source.init(a, "model.my", "n=43");
+    const renamed = try source.Source.init(a, "other.my", "n=42");
+    for ([_]source.Source{
+        try source.Source.initMapped(a, &.{ main, changed }),
+        try source.Source.initMapped(a, &.{ main, renamed }),
+        try source.Source.initMapped(a, &.{ model, main, model }),
+    }) |fresh| {
+        var catalog = try provenance.Catalog.init(t.allocator, fresh);
+        defer catalog.deinit();
+        const rejected_segments = try catalog.segments(t.allocator, refs, local);
+        defer t.allocator.free(rejected_segments);
+        try t.expectEqual(@as(usize, 1), rejected_segments.len);
+    }
+    var malformed = refs[0];
+    malformed.before.end = original.bytes.len + 1;
+    try t.expect(!provenance.valid(&.{malformed}, original.bytes.len));
+    try t.expect(!provenance.valid(&.{ refs[0], refs[0] }, original.bytes.len));
 }

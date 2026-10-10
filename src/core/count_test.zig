@@ -182,7 +182,7 @@ test "without --counters the emitted text names no counter and links the ordinar
     const plain = try support.llvmText(a, program);
     try std.testing.expect(!contains(plain, "myl_count"));
     try std.testing.expect(!contains(plain, "myl.cs."));
-    try std.testing.expect(!emit_units.unit("whole", "", .program, plain).counting);
+    try std.testing.expect(!emit_units.unit("whole", "", .program, plain).dependencies.counting);
     var refusal: build.Refusal = .{};
     var module = try support.buildSource(a, program, &refusal);
     const result = try passes.debug(a, &module);
@@ -194,7 +194,7 @@ test "without --counters the emitted text names no counter and links the ordinar
         .analysis = support.analysis(&result),
         .counters = true,
     });
-    try std.testing.expect(emit_units.unit("whole", "", .program, counting).counting);
+    try std.testing.expect(emit_units.unit("whole", "", .program, counting).dependencies.counting);
     try std.testing.expect(contains(counting, "section \"myl_count_fns\""));
     try std.testing.expect(contains(counting, "section \"myl_count_sites\""));
     try std.testing.expect(contains(counting, "@llvm.used = appending global"));

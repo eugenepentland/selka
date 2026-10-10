@@ -1,0 +1,3536 @@
+{
+  "12/baseline/entry_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 4.5929976580664515,
+      "min": 4.1431137879844755,
+      "max": 5.826476358110085
+    },
+    "peak_rss_gib": 0.500396728515625,
+    "raw_bodies_materialized": [
+      628,
+      628,
+      628
+    ],
+    "final_bodies_materialized": [
+      628,
+      628,
+      628
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 1.391452354,
+      "lowering": 0.227951463,
+      "optimizer": 1.143486928,
+      "emission": 0.124031331,
+      "native": 1.565420525,
+      "linker": 0.070280611
+    },
+    "frontend_phase_median_s": {
+      "check": 1.057849442,
+      "check_summaries": 0.008746487,
+      "declarations_interfaces": 0.011262897,
+      "dependency_key_preparation": 0.156677979,
+      "domain_codec_validation": 3.43e-07,
+      "effect_origin_passes": 0.081373465,
+      "entry_adaptation": 0.001100377,
+      "fresh_body_check": 0.282809824,
+      "load": 0.107582985,
+      "merge": 0.06080166,
+      "ordinary_body_replay": 0.112405191,
+      "retention_store_io": 0.09215513,
+      "specialization_body_replay": 0.001470026,
+      "stand_in_planning": 0.070611476,
+      "symbolic_templates": 0.009117625,
+      "syntax_parse": 0.000346816,
+      "syntax_replay": 0.084429528,
+      "warning_derivation": 0.00101022
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        1106,
+        1106,
+        1106
+      ],
+      "reused": [
+        13055,
+        13055,
+        13055
+      ],
+      "summaries": [
+        12071,
+        12071,
+        12071
+      ],
+      "stored": [
+        458,
+        458,
+        458
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          456,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          456,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          456,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          456,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          456,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          456,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "12/baseline/helper_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 4.146738013019785,
+      "min": 3.382422599941492,
+      "max": 5.2322368691675365
+    },
+    "peak_rss_gib": 0.5032501220703125,
+    "raw_bodies_materialized": [
+      807,
+      807,
+      807
+    ],
+    "final_bodies_materialized": [
+      807,
+      807,
+      807
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 2.189376513,
+      "lowering": 0.383886944,
+      "optimizer": 1.061371105,
+      "emission": 0.113076083,
+      "native": 0.248121782,
+      "linker": 0.079189386
+    },
+    "frontend_phase_median_s": {
+      "check": 1.481380497,
+      "check_summaries": 0.011405507,
+      "declarations_interfaces": 0.013409621,
+      "dependency_key_preparation": 0.189471305,
+      "domain_codec_validation": 4.51e-07,
+      "effect_origin_passes": 0.103210187,
+      "entry_adaptation": 0.001413069,
+      "fresh_body_check": 0.370941107,
+      "load": 0.130636639,
+      "merge": 0.073851408,
+      "ordinary_body_replay": 0.468942911,
+      "retention_store_io": 0.102145046,
+      "specialization_body_replay": 0.000887493,
+      "stand_in_planning": 0.085495672,
+      "symbolic_templates": 0.01146709,
+      "syntax_parse": 0.000605065,
+      "syntax_replay": 0.201288937,
+      "warning_derivation": 0.001229722
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        1108,
+        1108,
+        1108
+      ],
+      "reused": [
+        13053,
+        13053,
+        13053
+      ],
+      "summaries": [
+        12022,
+        12022,
+        12022
+      ],
+      "stored": [
+        460,
+        460,
+        460
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          228,
+          421,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          459,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          421,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          459,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          420,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          288,
+          459,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          420,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          459,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          420,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          288,
+          459,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          420,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          459,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "12/baseline/three_file_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 6.516370866913348,
+      "min": 5.464875107863918,
+      "max": 7.780750070000067
+    },
+    "peak_rss_gib": 0.5029869079589844,
+    "raw_bodies_materialized": [
+      991,
+      991,
+      991
+    ],
+    "final_bodies_materialized": [
+      991,
+      991,
+      991
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      3,
+      3,
+      3
+    ],
+    "llvm_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 1.64906395,
+      "lowering": 0.971425406,
+      "optimizer": 1.622414492,
+      "emission": 0.178384819,
+      "native": 1.821999962,
+      "linker": 0.076100413
+    },
+    "frontend_phase_median_s": {
+      "check": 1.213466722,
+      "check_summaries": 0.011716463,
+      "declarations_interfaces": 0.013874244,
+      "dependency_key_preparation": 0.195802851,
+      "domain_codec_validation": 4.16e-07,
+      "effect_origin_passes": 0.110167395,
+      "entry_adaptation": 0.001506671,
+      "fresh_body_check": 0.380357832,
+      "load": 0.141771202,
+      "merge": 0.074886896,
+      "ordinary_body_replay": 0.138626097,
+      "retention_store_io": 0.119120319,
+      "specialization_body_replay": 0.000923231,
+      "stand_in_planning": 0.087528167,
+      "symbolic_templates": 0.010290152,
+      "syntax_parse": 0.001671023,
+      "syntax_replay": 0.1187945,
+      "warning_derivation": 0.001315325
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        1113,
+        1113,
+        1113
+      ],
+      "reused": [
+        13048,
+        13048,
+        13048
+      ],
+      "summaries": [
+        11972,
+        11972,
+        11972
+      ],
+      "stored": [
+        465,
+        465,
+        465
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          228,
+          423,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          288,
+          461,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          423,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          461,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          288,
+          461,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          461,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          288,
+          461,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          461,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "12/candidate/entry_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 4.6961013418622315,
+      "min": 4.1556679389905185,
+      "max": 5.808923925971612
+    },
+    "peak_rss_gib": 0.49517059326171875,
+    "raw_bodies_materialized": [
+      628,
+      628,
+      628
+    ],
+    "final_bodies_materialized": [
+      628,
+      628,
+      628
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 1.455312601,
+      "lowering": 0.256259461,
+      "optimizer": 1.403826164,
+      "emission": 0.104607393,
+      "native": 1.394021627,
+      "linker": 0.06246965
+    },
+    "frontend_phase_median_s": {
+      "check": 1.016727307,
+      "check_summaries": 0.009135672,
+      "declarations_interfaces": 0.010074146,
+      "dependency_key_preparation": 0.155054271,
+      "domain_codec_validation": 3.56e-07,
+      "effect_origin_passes": 0.081225885,
+      "entry_adaptation": 0.001157755,
+      "fresh_body_check": 0.205964908,
+      "load": 0.103199741,
+      "merge": 0.055403018,
+      "ordinary_body_replay": 0.123918452,
+      "retention_store_io": 0.025031307,
+      "specialization_body_replay": 0.000835241,
+      "stand_in_planning": 0.064454285,
+      "symbolic_templates": 0.009773049,
+      "syntax_parse": 0.000353718,
+      "syntax_replay": 0.094221297,
+      "warning_derivation": 0.00099324
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        651,
+        651,
+        651
+      ],
+      "reused": [
+        13510,
+        13510,
+        13510
+      ],
+      "summaries": [
+        12071,
+        12071,
+        12071
+      ],
+      "stored": [
+        3,
+        3,
+        3
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          1,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          1,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          1,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "cache_flush_median_s": 0.008389061,
+    "cache_flush_succeeded": true,
+    "packed_reads": {
+      "packed_bytes_read": [
+        32259616,
+        31243380,
+        30790724
+      ],
+      "decoded_bytes": [
+        118243662,
+        112501011,
+        110355371
+      ],
+      "blocks_decoded": [
+        787,
+        769,
+        761
+      ],
+      "payload_bytes_returned": [
+        69195316,
+        69195316,
+        69195316
+      ],
+      "block_cache_hits": [
+        14606,
+        14624,
+        14632
+      ]
+    }
+  },
+  "12/candidate/helper_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 4.490188533905894,
+      "min": 4.375043126987293,
+      "max": 4.6988987100776285
+    },
+    "peak_rss_gib": 0.49761962890625,
+    "raw_bodies_materialized": [
+      807,
+      807,
+      807
+    ],
+    "final_bodies_materialized": [
+      807,
+      807,
+      807
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 1.632983535,
+      "lowering": 0.290919135,
+      "optimizer": 1.95408475,
+      "emission": 0.123592283,
+      "native": 0.327215866,
+      "linker": 0.072666164
+    },
+    "frontend_phase_median_s": {
+      "check": 1.134941193,
+      "check_summaries": 0.011078547,
+      "declarations_interfaces": 0.013483193,
+      "dependency_key_preparation": 0.199980266,
+      "domain_codec_validation": 4.94e-07,
+      "effect_origin_passes": 0.100811835,
+      "entry_adaptation": 0.001573149,
+      "fresh_body_check": 0.268454885,
+      "load": 0.126039534,
+      "merge": 0.07411703,
+      "ordinary_body_replay": 0.144077725,
+      "retention_store_io": 0.025382747,
+      "specialization_body_replay": 0.001132883,
+      "stand_in_planning": 0.082894861,
+      "symbolic_templates": 0.009860782,
+      "syntax_parse": 0.000602883,
+      "syntax_replay": 0.103269412,
+      "warning_derivation": 0.00124727
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        649,
+        649,
+        649
+      ],
+      "reused": [
+        13512,
+        13512,
+        13512
+      ],
+      "summaries": [
+        12022,
+        12022,
+        12022
+      ],
+      "stored": [
+        1,
+        1,
+        1
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          228,
+          421,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          421,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          420,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          420,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          420,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          420,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "cache_flush_median_s": 0.001165955,
+    "cache_flush_succeeded": true,
+    "packed_reads": {
+      "packed_bytes_read": [
+        38898446,
+        39826910,
+        39738064
+      ],
+      "decoded_bytes": [
+        146972605,
+        151893969,
+        151379212
+      ],
+      "blocks_decoded": [
+        1036,
+        1068,
+        1056
+      ],
+      "payload_bytes_returned": [
+        72073382,
+        72073382,
+        72073382
+      ],
+      "block_cache_hits": [
+        15801,
+        15769,
+        15781
+      ]
+    }
+  },
+  "12/candidate/three_file_edit": {
+    "lines": 191416,
+    "wall_s": {
+      "median": 7.647117088083178,
+      "min": 7.349819456925616,
+      "max": 7.846575283911079
+    },
+    "peak_rss_gib": 0.49628448486328125,
+    "raw_bodies_materialized": [
+      991,
+      991,
+      991
+    ],
+    "final_bodies_materialized": [
+      991,
+      991,
+      991
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      3,
+      3,
+      3
+    ],
+    "llvm_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 2.431736652,
+      "lowering": 0.310056663,
+      "optimizer": 2.372045016,
+      "emission": 0.154018309,
+      "native": 2.02673042,
+      "linker": 0.078547836
+    },
+    "frontend_phase_median_s": {
+      "check": 1.92921399,
+      "check_summaries": 0.012095421,
+      "declarations_interfaces": 0.013884307,
+      "dependency_key_preparation": 0.195826589,
+      "domain_codec_validation": 4.28e-07,
+      "effect_origin_passes": 0.108331975,
+      "entry_adaptation": 0.001489681,
+      "fresh_body_check": 0.298922098,
+      "load": 0.130620198,
+      "merge": 0.071502337,
+      "ordinary_body_replay": 1.064253698,
+      "retention_store_io": 0.025641413,
+      "specialization_body_replay": 0.000974541,
+      "stand_in_planning": 0.087334625,
+      "symbolic_templates": 0.012761588,
+      "syntax_parse": 0.00160956,
+      "syntax_replay": 0.12175098,
+      "warning_derivation": 0.001247953
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        653,
+        653,
+        653
+      ],
+      "reused": [
+        13508,
+        13508,
+        13508
+      ],
+      "summaries": [
+        11972,
+        11972,
+        11972
+      ],
+      "stored": [
+        5,
+        5,
+        5
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          228,
+          423,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          288,
+          1,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          423,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          288,
+          1,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          228,
+          422,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          288,
+          1,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          228,
+          422,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "cache_flush_median_s": 0.012222899,
+    "cache_flush_succeeded": true,
+    "packed_reads": {
+      "packed_bytes_read": [
+        44454016,
+        44534904,
+        45013673
+      ],
+      "decoded_bytes": [
+        175641767,
+        176429614,
+        178670564
+      ],
+      "blocks_decoded": [
+        1244,
+        1258,
+        1248
+      ],
+      "payload_bytes_returned": [
+        75035702,
+        75035702,
+        75035702
+      ],
+      "block_cache_hits": [
+        17057,
+        17043,
+        17053
+      ]
+    }
+  },
+  "32/baseline/entry_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 17.52147506806068,
+      "min": 10.564072465058416,
+      "max": 22.672619368880987
+    },
+    "peak_rss_gib": 1.3123970031738281,
+    "raw_bodies_materialized": [
+      1668,
+      1668,
+      1668
+    ],
+    "final_bodies_materialized": [
+      1668,
+      1668,
+      1668
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 6.974669656,
+      "lowering": 2.021299063,
+      "optimizer": 4.755617653,
+      "emission": 0.867604915,
+      "native": 3.035030911,
+      "linker": 0.154233908
+    },
+    "frontend_phase_median_s": {
+      "check": 5.4373142,
+      "check_summaries": 0.02904505,
+      "declarations_interfaces": 0.032596239,
+      "dependency_key_preparation": 0.466249582,
+      "domain_codec_validation": 3.74e-07,
+      "effect_origin_passes": 0.251033594,
+      "entry_adaptation": 0.00363013,
+      "fresh_body_check": 1.855355951,
+      "load": 0.305981035,
+      "merge": 0.174000106,
+      "ordinary_body_replay": 1.229803668,
+      "retention_store_io": 0.573945759,
+      "specialization_body_replay": 0.005755909,
+      "stand_in_planning": 0.239508822,
+      "symbolic_templates": 0.037251772,
+      "syntax_parse": 0.000405662,
+      "syntax_replay": 0.873329394,
+      "warning_derivation": 0.002864101
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        2946,
+        2946,
+        2946
+      ],
+      "reused": [
+        34755,
+        34755,
+        34755
+      ],
+      "summaries": [
+        32131,
+        32131,
+        32131
+      ],
+      "stored": [
+        1218,
+        1218,
+        1218
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1216,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1216,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1216,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1216,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1216,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1216,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "32/baseline/helper_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 10.76029759296216,
+      "min": 9.688750026049092,
+      "max": 16.437976259971038
+    },
+    "peak_rss_gib": 1.3177299499511719,
+    "raw_bodies_materialized": [
+      1847,
+      1847,
+      1847
+    ],
+    "final_bodies_materialized": [
+      1847,
+      1847,
+      1847
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 4.946247128,
+      "lowering": 0.659265164,
+      "optimizer": 4.192550528,
+      "emission": 0.321383633,
+      "native": 0.446705012,
+      "linker": 0.151384065
+    },
+    "frontend_phase_median_s": {
+      "check": 3.901508855,
+      "check_summaries": 0.028186203,
+      "declarations_interfaces": 0.031722516,
+      "dependency_key_preparation": 0.455660627,
+      "domain_codec_validation": 4.59e-07,
+      "effect_origin_passes": 0.234744706,
+      "entry_adaptation": 0.003431121,
+      "fresh_body_check": 1.772476684,
+      "load": 0.300988398,
+      "merge": 0.17002499,
+      "ordinary_body_replay": 0.416365574,
+      "retention_store_io": 0.320181189,
+      "specialization_body_replay": 0.002718402,
+      "stand_in_planning": 0.201418565,
+      "symbolic_templates": 0.028722482,
+      "syntax_parse": 0.000589412,
+      "syntax_replay": 0.319950253,
+      "warning_derivation": 0.00282156
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        2948,
+        2948,
+        2948
+      ],
+      "reused": [
+        34753,
+        34753,
+        34753
+      ],
+      "summaries": [
+        32082,
+        32082,
+        32082
+      ],
+      "stored": [
+        1220,
+        1220,
+        1220
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          608,
+          1121,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1219,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1121,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1219,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1120,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1219,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1120,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1219,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1120,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1219,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1120,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1219,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "32/baseline/three_file_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 9.67798399203457,
+      "min": 7.493492842884734,
+      "max": 17.166574785951525
+    },
+    "peak_rss_gib": 1.3177947998046875,
+    "raw_bodies_materialized": [
+      2031,
+      2031,
+      2031
+    ],
+    "final_bodies_materialized": [
+      2031,
+      2031,
+      2031
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      3,
+      3,
+      3
+    ],
+    "llvm_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 4.418468808,
+      "lowering": 0.550947938,
+      "optimizer": 2.664810691,
+      "emission": 0.285226209,
+      "native": 1.57913574,
+      "linker": 0.126847719
+    },
+    "frontend_phase_median_s": {
+      "check": 3.48941902,
+      "check_summaries": 0.023640754,
+      "declarations_interfaces": 0.025128695,
+      "dependency_key_preparation": 0.378087682,
+      "domain_codec_validation": 3.94e-07,
+      "effect_origin_passes": 0.194469274,
+      "entry_adaptation": 0.002784971,
+      "fresh_body_check": 1.456520227,
+      "load": 0.246452366,
+      "merge": 0.13933452,
+      "ordinary_body_replay": 0.356670764,
+      "retention_store_io": 0.330284177,
+      "specialization_body_replay": 0.004279976,
+      "stand_in_planning": 0.175962693,
+      "symbolic_templates": 0.02263529,
+      "syntax_parse": 0.00133236,
+      "syntax_replay": 0.268823865,
+      "warning_derivation": 0.002501225
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        2953,
+        2953,
+        2953
+      ],
+      "reused": [
+        34748,
+        34748,
+        34748
+      ],
+      "summaries": [
+        32032,
+        32032,
+        32032
+      ],
+      "stored": [
+        1225,
+        1225,
+        1225
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          608,
+          1123,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1221,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1123,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1221,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1221,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1221,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1221,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1221,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "32/candidate/entry_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 13.970676613040268,
+      "min": 11.432943485211581,
+      "max": 15.559232763946056
+    },
+    "peak_rss_gib": 1.2920036315917969,
+    "raw_bodies_materialized": [
+      1668,
+      1668,
+      1668
+    ],
+    "final_bodies_materialized": [
+      1668,
+      1668,
+      1668
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 6.002019332,
+      "lowering": 0.794929537,
+      "optimizer": 3.914739899,
+      "emission": 0.325245282,
+      "native": 2.769829756,
+      "linker": 0.15822392
+    },
+    "frontend_phase_median_s": {
+      "check": 4.298918501,
+      "check_summaries": 0.0299698,
+      "declarations_interfaces": 0.032313361,
+      "dependency_key_preparation": 0.473827608,
+      "domain_codec_validation": 3.94e-07,
+      "effect_origin_passes": 0.242181981,
+      "entry_adaptation": 0.003701651,
+      "fresh_body_check": 1.527592674,
+      "load": 0.31412124,
+      "merge": 0.170928999,
+      "ordinary_body_replay": 1.326626556,
+      "retention_store_io": 0.092102676,
+      "specialization_body_replay": 0.005724686,
+      "stand_in_planning": 0.206896889,
+      "symbolic_templates": 0.035948931,
+      "syntax_parse": 0.000402937,
+      "syntax_replay": 0.508134823,
+      "warning_derivation": 0.002951588
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        1731,
+        1731,
+        1731
+      ],
+      "reused": [
+        35970,
+        35970,
+        35970
+      ],
+      "summaries": [
+        32131,
+        32131,
+        32131
+      ],
+      "stored": [
+        3,
+        3,
+        3
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "cache_flush_median_s": 0.009297931,
+    "cache_flush_succeeded": true,
+    "packed_reads": {
+      "packed_bytes_read": [
+        81937582,
+        82876939,
+        83359752
+      ],
+      "decoded_bytes": [
+        290475388,
+        294730604,
+        298701839
+      ],
+      "blocks_decoded": [
+        2010,
+        2027,
+        2051
+      ],
+      "payload_bytes_returned": [
+        184381196,
+        184381196,
+        184381196
+      ],
+      "block_cache_hits": [
+        38963,
+        38946,
+        38922
+      ]
+    }
+  },
+  "32/candidate/helper_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 9.913087741937488,
+      "min": 9.009280523052439,
+      "max": 10.181349872145802
+    },
+    "peak_rss_gib": 1.2936325073242188,
+    "raw_bodies_materialized": [
+      1847,
+      1847,
+      1847
+    ],
+    "final_bodies_materialized": [
+      1847,
+      1847,
+      1847
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      1,
+      1,
+      1
+    ],
+    "llvm_keys_built": [
+      1,
+      1,
+      1
+    ],
+    "native_units_compiled": [
+      1,
+      1,
+      1
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 4.280524645,
+      "lowering": 0.760030274,
+      "optimizer": 3.978690207,
+      "emission": 0.298574393,
+      "native": 0.393239976,
+      "linker": 0.148338078
+    },
+    "frontend_phase_median_s": {
+      "check": 3.171395462,
+      "check_summaries": 0.029288584,
+      "declarations_interfaces": 0.031479658,
+      "dependency_key_preparation": 0.455156613,
+      "domain_codec_validation": 4.09e-07,
+      "effect_origin_passes": 0.233368449,
+      "entry_adaptation": 0.003414636,
+      "fresh_body_check": 1.433118354,
+      "load": 0.301147041,
+      "merge": 0.168757869,
+      "ordinary_body_replay": 0.334788122,
+      "retention_store_io": 0.087685924,
+      "specialization_body_replay": 0.002695773,
+      "stand_in_planning": 0.203294698,
+      "symbolic_templates": 0.022784166,
+      "syntax_parse": 0.000579234,
+      "syntax_replay": 0.238369871,
+      "warning_derivation": 0.002864496
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        1729,
+        1729,
+        1729
+      ],
+      "reused": [
+        35972,
+        35972,
+        35972
+      ],
+      "summaries": [
+        32082,
+        32082,
+        32082
+      ],
+      "stored": [
+        1,
+        1,
+        1
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          608,
+          1121,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1121,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1120,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1120,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1120,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1120,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "cache_flush_median_s": 0.001125886,
+    "cache_flush_succeeded": true,
+    "packed_reads": {
+      "packed_bytes_read": [
+        91222449,
+        91072280,
+        90983734
+      ],
+      "decoded_bytes": [
+        336504382,
+        335822123,
+        332814078
+      ],
+      "blocks_decoded": [
+        2295,
+        2265,
+        2305
+      ],
+      "payload_bytes_returned": [
+        187259262,
+        187259262,
+        187259262
+      ],
+      "block_cache_hits": [
+        40122,
+        40152,
+        40112
+      ]
+    }
+  },
+  "32/candidate/three_file_edit": {
+    "lines": 510436,
+    "wall_s": {
+      "median": 9.797583236824721,
+      "min": 8.317133446922526,
+      "max": 13.058474180987105
+    },
+    "peak_rss_gib": 1.2945289611816406,
+    "raw_bodies_materialized": [
+      2031,
+      2031,
+      2031
+    ],
+    "final_bodies_materialized": [
+      2031,
+      2031,
+      2031
+    ],
+    "checkpoint_records_decoded": [
+      0,
+      0,
+      0
+    ],
+    "fresh_optimizer_functions": [
+      3,
+      3,
+      3
+    ],
+    "llvm_keys_built": [
+      3,
+      3,
+      3
+    ],
+    "native_units_compiled": [
+      3,
+      3,
+      3
+    ],
+    "fallbacks": [
+      0,
+      0,
+      0
+    ],
+    "stage_median_s": {
+      "frontend": 3.733671185,
+      "lowering": 0.658184444,
+      "optimizer": 3.461723865,
+      "emission": 0.276513174,
+      "native": 1.469098267,
+      "linker": 0.129499009
+    },
+    "frontend_phase_median_s": {
+      "check": 2.882059638,
+      "check_summaries": 0.028174109,
+      "declarations_interfaces": 0.026395774,
+      "dependency_key_preparation": 0.394228143,
+      "domain_codec_validation": 3.37e-07,
+      "effect_origin_passes": 0.214281246,
+      "entry_adaptation": 0.003003898,
+      "fresh_body_check": 1.326557267,
+      "load": 0.254098187,
+      "merge": 0.1455522,
+      "ordinary_body_replay": 0.268290721,
+      "retention_store_io": 0.07968663,
+      "specialization_body_replay": 0.002458143,
+      "stand_in_planning": 0.17165604,
+      "symbolic_templates": 0.020811406,
+      "syntax_parse": 0.001195098,
+      "syntax_replay": 0.194442674,
+      "warning_derivation": 0.002732872
+    },
+    "paired_binaries_identical": false,
+    "paired_allocated_sections_identical": true,
+    "paired_edited_objects_identical": true,
+    "execution_checks_passed": true,
+    "frontend_counts": {
+      "checked": [
+        1733,
+        1733,
+        1733
+      ],
+      "reused": [
+        35968,
+        35968,
+        35968
+      ],
+      "summaries": [
+        32032,
+        32032,
+        32032
+      ],
+      "stored": [
+        5,
+        5,
+        5
+      ]
+    },
+    "frontend_misses": [
+      {
+        "total": [
+          0,
+          608,
+          1123,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1123,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "total": [
+          0,
+          608,
+          1122,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          768,
+          1,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "lookup": [
+          0,
+          608,
+          1122,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "retention": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ],
+        "relocation": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "cache_flush_median_s": 0.008678592,
+    "cache_flush_succeeded": true,
+    "packed_reads": {
+      "packed_bytes_read": [
+        95897755,
+        96987540,
+        95038312
+      ],
+      "decoded_bytes": [
+        360066359,
+        363778229,
+        353567790
+      ],
+      "blocks_decoded": [
+        2472,
+        2507,
+        2483
+      ],
+      "payload_bytes_returned": [
+        190221582,
+        190221582,
+        190221582
+      ],
+      "block_cache_hits": [
+        41409,
+        41374,
+        41398
+      ]
+    }
+  }
+}

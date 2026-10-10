@@ -224,14 +224,40 @@ pub const Summaries = struct {
 /// A walk's condition: on this path, call `call`'s declared `bool` result is `value`.
 pub const Condition = struct { call: ir.Ref, value: bool };
 
+/// A dependency-validated function's immutable transitive effects.
+pub const Reused = struct { params: []Effect, may: [2]bool };
+
+/// Copy sparse effects into the owning build arena.
+pub fn retain(arena: std.mem.Allocator, value: Reused) Error!Reused {
+    const params = try arena.dupe(Effect, value.params);
+    for (params) |*effect| {
+        inline for (.{ "reads", "writes", "when_true", "when_false" }) |field| {
+            const paths = &@field(effect, field);
+            paths.items = .{ .items = try arena.dupe(Path, paths.items.items), .capacity = paths.items.items.len };
+        }
+    }
+    return .{ .params = params, .may = value.may };
+}
+
 /// Compute every function's summaries.
 pub fn analyze(arena: std.mem.Allocator, module: *const ir.Module) Error!Summaries {
+    return analyzeReused(arena, module, &.{});
+}
+
+/// Seed validated closed dependency regions without walking their raw bodies.
+pub fn analyzeReused(arena: std.mem.Allocator, module: *const ir.Module, reused: []const ?Reused) Error!Summaries {
     const count = module.functions.items.len;
     const params = try arena.alloc([]Effect, count);
     const may = try arena.alloc([2]bool, count);
     const users = try arena.alloc(?[]const []const ir.Ref, count);
     @memset(users, null);
-    for (module.functions.items, params, may) |*f, *slot, *answers| {
+    for (module.functions.items, params, may, 0..) |*f, *slot, *answers, index| {
+        if (index < reused.len) if (reused[index]) |old| {
+            std.debug.assert(old.params.len == f.signature.params.len);
+            slot.* = old.params;
+            answers.* = old.may;
+            continue;
+        };
         slot.* = try arena.alloc(Effect, f.signature.params.len);
         const opaque_body = f.signature.linkage != .internal or f.blocks.items.len == 0;
         answers.* = .{ opaque_body, opaque_body };
@@ -251,7 +277,7 @@ pub fn analyze(arena: std.mem.Allocator, module: *const ir.Module) Error!Summari
     const callers = try arena.alloc(std.ArrayList(u32), count);
     @memset(callers, .empty);
     for (module.functions.items, 0..) |*f, index| {
-        if (f.signature.linkage != .internal) continue;
+        if (f.signature.linkage != .internal or (index < reused.len and reused[index] != null)) continue;
         for (f.insts.items) |inst| {
             if (inst.op != .call or inst.a.index() >= count) continue;
             const callee = &callers[inst.a.index()];
@@ -261,7 +287,7 @@ pub fn analyze(arena: std.mem.Allocator, module: *const ir.Module) Error!Summari
     const queued = try arena.alloc(bool, count);
     var work: std.ArrayList(u32) = .empty;
     for (module.functions.items, 0..) |*f, index| {
-        queued[index] = f.signature.linkage == .internal and f.blocks.items.len != 0;
+        queued[index] = f.signature.linkage == .internal and f.blocks.items.len != 0 and !(index < reused.len and reused[index] != null);
         if (queued[index]) try work.append(arena, @intCast(index));
     }
     std.mem.reverse(u32, work.items);
@@ -281,7 +307,22 @@ pub fn analyze(arena: std.mem.Allocator, module: *const ir.Module) Error!Summari
             try work.append(arena, caller);
         }
     }
+    canonicalize(&summaries);
     return summaries;
+}
+
+// A fixed point is a set of paths. Eager and seeded worklists can discover that
+// set in different orders; persistence and emission must see one representation.
+fn canonicalize(summaries: *const Summaries) void {
+    for (summaries.params) |params| for (params) |*effect| {
+        inline for (.{ "reads", "writes", "when_true", "when_false" }) |field| {
+            std.mem.sort(Path, @field(effect, field).items.items, {}, pathLess);
+        }
+    };
+}
+
+fn pathLess(_: void, left: Path, right: Path) bool {
+    return left.pack() < right.pack();
 }
 
 /// Per instruction of `f`, the instructions of reachable blocks that read it (copies resolved).

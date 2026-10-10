@@ -187,6 +187,237 @@ once over the Lox port and the EDA slice.
   the end of the build, so successful builds no longer retain `program-<nonce>`
   directories and Zig's cache no longer keeps a second copy of every object.
 
+### Intermediate reuse (2026-10-09)
+
+Edited builds also use the compiler-bound `stages-v1` store before the native
+object store. Each artifact is one atomic file containing its input key, payload
+checksum, and bounded plain-data encoding. Missing, damaged or unavailable entries
+fall back to fresh computation. `--verify-cache` bypasses frontend and intermediate
+reuse before checking native objects against freshly emitted LLVM.
+
+- Checked ordinary bodies beyond the 16 MiB retained-memory budget are loaded
+  from durable storage on demand, copied into the current checked program, and
+  released. Cold checks publish the nonretained suffix one body at a time. The
+  per-project durable limit grows with source bytes, capped at 4 GiB; this does
+  not enlarge the memory retention budget or the 64 MiB individual-entry limit.
+- After lowering, the backend owns the names, literal bytes and source metadata
+  it still needs, so the frontend session can release its syntax and checked
+  trees before optimization. Inlining safety proofs use caller-local scratch;
+  only cloned IR and its source ancestry survive the caller's inline pass.
+- Raw lowering artifacts capture each function and its ordered declaration,
+  type, string, and pending-function discoveries. Replay relocates current source
+  positions and string slots, then runs the existing module transforms. Saved
+  source-backed IR and inline ancestry restore line/column positions against the
+  current file; an earlier same-line length edit cannot install old byte offsets. Checked
+  trees are hashed by content, including expanded generic/default bodies and
+  embedded inputs. A rolling discovery guard avoids rescanning the growing IR.
+- Optimizer artifacts preserve the original caller mutation order. Separate
+  keys cover leaf/CFG inlining, unswitching, exploratory return/argument
+  summaries, parameter-aware inlining, and final facts/ownership/vector results.
+  Keys include the callee bodies or summaries actually consulted, incoming
+  parameter intervals, source ancestry, and pass mode. An unchanged transform
+  can restore a validated no-op receipt without copying another IR body.
+  Ordinary optimized Debug builds retain final analysis as verified encoded
+  bytes. LLVM keys use the analysis digest; only units that need rendering
+  decode their functions' dense tables into private worker scratch. Statistics,
+  fact verification, and whole-program LLVM requests retain the eager path.
+- Function/type catalog changes conservatively invalidate lowering and optimizer
+  artifacts across the module. Ordinary body and literal edits can reuse
+  independent functions. This first implementation does not promise a narrow
+  rebuild after every declaration or type-graph edit.
+- Completed development LLVM units and generated-helper seeds use canonical
+  input keys covering facts, effects, descriptor aliasing, exported symbols,
+  located spans, inline ancestry, and emission options. Release emission remains
+  one whole-program unit. Verified artifacts include runtime dependency flags,
+  so hits do not rescan LLVM text for number helpers, math or counters. Bulk byte
+  copies preserve the codec's original wire format. Native object keys and
+  runtime optimization stay the same.
+- Emission and native compiles use private worker scratch and both job-count and
+  estimated-byte admission limits. The transient admission budget is at most
+  1 GiB and at most one quarter of currently available memory; an oversized
+  individual unit runs alone. This is a concurrency estimate, not a hard ceiling
+  on the complete compiler process or an individual clang process.
+
+The existing single-line `--report` JSON includes a `stages` object with actual
+frontend, lowering, optimizer and emission reuse counters. Its `nanoseconds`
+fields include lookup, hashing, decoding and publication in their stage times.
+`native` includes object handling and linking; `linker` separately records time
+inside the linker process and is zero when the program store serves the output.
+Whole-build replay reports `stages: null`, since none of those stages ran.
+`frontend_misses` uses `semantic_cache.MissReason` order and includes publication
+bypasses. Expanded defaults with positions outside a retained declaration can
+still require fresh checking; a rejected relocation never installs a partial body.
+
+The scaling harness is `experiments/incremental-stages-20261009/benchmark.py`.
+It takes `SCALING_COMPILER`, `SCALING_SEED`, `SCALING_DEPENDENCIES`, and
+`SCALING_GOLDENS` paths through the environment. Run it through the build-slot
+wrapper on the reserved benchmark CPUs with `--copies 12 32 --repeats 3
+--few-edits --dependency-edits --threshold 1000 --output <fresh-directory>`.
+The 12-copy project has 191,416 physical lines; the 32-copy project has 510,436.
+Every replica is called and every generated project module is imported. This
+is a synthetic scale test of the EDA port, not a separate 500k-line application.
+It checks usage text, export goldens and leaks after each measured build. The
+reported RSS is GNU time's largest process peak, not simultaneous process-tree
+memory. Fixture generation, cache preparation and output validation are excluded
+from build latency. Broad declaration changes are measured separately from
+ordinary edits; a changed shared helper intentionally reaches all replicas.
+
+### Scaling validation of intermediate reuse (2026-10-09)
+
+Implementation `c48cfc24b` and source-position correction `7ab53ba6a` implement
+all five stages: temporary-memory reclamation, durable checked/lowered/optimizer/
+LLVM reuse, dependency invalidation, bounded emission/native work, and the large
+EDA scaling matrix. Runtime optimization remains O2.
+The corrected version passed the complete test gate: 91/91 build steps and
+2,253 executed tests, plus all 88 whole-tree Guardian checks.
+
+The final measurements and reproducible harnesses are in
+`experiments/incremental-stages-20261009/`. `comparison.json` summarizes the
+measurements; `matrix.json` and `reserved-edits.json` retain every sample, compiler
+hash, source hash, cache counter, phase time, load reading and RSS measurement.
+All 47 final large build invocations/setup builds passed all-replica usage,
+blinky-breakout export goldens, and runtime leak checks.
+
+| Synthetic EDA size | Entry edit median | Helper edit median | Three-file edit median | Steady-edit peak RSS, median |
+|---|---:|---:|---:|---:|
+| 191,416 lines | 8.51 s | 6.65 s | 7.08 s | 1.20 GiB |
+| Approximately 510k lines | 22.57 s | 33.29 s | 23.18 s | 3.18 GiB |
+
+These are three-sample medians on reserved CPUs 2,3,10,11: two physical P cores
+with four threads, `MYLANG_JOBS=4`, with the compiler itself built ReleaseFast.
+The guest is optimized Debug. This repeat uses fresh same-length edits and keeps
+the reachable declaration added during the main matrix (510,440 lines versus
+510,436 initially). Unrelated work on the shared host can still affect package
+throughput and memory/I/O; these are measured results, not isolated hardware
+limits. The earlier matrix used four physical P cores (0,4,6,8) and experienced
+substantial contention. Its full samples remain in `matrix.json`, including
+510k declaration-edit and shared-helper medians of 40.98 and 46.90 seconds. Do
+not interpret the different runs as a controlled comparison of core counts.
+
+For 191k lines, the prior memory-fixed compiler used 3.274 GiB on steady edits;
+this version used 1.204 GiB, a **63.2% reduction**. The initial passes with empty
+frontend/intermediate caches peaked at 2.05 GiB (191k) and 4.70 GiB (510k), both
+within the default compiler host-memory limit. Those final setup builds reused
+760/2,020 validated native objects and are explicitly labelled
+`cold_stages_warm_native`, not fully cold builds. The separate shared fixture
+has 510,470 lines and reused 2,021 native objects for setup. The older fully cold
+native reference is qualified in `cold-native-reference.json`; no Release guest
+builds were run. RSS is GNU time's largest process peak, not simultaneous
+compiler-plus-worker memory.
+
+The **15-second target is not yet met at 510k lines**. A representative repeated
+entry edit spent 11.28 seconds in the frontend, 1.09 in lowering, 3.95 in optimizer
+work/cache processing, 3.80 in emission/cache processing, and 1.85 in native
+handling (including a 0.11-second linker process). It reused 2,019 of 2,020 native
+units. Further progress needs less whole-program frontend and cache processing;
+native recompilation and linking are already a small share of ordinary edits.
+Declaration changes conservatively invalidate the ordered catalog. A changed
+common helper invalidates its own and 32 callers' inlining artifacts even when
+only the shared native unit needs recompilation.
+
+The source-position regression tests compare exact fresh/cached LLVM, lowered
+spans and reachable nested inline ancestry after an earlier literal grows on the
+same line. Object auditing against the previous compiler found 760 of 775 objects
+byte-identical; all 15 edited pairs have identical instructions, literal values,
+DWARF line/info sections and runtime trap descriptors. Only literal-pool ordering/
+alignment and corresponding reference addresses differ. See
+`object-equivalence.json` for each pair.
+
+The `--native-seed <completed-matrix-root>` option copies only completed object/
+checksum pairs published before the source matrix's cold-build metrics cutoff;
+edited variants are excluded. It asserts that frontend, lowering, optimizer and
+emission caches start cold and that native objects are reused. Without the
+option, the harness still measures full cold builds. The `repeat_edits.py`
+companion takes `--input <completed-matrix-root> --output <fresh-result-root>
+--copies 12 32 --repeats 3`, uses the identical recorded compiler and caches,
+saves the original edited files, and requires exactly one or three native
+compiles for every fresh edit. It leaves the fixture in its final edited state.
+
+### Demand-driven body reuse (2026-10-09)
+
+Edited builds can now omit an unchanged ordinary function's checked tree. The
+frontend validates its declaration region, semantic dependencies and touched
+record shapes, then propagates changes through the persisted reverse call and
+function-reference graph. The remaining functions may use their saved facts and
+diagnostics when a compact lowering manifest supplies their prior typed-body
+digest or records that the previous completed build never reached them. Demand
+checks publish updated summaries after every successful check.
+Concrete generic-instance IDs are excluded from the ordinary summary table's
+edges; those instances and their unsupported consumers still check normally.
+Managed byte literals no longer eagerly create unused fixed-array types. Growing
+a `b"..."` constant therefore leaves unrelated type-catalog entries stable;
+actual fixed-array contexts still intern and check the decoded element count.
+Type-suffix resolution shares an index keyed by both ends of each source span.
+Nested list/optional suffixes can start at the same byte, so indexing only the
+start is insufficient. This removes repeated scans of every suffix in the program
+from ordinary, generic and symbolic type resolution.
+
+Dependency keys resolve full dotted import qualifiers and retain domain suffixes.
+Signature, visibility and record-shape changes invalidate stored consumers in
+validation-only checks too. If checking with stand-ins encounters a body error,
+it repeats without stand-ins so cached checks report the same complete error diagnostics
+as a fresh check. Regression tests cover retained typed-body caches as well as
+summary-only checking.
+
+The manifest does not bypass raw lowering's ordered catalog, discovery, source
+position or artifact validation. Only trees with local source positions receive
+receipts; ordinary callee declaration positions relocate through the fresh
+catalog. If an omitted body's artifact is missing or invalid, the pipeline
+discards partial IR and diagnostics and repeats with complete checked trees.
+Previously unreachable bodies use the same fallback if an edit makes them
+reachable. Missing receipts and reached functions with unsafe source positions
+never count as proof of unreachability. Lambda offsets are normalized only in
+catalog and discovery guards; restored declarations take fresh names and spans,
+so growing earlier text does not invalidate every unrelated lowered body.
+`stages.lowering.deferred` counts actual frontend body omissions, and `fallbacks`
+counts these retries. `--verify-cache` keeps the full-check oracle.
+
+The optimizer also stores a compact index of raw bodies, exploratory summaries,
+incoming parameter intervals and final artifact keys. An unchanged function can
+skip intermediate stage lookups when all of its earlier transformation stages
+were identity. Changed callees and function references invalidate callers;
+changed incoming intervals demote candidates before parameter-aware inlining.
+Recursive cycles use the existing ordered path. Final IR and facts still undergo
+artifact validation. `stages.optimizer.bypassed` counts accepted final shortcuts.
+
+This reduces repeated body work without promising that every build visits only
+changed functions. Declaration collection, catalog validation, raw IR restoration,
+some module analyses and LLVM-unit handling still process the wider program.
+Declaration/type changes can invalidate the ordered catalog, and call-graph
+changes can alter lowering's discovery order; either can trigger a broad fallback.
+The optimizer still guards full names of reachable lambdas, so moving those
+names can invalidate its layout even when raw lowering reuses unrelated bodies.
+Native compilation remains per source module.
+
+The paired harness `experiments/demand-builds-20261009/compare.py` runs both compiler
+versions on identical source paths and fresh edits, with separate caches and
+alternating execution order. Every sample changes source length. Changed native objects must have identical code,
+literal values/references, debugger data and trap descriptors; only literal-pool
+ordering/alignment may differ. Each executable must execute every replica and
+pass the export goldens with leak checking.
+Its setup starts with empty intermediate caches and validated cold native objects;
+setup and validation time are excluded from edited-build medians.
+
+The completed paired run is recorded in
+[`experiments/demand-builds-20261009/README.md`](../../experiments/demand-builds-20261009/README.md):
+
+| Lines | Edit | Previous median | Demand median |
+|---:|---|---:|---:|
+| 191,416 | Entry / helper / three files | 9.17 / 6.81 / 7.68 s | 5.94 / 4.83 / 5.45 s |
+| 510,436 | Entry / helper / three files | 25.47 / 23.94 / 23.04 s | 14.25 / 12.69 / 13.65 s |
+
+Eight of nine 510k edits finish within 15 seconds; the first entry edit after
+setup takes 19.04 seconds, so the strict maximum remains unmet. Later edits range
+from 12.49 to 14.25 seconds. Median incremental peak RSS is about 3.25 GiB at
+510k lines. All 20 paired executables and 30 edited native-object pairs are
+byte-identical. The full gate passes 93/93 steps with 2,275 executed tests.
+
+The first-edit misses still include checked loop ordinals that differ between a
+cold check and one that skips cached bodies. Fixing those requires consistent
+function-local numbering through Core loop metadata and downstream receipts;
+hash-only normalization would not preserve the exact fresh-IR oracle. Wider
+artifact loading and validation also remain on the incremental path.
+
 ## 7. Tests S4 adds
 
 - **Unit text stability:**

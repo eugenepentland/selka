@@ -286,3 +286,10 @@
 - Evidence: merge-s2-01 passes repository95/95 with2,349 tests, then both qualifier invocations raise FileExistsError before any conformance case. Raw status1 happens to equal the known-mismatch status, but no valid summary exists and the overall run remains incomplete.
 - Choice: change only the owned orchestrator to qualify with tag-specific leaf basenames, add immediate strict raw validation, retain the failed attempt, and rerun every gate with fresh merge-s2-02 evidence. Keep the existing raw+additive cross-compiler validation and all original thresholds.
 - Reversibility: measurement orchestration only. The frozen qualifier, references and compiler implementation are unchanged.
+
+## X-013 — merge advancing main and requalify the current integration step
+
+- Trigger: main moves from the frozen M0 base41ed360fb to1ab0d92e7, bringing incremental stage/frontend caching, deferred facts and reclaimable compiler scratch. The launch explicitly requires a real main merge and fresh gates.
+- Evidence: merge-s2-02 has passed its build but its repository wrapper is still unadmitted (expected owned command, no fd9). Only that wrapper is canceled; its receipt/log remain.
+- Choice: merge main into the coordinator, preserve U2 ownership cutoff and U2/S2 pass ordering across the two textual conflicts, and rerun the complete current integration step. Completed lane branches need no ongoing-development merge. Main's other-package evidence arrives unchanged through the merge, as permitted; it is not edited. M0 compilers, original baseline, 683 copied corpus files and gate thresholds remain fixed. Future qualification receipts bind the integrated main hash and reject an unmerged or advancing main.
+- Reversibility: both parent histories are retained by a real merge. No performance outcome is assumed for the cache changes; final qualification and timing still apply to their combination with wave3.

@@ -68,6 +68,126 @@ pub fn hulls(arena: std.mem.Allocator, module: *const ir.Module, known: []const 
     return .{ .module = module, .types = out };
 }
 
+/// One reachable write, including an unknown interval when a write is unbounded.
+pub const Write = struct { record: ir.Type, field: u32, range: ?facts.Interval };
+/// Body-independent evidence retained from an exploratory fact round.
+pub const Contribution = struct {
+    writes: []const Write,
+    opens: []const ir.Type,
+    references: []const u32,
+
+    /// Reject evidence with invalid physical types, fields, intervals or function IDs.
+    pub fn valid(self: Contribution, module: *const ir.Module) bool {
+        for (self.writes) |write| {
+            if (!write.record.isCompound()) return false;
+            const index = @backingInt(write.record) - ir.Type.first_compound;
+            if (index >= module.compounds.items.len) return false;
+            const compound = module.compounds.items[index];
+            if (compound != .record or write.field >= compound.record.len) return false;
+            if (write.range) |range| if (range.lo > range.hi) return false;
+        }
+        for (self.opens) |ty| {
+            if (!ty.isCompound()) return false;
+            if (@backingInt(ty) - ir.Type.first_compound >= module.compounds.items.len) return false;
+        }
+        for (self.references) |target| if (target >= module.functions.items.len) return false;
+        return true;
+    }
+};
+
+fn addWrite(arena: std.mem.Allocator, module: *const ir.Module, writes: *std.ArrayList(Write), record: ir.Type, field: usize, range: ?facts.Interval) std.mem.Allocator.Error!void {
+    if (!module.valid(record) or module.kind(record) != .record) return;
+    if (field >= module.compound(record).record.len) return;
+    try writes.append(arena, .{ .record = record, .field = @intCast(field), .range = range });
+}
+
+/// Capture sparse writes and producer/escape evidence while this phase's body is live.
+pub fn contribution(arena: std.mem.Allocator, module: *const ir.Module, function: *const ir.Function, known: *const facts.Facts) std.mem.Allocator.Error!Contribution {
+    var writes: std.ArrayList(Write) = .empty;
+    for (function.blocks.items, 0..) |block, index| {
+        if (!known.reachable[index]) continue;
+        for (block.insts.items) |ref| {
+            const inst = function.inst(ref);
+            switch (inst.op) {
+                .record_make => for (function.operands(inst.data), 0..) |operand, field| {
+                    try addWrite(arena, module, &writes, inst.ty, field, rangeOf(function, known, operand));
+                },
+                .record_set => try addWrite(arena, module, &writes, inst.ty, @intCast(inst.data), rangeOf(function, known, inst.b)),
+                .list_set_field => {
+                    const operands = function.operands(inst.data);
+                    if (operands.len != 2) continue;
+                    const path_value = function.inst(function.resolve(operands[1]));
+                    if (path_value.op != .iconst or module.kind(inst.ty) != .list) continue;
+                    const target = facts.pathField(module, module.compound(inst.ty).list, ir.FieldPath.unpack(path_value.data)) orelse continue;
+                    try addWrite(arena, module, &writes, target.record, target.field, rangeOf(function, known, operands[0]));
+                },
+                else => {},
+            }
+        }
+    }
+    var opens: std.ArrayList(ir.Type) = .empty;
+    var references: std.ArrayList(u32) = .empty;
+    for (function.insts.items) |inst| {
+        if (inst.ty.isCompound() and !copies(inst.op) and std.mem.indexOfScalar(ir.Type, opens.items, inst.ty) == null) try opens.append(arena, inst.ty);
+        if (inst.op == .func_ref) {
+            const target: u32 = @intCast(inst.data);
+            if (std.mem.indexOfScalar(u32, references.items, target) == null) try references.append(arena, target);
+        }
+    }
+    return .{ .writes = writes.items, .opens = opens.items, .references = references.items };
+}
+
+/// Apply the same closure and write hull rules to deferred sparse contributions.
+pub fn fromContributions(arena: std.mem.Allocator, module: *const ir.Module, contributions: []const ?Contribution, sabotage: bool) std.mem.Allocator.Error!facts.FieldIntervals {
+    const count = module.compounds.items.len;
+    const closed = try arena.alloc(bool, count);
+    @memset(closed, true);
+    const seen = try arena.alloc(bool, count);
+    @memset(seen, false);
+    var marks: Marks = .{ .module = module, .closed = closed, .seen = seen };
+    const escapes = try arena.alloc(bool, module.functions.items.len);
+    @memset(escapes, false);
+    for (contributions) |optional| if (optional) |value| {
+        for (value.opens) |ty| marks.open(ty);
+        for (value.references) |target| if (target < escapes.len) {
+            escapes[target] = true;
+        };
+    };
+    for (module.functions.items, 0..) |function, index| {
+        const outside = function.signature.linkage != .internal;
+        if (outside or index == module.entry or escapes[index]) {
+            for (function.signature.params) |param| marks.open(param);
+            if (outside) marks.open(function.signature.ret);
+        }
+    }
+    const tables = try arena.alloc(?[]?facts.Interval, count);
+    const written = try arena.alloc(?[]bool, count);
+    for (module.compounds.items, closed, tables, written) |compound, is_closed, *table, *flags| {
+        table.* = null;
+        flags.* = null;
+        if (!is_closed or compound != .record) continue;
+        table.* = try arena.alloc(?facts.Interval, compound.record.len);
+        flags.* = try arena.alloc(bool, compound.record.len);
+        for (compound.record, table.*.?) |ty, *slot| slot.* = facts.typeRange(ty);
+        @memset(flags.*.?, false);
+    }
+    var writes: Writes = .{ .module = module, .tables = tables, .written = written };
+    for (contributions) |optional| if (optional) |value| {
+        for (value.writes) |write| writes.add(write.record, write.field, write.range);
+    };
+    const out = try arena.alloc(?[]const ?facts.Interval, count);
+    for (out, tables, written) |*slot, table, flags| {
+        slot.* = table;
+        if (table) |ranges| for (ranges, flags.?) |*range, supplied| {
+            if (!supplied) range.* = null;
+            if (sabotage) if (range.*) |*interval| {
+                if (interval.hi > interval.lo) interval.hi -= 1;
+            };
+        };
+    }
+    return .{ .module = module, .types = out };
+}
+
 /// The hulls being built: per record type, per field, the hull so far (null once a write
 /// with no interval reaches it) and whether any write reached it.
 const Writes = struct {
@@ -103,6 +223,7 @@ const Writes = struct {
         if (field >= table.len) return;
         const so_far = table[field] orelse return;
         const value = range orelse {
+            seen[field] = true;
             table[field] = null;
             return;
         };

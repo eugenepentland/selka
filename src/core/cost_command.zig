@@ -96,7 +96,7 @@ pub fn output(init: std.process.Init, request: Request) Error!Output {
         .facts = if (request.mode == .verify) .verify else if (request.mode == .off) .off else .on,
         .show = .{ .stats = true },
     };
-    const emission = pipeline.emitted(a, &module, try pipeline.unitFor(a, checked, entry.path, session.single != null), options, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
+    const emission = pipeline.emittedWithScratch(a, init.gpa, &module, try pipeline.unitFor(a, checked, entry.path, session.single != null), options, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     var report = emission.cost_report.?;
     if (request.llvm_remarks == null) {
         const captured = try driver.optimizationRemarks(a, init.io, init.environ_map, .{ .zig = options.zig, .work = options.cache, .output = "", .mode = options.mode, .links = &.{}, .units = emission.units });
