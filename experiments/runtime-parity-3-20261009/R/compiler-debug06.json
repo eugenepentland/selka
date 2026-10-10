@@ -1,0 +1,6 @@
+{
+ "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/zig-out/bin/mylang",
+ "sha256": "6f5f1b6008fce0f2f293a7a385e2cffc6159b624ab4dca4030116b9b8afdb5f4",
+ "head": "fa9da0106",
+ "source_changes": "R4 generalized split/CFG guard, R3 implementation reverted; source not committed pending native applicability check."
+}

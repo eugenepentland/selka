@@ -1,0 +1,10 @@
+{
+ "accepted": false,
+ "reason": "Superseded by the 256-value cutoff in probe 02: official cells recovered, but neighboring sort_int sizes 65 and 128 still regressed. Every sample is retained.",
+ "source_parent": "af898b6dbe561a2c5d53e2f1317307de8c0b6a9d",
+ "native_review": {
+  "sort_records": "The candidate myl_core_s2_sort_keyed restores all 916 normalized instructions of M0, versus 928 in the first integrated build. Key width stays in ebx; scattering returns to 18 instructions and 8 loads per two records, versus 20 and 9. This predicts removal of 126 instructions and 95 loads per 64-element sort; CPU8 confirms M0 instruction and load counts at both 64 and 4096.",
+  "result_propagate": "M0, first integrated build, and candidate have the same 235-byte repeated main+0x240..0x32b window, SHA256 faa90044e494cf8d7eaea237865c2345e95de5fa6f47b480a49cccfad3b576a7. Each spans four cache lines and eight 32-byte blocks; the inner loop is 64-byte aligned, with no page crossing. The candidate recovers CPU10 performance while still using two hot code pages (M0 uses one). The particular cache, translation, or prediction mechanism is unproved; flat instructions alone do not establish causality."
+ },
+ "correctness": "The small-sorting fixture passes in five native modes. The C harness preserves the 50001 generic callback assertion using a stride-16 descriptor, then separately validates eligible pointer lists with nulls, duplicate edges, plain/shared/saturated counts, publication, and concurrent pthread count traffic."
+}

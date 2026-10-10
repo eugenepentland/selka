@@ -1,0 +1,34 @@
+{
+ "source_commit": "98e9467155c802d2bb7a4f41882dc9ee68b4304e",
+ "main_commit": "fa11606022ed217896a27976f8fe6d95db95f465",
+ "tag": "final-fix-01",
+ "complete": false,
+ "steps": [
+  {
+   "name": "build",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build",
+    "--summary",
+    "all"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3",
+   "status": 0,
+   "expected_status": 0,
+   "seconds": 1.1393897533416748,
+   "log": ".tmp/rp3/gates-final-fix-01/build.log",
+   "log_sha256": "14d253dc20ac6e422515dab37680e323a61304100817b145e214a2e6faebde78",
+   "summary": [
+    "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs fa11606022ed217896a27976f8fe6d95db95f465, 25 file(s) in scope",
+    "Build Summary: 9/9 steps succeeded"
+   ]
+  }
+ ],
+ "corpora": {
+  "manifest_sha256": "421c9677c860447fe0b36f982cd14d3342c7d6048859d6f440eaebd313ffce5c",
+  "files_checked": 683
+ },
+ "fuzz_cases_per_family": 200
+}

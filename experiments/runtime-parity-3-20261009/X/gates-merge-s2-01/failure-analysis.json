@@ -1,0 +1,15 @@
+{
+ "complete": false,
+ "failure_kind": "temporary-cache basename collision",
+ "conformance_executed": false,
+ "raw_status_one_is_not_qualification": true,
+ "accepted_steps": [
+  "build",
+  "repository",
+  "fmt"
+ ],
+ "repository_steps": 95,
+ "repository_tests_passed": 2349,
+ "repository_routing_skips": 21688,
+ "correction": "Unique qualifier leaf basenames include the integration tag; validate raw qualification immediately before additive. Full fresh rerun merge-s2-02."
+}

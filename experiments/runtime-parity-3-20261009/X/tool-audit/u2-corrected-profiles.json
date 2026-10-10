@@ -1,0 +1,205 @@
+{
+ "complete": true,
+ "analysis_cpu": 8,
+ "fresh_sampling": false,
+ "method": "Existing LBR sample periods reparsed with identical strict/ambiguous definitions in both arms. Strict allocation/free ancestors include their descendants; ambiguous-only stacks are disjoint. Binary identities are copied from the original sample receipts, never inferred from current binaries.",
+ "limitation": "Bounded LBR stacks and missing inline metadata omit allocation/free attribution. Strict share is a lower bound; ambiguous share is unresolved, not an upper bound.",
+ "strict_family": [
+  "__libc_calloc",
+  "__libc_free",
+  "__libc_malloc",
+  "__libc_realloc",
+  "_int_free",
+  "_int_malloc",
+  "_int_realloc",
+  "aligned_alloc",
+  "block_alloc",
+  "block_free",
+  "block_new",
+  "block_new_slow",
+  "calloc",
+  "core_dict_finalize",
+  "core_free_pending",
+  "core_release_child",
+  "count_free_shared",
+  "free",
+  "malloc",
+  "myl_core_box_new",
+  "myl_core_free",
+  "myl_core_free_block",
+  "myl_core_list_grow",
+  "myl_core_list_new",
+  "myl_core_list_new_slow",
+  "myl_core_release_child_pending",
+  "realloc",
+  "small_alloc"
+ ],
+ "ambiguous_family": [
+  "core_children",
+  "core_dict_children",
+  "dict_release_part",
+  "guard_holds",
+  "myl_core_release",
+  "reference_at"
+ ],
+ "patch_sha256": "f1339642dea37593212c1091427cac1282b6de6a4753aedfd8f8171b56ed34f7",
+ "arms": {
+  "base": {
+   "labstation": {
+    "total_period": 492914787,
+    "strict_period": 127103813,
+    "strict_share_lower_bound": 0.2578616352201258,
+    "ambiguous_period": 200006,
+    "ambiguous_share": 0.0004057618178129438,
+    "prior_family_period": 127303819,
+    "prior_family_share": 0.2582673970379387,
+    "ambiguous_top_exclusive": [
+     [
+      "dict_release_part",
+      200006
+     ]
+    ],
+    "ambiguous_examples": [
+     [
+      "dict_release_part",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components",
+      "export_kicad_sch::build",
+      "export_kicad_sch::export_sch"
+     ],
+     [
+      "dict_release_part",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components",
+      "export_kicad_sch::build"
+     ]
+    ],
+    "recorded_binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7",
+    "recorded_raw_sha256": "c2a80933d0aed2579c22ab1dee599d0283a007b7837e4087ef89fc7236a69337",
+    "raw_scratch": ".mylang-cache/u2/profile/base/labstation.perf",
+    "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/experiments/runtime-parity-3-20261009/U2/profile-base.json",
+    "receipt_sha256": "221c4e6bd66d4a7ff41bfcaa48ca39dc12757bbf32ad298398e3a6ac21823853"
+   },
+   "rds3+flat": {
+    "total_period": 736922107,
+    "strict_period": 173205196,
+    "strict_share_lower_bound": 0.23503867553263671,
+    "ambiguous_period": 300009,
+    "ambiguous_share": 0.00040711086986022527,
+    "prior_family_period": 173505205,
+    "prior_family_share": 0.23544578640249694,
+    "ambiguous_top_exclusive": [
+     [
+      "dict_release_part",
+      300009
+     ]
+    ],
+    "ambiguous_examples": [
+     [
+      "dict_release_part",
+      "myl_core_dict_set",
+      "export_kicad_sch::synth_shapes"
+     ],
+     [
+      "dict_release_part",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components",
+      "export_kicad_sch::build",
+      "export_kicad_sch::export_sch"
+     ],
+     [
+      "dict_release_part",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components",
+      "export_kicad_sch::build",
+      "export_kicad_sch::export_sch"
+     ]
+    ],
+    "recorded_binary_sha256": "c3ccfaf6f06044d3531cef33b84b4ea080e9a2b103b3b3355f34b3903c2c1ca7",
+    "recorded_raw_sha256": "8dd6679ea4c42334f2f5fa4c5f03259f5c73e67935a95155aff1b5bd7ee17fc7",
+    "raw_scratch": ".mylang-cache/u2/profile/base/rds3+flat.perf",
+    "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/experiments/runtime-parity-3-20261009/U2/profile-base.json",
+    "receipt_sha256": "221c4e6bd66d4a7ff41bfcaa48ca39dc12757bbf32ad298398e3a6ac21823853"
+   }
+  },
+  "u2": {
+   "labstation": {
+    "total_period": 643119293,
+    "strict_period": 139604188,
+    "strict_share_lower_bound": 0.21707354999222517,
+    "ambiguous_period": 0,
+    "ambiguous_share": 0.0,
+    "prior_family_period": 139604188,
+    "prior_family_share": 0.21707354999222517,
+    "ambiguous_top_exclusive": [],
+    "ambiguous_examples": [],
+    "recorded_binary_sha256": "0ade772028c57ee656202c07715943690db165b9cf6bfc58516808dbcc5dbea8",
+    "recorded_raw_sha256": "fa881f5901e3d9332d2e564ce9e0e3169c62e15e594786f632305152c08a40b6",
+    "raw_scratch": ".mylang-cache/u2/profile/u2/labstation.perf",
+    "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/experiments/runtime-parity-3-20261009/U2/profile-u2.json",
+    "receipt_sha256": "f3d66ee300f968844b4bd14fa81a4b4dd9c1861aeaa7a49faba2a319898c6b95"
+   },
+   "rds3+flat": {
+    "total_period": 878926367,
+    "strict_period": 176505295,
+    "strict_share_lower_bound": 0.20081920582546364,
+    "ambiguous_period": 800024,
+    "ambiguous_share": 0.0009102286949596086,
+    "prior_family_period": 177305319,
+    "prior_family_share": 0.20172943452042325,
+    "ambiguous_top_exclusive": [
+     [
+      "myl_core_release",
+      400012
+     ],
+     [
+      "myl.dict.4.layout.release.value",
+      200006
+     ],
+     [
+      "dict_release_part",
+      200006
+     ]
+    ],
+    "ambiguous_examples": [
+     [
+      "myl.dict.4.layout.release.value",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components"
+     ],
+     [
+      "myl.dict.4.layout.release.value",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components",
+      "export_kicad_sch::build"
+     ],
+     [
+      "myl_core_release",
+      "myl.dict.4.layout.release.value",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components",
+      "export_kicad_sch::build"
+     ],
+     [
+      "myl_core_release",
+      "myl.dict.4.layout.release.value",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components"
+     ],
+     [
+      "myl_core_release",
+      "myl.dict.4.layout.release.value",
+      "myl_core_dict_set",
+      "export_kicad_sch::build_components",
+      "export_kicad_sch::build"
+     ]
+    ],
+    "recorded_binary_sha256": "0ade772028c57ee656202c07715943690db165b9cf6bfc58516808dbcc5dbea8",
+    "recorded_raw_sha256": "83cc7073d31cc547ea2d1f66655b7293c7a4da9f2be33c4f6248f468a9cc04e1",
+    "raw_scratch": ".mylang-cache/u2/profile/u2/rds3+flat.perf",
+    "receipt": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-u2/experiments/runtime-parity-3-20261009/U2/profile-u2.json",
+    "receipt_sha256": "f3d66ee300f968844b4bd14fa81a4b4dd9c1861aeaa7a49faba2a319898c6b95"
+   }
+  }
+ }
+}

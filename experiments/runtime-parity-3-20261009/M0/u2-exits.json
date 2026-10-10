@@ -1,0 +1,18 @@
+{
+ "lox:vm/invocation": {
+  "norc_over_real": 0.6719885892585126,
+  "final_over_base_limit": 0.8031931535551076
+ },
+ "lox:vm/fib": {
+  "norc_over_real": 0.7730593250766989,
+  "final_over_base_limit": 0.8638355950460194
+ },
+ "lox:vm/method_call": {
+  "norc_over_real": 0.6939952552812031,
+  "final_over_base_limit": 0.8163971531687219
+ },
+ "lox:tree/equality": {
+  "norc_over_real": 0.6032165368104605,
+  "final_over_base_limit": 0.7619299220862763
+ }
+}

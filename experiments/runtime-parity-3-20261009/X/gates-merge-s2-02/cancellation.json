@@ -1,0 +1,11 @@
+{
+ "reason": "main advanced; mandatory real merge and fresh gates",
+ "new_main": "1ab0d92e7a7120abaffba358933d8401b953251a",
+ "owned_pid_cancelled": 2045300,
+ "command": "scripts/build-slot.sh gate zig build test --summary all",
+ "proof_before_signal": "Expected coordinator wrapper command, no fd9; still waiting, no gate or build admitted.",
+ "signal": "SIGTERM",
+ "driver_status": 1,
+ "build_passed": true,
+ "repository_or_later_result_claimed": false
+}

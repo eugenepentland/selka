@@ -17,9 +17,9 @@ build keeps, see [the caches](#the-caches) below.
    function per program function, generic instance and generated adapter. A
    construct the front end accepts but the core cannot build yet stops with
    `E_CORE_UNSUPPORTED` naming it.
-3. **Passes.** A release or `--optimize-debug` build computes facts (integer ranges, lengths, ownership),
+3. **Passes.** The default optimized debug build and release compute facts (integer ranges, lengths, ownership),
    inlines, unswitches and versions loops, and removes the checks the facts prove
-   cannot fire. A debug build keeps every check and runs no optimizing pass.
+   cannot fire. An `--unoptimized` build keeps every check and runs no optimizing pass.
 4. **LLVM text.** The IR is emitted as LLVM units (`src/core/emit_*.zig`).
 5. **Compile and link.** Each unit the object store does not already hold is
    compiled with `zig cc -c`, in parallel; the objects are linked with the core C
@@ -32,26 +32,24 @@ and nothing is collected or traced.
 
 ## Debug and release builds
 
-A build is a **debug** build unless `--release` (or `--mode ReleaseFast`) asks for
-the optimized one. The experimental `--optimize-debug` flag offers an optimized
-development build:
+A build is **optimized debug** by default. `--optimize-debug` remains a
+compatibility alias, and `--mode Debug` selects the same mode.
 
-- **Debug** emits one unit per source module, plus one per generic instance, one per
-  generated adapter and the entry unit. A unit's text depends only on its own
-  functions and the facts they consume, so an edit recompiles only the units whose
-  text changed, and two modules using one `sort[Record]` share one object. This is
-  the edit loop: `run`, `test` and `build` without `--release`.
-- **Release** emits the whole program as one unit, so LLVM inlines and optimizes
-  across every module boundary. Its object is cached by its text like any unit, so
-  an unchanged release build compiles nothing, but any edit recompiles the whole
-  program. Use it for a binary you ship or time.
-- **Optimized debug** runs the same Core passes as Release, then compiles each
+- **Optimized debug** runs the Core optimization passes, then compiles each
   module unit at LLVM `-O2`. It retains `debug(...)` output and source locations in
-  trap traces. An edit recompiles units whose emitted text changes; inlining and
-  propagated facts can also change callers' units. Optimization adds build work,
-  so measure cold builds and edits as well as runtime before choosing it for your
-  edit loop. It is a prototype, not a guarantee of Release speed on every program.
-  See the [tested debugger limitations](#interactive-debugger-qualification).
+  trap traces. Generic instances, generated adapters and the entry have their
+  own units. An edit recompiles units whose emitted text changes; inlining and
+  propagated facts can also change callers' units. This is the default for
+  `run`, `run-project`, `build`, `build --run` and `test`.
+- **Unoptimized** (`--unoptimized`) skips Core optimization and requests LLVM
+  `-O0`, keeping module units and debug output. Use it to isolate optimizer bugs,
+  preserve helper functions for breakpoints, or compare optimization costs.
+- **Release** (`--release` or `--mode ReleaseFast`) emits the whole program as
+  one unit, so LLVM can optimize across every module boundary. An unchanged
+  release build compiles nothing, but an edit recompiles the whole unit.
+
+Both development modes have the [tested debugger limitations](#interactive-debugger-qualification).
+Optimized debug is not a guarantee of Release speed on every program.
 
 ```console
 $ mylang build app/main.my -o app --cache-report
@@ -94,7 +92,7 @@ python3 scripts/qualify_optimization_driver.py --compiler zig-out/bin/mylang \
 ## `mylang build`
 
 ```bash
-mylang build FILE.my -o OUT [--release | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
+mylang build FILE.my -o OUT [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
              [--cache-dir DIR] [--no-cache] [--zig PATH]
              [--report | --cache-report] [--verify-cache] [--stats]
              [--diagnostics=text|json] [--no-facts | --verify-facts]
@@ -112,10 +110,13 @@ mylang build FILE.my --run [run options] [-- ARGS...]
   `--` is the program's.
 - **`--link FILE.c`** (repeatable) compiles a C source and links it in; see
   [direct C imports](../c-ffi.md).
-- **`--optimize-debug`** also works on `run`, `run-project`, `build --run` and
-  `test`. It cannot be combined with a selected ReleaseFast mode. Build replay,
-  native objects and test receipts distinguish the modes; switching modes in one
-  cache cannot reuse a result from the other mode. The shared runtime stays `-O2`.
+- **`--optimize-debug`** is a compatibility alias for the default, including on
+  `run`, `run-project`, `build --run` and `test`. `--mode Debug` is equivalent.
+  These spellings share cached builds and test results.
+- **`--unoptimized`** selects the optimizer-off diagnostic mode on those commands.
+  It has separate build, native-object and test cache identities. Different
+  explicit modes cannot be combined, in either order; repeating the same mode
+  is allowed. The shared runtime stays `-O2`.
 - **`--emit-llvm PATH`** also writes the emitted LLVM text. Such a build is neither
   replayed nor recorded.
 - **`--diagnostics=json`** prints warnings, errors, refusals and (with `--run`) a
@@ -190,12 +191,12 @@ The emitted debug information currently describes functions, call sites and trap
 locations. It contains no source-variable declarations or variable locations.
 Preserving trap reports therefore does not imply full source-level debugging.
 
-GDB 17.1 probes on 2026-10-09 compared ordinary Debug, optimized Debug and Release
+GDB 17.1 probes on 2026-10-09 compared unoptimized Debug, optimized Debug and Release
 using a two-module loop and a separate tiny helper. Both programs returned the
 expected output in every mode. The table describes those fixtures, not a promise
 that every function or source line supports the same operations:
 
-| Probe | Debug | Optimized Debug | Release |
+| Probe | Unoptimized (`--unoptimized`) | Optimized Debug (default) | Release |
 |---|---|---|---|
 | Named loop-function breakpoint | Hits entry; caller frame correct | Hits entry; caller frame correct | Relocates to a trap location; not hit on normal execution |
 | Caller line breakpoint, then step into loop function | Hits; steps into function | Hits; steps into function | No compiled code for that line |
@@ -205,7 +206,7 @@ that every function or source line supports the same operations:
 | Inspect source arguments and locals | No symbols | No symbols | No frame or source symbols |
 
 Optimized Debug retains useful function and call-site breakpoints, but can remove
-helpers that ordinary Debug keeps. Neither mode currently supports normal
+helpers that unoptimized Debug keeps. Neither mode currently supports normal
 statement stepping or local-variable inspection. Supporting those requires
 statement locations on normal execution paths and variable/type/location metadata
 through optimization. Exact trap traces and `debug(...)` retention are checked

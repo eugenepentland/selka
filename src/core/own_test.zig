@@ -250,8 +250,8 @@ test "records, unions and boxes with managed parts are counted field by field an
     try std.testing.expectEqualStrings(values_output, release.stdout);
     try std.testing.expectEqualStrings("", release.stderr);
     // The list of records and the list of unions carry element layouts for the runtime.
-    try std.testing.expect(contains(release.llvm, "@myl.layout.0 = private constant [7 x i32] [i32 24, i32 2, i32 0, i32 8, i32 0, i32 16, i32 0]"));
-    try std.testing.expect(contains(release.llvm, "[i32 16, i32 1, i32 1, i32 8, i32 1, i32 0, i32 1, i32 0]"));
+    try std.testing.expect(contains(release.llvm, "@myl.layout.0 = private constant { [7 x i32], ptr, ptr, ptr } { [7 x i32] [i32 24, i32 2, i32 -1, i32 8, i32 0, i32 16, i32 0]"));
+    try std.testing.expect(contains(release.llvm, "[i32 16, i32 1, i32 -2, i32 8, i32 1, i32 0, i32 1, i32 0]"));
 }
 
 // spec-case: NEW-CORE-RC-3
@@ -533,7 +533,7 @@ test "lists that never escape and whose length the facts bound live on the stack
     try std.testing.expect(contains(release.report, "; 4 lists on the stack\n"));
     try std.testing.expectEqualStrings("475 16 3\n", release.run.stdout);
     try std.testing.expectEqualStrings("", release.run.stderr);
-    const debug = try stackRun(arena.allocator(), root, "debug", &.{});
+    const debug = try stackRun(arena.allocator(), root, "unoptimized", &.{"--unoptimized"});
     try std.testing.expect(contains(debug.report, "; 0 lists on the stack\n"));
     try std.testing.expectEqualStrings("475 16 3\n", debug.run.stdout);
     const verify = try stackRun(arena.allocator(), root, "verify", &.{ "--release", "--verify-facts", "--emit-llvm", try std.fmt.allocPrint(arena.allocator(), "{s}/verify.ll", .{root}) });

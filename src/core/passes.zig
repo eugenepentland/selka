@@ -211,8 +211,10 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
             .returns = returns,
             .shortcut = if (shortcut) |*state| state else null,
             .provenance = &result.provenance,
+            .fields = .{ .module = module },
         }, .{ .temporary = &temporary, .scratch = &scratch, .parameters = &parameter_summary, .inlined = inlined, .result = &result });
-        break :blk facts.FieldIntervals{};
+        // Array facts also need type information when no record field rounds run.
+        break :blk facts.FieldIntervals{ .module = module };
     };
     const parameters = parameter_summary.finish();
     try resolveParameters(arena, if (shortcut) |*state| state else null, parameters, inlined, &result);
@@ -546,7 +548,8 @@ fn finalFunctions(memory: FinalMemory, module: *ir.Module, cache: ?*cache_mod.Co
         result.per_function[index].own = try own.functionWithScratch(arena, backing, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
         result.own.add(result.per_function[index].own);
         // Checks already established by a dominating check, including ownership splits.
-        const covered = try index_checks.run(arena, function, &known, sabotage == .index);
+        const covered = try index_checks.run(arena, function, &known, sabotage == .index) +
+            try @import("overflow_edges.zig").run(arena, function);
         result.counts.proven += covered;
         result.per_function[index].counts.proven += covered;
         // Preserve scalar record fields in SSA before planning vectors.
@@ -580,9 +583,26 @@ fn finalFunctions(memory: FinalMemory, module: *ir.Module, cache: ?*cache_mod.Co
     }
 }
 
+// Split fusions can append compound types and helper requests outside the slice
+// recorder. Load these raw catalogs eagerly until replay covers all producers;
+// ordinary per-stage and emission caches still operate after the exact fusions.
+fn splitFusionCatalog(module: *const ir.Module) bool {
+    for (module.functions.items) |function| {
+        const sig = function.signature;
+        if (sig.linkage == .internal or sig.owned != 0 or sig.views != 0) continue;
+        if (module.kind(sig.ret) != .list or module.compound(sig.ret).list != .str) continue;
+        const explicit = std.mem.eql(u8, function.name, "myl_core_str_split");
+        const whitespace = sig.linkage == .runtime_c and std.mem.eql(u8, function.name, "myl_core_str_split_whitespace");
+        if (!explicit and !whitespace) continue;
+        if (std.mem.eql(ir.Type, sig.params, if (explicit) &.{ .str, .str } else &.{.str})) return true;
+    }
+    return false;
+}
+
 fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: ?*cache_mod.Context) CachedError!?shortcut_mod.Index {
+    const eager_splits = cache != null and cache.?.lazy.raw != null and splitFusionCatalog(module);
     var shortcut: ?shortcut_mod.Index = if (cache) |context| blk: {
-        if (context.lazy.raw == null or (mode != .verify and mode != .trusted)) break :blk null;
+        if (eager_splits or context.lazy.raw == null or (mode != .verify and mode != .trusted)) break :blk null;
         break :blk try shortcut_mod.Index.prepareDemand(arena, context, @backingInt(mode), hasRecordTypes(module));
     } else null;
     if (shortcut == null) if (cache) |context| if (context.lazy.raw) |handles| {
@@ -608,6 +628,7 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
         try @import("fusion_checkpoint.zig").seed(arena, module, shortcut.?.catalog);
     } else if (shortcut) |*state| state.catalog = .{ .raw_count = module.functions.items.len };
     try @import("fuse_text.zig").whitespace(arena, module);
+    try @import("split_views.zig").run(arena, module);
     const fusion_requests: ?[]std.ArrayList(u32) = if (shortcut != null)
         try arena.alloc(std.ArrayList(u32), before_fusions.len)
     else
@@ -638,7 +659,7 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
             entry.demand.fusion.identity = before_fusions[index] != null and after != null and std.mem.eql(u8, &before_fusions[index].?, &after.?);
         }
         try finishFusionInputs(arena, &fusion_scratch, state, .{ .seeded = seeded, .requests = fusion_requests.? });
-    } else shortcut = try prepareShortcut(arena, cache, mode);
+    } else if (!eager_splits) shortcut = try prepareShortcut(arena, cache, mode);
     return shortcut;
 }
 

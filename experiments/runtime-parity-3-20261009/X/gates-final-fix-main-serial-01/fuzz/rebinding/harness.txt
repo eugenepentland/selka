@@ -1,0 +1,9 @@
+qualification progress: rebinding: seen=25 elapsed=25.84s
+qualification progress: rebinding: seen=50 elapsed=54.53s
+qualification progress: rebinding: seen=75 elapsed=84.90s
+qualification progress: rebinding: seen=100 elapsed=120.47s
+qualification progress: rebinding: seen=125 elapsed=156.28s
+qualification progress: rebinding: seen=150 elapsed=194.64s
+qualification progress: rebinding: seen=175 elapsed=234.35s
+qualification progress: rebinding: seen=200 elapsed=276.42s
+mut,records,alias                  cases=200 old_rejected=0 refused=0 compared=3000 mismatch=0 fact=0 traps=151 caught=0

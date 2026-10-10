@@ -647,9 +647,9 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
     var other_planner = context;
     other_planner.identity.cache_plan.?.identity[0] ^= 1;
     try std.testing.expect(!std.mem.eql(u8, &plain, &try settings(other_planner, &inputs)));
-    var optimized = context;
-    optimized.options.build.mode = .optimized_debug;
-    try std.testing.expect(!std.mem.eql(u8, &plain, &try settings(optimized, &inputs)));
+    var unoptimized = context;
+    unoptimized.options.build.mode = .debug;
+    try std.testing.expect(!std.mem.eql(u8, &plain, &try settings(unoptimized, &inputs)));
     try environment.put("_", "/usr/bin/time");
     try environment.put("OLDPWD", "/elsewhere");
     try environment.put("MYLANG_JOBS", "3");

@@ -31,12 +31,17 @@ fn arrayAccess(context: anytype, out: anytype, name: []const u8, inst: ir.Inst) 
         // A negative index the program wrote is reported as written, recovered on the cold path.
         try context.trapBounds(out, bad, try context.site(.list_bounds, inst, "index"), .{ .index = index, .len = length, .from_end = context.countsFromEnd(inst.b) });
     }
-    const slot = try context.stackSlot(m.size(ty));
-    try context.storeValue(out, ty, try context.value(inst.a), slot);
+    const slot = if (m.passedInMemory(ty))
+        try context.arrayStorage(out, name, inst)
+    else blk: {
+        const temporary = try context.stackSlot(m.size(ty));
+        try context.storeValue(out, ty, try context.value(inst.a), temporary);
+        break :blk temporary;
+    };
     const at = try context.fresh("%array");
     const memory_type = try @import("std").fmt.allocPrint(a, "[{d} x [{d} x i8]]", .{ array.n, m.size(array.elem) });
     try out.print(a, "  {s} = getelementptr inbounds {s}, ptr {s}, i64 0, i64 {s}\n", .{ at, memory_type, slot, index });
     if (inst.op == .array_get) return context.loadValue(out, array.elem, at, name);
     try context.storeValue(out, array.elem, try context.value(context.function.operands(inst.data)[0]), at);
-    try context.loadValue(out, ty, slot, name);
+    if (!m.passedInMemory(ty)) try context.loadValue(out, ty, slot, name);
 }

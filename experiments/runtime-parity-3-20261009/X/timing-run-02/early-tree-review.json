@@ -1,0 +1,658 @@
+{
+ "purpose": "Early diagnostic of rejected-candidate risk; not complete X timing or regression acceptance.",
+ "cpu": 8,
+ "rounds": 7,
+ "events": [
+  "instructions",
+  "cycles",
+  "branch-misses"
+ ],
+ "complete": true,
+ "row_inputs": [
+  {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/results/all46-1.json.gz",
+   "sha256": "ac1092b5f137d40283c6b2fea0ca6aa24f04411ccf64ef89e2df17aa382e57e8"
+  },
+  {
+   "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/results/all46-2.json.gz",
+   "sha256": "5741c8352d0330cd21e2e965a6d1208b36b2bad3e68fe5fe32b55b153f3b61b7"
+  }
+ ],
+ "completed_batch_ratios": [
+  1.0759452125438214,
+  1.0574355225246888
+ ],
+ "minimum_possible_three_batch_median": 1.0574355225246888,
+ "arms": {
+  "base": {
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_old",
+    "4096",
+    "272",
+    "7"
+   ],
+   "binary_sha256": "6ff27d5df92de6fb11e0d92edbaea596b6f298e031c229d5016e004036050c02",
+   "samples": [
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_old",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 18149695\n",
+     "stderr": "333395824;;cpu_core/instructions/u;18465491;100.00;;\n73956223;;cpu_core/cycles/u;18465491;100.00;;\n109191;;cpu_core/branch-misses/u;18465491;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 18149695,
+     "counts": {
+      "instructions": 333395824,
+      "cycles": 73956223,
+      "branch-misses": 109191
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 18465491.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 18465491.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 18465491.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_old",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 18585479\n",
+     "stderr": "333395819;;cpu_core/instructions/u;18805016;100.00;;\n74528800;;cpu_core/cycles/u;18805016;100.00;;\n107221;;cpu_core/branch-misses/u;18805016;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 18585479,
+     "counts": {
+      "instructions": 333395819,
+      "cycles": 74528800,
+      "branch-misses": 107221
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 18805016.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 18805016.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 18805016.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_old",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 18232543\n",
+     "stderr": "333395818;;cpu_core/instructions/u;18483220;100.00;;\n74065027;;cpu_core/cycles/u;18483220;100.00;;\n108143;;cpu_core/branch-misses/u;18483220;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 18232543,
+     "counts": {
+      "instructions": 333395818,
+      "cycles": 74065027,
+      "branch-misses": 108143
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 18483220.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 18483220.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 18483220.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_old",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 18762537\n",
+     "stderr": "333395818;;cpu_core/instructions/u;19036905;100.00;;\n74530700;;cpu_core/cycles/u;19036905;100.00;;\n109023;;cpu_core/branch-misses/u;19036905;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 18762537,
+     "counts": {
+      "instructions": 333395818,
+      "cycles": 74530700,
+      "branch-misses": 109023
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 19036905.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 19036905.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 19036905.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_old",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 18426151\n",
+     "stderr": "333395820;;cpu_core/instructions/u;18634529;100.00;;\n74498093;;cpu_core/cycles/u;18634529;100.00;;\n112029;;cpu_core/branch-misses/u;18634529;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 18426151,
+     "counts": {
+      "instructions": 333395820,
+      "cycles": 74498093,
+      "branch-misses": 112029
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 18634529.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 18634529.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 18634529.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_old",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 19050314\n",
+     "stderr": "333395820;;cpu_core/instructions/u;19213801;100.00;;\n76204416;;cpu_core/cycles/u;19213801;100.00;;\n107774;;cpu_core/branch-misses/u;19213801;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 19050314,
+     "counts": {
+      "instructions": 333395820,
+      "cycles": 76204416,
+      "branch-misses": 107774
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 19213801.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 19213801.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 19213801.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_old",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 18365896\n",
+     "stderr": "333395819;;cpu_core/instructions/u;18598688;100.00;;\n74115112;;cpu_core/cycles/u;18598688;100.00;;\n110944;;cpu_core/branch-misses/u;18598688;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 18365896,
+     "counts": {
+      "instructions": 333395819,
+      "cycles": 74115112,
+      "branch-misses": 110944
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 18598688.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 18598688.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 18598688.0,
+       "running_percent": 100.0
+      }
+     }
+    }
+   ],
+   "median": {
+    "instructions": 333395819,
+    "cycles": 74498093,
+    "branch-misses": 109023
+   }
+  },
+  "final": {
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_new",
+    "4096",
+    "272",
+    "7"
+   ],
+   "binary_sha256": "9f0b32251d1f843f7857e2183f864eacda9e14fa0690c888aee30cefd47ccfc0",
+   "samples": [
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_new",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 19628796\n",
+     "stderr": "323369388;;cpu_core/instructions/u;19907794;100.00;;\n78678237;;cpu_core/cycles/u;19907794;100.00;;\n106962;;cpu_core/branch-misses/u;19907794;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 19628796,
+     "counts": {
+      "instructions": 323369388,
+      "cycles": 78678237,
+      "branch-misses": 106962
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 19907794.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 19907794.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 19907794.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_new",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 20063010\n",
+     "stderr": "323369389;;cpu_core/instructions/u;20267060;100.00;;\n78510458;;cpu_core/cycles/u;20267060;100.00;;\n107616;;cpu_core/branch-misses/u;20267060;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 20063010,
+     "counts": {
+      "instructions": 323369389,
+      "cycles": 78510458,
+      "branch-misses": 107616
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 20267060.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 20267060.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 20267060.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_new",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 19259625\n",
+     "stderr": "323369382;;cpu_core/instructions/u;19478846;100.00;;\n78205784;;cpu_core/cycles/u;19478846;100.00;;\n106981;;cpu_core/branch-misses/u;19478846;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 19259625,
+     "counts": {
+      "instructions": 323369382,
+      "cycles": 78205784,
+      "branch-misses": 106981
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 19478846.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 19478846.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 19478846.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_new",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 19485871\n",
+     "stderr": "323369382;;cpu_core/instructions/u;19746929;100.00;;\n78440950;;cpu_core/cycles/u;19746929;100.00;;\n105883;;cpu_core/branch-misses/u;19746929;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 19485871,
+     "counts": {
+      "instructions": 323369382,
+      "cycles": 78440950,
+      "branch-misses": 105883
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 19746929.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 19746929.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 19746929.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_new",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 19354906\n",
+     "stderr": "323369381;;cpu_core/instructions/u;19570469;100.00;;\n78359159;;cpu_core/cycles/u;19570469;100.00;;\n107433;;cpu_core/branch-misses/u;19570469;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 19354906,
+     "counts": {
+      "instructions": 323369381,
+      "cycles": 78359159,
+      "branch-misses": 107433
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 19570469.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 19570469.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 19570469.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_new",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 19365117\n",
+     "stderr": "323369380;;cpu_core/instructions/u;19597692;100.00;;\n78168755;;cpu_core/cycles/u;19597692;100.00;;\n105988;;cpu_core/branch-misses/u;19597692;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 19365117,
+     "counts": {
+      "instructions": 323369380,
+      "cycles": 78168755,
+      "branch-misses": 105988
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 19597692.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 19597692.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 19597692.0,
+       "running_percent": 100.0
+      }
+     }
+    },
+    {
+     "command": [
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "stat",
+      "--no-scale",
+      "-x;",
+      "-e",
+      "cpu_core/instructions/u,cpu_core/cycles/u,cpu_core/branch-misses/u",
+      "--",
+      "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/all46/row_tree_build_walk_new",
+      "4096",
+      "272",
+      "7"
+     ],
+     "status": 0,
+     "stdout": "181448421 19560656\n",
+     "stderr": "323369386;;cpu_core/instructions/u;19762476;100.00;;\n78524824;;cpu_core/cycles/u;19762476;100.00;;\n104298;;cpu_core/branch-misses/u;19762476;100.00;;\n",
+     "checksum": 181448421,
+     "elapsed_ns": 19560656,
+     "counts": {
+      "instructions": 323369386,
+      "cycles": 78524824,
+      "branch-misses": 104298
+     },
+     "validity": {
+      "instructions": {
+       "runtime": 19762476.0,
+       "running_percent": 100.0
+      },
+      "cycles": {
+       "runtime": 19762476.0,
+       "running_percent": 100.0
+      },
+      "branch-misses": {
+       "runtime": 19762476.0,
+       "running_percent": 100.0
+      }
+     }
+    }
+   ],
+   "median": {
+    "instructions": 323369382,
+    "cycles": 78440950,
+    "branch-misses": 106962
+   }
+  }
+ },
+ "pre_sampling_capture": {
+  "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.tmp/rp3/timing-run-02-before-timing-binaries.json",
+  "sha256": "a7c09fc0a8c2d9c83a727e112df9a15beeb173ae48ab46b5851b55b8f5d3fdd0"
+ },
+ "rounds_done": 7,
+ "ratios": {
+  "instructions": 0.9699263265206094,
+  "cycles": 1.0529256097870854,
+  "branch-misses": 0.981095732093228
+ }
+}

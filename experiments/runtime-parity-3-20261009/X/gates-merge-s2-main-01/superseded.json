@@ -1,0 +1,25 @@
+{
+ "complete": false,
+ "reason": "main advanced after this tree was frozen; automatic driver stopped after successful fuzz at its main-identity check",
+ "qualified_source": "74adf3466317b4883371046ff675ad6a53a45903",
+ "integrated_main": "1ab0d92e7a7120abaffba358933d8401b953251a",
+ "new_main": "fa11606022ed217896a27976f8fe6d95db95f465",
+ "completed": [
+  "build",
+  "repository",
+  "fmt",
+  "raw",
+  "validate-raw-qualification",
+  "additive",
+  "validate-qualification",
+  "fuzz"
+ ],
+ "not_run": [
+  "external tests",
+  "ReleaseFast",
+  "guest builds",
+  "counting",
+  "instruction comparisons"
+ ],
+ "next": "real merge of new main, compatibility regressions, and fresh complete gates-merge-s2-main-02; original M0 remains unchanged"
+}

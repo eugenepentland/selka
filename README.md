@@ -16,7 +16,7 @@ would confirm it. The working language name and `.my` extension are provisional.
   repository: `mylang docs` lists them, and `mylang docs primer` (or `syntax`,
   `io`, `errors`, `tests`, `build`, ...) prints one.
 - **Commands:** `mylang --help` starts with the everyday ones. `run`, `build`
-  and `test` make a debug build, one LLVM unit per module so an edit recompiles
+  and `test` make an optimized debug build, one LLVM unit per module so an edit recompiles
   only what changed; add `--release` for the optimized whole-program build you
   ship or time.
 - **Working in a large project:** `mylang context ENTRY.my --symbol=module::name`
@@ -607,7 +607,7 @@ A failed build preserves the last executable.
 
 When a program is not fast enough, the [performance page](docs/performance.md) is
 the front door: what ordinary managed code costs, that `mylang build` and
-`mylang run` make a debug build by default and `--release` the optimized one, how to raise the `--max-steps` and
+`mylang run` make an optimized debug build by default and `--release` the optimized one, how to raise the `--max-steps` and
 `--max-frames` budgets each trap now names, why a fixed `FixedArray[T, N]` belongs on the wire
 rather than in a hot loop, and how to measure with `--timings`, `--report` and the
 system timer.

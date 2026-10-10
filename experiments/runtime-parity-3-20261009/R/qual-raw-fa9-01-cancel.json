@@ -1,0 +1,7 @@
+{
+ "reason": "Queued install never acquired gate; source changed for measured R4 applicability and R3 acceptance. Restart final qualification only after final implementation.",
+ "pids": [
+  251388,
+  251466
+ ]
+}

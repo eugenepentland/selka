@@ -55,7 +55,7 @@ test "a trap names every caller frame like the old core, at debug and at -O3 whe
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
     try sameFrames(try trapped(arena.allocator(), root, false));
     try sameFrames(try trapped(arena.allocator(), root, true));
-    try sameFrames(try trappedWith(arena.allocator(), root, false, &.{"--optimize-debug"}));
+    try sameFrames(try trappedWith(arena.allocator(), root, false, &.{"--unoptimized"}));
 }
 
 // spec-case: NEW-CORE-TRAP-2

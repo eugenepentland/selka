@@ -65,7 +65,7 @@ const everyday_help =
     \\  mylang check FILE.my              type-check without building
     \\  mylang fix FILE.my [--check]     apply safe diagnostic repairs
     \\  mylang run FILE.my [-- ARGS...]   build natively and run; arguments after --
-    \\  mylang build FILE.my -o OUT       native executable, a debug build one unit per module
+    \\  mylang build FILE.my -o OUT       native executable, optimized debug one unit per module
     \\  mylang build FILE.my -o OUT --release   optimized whole-program LLVM build, for shipping or timing
     \\  mylang test FILE.my|DIR           run the public test_* functions
     \\  mylang juice --help                      runtime work measurements and comparisons
@@ -87,9 +87,9 @@ const everyday_help =
 /// Every command and option, after `everyday_help`, and what a malformed front-end
 /// command line prints. `build`, `run`, `run-project`, `test`, `dump-ir`,
 /// `dump-typed` and `coverage` print their own usage (`src/core/cli.zig`).
-const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) [--release | --optimize-debug] [--link FILE.c]... (native build; `mylang build` prints the options)\n" ++
+const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) [--release | --unoptimized | --optimize-debug] [--link FILE.c]... (native build; `mylang build` prints the options)\n" ++
     "       mylang run <file.my> [options] [-- ARGS...] | run-project <entry.my> [options] [-- ARGS...] (build and run; `mylang run` prints the options)\n" ++
-    "       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release | --optimize-debug] [--affected --against REF] (run the public test_* functions)\n" ++
+    "       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release | --unoptimized | --optimize-debug] [--affected --against REF] (run the public test_* functions)\n" ++
     "       mylang dump-ir <file.my> [--facts] | dump-typed <file.my> [FUNCTION] | coverage <file.my>... (developer views of the new core)\n" ++
     "       mylang juice <doctor|analyze|record|compare|validate|calibrate> (performance work proxy)\n" ++
     "       mylang cost <entry.my> [FUNCTION] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] (per-function Core costs)\n" ++

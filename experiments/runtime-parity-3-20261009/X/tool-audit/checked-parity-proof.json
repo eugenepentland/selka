@@ -1,0 +1,21 @@
+{
+ "passed": 8,
+ "tests": [
+  "successful native sample shape, values, count, and two-warmup exclusion unchanged",
+  "warmup nonzero exit rejected immediately",
+  "timed nonzero exit rejected immediately",
+  "warmup zero-exit wrong stdout rejected from that same execution",
+  "timed zero-exit wrong stdout rejected from that same execution",
+  "native confirmation warmup is covered by the checked timer",
+  "two failures produce distinct retained incomplete receipts",
+  "wrapper returns status 2, retains failure, and restores the native timer"
+ ],
+ "native_or_guest_processes_launched": 0,
+ "tracked_files_edited": 0,
+ "files": {
+  "parity_pair.py": "7622a494768e940f649efc9585c3650436668db70cf21608dedc1d4576128f0c",
+  "parity_pair.proposed.py": "dec4d6bd10d1cbf71fe5f181762bcd4ea3bf88388b2135b8f9a3b11fed16cfa1",
+  "checked-parity.patch": "9eab4592bf02fb60696634d1a3afe33e0b1b2313db21ff721e3659bf25af9181"
+ },
+ "method_note": "Actual stdout is captured in a preopened temporary file; capture verification is outside native spawn/wait timing. Successful return/sample shape is unchanged, but output I/O changes from /dev/null equally for all paired arms."
+}

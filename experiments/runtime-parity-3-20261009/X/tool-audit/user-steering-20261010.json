@@ -1,0 +1,19 @@
+{
+ "guardian_feedback": "Do not append or commit Guardian feedback unless the user explicitly asks; latest AGENTS instructions replace earlier requirement.",
+ "fifo": {
+  "worktree": "/home/epentland/ai/canopy/mylang-worktrees/codex-build-slot-fifo",
+  "branch": "codex/build-slot-fifo",
+  "commit": "986f54a5efcf1bde3ee524f5a32b4c80c09f35cc",
+  "tests": "9 process-level tests passed; 88 whole-tree Guardian checks passed",
+  "main_merged": false,
+  "limitation": "FIFO applies to updated wrapper users; old versions and direct slot flock users still bypass ordering."
+ },
+ "juice": {
+  "complete": true,
+  "directory": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.tmp/rp3/juice-current-native-02",
+  "samples": 36,
+  "workloads": 6,
+  "purpose": "User-requested provisional proxy; final X timing still mandatory",
+  "independent_review": "S2 verified exact M0 sources/oracles, 12 binary hashes, 108 evidence files, 18 logs, all output checks and 100% PMU availability, same contexts/libraries, production identity and six ratios. No disqualifying findings."
+ }
+}

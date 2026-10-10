@@ -30,6 +30,21 @@ The wrapper runs a job only when a slot of its kind is free **and**
 why. When it finally runs the job it prints how long it waited, and it passes the
 job's exit status through unchanged.
 
+Waiting jobs receive monotonically numbered **FIFO tickets**, separately for
+`build` and `gate`. Only the oldest live ticket of a kind may claim a slot of
+that kind. A newer arrival cannot overtake it by polling faster. Waiting output
+includes the ticket number and current position; `status` lists queued PIDs and
+their wait times. Multiple slots still admit multiple jobs, and a queued gate
+does not block the independent build queue.
+
+Cancelling a waiter removes its ticket. If it is killed without cleanup, the
+next admission or status check removes the stale ticket. Liveness includes the
+PID, process start time and boot identity, so a reused PID or a previous boot
+cannot keep a dead job at the front. The oldest job retains its position while
+waiting for memory; lower-memory newcomers of the same kind cannot jump ahead.
+FIFO prevents overtaking, but cannot bound the duration of a running job or
+provide memory that is unavailable.
+
 | variable | default | meaning |
 |---|---|---|
 | `MYLANG_BUILD_SLOTS` | 3 | concurrent `build` jobs |
@@ -39,7 +54,7 @@ job's exit status through unchanged.
 | `MYLANG_TIMING_CPUS` | `2,3,10,11` | CPUs no admitted job may use (`""` reserves none) |
 | `MYLANG_SLOT_SETTLE` | 5 | seconds before the next job is admitted, so this job's memory counts |
 | `MYLANG_SLOT_POLL` | 5 | seconds between admission attempts |
-| `MYLANG_SLOT_DIR` | `$XDG_RUNTIME_DIR/mylang-slots`, else `~/.cache/mylang/slots` | lock files |
+| `MYLANG_SLOT_DIR` | `$XDG_RUNTIME_DIR/mylang-slots`, else `~/.cache/mylang/slots` | shared slot locks and FIFO tickets |
 
 The thresholds come from peaks measured on this machine with `/usr/bin/time -v`,
 and from the peak anonymous memory of the job's cgroup. All builds used Zig's
@@ -67,6 +82,24 @@ The lock files have the same names as the coordinator's earlier
 `.tmp/perf-plan-20260922/slot.sh` (`build1.lock` … `gate1.lock`). Point
 `MYLANG_SLOT_DIR` at that script's `slots/` directory and both share one set of
 slots while some agents still use the old script.
+
+FIFO ordering applies to callers using the updated wrapper and the same slot
+directory. Old wrapper versions and direct `flock buildN.lock` / `gateN.lock`
+reservations still respect mutual exclusion, but bypass the ticket queues.
+Do not use raw slot reservations to jump ahead. Worktrees on older revisions
+can invoke the updated wrapper by absolute path without changing their source
+tree. Already running wrappers retain the admission policy they started with.
+Benchmark harnesses that reserve these slot files directly also need to enter
+through this queue before system-wide FIFO ordering can be claimed.
+
+Run the admission regression tests without a compiler build:
+
+```bash
+python3 -B scripts/build_slot_test.py -v
+```
+
+They use real processes and private lock directories under `.tmp/`, so they do
+not occupy or alter the machine's live slots.
 
 ## Reserved timing cores
 

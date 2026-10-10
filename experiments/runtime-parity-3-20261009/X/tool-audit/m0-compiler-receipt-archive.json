@@ -1,0 +1,9 @@
+{
+ "path": "experiments/runtime-parity-3-20261009/M0/compiler-base.json",
+ "gzip_path": "experiments/runtime-parity-3-20261009/M0/compiler-base.json.gz",
+ "raw_sha256": "5b17788054187998662f6fac7695ba5784fc076fadb082145eea91ff4d19dcee",
+ "gzip_sha256": "56024bf0ee536b431d0b995763d7ddb81eb44dfbe5e661ccfe02d379822bdf9a",
+ "raw_bytes": 587825,
+ "gzip_bytes": 219071,
+ "method": "Lossless compression of the unchanged M0 compiler receipt; measurements, identities and source hashes are unchanged."
+}

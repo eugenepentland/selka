@@ -110,10 +110,15 @@ pub fn prelude(allocator: std.mem.Allocator, out: *std.ArrayList(u8)) std.mem.Al
         \\entry:
         \\  %len_at = getelementptr inbounds i8, ptr %text, i64 8
         \\  %len = load i64, ptr %len_at, align 8
+        \\  %data = getelementptr inbounds i8, ptr %text, i64 32
+        \\  %result = call fastcc i1 @myl_core_parse_span_inline(ptr %data, i64 %len, ptr %out)
+        \\  ret i1 %result
+        \\}
+        \\define internal fastcc i1 @myl_core_parse_span_inline(ptr %data, i64 %len, ptr %out) alwaysinline nounwind {
+        \\entry:
         \\  %has_bytes = icmp ugt i64 %len, 0
         \\  br i1 %has_bytes, label %head, label %invalid
         \\head:
-        \\  %data = getelementptr inbounds i8, ptr %text, i64 32
         \\  %first = load i8, ptr %data, align 1
         \\  %minus = icmp eq i8 %first, 45
         \\  %plus = icmp eq i8 %first, 43
@@ -152,7 +157,7 @@ pub fn prelude(allocator: std.mem.Allocator, out: *std.ArrayList(u8)) std.mem.Al
         \\invalid:
         \\  ret i1 false
         \\slow:
-        \\  %parsed = call zeroext i1 @myl_core_str_parse_int(ptr %text, ptr %out)
+        \\  %parsed = call zeroext i1 @myl_core_span_parse_int(ptr %data, i64 %len, ptr %out)
         \\  ret i1 %parsed
         \\}
         \\

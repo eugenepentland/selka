@@ -1,0 +1,54 @@
+{
+ "source_base": "41ed360fb361c49938488ad111795bad8a726b73",
+ "frozen_reference_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+ "frontend_reference_sha256": "670f7feb5d02526605ee426294e2f52e31173567585440452275c313d34d3402",
+ "unadapted": {
+  "status": 1,
+  "debug": [
+   1516,
+   4,
+   0
+  ],
+  "release": [
+   1516,
+   4,
+   0
+  ],
+  "problem_lines": [
+   "PROBLEM dict_comprehensions: debug: test name dict_comprehensions::test_destructuring_loops_and_combined_comprehension_filter (only in the new core)",
+   "PROBLEM dict_comprehensions: debug: test name dict_comprehensions::test_explicit_nested_loops_read_left_to_right (only in the new core)",
+   "PROBLEM dict_comprehensions: debug: test name dict_comprehensions::test_nested_clauses_read_left_to_right (only in the old core)",
+   "PROBLEM dict_comprehensions: debug: test name dict_comprehensions::test_two_names_and_several_filters_in_a_list_comprehension (only in the old core)",
+   "PROBLEM dict_comprehensions: release: test name dict_comprehensions::test_destructuring_loops_and_combined_comprehension_filter (only in the new core)",
+   "PROBLEM dict_comprehensions: release: test name dict_comprehensions::test_explicit_nested_loops_read_left_to_right (only in the new core)",
+   "PROBLEM dict_comprehensions: release: test name dict_comprehensions::test_nested_clauses_read_left_to_right (only in the old core)",
+   "PROBLEM dict_comprehensions: release: test name dict_comprehensions::test_two_names_and_several_filters_in_a_list_comprehension (only in the old core)",
+   "PROBLEM frontend_mut: old core (frozen): no reference for frontend_mut",
+   "PROBLEM frontend_numbers: old core (frozen): no reference for frontend_numbers",
+   "PROBLEM frontend_type_helpers: old core (frozen): no reference for frontend_type_helpers",
+   "PROBLEM frontend_types: old core (frozen): no reference for frontend_types"
+  ],
+  "receipt": "experiments/runtime-parity-3-20261009/M0/qualify-base-41ed360fb-01"
+ },
+ "additive": {
+  "status": 0,
+  "qualified": true,
+  "debug": [
+   1547,
+   0,
+   0
+  ],
+  "release": [
+   1547,
+   0,
+   0
+  ],
+  "receipt": "experiments/runtime-parity-3-20261009/M0/qualify-base-additive-41ed360fb-02",
+  "core_shards": 64,
+  "core_tests_passed": 600,
+  "core_seconds": 44.96,
+  "leakcheck": true,
+  "verify_facts": true
+ },
+ "explanation": "Two historical comprehension test names map to their reviewed new names; the reviewed frontend reference adds 29 cases. Every frozen case remains covered."
+}

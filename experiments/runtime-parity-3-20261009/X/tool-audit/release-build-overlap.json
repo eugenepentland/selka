@@ -1,0 +1,29 @@
+{
+ "source_commit": "90982ff631b68f1a47e32e5919ba949510edba99",
+ "main_commit": "e9011d9c6513f63ae02881d0cfc8258c668e6b5e",
+ "command": [
+  "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/scripts/build-slot.sh",
+  "build",
+  "taskset",
+  "-c",
+  "0,1,8,9",
+  "zig",
+  "build",
+  "-Doptimize=ReleaseFast",
+  "--prefix",
+  "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.tmp/rp3/prewarm-final-fix-main-01/install",
+  "--summary",
+  "all"
+ ],
+ "status": 0,
+ "seconds": 281.6895878314972,
+ "log": ".tmp/rp3/prewarm-final-fix-main-01/build.log",
+ "log_sha256": "4f4355dd8834da5a85f62cc2959393bf4174b9d3d47826908bdaf9233cffe640",
+ "source_unchanged": true,
+ "purpose": "Overlap required ReleaseFast compilation with the repository test stage using two otherwise available performance cores. The qualification driver still runs its complete build step and records its own compiler hash; no gate is omitted.",
+ "summary": [
+  "guardian: run-all: 88 check(s) passed \u2014 diff-scoped vs e9011d9c6513f63ae02881d0cfc8258c668e6b5e, 25 file(s) in scope",
+  "Build Summary: 9/9 steps succeeded"
+ ],
+ "compiler_sha256": "7489a2882613c21a2b02b542d046f7976b686850dc790cb4e2b1290c50f42944"
+}

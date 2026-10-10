@@ -1,0 +1,26 @@
+{
+ "candidate_tag": "final-fix-main-serial-01",
+ "reviewer": "S2 subagent and coordinator",
+ "complete": true,
+ "selection_unchanged": true,
+ "default_shards": {
+  "unit": 12,
+  "cli": 6,
+  "core": 8
+ },
+ "repository_flags": [
+  "-j1",
+  "-Dtest-rerun=true"
+ ],
+ "inherited_MYLANG_UNIT_JOBS": "unset",
+ "evidence": [
+  "build.zig:272",
+  "build.zig:419",
+  "build.zig:587",
+  "build.zig:810",
+  "src/wiring/core_runner.zig:63",
+  "src/core/stage_pack.zig:91",
+  "src/core/stage_pack.zig:355"
+ ],
+ "conclusion": "Only build-step scheduling changes. Guardian index-modulo-shard selection, all dependencies, per-test concurrency and subsequent gates remain. Fresh verdicts are forced. Serial unrelated writers should reduce sequence invalidations and full directory refreshes; no speedup is claimed until measured. Initial directory scans remain."
+}

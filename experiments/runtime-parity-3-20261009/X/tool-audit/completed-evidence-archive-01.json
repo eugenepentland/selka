@@ -1,0 +1,110 @@
+{
+ "method": "Lossless deterministic gzip; exact original bytes and both hashes preserved. Original paths in historical receipts resolve through this manifest. Completed qualification revalidated before and after log compression.",
+ "files": [
+  {
+   "original": "X/gates-merge-u2-01/instruction-comparison.json",
+   "archive": "X/gates-merge-u2-01/instruction-comparison.json.gz",
+   "raw_bytes": 113587,
+   "gzip_bytes": 20056,
+   "raw_sha256": "a07be72d52dd20fd66555129050af4c9a59706ec117adaf7f40ebdbbb38fd7e4",
+   "gzip_sha256": "77387e27610448a3ac75f25a6ca4564e0d2ce548f69e68fa20cb4dea6becd7b5"
+  },
+  {
+   "original": "X/gates-merge-s2-main-02/instruction-comparison.json",
+   "archive": "X/gates-merge-s2-main-02/instruction-comparison.json.gz",
+   "raw_bytes": 113470,
+   "gzip_bytes": 19884,
+   "raw_sha256": "ef645ecfc62ce9ca649952f20e28355bbb1d18878311ffe9fef237752a9f18fc",
+   "gzip_sha256": "677ff692ea0d9763ccf8caf527c6b59b6381fb53873325a232e48838127a4f2b"
+  },
+  {
+   "original": "M0/rows-reference-rebuild.json",
+   "archive": "M0/rows-reference-rebuild.json.gz",
+   "raw_bytes": 70534,
+   "gzip_bytes": 4415,
+   "raw_sha256": "8a5c2a392cd81353012f3fb18a6f8c58a21392a3fa8c27db4aa9e2734b7381ea",
+   "gzip_sha256": "98be99d424bc675f4f7ce9ce27fb63aecd6c6f0cbeec269267cb72fc8c99f5df"
+  },
+  {
+   "original": "M0/rows-summary.json",
+   "archive": "M0/rows-summary.json.gz",
+   "raw_bytes": 71066,
+   "gzip_bytes": 17392,
+   "raw_sha256": "7c6c250a357877a146dd3aa8071e318c5f1cb1b4925698ac68d83afa95372459",
+   "gzip_sha256": "abc17a64a49b299e883d3af4efface205067c602c34636691281b3f906de7083"
+  },
+  {
+   "original": "M0/rows-qualification.json",
+   "archive": "M0/rows-qualification.json.gz",
+   "raw_bytes": 56904,
+   "gzip_bytes": 3454,
+   "raw_sha256": "ee0ee4993a648cdc27a7a63f34ad80fedff41533ea410a2978048561855beb80",
+   "gzip_sha256": "b8cfe73cf04f0ad113d923f310e62ae59cb376ff11fae9ff99128cda225dcaa5"
+  },
+  {
+   "original": "S2/prefix-cpu8.json",
+   "archive": "S2/prefix-cpu8.json.gz",
+   "raw_bytes": 37206,
+   "gzip_bytes": 5322,
+   "raw_sha256": "30fdb2233f328f145ad5e0cb9aa0f90048ca4ea78752cf8558cbe099b2ef144a",
+   "gzip_sha256": "9894280f7a49608355af67c632278c7ddf9d2d56ea599f63156d327f499c016f"
+  },
+  {
+   "original": "S2/final-compile-times.json",
+   "archive": "S2/final-compile-times.json.gz",
+   "raw_bytes": 32241,
+   "gzip_bytes": 2370,
+   "raw_sha256": "f22ecd86cb2684912cc0f84793e49d17d534eafc3761eca76b674602645acf42",
+   "gzip_sha256": "5aa2336ffffb4b5fe958976609f78b566b4e788dc4810a16ef92761f711f8e74"
+  },
+  {
+   "original": "M0/qualify-base-41ed360fb-01/full-conformance.log",
+   "archive": "M0/qualify-base-41ed360fb-01/full-conformance.log.gz",
+   "raw_bytes": 48097,
+   "gzip_bytes": 4166,
+   "raw_sha256": "fbd75cc7a90339c2f74c1489b38397feb31df043242084b8084df4563f28088b",
+   "gzip_sha256": "7167089f28765489dd5c77ae0fde38be463d18f2e6af4f1aa6fef74735a9dc04"
+  },
+  {
+   "original": "M0/qualify-base-41ed360fb-01/install-core.log",
+   "archive": "M0/qualify-base-41ed360fb-01/install-core.log.gz",
+   "raw_bytes": 3063,
+   "gzip_bytes": 986,
+   "raw_sha256": "eb44d7f24faac8b76a6728a4138534bbe28c56d40875a84e019e23345ea8e7fd",
+   "gzip_sha256": "cdbf40cb4689762040d56a1cc8423a9596cc8aeb24786d73f17dee917b634541"
+  },
+  {
+   "original": "M0/qualify-base-41ed360fb-01/test-core.log",
+   "archive": "M0/qualify-base-41ed360fb-01/test-core.log.gz",
+   "raw_bytes": 78019,
+   "gzip_bytes": 14690,
+   "raw_sha256": "c9d22bca177a9bf19949c2891ad31ec8d8749a3c08743db1c595adf032495548",
+   "gzip_sha256": "3be03860e78edda3ea0aa28f88becadcf83a5ebdcacf248e5d6d3f6ec4d07a30"
+  },
+  {
+   "original": "M0/qualify-base-additive-41ed360fb-02/full-conformance.log",
+   "archive": "M0/qualify-base-additive-41ed360fb-02/full-conformance.log.gz",
+   "raw_bytes": 47004,
+   "gzip_bytes": 3990,
+   "raw_sha256": "0f9715a5d77294641b9ac35a659991824bd3ad2c7867cc919b169075be7b7cc9",
+   "gzip_sha256": "0210e07e8656662151303330ef1e06e121378b411cf5020d68141fd5e431275a"
+  },
+  {
+   "original": "M0/qualify-base-additive-41ed360fb-02/install-core.log",
+   "archive": "M0/qualify-base-additive-41ed360fb-02/install-core.log.gz",
+   "raw_bytes": 1884,
+   "gzip_bytes": 908,
+   "raw_sha256": "1fa5f6bc406f915274e433b133655520fbf6d203766811a26a8b7c9ebf73c6bc",
+   "gzip_sha256": "077fa6e03ebc107d3324f1de3cc08e477f65eed1e2c2442157661977c382e096"
+  },
+  {
+   "original": "M0/qualify-base-additive-41ed360fb-02/test-core.log",
+   "archive": "M0/qualify-base-additive-41ed360fb-02/test-core.log.gz",
+   "raw_bytes": 75908,
+   "gzip_bytes": 14434,
+   "raw_sha256": "90a2dafd3f2e2952cd3777557fd41073680c30abc6d019306f7294af209fb180",
+   "gzip_sha256": "3277260a3c3d947e125fbe6d9b8b53f6e91978441bea6becaac1a80d77424b0f"
+  }
+ ],
+ "saved_bytes": 636916
+}

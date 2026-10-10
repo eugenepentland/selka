@@ -5,19 +5,32 @@ const origins = @import("inline_origins.zig");
 
 /// A loop helper qualifies only within bounded expansion and without further calls.
 pub fn qualifies(f: *const ir.Function) bool {
-    if (f.signature.linkage != .internal or f.signature.owned == 0 or f.signature.ret == .void) return false;
+    if (f.signature.linkage != .internal or f.signature.ret == .void) return false;
     if (f.blocks.items.len < 2 or f.blocks.items.len > 20) return false;
     var size: usize = 0;
     var returns: usize = 0;
+    var reads: usize = 0;
     for (f.blocks.items) |block| for (block.insts.items) |ref| {
         size += 1;
+        if (f.signature.owned == 0 and !projectionOp(f.inst(ref).op)) return false;
+        if (f.inst(ref).op == .list_get) reads += 1;
         switch (f.inst(ref).op) {
             .call, .call_indirect, .print, .err_trace => return false,
             .ret => returns += 1,
             else => {},
         }
     };
+    if (f.signature.owned == 0) return returns == 1 and reads == 1 and size <= 24 and f.loops.items.len == 0;
     return returns != 0 and size <= 100;
+}
+
+// Checked stack peeks are small read-only CFGs. Splicing preserves each check
+// and its inline ancestry, including a trap in the negative-index arm.
+fn projectionOp(op: ir.Op) bool {
+    return switch (op) {
+        .param, .iconst, .copy, .record_get, .list_len, .list_get, .add, .sub, .cmp, .convert, .phi, .branch, .jump, .ret => true,
+        else => false,
+    };
 }
 
 /// Split one call site and clone the callee's complete control flow into its caller.

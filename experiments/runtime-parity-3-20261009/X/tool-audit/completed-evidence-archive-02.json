@@ -1,0 +1,77 @@
+{
+ "reason": "Lossless compression of completed matrices and final instruction comparison after timing-run-01; no measurement or gate result changes. Historical paths resolve through this manifest.",
+ "files": [
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/gates-final/instruction-comparison.json",
+   "archive": "experiments/runtime-parity-3-20261009/X/gates-final/instruction-comparison.json.gz",
+   "raw_sha256": "c1dc7af434c5de9cd0c0bc1b97114292321e1c266856f2547dd0148aa74338db",
+   "gzip_sha256": "3bcef1a351a26c463f81061362d59d3f622a5e5c253890bfc5b7ff7e63c80b57",
+   "bytes": 113415,
+   "gzip_bytes": 19946
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/M0/fuzz50-base-41ed360fb-01/matrix.json",
+   "archive": "experiments/runtime-parity-3-20261009/M0/fuzz50-base-41ed360fb-01/matrix.json.gz",
+   "raw_sha256": "cb00adfc9a6b6a1b5384055db9d4e6e2b83ac072074770dd6dd90c1604f1da95",
+   "gzip_sha256": "a70eee27811c60461af6f112f9413f09c06817722f07a89853bc76da6a71f041",
+   "bytes": 29007,
+   "gzip_bytes": 2203
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/U2/fuzz-cd-20261010/matrix.json",
+   "archive": "experiments/runtime-parity-3-20261009/U2/fuzz-cd-20261010/matrix.json.gz",
+   "raw_sha256": "3d463d9d45887a0d5e27868045ae7043f57e3a3469f60b70677467b024011728",
+   "gzip_sha256": "5c8be9607d9dd7eda83500481e60ae975b9985b64b71d9d113c341289a70fdb3",
+   "bytes": 28211,
+   "gzip_bytes": 2168
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/S2/s2-final-02-fuzz/matrix.json",
+   "archive": "experiments/runtime-parity-3-20261009/S2/s2-final-02-fuzz/matrix.json.gz",
+   "raw_sha256": "d6bb5644b5cbc369315359135bca85fdb5c0c02b857244fdd9105a3a5fd33948",
+   "gzip_sha256": "5106f40de807cecf0af94f63083e4800b127069a1173fa7ec0519c3e1cae3793",
+   "bytes": 28176,
+   "gzip_bytes": 2178
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/R/fuzz-final-02/matrix.json",
+   "archive": "experiments/runtime-parity-3-20261009/R/fuzz-final-02/matrix.json.gz",
+   "raw_sha256": "5a41300dc1fb0ac0497ec2b79528a142958a397779053124b263a0690e43c2d7",
+   "gzip_sha256": "103b7594dfdb92fce03b25963d7822359590fb6a2c84c26d2b128c1a3476870e",
+   "bytes": 28099,
+   "gzip_bytes": 2167
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/gates-merge-u2-01/fuzz/matrix.json",
+   "archive": "experiments/runtime-parity-3-20261009/X/gates-merge-u2-01/fuzz/matrix.json.gz",
+   "raw_sha256": "a74727d308d9e62772aab9d36919543a2af3f403555564b03e85a083e8b5bb42",
+   "gzip_sha256": "7490b92d135859342597fdf3d96c49592899a0938bc0ae35f2408c37315ddb90",
+   "bytes": 29090,
+   "gzip_bytes": 2210
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/fuzz/matrix.json",
+   "archive": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-01/fuzz/matrix.json.gz",
+   "raw_sha256": "631969f3163382e1273c0fe5b2f8093bc08b14f8626bff64f35939f2a61b02a9",
+   "gzip_sha256": "02fa4739e1f3ddedb3a0f6a12193649d9cd43bab12c679b8c7393ad9784c8ead",
+   "bytes": 29135,
+   "gzip_bytes": 2214
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-02/fuzz/matrix.json",
+   "archive": "experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-02/fuzz/matrix.json.gz",
+   "raw_sha256": "d33a0fe72d67c27f3e1bccc466c597d008969a959895504c32f1974aaff46a13",
+   "gzip_sha256": "695e8c5d6acc7d864e76425be3e616789e6680d4e46aea3b8c182de9bf62c6cb",
+   "bytes": 29133,
+   "gzip_bytes": 2218
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/matrix.json",
+   "archive": "experiments/runtime-parity-3-20261009/X/gates-final/fuzz/matrix.json.gz",
+   "raw_sha256": "c0f8cdaecacaba75e8afc8437ade98cf37e63b497f5c27a2300f166391ba9934",
+   "gzip_sha256": "aa6170f4b5c0e17087f520a7bc301f662f1e25dd2337e137cec95e2df3433639",
+   "bytes": 29035,
+   "gzip_bytes": 2205
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "commit": "90982ff631b68f1a47e32e5919ba949510edba99",
+ "parents": [
+  "98e9467155c802d2bb7a4f41882dc9ee68b4304e",
+  "e9011d9c6513f63ae02881d0cfc8258c668e6b5e"
+ ],
+ "log": ".tmp/rp3/main-e901-commit-admitted.log",
+ "log_sha256": "12c01be3c5ff8fb68fa02f3bdcdcdadc2abbfe5be459c033a5241f501907ad4b",
+ "complete_log": "guardian: run-all: whole-tree run \u2014 blocking gate run (commit/CI enforces the whole-tree guarantee)\nguardian: file-size: 16 finding(s) \u2014 report-only (--verbose for detail)\nguardian: function-length: 21 finding(s) \u2014 report-only (--verbose for detail)\nguardian: line-length: 9137 finding(s) \u2014 report-only (--verbose for detail)\nguardian: abi-layout: 2 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 88 check(s) passed\n[codex/runtime-parity-3 90982ff63] Merge main frontend demand reuse into runtime parity wave 3\n",
+ "blocking_checks_passed": 88,
+ "report_only_findings": {
+  "file-size": 16,
+  "function-length": 21,
+  "line-length": 9137,
+  "abi-layout": 2
+ },
+ "admission": "scripts/build-slot.sh build; static whole-tree Guardian commit hook passed. Full repository qualification separately uses the gate slot."
+}

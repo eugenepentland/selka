@@ -96,7 +96,7 @@ test "a counting build records copies, count updates, uniqueness tests and memor
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const plain = try counted(a, root, "counters.my", &.{}, &.{});
-    const debug = try counted(a, root, "counters.my", &.{"--counters"}, &.{});
+    const debug = try counted(a, root, "counters.my", &.{ "--counters", "--unoptimized" }, &.{});
     try std.testing.expectEqualStrings("100 101 4\n", plain.stdout);
     try std.testing.expectEqualStrings(plain.stdout, debug.stdout);
     try std.testing.expectEqualStrings(plain.stderr, debug.stderr);
@@ -272,7 +272,7 @@ test "a counting build counts each bounds, overflow, division and shift check it
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const plain = try counted(a, root, "counters_checks.my", &.{}, &.{});
-    const debug = try counted(a, root, "counters_checks.my", &.{"--counters"}, &.{});
+    const debug = try counted(a, root, "counters_checks.my", &.{ "--counters", "--unoptimized" }, &.{});
     try std.testing.expectEqualStrings("25\n", plain.stdout);
     try std.testing.expectEqualStrings(plain.stdout, debug.stdout);
     try std.testing.expectEqual(plain.status, debug.status);

@@ -1,0 +1,72 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/eda-src/src/main.my",
+ "name": "eda-labstation",
+ "cases": {
+  "labstation": {
+   "args": [
+    "--model",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation/model.sexp",
+    "--project-dir",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "--out-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/counterfactuals-v2/eda-output-labstation"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 736076344,
+      "cycles": 199246074,
+      "branch-misses": 627082,
+      "L1-dcache-load-misses": 1866397
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 736076230,
+      "cycles": 204364795,
+      "branch-misses": 629278,
+      "L1-dcache-load-misses": 1861429
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "norc": {
+     "median": {
+      "instructions": 29429287,
+      "cycles": 10199888,
+      "branch-misses": 39344,
+      "L1-dcache-load-misses": 55692
+     },
+     "status": -6,
+     "output_matches_real": false,
+     "llvm_lines_changed": 50206
+    },
+    "checks+norc": {
+     "median": {
+      "instructions": 28427002,
+      "cycles": 10297541,
+      "branch-misses": 39057,
+      "L1-dcache-load-misses": 56946
+     },
+     "status": -6,
+     "output_matches_real": false,
+     "llvm_lines_changed": 53508
+    },
+    "reference-inline": {
+     "median": {
+      "instructions": 703983872,
+      "cycles": 187935405,
+      "branch-misses": 612874,
+      "L1-dcache-load-misses": 1917781
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    }
+   }
+  }
+ }
+}

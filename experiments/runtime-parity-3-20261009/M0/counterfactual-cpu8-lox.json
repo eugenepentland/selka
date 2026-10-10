@@ -1,0 +1,312 @@
+{
+ "program": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/lox/ports/mylang/main.my",
+ "name": "lox",
+ "cases": {
+  "vm/invocation": {
+   "args": [
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/counterfactuals-v2/scripts/vm-invocation.lox"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 59442159416,
+      "cycles": 16561905471,
+      "branch-misses": 1887264,
+      "L1-dcache-load-misses": 70230000
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 59442158701,
+      "cycles": 15711563778,
+      "branch-misses": 1742921,
+      "L1-dcache-load-misses": 57959792
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "norc": {
+     "median": {
+      "instructions": 39335185871,
+      "cycles": 10095628924,
+      "branch-misses": 1607166,
+      "L1-dcache-load-misses": 6479462
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2125
+    },
+    "checks+norc": {
+     "median": {
+      "instructions": 33803167694,
+      "cycles": 7567000918,
+      "branch-misses": 1554194,
+      "L1-dcache-load-misses": 3597574
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2697
+    }
+   }
+  },
+  "vm/fib": {
+   "args": [
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/counterfactuals-v2/scripts/vm-fib.lox"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 31013996741,
+      "cycles": 5659276982,
+      "branch-misses": 11929173,
+      "L1-dcache-load-misses": 23486
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 31013996644,
+      "cycles": 5766953070,
+      "branch-misses": 11899914,
+      "L1-dcache-load-misses": 25869
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "norc": {
+     "median": {
+      "instructions": 23170579347,
+      "cycles": 4525311534,
+      "branch-misses": 9944657,
+      "L1-dcache-load-misses": 17889
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2125
+    },
+    "checks+norc": {
+     "median": {
+      "instructions": 20448474874,
+      "cycles": 4087827649,
+      "branch-misses": 9013365,
+      "L1-dcache-load-misses": 14710
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2697
+    }
+   }
+  },
+  "vm/method_call": {
+   "args": [
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/counterfactuals-v2/scripts/vm-method_call.lox"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 51710664754,
+      "cycles": 13171449868,
+      "branch-misses": 3151788,
+      "L1-dcache-load-misses": 1694858
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 51710662528,
+      "cycles": 9693923786,
+      "branch-misses": 3323086,
+      "L1-dcache-load-misses": 299435
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "norc": {
+     "median": {
+      "instructions": 35581698714,
+      "cycles": 7733885253,
+      "branch-misses": 3332285,
+      "L1-dcache-load-misses": 423355
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2125
+    },
+    "checks+norc": {
+     "median": {
+      "instructions": 30171340676,
+      "cycles": 5957358210,
+      "branch-misses": 3080511,
+      "L1-dcache-load-misses": 168774
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2697
+    }
+   }
+  },
+  "vm/string_equality": {
+   "args": [
+    "--engine=vm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/counterfactuals-v2/scripts/vm-string_equality.lox"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 31489071619,
+      "cycles": 4771885379,
+      "branch-misses": 283966,
+      "L1-dcache-load-misses": 8063887
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 31489072775,
+      "cycles": 7523310199,
+      "branch-misses": 547704,
+      "L1-dcache-load-misses": 11201745
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "norc": {
+     "median": {
+      "instructions": 31266738422,
+      "cycles": 4699292390,
+      "branch-misses": 250112,
+      "L1-dcache-load-misses": 1725214
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2125
+    },
+    "checks+norc": {
+     "median": {
+      "instructions": 25544428586,
+      "cycles": 3967427835,
+      "branch-misses": 320375,
+      "L1-dcache-load-misses": 1276134
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2697
+    }
+   }
+  },
+  "tree/equality": {
+   "args": [
+    "--engine=tree",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/counterfactuals-v2/scripts/tree-equality.lox"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 7021840719,
+      "cycles": 1188054390,
+      "branch-misses": 747772,
+      "L1-dcache-load-misses": 617812
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 7021840673,
+      "cycles": 1194963592,
+      "branch-misses": 744329,
+      "L1-dcache-load-misses": 623008
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "norc": {
+     "median": {
+      "instructions": 4021228006,
+      "cycles": 710952718,
+      "branch-misses": 340066,
+      "L1-dcache-load-misses": 448362
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2125
+    },
+    "checks+norc": {
+     "median": {
+      "instructions": 3583914357,
+      "cycles": 731531098,
+      "branch-misses": 321686,
+      "L1-dcache-load-misses": 457249
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2697
+    }
+   }
+  },
+  "tree/string_equality": {
+   "args": [
+    "--engine=tree",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/counterfactuals-v2/scripts/tree-string_equality.lox"
+   ],
+   "variants": {
+    "real": {
+     "median": {
+      "instructions": 10042526978,
+      "cycles": 1708037938,
+      "branch-misses": 1452692,
+      "L1-dcache-load-misses": 28570868
+     },
+     "status": 0,
+     "output_matches_real": true
+    },
+    "base": {
+     "median": {
+      "instructions": 10042526927,
+      "cycles": 1712817773,
+      "branch-misses": 1518417,
+      "L1-dcache-load-misses": 28737313
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 0
+    },
+    "norc": {
+     "median": {
+      "instructions": 5007911985,
+      "cycles": 819806379,
+      "branch-misses": 44706,
+      "L1-dcache-load-misses": 25567052
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2125
+    },
+    "checks+norc": {
+     "median": {
+      "instructions": 4544485580,
+      "cycles": 891020115,
+      "branch-misses": 39444,
+      "L1-dcache-load-misses": 25748839
+     },
+     "status": 0,
+     "output_matches_real": true,
+     "llvm_lines_changed": 2697
+    }
+   }
+  }
+ }
+}

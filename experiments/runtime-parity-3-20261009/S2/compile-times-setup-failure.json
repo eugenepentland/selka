@@ -1,0 +1,7 @@
+{
+ "status": "setup failure before any timed build",
+ "reason": "The prepared baseline binaries did not seed this worktree\u2019s compiler-hash runtime directory. The runtime-only copy assertion rejected an empty seed. Warm the baseline runtime via untimed EDA/Lox builds, then rerun unchanged fresh-cache helper.",
+ "log": ".tmp/rp3/s2-final-02-compile-times.log",
+ "log_sha256": "c8bf31acc76dc1cd474d7e2b43d322707feed3fb6f75f96e08c48a44e7f535ba",
+ "preserved_setup": ".mylang-cache/rp3/s2-compile-times-empty-seed"
+}

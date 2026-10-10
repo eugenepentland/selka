@@ -1,0 +1,11 @@
+{
+ "incoming_main": "1ab0d92e7a7120abaffba358933d8401b953251a",
+ "prior_integration": "ccaa648f6",
+ "conflicts": {
+  "src/core/own.zig": "Incoming main plus exactly two accepted U2 changes: borrow_fields on persistent allocator and original-owner clearThrough cutoff.",
+  "src/core/passes.zig": "Incoming main plus split_views between whitespace/slice fusions in prepareOptimizer and overflow_edges after index_checks in finalFunctions."
+ },
+ "review": "U2/S2 review source compatibility and coordinator inspects diff against main. No further source edits identified at merge time. Full gates are still pending.",
+ "frozen_m0_base": "41ed360fb361c49938488ad111795bad8a726b73",
+ "completed_lane_branches_unchanged": true
+}

@@ -409,17 +409,31 @@ static void block_free(myl_block *block) {
 
 /* ---- element layouts ---------------------------------------------------------
  * Where the blocks inside one element (or a box's value) are, as the emitter
- * writes them (`@myl.layout.N`, an i32 array):
+ * writes them (`@myl.layout.N`, an i32 array prefix):
  *   [0] element size in bytes, [1] reference count R, [2] guard count G,
  *   then R pairs {offset, guard}: an 8-byte block pointer (null allowed) at
  *   `offset`, counted only when guard `guard` holds (0: always; else 1-based),
  *   then G triples {offset, value, parent}: the 8-byte union tag word at
  *   `offset` equals `value`, and guard `parent` holds too (0: none).
+ * Generated layouts store -(G + 1) at [2] and append aligned callback pointers
+ * (whole element, dictionary key, dictionary value) after the same pairs/triples.
+ * Nonnegative [2] is the legacy interpreted layout, used by C-created blocks.
  * A union's payload references are guarded by its tag, so an integer in a
  * payload word is never taken for a pointer. */
 typedef const int32_t myl_layout;
 
 static myl_layout *layout_of(const myl_block *block) { return (myl_layout *)(intptr_t)block->reserved; }
+
+/* NEW-CORE-U2-RELEASE-1: specialized walks keep count operations in the runtime. */
+typedef void (*core_layout_release)(const unsigned char *, void *);
+static core_layout_release layout_release(myl_layout *layout, unsigned part) {
+    if (!layout || layout[2] >= 0) return NULL;
+    size_t words = 3 + 2 * (size_t)layout[1] + 3 * (size_t)(-(int64_t)layout[2] - 1);
+    size_t offset = (words * sizeof(int32_t) + sizeof(void *) - 1) & ~(sizeof(void *) - 1);
+    core_layout_release release;
+    memcpy(&release, (const unsigned char *)layout + offset + part * sizeof release, sizeof release);
+    return release;
+}
 
 static bool guard_holds(myl_layout *layout, const unsigned char *element, int32_t guard) {
     myl_layout *guards = layout + 3 + 2 * layout[1];
@@ -703,6 +717,7 @@ myl_block *myl_core_box_new(int64_t size) {
    Each occurrence is visited, including aliases; guards exclude inactive arms. */
 typedef void (*core_child_visitor)(myl_block *, void *);
 static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context);
+__attribute__((always_inline)) static inline void core_release_child(myl_block *child, void *context);
 static void core_dict_finalize(myl_block *dict);
 static void core_task_finalize(myl_block *block);
 static void core_tasks_quiesce(void);
@@ -718,10 +733,24 @@ __attribute__((always_inline)) static inline void core_children(myl_block *block
     }
     if (kind == MYL_KIND_STR || kind == MYL_KIND_BYTES) return;
     myl_layout *layout = layout_of(block);
-    if (!layout) return;
+    if (!layout || layout[1] == 0) return;
+    /* A guardless pointer list needs no per-element indirect callback. The
+       ordinary child release still handles null, shared and saturated counts. */
+    if (visit == core_release_child && kind == MYL_KIND_LIST &&
+        layout[0] == sizeof(myl_block *) && layout[1] == 1 &&
+        layout[2] == -1 && layout[3] == 0 && layout[4] == 0) {
+        for (int64_t i = 0; i < block->len; ++i) {
+            myl_block *child;
+            memcpy(&child, block_data(block) + i * sizeof child, sizeof child);
+            core_release_child(child, context);
+        }
+        return;
+    }
+    core_layout_release release = visit == core_release_child ? layout_release(layout, 0) : NULL;
     int64_t count = element_count(block);
     for (int64_t i = 0; i < count; ++i) {
         const unsigned char *element = block_data(block) + i * (int64_t)layout[0];
+        if (release) { release(element, context); continue; }
         for (int32_t r = 0; r < layout[1]; ++r) {
             myl_block *child = reference_at(layout, element, r);
             if (child) visit(child, context);
@@ -735,6 +764,12 @@ __attribute__((always_inline)) static inline void core_release_child(myl_block *
         child->cap = (int64_t)(intptr_t)*pending;
         *pending = child;
     }
+}
+
+/* The generated walk calls this boundary; count_release remains authoritative
+   for plain, shared and saturated blocks, including null children. */
+void myl_core_release_child_pending(myl_block *child, void *context) {
+    core_release_child(child, context);
 }
 
 __attribute__((cold)) void myl_core_free_block(myl_block *block) {
