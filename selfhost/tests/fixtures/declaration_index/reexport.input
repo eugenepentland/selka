@@ -1,0 +1,5 @@
+import helper
+export helper.value
+
+func main() -> int:
+    return helper.value()

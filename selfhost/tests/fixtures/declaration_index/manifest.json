@@ -1,0 +1,26 @@
+{
+  "duplicate.my": {
+    "status": 1,
+    "code": "E_DUPLICATE_SYMBOL"
+  },
+  "alias_conflict.my": {
+    "status": 1,
+    "code": "E_IMPORT_ALIAS"
+  },
+  "reexport.my": {
+    "status": 0
+  },
+  "private_access.my": {
+    "status": 1,
+    "code": "E_PRIVATE_SYMBOL"
+  },
+  "domain_public.my": {
+    "status": 0
+  },
+  "domain_private.my": {
+    "status": 1
+  },
+  "reexport_identity.my": {
+    "status": 0
+  }
+}

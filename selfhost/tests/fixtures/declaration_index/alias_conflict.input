@@ -1,0 +1,7 @@
+import helper as value
+
+func value() -> int:
+    return 1
+
+func main() -> int:
+    return 0

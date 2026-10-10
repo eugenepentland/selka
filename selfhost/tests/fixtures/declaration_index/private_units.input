@@ -1,0 +1,3 @@
+domain Distance: i64:
+    func make(x: i64) -> Distance effects():
+        return wrap[Distance](x)

@@ -1,0 +1,7 @@
+import units
+
+public record Sample:
+    distance: units.Distance
+
+func main() -> int:
+    return 0

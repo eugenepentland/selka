@@ -1,0 +1,2 @@
+func hidden() -> int:
+    return 7

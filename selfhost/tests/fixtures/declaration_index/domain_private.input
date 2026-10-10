@@ -1,0 +1,7 @@
+import private_units
+
+public record Sample:
+    distance: private_units.Distance
+
+func main() -> int:
+    return 0

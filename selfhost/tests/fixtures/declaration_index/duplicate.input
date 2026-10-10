@@ -1,0 +1,9 @@
+# Unicode offsets: éλ
+func value() -> int:
+    return 1
+
+func value() -> int:
+    return 2
+
+func main() -> int:
+    return value()
