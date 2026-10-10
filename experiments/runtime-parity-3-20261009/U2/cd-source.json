@@ -1,0 +1,46 @@
+{
+ "source_commit": "4661eb368f949e44e43dc39954bac7e75aef9770",
+ "files": {
+  "SPEC.md": "a72541581db5a4a4f9def6e6083854f37288996905659277a778a8a6f1ce6095",
+  "src/core/borrow_fields.zig": "04ef3364671ddbd3c00908cd1395239ca3804ac2ae1d92474b42fcc29811b9f3",
+  "src/core/emit_llvm.zig": "197280bca09d7cbbec7c40d9de04fc909670fcb6a75d5caa6525f251fa3d3947",
+  "src/core/emit_release.zig": "8ba9df5ce7f2590463a3a2773287430f47eb04236dd8988b06ae4eaebfdca64e",
+  "src/core/inline_cfg.zig": "ef847471d827de5681ad3fe60335deb33cf410a98695b6894f683d9b16939d73",
+  "src/core/overflow_edges.zig": "6104b3ae47c382d5261480b5c1c47a3e664b2311fbb9a5060b4276ff0f4cab2b",
+  "src/core/own.zig": "b7018ee71125ac62a0196c1881d22e3b1ed01b977234c6d1fc569c2938e408a1",
+  "src/core/own_test.zig": "9a506f0f4e8bfb688d8978f3b75379d541286c40b90db575afeb418eccc31d7c",
+  "src/core/passes.zig": "6ddaa98816a5f6ede3a9e0991dd4392dbd095a2922a931d5a5c695926470eb9b",
+  "src/core/runtime/core_dict.c": "8d734ff1e582b976f8390a9d5e2ea20a0d3a5483f588fefdd7fb9b5cf21f1cc8",
+  "src/core/runtime/core_rt.c": "11dca407627d4c6d89215bf98d3329cf3850a553bb5478b814479ec387d348b7",
+  "src/core/u2_test.zig": "7b452dc18748b763209b3c07b3030f2a9221385629e37b281cbad4b110b32133"
+ },
+ "focused_tests": {
+  "passed": 13,
+  "failed": 0,
+  "modes": [
+   "debug",
+   "release",
+   "release --verify-facts",
+   "--optimize-debug",
+   "--optimize-debug --verify-facts"
+  ],
+  "raw_log": ".mylang-cache/u2/test-lifetime.log",
+  "log_sha256": "e0d24461ca81e41498735892b70d001efa41dc165c1c156ff818badc42c2533e"
+ },
+ "guardian": {
+  "checks": 88,
+  "passed": true
+ },
+ "frame_lifetime_diagnostic": {
+  "source": ".mylang-cache/u2/frame.my",
+  "source_sha256": "41ed531d5e01b0d7e2c6a53717b19406b5435dddd6289e7565b8e5a4ccd83a3a",
+  "comparative_receipt": "frame-probe.json",
+  "cause": "Taking.clearThrough used the later record holder definition as its reachability cutoff, hiding live forwarded borrows after that definition and transferring the original frames count too early.",
+  "fix": "Use the original record definition as traversal cutoff for every preserving holder. Native snapshot regression now passes every build kind.",
+  "failed_checkpoint_statuses": {
+   "M0": 0,
+   "u2a": -11,
+   "u2cd_before_fix": -11
+  }
+ }
+}

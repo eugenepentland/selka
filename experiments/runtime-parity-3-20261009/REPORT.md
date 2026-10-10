@@ -1,12 +1,14 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0 complete. U2, S2 and R are running in parallel; X preparation is in progress.
+Status: M0, U2 and S2 complete. R is finishing qualification. X has begun with the real U2 merge; its merged-tree gates are pending.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
 Final head: pending X.
 
 ## Progress
+
+Historical checkpoints are retained below; the current state is stated above.
 
 - Launch: read the complete wave-3 plan, parity-plan §§2/6/8, PM report, F1/S1/F2/U1 reports, FU-X and FU-PORT reports.
 - M0 setup: created an isolated worktree from current main; all existing user changes remain in the original checkout.
@@ -69,6 +71,11 @@ Final head: pending X.
 - U2 raw/additive qualification is validated: raw 1516/4/0 in both modes with the exact 12 baseline PROBLEM lines, additive 1547/0/0 in both, and 613 passing core tests in each 64-shard run. S2 raw qualification also exactly matches M0 with 613 core tests; additive is underway. U2's frozen 9×50 matrix is queued. Preliminary U2/S2 merge-tree inspection finds no textual conflicts; no real merge has occurred.
 
 - Pre-integration identity audit checks all 683 frozen copied corpus files in the coordinator and each lane: all four copies exactly match M0. Integration qualification now checks the manifest and every listed file before and after each merged-tree run.
+
+- U2 hand-off accepted at `6f5aad8fe58c6f50c6e8d64af866f12612122faa`, with production/qualified source `4661eb368f949e44e43dc39954bac7e75aef9770`. All required lane gates pass, including the final 450 frozen cases, 6,450 native comparisons and 8,900 native runs. Debug compiler SHA is fcd73ffa3936733621f6e885043e17f8087d13007b61cdc1c5255d40e267a0c0; ReleaseFast is 539ff575ccb47504d5d6cb65903797835bb5d805f88aeba47c638d3b280f8083. `U2/handoff.json` and `U2/exit.json` distinguish met counter exits from unmet frame/profile targets and pending binding X timing.
+- S2 hand-off accepted at `04c1f88807def016245a20140a57506ad8425ec0`, with production source `73ee7212a0bf300c002fad95b60e822094b42f74` and qualified source `5977fe4bdf72ec37ee0c6c624eddcd45160d574d`. All lane gates pass, including 450 frozen cases with source/oracles unchanged. Later commits contain evidence only. `S2/final-validation.json` and `S2/final-metrics.json` retain exact compiler, gate and exit identities; S2 waits for its prescribed merge after U2's integration checks.
+- R's final repository plus formatting run passes 97/97 steps and 2,334 tests. Its isolated payload prototype adds 0.8136% EDA instructions over the ordinary-return candidate with the same R1/R2 changes; P6 stays unchanged and record-copy bytes grow 30.70%. Raw/additive conformance and frozen fuzz remain before hand-off.
+- X first real merge: integrate qualified U2 with both parent histories preserved and no textual conflicts. Completed U2 command journals are summarized by the same strict tool used for M0; exact raw data remains in owned cache. `qualify_tree.py --tag merge-u2-01` will run the full merged-tree checks, including 9×200 frozen cases. No merged-tree passing result or CPU-10 result is claimed yet.
 
 ## Lane exits at current checkpoints
 

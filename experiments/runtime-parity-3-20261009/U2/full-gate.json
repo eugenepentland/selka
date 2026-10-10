@@ -1,0 +1,12 @@
+{
+ "source_commit": "4661eb368f949e44e43dc39954bac7e75aef9770",
+ "command": "scripts/build-slot.sh gate zig build test --summary all",
+ "status": 0,
+ "summary": "Build Summary: 95/95 steps succeeded; 2336/23933 tests passed (21597 skipped)",
+ "log_sha256": "9e3ea60c0efdd22520bd608a88fcdb61785cd36adcbbd55374ef4901557fe2b7",
+ "log": "full-test-cd.log.gz",
+ "passed": 2336,
+ "core_tests": 613,
+ "skipped": 21597,
+ "skip_reason": "Core shards route the same test catalogue to one of eight runners."
+}

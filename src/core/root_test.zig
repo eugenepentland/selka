@@ -70,6 +70,7 @@ comptime {
     _ = @import("ce2_results_test.zig");
     _ = @import("f1_facts_test.zig");
     _ = @import("u1_state_test.zig");
+    _ = @import("u2_test.zig");
     _ = @import("f2_index_test.zig");
     _ = @import("trace_test.zig");
     _ = @import("s2_ir_test.zig");

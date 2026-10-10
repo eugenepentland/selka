@@ -176,7 +176,8 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
         result.per_function[index].own = try own.function(arena, module, function, .{ .verify = verify, .facts = &known, .provenance = &result.provenance, .function_index = @intCast(index), .effects = &summaries });
         result.own.add(result.per_function[index].own);
         // Checks a dominating check already made, among them those ownership split (NEW-CORE-F2-INDEX-3).
-        const covered = try index_checks.run(arena, function, &known, sabotage == .index);
+        const covered = try index_checks.run(arena, function, &known, sabotage == .index) +
+            try @import("overflow_edges.zig").run(arena, function);
         result.counts.proven += covered;
         result.per_function[index].counts.proven += covered;
         // Scalar fields a loop carries in a record stay in SSA values (NEW-CORE-U1-STATE-1).

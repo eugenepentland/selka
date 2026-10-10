@@ -1,0 +1,61 @@
+{
+ "method": "Completed command journal retained in owned cache; matrix.json retains every family's native comparison and qualification totals. No failed or incomplete run is compacted.",
+ "command_count": 1100,
+ "source_paths": 50,
+ "counts": [
+  {
+   "role": "debug",
+   "building": false,
+   "status": "0",
+   "count": 150
+  },
+  {
+   "role": "debug",
+   "building": true,
+   "status": "0",
+   "count": 50
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "0",
+   "count": 450
+  },
+  {
+   "role": "old",
+   "building": true,
+   "status": "0",
+   "count": 50
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "0",
+   "count": 150
+  },
+  {
+   "role": "release",
+   "building": true,
+   "status": "0",
+   "count": 50
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "0",
+   "count": 150
+  },
+  {
+   "role": "verify",
+   "building": true,
+   "status": "0",
+   "count": 50
+  }
+ ],
+ "uncompressed_bytes": 734972,
+ "uncompressed_sha256": "b53ac37d97a28dac396fb3c2c714aeff8bd23dcc90f8d0474150d756c84683aa",
+ "gzip_sha256": "ea8d901ba1542d8eba14be7d0be7d2ddb08d3fc8f93edff85f29fef7a01aebf1",
+ "raw_scratch": ".mylang-cache/rp3/fuzz-journals/U2/fuzz-cd-20261010/rc/commands.jsonl.gz",
+ "worker_qualified": true,
+ "native_complete": true
+}

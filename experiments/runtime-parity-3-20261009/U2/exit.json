@@ -1,0 +1,116 @@
+{
+ "source_commit": "4661eb368f949e44e43dc39954bac7e75aef9770",
+ "read_constant": {
+  "exit_met": true,
+  "base_retain_per_execution": 3,
+  "base_release_per_execution": 3,
+  "candidate_retain_per_execution": 0,
+  "candidate_release_per_execution": 0,
+  "vm_cells_checked": 37,
+  "executions": 986053806,
+  "receipt": "read-constant-all.json"
+ },
+ "frame_copy": {
+  "exit_met": false,
+  "required_reduction": 0.8,
+  "measured_reduction": 0.0,
+  "invocation_bytes": 10080000224,
+  "method_call_bytes": 4853334440,
+  "receipts": [
+   "cd-counts.json",
+   "frame-analysis.json"
+  ],
+  "blocker": "Every live 88-byte frame reload feeds an owning retain and whole-record phi; the 48-byte construction operand precedes destination checks and detach/release. Fieldwise loop SSA with lifetime proofs or a deferred destination ABI is required."
+ },
+ "allocation_release": {
+  "method": "Matched CPU8 LBR instruction-event profiles, 40 repeats per binding design. Union attribution counts one sampled period once, including inlined allocator/destructor family and generated callbacks. Lower bounds exceed 15%, so the exit is definitely unmet.",
+  "designs": {
+   "labstation": {
+    "base_share_lower_bound": 0.2582673970379387,
+    "candidate_share_lower_bound": 0.21707354999222517,
+    "exit_maximum": 0.15,
+    "exit_met": false
+   },
+   "rds3+flat": {
+    "base_share_lower_bound": 0.23544578640249694,
+    "candidate_share_lower_bound": 0.20172943452042325,
+    "exit_maximum": 0.15,
+    "exit_met": false
+   }
+  },
+  "remaining_lever": "Block allocation and iterative destruction still dominate. Reduce actual materialization/allocations using proved views or destination construction; specializing descriptor traversal alone cannot eliminate allocation or count primitive cost. Count primitives are unchanged.",
+  "references": [
+   "profile-base.json",
+   "profile-u2.json"
+  ]
+ },
+ "dispatch": {
+  "exit_met": true,
+  "receipt": "dispatch-ir.json",
+  "proof": "Identical checked arithmetic on all incoming edges; entry and changed-call checks remain."
+ },
+ "heap_peek": {
+  "exit_met": true,
+  "remaining_calls_in_vm_run": 0,
+  "receipt": "dispatch-ir.json",
+  "checks": "Full checked CFG retained, with negative-index and bounds-trap fixtures."
+ },
+ "instruction_gate": {
+  "exit_met": true,
+  "cells": 151,
+  "regressions": [],
+  "receipt": "instructions.json.gz"
+ },
+ "compile_time": {
+  "over_10_percent_regression": false,
+  "ratios": {
+   "lox": {
+    "wall_seconds": 0.9428686809980207,
+    "cpu_seconds": 0.943300057174029
+   },
+   "eda": {
+    "wall_seconds": 1.0052351467317393,
+    "cpu_seconds": 1.0050949705568142
+   }
+  },
+  "receipt": "compile-times.json"
+ },
+ "cpu8_groups": {
+  "lox/vm": {
+   "cells": 13,
+   "instruction_geomean": 0.912444690586644,
+   "cycles_geomean": 0.8748301659086409
+  },
+  "lox/tree": {
+   "cells": 13,
+   "instruction_geomean": 0.9900010058174513,
+   "cycles_geomean": 1.091481918057005
+  },
+  "eda": {
+   "cells": 34,
+   "instruction_geomean": 0.9281556870204616,
+   "cycles_geomean": 0.9325497026624324
+  },
+  "parity": {
+   "cells": 45,
+   "instruction_geomean": 0.9954823968717041,
+   "cycles_geomean": 0.987871015976231
+  },
+  "rows": {
+   "cells": 46,
+   "instruction_geomean": 0.9881979610881874,
+   "cycles_geomean": 0.9771055039706414
+  }
+ },
+ "cpu10_binding": {
+  "status": "Assigned to coordinator X on final integrated tree; not measured as a separate lane session.",
+  "final_base_maximum": {
+   "lox/vm/invocation": 0.8031931535551076,
+   "lox/vm/fib": 0.8638355950460194,
+   "lox/vm/method_call": 0.8163971531687219,
+   "lox/tree/equality": 0.7619299220862763,
+   "eda_geomean": 0.93
+  },
+  "joint_vm_zig_rs_maximum": 1.5
+ }
+}
