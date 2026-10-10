@@ -219,6 +219,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     const module = &prepared.module;
     if (prepared.lazy) |state| state.input.module = module;
     const caches: StageContext = .{
+        .frontend = try build_replay.validate(context),
         .storage = if (options.show.verify_cache) null else &storage,
         .io = init.io,
         .lanes = @import("unit_cache.zig").width(init.environ_map, module.functions.items.len),
@@ -385,9 +386,10 @@ fn linkEmittedCached(init: std.process.Init, module: *ir.Module, unit: Unit, opt
     const allocator = init.arena.allocator();
     const stages = cache.metrics;
     const emission = try emittedCached(.{ .result = allocator, .scratch = init.gpa }, module, unit, options, cache, report);
+    if (cache.frontend) |captured_frontend| try language.frontend_runtime.revalidate(allocator, .{ .io = init.io, .environ = init.environ_map }, captured_frontend);
     if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = emission.whole.? }) catch return error.WriteFailed;
     const native_start = stage_metrics.now(init.io);
-    var outcome = driver.linkWithScratch(allocator, init.gpa, init.io, init.environ_map, .{
+    var outcome = driver.linkVerified(.{ .arena = allocator, .backing = init.gpa, .io = init.io, .environ = init.environ_map, .frontend = cache.frontend }, .{
         .zig = options.zig,
         .work = options.cache,
         .output = options.output,
@@ -423,7 +425,7 @@ pub fn emittedWithScratch(allocator: std.mem.Allocator, scratch: std.mem.Allocat
     return emittedCached(.{ .result = allocator, .scratch = scratch }, module, unit, options, null, report);
 }
 
-const StageContext = struct { storage: ?*stage_store.Store, io: std.Io, lanes: usize, metrics: *stage_metrics.Report, demand: ?*@import("demand_ir.zig").Context = null };
+const StageContext = struct { storage: ?*stage_store.Store, io: std.Io, lanes: usize, metrics: *stage_metrics.Report, demand: ?*@import("demand_ir.zig").Context = null, frontend: ?language.frontend_runtime.Verified = null };
 
 const Memory = struct { result: std.mem.Allocator, scratch: std.mem.Allocator };
 

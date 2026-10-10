@@ -148,6 +148,11 @@ pub fn settingsKey(context: Context, tool: tool_identity.Identity) Error!Digest 
     return digest;
 }
 
+/// Reauthenticate the producer captured in build flags before emission or publication.
+pub fn validate(context: Context) Error!language.frontend_runtime.Verified {
+    return boundary(context);
+}
+
 /// Capture verified frontend authority alongside build flags without retaining artifact paths.
 pub fn bindFlags(a: std.mem.Allocator, bytes: []const u8, runtime: language.frontend_runtime.Runtime) Error![]const u8 {
     const verified = try language.frontend_runtime.verify(a, runtime);

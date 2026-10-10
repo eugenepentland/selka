@@ -116,8 +116,11 @@ requires no Python. `MYLANG_LEXER_MODE=reference` (the default) uses the native
 lexer; `MYLANG_LEXER_MODE=shadow mylang dump-tokens FILE --diagnostics=json`
 executes the independently qualified component, compares the result, and renders
 the reference tokens or original diagnostic records. Messages, migration fixes,
-and captured-name withholding remain exactly native. `component` and unknown
-modes are refused: this is adoption preparation, not direct production adoption.
+and captured-name withholding remain exactly native. Explicit `component` mode
+uses validated producer tokens directly on success. Lexical failures use native
+diagnostic enrichment after matching the producer error code and span. Unknown
+modes are refused; reference remains the default. Frontend cache and publication
+boundaries authenticate producer identities before reuse and after computation.
 `MYLANG_COMPONENT_DIR` selects the installed manifests. Host launch verifies the
 manifest/schema and artifact SHA-256, seals those verified bytes in a Linux
 memfd, captures at most 3,148,884 reply bytes and 65,536 stderr bytes, and races

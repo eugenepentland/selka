@@ -15,6 +15,7 @@
 //! A minimal driver rather than the old core's `qbe_build_llvm_compile.zig`:
 //! that one is bound to the QBE manifest, fragment store and object cache.
 const std = @import("std");
+const frontend_runtime = @import("mylang").frontend_runtime;
 const target_policy = @import("target.zig");
 const target = target_policy.current;
 const number_runtime = @import("number_runtime.zig");
@@ -54,7 +55,7 @@ pub const Request = struct {
 };
 
 /// Why a native build failed; the tool's output was written to `log`.
-pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed, CacheMiss };
+pub const Error = frontend_runtime.HostError || error{ ToolFailed, WriteFailed, CacheMiss };
 
 /// What one build did, for `--cache-report` and the tests.
 pub const Counts = struct {
@@ -95,9 +96,12 @@ pub fn wholeUnit(llvm: []const u8) emit_units.Unit {
 const Guard = struct {
     resources: tool_identity.Request,
     identity: tool_identity.Identity,
+    frontend: ?frontend_runtime.Verified = null,
+    frontend_environment: ?*const std.process.Environ.Map = null,
 
     /// Validate the captured tool before publishing a native object or accepting a link.
     pub fn check(self: Guard, log: *std.ArrayList(u8)) Error!void {
+        if (self.frontend) |captured_frontend| try frontend_runtime.revalidate(self.resources.arena, .{ .io = self.resources.io, .environ = self.frontend_environment orelse self.resources.environment }, captured_frontend);
         const stable = tool_identity.unchanged(self.resources, self.identity) catch |err| changed: {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             break :changed false;
@@ -140,6 +144,23 @@ pub fn link(allocator: std.mem.Allocator, io: std.Io, environ: *const std.proces
 
 /// Link with private worker arenas on a reclaiming thread-safe allocator.
 pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+    return linkConfigured(allocator, .{ .backing = backing }, io, environ, request, log);
+}
+/// Publication capabilities and the frontend generation that produced the input LLVM.
+pub const FrontendLink = struct {
+    arena: std.mem.Allocator,
+    backing: ?std.mem.Allocator,
+    io: std.Io,
+    environ: *const std.process.Environ.Map,
+    frontend: ?frontend_runtime.Verified,
+};
+/// Link checked frontend output while reauthenticating its producer before native publication.
+pub fn linkVerified(context: FrontendLink, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+    return linkConfigured(context.arena, .{ .backing = context.backing, .frontend = context.frontend }, context.io, context.environ, request, log);
+}
+const Publication = struct { backing: ?std.mem.Allocator = null, frontend: ?frontend_runtime.Verified = null };
+fn linkConfigured(allocator: std.mem.Allocator, publication: Publication, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
+    if (publication.frontend) |captured_frontend| try frontend_runtime.revalidate(allocator, .{ .io = io, .environ = environ }, captured_frontend);
     try validateLayout(allocator, environ, log);
     try validateSanitize(allocator, environ, log);
     const cwd = std.Io.Dir.cwd();
@@ -160,7 +181,16 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
     // unproved tool gets one, and it never writes the shared builds.
     if (!guest.cacheable) environment.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(allocator, &.{ staging, "global" })) catch return error.OutOfMemory;
     var outcome: Outcome = .{ .tool = guest };
-    const native: Native = .{ .arena = allocator, .io = io, .environment = &environment, .zig = guest.path, .log = log, .guard = .{ .resources = resources, .identity = guest }, .counts = &outcome.counts, .backing = backing };
+    const native: Native = .{
+        .arena = allocator,
+        .io = io,
+        .environment = &environment,
+        .zig = guest.path,
+        .log = log,
+        .guard = .{ .resources = resources, .identity = guest, .frontend = publication.frontend, .frontend_environment = environ },
+        .counts = &outcome.counts,
+        .backing = publication.backing,
+    };
     // Content-keyed objects are shared, so a fresh work directory (a new worktree,
     // a test's temporary directory) reuses them; an unproved tool keeps every
     // object private to this build.
@@ -376,6 +406,7 @@ fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool
 
 /// Copy a finished program to the requested output path (`copyOutput`).
 fn publishOutput(native: Native, program: []const u8, output: []const u8) Error!void {
+    try native.guard.check(native.log);
     copyOutput(native.io, program, output) catch |err| {
         try native.log.print(native.arena, "error: cannot write {s}: {s}\n", .{ output, @errorName(err) });
         return error.WriteFailed;
@@ -905,4 +936,27 @@ test "cost optimizationRemarks returns unknown for unwritable staging missing to
     try std.testing.expect(failed.yaml == null);
     try std.testing.expectEqual(@as(u32, 1), failed.processes);
     try std.testing.expect(failed.compile_ns > 0);
+}
+
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "Guard.check rejects changed frontend authority before output publication" {
+    var environment = std.process.Environ.Map.init(std.testing.allocator);
+    defer environment.deinit();
+    var log: std.ArrayList(u8) = .empty;
+    defer log.deinit(std.testing.allocator);
+    const guard: Guard = .{
+        .resources = .{ .arena = std.testing.allocator, .io = std.testing.io, .environment = &environment, .executable = "unused", .cache = "unused" },
+        .identity = undefined,
+        .frontend = .{ .identity = @splat(1) },
+    };
+    try std.testing.expectError(error.ComponentChanged, guard.check(&log));
+    try std.testing.expectEqual(@as(usize, 0), log.items.len);
+    var clone = try environment.clone(std.testing.allocator);
+    defer clone.deinit();
+    var mutation_guard = guard;
+    mutation_guard.frontend = .{};
+    mutation_guard.resources.environment = &clone;
+    mutation_guard.frontend_environment = &environment;
+    try environment.put("MYLANG_PARSER_MODE", "invalid");
+    try std.testing.expectError(error.ComponentMode, mutation_guard.check(&log));
 }

@@ -48,6 +48,11 @@ pub fn verify(a: std.mem.Allocator, runtime: ?Runtime) HostError!Verified {
     hash.final(&result);
     return .{ .identity = result, .reuse = reusable(runtime) };
 }
+/// Authenticate the same producer generation immediately before result publication.
+pub fn revalidate(a: std.mem.Allocator, runtime: ?Runtime, captured: Verified) HostError!void {
+    const current = try verify(a, runtime);
+    if (!std.mem.eql(u8, &current.identity, &captured.identity)) return error.ComponentChanged;
+}
 /// Lex with the selected boundary; absent runtime keeps pure native callers unchanged.
 pub fn lex(a: std.mem.Allocator, src: source.Source, sink: *diagnostic.Sink, runtime: ?Runtime) Error![]lexer.Token {
     return if (runtime) |capabilities| lex_boundary.lex(a, src, sink, capabilities) else lexer.lex(a, src.bytes, sink);
