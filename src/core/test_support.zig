@@ -16,7 +16,7 @@ const vector = @import("vector.zig");
 const report = std.debug.print;
 
 /// Everything checking, building or emitting a test program can fail with.
-pub const Error = language.diagnostic.Error || build.Error || emit_llvm.Error || verify_ir.Error;
+pub const Error = language.frontend_runtime.Error || build.Error || emit_llvm.Error || verify_ir.Error;
 
 /// Check `source` as a header-less program and build its Core IR in `arena`; the
 /// IR is verified (`verify_ir.zig`) before it is returned.

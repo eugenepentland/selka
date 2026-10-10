@@ -167,6 +167,7 @@ const Boundary = struct {
     verified: frontend.Verified = .{},
     base: []const u8 = "",
     owned: ?[]const u8 = null,
+    trust: ?bool = null,
 };
 
 /// Retention budget and the symbolic-template table that shares it. Grouped
@@ -362,10 +363,13 @@ pub const Cache = struct {
 
     /// Begin after fresh declaration/type collection, before checking any body.
     pub fn begin(self: *Cache, allocator: std.mem.Allocator, src: source.Source, syntax: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Session {
+        if (self.context.boundary.trust) |previous| if (previous != src.trusted_intrinsics) self.clear();
+        self.context.boundary.trust = src.trusted_intrinsics;
         const profile = if (self.context.timing) |p| if (p.enabled) p else null else null;
         const prepare_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
         const recall = if (self.context.summaries) |request| if (request.previous) |previous| summary.recall(previous) else null else null;
-        const prepared = try key.prepare(allocator, src, syntax, .{ .build = self.context.contract, .mutation = self.context.mutation_contract }, self.resolution, recall);
+        const build_context = try std.fmt.allocPrint(allocator, "{s}/intrinsic-authority/{d}", .{ self.context.contract, @intFromBool(src.trusted_intrinsics) });
+        const prepared = try key.prepare(allocator, src, syntax, .{ .build = build_context, .mutation = self.context.mutation_contract }, self.resolution, recall);
         if (profile) |p| p.addSince("dependency_key_preparation", prepare_start, false);
         const needs_trees = if (self.context.summaries) |request|
             request.body_policy == .concrete and self.context.retain_summary_trees

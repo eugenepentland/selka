@@ -13,6 +13,7 @@ const emit_llvm = @import("emit_llvm.zig");
 const ir = @import("ir.zig");
 const Error = @import("test_runner_property.zig").Error;
 const Digest = [32]u8;
+const boundary = @import("mylang").frontend_runtime;
 const planner = @import("mylang").cache_plan_adapter;
 
 /// Command resources and freshly resolved project configuration.
@@ -23,7 +24,7 @@ pub const Context = struct {
     options: options.Options,
     entry: project_entry.Entry,
     case_bytes: []const u8 = "",
-    identity: struct { tool: tool_identity.Identity, cache_plan: ?planner.Bound = null },
+    identity: struct { tool: tool_identity.Identity, cache_plan: ?planner.Bound = null, frontend: ?boundary.Verified = null },
 };
 /// A file's exact identity, including absence for optional generated interfaces.
 pub const Dependency = struct { path: []const u8, digest: ?Digest };
@@ -34,8 +35,10 @@ const Envelope = struct { version: []const u8, payload: []const u8, checksum: Di
 /// environment variables that can change an outcome. Field lengths prevent
 /// concatenation ambiguities.
 pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Digest {
+    const verified = try frontendVerified(context);
     const a = context.arena;
     var hash = std.crypto.hash.Blake3.init(.{});
+    field(&hash, &verified.identity);
     field(&hash, "core-test-settings-v5");
     if (context.identity.cache_plan) |bound| field(&hash, &bound.identity) else field(&hash, "missing-cache-plan");
     field(&hash, frontend.compiler_identity);
@@ -226,6 +229,7 @@ pub fn configuredKey(program: Digest, json: []const u8) Digest {
 
 /// Only an exact, checksummed success record can bypass execution.
 pub fn hit(context: Context, identity: Digest) Error!bool {
+    _ = try frontendVerified(context);
     if (!reusable(context)) return false;
     const path = try receiptPath(context, identity);
     const found = std.Io.Dir.cwd().readFileAlloc(context.io, path, context.arena, .limited(4096)) catch return false;
@@ -235,6 +239,7 @@ pub fn hit(context: Context, identity: Digest) Error!bool {
 
 /// Publish successes atomically; a failed run never writes a receipt.
 pub fn save(context: Context, identity: Digest) Error!void {
+    if (!(try frontendVerified(context)).reuse) return;
     try atomic(context, try receiptPath(context, identity), try success(context.arena, identity));
 }
 
@@ -243,6 +248,7 @@ pub const Replay = struct { report: []const u8, warnings: []const u8 };
 
 /// Look up a complete successful file run after resolving configuration anew.
 pub fn replay(context: Context, base: Digest) Error!?Replay {
+    _ = try frontendVerified(context);
     if (!reusable(context)) return null;
     if (!try toolUnchanged(context)) return null;
     return replayProvisional(context, base);
@@ -252,6 +258,7 @@ pub fn replay(context: Context, base: Digest) Error!?Replay {
 /// validate its full tool generation before accepting any borrowed child result.
 /// A miss must establish a local identity before checking or cache publication.
 pub fn replayProvisional(context: Context, base: Digest) Error!?Replay {
+    _ = try frontendVerified(context);
     if (!reusable(context)) return null;
     if (context.entry.configuration) |configured| if (configured.document.interface_files) return null;
     const a = context.arena;
@@ -303,6 +310,7 @@ pub fn replayProvisional(context: Context, base: Digest) Error!?Replay {
 /// Explain the execution contract that prevents reusing successful evidence.
 /// `no-success-receipt` means admission is permitted, subject to receipt lookup.
 pub fn reuseReason(context: Context) []const u8 {
+    if (!boundary.reusable(.{ .io = context.io, .environ = context.environment })) return "frontend-shadow";
     if (context.identity.cache_plan == null) return "missing-cache-plan";
     if (!context.identity.tool.cacheable) return "uncacheable-toolchain";
     if (context.options.controls.force) return "force";
@@ -317,6 +325,7 @@ pub fn reuseReason(context: Context) []const u8 {
 
 /// Revalidate the component deployment before accepting replay or publishing receipts.
 pub fn validatePlan(context: Context) Error!void {
+    _ = try frontendVerified(context);
     const bound = context.identity.cache_plan orelse return;
     bound.validate(context.arena) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
@@ -327,7 +336,21 @@ pub fn validatePlan(context: Context) Error!void {
     };
 }
 
+fn frontendVerified(context: Context) Error!boundary.Verified {
+    const verified = boundary.verify(context.arena, .{ .io = context.io, .environ = context.environment }) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        var writer = std.Io.File.stderr().writer(context.io, &.{});
+        writer.interface.print("error: frontend component: {s}\n", .{@errorName(err)}) catch return error.WriteFailed;
+        return error.ComponentUnavailable;
+    };
+    if (context.identity.frontend) |frontend_snapshot| {
+        if (!std.mem.eql(u8, &frontend_snapshot.identity, &verified.identity)) return error.ComponentChanged;
+    }
+    return verified;
+}
+
 fn reusable(context: Context) bool {
+    if (!boundary.reusable(.{ .io = context.io, .environ = context.environment })) return false;
     if (context.identity.cache_plan == null) return false;
     if (!context.identity.tool.cacheable) return false;
     if (context.options.controls.force or context.options.build.facts == .verify or context.options.build.links.len != 0) return false;
@@ -429,6 +452,7 @@ pub fn unchanged(context: Context, files: []const Dependency) Error!bool {
 
 /// Save a manifest only after all selected tests succeeded under unchanged inputs.
 pub fn remember(context: Context, base: Digest, files: []const Dependency, json: []const u8, warnings: []const u8) Error!void {
+    if (!(try frontendVerified(context)).reuse) return;
     if (!try unchanged(context, files) or !try toolUnchanged(context)) return;
     const payload = try std.json.Stringify.valueAlloc(context.arena, Snapshot{ .base = base, .dependencies = files, .report = json, .warnings = warnings }, .{});
     var checksum: Digest = undefined;
@@ -685,4 +709,58 @@ test "validatePlan returns ComponentUnavailable when a verified component change
     try validatePlan(context);
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "cache-plan", .data = "changed planner" });
     try std.testing.expectError(error.ComponentUnavailable, validatePlan(context));
+}
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "frontendVerified rejects absent producer before warm test receipt lookup" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_PARSER_MODE", "shadow");
+    try environment.put("MYLANG_COMPONENT_DIR", "missing-receipt-frontend");
+    const context: Context = .{
+        .arena = a,
+        .io = std.testing.io,
+        .environment = &environment,
+        .options = .{ .path = "fixture", .build = .{ .zig = "unused" } },
+        .entry = .{ .path = "fixture", .root = ".", .name = "fixture" },
+        .identity = .{ .tool = undefined },
+    };
+    try std.testing.expectError(error.ComponentUnavailable, frontendVerified(context));
+}
+fn frontendFixture(a: std.mem.Allocator, directory: std.Io.Dir, bytes: []const u8) !void {
+    try directory.writeFile(std.testing.io, .{ .sub_path = "parser-pilot", .data = bytes });
+    const executable = try directory.openFile(std.testing.io, "parser-pilot", .{});
+    defer executable.close(std.testing.io);
+    try executable.setPermissions(std.testing.io, .fromMode(0o700));
+    var digest: Digest = undefined;
+    std.crypto.hash.sha2.Sha256.hash(bytes, &digest, .{});
+    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"parser-pilot\",\"protocol\":1,\"schema\":1,\"artifact\":\"parser-pilot\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
+    try directory.writeFile(std.testing.io, .{ .sub_path = "parser-pilot.json", .data = manifest });
+}
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "frontendVerified rejects a valid replacement producer before test hit or publication" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_PARSER_MODE", "component");
+    try environment.put("MYLANG_COMPONENT_DIR", try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    try frontendFixture(a, temporary.dir, "#!/bin/sh\nexit 1\n");
+    const frontend_snapshot = try boundary.verify(a, .{ .io = std.testing.io, .environ = &environment });
+    const context: Context = .{
+        .arena = a,
+        .io = std.testing.io,
+        .environment = &environment,
+        .options = .{ .path = "fixture", .build = .{ .zig = "unused" } },
+        .entry = .{ .path = "fixture", .root = ".", .name = "fixture" },
+        .identity = .{ .tool = undefined, .frontend = frontend_snapshot },
+    };
+    try frontendFixture(a, temporary.dir, "#!/bin/sh\nexit 2\n");
+    try std.testing.expectError(error.ComponentChanged, hit(context, @splat(1)));
+    try std.testing.expectError(error.ComponentChanged, save(context, @splat(1)));
 }

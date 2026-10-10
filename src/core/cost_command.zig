@@ -79,6 +79,7 @@ pub fn output(init: std.process.Init, request: Request) Error!Output {
     var diagnostics: std.ArrayList(u8) = .empty;
     const entry = project_entry.resolve(a, init.io, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
+    session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     defer session.deinit();
     entry.configure(&session);
     const checked = session.checkFile(a, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
@@ -147,6 +148,7 @@ fn withCounters(a: std.mem.Allocator, report: cost.Report, section: []const dyna
 }
 
 fn failure(init: std.process.Init, text: []const u8, err: anyerror) Error!Output {
+    if (@import("mylang").frontend_runtime.hostFailure(err)) |failure_error| return failure_error;
     if (err == error.OutOfMemory) return error.OutOfMemory;
     try std.Io.File.stderr().writeStreamingAll(init.io, text);
     return .{ .status = if (err == error.PolicyDenied) 3 else if (err == error.ConfigurationFailed or err == error.ToolFailed or err == error.InvalidIr or err == error.WriteFailed) 2 else 1 };

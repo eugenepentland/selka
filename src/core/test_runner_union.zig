@@ -215,6 +215,7 @@ fn together(context: Context, checks: *Checks, eligible: []const ?Root, members:
     const text = try entryText(a, names);
     const session = try a.create(frontend.Session);
     session.* = frontend.Session.init(init.gpa, init.io, first.root);
+    session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     first.configure(session);
     session.configureProject(first.limits(), entry_name);
     session.setProviders(try a.dupe(frontend.Provider, &.{.{ .path = relative, .text = text }}));
@@ -225,6 +226,7 @@ fn together(context: Context, checks: *Checks, eligible: []const ?Root, members:
     const checked = session.check(a, entry_name, &problems) catch |err| {
         session.deinit();
         if (err == error.OutOfMemory) return error.OutOfMemory;
+        if (language.frontend_runtime.hostFailure(err)) |failure| return failure;
         return;
     };
     std.Io.File.stderr().writeStreamingAll(init.io, problems.items) catch return error.WriteFailed;

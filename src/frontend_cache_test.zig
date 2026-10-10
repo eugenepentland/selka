@@ -499,6 +499,7 @@ test "frontend cache partitions authenticated producer and intrinsic authority a
     defer arena.deinit();
     var src = try source.Source.init(arena.allocator(), "fixture", "");
     const native = cache.syntaxKey(src, 0);
+    try t.expect(!std.mem.eql(u8, &native, &cache.syntaxKeyMode(src, 0, false)));
     src.trusted_intrinsics = true;
     try t.expect(!std.mem.eql(u8, &native, &cache.syntaxKey(src, 0)));
     src.trusted_intrinsics = false;

@@ -2790,3 +2790,23 @@ test "portable nominal references reuse a type materialized by an earlier fresh 
     defer t.allocator.free(changed);
     try compare(t.allocator, &cache, changed, null);
 }
+fn frontendBinding(allocator: std.mem.Allocator) !void {
+    var cache = Cache.initWithContract(allocator, 1024, "host-contract");
+    defer cache.deinit();
+    try cache.setFrontend(.{ .identity = @splat(1) });
+    const first = try allocator.dupe(u8, cache.context.contract);
+    defer allocator.free(first);
+    try cache.setFrontend(.{ .identity = @splat(1) });
+    try t.expectEqualStrings(first, cache.context.contract);
+    try cache.setFrontend(.{ .identity = @splat(2) });
+    try t.expect(!std.mem.eql(u8, first, cache.context.contract));
+    try t.expect(std.mem.startsWith(u8, cache.context.contract, "host-contract/frontend/"));
+    try cache.setFrontend(.{ .identity = @splat(2), .reuse = false });
+    try t.expect(!cache.context.boundary.verified.reuse);
+    try t.expectEqual(@as(usize, 0), cache.entries.len);
+}
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "semantic frontend identities partition keys and retain valid state under allocation failure" {
+    try frontendBinding(t.allocator);
+    try t.checkAllAllocationFailures(t.allocator, frontendBinding, .{});
+}

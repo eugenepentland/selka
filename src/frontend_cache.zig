@@ -178,7 +178,14 @@ pub const Cache = struct {
     /// Copy parsed module syntax for an exact path/bytes/body-start match, or null.
     /// The returned program owns all of its storage through `allocator`.
     pub fn lookupSyntax(self: *Cache, allocator: std.mem.Allocator, src: source.Source, body_start: usize) error{OutOfMemory}!?ast.Program {
-        const key = syntaxKey(self, src, body_start);
+        return self.lookupSyntaxMode(allocator, src, body_start, true);
+    }
+    /// Load single-file grammar syntax in a separate namespace from module parsing.
+    pub fn lookupUnitSyntax(self: *Cache, allocator: std.mem.Allocator, src: source.Source, body_start: usize) error{OutOfMemory}!?ast.Program {
+        return self.lookupSyntaxMode(allocator, src, body_start, false);
+    }
+    fn lookupSyntaxMode(self: *Cache, allocator: std.mem.Allocator, src: source.Source, body_start: usize, module: bool) error{OutOfMemory}!?ast.Program {
+        const key = syntaxKeyMode(self, src, body_start, module);
         // Decoding copies everything it keeps, so the payload is decoded in
         // place in the file buffer rather than copied out of it first.
         const entry = self.readEntry(key) catch |err| switch (err) {
@@ -208,7 +215,14 @@ pub const Cache = struct {
 
     /// Retain parsed syntax under its exact path/bytes/body-start key.
     pub fn rememberSyntax(self: *Cache, src: source.Source, body_start: usize, syntax: ast.Program) error{OutOfMemory}!void {
-        const key = syntaxKey(self, src, body_start);
+        return self.rememberSyntaxMode(src, body_start, syntax, true);
+    }
+    /// Store single-file grammar syntax in a separate namespace from module parsing.
+    pub fn rememberUnitSyntax(self: *Cache, src: source.Source, body_start: usize, syntax: ast.Program) error{OutOfMemory}!void {
+        return self.rememberSyntaxMode(src, body_start, syntax, false);
+    }
+    fn rememberSyntaxMode(self: *Cache, src: source.Source, body_start: usize, syntax: ast.Program, module: bool) error{OutOfMemory}!void {
+        const key = syntaxKeyMode(self, src, body_start, module);
         var writer = codec.Writer.init(self.runtime.allocator);
         defer writer.deinit();
         // The two growable `Program` lists are stored as exact-length owned
@@ -337,6 +351,10 @@ pub const Cache = struct {
 
     /// Content key of one parsed-module entry; exposed so tests can damage it.
     pub fn syntaxKey(self: *Cache, src: source.Source, body_start: usize) [32]u8 {
+        return self.syntaxKeyMode(src, body_start, true);
+    }
+    /// Key complete grammar mode and intrinsic authority as well as exact source and producer.
+    pub fn syntaxKeyMode(self: *Cache, src: source.Source, body_start: usize, module: bool) [32]u8 {
         var hash = std.crypto.hash.sha2.Sha256.init(.{});
         hash.update(format_version);
         hash.update("syntax");
@@ -346,7 +364,7 @@ pub const Cache = struct {
         hash.update(&contract);
         frame(&hash, src.path);
         frame(&hash, src.bytes);
-        hash.update(&.{@intFromBool(src.trusted_intrinsics)});
+        hash.update(&.{ @intFromBool(src.trusted_intrinsics), @intFromBool(module) });
         hash.update(std.mem.asBytes(&body_start));
         var out: [32]u8 = undefined;
         hash.final(&out);

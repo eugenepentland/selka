@@ -1,4 +1,4 @@
-//! Bounded in-memory reuse of exact module syntax; semantic decisions are never cached.
+//! Bounded in-memory reuse of exact module syntax (module grammar only); semantic decisions are never cached.
 const std = @import("std");
 const ast = @import("ast.zig");
 const source = @import("source.zig");

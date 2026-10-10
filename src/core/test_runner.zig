@@ -158,13 +158,17 @@ fn start(init: std.process.Init, requested: Options, setup: Setup) Error!Started
         .options = options,
         .entry = located,
         .case_bytes = configured_cases.bytes,
-        .identity = .{ .tool = guest, .cache_plan = cache_plan },
+        .identity = .{ .tool = guest, .cache_plan = cache_plan, .frontend = try frontendSnapshot(init) },
     };
     var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
     const base = try receipt.settings(context, &native_inputs);
     if (try replayRun(context, base)) |cached| return .{ .done = try emitted(init, setup, cached) };
     if (setup.directed) |directed| if (directed.replay_only) return .{ .done = null };
     return .{ .ready = .{ .context = context, .base = base, .native_inputs = native_inputs.items, .bytes = bytes, .cases = configured_cases } };
+}
+
+fn preserveFrontendFailure(err: anyerror) Error!void {
+    if (@import("mylang").frontend_runtime.hostFailure(err)) |failure| return failure;
 }
 
 /// Print a replayed report and answer its status, 0.
@@ -197,6 +201,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     var problems: std.ArrayList(u8) = .empty;
     const view = setup.view();
     var session = frontend.Session.init(init.gpa, init.io, located.root);
+    session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     defer session.deinit();
     located.configure(&session);
     if (view == null) try session.enableCache(init.gpa, options.build.cache);
@@ -207,10 +212,15 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     // NATIVE-TEST-5: with providers, an unselected production body is never checked; the
     // first provider graph then answers discovery, and a case without providers fails.
     var first_provider = frontend.Session.init(init.gpa, init.io, located.root);
+    first_provider.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     defer first_provider.deinit();
     const base_checked: ?frontend.Checked = if (view) |share| share.checked else checkEntry(&session, allocator, located, &problems) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
-        else => if (provider_sets.len == 0) return failWith(init, problems.items, 1) else null,
+        else => blk: {
+            try preserveFrontendFailure(err);
+            if (provider_sets.len == 0) return failWith(init, problems.items, 1);
+            break :blk null;
+        },
     };
     const checked = base_checked orelse try providerGraph(init, options, located, entry_text, provider_sets[0], &first_provider) orelse return failWith(init, problems.items, 1);
     if (base_checked != null) try writeAll(init, std.Io.File.stderr(), problems.items);
@@ -325,6 +335,7 @@ const GroupRun = struct {
         const context = self.selection.receipt;
         const located = context.entry;
         var provider_session = frontend.Session.init(init.gpa, init.io, located.root);
+        provider_session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
         defer provider_session.deinit();
         var program = self.base_checked orelse self.discovery;
         var cases = group.cases;
@@ -394,6 +405,7 @@ fn validateProviders(init: std.process.Init, options: Options, located: project_
     const a = init.arena.allocator();
     var problems: std.ArrayList(u8) = .empty;
     var production = frontend.Session.init(init.gpa, init.io, located.root);
+    production.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     defer production.deinit();
     located.configure(&production);
     try production.enableCache(init.gpa, options.build.cache);
@@ -403,6 +415,7 @@ fn validateProviders(init: std.process.Init, options: Options, located: project_
         case_settings.available(set, &production, located.name) catch |err|
             return checkFailure(init, err, "error: InvalidTestProviders: invalid test provider dependencies: a provider may replace only a module the entry imports, never the entry\n", 2);
         var replacement = frontend.Session.init(init.gpa, init.io, located.root);
+        replacement.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
         defer replacement.deinit();
         located.configure(&replacement);
         try replacement.enableCache(init.gpa, options.build.cache);
@@ -451,6 +464,7 @@ fn providerGraph(init: std.process.Init, options: Options, located: project_entr
 /// A check's failure as an exit status: memory runs out of the run itself; any other
 /// error was already rendered into `text`, which goes to stderr.
 fn checkFailure(init: std.process.Init, err: anyerror, text: []const u8, status: u8) Error!?u8 {
+    if (@import("mylang").frontend_runtime.hostFailure(err)) |failure| return failure;
     if (err == error.OutOfMemory) return error.OutOfMemory;
     try writeAll(init, std.Io.File.stderr(), text);
     return status;
@@ -550,6 +564,10 @@ fn cacheExplanation(a: std.mem.Allocator, item: Selected, context: receipt.Conte
     };
 }
 
+fn frontendSnapshot(init: std.process.Init) Error!@import("mylang").frontend_runtime.Verified {
+    return @import("mylang").frontend_runtime.verify(init.arena.allocator(), .{ .io = init.io, .environ = init.environ_map });
+}
+
 fn bindPlan(init: std.process.Init) Error!planner.Bound {
     return planner.bind(init.arena.allocator(), init.io, init.environ_map) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
@@ -586,7 +604,15 @@ fn directedReplay(init: std.process.Init, requested: Options, located: project_e
     const a = init.arena.allocator();
     var options = requested;
     options.build.zig = guest.path;
-    const context: receipt.Context = .{ .arena = a, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = case_bytes, .identity = .{ .tool = guest, .cache_plan = cache_plan } };
+    const context: receipt.Context = .{
+        .arena = a,
+        .io = init.io,
+        .environment = init.environ_map,
+        .options = options,
+        .entry = located,
+        .case_bytes = case_bytes,
+        .identity = .{ .tool = guest, .cache_plan = cache_plan, .frontend = try frontendSnapshot(init) },
+    };
     var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
     return receipt.replayProvisional(context, try receipt.settings(context, &native_inputs));
 }
@@ -600,7 +626,15 @@ fn localReplay(init: std.process.Init, requested: Options, located: project_entr
     } orelse return null;
     var options = requested;
     options.build.zig = guest.path;
-    const context: receipt.Context = .{ .arena = a, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = case_bytes, .identity = .{ .tool = guest, .cache_plan = cache_plan } };
+    const context: receipt.Context = .{
+        .arena = a,
+        .io = init.io,
+        .environment = init.environ_map,
+        .options = options,
+        .entry = located,
+        .case_bytes = case_bytes,
+        .identity = .{ .tool = guest, .cache_plan = cache_plan, .frontend = try frontendSnapshot(init) },
+    };
     var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
     const base = try receipt.settings(context, &native_inputs);
     // Buffer the candidate without publishing anything under its unverified key.

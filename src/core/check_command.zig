@@ -6,7 +6,7 @@ const frontend = @import("frontend.zig");
 const project_entry = @import("project_entry.zig");
 
 /// A check's host failures; source diagnostics are returned as process status.
-pub const Error = error{ OutOfMemory, WriteFailed };
+pub const Error = language.frontend_runtime.HostError || error{WriteFailed};
 
 const Options = struct {
     path: []const u8 = "",
@@ -28,6 +28,7 @@ pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
         return project_entry.status(err);
     };
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
+    session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     defer session.deinit();
     if (!options.no_cache) try session.enableCache(init.gpa, options.cache);
     if (!options.typed) session.validationOnly();
@@ -36,6 +37,7 @@ pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
     const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => {
+            if (language.frontend_runtime.hostFailure(err)) |failure| return failure;
             try write(init.io, report.items);
             const status: u8 = switch (err) {
                 error.PolicyDenied => 3,

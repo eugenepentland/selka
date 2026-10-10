@@ -58,9 +58,10 @@ pub const State = struct {
 
     /// Bind all frontend stores to identities authenticated before cache access.
     pub fn setFrontend(self: *State, verified: language.frontend_runtime.Verified) error{OutOfMemory}!void {
+        const changed = !std.mem.eql(u8, &self.frontend.runtime.boundary.identity, &verified.identity);
         try self.semantic.setFrontend(verified);
         self.frontend.setFrontend(verified);
-        self.request.previous = null;
+        if (changed or !verified.reuse) self.request.previous = null;
         if (!verified.reuse) self.semantic.context.summaries = null;
     }
     /// Bind self-references only after the state reached its final address.

@@ -90,7 +90,7 @@ pub const Diagnostics = enum { errors, text, json };
 pub const CacheReport = enum { off, text, json };
 
 /// Why a build stopped after its report was written.
-pub const Error = error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr, PolicyDenied, ConfigurationFailed, CacheMiss };
+pub const Error = language.frontend_runtime.HostError || error{ SourceError, Unsupported, ToolFailed, WriteFailed, OutOfMemory, InvalidIr, PolicyDenied, ConfigurationFailed, CacheMiss };
 
 /// Build `path` into `options.output`. An unchanged build replays its last
 /// identical build's executable (`build_replay.zig`) before checking anything.
@@ -134,7 +134,15 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     };
     const entry = try project_entry.resolve(allocator, init.io, path, report);
     const replaying = options.show.llvm == null;
-    const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options, budget), .entry = entry };
+    const context: build_replay.Context = .{
+        .arena = allocator,
+        .io = init.io,
+        .environment = init.environ_map,
+        .cache = options.cache,
+        .zig = options.zig,
+        .flags = try build_replay.bindFlags(allocator, try flags(init, options, budget), .{ .io = init.io, .environ = init.environ_map }),
+        .entry = entry,
+    };
     if (try replayBuild(context, options, report)) return 0;
     var storage = try stage_store.Store.initWithOptions(init.gpa, init.io, options.cache, .{ .compression = compression });
     defer storage.deinit();
@@ -149,6 +157,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         const checked_start = stage_metrics.now(init.io);
         const report_start = report.items.len;
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
+        session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
         defer session.deinit();
         entry.configure(&session);
         if (options.show.diagnostics != .errors) session.setFormat(if (options.show.diagnostics == .json) .json else .text);
@@ -160,7 +169,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         if (demand_enabled) session.configureDemand(demand.callback());
         const checked = session.checkFile(allocator, if (options.show.diagnostics == .errors) entry.path else path, report) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
-            else => return error.SourceError,
+            else => return frontendFailure(err),
         };
         if (options.show.diagnostics != .errors) try report.appendSlice(allocator, try session.warnings(allocator));
         const sources = if (replaying) try build_replay.inputs(context, &session) else null;
@@ -225,9 +234,14 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     if (replaying) build_replay.remember(context, prepared.sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.WriteFailed => {},
+        else => return err,
     };
     if (options.show.cache_report != .off) try cacheReport(allocator, options.show.cache_report, outcome, &stages, &publication, report);
     return 0;
+}
+
+fn frontendFailure(err: anyerror) Error {
+    return language.frontend_runtime.hostFailure(err) orelse error.SourceError;
 }
 
 fn replayBuild(context: build_replay.Context, options: Options, report: *std.ArrayList(u8)) Error!bool {

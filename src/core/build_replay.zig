@@ -39,9 +39,10 @@ pub const Context = struct {
 };
 
 /// Why a replay could not be read or written; a damaged record is a miss.
-pub const Error = error{ OutOfMemory, WriteFailed };
+pub const Error = language.frontend_runtime.HostError || error{WriteFailed};
 
 const version = "core-build-replay-v1";
+const flags_magic = "SLKKEY01";
 const Stamp = struct { size: u64, inode: u64, mtime: i64, ctime: i64 };
 const Entry = struct { path: []const u8, digest: []const u8 };
 const Snapshot = struct { key: []const u8, dependencies: []const Entry, program: []const u8, digest: []const u8, stamp: Stamp, report: []const u8 };
@@ -50,6 +51,8 @@ const Envelope = struct { version: []const u8, payload: []const u8, checksum: []
 /// Publish the recorded executable to `output` and append the recorded report when
 /// every input is unchanged; false (a miss) otherwise, having written nothing.
 pub fn replay(context: Context, output: []const u8, report: *std.ArrayList(u8)) Error!bool {
+    const verified = try boundary(context);
+    if (!verified.reuse) return false;
     const a = context.arena;
     const request = toolRequest(context);
     const candidate = tool_identity.lookupReplayCandidate(request) catch |err| {
@@ -70,6 +73,7 @@ pub fn replay(context: Context, output: []const u8, report: *std.ArrayList(u8)) 
     };
     if (!same_tool) return false;
     if (!try programIntact(context, snapshot)) return false;
+    _ = try boundary(context);
     @import("driver.zig").copyOutput(context.io, snapshot.program, output) catch return false;
     try report.appendSlice(a, snapshot.report);
     return true;
@@ -88,6 +92,7 @@ pub fn inputs(context: Context, session: *const frontend.Session) Error!?[]const
 /// build whose `--link` inputs changed while they compiled, unpinned `sources`
 /// (`inputs`), or a file that changed after the build read it.
 pub fn remember(context: Context, sources: ?[]const unit_cache.Dependency, tool: tool_identity.Identity, outcome: Outcome, report: []const u8) Error!void {
+    if (!(try boundary(context)).reuse) return;
     const a = context.arena;
     if (!tool.cacheable) return;
     const program = outcome.program orelse return;
@@ -114,7 +119,9 @@ pub const Outcome = struct { program: ?unit_cache.Found, foreign: ?[]const unit_
 
 /// The record's key: compiler, flags, entry, configuration, toolchain and environment.
 pub fn settingsKey(context: Context, tool: tool_identity.Identity) Error!Digest {
+    const verified = try boundary(context);
     var hash = std.crypto.hash.Blake3.init(.{});
+    unit_cache.field(&hash, &verified.identity);
     unit_cache.field(&hash, version);
     unit_cache.field(&hash, frontend.compiler_identity);
     unit_cache.field(&hash, context.flags);
@@ -139,6 +146,21 @@ pub fn settingsKey(context: Context, tool: tool_identity.Identity) Error!Digest 
     var digest: Digest = undefined;
     hash.final(&digest);
     return digest;
+}
+
+/// Capture verified frontend authority alongside build flags without retaining artifact paths.
+pub fn bindFlags(a: std.mem.Allocator, bytes: []const u8, runtime: language.frontend_runtime.Runtime) Error![]const u8 {
+    const verified = try language.frontend_runtime.verify(a, runtime);
+    return std.mem.concat(a, u8, &.{ flags_magic, &verified.identity, bytes });
+}
+
+fn boundary(context: Context) Error!language.frontend_runtime.Verified {
+    const verified = try language.frontend_runtime.verify(context.arena, .{ .io = context.io, .environ = context.environment });
+    if (std.mem.startsWith(u8, context.flags, flags_magic)) {
+        if (context.flags.len < 40) return error.ComponentProtocol;
+        if (!std.mem.eql(u8, context.flags[8..40], &verified.identity)) return error.ComponentChanged;
+    }
+    return verified;
 }
 
 /// The environment, in name order: anything the toolchain or the core reads from
@@ -306,4 +328,19 @@ test "replay keys cover flags, the tool, configuration and the environment" {
     changed = context;
     changed.entry.path = "/p/other.my";
     try std.testing.expect(!std.mem.eql(u8, &original, &try settingsKey(changed, tool)));
+}
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "bindFlags captures producer authority and boundary rejects changed authority before replay" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const flags_snapshot = try bindFlags(a, "flags", .{ .io = std.testing.io, .environ = &environment });
+    const context: Context = .{ .arena = a, .io = std.testing.io, .environment = &environment, .cache = "cache", .zig = "unused", .flags = flags_snapshot, .entry = .{ .path = "fixture", .root = ".", .name = "fixture" } };
+    try std.testing.expect((try boundary(context)).reuse);
+    @constCast(flags_snapshot)[8] ^= 1;
+    try std.testing.expectError(error.ComponentChanged, boundary(context));
+    var report: std.ArrayList(u8) = .empty;
+    try std.testing.expectError(error.ComponentChanged, replay(context, "output", &report));
 }

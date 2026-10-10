@@ -73,6 +73,7 @@ pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
 fn developerFailure(init: std.process.Init, report: []const u8, err: (project_entry.Error || frontend.Error || error{ReadFailed})) Error!u8 {
     if (err == error.OutOfMemory) return error.OutOfMemory;
     if (err == error.InternalError) return error.InternalError;
+    if (@import("mylang").frontend_runtime.hostFailure(err)) |failure| return failure;
     try std.Io.File.stderr().writeStreamingAll(init.io, report);
     return switch (err) {
         error.ConfigurationFailed => 2,
@@ -86,6 +87,7 @@ fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 
     var report: std.ArrayList(u8) = .empty;
     const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
+    session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     defer session.deinit();
     const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
     const text = try typed_dump.render(allocator, checked.program, filter);
@@ -98,6 +100,7 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
     var report: std.ArrayList(u8) = .empty;
     const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
+    session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
     defer session.deinit();
     const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
     var refusal: build.Refusal = .{};
@@ -413,10 +416,12 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
             continue;
         };
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
+        session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
         defer session.deinit();
         const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
             error.OutOfMemory => return err,
             else => {
+                if (@import("mylang").frontend_runtime.hostFailure(err)) |failure| return failure;
                 const first = std.mem.sliceTo(report.items, '\n');
                 try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, first });
                 continue;

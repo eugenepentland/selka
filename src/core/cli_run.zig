@@ -23,7 +23,7 @@ const stack_slack: u64 = 8 << 20;
 
 /// What stops a run before the program's status is known: memory, or standard
 /// error cannot be written.
-pub const Error = error{ OutOfMemory, WriteFailed };
+pub const Error = @import("mylang").frontend_runtime.HostError || error{WriteFailed};
 
 /// `mylang run`'s usage, which a malformed run command line prints.
 pub const run_usage =
@@ -105,6 +105,7 @@ pub fn run(init: std.process.Init, request: cli_args.Request, command: []const u
             error.PolicyDenied => 3,
             error.ConfigurationFailed => 2,
             error.ToolFailed, error.WriteFailed, error.InvalidIr, error.CacheMiss => 2,
+            else => @import("mylang").frontend_runtime.hostFailure(err).?,
         };
     };
     try emit(init, report.items, json);
