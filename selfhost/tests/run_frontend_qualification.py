@@ -17,10 +17,34 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[2]
+SOURCE_LIMIT = 1048576
+
+
+def profile_sources():
+    suffix = b'func main() -> int:\n    return 0\n'
+    boundary = b'#' + b' ' * (SOURCE_LIMIT - len(suffix) - 2) + b'\n' + suffix
+    dense = (b'func main() -> int:\n    mut total: int = 0\n' +
+             b'    total = total + 1\n' * 16000 + b'    return total\n')
+    return {'boundary.my': boundary, 'oversize.my': boundary + b'\n',
+            'profile_dense.my': dense,
+            'profile_nested.my': b'func main() -> int:\n    return ' + b'(' * 16 + b'0' + b')' * 16 + b'\n',
+            'profile_deep_malformed.my': b'func main() -> int:\n    return ' + b'(' * 300 + b'0\n',
+            'profile_comments.my': (b'# Unicode ' + 'éλ'.encode() + b'\n') * 25000 + suffix}
 FIXTURES = ROOT / 'selfhost/tests/fixtures/frontend_qualification'
 FRONTENDS = ('lexer-pilot', 'parser-pilot')
 PACKAGES = ('test-index', 'cache-plan', *FRONTENDS)
-OUTPUT_LIMIT = 64 << 20
+OUTPUT_LIMIT = (64 << 20) + 4096  # AST profile wire cap plus bounded framing.
+ADDRESS_SPACE_BUDGET = 2 << 30
+
+
+def process_limits():
+    # Qualification budget, not a claim about the production launcher. Never
+    # relax a caller's stricter soft or hard ceiling; descendants inherit it.
+    for kind, budget in ((resource.RLIMIT_FSIZE, OUTPUT_LIMIT),
+                         (resource.RLIMIT_AS, ADDRESS_SPACE_BUDGET)):
+        soft, hard = resource.getrlimit(kind)
+        ceiling = min([budget] + [v for v in (soft, hard) if v != resource.RLIM_INFINITY])
+        resource.setrlimit(kind, (ceiling, ceiling))
 
 
 def require(condition, message):
@@ -43,12 +67,10 @@ def copy_sources(destination):
 
 
 def execute(argv, env, cwd, timeout=180):
-    def limits():
-        resource.setrlimit(resource.RLIMIT_FSIZE, (OUTPUT_LIMIT, OUTPUT_LIMIT))
     with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
         result = subprocess.run([str(a) for a in argv], env=env, cwd=cwd,
                                 stdout=stdout, stderr=stderr, timeout=timeout,
-                                preexec_fn=limits)
+                                preexec_fn=process_limits)
         stdout.seek(0)
         stderr.seek(0)
         return result.returncode, stdout.read(OUTPUT_LIMIT), stderr.read(OUTPUT_LIMIT)
@@ -65,13 +87,14 @@ def environment(mode, components, empty_path):
     return env
 
 
-def packages(directory):
+def packages(directory, frontend_schema=2):
     found = {}
     for name in PACKAGES:
         manifest = json.loads((directory / f'{name}.json').read_text())
         version = 2 if name == 'cache-plan' else 1
+        schema = frontend_schema if name in FRONTENDS else version
         require(all(manifest.get(k) == v for k, v in
-                    {'format': 1, 'component': name, 'protocol': version, 'schema': version}.items()),
+                    {'format': 1, 'component': name, 'protocol': version, 'schema': schema}.items()),
                 f'{name}: invalid manifest identity')
         artifact = manifest.get('artifact', '')
         require(artifact not in ('', '.', '..') and '/' not in artifact and '\\' not in artifact,
@@ -118,9 +141,8 @@ class Qualification:
             'func main() -> int:\n    return f699() - 699\n')
         (self.source / 'invalid_utf8.my').write_bytes(b'func main() -> int:\n    # \xff\n    return 0\n')
         suffix = b'func main() -> int:\n    return 0\n'
-        boundary = b'#' + b' ' * (262144 - len(suffix) - 2) + b'\n' + suffix
-        (self.source / 'boundary.my').write_bytes(boundary)
-        (self.source / 'oversize.my').write_bytes(boundary + b'\n')
+        for name, body in profile_sources().items():
+            (self.source / name).write_bytes(body)
 
     def run(self, mode, args, components=None, leakcheck=True):
         self.calls += 1
@@ -181,6 +203,10 @@ class Qualification:
         for source in ('large_comments.my', 'large_nodes.my'):
             self.compare(source, ['check', self.source / source])
         self.compare('maximum-qualified-source', ['check', self.source / 'boundary.my'])
+        for source in ('profile_comments.my', 'profile_dense.my', 'profile_nested.my'):
+            self.compare(source, ['check', self.source / source])
+        self.compare('profile-dense-tokens', ['dump-tokens', self.source / 'profile_dense.my'])
+        self.compare('profile-dense-ast', ['dump-syntax', self.source / 'profile_dense.my'])
         formatted = self.source / 'format.my'
         original = formatted.read_bytes()
         outputs = []
@@ -220,7 +246,26 @@ class Qualification:
             first = self.run(mode, args)
             require(first[0] == 2 and not first[1] and first[2], f'{mode}: oversize must be a bounded host failure')
             require(self.run(mode, args) == first, f'{mode}: oversize failure is nondeterministic')
-        return {'qualified_lexer_bytes': 262144, 'reference_valid_rejected_bytes': 262145,
+        deep_args = ['check', self.source / 'profile_deep_malformed.my', '--diagnostics=json']
+        reference = self.run('reference', deep_args)
+        require(reference[0] == 1, 'deep malformed reference must reject as source error')
+        deep = {}
+        for mode in self.modes:
+            first = self.run(mode, deep_args)
+            require(first[0] in (1, 2) and (first[1] or first[2]), f'{mode}: deep malformed input escaped rejection')
+            require(self.run(mode, deep_args) == first, f'{mode}: deep rejection is nondeterministic')
+            if first[0] == 1:
+                require(first == reference, f'{mode}: deep source diagnostics differ')
+            else:
+                require(not first[1] and first[2], f'{mode}: profile host failure published source output')
+            deep[mode] = 'native diagnostic parity' if first[0] == 1 else 'explicit profile host rejection'
+        return {'qualified_lexer_bytes': SOURCE_LIMIT, 'reference_valid_rejected_bytes': SOURCE_LIMIT + 1,
+                'frontend_package_schema': 2, 'protocol': 1,
+                'token_limit': 1048833, 'ast_value_limit': 1048576,
+                'ast_edge_limit': 4194304, 'ast_depth_limit': 256,
+                'ast_data_and_wire_bytes': 67108864,
+                'workload_bytes': {name: len(body) for name, body in profile_sources().items()},
+                'deep_malformed': deep,
                 'default_adoption_limit': 'component source bound narrower than reference source acceptance'}
 
     def run_check_fmt(self, mode, path):
@@ -434,6 +479,9 @@ def main():
                   'cache_enabled_test_receipts': q.receipt_warm,
                   'coordinator_edit': edit, 'failed': 0, 'skipped': 0}
         report['profile_limits'] = profile_limits
+        report['qualification_address_space_budget_bytes'] = ADDRESS_SPACE_BUDGET
+        report['children_peak_rss_kib'] = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+        report['rss_scope'] = 'cumulative child high-water for entire qualification, not per producer; address-space ceiling inherited by descendants'
     require(digest(args.compiler) == host_before, 'qualification changed installed host')
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)

@@ -135,3 +135,38 @@ measurements also disable fact and leak verification so cache reuse is allowed.
 These are complete commands with the frontend contribution isolated; they are
 not measurements of all production-default component settings. The JSON records
 these controls alongside the raw samples.
+
+The hardening qualification explicitly targets the 1MiB frontend source
+profile. It checks exactly 1,048,576 source bytes and a reference-valid
+1,048,577-byte rejection, plus Unicode comments and dense repeated assignments beyond
+the former 256KiB bound. Dense input is compared through check, token output and
+full AST output; source byte coverage alone does not establish token or AST
+capacity. The outer frontend package schema is explicitly version 2 (protocol 1);
+inner parser token and AST representations remain version 1. Qualified package
+source identity also binds the profile constants. Frozen baseline measurements
+require explicit `--frontend-schema 1`; candidate qualification expects 2.
+
+For before/after evidence, run the measurement driver against each qualified
+host with the same default workloads and label each run with `--candidate-label`.
+Only the new host receives `--large-profile`; those added cases compare its
+native and component modes and cannot be presented as old-host parity. Every
+run keeps the corrected blocking process wait and watchdog deadline. An empty
+private application cache may still reuse shared native objects across modes
+and hosts: inspect `cache_evidence` before describing a run as cold compilation.
+
+Qualification children and their descendants inherit an explicit 2GiB address
+space ceiling and a 64MiB output ceiling with 4KiB framing allowance, preserving
+any stricter caller limits. These are test budgets, not an asserted production
+address-space policy. Reports record cumulative child peak RSS for the whole
+run; that high-water includes the native coordinator and is not per-producer
+allocation. Production source, token, graph, wire and depth limits are reported
+separately. Deep malformed input must reject deterministically: exact native
+source diagnostics are compared when represented, and explicit profile host
+rejection is recorded separately from diagnostic parity.
+
+The expanded matrix contains 34 workflows and 68 mode comparisons (136 when
+repeated after the coordinator edit), retaining all 60 warm deployment mutations
+and eight live session checks. Oversize and deep malformed rejection checks are
+reported separately; their classification never increases successful grammar
+parity counts. The dense generator uses 16,000 repeated assignments in one
+function so it exercises tokens and AST values without unused-binding warnings.

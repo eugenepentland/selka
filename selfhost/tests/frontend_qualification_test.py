@@ -22,6 +22,46 @@ def report(**changes):
 
 
 class QualificationTests(unittest.TestCase):
+    def test_profile_host_rejection_is_separate_from_diagnostic_parity(self):
+        q = object.__new__(Q.Qualification)
+        q.modes, q.source = ['component'], Path('/qualified/source')
+        host_failure = (2, b'', b'ComponentProtocol\n')
+        results = iter([(0, b'', b''), host_failure, host_failure,
+                        (1, b'', b'native syntax diagnostic'), host_failure, host_failure])
+        q.run = lambda *args: next(results)
+        limits = q.bounds()
+        self.assertEqual(limits['reference_valid_rejected_bytes'], 1048577)
+        self.assertEqual(limits['deep_malformed']['component'], 'explicit profile host rejection')
+
+    def test_qualification_limits_preserve_stricter_inherited_bounds(self):
+        with patch.object(Q.resource, 'getrlimit', return_value=(4096, 8192)), patch.object(Q.resource, 'setrlimit') as set_limit:
+            Q.process_limits()
+        self.assertEqual(set_limit.call_count, 2)
+        for call in set_limit.call_args_list:
+            self.assertEqual(call.args[1], (4096, 4096))
+
+    def test_old_profile_requires_explicit_baseline_schema(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(Q, 'PACKAGES', ('lexer-pilot',)):
+            root = Path(temporary)
+            artifact = root / 'producer'
+            artifact.write_bytes(b'qualified baseline')
+            (root / 'lexer-pilot.json').write_text(json.dumps({
+                'format': 1, 'component': 'lexer-pilot', 'protocol': 1, 'schema': 1,
+                'artifact': 'producer', 'sha256': Q.digest(artifact)}))
+            with self.assertRaisesRegex(RuntimeError, 'identity'):
+                Q.packages(root)
+            self.assertEqual(Q.packages(root, frontend_schema=1)['lexer-pilot']['schema'], 1)
+
+    def test_profile_workloads_cover_exact_and_previous_bounds(self):
+        sources = Q.profile_sources()
+        self.assertEqual(len(sources['boundary.my']), 1048576)
+        self.assertEqual(len(sources['oversize.my']), 1048577)
+        self.assertEqual(sources['oversize.my'][:-1], sources['boundary.my'])
+        for name in ('profile_dense.my', 'profile_comments.my'):
+            self.assertGreater(len(sources[name]), 262144)
+            self.assertLess(len(sources[name]), Q.SOURCE_LIMIT)
+            sources[name].decode('utf-8')
+
     def test_warm_failures_keep_primed_environment_and_path(self):
         with tempfile.TemporaryDirectory() as temporary:
             work = Path(temporary)
@@ -32,7 +72,7 @@ class QualificationTests(unittest.TestCase):
                 binary.write_bytes(name.encode())
                 version = 2 if name == 'cache-plan' else 1
                 (installed / f'{name}.json').write_text(json.dumps({
-                    'format': 1, 'component': name, 'protocol': version, 'schema': version,
+                    'format': 1, 'component': name, 'protocol': version, 'schema': 2 if name in Q.FRONTENDS else version,
                     'artifact': binary.name, 'sha256': Q.digest(binary)}))
             manifests = Q.packages(installed)
             q = object.__new__(Q.Qualification)

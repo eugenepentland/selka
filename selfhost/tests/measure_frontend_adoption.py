@@ -20,16 +20,15 @@ import threading
 import time
 
 from run_frontend_qualification import (FRONTENDS, PACKAGES, ROOT, FIXTURES,
-                                       OUTPUT_LIMIT, copy_sources, digest, environment, packages, require)
+                                       OUTPUT_LIMIT, ADDRESS_SPACE_BUDGET, copy_sources, digest, environment,
+                                       packages, process_limits, profile_sources, require)
 
 
 def execute(argv, env, cwd, timeout=180):
     """Wait directly for exit; deadline enforcement does not quantize samples."""
-    def limits():
-        resource.setrlimit(resource.RLIMIT_FSIZE, (OUTPUT_LIMIT, OUTPUT_LIMIT))
     with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
         process = subprocess.Popen([str(a) for a in argv], env=env, cwd=cwd,
-                                   stdout=stdout, stderr=stderr, preexec_fn=limits,
+                                   stdout=stdout, stderr=stderr, preexec_fn=process_limits,
                                    start_new_session=True)
         expired = threading.Event()
         def terminate():
@@ -77,6 +76,9 @@ def transport(args, work, empty):
               'comments64k': b'#' + b' ' * 65498 + b'\nfunc main() -> int:\n    return 0\n',
               'nodes': ''.join(f'func f{i}() -> int:\n    return {i}\n\n' for i in range(700)).encode() +
                        b'func main() -> int:\n    return 0\n'}
+    if args.large_profile:
+        bodies.update({name: body for name, body in profile_sources().items()
+                       if name != 'oversize.my'})
     for name, body in bodies.items():
         source = work / f'{name}.my'
         source.write_bytes(body)
@@ -155,13 +157,13 @@ def components(args, work):
     host_before = digest(args.compiler)
     env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_PARSER_MODE='reference', MYL_CORE_LEAKCHECK='0')
     elapsed, _ = sample(command, env, work)
-    before = packages(installation)
+    before = packages(installation, args.frontend_schema)
     rows = [{'phase': 'cold-artifacts', 'scope': 'native coordinator verifies reused seed and builds/installs all four packages',
              'elapsed_ns': elapsed, 'packages': before}]
     samples = []
     for _ in range(args.coordinator_iterations):
         elapsed, _ = sample(command, env, work)
-        require(packages(installation) == before, 'warm coordinator changed package identity')
+        require(packages(installation, args.frontend_schema) == before, 'warm coordinator changed package identity')
         samples.append(elapsed)
     rows.append({'phase': 'warm', 'scope': 'native coordinator verifies qualified seed and existing package receipts/install',
                  **distribution(samples)})
@@ -172,7 +174,7 @@ def components(args, work):
     edited.write_text(text.replace(marker, marker +
                      '    if tag == "pilot_edit_marker":\n        return Signature(typed=False, owner=False, arguments=0, variadic=False)\n'))
     elapsed, _ = sample(command, env, work)
-    after = packages(installation)
+    after = packages(installation, args.frontend_schema)
     require(before['parser-pilot']['key'] != after['parser-pilot']['key'] and
             before['parser-pilot']['sha256'] != after['parser-pilot']['sha256'], 'component edit did not change executable identity')
     require(all(before[n] == after[n] for n in PACKAGES if n != 'parser-pilot'), 'unrelated component identity changed')
@@ -205,6 +207,10 @@ def main():
     ap.add_argument('--edit-iterations', type=int, default=5)
     ap.add_argument('--coordinator-iterations', type=int, default=3)
     ap.add_argument('--component', action='store_true')
+    ap.add_argument('--large-profile', action='store_true', help='candidate-only 1MiB profile workloads; old cases remain identical')
+    ap.add_argument('--candidate-label', default='qualified-host', help='baseline/candidate evidence label; no timing selection changes')
+    ap.add_argument('--frontend-schema', type=int, choices=(1, 2), default=2,
+                    help='explicit qualified frontend package profile; use 1 for frozen baseline only')
     ap.add_argument('--isolated', action='store_true', help='coordinator asserts all build/gate reservations held')
     ap.add_argument('--output', type=Path, required=True)
     args = ap.parse_args()
@@ -214,7 +220,7 @@ def main():
     for name in ('compiler', 'component_dir', 'builder', 'source_root', 'zig'):
         setattr(args, name, getattr(args, name).resolve())
     args.modes = ['reference', 'shadow'] + (['component'] if args.component else [])
-    manifests = packages(args.component_dir)
+    manifests = packages(args.component_dir, args.frontend_schema)
     require(execute([args.builder, '--root', args.source_root, '--zig', args.zig, '--seed-only'],
                     dict(os.environ), args.source_root, 600)[0] == 0, 'seed receipt verification failed')
     host = digest(args.compiler)
@@ -223,6 +229,10 @@ def main():
         empty = work / 'empty-path'
         empty.mkdir()
         evidence = {'host_sha256': host, 'host_build_requirement': 'ReleaseFast, built before isolation',
+                    'candidate_label': args.candidate_label, 'large_profile': args.large_profile,
+                    'frontend_schema': args.frontend_schema,
+                    'qualification_address_space_budget_bytes': ADDRESS_SPACE_BUDGET,
+                    'native_cache_scope': 'private application cache starts empty; shared native units/runtime/toolchain may be warm across modes and hosts; inspect retained cache_evidence',
                     'fixed_mode_controls': {'MYLANG_TEST_INDEX_MODE': 'reference', 'MYLANG_CACHE_PLAN_MODE': 'reference'},
                     'measurement_scope': 'frontend-isolated workflows; auxiliary components held in reference mode, not production-default end-to-end timings',
                     'measurement_checks': 'fact/leak verification disabled; every sample validates observable status/output; separate correctness gate enables facts/leaks',
@@ -232,7 +242,7 @@ def main():
                     'coordinator': components(args, work)}
         evidence['children_peak_rss_kib'] = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
         evidence['rss_scope'] = 'cumulative child high-water for entire driver, including coordinator/compiler descendants; not per exchange'
-    require(digest(args.compiler) == host and packages(args.component_dir) == manifests,
+    require(digest(args.compiler) == host and packages(args.component_dir, args.frontend_schema) == manifests,
             'measurement changed installed inputs')
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(evidence, indent=2) + '\n')
