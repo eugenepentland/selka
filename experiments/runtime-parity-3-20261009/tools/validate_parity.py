@@ -30,6 +30,7 @@ def main():
     for name, names in expected.items():
         bench = data['benchmarks'][name]
         assert set(bench['arms']) == names, name
+        assert not bench.get('failure'), (name, bench.get('failure'))
         for label, arm in bench['arms'].items():
             assert arm['build']['ok'] and arm['status'] == 0 and arm['matches_expected'], (name, label)
             assert 'failure' not in arm and arm['wall_median'] > 0 and len(arm['wall']) == 9, (name, label)

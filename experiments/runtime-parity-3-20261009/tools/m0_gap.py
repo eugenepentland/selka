@@ -21,18 +21,22 @@ def gm(values):
     return math.exp(statistics.mean(math.log(v) for v in values))
 
 
-def row(label, own, refs, limit):
-    ratios = {name: own / value for name, value in refs.items() if value is not None}
+def ratio_row(label, ratios, limit):
     gated = [ratios[key] for key in ('zig-safe', 'rust-checked') if key in ratios]
     verdict = 'unavailable' if not gated else ('met' if all(value <= limit for value in gated) else 'over')
     cells = ['—' if key not in ratios else f"{ratios[key]:.3f}" for key in ('zig-safe', 'rust-checked', 'zig-fast', 'rust', 'go')]
-    return '| ' + ' | '.join([label, *cells, f'{limit:.2f}', verdict]) + ' |', ratios
+    return '| ' + ' | '.join([label, *cells, f'{limit:.2f}', verdict]) + ' |'
+
+
+def row(label, own, refs, limit):
+    ratios = {name: own / value for name, value in refs.items() if value is not None}
+    return ratio_row(label, ratios, limit), ratios
 
 
 def main():
     lines = ['# M0 gap — current-main base', '',
              'Base: `41ed360fb361c49938488ad111795bad8a726b73`. Ratios below divide mylang by the named reference; smaller is faster.', '',
-             'CPU 10 runs hold the timing lock and all build/gate slots. Parity uses 9 rounds and 2 warmups; Lox 3 rounds; EDA 10 rounds and 1 warmup. Rows use the median of three 7-round batches, after startup subtraction, in cycles per unit.', '',
+             'CPU 10 runs hold the timing lock and all build/gate slots. Parity uses 9 rounds and 2 warmups; Lox 3 rounds; EDA 10 rounds and 1 warmup. Rows use the median of the three within-batch ratios (7 rounds per batch, startup-subtracted cycles per unit), as in FU-X.', '',
              'A dash means the corpus has no such arm. Lox and EDA provide plain Rust only; its ratio is evidence, not a checked-Rust gate result. The `met` column applies only to the available gated references. Missing checked-Rust coverage remains explicit. binary_trees_recursive has only a mylang arm; it is timed and qualified, but its relative gate is unavailable and it is excluded from reference geomeans.', '']
     header = ['| program / arm | ÷ Zig RS | ÷ rust-checked | ÷ Zig RF | ÷ plain Rust | ÷ Go | limit | available gate |',
               '|---|---:|---:|---:|---:|---:|---:|---|']
@@ -81,9 +85,9 @@ def main():
     for name in sorted(batches[0]['rows']):
         for size in ('4096', '64'):
             configs = [batch['rows'][name]['sizes'][size]['configurations'] for batch in batches]
-            median = {key: statistics.median(config[key]['cycles_per_unit'] for config in configs) for key in configs[0]}
-            refs = {short: median[key] for short, key in (('zig-safe', 'Zig ReleaseSafe'), ('zig-fast', 'Zig ReleaseFast'), ('rust', 'Rust'), ('go', 'Go')) if key in median}
-            lines.append(row(name + '/' + size, median['new core release'], refs, 1.1)[0])
+            ratios = {short: statistics.median(config['new core release']['cycles_per_unit'] / config[key]['cycles_per_unit'] for config in configs)
+                      for short, key in (('zig-safe', 'Zig ReleaseSafe'), ('zig-fast', 'Zig ReleaseFast'), ('rust', 'Rust'), ('go', 'Go')) if key in configs[0]}
+            lines.append(ratio_row(name + '/' + size, ratios, 1.1))
     (M0 / 'gap.md').write_text('\n'.join(lines) + '\n')
     print('gap.md: 45 parity arms, 26 Lox cells, 34 EDA designs, 92 row cells')
 

@@ -91,6 +91,9 @@ def main():
         out = Path(remainder[remainder.index('--json') + 1])
         if out.exists():
             data = json.loads(out.read_text())
+            if any(entry.get('failure') == 'no qualified ' + BP.REFERENCE for entry in data['benchmarks'].values()):
+                from parity_standalone import complete
+                complete(data, Path(remainder[remainder.index('--work') + 1]).resolve(), BP)
             data['rp3_pair'] = {'base_compiler': str(base), 'base_sha256': hashes[str(base)],
                                 'base_source': own.base_source, 'candidate_compiler': str(candidate),
                                 'candidate_sha256': hashes[str(candidate)],

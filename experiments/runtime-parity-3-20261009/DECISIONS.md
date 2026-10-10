@@ -143,3 +143,19 @@
 - Evidence: bench_parity.discover/arms_for yields 153 arms, including all 45 mylang programs; binary_trees_recursive is the sole benchmark without Zig or Rust arms.
 - Choice: keep all 45 mylang programs in timing and the gap table, mark the standalone relative gate unavailable, and compute the reference geomeans over the 27 primary arms with Zig RS/RF references. No speed result or passing gate is inferred for missing coverage.
 - Reversibility: reporting correction only; no benchmark, oracle, threshold, or runner changes.
+
+## M0-019 — preserve paired row ratios when aggregating batches
+
+- Question: sort_records/4096 has a 1.2277× new/old result in batch 3 despite byte-identical old/new binaries. The two earlier batches are 1.0092× and 1.0138×.
+- Options: discard the outlying batch, divide separately pooled absolute medians, or follow FU-X's median of the three within-batch ratios and retain every raw sample.
+- Evidence: both binaries hash to 8f900581c0adca405b03aaba325e5f6c6e2341ba78483b1c82d2de141b3e629e. CPU-8 instruction samples are 232443933, 232443925, 232443931. The CPU-10 cycles have two modes around 51 M and 64 M. FU-X tools/summarize.py explicitly takes the median of per-batch ratios. Pooling absolute medians first incorrectly turns the paired 1.0138× result into 1.2054×.
+- Choice: correct m0_gap.py to preserve paired ratios for every reference. Keep all three complete 7-round batches unchanged, report the single-batch outlier, and run one separate sort_records confirmation at both sizes with the original 7-round/reference/checksum method. The confirmation is diagnostic and replaces none of the full batches.
+- Reversibility: aggregation correction only; original harnesses, thresholds, workload sizes, reference coverage, and raw results are unchanged.
+
+## M0-020 — add timing for the reference-free parity program
+
+- Question: the native parity runner qualifies binary_trees_recursive, then skips its timing with `no qualified zig-fast`. The strict complete-coverage validator caught the missing wall samples.
+- Options: drop the arm, label a mylang binary as Zig, or add absolute timing without a reference ratio.
+- Evidence: all 153 arms build and match output, but the unmodified runner records timing for only 152. The standalone mylang binary matches its build-manifest hash and expected output.
+- Choice: retain the complete original runner receipt as parity-native27.json.gz and add the missing 9 rounds / 2 warmups with the same run_timed/measure primitives under the quiet lock. The adapter verifies output before and after, checks every timed status, and invents no reference arm or ratio. The completed receipt now passes all 28-benchmark / 153-arm coverage checks. parity_pair.py uses the same adapter while retaining its lock, interleaving base and candidate for this program at X. Historical speed-threshold failures remain in the native and completed receipts; no thresholds changed.
+- Reversibility: additive measurement only. No native benchmark source or runner is edited.

@@ -1,0 +1,47 @@
+{
+ "cpu": 10,
+ "rounds": 9,
+ "warmups": 2,
+ "benchmarks": 28,
+ "arms": 153,
+ "mylang_arms": 45,
+ "all_builds_and_outputs_qualified": true,
+ "all_arms_timed": true,
+ "native_exit_status": 1,
+ "native_exit_explanation": "Five misses against the retained historical thresholds; every build/output succeeds. The standalone reference-free program needs the additive timing adapter. No threshold file changed.",
+ "native_failures": [
+  "REGRESSION binary_trees my: ratio 0.98x to zig-fast (95% CI 0.96-0.99) exceeds threshold 0.54x (baseline 0.47x + 15%); re-measured 0.98x (95% CI 0.98-1.04)",
+  "REGRESSION binary_trees my-arena: ratio 0.98x to zig-fast (95% CI 0.97-1.00) exceeds threshold 0.88x (baseline 0.77x + 15%); re-measured 0.98x (95% CI 0.96-1.00)",
+  "REGRESSION fannkuch_redux my-array: ratio 3.17x to zig-fast (95% CI 3.08-3.25) exceeds threshold 1.00x (baseline 0.87x + 15%); re-measured 3.20x (95% CI 3.15-3.24)",
+  "REGRESSION fannkuch_redux my-tuned: ratio 2.70x to zig-fast (95% CI 2.61-2.71) exceeds threshold 1.11x (baseline 0.96x + 15%); re-measured 2.64x (95% CI 2.61-2.70)",
+  "REGRESSION scan_replace my: ratio 0.48x to zig-fast (95% CI 0.47-0.48) exceeds threshold 0.40x (baseline 0.35x + 15%); re-measured 0.48x (95% CI 0.48-0.48)"
+ ],
+ "standalone": {
+  "programs": [
+   "binary_trees_recursive"
+  ],
+  "load_start": [
+   4.26513671875,
+   3.39794921875,
+   3.0380859375
+  ],
+  "load_end": [
+   4.26513671875,
+   3.39794921875,
+   3.0380859375
+  ],
+  "rounds": 9,
+  "warmups": 2,
+  "method": "Native run_timed/measure, output checked before and after; all timed exits checked. No reference ratio is fabricated."
+ },
+ "load_start": [
+  4.98486328125,
+  4.50634765625,
+  5.32763671875
+ ],
+ "load_end": [
+  3.841796875,
+  2.90576171875,
+  2.84716796875
+ ]
+}
