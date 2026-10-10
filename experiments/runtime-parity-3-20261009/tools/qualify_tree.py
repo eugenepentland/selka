@@ -81,6 +81,7 @@ class Gates:
 
 
 def main():
+    os.sched_setaffinity(0, os.sched_getaffinity(0) - {2, 3, 10, 11})
     parser = argparse.ArgumentParser()
     parser.add_argument('--tag', required=True)
     parser.add_argument('--fuzz-cases', type=int, choices=(50, 200), default=200)
@@ -120,7 +121,12 @@ def main():
     final = prefix / 'bin/mylang'
     g.receipt['release_fast_compiler'] = {'path': str(final), 'sha256': digest(final)}
     g.run('guest-builds', ['python3', TOOLS / 'build_count_batch.py', '--compiler', final, '--tag', args.tag], 'build')
-    lox = ROOT / '.mylang-cache/rp3/ce/bin' / args.tag / 'lox-plain'
+    bins = ROOT / '.mylang-cache/rp3/ce/bin' / args.tag
+    binaries = {path.name: digest(path) for path in bins.iterdir() if path.is_file()}
+    assert len(binaries) == 186, len(binaries)
+    g.receipt['guest_binaries'] = {'directory': str(bins), 'sha256': binaries}
+    g.save()
+    lox = bins / 'lox-plain'
     g.run('lox-conformance', ['python3', 'harness/lox_bench.py', 'conformance', '--binary', lox,
                              '--engine', 'both', '--stress', '--jobs', '4'], 'build', ROOT / '.mylang-cache/lox')
     g.run('counting', ['python3', TOOLS / 'corpus_counts.py', '--compiler', final, '--tag', args.tag, 'run', 'all'], 'build')
@@ -141,6 +147,8 @@ def main():
                                   '--markdown', g.area / 'instruction-comparison.md'])
     assert digest(debug) == g.receipt['debug_compiler']['sha256']
     assert digest(final) == g.receipt['release_fast_compiler']['sha256']
+    assert all(digest(bins / name) == sha for name, sha in binaries.items())
+    g.receipt['guest_binaries']['unchanged_after_gates'] = True
     g.receipt['complete'] = True
     g.save()
     print('complete: correctness and instruction gates; CPU-10 timing/review remain mandatory', flush=True)
