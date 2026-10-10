@@ -255,3 +255,11 @@
 - Evidence: the corrected conservative prototype passes the sampled EDA goldens/counting comparisons but leaves P6 at 444,833,472 bytes and increases total EDA record-copy bytes by 30.70%. On the actual parse_node error path, parse_list releases the destination children list before it reads and releases the returned error payload. The generalized ABI relocates overlapping error bytes as well as success bytes; lending there would dangle. Its initial 60-cell CPU-8 diagnostic records EDA instruction geomean 1.008163× M0; direct ordinary-control isolation is still pending.
 - Choice: preserve the corrected prototype in `07534f41b`, remove its production ABI machinery in `09ed22709`, and keep the regression fixtures. A future selected-case ABI needs tag-aware return-home placement, caller projections/ownership and a CFG/lifetime proof together. Do not weaken the conservative refusal merely to remove the measured copies.
 - Reversibility: all prototype history and attributed LLVM remain available. No language, trap, count-word or safety change is accepted.
+
+## X-009 — require fresh guest units for the final compile-time comparison
+
+- Question: an isolated --cache-dir does not prevent native guest unit reuse through the parent runtime store.
+- Options: accept the cached pilot, rebuild runtimes as part of every timed guest, or copy only warm runtime top-level files into fresh guest stores.
+- Evidence: U2's first pilot reused units-v1 and is retained as invalid. Its corrected 16 builds each report one unit compiled, zero reused, a linked program and two processes. S2's equivalent helper also rejects an empty runtime seed before timing.
+- Choice: final compile_times.py uses fresh run directories, compiler-hash runtime seeds without units-v1, one excluded warmup and three shuffled paired rounds for EDA/Lox. It records wall and child CPU time, binary/compiler hashes and exact cache reports; cached guest units fail validation. The parser accepts all 16 corrected U2 reports and rejects a reused-unit report. Actual final-tree timing remains pending.
+- Reversibility: measurement-only cache isolation. No compiler optimization or threshold changes.
