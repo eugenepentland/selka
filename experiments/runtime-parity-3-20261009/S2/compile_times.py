@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import random
+import shutil
 import statistics
 import sys
 import time
@@ -32,17 +33,27 @@ for repeat in range(-1, a.rounds):
         lane = lanes[tag]
         run = work / f'{repeat}-{tag}-{name}'
         run.mkdir()
+        runtime = run / 'runtime'
+        runtime.mkdir()
+        artifacts = []
+        for artifact in lane.runtime_cache.iterdir():
+            if artifact.is_file():
+                shutil.copy2(artifact, runtime / artifact.name)
+                artifacts.append({'name': artifact.name, 'sha256': ce.digest(artifact)})
+        assert artifacts and not (runtime / 'units-v1').exists()
         output = run / 'program'
-        command = [lane.compiler, 'build', source, '-o', output, '--release', '--cache-dir', run / 'cache']
+        command = [lane.compiler, 'build', source, '-o', output, '--release', '--cache-dir', run / 'cache', '--cache-report']
         start = time.monotonic()
-        status, stdout, stderr = ce.run(command, cwd=cwd, extra_env={'MYLANG_CORE_RUNTIME_CACHE': str(lane.runtime_cache)}, slot=False)
+        status, stdout, stderr = ce.run(command, cwd=cwd, extra_env={'MYLANG_CORE_RUNTIME_CACHE': str(runtime)}, slot=False)
         seconds = time.monotonic() - start
         (run / 'stdout').write_bytes(stdout)
         (run / 'stderr').write_bytes(stderr)
         rows.append({'round': repeat, 'tag': tag, 'program': name, 'seconds': seconds, 'status': status,
                      'command': list(map(str, command)), 'compiler_sha256': ce.digest(lane.compiler),
                      'binary_sha256': ce.digest(output) if output.exists() else None,
-                     'stderr_sha256': hashlib.sha256(stderr).hexdigest(), 'scratch': str(run)})
+                     'stderr_sha256': hashlib.sha256(stderr).hexdigest(), 'scratch': str(run),
+                     'runtime_seed': artifacts, 'cache_report': stderr.decode(errors='replace').splitlines(),
+                     'guest_unit_objects': len(list((runtime / 'units-v1').glob('*.o')))})
         a.out.write_text(json.dumps({'samples': rows}, indent=1) + '\n')
         print(name, tag, repeat, status, seconds, flush=True)
         if status:
@@ -52,4 +63,4 @@ for name in ('eda', 'lox'):
     times = {tag: [row['seconds'] for row in rows if row['program'] == name and row['tag'] == tag and row['round'] >= 0] for tag in lanes}
     medians = {tag: statistics.median(values) for tag, values in times.items()}
     summary[name] = {'samples_seconds': times, 'median_seconds': medians, 'ratio': medians['s2'] / medians['base']}
-a.out.write_text(json.dumps({'method': 'ReleaseFast compilers; shuffled interleaved release guest builds; fresh front-end/semantic/program caches per arm, one unmeasured warm-up per compiler/program then compiler-hash runtime caches; one outer shared build slot, CPUs2/3/10/11 excluded; shared-machine compile-time noise remains.', 'summary': summary, 'samples': rows}, indent=1) + '\n')
+a.out.write_text(json.dumps({'method': 'ReleaseFast compilers; shuffled interleaved release guest builds; fresh front-end/semantic/native-unit/program stores per arm, copying only compiler-hash runtime cache top-level files (no units-v1 directory); --cache-report retained; one unmeasured warm-up per compiler/program; one outer shared build slot, CPUs2/3/10/11 excluded; shared-machine compile-time noise remains.', 'summary': summary, 'samples': rows}, indent=1) + '\n')
