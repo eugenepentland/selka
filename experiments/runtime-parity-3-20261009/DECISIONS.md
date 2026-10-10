@@ -239,3 +239,11 @@
 - Choice: merge in the specified order and run the complete correctness/instruction sequence after each merge. `qualify_tree.py` uses a fresh evidence basename, asserts an unchanged clean tracked tree, snapshots Debug and ReleaseFast compiler identities, runs exact raw/additive conformance, 9×200 fuzz at integration, external tests/conformance, all 199 counting/output cells and all 151 instruction cells. Full repository tests include the registered lane fixtures. Fuzz holds the gate slot so it cannot run beside a full gate. Binding CPU-10 timing still runs on the complete final tree.
 - Evidence: the tool composes the already validated M0 gate adapters and checks every subprocess status; command-line/schema checks pass. No integration execution or passing gate is claimed before a lane hand-off.
 - Reversibility: orchestration only; no source, oracle, workload or threshold changes.
+
+## X-008 — summarize completed fuzz command journals within the evidence budget
+
+- Question: retaining the three lane matrices and a full matrix after each integration merge would exceed the plan's 10 MB evidence limit if every raw command journal remained in the committed directory.
+- Options: discard observations, compress the journals only, or retain exact journals in owned cache with checked summaries in the evidence tree.
+- Evidence: M0's nine command journals are already gzip-compressed, yet constitute most of its fuzz evidence. Each worker summary records exact command counts, native comparison totals, completion, failures and qualification; the matrix also records source/oracle stability.
+- Choice: after a matrix passes completely with unchanged source/oracles, count every journal event by role/build/status and verify its count against the worker summary. Preserve uncompressed and gzip hashes, copy the exact journal to owned cache, verify its hash, and retain its location in commands-summary.json. Keep the original matrix, worker summaries and source archives. Failed or incomplete matrices cannot use this path. The operation passes on all nine completed M0 workers; integration qualification uses it after successful fuzzing.
+- Reversibility: raw journals remain byte-identical in the locked worktree's owned cache and can be restored. No cases, comparisons, seeds, or gates are omitted.

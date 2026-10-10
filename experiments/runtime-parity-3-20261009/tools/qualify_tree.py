@@ -109,7 +109,7 @@ def main():
                   '--references', ROOT / 'experiments/new-core-s5-20261007/references/fuzz-v1.json.gz',
                   '--cases', args.fuzz_cases, '--new', TOOLS / 'mylang-migrating', '--evidence', fuzz,
                   '--jobs', '3', '--qualified-head', g.head], 'gate', extra={'FU_PORT_REAL': str(debug)})
-    g.run('compact-fuzz', ['python3', TOOLS / 'compact_fuzz.py', fuzz])
+    g.run('compact-fuzz', ['python3', TOOLS / 'compact_fuzz.py', fuzz, '--summarize-commands'])
     tests = ROOT / '.mylang-cache/rp3' / args.tag
     g.run('lox-tests', [debug, 'test', 'ports/mylang', '--jobs', '4', '--cache-dir', tests / 'lox-tests'],
           'build', ROOT / '.mylang-cache/lox')
