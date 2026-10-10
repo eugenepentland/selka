@@ -1,0 +1,6 @@
+{
+  "file": "copy-fix-evidence.tar.gz",
+  "sha256": "462cd946a106e2081be68b04b1d7c3ffe11a4cb4923a2f423fb7263897c42b77",
+  "bytes": 100698,
+  "scope": "Complete two-case captures, independent timings with rusage telemetry, paired analysis, source and build identities, driver snapshot, plus rejected pre-measurement attempt. Executables and build caches excluded."
+}

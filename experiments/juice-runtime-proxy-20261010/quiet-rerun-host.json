@@ -1,0 +1,11 @@
+{
+  "time_utc": "2026-10-10T16:18:38.636789+00:00",
+  "busy_percent_over_one_second": {
+    "cpu": 0.8,
+    "cpu2": 1.01,
+    "cpu10": 1.01
+  },
+  "loadavg": "2.78 3.06 3.00 2/1514 2111319",
+  "source_commit": "c38719209",
+  "same_seven_input_pairs_verified": true
+}

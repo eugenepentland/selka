@@ -1,0 +1,251 @@
+{
+  "schema": "juice-machine-region-map-v1",
+  "binary_sha256": "0a78dc6ea0fc9b47a6b543b768d89c111c73096e20a7738c4888eff1dcb2169e",
+  "core_ir_sha256": "0cf3617022fa3b899810599781135e47f243e4357e2be487b122a57b7cb5e6a5",
+  "provenance": "Manually audited source-mode switch destinations and optimized loop latches; no measurement-derived coefficients. Exact binary/IR hashes prevent reuse on a different build.",
+  "switch_table_address": "0x10058c0",
+  "functions": {
+    "cal_depth2": {
+      "mode": 0,
+      "native_switch_entry": "0x103cd39",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "main",
+              "start": "0x103cd62",
+              "end": "0x103ce06"
+            }
+          ]
+        }
+      ]
+    },
+    "cal_depth4": {
+      "mode": 1,
+      "native_switch_entry": "0x103d22a",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "main",
+              "start": "0x103d257",
+              "end": "0x103d2fb"
+            }
+          ]
+        }
+      ]
+    },
+    "one": {
+      "mode": 2,
+      "native_switch_entry": "0x103d0ea",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "main",
+              "start": "0x103d114",
+              "end": "0x103d140"
+            }
+          ]
+        }
+      ]
+    },
+    "one_unroll2": {
+      "mode": 3,
+      "native_switch_entry": "0x103d194",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "main",
+              "start": "0x103d1be",
+              "end": "0x103d1e0"
+            }
+          ]
+        }
+      ]
+    },
+    "three": {
+      "mode": 4,
+      "native_switch_entry": "0x103cea6",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "main",
+              "start": "0x103ced4",
+              "end": "0x103cfc8"
+            }
+          ]
+        }
+      ]
+    },
+    "three_unroll4": {
+      "mode": 5,
+      "native_switch_entry": "0x103d37a",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "my.three_unroll4",
+              "start": "0x103bf40",
+              "end": "0x103c034"
+            }
+          ]
+        }
+      ]
+    },
+    "lanes2_separate": {
+      "mode": 6,
+      "native_switch_entry": "0x103d390",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "my.lanes2_separate",
+              "start": "0x103c100",
+              "end": "0x103c1f4"
+            }
+          ]
+        },
+        {
+          "kind": "single_loop",
+          "core_header": 5,
+          "pieces": [
+            {
+              "symbol": "my.lanes2_separate",
+              "start": "0x103c240",
+              "end": "0x103c334"
+            }
+          ]
+        }
+      ]
+    },
+    "lanes2_fused": {
+      "mode": 7,
+      "native_switch_entry": "0x103d214",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "my.lanes2_fused",
+              "start": "0x103c3c0",
+              "end": "0x103c45c"
+            }
+          ]
+        }
+      ]
+    },
+    "lanes4_separate": {
+      "mode": 8,
+      "native_switch_entry": "0x103d508",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "my.lanes4_separate",
+              "start": "0x103c500",
+              "end": "0x103c5f4"
+            }
+          ]
+        },
+        {
+          "kind": "single_loop",
+          "core_header": 5,
+          "pieces": [
+            {
+              "symbol": "my.lanes4_separate",
+              "start": "0x103c680",
+              "end": "0x103c774"
+            }
+          ]
+        },
+        {
+          "kind": "single_loop",
+          "core_header": 9,
+          "pieces": [
+            {
+              "symbol": "my.lanes4_separate",
+              "start": "0x103c800",
+              "end": "0x103c8f4"
+            }
+          ]
+        },
+        {
+          "kind": "single_loop",
+          "core_header": 13,
+          "pieces": [
+            {
+              "symbol": "my.lanes4_separate",
+              "start": "0x103c940",
+              "end": "0x103ca34"
+            }
+          ]
+        }
+      ]
+    },
+    "lanes4_fused": {
+      "mode": 9,
+      "native_switch_entry": "0x103d0d4",
+      "regions": [
+        {
+          "kind": "single_loop",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "my.lanes4_fused",
+              "start": "0x103cac0",
+              "end": "0x103cbf4"
+            }
+          ]
+        }
+      ]
+    },
+    "nested32": {
+      "mode": 10,
+      "native_switch_entry": "0x103d3a6",
+      "regions": [
+        {
+          "kind": "expanded_nest",
+          "core_header": 1,
+          "pieces": [
+            {
+              "symbol": "main",
+              "start": "0x103d3c0",
+              "end": "0x103d3f2"
+            },
+            {
+              "symbol": "main",
+              "start": "0x103d400",
+              "end": "0x103d4f4",
+              "repeat_core_header": 5
+            },
+            {
+              "symbol": "main",
+              "start": "0x103d4fa",
+              "end": "0x103d500"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

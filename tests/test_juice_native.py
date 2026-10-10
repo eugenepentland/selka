@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -139,7 +140,11 @@ while [ "$#" -gt 0 ]; do
   *) shift;;
  esac
 done
-printf '1000;;%s;1;100.00\n' "$event" > "$output"
+events=${event#"{"}; events=${events%"}"}
+: > "$output"
+IFS=,
+for item in $events; do printf '1000;;%s;1;100.00\n' "$item" >> "$output"; done
+unset IFS
 "$@"
 ''')
         perf.chmod(0o755)
@@ -197,6 +202,105 @@ printf '1000;;%s;1;100.00\n' "$event" > "$output"
         self.command("analyze", manifest, "--output", output, "--cache-dir", self.root / "cache")
         self.assertEqual(json.loads(output.read_text())["version"], "juice-analysis-v1")
         self.assertNotIn("juice", json.loads(output.read_text()))
+
+    def runtime_records(self, refs=(1000, 1100)):
+        a, b = sample_record(1000), sample_record(800)
+        for record, count in zip((a, b), refs):
+            metrics = record["workloads"]["w"]["metrics"]
+            for key in ("cycles", "reference_cycles"):
+                metrics[key] = dict(median=count, min=count, max=count, spread=0,
+                                    samples=[count] * 3)
+        return self.records(a, b)
+
+    def test_runtime_cost_detects_regression_despite_fewer_instructions(self):
+        _, _, a, b = self.runtime_records()
+        output = self.root / "runtime.json"
+        self.command("compare", a, b, "--output", output)
+        cell = json.loads(output.read_text())["workloads"]["w"]
+        self.assertEqual(cell["juice"], 80)
+        self.assertAlmostEqual(cell["runtime_proxy"]["estimated_ratio"], 1.1)
+        self.assertFalse(cell["runtime_proxy"]["accuracy_validated"])
+        self.assertIn("5% accuracy target is unvalidated", output.with_suffix(".md").read_text())
+
+    def test_runtime_spread_abstains_and_forged_summary_fails(self):
+        _, b, first, second = self.runtime_records()
+        ref = b["workloads"]["w"]["metrics"]["reference_cycles"]
+        ref.update(min=1000, max=1200, spread=200 / 1100, samples=[1000, 1100, 1200])
+        self.write("candidate.json", b)
+        output = self.root / "runtime.json"
+        self.command("compare", first, second, "--output", output)
+        proxy = json.loads(output.read_text())["workloads"]["w"]["runtime_proxy"]
+        self.assertEqual(proxy["status"], "uncertain")
+        self.assertIsNone(proxy["estimated_ratio"])
+        ref["spread"] = 0
+        self.write("candidate.json", b)
+        self.command("compare", first, second, "--output", output, code=2)
+
+    def test_alternating_counter_pairs_cancel_shared_drift_and_require_matching_identity(self):
+        a, b, first, second = self.runtime_records()
+        baseline = [1000, 1000, 1100, 1100, 1200, 1200, 1300, 1300, 1400, 1400]
+        for record, scale in ((a, 1), (b, 1.1)):
+            cell = record["workloads"]["w"]
+            cell["pairing"] = dict(method="alternating-captures-v1", id="same-session", samples_per_pair=2)
+            for key in cell["metrics"]:
+                values = [value * scale for value in baseline]
+                median = statistics.median(values)
+                cell["metrics"][key] = dict(samples=values, median=median, min=min(values), max=max(values),
+                                             spread=(max(values) - min(values)) / median)
+        self.write("base.json", a)
+        self.write("candidate.json", b)
+        output = self.root / "paired.json"
+        self.command("compare", first, second, "--output", output)
+        proxy = json.loads(output.read_text())["workloads"]["w"]["runtime_proxy"]
+        self.assertEqual(proxy["status"], "estimated")
+        self.assertAlmostEqual(proxy["estimated_ratio"], 1.1)
+        self.assertEqual(len(proxy["reference_cycles"]["pair_ratios"]), 5)
+        b["workloads"]["w"]["pairing"]["id"] = "different-session"
+        self.write("candidate.json", b)
+        self.command("compare", first, second, "--output", output, code=2)
+        b["workloads"]["w"]["pairing"] = dict(a["workloads"]["w"]["pairing"], samples_per_pair=3)
+        a["workloads"]["w"]["pairing"] = b["workloads"]["w"]["pairing"]
+        self.write("base.json", a)
+        self.write("candidate.json", b)
+        self.command("compare", first, second, "--output", output, code=2)
+
+    def test_runtime_validation_requires_matching_independent_stable_timings(self):
+        _, _, a, b = self.runtime_records()
+        comparison = self.root / "comparison.json"
+        self.command("compare", a, b, "--output", comparison)
+        report = json.loads(comparison.read_text())
+        evidence = {key: report[key] for key in ("base_id", "candidate_id", "context_id")}
+        evidence.update(version="juice-timing-evidence-v1", workload="w",
+                        method="independent alternating processes", pairs=[[1, 1.1]] * 5)
+        timing = self.write("timing.json", evidence)
+        output = self.root / "validation.json"
+        self.command("validate-runtime", comparison, timing, "--output", output)
+        self.assertTrue(json.loads(output.read_text())["passed"])
+        evidence["pairs"] = [[1, 1.3]] * 5
+        self.write("timing.json", evidence)
+        self.command("validate-runtime", comparison, timing, "--output", output, code=1)
+        self.assertEqual(json.loads(output.read_text())["status"], "outside-target")
+        evidence["pairs"][0] = [1, 2]
+        self.write("timing.json", evidence)
+        self.command("validate-runtime", comparison, timing, "--output", output, code=1)
+        self.assertEqual(json.loads(output.read_text())["status"], "uncertain")
+        evidence["candidate_id"] = "wrong build"
+        self.write("timing.json", evidence)
+        self.command("validate-runtime", comparison, timing, "--output", output, code=2)
+
+    def test_runtime_capture_preserves_three_events_and_rejects_partial_group(self):
+        manifest, perf = self.project()
+        self.command("record", manifest, "--name", "runtime", "--repeats", 2,
+                     "--profile", "runtime", "--perf", perf, "--cache-dir", self.root / "cache")
+        path = self.root / "cache/test-project/records/runtime/record.json"
+        record = json.loads(path.read_text())
+        self.assertEqual(record["collector"]["profile"], "runtime")
+        self.assertIn("reference_cycles", record["workloads"]["quick"]["metrics"])
+        perf.write_text(perf.read_text().replace('for item in $events; do',
+                       'for item in $events; do case "$item" in *ref-cycles*) continue;; esac;'))
+        self.command("record", manifest, "--name", "missing", "--repeats", 2,
+                     "--profile", "runtime", "--perf", perf, "--cache-dir", self.root / "cache", code=2)
+        self.assertEqual(json.loads((path.parent.parent / "missing/record.json").read_text())["status"], "incomplete")
 
     def test_unknown_manifest_field_cannot_disable_oracle(self):
         manifest, perf = self.project()

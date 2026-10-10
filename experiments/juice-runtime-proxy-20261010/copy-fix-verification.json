@@ -1,0 +1,23 @@
+{
+  "archive_sha256": "462cd946a106e2081be68b04b1d7c3ffe11a4cb4923a2f423fb7263897c42b77",
+  "checks": [
+    {
+      "case": "copy-unrolled",
+      "comparison_and_validation_reproduced": true,
+      "retained_timing_runs_with_resource_usage": 20,
+      "verdict": "within-target"
+    },
+    {
+      "case": "large-copy-unrolled",
+      "comparison_and_validation_reproduced": true,
+      "retained_timing_runs_with_resource_usage": 20,
+      "verdict": "uncertain"
+    }
+  ],
+  "controller_placement_verified": true,
+  "focused_tests": {
+    "command": "python3 -m unittest discover -s tests -p test_juice_runtime_bench.py -v",
+    "passed": 5
+  },
+  "scope": "Offline comparison/validation replay from retained evidence; live fixture oracles checked during build and every measurement; no further workload runs."
+}
