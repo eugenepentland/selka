@@ -6,6 +6,7 @@
 //! from 0 on the first run to `max_size` on the last, and integers lean on
 //! their edges (0, ±1, the width's minimum and maximum, powers of two).
 const std = @import("std");
+const campaign = @import("property_campaign_contract.zig");
 const v = @import("property_value.zig");
 const types = @import("property_types.zig");
 const Value = std.json.Value;
@@ -52,6 +53,11 @@ pub const Stream = struct {
 pub fn sizeOf(run: usize, runs: usize) usize {
     if (runs <= 1) return max_size;
     return (run % runs) * max_size / (runs - 1);
+}
+
+/// Indexed generation uses a versioned fixed period, so extending a pass budget preserves input ordinals.
+pub fn campaignSize(policy: campaign.Policy, ordinal: usize, requested: usize) usize {
+    return sizeOf(ordinal, if (policy == .indexed_v1) campaign.indexed_period else requested);
 }
 
 /// One input's generation state: the schema, the run's stream and size, and

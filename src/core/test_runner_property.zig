@@ -14,6 +14,7 @@ const types = @import("property_types.zig");
 const generate = @import("property_generate.zig");
 const shrink = @import("property_shrink.zig");
 const render = @import("property_render.zig");
+const campaign = @import("property_campaign_contract.zig");
 const Value = std.json.Value;
 
 /// Generated inputs a property must pass when `--property-runs` names none.
@@ -32,11 +33,11 @@ const shrink_chunk = 128;
 /// Copied nodes one batch request may carry before the rest wait for the next.
 const batch_nodes = 500_000;
 /// Property setup, generation and execution failures.
-pub const Error = execute.Error || render.Error || error{ComponentUnavailable};
+pub const Error = execute.Error || render.Error || campaign.CommitError;
 
 /// The run's identity: the seed inputs are drawn from, how many must pass,
 /// and the entry path the reproduction command names.
-pub const Settings = struct { seed: u64, runs: u32 = default_runs, entry: []const u8 = "" };
+pub const Settings = struct { seed: u64, runs: u32 = default_runs, entry: []const u8 = "", policy: campaign.Policy = .legacy, campaign: campaign.Campaign = .{} };
 /// One data parameter the generator fills.
 const Parameter = struct { name: []const u8, type: []const u8 };
 /// One generated input: its run number, a value per data parameter, and the
@@ -47,7 +48,17 @@ const Input = struct { run: usize, values: []const Value, nodes: []const u64 };
 /// evidence the JSON report carries as the result's `property` object.
 pub const Verdict = struct { passed: bool, reason: []const u8 = "", evidence: Evidence };
 /// What one property run did, and for a falsified property its counterexample.
-pub const Evidence = struct { seed: u64, counts: Counts, failure: ?*const Failure = null };
+pub const Evidence = struct { seed: u64, counts: Counts, failure: ?*const Failure = null, campaign: ?CampaignEvidence = null };
+/// Dispatches include retries and may exceed classified cases; observed counts only returned trial outcomes.
+pub const CampaignEvidence = struct {
+    policy: []const u8 = "indexed-v1",
+    generated: u64,
+    submitted: u64,
+    observed: u64,
+    fresh_classified: u64,
+    reused: u64,
+    next_ordinal: u64,
+};
 /// How much work one property did: the runs asked for, the inputs that passed
 /// and were discarded, the batch processes it started, and its shrinking.
 pub const Counts = struct { runs: usize, passed: usize = 0, discarded: usize = 0, processes: usize = 0, shrinks: usize = 0, attempts: usize = 0 };
@@ -108,11 +119,35 @@ pub const Property = struct {
         if (!types.verdict(schema, result)) return .{ .invalid = try std.fmt.allocPrint(a, non_bool_result, .{result}) };
         return .{ .ready = .{ .context = context, .executor = executor, .function = function, .limits = limits, .settings = settings, .schema = schema, .parameters = parameters.items } };
     }
-    /// The first batch: the inputs of every requested run, which the command
-    /// executes beside every other property's first batch.
-    pub fn first(self: *Property, search: *Search) Error!execute.BatchCall {
+    /// Restore only a qualified prefix within this campaign's requested pass/discard ceilings.
+    pub fn restoreCampaign(self: *Property, restored: campaign.Campaign) Error!void {
+        if (self.settings.policy != .indexed_v1 or !try restored.restored.valid(self.context.arena)) return error.InvalidTestValue;
+        if (restored.restored.passed > self.settings.runs or restored.restored.discarded > discard_factor * @as(u64, self.settings.runs)) return error.InvalidTestValue;
+        self.settings.campaign = restored;
+    }
+
+    fn restore(self: *Property, search: *Search) Error!void {
+        if (self.settings.policy != .indexed_v1) return;
+        const prefix = self.settings.campaign.restored;
+        search.next_run = @intCast(prefix.next_ordinal);
+        search.passed = @intCast(prefix.passed);
+        search.discarded = @intCast(prefix.discarded);
+        search.work = .{ .counts = .{ .reused = prefix.next_ordinal }, .classified = prefix.next_ordinal };
+        for (prefix.clauses) |clause| {
+            const message = try self.context.arena.dupe(u8, clause.message);
+            try search.clauses.put(self.context.arena, message, @intCast(clause.count));
+        }
+        search.work.last = try self.progress(search);
+    }
+
+    /// No first batch is needed when a restored prefix already satisfies the budget.
+    pub fn first(self: *Property, search: *Search) Error!?execute.BatchCall {
+        try self.restore(search);
+        if (search.passed >= self.settings.runs) return null;
+        const batch = try self.draw(search, self.settings.runs - search.passed);
         search.processes += 1;
-        return self.draw(search, self.settings.runs);
+        search.work.counts.submitted += batch.inputs.len;
+        return batch;
     }
     /// The evidence of a run so far, with any shrinking counts.
     fn tally(self: *Property, search: *Search, shrunk: Shrunk) Evidence {
@@ -123,19 +158,56 @@ pub const Property = struct {
             .processes = search.processes,
             .shrinks = shrunk.steps,
             .attempts = shrunk.attempts,
-        } };
+        }, .campaign = if (self.settings.policy == .indexed_v1) .{
+            .generated = search.work.counts.generated,
+            .submitted = search.work.counts.submitted,
+            .observed = search.work.counts.observed,
+            .fresh_classified = search.work.counts.fresh_classified,
+            .reused = search.work.counts.reused,
+            .next_ordinal = search.work.last.next_ordinal,
+        } else null };
     }
     /// Classify the first batch's outcomes, draw more inputs while discards
     /// leave runs to fill, and shrink the first failure.
-    pub fn finish(self: *Property, search: *Search, outcome: execute.BatchOutcome) Error!Verdict {
-        var answer = outcome;
+    pub fn finish(self: *Property, search: *Search, outcome: ?execute.BatchOutcome) Error!Verdict {
+        if (outcome == null) {
+            if (search.passed < self.settings.runs) return error.InvalidTestValue;
+            return .{ .passed = true, .evidence = self.tally(search, .{ .values = &.{}, .reason = "" }) };
+        }
+        self.observed(search, outcome.?);
+        var answer = outcome.?;
         const runs: usize = self.settings.runs;
         while (true) {
             if (try self.absorb(search, answer)) |verdict| return verdict;
+            try self.checkpoint(search);
             if (search.passed >= runs) return .{ .passed = true, .evidence = self.tally(search, .{ .values = &.{}, .reason = "" }) };
             if (search.discarded > discard_factor * runs) return self.exhausted(search);
-            answer = try self.one(search, try self.draw(search, self.refill(search)));
+            const wanted = if (self.settings.policy == .indexed_v1) runs - search.passed else self.refill(search);
+            answer = try self.one(search, try self.draw(search, wanted));
         }
+    }
+
+    fn checkpoint(self: *Property, search: *Search) Error!void {
+        if (self.settings.policy != .indexed_v1 or search.work.classified != search.next_run) return;
+        const progress_now = if (search.work.publication) try self.progress(search) else search.work.last;
+        if (self.settings.campaign.callback) |callback| {
+            try callback.commit(callback.context, progress_now);
+        }
+        if (search.work.publication) search.work.last = progress_now;
+    }
+
+    fn progress(self: *Property, search: *Search) Error!campaign.Progress {
+        const clauses = try self.context.arena.alloc(campaign.Clause, search.clauses.count());
+        var iterator = search.clauses.iterator();
+        var index: usize = 0;
+        while (iterator.next()) |entry| : (index += 1) clauses[index] = .{ .message = entry.key_ptr.*, .count = entry.value_ptr.* };
+        return .{ .next_ordinal = search.work.classified, .passed = search.passed, .discarded = search.discarded, .clauses = clauses };
+    }
+
+    fn observed(_: *Property, search: *Search, outcome: execute.BatchOutcome) void {
+        search.work.counts.observed += outcome.outcomes.len;
+        if (!outcome.complete or outcome.ending.len != 0) search.work.publication = false;
+        if (outcome.timed_out or outcome.alarm) search.work.publication = false;
     }
     /// How many more inputs to draw: the runs still missing, scaled by the
     /// share of inputs that have passed so far, and never more than the
@@ -153,9 +225,11 @@ pub const Property = struct {
         const a = self.context.arena;
         var inputs: std.ArrayList(Input) = .empty;
         var nodes: usize = 0;
-        while (inputs.items.len < @min(wanted, execute.batch_limit) and nodes < batch_nodes) {
+        const limit = if (self.settings.policy == .indexed_v1) @min(wanted, campaign.chunk_limit) else @min(wanted, execute.batch_limit);
+        while (inputs.items.len < limit and nodes < batch_nodes) {
             const input = try self.generated(search.next_run);
             search.next_run += 1;
+            search.work.counts.generated += 1;
             nodes += input.nodes.len / 2;
             try inputs.append(a, input);
         }
@@ -176,7 +250,7 @@ pub const Property = struct {
             .arena = a,
             .schema = self.schema,
             .stream = .init(self.settings.seed, run),
-            .size = generate.sizeOf(run, self.settings.runs),
+            .size = generate.campaignSize(self.settings.policy, run, self.settings.runs),
         };
         const values = try a.alloc(Value, self.parameters.len);
         for (values, self.parameters) |*slot, parameter| slot.* = try generator.value(parameter.type, 0);
@@ -194,7 +268,9 @@ pub const Property = struct {
     /// Run one batch call in its own process.
     fn one(self: *Property, search: *Search, batch: execute.BatchCall) Error!execute.BatchOutcome {
         search.processes += 1;
+        search.work.counts.submitted += batch.inputs.len;
         const answered = try execute.executeBatches(self.context, &.{batch}, self.limits, 1);
+        self.observed(search, answered[0]);
         return answered[0];
     }
     /// Count one batch's outcomes in input order. A child that died before
@@ -226,10 +302,15 @@ pub const Property = struct {
     fn count(self: *Property, search: *Search, inputs: []const Input, outcomes: []const execute.Outcome) Error!?Verdict {
         for (outcomes, inputs) |result, input| {
             if (search.passed >= self.settings.runs) return null;
+            search.work.counts.fresh_classified += 1;
             switch (try self.classify(result)) {
-                .pass => search.passed += 1,
+                .pass => {
+                    search.passed += 1;
+                    search.work.classified += 1;
+                },
                 .discard => |clause| {
                     try search.discard(self.context.arena, clause);
+                    search.work.classified += 1;
                     if (search.discarded > discard_factor * @as(usize, self.settings.runs)) {
                         const verdict = try self.exhausted(search);
                         return verdict;
@@ -401,7 +482,8 @@ pub const Property = struct {
         const a = self.context.arena;
         const name = v.text(v.get(self.function, "name"));
         const runs = if (self.settings.runs == default_runs) "" else try std.fmt.allocPrint(a, " --property-runs {d}", .{self.settings.runs});
-        return std.fmt.allocPrint(a, "mylang test {s} --filter '{s}' --seed {d}{s}", .{ self.settings.entry, name, self.settings.seed, runs });
+        const policy = if (self.settings.policy == .indexed_v1) " --property-policy indexed-v1" else "";
+        return std.fmt.allocPrint(a, "mylang test {s} --filter '{s}' --seed {d}{s}{s}", .{ self.settings.entry, name, self.settings.seed, runs, policy });
     }
     /// The failure text `mylang test` prints after `failed NAME: `.
     // twin-drift-ok: Preserve the old property algorithm in the independent Core port; its command allocator is borrowed as arena.
@@ -441,6 +523,12 @@ pub const Search = struct {
     processes: usize = 0,
     clauses: std.array_hash_map.String(usize) = .empty,
     batch: []const Input = &.{},
+    work: struct {
+        counts: struct { generated: u64 = 0, submitted: u64 = 0, observed: u64 = 0, fresh_classified: u64 = 0, reused: u64 = 0 } = .{},
+        classified: u64 = 0,
+        last: campaign.Progress = .{},
+        publication: bool = true,
+    } = .{},
 
     fn discard(self: *Search, allocator: std.mem.Allocator, clause: []const u8) error{OutOfMemory}!void {
         self.discarded += 1;

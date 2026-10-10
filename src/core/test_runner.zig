@@ -71,6 +71,10 @@ const SelectionContext = struct { receipt: receipt.Context, base: [32]u8, permit
 pub fn run(init: std.process.Init, requested: Options) Error!u8 {
     return runRequested(init, requested) catch |err| {
         if (err == error.ComponentUnavailable) return 2;
+        if (err == error.SourceChanged) {
+            try writeAll(init, std.Io.File.stderr(), "error: SourceChanged: a property campaign input changed during execution\n");
+            return 1;
+        }
         return err;
     };
 }
@@ -161,7 +165,7 @@ fn start(init: std.process.Init, requested: Options, setup: Setup) Error!Started
         .identity = .{ .tool = guest, .cache_plan = cache_plan },
     };
     var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
-    const base = try receipt.settings(context, &native_inputs);
+    const base = if (options.properties.policy == .indexed_v1) (try receipt.campaignSettings(context, &native_inputs)).? else try receipt.settings(context, &native_inputs);
     if (try replayRun(context, base)) |cached| return .{ .done = try emitted(init, setup, cached) };
     if (setup.directed) |directed| if (directed.replay_only) return .{ .done = null };
     return .{ .ready = .{ .context = context, .base = base, .native_inputs = native_inputs.items, .bytes = bytes, .cases = configured_cases } };
@@ -265,12 +269,12 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
         verdict.* = item.verdict;
         verdict.cache = try cacheExplanation(allocator, item, context);
         successful = successful and item.identity != null and (item.verdict.status == .passed or item.verdict.status == .cached);
-        if (unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
+        if (options.properties.policy == .legacy and unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
     }
-    for (collected.wholes.items) |range| if (unchanged and wholePassed(range.whole, chosen.items[range.start..][0..range.len])) try receipt.save(context, range.whole.key);
+    for (collected.wholes.items) |range| if (options.properties.policy == .legacy and unchanged and wholePassed(range.whole, chosen.items[range.start..][0..range.len])) try receipt.save(context, range.whole.key);
     attachWork(verdicts, collected.works.items);
     const json = try report.jsonSources(allocator, verdicts, sources.items);
-    if (successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json, collected.warnings.items);
+    if (options.properties.policy == .legacy and successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json, collected.warnings.items);
     const out = if (options.json) json else try report.text(allocator, verdicts);
     try emit(init, setup, out);
     try siblingHint(init, loaded, located, verdicts.len);
@@ -351,7 +355,7 @@ const GroupRun = struct {
         }
         const selected = try select(init, context.options, program, cases, self.cases, self.selection);
         const items = selected.items;
-        try execute(init, context.options, program, items, self.selection.permits);
+        try execute(init, context.options, program, items, self.selection.permits, .{ .context = context, .inputs = out.before.items, .backing = init.gpa });
         if (identity) |known| for (items) |*item| {
             item.verdict.identity = known;
         };
@@ -471,10 +475,29 @@ fn casesFailure(init: std.process.Init, err: case_settings.Error) Error!u8 {
 /// overlaid with its header (`headerlessTest`), so its own bytes are its input.
 fn checkedInputs(context: receipt.Context, loaded: Loaded, overlay: []const frontend.Provider, bytes: []const u8) Error![]const receipt.Dependency {
     const inputs = if (loaded.session) |session| try receipt.captured(context, session, overlay) else try receipt.capturedModules(context, loaded.modules);
-    if (overlay.len == 0) return inputs;
-    var digest: [32]u8 = undefined;
-    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
-    return std.mem.concat(context.arena, receipt.Dependency, &.{ inputs, &.{.{ .path = context.entry.path, .digest = digest }} });
+    const captured = if (overlay.len == 0) inputs else blk: {
+        var digest: [32]u8 = undefined;
+        std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+        break :blk try std.mem.concat(context.arena, receipt.Dependency, &.{ inputs, &.{.{ .path = context.entry.path, .digest = digest }} });
+    };
+    if (context.options.properties.policy != .indexed_v1) return captured;
+    var guarded: std.ArrayList(receipt.Dependency) = .empty;
+    try guarded.appendSlice(context.arena, captured);
+    if (context.options.controls.cases == null) {
+        const path = context.entry.path;
+        const stem = if (std.mem.endsWith(u8, path, ".my")) path[0 .. path.len - 3] else path;
+        try guarded.append(context.arena, .{ .path = try std.fmt.allocPrint(context.arena, "{s}.cases.json", .{stem}), .digest = null });
+    }
+    var directory = std.fs.path.dirname(context.entry.path) orelse return guarded.items;
+    while (true) {
+        const candidate = try std.fs.path.join(context.arena, &.{ directory, @import("mylang").project_config.config_name });
+        if (context.entry.configuration) |configured| if (std.mem.eql(u8, candidate, configured.path)) break;
+        try guarded.append(context.arena, .{ .path = candidate, .digest = null });
+        const parent = std.fs.path.dirname(directory) orelse break;
+        if (std.mem.eql(u8, parent, directory)) break;
+        directory = parent;
+    }
+    return guarded.items;
 }
 
 /// CLI-INPUT-REFUSED-1: refuse an entry that cannot be read, naming it and the reason
@@ -530,14 +553,16 @@ fn chooseCases(init: std.process.Init, options: Options, located: project_entry.
 fn cacheExplanation(a: std.mem.Allocator, item: Selected, context: receipt.Context) Error!report.Cache {
     const status = item.verdict.status;
     const admission = receipt.reuseReason(context);
-    const reason = switch (status) {
+    const prefix = if (item.verdict.property) |evidence| evidence.campaign else null;
+    const range_replay = if (prefix) |progress| status == .passed and progress.submitted == 0 and progress.fresh_classified == 0 and progress.reused != 0 else false;
+    const reason = if (range_replay) "property-prefix-hit" else switch (status) {
         .cached => item.cache_reason orelse "receipt-hit",
         .skipped => "configured-skip",
         .unsupported => "unsupported",
         else => if (!std.mem.eql(u8, admission, "no-success-receipt")) admission else item.cache_reason orelse if (item.identity == null) "uncacheable-metadata" else "no-success-receipt",
     };
     return .{
-        .action = switch (status) {
+        .action = if (range_replay) "reuse" else switch (status) {
             .cached => "reuse",
             .skipped => "skip",
             .unsupported => "refuse",
@@ -560,12 +585,12 @@ fn bindPlan(init: std.process.Init) Error!planner.Bound {
 
 /// The whole run's recorded report, unless `--affected` selects by unrecorded git state.
 fn replayRun(context: receipt.Context, base: [32]u8) Error!?receipt.Replay {
-    if (context.options.controls.against != null) return null;
+    if (context.options.controls.against != null or context.options.properties.policy == .indexed_v1) return null;
     return receipt.replay(context, base);
 }
 
 fn cachedReplay(init: std.process.Init, options: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?receipt.Replay {
-    if (options.controls.against != null) return null;
+    if (options.controls.against != null or options.properties.policy == .indexed_v1) return null;
     const borrowed = try borrowedReplay(init, options, located, case_bytes, cache_plan);
     // The private transport never reaches native guests or a persistent key.
     _ = init.environ_map.swapRemove(tool_ticket.hint);
@@ -582,7 +607,7 @@ fn borrowedReplay(init: std.process.Init, requested: Options, located: project_e
 /// The recorded report of an entry under `guest`, the toolchain its directory run
 /// identified and validates once for every root.
 fn directedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, guest: tool_identity.Identity, cache_plan: planner.Bound) Error!?receipt.Replay {
-    if (requested.controls.against != null) return null;
+    if (requested.controls.against != null or requested.properties.policy == .indexed_v1) return null;
     const a = init.arena.allocator();
     var options = requested;
     options.build.zig = guest.path;
@@ -698,7 +723,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
         };
     }
     if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base, .{ .planner = context.identity.cache_plan.?, .catalog = selection.catalog })) |keys| {
-        if (try receipt.hit(context, keys.whole.key)) {
+        if (options.properties.policy == .legacy and try receipt.hit(context, keys.whole.key)) {
             for (chosen, keys.tests) |*item, key| if (item.ready) {
                 item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = key, .cache_reason = "whole-receipt-hit", .settings = item.settings, .key_method = keys.method };
             };
@@ -707,7 +732,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
         for (chosen, keys.tests) |*item, key| if (item.ready) {
             item.key_method = keys.method;
             item.identity = key;
-            if (try receipt.hit(context, key.?)) {
+            if (options.properties.policy == .legacy and try receipt.hit(context, key.?)) {
                 item.verdict = .{ .name = item.case.name, .status = .cached };
                 item.ready = false;
             }
@@ -727,7 +752,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
         }
         if (try programIdentity(.{ .scratch = scratch.allocator(), .io = init.io, .prebuilt = built }, options, checked, item.case, selection.base)) |identity| {
             item.identity = receipt.configuredKey(identity, try std.json.Stringify.valueAlloc(a, item.settings, .{}));
-            if (try receipt.hit(context, item.identity.?)) {
+            if (options.properties.policy == .legacy and try receipt.hit(context, item.identity.?)) {
                 item.verdict = .{ .name = item.case.name, .status = .cached };
                 item.ready = false;
             }
@@ -1214,7 +1239,7 @@ fn definesMain(bytes: []const u8) bool {
 }
 
 /// Build the pending tests together (isolating any the backend rejects) and run each.
-fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked, chosen: []Selected, permits: ?*root_share.Permits) Error!void {
+fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked, chosen: []Selected, permits: ?*root_share.Permits, campaign: run_tests.Campaign) Error!void {
     const allocator = init.arena.allocator();
     var live: std.ArrayList(usize) = .empty;
     for (chosen, 0..) |item, position| if (item.ready) try live.append(allocator, position);
@@ -1247,7 +1272,7 @@ fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked
         .built => |executable| {
             const width = options_module.width(options.controls, init.environ_map, live.items.len, @import("memory_budget").available(init.io));
             // The pinned Zig arena is thread-safe with Init's thread-safe backing.
-            const resources: run_tests.Resources = .{ .arena = allocator, .backing = init.gpa, .io = init.io, .environment = .{ .block = init.minimal.environ.block } };
+            const resources: run_tests.Resources = .{ .arena = allocator, .backing = init.gpa, .io = init.io, .environment = .{ .block = init.minimal.environ.block }, .campaign = &campaign };
             const workers: run_tests.Workers = .{ .width = width, .batch = if (run_tests.isolated(init.environ_map)) 1 else std.math.maxInt(usize), .permits = permits };
             try run_tests.run(resources, options, .{ .path = executable, .program = checked.program }, chosen, live.items, workers);
         },
@@ -1300,7 +1325,7 @@ fn testTarget(allocator: std.mem.Allocator, options: Options, checked: frontend.
         .function = table_index,
         .streams = case.streams,
         .parameters = case.parameters,
-        .seed = run_tests.entropySeed(options.seed, case.name),
+        .seed = run_tests.entropySeed(options.properties.seed, case.name),
         .data = .{ .parameters = parameters, .result = typed.typeName(function.signature.return_type, checked.program.records) },
         .result = if (result) |shape| .{ .ok_tag = @intCast(shape.ok_tag), .error_tag = @intCast(shape.error_tag) } else null,
     };
@@ -1423,4 +1448,123 @@ test "programIdentity propagates allocation failure instead of inventing a reusa
     const cases = try discover.discover(a, checked.program, "app", &.{.{ .name = "app", .text = source }});
     try std.testing.expectEqual(@as(usize, 1), cases.len);
     try std.testing.expectError(error.OutOfMemory, programIdentity(resources, .{ .path = path, .build = .{ .zig = "zig" } }, checked, cases[0], @splat(0)));
+}
+
+// spec-case: NEW-CORE-PROPERTY-CAMPAIGN-1
+test "indexed campaign checkedInputs guard records absent default cases and rejects their appearance" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const path = try std.fs.path.join(a, &.{ root, "app.my" });
+    const context: receipt.Context = .{
+        .arena = a,
+        .io = std.testing.io,
+        .environment = &environment,
+        .options = .{ .path = path, .build = .{ .zig = "unselected-tool" }, .properties = .{ .policy = .indexed_v1 } },
+        .entry = .{ .path = path, .root = root, .name = "app" },
+        .identity = .{ .tool = .{ .path = "unselected-tool", .digest = @splat(0), .generation = @splat(0), .native_target = @splat(0), .inputs = 0, .memo_hit = false } },
+    };
+    const inputs = try checkedInputs(context, .{ .modules = &.{} }, &.{}, "");
+    try std.testing.expect(inputs.len >= 1);
+    try std.testing.expectEqualStrings(try case_settings.defaultPath(a, path), inputs[0].path);
+    try std.testing.expect(inputs[0].digest == null);
+    try std.testing.expect(try receipt.unchanged(context, inputs));
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.cases.json", .data = "{}" });
+    const guard: run_tests.Campaign = .{ .context = context, .inputs = inputs, .backing = std.testing.allocator };
+    try std.testing.expect(!try guard.unchanged());
+}
+
+fn configurationGuard(a: std.mem.Allocator, path: []const u8, environment: *const std.process.Environ.Map) !run_tests.Campaign {
+    var problems: std.ArrayList(u8) = .empty;
+    const located = try project_entry.resolve(a, std.testing.io, path, &problems);
+    const context: receipt.Context = .{
+        .arena = a,
+        .io = std.testing.io,
+        .environment = environment,
+        .options = .{ .path = located.path, .build = .{ .zig = "unselected-tool" }, .properties = .{ .policy = .indexed_v1 } },
+        .entry = located,
+        .identity = .{ .tool = .{ .path = "unselected-tool", .digest = @splat(0), .generation = @splat(0), .native_target = @splat(0), .inputs = 0, .memo_hit = false } },
+    };
+    return .{ .context = context, .inputs = try checkedInputs(context, .{ .modules = &.{} }, &.{}, ""), .backing = a };
+}
+
+// spec-case: NEW-CORE-PROPERTY-CAMPAIGN-1
+test "indexed campaign checkedInputs guard rejects configuration appearing before the nearest existing config" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try temporary.dir.createDir(std.testing.io, "inner", .default_dir);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "inner/app.my", .data = "func main() -> int:\n    return 0\n" });
+    const path = try temporary.dir.realPathFileAlloc(std.testing.io, "inner/app.my", a);
+    const absent = try configurationGuard(a, path, &environment);
+    try std.testing.expect(try receipt.unchanged(absent.context, absent.inputs));
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "mylang.json", .data = "{\"version\":2}" });
+    try std.testing.expect(!try absent.unchanged());
+    const configured = try configurationGuard(a, path, &environment);
+    try std.testing.expect(configured.context.entry.configuration != null);
+    try std.testing.expect(try receipt.unchanged(configured.context, configured.inputs));
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "inner/mylang.json", .data = "{\"version\":2}" });
+    try std.testing.expect(!try configured.unchanged());
+}
+
+// spec-case: NEW-CORE-PROPERTY-CAMPAIGN-1
+test "cacheExplanation reports execution after partial property reuse and unanswered trials" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const context: receipt.Context = .{
+        .arena = a,
+        .io = std.testing.io,
+        .environment = &environment,
+        .options = .{ .path = "app.my", .build = .{ .zig = "unselected-tool" }, .properties = .{ .policy = .indexed_v1 } },
+        .entry = .{ .path = "app.my", .root = ".", .name = "app" },
+        .identity = .{
+            .tool = .{ .path = "unselected-tool", .digest = @splat(0), .generation = @splat(0), .native_target = @splat(0), .inputs = 0, .memo_hit = false, .cacheable = true },
+            .cache_plan = .{ .identity = @splat(11), .mode = .reference, .io = std.testing.io, .environ = &environment, .directory = null, .artifact = null },
+        },
+    };
+    var item: Selected = .{
+        .case = .{ .name = "app::test_generated", .function = @fromBackingInt(@intCast(0)), .shape = .boolean, .other_parameters = 1, .streams = &.{} },
+        .ready = true,
+        .identity = @splat(7),
+        .verdict = .{
+            .name = "app::test_generated",
+            .status = .failed,
+            .reason = "native process ended before answering",
+            .property = .{
+                .seed = 42,
+                .counts = .{ .runs = 64, .passed = 32, .processes = 1 },
+                .campaign = .{ .generated = 32, .submitted = 32, .observed = 0, .fresh_classified = 0, .reused = 32, .next_ordinal = 32 },
+            },
+        },
+    };
+    const unanswered = try cacheExplanation(a, item, context);
+    try std.testing.expectEqualStrings("execute", unanswered.action);
+    try std.testing.expectEqualStrings("no-success-receipt", unanswered.reason);
+    item.verdict.status = .passed;
+    const submitted = try cacheExplanation(a, item, context);
+    try std.testing.expectEqualStrings("execute", submitted.action);
+    item.verdict.property.?.counts.processes = 0;
+    item.verdict.property.?.counts.passed = 64;
+    item.verdict.property.?.campaign.?.generated = 0;
+    item.verdict.property.?.campaign.?.submitted = 0;
+    item.verdict.property.?.campaign.?.reused = 64;
+    item.verdict.property.?.campaign.?.next_ordinal = 64;
+    const restored = try cacheExplanation(a, item, context);
+    try std.testing.expectEqualStrings("reuse", restored.action);
+    try std.testing.expectEqualStrings("property-prefix-hit", restored.reason);
+    item.verdict.status = .failed;
+    const failed = try cacheExplanation(a, item, context);
+    try std.testing.expectEqualStrings("execute", failed.action);
 }

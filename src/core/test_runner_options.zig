@@ -3,6 +3,7 @@
 const std = @import("std");
 const pipeline = @import("pipeline.zig");
 const property = @import("test_runner_property.zig");
+const campaign_contract = @import("property_campaign_contract.zig");
 const budget = @import("memory_budget");
 
 /// Execution settings beyond one file's test selection.
@@ -55,14 +56,20 @@ pub fn frameRefusal(a: std.mem.Allocator, environment: *const std.process.Enviro
     return budget.frameRefusalUnder(a, .{ .command = "test", .who = "a test" }, ceilings.frames, ceilings.memory, budget.guestAddressSpaceLimit(environment));
 }
 
+/// Generated-property policy and deterministic input budget.
+pub const PropertyOptions = struct {
+    seed: ?u64 = null,
+    runs: u32 = property.default_runs,
+    policy: campaign_contract.Policy = .legacy,
+};
+
 /// Command options; grouped execution settings keep the public type bounded.
 pub const Options = struct {
     path: []const u8,
     filter: []const u8 = "",
     json: bool = false,
     build: pipeline.Options,
-    seed: ?u64 = null,
-    property_runs: u32 = property.default_runs,
+    properties: PropertyOptions = .{},
     controls: Controls = .{},
 };
 

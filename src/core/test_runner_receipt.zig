@@ -34,9 +34,21 @@ const Envelope = struct { version: []const u8, payload: []const u8, checksum: Di
 /// environment variables that can change an outcome. Field lengths prevent
 /// concatenation ambiguities.
 pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Digest {
+    return settingsWithBudget(context, inputs, "core-test-settings-v5", context.options.properties.runs);
+}
+
+/// Budget-independent settings exist only for the explicit stable indexed generator.
+/// The caller binds these settings through the ordinary complete target-closure key.
+pub fn campaignSettings(context: Context, inputs: *std.ArrayList(Dependency)) Error!?Digest {
+    if (context.options.properties.policy != .indexed_v1) return null;
+    const indexed = try settingsWithBudget(context, inputs, "core-property-indexed-settings-v1", 0);
+    return indexed;
+}
+
+fn settingsWithBudget(context: Context, inputs: *std.ArrayList(Dependency), domain: []const u8, runs: u32) Error!Digest {
     const a = context.arena;
     var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-test-settings-v5");
+    field(&hash, domain);
     if (context.identity.cache_plan) |bound| field(&hash, &bound.identity) else field(&hash, "missing-cache-plan");
     field(&hash, frontend.compiler_identity);
     field(&hash, context.entry.path);
@@ -52,8 +64,8 @@ pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Dige
         .facts = context.options.build.facts,
         .vectors = context.options.build.show.codegen.generic_vectors,
         .frames = context.options.build.show.codegen.trap_frames,
-        .seed = context.options.seed,
-        .runs = context.options.property_runs,
+        .seed = context.options.properties.seed,
+        .runs = runs,
         .timeout = context.options.controls.timeout_ms,
         .steps = context.options.controls.max_steps,
         .call_frames = context.options.controls.ceilings.frames,
@@ -685,4 +697,34 @@ test "validatePlan returns ComponentUnavailable when a verified component change
     try validatePlan(context);
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "cache-plan", .data = "changed planner" });
     try std.testing.expectError(error.ComponentUnavailable, validatePlan(context));
+}
+
+// spec-case: NEW-CORE-PROPERTY-CAMPAIGN-1
+test "receipt campaignSettings excludes only indexed passing budget and binds seed and providers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    var context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    var inputs: std.ArrayList(Dependency) = .empty;
+    try std.testing.expect(try campaignSettings(context, &inputs) == null);
+    const legacy = try settings(context, &inputs);
+    context.options.properties.runs += 1;
+    try std.testing.expect(!std.mem.eql(u8, &legacy, &try settings(context, &inputs)));
+    context.options.properties.policy = .indexed_v1;
+    const indexed = (try campaignSettings(context, &inputs)).?;
+    context.options.properties.runs += 100;
+    try std.testing.expectEqual(indexed, (try campaignSettings(context, &inputs)).?);
+    context.options.properties.seed = 17;
+    try std.testing.expect(!std.mem.eql(u8, &indexed, &(try campaignSettings(context, &inputs)).?));
+    const seeded = (try campaignSettings(context, &inputs)).?;
+    context.options.controls.cases = "cases.json";
+    context.case_bytes = "provider fixture";
+    try std.testing.expect(!std.mem.eql(u8, &seeded, &(try campaignSettings(context, &inputs)).?));
+    const provider = (try campaignSettings(context, &inputs)).?;
+    context.case_bytes = "changed provider fixture";
+    try std.testing.expect(!std.mem.eql(u8, &provider, &(try campaignSettings(context, &inputs)).?));
 }

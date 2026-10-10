@@ -15,7 +15,8 @@ check that cannot be proved unnecessary. The design record is [the guest test wo
 ```text
 mylang test FILE.my|DIR [--release | --unoptimized | --optimize-debug] [--json] [--filter S] [--affected --against REF]
     [--no-cache] [--force] [--jobs N] [--cases PATH] [--max-steps N] [--max-frames N]
-    [--max-memory SIZE] [--timeout-ms N] [--seed N] [--property-runs N] [--link FILE.c]
+    [--max-memory SIZE] [--timeout-ms N] [--seed N] [--property-runs N]
+    [--property-policy legacy|indexed-v1] [--link FILE.c]
     [--verify-facts | --no-facts] [--cache-dir DIR] [--zig PATH]
 ```
 
@@ -309,8 +310,9 @@ passed main::test_reversing_twice_is_the_identity
 Inputs are deterministic. They are drawn from a SplitMix64 stream seeded by the
 test's seed — the same one its `Entropy` stand-in gets: the first eight bytes of
 the SHA-256 of its qualified name, or `N` under `--seed N` — and the run number,
-so run 37 of a property is the same value on every machine, and renaming the test
-draws new ones. Sizes grow from 0 on the first run to 100 on the last: a
+so run 37 of a property under the same generation policy and budget is the same
+value on every machine, and renaming the test draws new ones. Under the default
+`legacy` policy, sizes grow from 0 on the first run to 100 on the last: a
 collection holds up to the size at the top level and half of it for every level
 it is nested, and an input stops growing collections once it holds 4096 nodes.
 
@@ -418,6 +420,50 @@ $ mylang test app/main.my --filter test_reversing --property-runs 500
 passed main::test_reversing_twice_is_the_identity
 1 passed, 0 cached, 0 failed, 0 skipped
 ```
+
+
+### Resumable indexed campaigns
+
+Use `--property-policy indexed-v1` when you want to extend a property's budget or
+resume after an interrupted command:
+
+```console
+$ mylang test app/main.my --filter test_reversing --seed 7 --property-policy indexed-v1 --property-runs 1000
+$ mylang test app/main.my --filter test_reversing --seed 7 --property-policy indexed-v1 --property-runs 2000
+```
+
+This policy repeats the default 100-run size schedule independently of the
+requested budget. Increasing the budget preserves every earlier generated
+input. The default `legacy` policy keeps its existing budget-dependent schedule
+and whole-test receipts.
+
+An eligible indexed campaign retains a completed prefix after bounded batches.
+Both passing and discarded inputs advance that prefix. An unchanged request can
+reuse the completed prefix without starting a property-test process; an increased
+budget continues from the next unclassified ordinal. Reuse still requires the
+same target dependencies, generation and shrinking contract, seed, compiler,
+providers, environment and execution limits. A smaller budget may run fresh.
+
+If the command is interrupted, the next matching request can resume the last
+committed prefix. The current unfinished batch may run again. A failing batch
+never extends passing evidence, and a saved prefix alone cannot certify a larger
+unfinished request as passed. Failure reports retain shrinking and include the
+indexed policy in their reproduction command.
+
+In JSON, `property.campaign` reports the policy, search inputs `generated`, trials
+`submitted`, returned outcomes `observed`, `fresh_classified`, `reused` ordinals,
+and `next_ordinal`. Submitted and observed work includes retries and shrinking;
+fresh classification counts search outcomes in order, including the first
+returned failure. It does not imply every submitted trial returned an outcome.
+`next_ordinal` marks the last safe prefix; another run can reuse it only if its
+stored checkpoint validates. The existing `property.counts.attempts` continues
+to count shrinking attempts.
+
+This progress is disposable cache data: removing the cache or losing a damaged
+record runs work again. It is not a power-loss durability guarantee. `--force`,
+`--verify-facts`, leak checking, native links and untracked effects keep their
+fresh-execution rules. Indexed campaigns initially bypass whole-test and report
+receipts so their case-level reuse remains observable.
 
 ## Directory runs
 

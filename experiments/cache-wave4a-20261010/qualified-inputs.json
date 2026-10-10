@@ -1,0 +1,25 @@
+{
+  "baseline": "1d202d41bfff888ee91354f706cb74e860dc4b94",
+  "zig_pin": "0.17.0-dev.1683+5ceec001b",
+  "compiler_sha256": "8d8b2520407639305ad840a7ff6dd7cb271807957a73efe91f5e625c3c7e3660",
+  "inputs": {
+    "SPEC.md": "5677a848f1ed51ec2b1f3b4481e749a8d5c258bca10fdcb168d6f9f762cc5bbc",
+    "docs/audits/selka-toolchain-cache-plan-2026-10-10.md": "86006c65d50afd9428424bdfe16fcccd9c442ad31dd1b814ad911ae762055710",
+    "docs/tooling/guest-tests.md": "5e0386d552a67b973ad0429526f0fd7b9e9c21dea2e80eb03fe4b7f22e7e2104",
+    "src/core/main.zig": "a427d522131390a500c92d2464545c4451ed5dc6c5ff8b3db7f1f88a24222949",
+    "src/core/property_campaign_contract.zig": "4c3112b3a460d72daf5cca33e604d6207064fde73baa2d26fdd3a2179f893036",
+    "src/core/property_campaign_contract_test.zig": "05c6ebeadbc9efafb03637bb0993f4a066aff18a914ab373b202fe85089f3f4a",
+    "src/core/property_campaign_receipt.zig": "5328ace55f20616bddd0a17021c94a48e363d9cbb4d6b83d59a625799bf97b64",
+    "src/core/property_campaign_receipt_test.zig": "c8efbeb6379eae9486bc409f18563311e9759b9fe9326a6f3fbf5149200cd551",
+    "src/core/property_generate.zig": "46718228d86509f8994135f9749fa80fa73f697633f5f609a8e2600291aed522",
+    "src/core/root_test.zig": "82e01b92c7cdca26b8df4661be0ec34d0464414f1bb0bd4a4ccef14096faf567",
+    "src/core/runner_property_campaign_test.zig": "f9ecc4ca7ab33388f3d74edd71c4f5bde308701f647df0db8539abf07daed9ef",
+    "src/core/test_runner.zig": "eb73599ee2752c6e438ffa84412c91161593b0c4c5d78057fbe297ec515f92e8",
+    "src/core/test_runner_directory.zig": "b84b2e5d1ddbcedf9653f0df3b9381108fba09732041a300931cfd9a347cf568",
+    "src/core/test_runner_execute.zig": "13a52999f1bc8fdc4b2f528555035fd1ac4100d2c4d03630419f769587e050e1",
+    "src/core/test_runner_options.zig": "89f48a9babb63050710e968f533c1a8c2c617a408bf99f5b0f0bd799c7deceaf",
+    "src/core/test_runner_property.zig": "8727b77423a907c2d7cd3d4bdd8b4680cf20c202bf501e70e22d179958990336",
+    "src/core/test_runner_receipt.zig": "2d4490de6199ec91d9c36798b190df20db2eaa15674fbcc97fba765285640be6",
+    "src/core/test_runner_report.zig": "f63e61a125d3a3eab3f284213fc39f0850590278644366a36b838d2369d10410"
+  }
+}

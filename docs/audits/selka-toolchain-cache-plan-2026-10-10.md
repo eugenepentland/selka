@@ -1,5 +1,14 @@
 # Selka toolchain caching plan
 
+Current implementation baseline: main `1d202d41b` includes Waves 1–3 and the
+qualified lock-occupancy follow-up. The previously deferred paired Wave 2
+measurements and optimized profile are complete; see the
+[follow-up evidence](../../experiments/cache-lock-followup-20261010/REPORT.md).
+Wave 4A now implements opt-in indexed property campaigns with bounded completed
+prefixes, before broader differential or coverage-guided fuzzing. Its scope and
+qualification are in the [Wave 4A plan](../../experiments/cache-wave4a-20261010/PLAN.md).
+Historical review sections below retain their original baselines.
+
 Status: Wave 1 qualified together with `main` at `e9011d9c6` on 2026-10-10;
 integration commit `ed76d2a9c` passed the full gate (83 steps, 2,512 executed
 Zig tests) and all 88 Guardian checks. The expanded shadow qualification passed
@@ -17,11 +26,10 @@ shadow calls, 40 focused tests and 88 whole-tree Guardian commit-hook checks.
 Only the before-change profile ran. At the user's request, paired measurements
 and the optimized after-profile were deferred after the benchmark never acquired
 admission behind another worktree's gate. No optimization speedup, memory gain or
-shorter lock duration is established. Those measurements remain deferred.
+shorter lock duration is established. That deferral was subsequently resolved by the lock-occupancy follow-up above.
 The user subsequently authorized integration of current main and cache Wave 3.
 Committed main `5174fd03f` (FIFO admission and optimized-debug default) was merged
-as `0d9ababf7`; the focused merge qualification passed. These cache waves remain
-on the feature branch.
+as `0d9ababf7`; the focused merge qualification passed. Those cache waves were subsequently merged into main at `1d202d41b`.
 See the [original Wave 2 evidence](../../experiments/cache-wave2-20261010/REPORT.md)
 and [completed optimization correctness pass](../../experiments/cache-wave2-performance-20261010/REPORT.md).
 
@@ -680,8 +688,9 @@ identities; further input partitioning needs separate qualification.
 
 See [the developer command](../tooling/many-agents.md#reuse-verification-evidence-before-admission).
 Operational reports record selected/reused/fresh cohorts and admitted seconds.
-The isolated edit-matrix performance qualification below remains outstanding;
-the previously deferred Wave 2 benchmark has not been restarted.
+The lock-occupancy follow-up subsequently qualified the live edit matrix and
+completed the deferred historical Wave 2 benchmark. Its measured limits are
+recorded separately from the original Wave 3 observations.
 
 Prioritize reductions in measured gate/build lock occupancy using the admission
 boundary above. Move validated no-work decisions ahead of execution admission;

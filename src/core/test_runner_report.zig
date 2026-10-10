@@ -67,7 +67,12 @@ fn count(verdicts: []const Verdict, status: Status) usize {
 pub fn text(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.Allocator.Error![]u8 {
     var out: std.ArrayList(u8) = .empty;
     for (verdicts) |verdict| switch (verdict.status) {
-        .passed => try out.print(allocator, "passed {s}\n", .{verdict.name}),
+        .passed => {
+            try out.print(allocator, "passed {s}", .{verdict.name});
+            if (verdict.property) |evidence| if (evidence.campaign) |campaign|
+                try out.print(allocator, " ({d} property ordinals classified, {d} reused)", .{ campaign.fresh_classified, campaign.reused });
+            try out.append(allocator, '\n');
+        },
         .cached => try out.print(allocator, "cached {s}\n", .{verdict.name}),
         .skipped => try out.print(allocator, "skipped {s}: {s}\n", .{ verdict.name, verdict.reason }),
         .failed => try out.print(allocator, "failed {s}: {s}\n", .{ verdict.name, std.mem.trimEnd(u8, verdict.reason, "\n") }),

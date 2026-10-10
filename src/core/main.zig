@@ -39,6 +39,7 @@ const test_usage =
     \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
     \\  --max-steps N --max-frames N --max-memory SIZE --timeout-ms N   per-test budgets
     \\  --seed N --property-runs N              property test inputs (runs: 1 to 1000000)
+    \\  --property-policy legacy|indexed-v1    property generation and range reuse policy
     \\  --force --no-cache --cache-dir DIR      rerun every test / use a private cache / cache location
     \\  --link FILE.c (repeatable) --zig PATH
     \\
@@ -287,11 +288,13 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             try links.append(init.arena.allocator(), args[index]);
         } else if (std.mem.eql(u8, arg, "--seed") and has_value) {
             index += 1;
-            options.seed = std.fmt.parseInt(u64, args[index], 10) catch return invalidValue(init, args, index - 1, index);
+            options.properties.seed = std.fmt.parseInt(u64, args[index], 10) catch return invalidValue(init, args, index - 1, index);
+        } else if (std.mem.eql(u8, arg, "--property-policy") and has_value) {
+            index += 1;
+            options.properties.policy = @import("property_campaign_contract.zig").Policy.parse(args[index]) orelse return invalidValue(init, args, index - 1, index);
         } else if (std.mem.eql(u8, arg, "--property-runs") and has_value) {
             index += 1;
-            options.property_runs = std.fmt.parseInt(u32, args[index], 10) catch return invalidValue(init, args, index - 1, index);
-            if (options.property_runs == 0 or options.property_runs > 1000000) return invalidValue(init, args, index - 1, index);
+            options.properties.runs = propertyRuns(args[index]) orelse return invalidValue(init, args, index - 1, index);
         } else if (std.mem.eql(u8, arg, "--filter") and has_value) {
             index += 1;
             options.filter = args[index];
@@ -318,6 +321,11 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     return test_runner.run(init, options);
 }
 
+fn propertyRuns(text: []const u8) ?u32 {
+    const runs = std.fmt.parseInt(u32, text, 10) catch return null;
+    return if (runs == 0 or runs > 1000000) null else runs;
+}
+
 /// Print `mylang test: PROBLEM` (when there is one) and the test usage; status 2.
 fn testUsage(init: std.process.Init, problem: ?[]const u8) Error!u8 {
     const text = if (problem) |line| try std.fmt.allocPrint(init.arena.allocator(), "mylang test: {s}\n" ++ test_usage, .{line}) else test_usage;
@@ -336,7 +344,7 @@ fn invalidValue(init: std.process.Init, args: []const []const u8, start: usize, 
 
 /// Whether `arg` is a `mylang test` flag that reads the next argument as its value.
 fn takesValue(arg: []const u8) bool {
-    const valued = [_][]const u8{ "--filter", "--cases", "--jobs", "--mode", "--max-steps", "--max-frames", "--max-memory", "--timeout-ms", "--seed", "--property-runs", "--link", "--zig", cache_dir_flag, "--against" };
+    const valued = [_][]const u8{ "--filter", "--cases", "--jobs", "--mode", "--max-steps", "--max-frames", "--max-memory", "--timeout-ms", "--seed", "--property-runs", "--property-policy", "--link", "--zig", cache_dir_flag, "--against" };
     for (valued) |name| if (std.mem.eql(u8, arg, name)) return true;
     return false;
 }

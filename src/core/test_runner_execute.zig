@@ -23,6 +23,9 @@ const Options = @import("test_runner_options.zig").Options;
 const spawn = @import("process_spawn.zig");
 const root_share = @import("test_runner_shared.zig");
 const Value = std.json.Value;
+const receipt = @import("test_runner_receipt.zig");
+const campaign_contract = @import("property_campaign_contract.zig");
+const campaign_receipt = @import("property_campaign_receipt.zig");
 
 /// What stops a run: memory, or an output stream that cannot be written.
 pub const Error = property.Error;
@@ -36,7 +39,31 @@ pub const expectation = "expected";
 
 /// The arena, child-output allocator, I/O and environment the test processes use; the
 /// arena must be thread-safe.
-pub const Resources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io, environment: spawn.Environment };
+pub const Resources = struct { arena: std.mem.Allocator, backing: std.mem.Allocator, io: std.Io, environment: spawn.Environment, campaign: ?*const Campaign = null };
+
+/// Captured checking inputs and provider/tool contracts guarded at each range boundary.
+pub const Campaign = struct {
+    context: receipt.Context,
+    inputs: []const receipt.Dependency,
+    backing: std.mem.Allocator,
+
+    /// Reject a range if its checked sources, toolchain or planner deployment changed.
+    pub fn unchanged(self: Campaign) campaign_contract.CommitError!bool {
+        var scratch = std.heap.ArenaAllocator.init(self.backing);
+        defer scratch.deinit();
+        var context = self.context;
+        context.arena = scratch.allocator();
+        receipt.validatePlan(context) catch |err| return switch (err) {
+            error.OutOfMemory => error.OutOfMemory,
+            error.WriteFailed => error.WriteFailed,
+            else => error.ComponentUnavailable,
+        };
+        const sources = receipt.unchanged(context, self.inputs) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.ReadFailed;
+        if (!sources) return false;
+        const tool = receipt.toolUnchanged(context) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.ReadFailed;
+        return tool;
+    }
+};
 
 /// A built test executable and the checked program its tests come from.
 pub const Executable = struct { path: []const u8, program: typed.Program };
@@ -138,7 +165,7 @@ const Shared = struct {
         defer removePrivate(self.resources.io, directory);
         const executor = self.executorIn(directory, pending.row);
         const limits: property_execute.Limits = .{ .timeout_ms = self.options.controls.timeout_ms };
-        const settings: property.Settings = .{ .seed = entropySeed(self.options.seed, case.name), .runs = self.options.property_runs, .entry = self.options.path };
+        const settings: property.Settings = .{ .seed = entropySeed(self.options.properties.seed, case.name), .runs = self.options.properties.runs, .entry = self.options.path, .policy = self.options.properties.policy };
         const setup = try property.Property.bind(executor.context, &executor, pending.function, limits, settings);
         var bound = switch (setup) {
             .invalid => |reason| {
@@ -147,10 +174,18 @@ const Shared = struct {
             },
             .ready => |ready| ready,
         };
+        var checkpoint: ?Checkpoint = null;
+        defer if (checkpoint) |*saved| saved.deinit();
+        if (self.options.properties.policy == .indexed_v1) if (self.resources.campaign) |guard| {
+            const eligible = std.mem.eql(u8, receipt.reuseReason(guard.context), "no-success-receipt");
+            checkpoint = try Checkpoint.init(guard.*, self.options.build.cache, if (eligible) pending.selected.identity else null, self.options.properties.runs);
+            const saved = &checkpoint.?;
+            try bound.restoreCampaign(.{ .restored = saved.expected orelse .{}, .callback = .{ .context = saved, .commit = Checkpoint.commit } });
+        };
         var state: property.Search = .{};
         const first = try bound.first(&state);
-        const answers = try property_execute.executeBatches(executor.context, &.{first}, limits, 1);
-        const verdict = try bound.finish(&state, answers[0]);
+        const answer = if (first) |batch| (try property_execute.executeBatches(executor.context, &.{batch}, limits, 1))[0] else null;
+        const verdict = try bound.finish(&state, answer);
         pending.selected.verdict = .{ .name = case.name, .status = if (verdict.passed) .passed else .failed, .reason = verdict.reason, .property = verdict.evidence };
     }
 
@@ -213,6 +248,49 @@ const Shared = struct {
             return .{ .name = case.name, .status = .failed, .reason = try std.fmt.allocPrint(a, "expected {s}, got {s}", .{ expected_text, actual_text }) };
         }
         return .{ .name = case.name, .status = if (passed) .passed else .failed, .reason = if (passed) "" else try ordinaryReason(a, outcome) };
+    }
+};
+
+/// One property's captured-input guard and bounded expected-prefix allocation arena.
+const Checkpoint = struct {
+    guard: Campaign,
+    root: []const u8,
+    key: ?campaign_receipt.Digest,
+    expected: ?campaign_contract.Progress = null,
+    progress_arena: std.heap.ArenaAllocator,
+
+    fn init(guard: Campaign, root: []const u8, key: ?campaign_receipt.Digest, budget: u32) Error!Checkpoint {
+        if (!try guard.unchanged()) return error.SourceChanged;
+        var result: Checkpoint = .{ .guard = guard, .root = root, .key = key, .progress_arena = .init(guard.backing) };
+        errdefer result.deinit();
+        if (key) |identity| result.expected = try result.store(result.progress_arena.allocator()).load(identity, budget);
+        if (!try guard.unchanged()) return error.SourceChanged;
+        return result;
+    }
+
+    fn deinit(self: *Checkpoint) void {
+        self.progress_arena.deinit();
+    }
+
+    fn store(self: *Checkpoint, allocator: std.mem.Allocator) campaign_receipt.Store {
+        return .{ .arena = allocator, .io = self.guard.context.io, .root = self.root };
+    }
+
+    fn commit(raw: *anyopaque, progress: campaign_contract.Progress) campaign_contract.CommitError!void {
+        const self: *Checkpoint = @ptrCast(@alignCast(raw));
+        if (!try self.guard.unchanged()) return error.SourceChanged;
+        const key = self.key orelse return;
+        if (!try self.store(self.guard.backing).commit(key, self.expected, progress)) return;
+        var next_arena = std.heap.ArenaAllocator.init(self.guard.backing);
+        errdefer next_arena.deinit();
+        var expected = progress;
+        const a = next_arena.allocator();
+        const clauses = try a.alloc(campaign_contract.Clause, progress.clauses.len);
+        for (progress.clauses, clauses) |source, *target| target.* = .{ .message = try a.dupe(u8, source.message), .count = source.count };
+        expected.clauses = clauses;
+        self.progress_arena.deinit();
+        self.progress_arena = next_arena;
+        self.expected = expected;
     }
 };
 
@@ -378,4 +456,61 @@ fn ordinaryReason(a: std.mem.Allocator, outcome: property_execute.Outcome) Error
     }
     if (outcome.output.len != 0) reason = try std.fmt.allocPrint(a, "{s}\n{s}", .{ reason, outcome.output });
     return reason;
+}
+
+fn testCampaignGuard(a: std.mem.Allocator, root: []const u8, environment: *const std.process.Environ.Map) !Campaign {
+    const path = try std.fs.path.join(a, &.{ root, "app.my" });
+    const inputs = try a.alloc(receipt.Dependency, 1);
+    inputs[0] = .{ .path = path, .digest = try receipt.readDigest(a, std.testing.io, path) };
+    return .{
+        .context = .{
+            .arena = a,
+            .io = std.testing.io,
+            .environment = environment,
+            .options = .{ .path = path, .build = .{ .zig = "unselected-tool" } },
+            .entry = .{ .path = path, .root = root, .name = "app" },
+            .identity = .{ .tool = .{ .path = "unselected-tool", .digest = @splat(0), .generation = @splat(0), .native_target = @splat(0), .inputs = 0, .memo_hit = false } },
+        },
+        .inputs = inputs,
+        .backing = a,
+    };
+}
+
+// spec-case: NEW-CORE-PROPERTY-CAMPAIGN-1
+test "property checkpoint init and commit reject a changed source before loading or publishing progress" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "before" });
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const guard = try testCampaignGuard(a, root, &environment);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "after" });
+    try std.testing.expect(!try guard.unchanged());
+    try std.testing.expectError(error.SourceChanged, Checkpoint.init(guard, root, @splat(7), 32));
+    var checkpoint: Checkpoint = .{ .guard = guard, .root = root, .key = @splat(7), .progress_arena = .init(std.testing.allocator) };
+    defer checkpoint.deinit();
+    try std.testing.expectError(error.SourceChanged, Checkpoint.commit(&checkpoint, .{ .next_ordinal = 1, .passed = 1 }));
+    try std.testing.expect((try checkpoint.store(a).load(@splat(7), 32)) == null);
+}
+
+// spec-case: NEW-CORE-PROPERTY-CAMPAIGN-1
+test "property checkpoint source guard propagates ReadFailed instead of publishing unreadable inputs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "before" });
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const guard = try testCampaignGuard(a, root, &environment);
+    try temporary.dir.deleteFile(std.testing.io, "app.my");
+    try temporary.dir.createDir(std.testing.io, "app.my", .default_dir);
+    try std.testing.expectError(error.ReadFailed, guard.unchanged());
+    try std.testing.expectError(error.ReadFailed, Checkpoint.init(guard, root, @splat(7), 32));
 }

@@ -1,0 +1,90 @@
+{
+  "qualification": "owned-process-group SIGKILL, resume, warm, forced oracle",
+  "compiler_sha256": "8d8b2520407639305ad840a7ff6dd7cb271807957a73efe91f5e625c3c7e3660",
+  "fixture_sha256": "0574a622e4a9bd98ef061979e04571a1aa4bd43c9040b2126f0020e510696f58",
+  "budget": 4096,
+  "prefix_after_kill": {
+    "next_ordinal": 128,
+    "passed": 128,
+    "checksum": "6e863598eb9bf911815f36b8352893e4b9eaee940d3bed201866f6f3e7d67025"
+  },
+  "interrupted_exit": -9,
+  "interrupted_report_bytes": 0,
+  "interrupted_stderr": "",
+  "resumed": {
+    "seed": 42,
+    "counts": {
+      "runs": 4096,
+      "passed": 4096,
+      "discarded": 0,
+      "processes": 31,
+      "shrinks": 0,
+      "attempts": 0
+    },
+    "failure": null,
+    "campaign": {
+      "policy": "indexed-v1",
+      "generated": 3968,
+      "submitted": 3968,
+      "observed": 3968,
+      "fresh_classified": 3968,
+      "reused": 128,
+      "next_ordinal": 4096
+    }
+  },
+  "warm": {
+    "seed": 42,
+    "counts": {
+      "runs": 4096,
+      "passed": 4096,
+      "discarded": 0,
+      "processes": 0,
+      "shrinks": 0,
+      "attempts": 0
+    },
+    "failure": null,
+    "campaign": {
+      "policy": "indexed-v1",
+      "generated": 0,
+      "submitted": 0,
+      "observed": 0,
+      "fresh_classified": 0,
+      "reused": 4096,
+      "next_ordinal": 4096
+    }
+  },
+  "forced": {
+    "seed": 42,
+    "counts": {
+      "runs": 4096,
+      "passed": 4096,
+      "discarded": 0,
+      "processes": 32,
+      "shrinks": 0,
+      "attempts": 0
+    },
+    "failure": null,
+    "campaign": {
+      "policy": "indexed-v1",
+      "generated": 4096,
+      "submitted": 4096,
+      "observed": 4096,
+      "fresh_classified": 4096,
+      "reused": 0,
+      "next_ordinal": 4096
+    }
+  },
+  "source_changed_during_execution": {
+    "exit": 1,
+    "stdout_bytes": 0,
+    "stderr": "error: SourceChanged: a property campaign input changed during execution\n",
+    "last_prefix": {
+      "next_ordinal": 4224,
+      "passed": 4224,
+      "checksum": "25fb45d0fbc63e2e032fc418381e3bc318fb2f003885b8a5b9d625bcc2e1245c"
+    }
+  },
+  "elapsed_seconds_unisolated": 7.654472369933501,
+  "children_max_rss_kib": 65856,
+  "checksum_validation": "compiler load validates BLAKE3; harness checks framing and exact restored ordinal"
+}

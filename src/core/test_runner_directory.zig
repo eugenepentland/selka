@@ -520,14 +520,15 @@ fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []
     const ceilings = opts.controls.ceilings;
     if (ceilings.explicit_frames) try arguments.appendSlice(a, &.{ "--max-frames", try std.fmt.allocPrint(a, "{d}", .{ceilings.frames}) });
     if (ceilings.explicit_memory) try arguments.appendSlice(a, &.{ "--max-memory", try std.fmt.allocPrint(a, "{d}", .{ceilings.memory}) });
-    try arguments.appendSlice(a, &.{ "--property-runs", try std.fmt.allocPrint(a, "{d}", .{opts.property_runs}) });
+    try arguments.appendSlice(a, &.{ "--property-runs", try std.fmt.allocPrint(a, "{d}", .{opts.properties.runs}) });
+    try arguments.appendSlice(a, &.{ "--property-policy", opts.properties.policy.name() });
     if (opts.build.mode == .release) try arguments.append(a, "--release");
     if (opts.build.mode == .debug) try arguments.append(a, "--unoptimized");
     if (opts.build.facts == .verify) try arguments.append(a, "--verify-facts");
     if (opts.build.facts == .off) try arguments.append(a, "--no-facts");
     if (opts.controls.force) try arguments.append(a, "--force");
     if (opts.controls.against) |reference| try arguments.appendSlice(a, &.{ "--affected", "--against", reference });
-    if (opts.seed) |seed| try arguments.appendSlice(a, &.{ "--seed", try std.fmt.allocPrint(a, "{d}", .{seed}) });
+    if (opts.properties.seed) |seed| try arguments.appendSlice(a, &.{ "--seed", try std.fmt.allocPrint(a, "{d}", .{seed}) });
     for (opts.build.links) |link| try arguments.appendSlice(a, &.{ "--link", link });
     return arguments.items;
 }
