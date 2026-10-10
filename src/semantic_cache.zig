@@ -1,6 +1,7 @@
 //! Per-function successful checked-body snapshots. Global declaration, type,
 //! effect and mutation validation always runs; only unchanged bodies are copied.
 const std = @import("std");
+const frontend = @import("frontend_runtime.zig");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -159,6 +160,13 @@ pub const Context = struct {
     /// Complete typed-tree reuse alongside facts-only summaries is opt-in.
     /// Legacy native-test facts keep their existing check/retention policy.
     retain_summary_trees: bool = false,
+    boundary: Boundary = .{},
+};
+
+const Boundary = struct {
+    verified: frontend.Verified = .{},
+    base: []const u8 = "",
+    owned: ?[]const u8 = null,
 };
 
 /// Retention budget and the symbolic-template table that shares it. Grouped
@@ -208,6 +216,19 @@ pub const Cache = struct {
     /// specialization. Safe to call after `clear`.
     pub fn deinit(self: *Cache) void {
         self.clear();
+        if (self.context.boundary.owned) |contract_bytes| self.allocator.free(contract_bytes);
+    }
+    /// Partition every semantic key and evict retained bodies when the verified producer changes.
+    pub fn setFrontend(self: *Cache, verified: frontend.Verified) error{OutOfMemory}!void {
+        const previous = self.context.boundary;
+        if (std.mem.eql(u8, &previous.verified.identity, &verified.identity) and previous.verified.reuse == verified.reuse) return;
+        const base = if (previous.owned != null) previous.base else self.context.contract;
+        const combined = try std.fmt.allocPrint(self.allocator, "{s}/frontend/{s}", .{ base, std.fmt.bytesToHex(verified.identity, .lower) });
+        self.clear();
+        if (previous.owned) |contract_bytes| self.allocator.free(contract_bytes);
+        self.context.boundary = .{ .verified = verified, .base = base, .owned = combined };
+        self.context.contract = combined;
+        if (!verified.reuse) self.context.summaries = null;
     }
     /// Evict retained bodies of every kind; already-returned compilations remain
     /// valid because checked trees are copied out of cache-owned storage. Work
@@ -271,8 +292,8 @@ pub const Cache = struct {
     pub fn symbolicSession(self: *Cache, src: source.Source, prepared: *const key.Prepared, mode: []const u8) error{OutOfMemory}!generic_cache.Session {
         return generic_cache.Session.init(self.allocator, src, prepared, .{
             .memory = &self.reuse.symbolic,
-            .persistent = self.context.persistent,
-            .enabled = self.reuse.max_bytes != 0,
+            .persistent = if (self.context.boundary.verified.reuse) self.context.persistent else null,
+            .enabled = self.reuse.max_bytes != 0 and self.context.boundary.verified.reuse,
             .mode = mode,
             .retention = .{ .owner = self, .reconcile = reconcileRetention },
             .sequence = &self.reuse.sequence,
@@ -283,8 +304,8 @@ pub const Cache = struct {
     pub fn specializationSession(self: *Cache, prepared: *const key.Prepared) error{OutOfMemory}!generic_specializations.Session {
         return generic_specializations.Session.init(self.allocator, prepared, .{
             .memory = &self.reuse.specializations,
-            .persistent = self.context.persistent,
-            .enabled = self.reuse.max_bytes != 0,
+            .persistent = if (self.context.boundary.verified.reuse) self.context.persistent else null,
+            .enabled = self.reuse.max_bytes != 0 and self.context.boundary.verified.reuse,
             .build = self.context.contract,
             .retention = .{ .owner = self, .reconcile = reconcileRetention },
             .sequence = &self.reuse.sequence,
@@ -353,7 +374,7 @@ pub const Cache = struct {
         // Demand requests decode only bodies their host cannot replace, after
         // summary planning; Session.lookup retains the ordinary lazy miss path.
         const lazy_trees = if (self.context.summaries) |request| request.policy.demand != null else false;
-        if (self.context.persistent) |persistent| {
+        if (if (self.context.boundary.verified.reuse) self.context.persistent else null) |persistent| {
             if (self.entries.len == 0 and needs_trees and !lazy_trees) {
                 const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
                 try self.loadPersistent(persistent, prepared);
@@ -363,7 +384,7 @@ pub const Cache = struct {
         // Per-function eligibility: an unrelated generic, alias, constant or
         // callback no longer disables ordinary-body reuse. A zero-retention cache
         // still reports a bypass because reuse was never consulted.
-        const enabled = self.reuse.max_bytes != 0 and
+        const enabled = self.context.boundary.verified.reuse and self.reuse.max_bytes != 0 and
             (self.entries.len != 0 or (needs_trees and self.context.persistent != null));
         if (self.reuse.max_bytes == 0) self.statistics.bypassed += 1;
         const count = prepared.ordinary_ast.len;
@@ -746,7 +767,7 @@ pub const Session = struct {
     /// a time from the durable store without growing retained storage.
     pub fn remember(self: *Session, program: typed.Program) error{ OutOfMemory, InternalError }!void {
         const cache = self.cache;
-        if (cache.reuse.max_bytes == 0) return;
+        if (!cache.context.boundary.verified.reuse or cache.reuse.max_bytes == 0) return;
         // Validation-only summary requests have no complete trees to retain.
         // Hosts may opt lowering requests into tree reuse independently of the
         // unchanged pass facts their summaries stand in for.

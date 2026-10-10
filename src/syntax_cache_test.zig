@@ -175,3 +175,28 @@ test "in-memory syntax cache preserves expression lambdas across a hit" {
     try t.expectEqual(@as(usize, 1), cache.statistics.stored);
     try t.expectEqual(@as(usize, 1), cache.statistics.hits);
 }
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "retained syntax cache drops changed frontend identity and never serves shadow" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const src = try @import("source.zig").Source.init(a, "fixture", "");
+    var sink: @import("diagnostic.zig").Sink = .{ .allocator = a };
+    const tokens = try @import("lexer.zig").lex(a, src.bytes, &sink);
+    var p: @import("parser.zig").Parser = .{ .storage = a, .src = src, .tokens = tokens, .sink = &sink };
+    const syntax = try p.parseModule();
+    var cache = Cache.init(t.allocator, .{});
+    defer cache.deinit();
+    try cache.remember(src, 0, syntax);
+    try t.expect((try cache.lookup(a, src, 0)) != null);
+    var trusted = src;
+    trusted.trusted_intrinsics = true;
+    try t.expect((try cache.lookup(a, trusted, 0)) == null);
+    cache.setFrontend(.{ .identity = @splat(1) });
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+    try t.expect((try cache.lookup(a, src, 0)) == null);
+    cache.setFrontend(.{ .identity = @splat(1), .reuse = false });
+    try cache.remember(src, 0, syntax);
+    try t.expect((try cache.lookup(a, src, 0)) == null);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+}

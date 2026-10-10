@@ -7,22 +7,29 @@ const diagnostic = @import("diagnostic.zig");
 const launch = @import("component_launch.zig");
 const wire = @import("parser_component_protocol.zig");
 const reference_mode = config.reference_mode;
+const component_mode = config.component_mode;
 const component_name = "parser-pilot";
 const config = @import("config/component_runtime.zig");
 /// Bounded component failures are host errors, never parser diagnostics.
 pub const Error = launch.Error || error{ ComponentProtocol, ComponentTimeout, ComponentFailed, ComponentIo, ComponentShadowMismatch, ComponentMode, ComponentChanged, ComponentProfile };
 /// Explicit host capabilities and full child lifecycle deadline.
-pub const Runtime = struct { io: std.Io, environ: *const std.process.Environ.Map, component_dir: ?[]const u8 = null, timeout_ms: i64 = 30000 };
+pub const Runtime = config.Runtime;
 /// Parse through an explicit comparison boundary, preserving the native AST or errors.
 pub fn parse(p: *parser.Parser, module: bool, runtime: Runtime) (diagnostic.Error || Error)!ast.Program {
     const mode = runtime.environ.get("MYLANG_PARSER_MODE") orelse reference_mode;
-    if (!std.mem.eql(u8, mode, reference_mode) and !std.mem.eql(u8, mode, "shadow")) return error.ComponentMode;
+    const known = std.mem.eql(u8, mode, reference_mode) or std.mem.eql(u8, mode, "shadow") or std.mem.eql(u8, mode, component_mode);
+    if (!known) return error.ComponentMode;
     if (std.mem.eql(u8, mode, reference_mode)) return if (module) p.parseModule() else p.parse();
     if (p.cursor.pos != 0 or p.cursor.dialect != .target or p.module_syntax) return error.ComponentProfile;
     if (p.cursor.depth != 0 or p.cursor.delimiters != 0 or p.cursor.recovered) return error.ComponentProfile;
     var request_source = p.src;
     request_source.trusted_intrinsics = p.trustedStdlib();
     const input: wire.Input = .{ .src = request_source, .tokens = p.tokens, .module = module };
+    if (std.mem.eql(u8, mode, component_mode)) {
+        var actual = try execute(p.storage, input, runtime);
+        defer actual.deinit();
+        return adopt(p, actual);
+    }
     const before = p.sink.items.items.len;
     const reference = if (module) p.parseModule() else p.parse();
     const program = reference catch |err| blk: {
@@ -59,7 +66,7 @@ pub fn identity(a: std.mem.Allocator, runtime: Runtime) Error![32]u8 {
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
     hash.update("selka-parser-pilot-v1/full-source/");
     hash.update(mode);
-    if (std.mem.eql(u8, mode, "shadow")) {
+    if (std.mem.eql(u8, mode, "shadow") or std.mem.eql(u8, mode, component_mode)) {
         const dir = try directory(a, runtime);
         defer a.free(dir);
         const artifact = try launch.artifact(a, runtime.io, dir, component_name);
@@ -123,4 +130,37 @@ fn discard(io: std.Io, path: []const u8) void {
         const message = std.fmt.bufPrint(&buffer, "mylang: parser request cleanup failed: {t}\n", .{err}) catch return;
         std.Io.File.stderr().writeStreamingAll(io, message) catch return;
     };
+}
+
+/// Copy a validated reply into parser-owned storage before its transport arena is released.
+pub fn adopt(p: *parser.Parser, actual: wire.Reply) diagnostic.Error!ast.Program {
+    switch (actual) {
+        .syntax => |syntax| return @import("ast_copy.zig").clone(p.storage, syntax.program),
+        .failure => |failure| {
+            for (failure.report.diagnostics) |item| try p.sink.items.append(p.sink.allocator, .{
+                .code = try p.storage.dupe(u8, item.code),
+                .severity = item.severity,
+                .span = item.span,
+                .message = try p.storage.dupe(u8, item.message),
+                .related = try copyNote(p.storage, item.related),
+                .provenance = .{
+                    .origin = try copyNote(p.storage, item.provenance.origin),
+                    .requirement = try copyNote(p.storage, item.provenance.requirement),
+                    .fix = try copyFix(p.storage, item.provenance.fix),
+                },
+            });
+            return error.SourceError;
+        },
+    }
+}
+fn copyNote(a: std.mem.Allocator, note: ?diagnostic.Related) error{OutOfMemory}!?diagnostic.Related {
+    var result = note orelse return null;
+    result.message = try a.dupe(u8, result.message);
+    return result;
+}
+fn copyFix(a: std.mem.Allocator, fix: ?diagnostic.Fix) error{OutOfMemory}!?diagnostic.Fix {
+    const original = fix orelse return null;
+    const more = try a.alloc(diagnostic.Edit, original.more.len);
+    for (more, original.more) |*dest, item| dest.* = .{ .span = item.span, .text = try a.dupe(u8, item.text) };
+    return .{ .edit = .{ .span = original.edit.span, .text = try a.dupe(u8, original.edit.text) }, .more = more };
 }

@@ -175,9 +175,41 @@ test "parser component reference requires no deployment and unqualified modes or
     var p: parser.Parser = .{ .storage = a, .src = src, .tokens = tokens, .sink = &sink };
     const parsed = try adapter.parse(&p, false, runtime);
     try t.expectEqual(@as(usize, 0), parsed.functions.len);
-    try environ.put("MYLANG_PARSER_MODE", "component");
+    try environ.put("MYLANG_PARSER_MODE", "invalid");
     try t.expectError(error.ComponentMode, adapter.parse(&p, false, runtime));
     try environ.put("MYLANG_PARSER_MODE", "shadow");
     p.cursor.dialect = .migration;
     try t.expectError(error.ComponentProfile, adapter.parse(&p, false, runtime));
+}
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "parser component adoption owns syntax and complete diagnostic repair bytes after reply release" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const src = try source.Source.init(a, "fixture", "func main() -> int:\n    return 42\n");
+    var sink: diagnostic.Sink = .{ .allocator = a };
+    const tokens = try lexer.lex(a, src.bytes, &sink);
+    const expected = try syntax(a, src, tokens);
+    const encoded = try values.encode(a, expected);
+    var p: parser.Parser = .{ .storage = a, .src = src, .tokens = tokens, .sink = &sink };
+    var decoded = try values.decode(t.allocator, encoded, src.bytes.len);
+    const adopted = try adapter.adopt(&p, .{ .syntax = decoded });
+    decoded.deinit();
+    try t.expectEqualStrings(encoded, try values.encode(a, adopted));
+    const repair: diagnostic.Fix = .{
+        .edit = .{ .span = .{ .start = 0, .end = 1 }, .text = "first" },
+        .more = &.{.{ .span = .{ .start = 1, .end = 2 }, .text = "second" }},
+    };
+    const problem: diagnostic.Diagnostic = .{
+        .code = "E_PARSE",
+        .span = .{ .start = 0, .end = 1 },
+        .message = "repair",
+        .related = .{ .span = .{ .start = 1, .end = 2 }, .message = "related" },
+        .provenance = .{ .fix = repair },
+    };
+    const errors = try values.encodeErrors(a, &.{problem});
+    var failure = try values.decodeErrors(t.allocator, errors, src.bytes.len);
+    try t.expectError(error.SourceError, adapter.adopt(&p, .{ .failure = failure }));
+    failure.deinit();
+    try t.expectEqualStrings(errors, try values.encodeErrors(a, sink.items.items));
 }

@@ -487,3 +487,30 @@ test "the frontend cache keeps a working set larger than its floor and evicts le
     try t.expectEqual(@as(usize, 1), try readBack(&after, 9, 10));
     try t.expectEqual(@as(usize, 10) - narrow.statistics.evicted, try readBack(&after, 0, 10));
 }
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "frontend cache partitions authenticated producer and intrinsic authority and disables shadow storage" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var cache = openCache(root);
+    defer cache.deinit();
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    var src = try source.Source.init(arena.allocator(), "fixture", "");
+    const native = cache.syntaxKey(src, 0);
+    src.trusted_intrinsics = true;
+    try t.expect(!std.mem.eql(u8, &native, &cache.syntaxKey(src, 0)));
+    src.trusted_intrinsics = false;
+    cache.setFrontend(.{ .identity = @splat(3) });
+    const changed = cache.syntaxKey(src, 0);
+    try t.expect(!std.mem.eql(u8, &native, &changed));
+    try t.expect(try cache.write(changed, "payload"));
+    cache.setFrontend(.{ .identity = @splat(3), .reuse = false });
+    try t.expectError(error.NotFound, cache.read(changed));
+    try t.expect(!try cache.write(changed, "replacement"));
+    cache.setFrontend(.{ .identity = @splat(3) });
+    const bytes = try cache.read(changed);
+    defer t.allocator.free(bytes);
+    try t.expectEqualStrings("payload", bytes);
+}

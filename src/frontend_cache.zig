@@ -18,6 +18,7 @@ const source = @import("source.zig");
 const codec = @import("persist_codec.zig");
 const diagnostic_output = @import("diagnostic_output.zig");
 const project = @import("project.zig");
+const frontend = @import("frontend_runtime.zig");
 const cache_key = @import("cache_key.zig");
 
 /// Bump when the on-disk layout or a stored serializer changes; older files miss.
@@ -71,6 +72,7 @@ const Runtime = struct {
     policy_identity: ?[]const u8 = null,
     /// Whether this run stored an entry, so `finish` has a directory to trim.
     stored: bool = false,
+    boundary: frontend.Verified = .{},
 };
 
 /// One bounded, caller-serialized directory of immutable entries.
@@ -101,6 +103,10 @@ pub const Cache = struct {
     /// identity keep using `init`; the contract may also be assigned afterwards.
     pub fn initWithContract(allocator: std.mem.Allocator, io: std.Io, root: []const u8, identity: []const u8, contract: cache_key.Contract) Cache {
         return .{ .runtime = .{ .allocator = allocator, .io = io }, .root = root, .identity = identity, .contract = contract };
+    }
+    /// Bind an authenticated producer identity before any cache operation.
+    pub fn setFrontend(self: *Cache, verified: frontend.Verified) void {
+        self.runtime.boundary = verified;
     }
     /// Hex contract fingerprint for key and namespace construction.
     fn contractHex(self: *Cache) [64]u8 {
@@ -161,6 +167,7 @@ pub const Cache = struct {
         var hash = std.crypto.hash.sha2.Sha256.init(.{});
         hash.update("frontend-cache-identity-v3");
         frame(&hash, self.identity);
+        hash.update(&self.runtime.boundary.identity);
         const contract = self.contractHex();
         hash.update(&contract);
         var out: [32]u8 = undefined;
@@ -318,6 +325,7 @@ pub const Cache = struct {
         hash.update(format_version);
         hash.update("check-summaries");
         frame(&hash, self.identity);
+        hash.update(&self.runtime.boundary.identity);
         const contract = self.contractHex();
         hash.update(&contract);
         frame(&hash, entry.name);
@@ -333,10 +341,12 @@ pub const Cache = struct {
         hash.update(format_version);
         hash.update("syntax");
         frame(&hash, self.identity);
+        hash.update(&self.runtime.boundary.identity);
         const contract = self.contractHex();
         hash.update(&contract);
         frame(&hash, src.path);
         frame(&hash, src.bytes);
+        hash.update(&.{@intFromBool(src.trusted_intrinsics)});
         hash.update(std.mem.asBytes(&body_start));
         var out: [32]u8 = undefined;
         hash.final(&out);
@@ -348,6 +358,7 @@ pub const Cache = struct {
         hash.update(format_version);
         hash.update("verdict");
         frame(&hash, self.identity);
+        hash.update(&self.runtime.boundary.identity);
         const contract = self.contractHex();
         hash.update(&contract);
         if (self.runtime.policy_identity) |identity| {
@@ -378,6 +389,7 @@ pub const Cache = struct {
     /// Read `key`, rejecting anything whose stored key or payload checksum
     /// disagrees. The payload belongs to the cache allocator; the caller frees it.
     pub fn read(self: *Cache, key: [32]u8) error{ OutOfMemory, NotFound, Damaged, ReadFailed }![]u8 {
+        if (!self.runtime.boundary.reuse) return error.NotFound;
         const entry = try self.readEntry(key);
         defer self.runtime.allocator.free(entry.bytes);
         return self.runtime.allocator.dupe(u8, entry.payload) catch return error.OutOfMemory;
@@ -388,6 +400,7 @@ pub const Cache = struct {
     const ReadEntry = struct { bytes: []u8, payload: []const u8 };
 
     fn readEntry(self: *Cache, key: [32]u8) error{ OutOfMemory, NotFound, Damaged, ReadFailed }!ReadEntry {
+        if (!self.runtime.boundary.reuse) return error.NotFound;
         const directory = self.namespace() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
@@ -429,6 +442,7 @@ pub const Cache = struct {
     /// retain. A damaged or concurrent store is not fatal: the caller keeps the
     /// freshly computed value either way.
     pub fn write(self: *Cache, key: [32]u8, payload: []const u8) error{ OutOfMemory, WriteFailed }!bool {
+        if (!self.runtime.boundary.reuse) return false;
         if (payload.len > self.max_bytes) return false;
         const directory = self.namespace() catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
@@ -531,6 +545,7 @@ fn digestModules(modules: []const project.Module) [32]u8 {
         frame(&hash, module.name);
         frame(&hash, module.src.path);
         frame(&hash, module.src.bytes);
+        hash.update(&.{@intFromBool(module.src.trusted_intrinsics)});
     }
     var out: [32]u8 = undefined;
     hash.final(&out);

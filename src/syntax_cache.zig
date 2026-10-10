@@ -2,6 +2,7 @@
 const std = @import("std");
 const ast = @import("ast.zig");
 const source = @import("source.zig");
+const frontend = @import("frontend_runtime.zig");
 const copy = @import("ast_copy.zig");
 /// Maximum retained parse arenas and entry count; zero disables retention.
 pub const Limits = struct { max_entries: usize = 256, max_bytes: usize = 16 * 1024 * 1024 };
@@ -22,7 +23,8 @@ const Entry = struct {
     fn init(allocator: std.mem.Allocator, src: source.Source, start: usize, syntax: ast.Program) error{ OutOfMemory, InternalError }!Entry {
         var arena = std.heap.ArenaAllocator.init(allocator);
         errdefer arena.deinit();
-        const owned_source = try source.Source.init(arena.allocator(), src.path, src.bytes);
+        var owned_source = try source.Source.init(arena.allocator(), src.path, src.bytes);
+        owned_source.trusted_intrinsics = src.trusted_intrinsics;
         const owned_syntax = try copy.clone(arena.allocator(), syntax);
         return .{ .arena = arena, .src = owned_source, .body_start = start, .syntax = owned_syntax };
     }
@@ -37,6 +39,7 @@ pub const Cache = struct {
     entries: std.ArrayList(Entry) = .empty,
     limits: Limits,
     statistics: Statistics = .{},
+    boundary: frontend.Verified = .{},
     /// Create an empty cache with explicit retention limits; release it with deinit.
     pub fn init(allocator: std.mem.Allocator, limits: Limits) Cache {
         return .{ .allocator = allocator, .limits = limits };
@@ -52,9 +55,19 @@ pub const Cache = struct {
         self.entries.clearRetainingCapacity();
         self.statistics.retained_bytes = 0;
     }
+    /// Bind an authenticated frontend; changed producers drop retained parse arenas.
+    pub fn setFrontend(self: *Cache, verified: frontend.Verified) void {
+        if (!std.mem.eql(u8, &self.boundary.identity, &verified.identity) or !verified.reuse) self.clear();
+        self.boundary = verified;
+    }
     /// Deep-copy exact source/path/header matches; misses require fresh lexing and parsing.
     pub fn lookup(self: *Cache, allocator: std.mem.Allocator, src: source.Source, start: usize) error{ OutOfMemory, InternalError }!?ast.Program {
+        if (!self.boundary.reuse) {
+            self.statistics.bypassed += 1;
+            return null;
+        }
         for (self.entries.items) |entry| {
+            if (entry.src.trusted_intrinsics != src.trusted_intrinsics) continue;
             if (entry.body_start != start) continue;
             if (!std.mem.eql(u8, entry.src.path, src.path)) continue;
             if (!std.mem.eql(u8, entry.src.bytes, src.bytes)) continue;
@@ -68,7 +81,7 @@ pub const Cache = struct {
     /// Retain a successful parse using deterministic oldest-insertion eviction.
     /// Oversized entries are bypassed; allocation failures remain explicit host failures.
     pub fn remember(self: *Cache, src: source.Source, start: usize, syntax: ast.Program) error{ OutOfMemory, InternalError }!void {
-        if (self.limits.max_entries == 0 or src.bytes.len > self.limits.max_bytes) {
+        if (!self.boundary.reuse or self.limits.max_entries == 0 or src.bytes.len > self.limits.max_bytes) {
             self.statistics.bypassed += 1;
             return;
         }

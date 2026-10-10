@@ -6,17 +6,37 @@ const diagnostic = @import("diagnostic.zig");
 const launch = @import("component_launch.zig");
 const wire = @import("lexer_component_protocol.zig");
 const reference_mode = config.reference_mode;
+const component_mode = config.component_mode;
 const component_name = "lexer-pilot";
 const config = @import("config/component_runtime.zig");
 /// Bounded component failures are host errors, never lexical diagnostics.
 pub const Error = launch.Error || error{ ComponentProtocol, ComponentTimeout, ComponentFailed, ComponentIo, ComponentShadowMismatch, ComponentMode, ComponentChanged };
 /// Explicit host capabilities and full child lifecycle deadline.
-pub const Runtime = struct { io: std.Io, environ: *const std.process.Environ.Map, component_dir: ?[]const u8 = null, timeout_ms: i64 = 30000 };
-/// Compare only when explicitly selected; always retain reference tokens and diagnostics.
+pub const Runtime = config.Runtime;
+/// Select native, shadow, or validated component tokens; v1 lexical failures retain native repairs.
 pub fn lex(a: std.mem.Allocator, src: source.Source, sink: *diagnostic.Sink, runtime: Runtime) (diagnostic.Error || Error)![]lexer.Token {
     const mode = runtime.environ.get("MYLANG_LEXER_MODE") orelse reference_mode;
-    if (!std.mem.eql(u8, mode, reference_mode) and !std.mem.eql(u8, mode, "shadow")) return error.ComponentMode;
+    const known = std.mem.eql(u8, mode, reference_mode) or std.mem.eql(u8, mode, "shadow") or std.mem.eql(u8, mode, component_mode);
+    if (!known) return error.ComponentMode;
     if (std.mem.eql(u8, mode, reference_mode)) return lexer.lex(a, src.bytes, sink);
+    if (std.mem.eql(u8, mode, component_mode)) {
+        const actual = try execute(a, src, runtime);
+        switch (actual) {
+            .tokens => |items| return items,
+            .failure => {
+                // The v1 lexer DTO carries code/spans only. Native failure enrichment
+                // preserves established prose and structured repairs after validation.
+                const before = sink.items.items.len;
+                const native = lexer.lex(a, src.bytes, sink) catch |err| {
+                    if (err != error.SourceError) return err;
+                    try compare(actual, null, sink.items.items[before..], src);
+                    return error.SourceError;
+                };
+                a.free(native);
+                return error.ComponentShadowMismatch;
+            },
+        }
+    }
     const before = sink.items.items.len;
     const reference = lexer.lex(a, src.bytes, sink);
     const tokens = reference catch |err| blk: {
@@ -61,7 +81,7 @@ pub fn identity(a: std.mem.Allocator, runtime: Runtime) Error![32]u8 {
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
     hash.update("selka-lexer-pilot-v1/full-source/");
     hash.update(mode);
-    if (std.mem.eql(u8, mode, "shadow")) {
+    if (std.mem.eql(u8, mode, "shadow") or std.mem.eql(u8, mode, component_mode)) {
         const dir = try directory(a, runtime);
         defer a.free(dir);
         const artifact = try launch.artifact(a, runtime.io, dir, component_name);

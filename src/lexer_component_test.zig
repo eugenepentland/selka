@@ -95,7 +95,7 @@ test "lexer component reference needs no deployment and direct component mode fa
     var sink: diagnostic.Sink = .{ .allocator = a };
     const tokens = try adapter.lex(a, src, &sink, runtime);
     try t.expectEqual(@as(usize, 2), tokens.len);
-    try environ.put("MYLANG_LEXER_MODE", "component");
+    try environ.put("MYLANG_LEXER_MODE", "invalid");
     try t.expectError(error.ComponentMode, adapter.lex(a, src, &sink, runtime));
 }
 
@@ -165,4 +165,24 @@ test "lexer component lexical error codes physical locations and request limit f
     const over = try a.alloc(u8, wire.source_limit + 1);
     @memset(over, ' ');
     try t.expectError(error.ComponentProtocol, wire.request(a, over, @splat(0)));
+}
+// spec-case: SELFHOST-FRONTEND-CACHE-1
+test "lexer component mode returns validated tokens and enriches matching errors with native fixes" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    var buffer: [4096]u8 = undefined;
+    const directory = buffer[0..try temporary.dir.realPath(t.io, &buffer)];
+    var environ: std.process.Environ.Map = .init(a);
+    defer environ.deinit();
+    try environ.put("MYLANG_LEXER_MODE", "component");
+    const runtime: adapter.Runtime = .{ .io = t.io, .environ = &environ, .component_dir = directory };
+    try fixture(a, temporary.dir, echo_script);
+    var sink: diagnostic.Sink = .{ .allocator = a };
+    const tokens = try adapter.lex(a, try source.Source.init(a, "fixture", ""), &sink, runtime);
+    try t.expectEqual(@as(usize, 1), tokens.len);
+    try t.expectError(error.SourceError, adapter.lex(a, try source.Source.init(a, "fixture", "f64_abs"), &sink, runtime));
+    try t.expect(sink.items.items[0].provenance.fix != null);
 }
