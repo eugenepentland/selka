@@ -129,10 +129,14 @@ const payloads =
     \\    text: str
     \\
     \\
-    \\func make(i: int) -> Result[Node, int]:
+    \\func leaf(i: int) -> Result[Node, int]:
     \\    if i % 11 == 0:
     \\        return Err(i)
     \\    return Ok(Node(a=i, b=i + 1, c=2, d=3, e=4, text=str(i)))
+    \\
+    \\
+    \\func make(i: int) -> Result[Node, int]:
+    \\    return leaf(i)
     \\
     \\
     \\func main(out: Stream) -> int:
@@ -196,15 +200,22 @@ test "R payload ABI keeps a whole union snapshot contiguous" {
         \\    e: int
         \\
         \\
-        \\func make(i: int) -> Result[Node, int]:
-        \\    return Ok(Node(a=i, b=2, c=3, d=4, e=5))
+        \\func leaf(i: int) -> Node?:
+        \\    return Some(Node(a=i, b=2, c=3, d=4, e=5))
         \\
         \\
-        \\func inspect(result: Result[Node, int]) -> int:
+        \\func make(i: int) -> Node?:
+        \\    mut result = leaf(i)
+        \\    if inspect(result) < 0:
+        \\        return None
+        \\    return result
+        \\
+        \\
+        \\func inspect(result: Node?) -> int:
         \\    match result:
-        \\        case Ok(node):
+        \\        case Some(node):
         \\            return node.a
-        \\        case Err(_):
+        \\        case None:
         \\            return -1
         \\
         \\
@@ -215,9 +226,9 @@ test "R payload ABI keeps a whole union snapshot contiguous" {
         \\        mut result = make(i)
         \\        total += inspect(result)
         \\        match result:
-        \\            case Ok(node):
+        \\            case Some(node):
         \\                nodes.append(node)
-        \\            case Err(_):
+        \\            case None:
         \\                pass
         \\    out.print(total, nodes[37].a)
         \\    return 0
@@ -227,4 +238,41 @@ test "R payload ABI keeps a whole union snapshot contiguous" {
     try std.testing.expectEqualStrings("780 37\n", try runFixture(arena.allocator(), source, .optimize_debug));
     try std.testing.expectEqualStrings("780 37\n", try runFixture(arena.allocator(), source, .release));
     try std.testing.expectEqualStrings("780 37\n", try runFixture(arena.allocator(), source, .verify));
+}
+
+// spec-case: NEW-CORE-R-PUSH-1
+test "R destination selection follows intervening list updates" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const source =
+        \\record Node:
+        \\    a: int
+        \\    b: int
+        \\    c: int
+        \\    d: int
+        \\    e: int
+        \\
+        \\
+        \\func make(i: int) -> Node?:
+        \\    return Some(Node(a=i, b=2, c=3, d=4, e=5))
+        \\
+        \\
+        \\func main(out: Stream) -> int:
+        \\    mut nodes: Node[] = []
+        \\    for i in range(40):
+        \\        mut result = make(i)
+        \\        nodes.append(Node(a=1000 + i, b=2, c=3, d=4, e=5))
+        \\        match result:
+        \\            case Some(node):
+        \\                nodes.append(node)
+        \\            case None:
+        \\                pass
+        \\    out.print(nodes[74].a, nodes[75].a, len(nodes))
+        \\    return 0
+        \\
+    ;
+    try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .debug));
+    try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .optimize_debug));
+    try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .release));
+    try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .verify));
 }

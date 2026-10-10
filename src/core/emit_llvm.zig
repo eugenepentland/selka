@@ -3665,6 +3665,8 @@ const FunctionEmitter = struct {
                 size = @max(size, m.size(inst.ty));
                 const child = if (inst.op == .call) self.payloadShape(@intCast(inst.a.index())) else null;
                 if (child == null or offset + child.?.offset != payload.offset) calls_only = false;
+                const ref: ir.Ref = @fromBackingInt(@as(u32, @intCast(index)));
+                if (child != null and !emit_payload.projectedOnly(m, self.function, ref, child.?.offset, true)) calls_only = false;
             }
             if (offset >= payload.offset + payload.size or offset + size <= payload.offset) continue;
             if (offset >= payload.offset and offset + size <= payload.offset + payload.size) continue;
@@ -3718,7 +3720,7 @@ const FunctionEmitter = struct {
             }
         }
         const fallback = try self.offsetPointer(out, result, payload.offset);
-        if (!emit_payload.projectedOnly(self.state.module, self.function, self.current, payload.offset)) return fallback;
+        if (!emit_payload.projectedOnly(self.state.module, self.function, self.current, payload.offset, false)) return fallback;
         const list = self.payloadList(self.current, payload.ty) orelse return fallback;
         const element = self.state.module.compound(self.typeOf(list)).list;
         if (payload.size > self.state.stride(element)) return fallback;

@@ -114,7 +114,7 @@ pub fn reaches(m: *const ir.Module, ty: ir.Type, list: ir.Type, budget: usize) b
 
 /// A separated caller result may only be inspected through field/tag/payload
 /// projections. Whole-value retains, releases, stores, phis and arguments refuse.
-pub fn projectedOnly(m: *const ir.Module, f: *const ir.Function, call: ir.Ref, offset: u32) bool {
+pub fn projectedOnly(m: *const ir.Module, f: *const ir.Function, call: ir.Ref, offset: u32, returned: bool) bool {
     for (f.insts.items) |user| {
         if (user.op == .copy) continue;
         const operands = f.valueOperands(user);
@@ -123,6 +123,7 @@ pub fn projectedOnly(m: *const ir.Module, f: *const ir.Function, call: ir.Ref, o
             const part = projection(m, f, operand) orelse continue;
             if (part.call != call or part.offset >= offset) continue;
             if (part.offset + m.size(f.inst(operand).ty) <= offset) continue;
+            if (user.op == .ret and returned) continue;
             if (user.op != .record_get and user.op != .union_tag and user.op != .union_payload) return false;
         }
     }
