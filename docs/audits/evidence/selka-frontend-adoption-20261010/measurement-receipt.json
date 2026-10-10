@@ -1,0 +1,10 @@
+{
+  "code_commit": "2b33d2112",
+  "measurement_driver_commit": "499b713aa",
+  "measurement_driver_sha256": "593f39d46de6772d5d5f939f1c1bfc9d465180fc30603f4b4322b5ce964c7202",
+  "command": "taskset -c 2,3,10,11 python3 selfhost/tests/measure_frontend_adoption.py --isolated --component --compiler /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/adoption-release/bin/mylang --builder /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/adoption-release/tools/selka-components --component-dir /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/adoption-release/libexec/mylang/components --source-root /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang --zig /home/epentland/.local/bin/zig --output /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/adoption-timing-final.json",
+  "admission": "FIFO gate ticket33 and all3buildslots held for entire timing; CPUs2,3,10,11",
+  "timing_json_sha256": "3b9906746bdb214f5a92298c28ba291e1748b3084440204e542e706cd3f75354",
+  "timer": "perf_counter_ns around complete process invocation, bounded disk output, direct blocking wait, separate deadline watchdog",
+  "superseded_run": "Initial polling-wait measurements were rejected; none of those samples appear in timing.json."
+}

@@ -2,8 +2,30 @@
 
 `selfhost/tests/run_frontend_qualification.py` takes an installed host, native
 coordinator and four verified packages. It verifies the qualified seed receipt
-on every invocation. It does not build implicitly. Run after installation,
-under build admission with a private disk `TMPDIR` and local Zig cache:
+on every invocation. It does not build implicitly.
+
+The registered `zig build test-selfhost-frontend` target runs the normal matrix
+with a coordinator edit, the release/fact/leak matrix, and the harness self-tests.
+It is included in `zig build test`. Both workflow lanes remain fresh when the
+verification registry reuses other test receipts.
+
+For ordinary compiler commands, `MYLANG_LEXER_MODE` and `MYLANG_PARSER_MODE`
+independently select `reference`, `shadow` or `component`. Both default to
+`reference`. Shadow compares the component with the native implementation;
+component consumes the validated component result. Selected packages come from
+the installation, or from an explicit `MYLANG_COMPONENT_DIR`. For example,
+after installation:
+
+```console
+MYLANG_LEXER_MODE=component MYLANG_PARSER_MODE=component \
+  zig-out/bin/mylang check examples/arithmetic.my
+```
+
+The current component source bound is narrower than the native frontend's;
+see the qualification limits below before selecting it for a project.
+
+To run the driver directly after installation, use build admission with a
+private disk `TMPDIR` and local Zig cache:
 
 ```console
 scripts/build-slot.sh build python3 selfhost/tests/run_frontend_qualification.py \
@@ -92,7 +114,9 @@ It records all raw samples and medians for complete parser `dump-syntax`
 commands with the lexer held in reference mode, application builds through an
 empty application cache, repeated warm builds and imported-source edit loops.
 Every sample checks actual output/status; edited executables must return the
-new value. Fact/leak verification is disabled for these cache measurements and
+new value. A blocking process wait and a separate deadline watchdog avoid the
+polling delays of Python's timed wait. Captured output remains bounded on disk.
+Fact/leak verification is disabled for these cache measurements and
 qualified separately by the gate. Application cache reports are retained without pretending cold
 application state is a cold machine, runtime store or toolchain.
 
@@ -104,3 +128,10 @@ source snapshot, native compilation and installation; the seed is provisioned,
 not measured cold. Package identities and unchanged host bytes are checked.
 Process affinity, host/package digests and the cumulative child peak RSS are
 recorded. That RSS is a whole-driver high-water, not per-exchange allocation.
+
+Measurements hold `MYLANG_TEST_INDEX_MODE=reference` and
+`MYLANG_CACHE_PLAN_MODE=reference` constant across frontend modes. Application
+measurements also disable fact and leak verification so cache reuse is allowed.
+These are complete commands with the frontend contribution isolated; they are
+not measurements of all production-default component settings. The JSON records
+these controls alongside the raw samples.

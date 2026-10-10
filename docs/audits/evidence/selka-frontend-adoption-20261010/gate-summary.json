@@ -1,0 +1,23 @@
+{
+  "code_commit": "2b33d2112",
+  "command": "scripts/build-slot.sh gate zig build test --summary all -j4 --maxrss 8589934592",
+  "exit_status": 0,
+  "build_summary": "Build Summary: 120/120 steps succeeded; 2646/26715 tests passed (24069 skipped)",
+  "guardian_selected_results": {
+    "passed": 2644,
+    "failed": 0,
+    "skipped": 0
+  },
+  "guardian_result_count": 29,
+  "full_gate_log_sha256": "852af76e2115ca1ef9f0b3671ae40136b54118d5c8fad53ed67601636ad6a672",
+  "frontend_verdicts": [
+    "frontend qualification: 29 workflows, 58 comparisons, 60 warm deployment checks, 8 live session checks; 0 failed, 0 skipped",
+    "frontend qualification: 29 workflows, 116 comparisons, 60 warm deployment checks, 8 live session checks; 0 failed, 0 skipped"
+  ],
+  "pilot_verdicts": [
+    "pilot gate parser: 86 pure tests in each of two modes; qualification passed",
+    "pilot gate probes: 11 pure tests in each of two modes; qualification passed",
+    "pilot gate lexer: 17 pure tests in each of two modes; qualification passed"
+  ],
+  "note": "Zig aggregate skipped slots are exclusions assigned to other shards. Historical corpus and documentation exclusions remain explicitly recorded in the full log."
+}

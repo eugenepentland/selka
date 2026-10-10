@@ -64,11 +64,16 @@ The frontend adoption branch integrates the committed cache work through
 `1d202d41b`. Its verification registry in `build_verification.zig` registers
 `cached()` steps by input-list name and wraps eligible actions in persisted
 receipts. The integrated registry marks the three seed-dependent pilot lanes
-non-cacheable; registration self-tests remain eligible for reuse. The registry
+and the compiler-wide `frontend_qualification` lanes non-cacheable;
+registration self-tests remain eligible for reuse. The registry
 policy and action coverage have a dedicated `test-verification-registry` target
 that also runs in the complete gate. Verification preparation tracks the
 installed manifests and executable bytes of all four components, including
 `lexer-pilot` and `parser-pilot`.
+
+The [frontend qualification target](frontend-adoption-qualification.md) adds
+ordinary consumers, cache transitions, deployment failures and coordinator edits
+to the original language-boundary checks.
 
 Future changes must preserve the three `pilot_*` input lists and
 `pilot_registration`, the aggregate/full-test dependencies and the per-lane

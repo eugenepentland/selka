@@ -1,0 +1,8 @@
+build-slot: gate slot 1, FIFO ticket 33 after 0s
+Final gate and production source guard passed
+build reservation 1 admitted
+build reservation 3 admitted
+build reservation 2 admitted
+outer gate and all FIFO build reservations held; timing isolated
+{"measurement": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/adoption-timing-final.json", "host_sha256": "51c207cb030c5c5c9cf19ef041d7eeaea3ddb5924c05d991f46a665e06b97b19", "parser_transport_cases": 9, "application_cases": 9, "coordinator_cases": 3}
+all FIFO build reservations released
