@@ -23,13 +23,13 @@ const arrays =
     \\
 ;
 
-const Mode = enum { debug, optimize_debug, release, verify };
+const Mode = enum { debug, optimize_debug, optimize_debug_verify, release, verify };
 
 fn runFixture(arena: std.mem.Allocator, source: []const u8, mode: Mode) ![]const u8 {
     var refusal: @import("build.zig").Refusal = .{};
     var module = try support.buildSource(arena, source, &refusal);
-    const release = mode == .release or mode == .verify;
-    const verify = mode == .verify;
+    const release = mode != .debug;
+    const verify = mode == .verify or mode == .optimize_debug_verify;
     var passed = if (mode != .debug)
         try @import("passes.zig").run(arena, &module, if (verify) .verify else .trusted)
     else
@@ -45,6 +45,7 @@ test "R fixed-array element access preserves live snapshots and managed element 
     defer arena.deinit();
     try std.testing.expectEqualStrings("13 3 13\n14 7\ne b\n", try runFixture(arena.allocator(), arrays, .debug));
     try std.testing.expectEqualStrings("13 3 13\n14 7\ne b\n", try runFixture(arena.allocator(), arrays, .optimize_debug));
+    try std.testing.expectEqualStrings("13 3 13\n14 7\ne b\n", try runFixture(arena.allocator(), arrays, .optimize_debug_verify));
     try std.testing.expectEqualStrings("13 3 13\n14 7\ne b\n", try runFixture(arena.allocator(), arrays, .release));
     try std.testing.expectEqualStrings("13 3 13\n14 7\ne b\n", try runFixture(arena.allocator(), arrays, .verify));
 }
@@ -84,6 +85,7 @@ test "R integer radix partitions preserve signed order, aliases and stable decor
     defer arena.deinit();
     try std.testing.expectEqualStrings("True -55 -9223372036854775808 9223372036854775807\n", try runFixture(arena.allocator(), sorting, .debug));
     try std.testing.expectEqualStrings("True -55 -9223372036854775808 9223372036854775807\n", try runFixture(arena.allocator(), sorting, .optimize_debug));
+    try std.testing.expectEqualStrings("True -55 -9223372036854775808 9223372036854775807\n", try runFixture(arena.allocator(), sorting, .optimize_debug_verify));
     try std.testing.expectEqualStrings("True -55 -9223372036854775808 9223372036854775807\n", try runFixture(arena.allocator(), sorting, .release));
     try std.testing.expectEqualStrings("True -55 -9223372036854775808 9223372036854775807\n", try runFixture(arena.allocator(), sorting, .verify));
 }
@@ -116,6 +118,8 @@ test "R destination sharing keeps ordinary function-value signatures" {
     ;
     try std.testing.expectEqualStrings("2 1 5\n", try runFixture(arena.allocator(), source, .debug));
     try std.testing.expectEqualStrings("2 1 5\n", try runFixture(arena.allocator(), source, .optimize_debug));
+    try std.testing.expectEqualStrings("2 1 5\n", try runFixture(arena.allocator(), source, .optimize_debug_verify));
+    try std.testing.expectEqualStrings("2 1 5\n", try runFixture(arena.allocator(), source, .release));
     try std.testing.expectEqualStrings("2 1 5\n", try runFixture(arena.allocator(), source, .verify));
 }
 
@@ -167,6 +171,7 @@ test "R payload destinations preserve fallible construction, growth and shared l
     try std.testing.expect(std.mem.indexOf(u8, llvm, "%payload.dst") != null);
     try std.testing.expectEqualStrings("31 14 529 15\n", try runFixture(arena.allocator(), payloads, .debug));
     try std.testing.expectEqualStrings("31 14 529 15\n", try runFixture(arena.allocator(), payloads, .optimize_debug));
+    try std.testing.expectEqualStrings("31 14 529 15\n", try runFixture(arena.allocator(), payloads, .optimize_debug_verify));
     try std.testing.expectEqualStrings("31 14 529 15\n", try runFixture(arena.allocator(), payloads, .release));
     try std.testing.expectEqualStrings("31 14 529 15\n", try runFixture(arena.allocator(), payloads, .verify));
 }
@@ -184,6 +189,10 @@ test "R fixed-array element hulls retain changed and negative values" {
         \\    return 0
         \\
     ;
+    try std.testing.expectEqualStrings("-10 -6\n", try runFixture(arena.allocator(), source, .debug));
+    try std.testing.expectEqualStrings("-10 -6\n", try runFixture(arena.allocator(), source, .optimize_debug));
+    try std.testing.expectEqualStrings("-10 -6\n", try runFixture(arena.allocator(), source, .optimize_debug_verify));
+    try std.testing.expectEqualStrings("-10 -6\n", try runFixture(arena.allocator(), source, .release));
     try std.testing.expectEqualStrings("-10 -6\n", try runFixture(arena.allocator(), source, .verify));
 }
 
@@ -236,6 +245,7 @@ test "R payload ABI keeps a whole union snapshot contiguous" {
     ;
     try std.testing.expectEqualStrings("780 37\n", try runFixture(arena.allocator(), source, .debug));
     try std.testing.expectEqualStrings("780 37\n", try runFixture(arena.allocator(), source, .optimize_debug));
+    try std.testing.expectEqualStrings("780 37\n", try runFixture(arena.allocator(), source, .optimize_debug_verify));
     try std.testing.expectEqualStrings("780 37\n", try runFixture(arena.allocator(), source, .release));
     try std.testing.expectEqualStrings("780 37\n", try runFixture(arena.allocator(), source, .verify));
 }
@@ -273,6 +283,7 @@ test "R destination selection follows intervening list updates" {
     ;
     try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .debug));
     try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .optimize_debug));
+    try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .optimize_debug_verify));
     try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .release));
     try std.testing.expectEqualStrings("1037 37 80\n", try runFixture(arena.allocator(), source, .verify));
 }
