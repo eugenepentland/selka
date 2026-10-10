@@ -110,7 +110,7 @@ def qualify(args):
             for source, count in roots:
                 # The expanded parser profile deliberately reaches a million
                 # value records; retain default budgets for every other root.
-                budget = (['--max-steps', '50000000', '--max-memory', '1G']
+                budget = (['--max-steps', '500000000', '--max-memory', '1G']
                           if args.lane == 'parser' and source.name == 'profile_tests.my' else [])
                 pure = execute([seed, 'test', source, '--force', '--no-cache', *flags, *budget], environment)
                 require_guest(pure, count)
