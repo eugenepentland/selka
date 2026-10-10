@@ -30,10 +30,11 @@ class DeclarationQualificationTests(unittest.TestCase):
                 D.packages(root)
 
     def test_gate_requires_complete_exact_counts(self):
-        good = ('declaration qualification: 21 workflows, 42 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
-                'declaration transport: 1 valid, 19 malformed; 0 failed, 0 skipped\n')
+        good = ('declaration qualification: 30 workflows, 60 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
+                'declaration transport: 1 valid, 19 malformed; 0 failed, 0 skipped\n'
+                'declaration forged replies: 8 rejected; 0 failed, 0 skipped\n')
         G.require_summary(good)
-        for bad in (good.replace('42 comparisons', '40 comparisons'),
+        for bad in (good.replace('60 comparisons', '58 comparisons'),
                     good.replace('19 malformed', '0 malformed'), good + good,
                     good.replace('0 skipped', '1 skipped')):
             with self.assertRaises(RuntimeError):
@@ -68,7 +69,7 @@ class DeclarationQualificationTests(unittest.TestCase):
 
     def test_fixture_selection_nonempty_and_unique(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
-        self.assertGreaterEqual(len(manifest), 4)
+        self.assertGreaterEqual(len(manifest), 15)
         for name, spec in manifest.items():
             self.assertTrue((D.FIXTURES/Path(name).with_suffix('.input')).is_file())
             self.assertIn(spec['status'],(0,1))

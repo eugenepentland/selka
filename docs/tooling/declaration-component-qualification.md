@@ -13,14 +13,15 @@ uncached pure-test verdicts in normal and release/fact/leak modes. It then runs
 all five verified component packages. The declaration package is explicitly
 protocol/schema 1; existing lexer/parser packages remain protocol 1/schema 2.
 
-The current seven fixture entries cover duplicate declarations, import alias
-conflicts, public/private domain visibility, private imported declarations and
+The current fifteen fixture entries cover duplicate declarations, import alias
+conflicts, public/private domain visibility, private imported declarations (including the standalone test-module exception
+and its refusal once imported) and
 re-export identities. Whole diagnostic-v1 output, including related locations,
 is compared byte for byte. Checks, interface/schema/navigation outputs,
 implementation source edits and restoration, build/executable/run behavior and
 two actual tests are compared. Repeated outputs must preserve exact ordering.
-The selection is 21 workflows and 42 comparisons; the coordinator edit repeats
-the workflows for 84 comparisons in the normal lane.
+The selection is 30 workflows and 60 comparisons; the coordinator edit repeats
+the workflows for 120 comparisons in the normal lane.
 
 Warm checks publish against the same private component directory before each
 mutation. Missing manifests/artifacts, unsupported schemas, corrupted artifacts
@@ -48,3 +49,27 @@ changed declaration key and artifact bytes, unchanged other four receipts and
 host bytes, and exact workflow parity against the new deployment. No direct seed
 build bypass is used. Timing is separate and remains unqualified until an
 isolated ReleaseFast baseline/candidate run is explicitly performed.
+
+Eight installed-host checks also deploy pinned-Zig compiled native fixtures that
+return the correct protocol magic and correlation bytes but forge declaration
+results. Empty/incomplete tables, oversized counts, undefined outcomes and
+out-of-source spans must produce host exit 2 in both shadow and component modes.
+The fixture is developer-only C, runs without Python, and deliberately passes
+manifest digest authentication so result validation is exercised independently.
+
+`measure_declaration_adoption.py` prepares isolated warm/edit/interface evidence.
+The frozen prior host runs reference only because it has no declaration boundary;
+the candidate runs reference and component with lexer/parser held in reference.
+Both use the same fixture project, explicit qualified seed verification and
+corrected blocking process wait with deadline watchdog. Shared native objects may
+be warm across runs; cache reports are retained. Run this only after correctness
+qualification under the approved outer gate and all three FIFO build reservations
+on CPUs 2,3,10,11. No timing result is implied by registration of the driver.
+
+Domain fixtures exercise inherited owned-method publication and private-member
+refusal. The multi-hop facade fixture uses re-exported type, function and
+constraint names and compares complete interface output. Private target failure
+precedence and local facade collisions preserve their related locations. Bare
+`export NAME` is removed by the parser: its explicit source rejection is marked
+as a parser boundary case, while repeated direct-export algorithm compatibility
+is exercised through the producer's pure projected-facts tests.

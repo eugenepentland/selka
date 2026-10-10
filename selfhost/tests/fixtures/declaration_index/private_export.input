@@ -1,0 +1,8 @@
+import private_helper
+export private_helper.hidden
+
+func hidden() -> int:
+    return 0
+
+func main() -> int:
+    return 0

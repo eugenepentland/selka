@@ -26,11 +26,13 @@ def require_summary(output, edit=False):
     if len(rows)!=1:raise RuntimeError('missing/duplicate declaration qualification verdict')
     workflows,comparisons,warm,live=map(int,rows[0])
     fixtures = json.loads((ROOT / 'selfhost/tests/fixtures/declaration_index/manifest.json').read_text())
-    expected = len(fixtures) + 6 + 2 + 3 + 3
-    if len(fixtures) < 7 or workflows != expected or comparisons!=(4 if edit else 2)*workflows or warm!=30 or live!=4:
+    expected = len(fixtures) + sum(bool(value.get('interfaces')) for value in fixtures.values()) + 6 + 2 + 3 + 3
+    if len(fixtures) < 15 or workflows != expected or comparisons!=(4 if edit else 2)*workflows or warm!=30 or live!=4:
         raise RuntimeError('incomplete declaration qualification selection')
     if re.findall(r'^declaration transport: (\d+) valid, (\d+) malformed; 0 failed, 0 skipped$', output, re.M) != [('1', '19')]:
         raise RuntimeError('missing/incomplete declaration transport selection')
+    if re.findall(r'^declaration forged replies: (\d+) rejected; 0 failed, 0 skipped$', output, re.M) != ['8']:
+        raise RuntimeError('missing/incomplete hostile declaration reply selection')
 
 
 def main():

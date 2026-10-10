@@ -1,0 +1,4 @@
+import kind_facade
+export kind_facade.Box
+export kind_facade.Copy
+export kind_facade.make

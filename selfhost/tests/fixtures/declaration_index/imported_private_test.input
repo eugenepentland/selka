@@ -1,0 +1,4 @@
+import private_helper_test
+
+func main() -> int:
+    return 0

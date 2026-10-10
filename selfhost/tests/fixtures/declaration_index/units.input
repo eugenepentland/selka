@@ -1,3 +1,9 @@
 public domain Distance: i64:
-    func make(x: i64) -> Distance effects():
+    private func raw(x: i64) -> Distance effects():
         return wrap[Distance](x)
+
+    func make(x: i64) -> Distance effects():
+        return Distance.raw(x)
+
+    func number(value: Distance) -> i64 effects():
+        return unwrap(value)

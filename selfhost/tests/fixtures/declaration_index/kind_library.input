@@ -1,0 +1,7 @@
+public record Box:
+    value: int
+
+public constraint Copy[T] = copy
+
+public func make() -> Box effects():
+    return Box(value=7)

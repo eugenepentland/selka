@@ -1,0 +1,8 @@
+import final_facade
+
+public func identity[T: final_facade.Copy](value: T) -> T effects():
+    return value
+
+func main() -> int:
+    const box = final_facade.make()
+    return identity(box).value

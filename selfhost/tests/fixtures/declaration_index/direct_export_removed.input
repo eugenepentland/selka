@@ -1,0 +1,8 @@
+func value() -> int:
+    return 7
+
+export value
+export value
+
+func main() -> int:
+    return value()

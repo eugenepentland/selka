@@ -1,0 +1,4 @@
+import units
+
+func main() -> i64:
+    return units.Distance.number(units.Distance.raw(7i64))

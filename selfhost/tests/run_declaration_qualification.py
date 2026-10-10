@@ -76,11 +76,13 @@ def environment(mode, components, empty):
     return env
 
 
-def packages(directory):
+def packages(directory, include_declaration=True):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
                 'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), COMPONENT: (1, 1)}
     for name, (protocol, schema) in versions.items():
+        if name == COMPONENT and not include_declaration:
+            continue  # Explicit frozen pre-boundary measurement profile only.
         value = json.loads((directory / f'{name}.json').read_text())
         F.require(all(type(value.get(k)) is int for k in ('format', 'protocol', 'schema')), 'noninteger package identity')
         F.require(all(value.get(k) == v for k, v in
@@ -163,13 +165,16 @@ class Qualification(F.Qualification):
                         'schema-project', 'list-interfaces'):
             self.compare(command, [command, main])
         manifest = json.loads((FIXTURES / 'manifest.json').read_text())
-        F.require(len(manifest) >= 7, 'empty/incomplete declaration fixture selection')
+        F.require(len(manifest) >= 15, 'empty/incomplete declaration fixture selection')
         for name, spec in manifest.items():
             F.require(spec['status'] in (0, 1), 'unsupported fixture verdict')
             result = self.compare(name, ['check-project', self.source / name, '--diagnostics=json'], spec['status'])
+            self.records[-1]['boundary'] = spec.get('boundary', 'declaration or native consumer')
             if 'code' in spec:
                 diagnostics = [json.loads(line)['diagnostic'] for line in result[2].splitlines()]
                 F.require(any(value['code'] == spec['code'] for value in diagnostics), 'expected declaration diagnostic missing')
+            if spec.get('interfaces'):
+                self.compare(name + '-interfaces', ['list-interfaces', self.source / name])
         helper = self.source / 'helper.my'
         original = helper.read_bytes()
         replacement = original.replace(b'public func value(', b'public func renamed(')
@@ -224,6 +229,32 @@ def coordinator_edit(args, q):
     return {'before': before[COMPONENT], 'after': after[COMPONENT], 'other_packages_unchanged': 4}
 
 
+def forged_replies(args, q):
+    private = q.work / 'forged-deployment'
+    checked = 0
+    for case in range(4):
+        binary = q.work / f'forged-reply-{case}'
+        compile_result = F.execute([args.zig, 'cc', FIXTURES / 'forged_reply.c', '-O2',
+                                    f'-DFORGE_CASE={case}', '-o', binary],
+                                   coordinator_environment(), q.work, 180)
+        F.require(compile_result[0] == 0, 'native hostile-reply fixture compilation failed')
+        F.restore_deployment(args.component_dir, private)
+        manifest_path = private / f'{COMPONENT}.json'
+        manifest = json.loads(manifest_path.read_text())
+        artifact = private / manifest['artifact']
+        artifact.chmod(0o700)
+        shutil.copyfile(binary, artifact)
+        manifest['sha256'] = F.digest(artifact)
+        manifest_path.write_text(json.dumps(manifest))
+        packages(private)  # Authentication passes; returned facts must fail.
+        for mode in q.modes:
+            result = q.run(mode, ['check-project', q.source / 'main.my'], private)
+            F.require(result[0] == 2 and not result[1] and result[2],
+                      f'{mode}: forged declaration reply case {case} escaped host rejection: {result!r}')
+            checked += 1
+    return checked
+
+
 def main():
     ap = argparse.ArgumentParser()
     for name in ('compiler', 'builder', 'component-dir', 'zig'):
@@ -250,6 +281,7 @@ def main():
         q.live_sessions()
         protocol = transport(args.component_dir / manifests[COMPONENT]['artifact'], q.work,
                              environment('component', args.component_dir, q.empty_path))
+        forged = forged_replies(args, q)
         edit = coordinator_edit(args, q) if args.edit_check else None
         report = {'host_sha256': host, 'packages': manifests, 'workflows': workflows,
                   'verified_seed_sha256': seed_sha256, 'release_facts_leaks': args.release,
@@ -257,6 +289,7 @@ def main():
                   'live_session_checks': q.sessions, 'cache_enabled_test_receipts': q.receipt_warm,
                   'records': q.records, 'failed': 0, 'skipped': 0}
         report['transport'] = protocol
+        report['forged_reply_checks'] = forged
         report['coordinator_edit'] = edit
     F.require(F.digest(args.compiler) == host and packages(args.component_dir) == manifests, 'installed inputs changed')
     if args.report:
@@ -264,6 +297,7 @@ def main():
         args.report.write_text(json.dumps(report, indent=2) + '\n')
     print(f'declaration qualification: {workflows} workflows, {q.comparisons} comparisons, {q.deployment} warm deployment checks, {q.sessions} live session checks; 0 failed, 0 skipped')
     print(f'declaration transport: {protocol["valid"]} valid, {protocol["malformed"]} malformed; 0 failed, 0 skipped')
+    print(f'declaration forged replies: {forged} rejected; 0 failed, 0 skipped')
 
 
 if __name__ == '__main__':

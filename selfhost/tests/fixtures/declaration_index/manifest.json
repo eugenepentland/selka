@@ -22,5 +22,34 @@
   },
   "reexport_identity.my": {
     "status": 0
+  },
+  "private_helper_test.my": {
+    "status": 0
+  },
+  "imported_private_test.my": {
+    "status": 1
+  },
+  "domain_member_public.my": {
+    "status": 0
+  },
+  "domain_member_private.my": {
+    "status": 1
+  },
+  "facade_kinds.my": {
+    "status": 0,
+    "interfaces": true
+  },
+  "direct_export_removed.my": {
+    "status": 1,
+    "code": "E_EXPORT_REMOVED",
+    "boundary": "parser"
+  },
+  "private_export.my": {
+    "status": 1,
+    "code": "E_PRIVATE_SYMBOL"
+  },
+  "facade_conflict.my": {
+    "status": 1,
+    "code": "E_DUPLICATE_SYMBOL"
   }
 }
