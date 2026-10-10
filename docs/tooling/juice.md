@@ -22,6 +22,14 @@ timing-ratio error, substantial outliers and excessive timing spread; it does no
 meet the 5% target or replace runtime validation. Collection operations and
 data-dependent paths currently produce `unknown`.
 
+A [final machine-code follow-up](../../experiments/juice-machine-proxy-20261010/README.md)
+keeps Core's loop counts and uses LLVM MCA with independently checked instruction
+latencies. On a fresh run of the same five transformations, median timing-ratio
+error improves from 17.2% for Core to 3.3%; four of five point estimates are within
+5%, with an 18.2% remaining miss. Timing spread still prevents qualified passes.
+The mapping is manually audited for one binary, and memory and general control
+flow are unsupported. This remains an advisory developer experiment.
+
 ## Runtime proxy and the 5% target
 
 `record --profile runtime` adds a separate CPU runtime proxy. The default

@@ -1,0 +1,15 @@
+{
+  "schema": "juice-machine-latency-profile-v1",
+  "cpu_model": "alderlake",
+  "latencies": {
+    "mov_reg64_distinct": 0,
+    "xor_reg64_distinct": 1
+  },
+  "basis": "Separate llvm-exegesis instruction probes on CPU 10, five measurements each, mean aggregation. XOR64rr measured 1.00305 cycles; a serial mov/xor/mov chain measured 1.01002 cycles per three-instruction snippet. Same-register MOV measured 1.00163 and is not overridden. Vector instruction measurements are approximately 1 cycle; unchanged. No held-out program timings determine these two integer latency overrides.",
+  "evidence_hashes": {
+    "copy-xor.s": "765137bee2df9692cc5aa47c37ef3ba7573a5177722343e9f559529de9a9bd93",
+    "other.yaml": "20ee505e8c4b0f08099339008b78875d4e211e6428d3487397d58cccaf409702",
+    "xor.yaml": "07efc30cca34d9aa8d0293b46d90eee547860884a41603c4a822aedc37d10482",
+    "copy-xor.yaml": "829c2dfd39499f255d64bd78203105bbfc1f08ffa2e63128ffd12dc20ec37c71"
+  }
+}
