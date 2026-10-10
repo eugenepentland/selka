@@ -1039,10 +1039,12 @@ test "optimizer demand field summaries ignore fusion runtime entries and retain 
     try equal(oracle, warm.output);
     try std.testing.expect(warm.output.statistics.bypassed > 0);
     try std.testing.expect(deferredName(warm, "idle"));
+    try std.testing.expectEqual(warm.omitted, warm.deferred_functions.len);
     const edited = try compileDemand(a, std.testing.allocator, after, &storage, true);
     try equal(try compile(a, std.testing.allocator, after, null, .verify), edited.output);
     try std.testing.expect(edited.output.statistics.bypassed > 0);
     try std.testing.expect(deferredName(edited, "idle"));
+    try std.testing.expectEqual(edited.omitted, edited.deferred_functions.len);
     const eager_cold = try compile(a, std.testing.allocator, before, &storage, .verify);
     const eager_warm = try compile(a, std.testing.allocator, before, &storage, .verify);
     try equal(oracle, eager_cold);
