@@ -13,7 +13,7 @@ lexer, parser, declaration and signature producers together. The public default
 remains reference. Installed commands run with an empty PATH; Python is only the
 developer gate driver, never the compiler or component runtime.
 
-The fixture corpus contains 27 cases: generic and nominal applications, public
+The fixture corpus contains 29 cases: generic and nominal applications, public
 aliases/domains, array/tuple/callback signatures, imported and re-exported named
 constraints, implied structural copy, private nested type leakage, private bound
 exposure, invalid arity and parameter constructors, unknown and wrong-kind
@@ -22,7 +22,7 @@ reference status, stdout and diagnostic-v1 stderr, including related locations.
 UTF-8 comments precede declarations to exercise byte locations. All six component entry sources also run through installed `check`. Successful cases
 also compare deterministic interface listings.
 
-There are 57 workflows and 114 component comparisons per matrix, or 228
+There are 60 workflows and 120 component comparisons per matrix, or 240
 comparisons when the normal gate repeats the matrix after a component-only source
 edit. Thirty same-path warm deployment checks cover missing manifests/artifacts,
 schema changes, digest corruption and authenticated wrong-protocol replacement.
@@ -52,3 +52,8 @@ cache build, twenty warm builds, five body edits and twenty interface listings,
 including program behavior, native reuse reports and immutable identities. Run
 only with the outer gate and all three FIFO build reservations held; timings are
 not qualification assertions. Native toolchain/unit caches may already be warm.
+
+The dotted import fixture distinguishes syntax admission from type resolution: `shared.types.Thing`
+resolves, while `shared . types . Thing` is rejected by the parser with `E_SYNTAX` before the signature boundary. A single
+qualifier with spacing still resolves. This is parity with the existing boundary,
+not a new normalization policy.

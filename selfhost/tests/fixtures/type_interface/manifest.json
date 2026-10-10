@@ -133,5 +133,15 @@
     "status": 0,
     "interfaces": true,
     "boundary": "checkSignatures"
+  },
+  "dotted_canonical.my": {
+    "status": 0,
+    "boundary": "checkSignatures",
+    "interfaces": true
+  },
+  "dotted_internal_spacing.my": {
+    "status": 1,
+    "boundary": "parser (second spaced dot rejected before signature resolution)",
+    "code": "E_SYNTAX"
   }
 }

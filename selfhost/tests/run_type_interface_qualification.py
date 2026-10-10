@@ -275,8 +275,10 @@ def main():
     host = F.digest(args.compiler)
     with tempfile.TemporaryDirectory(prefix='type_interface-qualification-') as temporary, type_interface_boundary():
         q = Qualification(args.compiler, args.zig, args.component_dir, Path(temporary), ['shadow', 'component'], args.release)
-        for source in FIXTURES.glob('*.input'):
-            shutil.copyfile(source, q.source / source.with_suffix('.my').name)
+        for source in FIXTURES.rglob('*.input'):
+            target = q.source / source.relative_to(FIXTURES).with_suffix('.my')
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
         workflows = q.matrix()
         q.warm_deployments()
         q.live_sessions()

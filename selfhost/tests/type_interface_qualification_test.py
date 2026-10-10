@@ -34,11 +34,11 @@ class TypeInterfaceQualificationTests(unittest.TestCase):
                 D.packages(root)
 
     def test_gate_requires_complete_exact_counts(self):
-        good = ('type_interface qualification: 57 workflows, 114 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
+        good = ('type_interface qualification: 60 workflows, 120 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
                 'type_interface transport: 1 valid, 31 malformed; 0 failed, 0 skipped\n'
                 'type_interface forged replies: 8 rejected; 0 failed, 0 skipped\n')
         G.require_summary(good)
-        for bad in (good.replace('114 comparisons', '112 comparisons'),
+        for bad in (good.replace('120 comparisons', '118 comparisons'),
                     good.replace('31 malformed', '0 malformed'), good + good,
                     good.replace('0 skipped', '1 skipped')):
             with self.assertRaises(RuntimeError):

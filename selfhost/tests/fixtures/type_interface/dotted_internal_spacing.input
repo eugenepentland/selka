@@ -1,0 +1,7 @@
+import shared.types
+
+public record API:
+    value: shared . types . Thing
+
+func main()->int:
+    return 0
