@@ -195,11 +195,12 @@ fn snapshot(ctx: *Context, source: []const u8, destination: []const u8) !void {
     }
 }
 
-const Component = struct { source: []const u8, name: []const u8 };
+const Component = struct { source: []const u8, name: []const u8, entry: []const u8 = "main.my" };
 const components = [_]Component{
     .{ .source = "test_index", .name = "test-index" },
     .{ .source = "cache_plan", .name = "cache-plan" },
     .{ .source = "lexer_pilot", .name = "lexer-pilot" },
+    .{ .source = "parser_pilot", .name = "parser-pilot", .entry = "full_adapter.my" },
 };
 
 fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {
@@ -258,7 +259,7 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         // Shared Zig CRT objects retain the directory of their first compilation
         // in DWARF. A deterministic private cache makes every byte reproducible.
         try environment.put("ZIG_GLOBAL_CACHE_DIR", try ctx.path(&.{ work, "cache", "zig-global" }));
-        const compile_output = try ctx.checked(&.{ seed.binary, "build", try ctx.path(&.{ copied, "main.my" }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) }, work, &environment);
+        const compile_output = try ctx.checked(&.{ seed.binary, "build", try ctx.path(&.{ copied, descriptor.entry }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) }, work, &environment);
         if (compile_output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, compile_output);
         const fresh = try files.object(ctx.a, &.{ .{ .name = "identity", .value = identity }, .{ .name = "sha256", .value = try ctx.hashValue(output) } });
         if (has_receipt) {

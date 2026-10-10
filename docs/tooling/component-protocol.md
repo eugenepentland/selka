@@ -1,5 +1,8 @@
 # Component protocol v1
 
+Frontend qualification also uses a separate [complete parser syntax protocol](parser-syntax-values.md)
+for the `parser-pilot` component and `dump-syntax` shadow command.
+
 The first operation is `test-index-v1`, implemented by
 `selfhost/components/test_index/main.my`. Invoke the built executable as
 `COMPONENT --request FILE`. It reads at most 16 MiB plus one sentinel byte from

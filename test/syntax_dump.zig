@@ -13,7 +13,7 @@ fn release(result: std.process.RunResult) void {
 }
 
 // spec: SELFHOST-PARSER-DUMP-1
-test "CLI dump-syntax returns a complete module AST without loading imports" {
+test "CLI dump-syntax returns a complete module AST and native shadow without PATH tools" {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(t.io, .{ .sub_path = "syntax.my", .data = "import absent\n\npublic func value() -> int:\n    return absent.answer()\n" });
@@ -23,12 +23,20 @@ test "CLI dump-syntax returns a complete module AST without loading imports" {
     defer environment.deinit();
     try environment.put("MYLANG_LEXER_MODE", "reference");
     try environment.put("MYLANG_PARSER_MODE", "reference");
+    try environment.put("PATH", "");
     const result = try run(&environment, path);
     defer release(result);
     try t.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
     try t.expectEqualStrings("", result.stderr);
     try t.expect(std.mem.startsWith(u8, result.stdout, "SLKAST01"));
     try t.expect(result.stdout.len > 16);
+    try environment.put("MYLANG_LEXER_MODE", "shadow");
+    try environment.put("MYLANG_PARSER_MODE", "shadow");
+    const compared = try run(&environment, path);
+    defer release(compared);
+    try t.expectEqual(result.term, compared.term);
+    try t.expectEqualSlices(u8, result.stdout, compared.stdout);
+    try t.expectEqualSlices(u8, result.stderr, compared.stderr);
 }
 
 // spec-case: SELFHOST-PARSER-DUMP-1

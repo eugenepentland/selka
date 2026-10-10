@@ -16,7 +16,7 @@ scripts/build-slot.sh build zig build test-selfhost-pilots --summary all
 scripts/build-slot.sh build zig build fmt-check
 ```
 
-The focused aggregate also runs six adversarial admission/input-tracking tests.
+The focused aggregate also runs adversarial admission/input-tracking tests.
 Every lane verifies the seed receipt through the component coordinator, then
 executes all declared pure tests in normal and release modes. Lexer/parser pure
 roots are discovered from every sibling module declaring public test functions,
@@ -25,10 +25,20 @@ so new type/value test modules enter the gate automatically. Release enables
 and `--no-cache`. The orchestration rejects empty selections, unexpected counts,
 cached verdicts, failures, skips and missing summaries. Lexer qualification adds
 both corpus comparisons and component-only edit/rebuild checks in both modes.
-Parser qualification adds the structural oracle and malformed transport checks
-in both modes. Its projection remains narrower than full production AST parity;
-gate registration does not expand the supported grammar or route compilation
-through the parser pilot.
+Parser qualification retains the original structural projection and adds complete
+AST/diagnostic fixture comparisons in both modes. The complete value codec is
+also roundtripped over language and standard-library source modules; this oracle
+check is reported separately from Selka grammar parity. A further recursive corpus
+comparison requires exact Selka AST or diagnostic equality for every selected
+language, value-semantics, and standard-library module that produces tokens.
+One historical provider fixture uses retired capability spellings and fails
+lexing before parsing. Its exclusion is pinned to exact source bytes and native
+lexical rejection, reported separately, and never counted as parser parity;
+any changed, missing, or newly tokenizable exclusion fails qualification.
+Installed parser checks
+exercise framing, malformed input, deployment failures and a component-only edit
+with an unchanged host in each mode. Neither a projected
+comparison nor a codec roundtrip substitutes for complete grammar comparisons.
 
 The lexer oracle explicitly uses `MYLANG_LEXER_MODE=reference`. User-provided
 `MYLANG_*` settings are removed from qualification children except the chosen
@@ -38,8 +48,9 @@ qualification selection. The build uses the existing live-environment
 `withTools` wrapper; it does not copy environment variables at configure time.
 
 Each lane records its complete source, driver, fixture and seed/coordinator
-closure through `build_test_inputs.zig`. The parser additionally records the
-entire `src/` tree because its standalone oracle copies that tree. Source
+closure through `build_test_inputs.zig`. The parser additionally records the shared
+lexer sources, `tests/lang/`, `tests/value_semantics/`, and the entire `src/` tree because its standalone
+oracle copies that tree. Source
 manifests discover edits, additions, removals and renames at execution time.
 Artifacts and the pinned Zig executable are build dependencies. The new lane
 steps intentionally execute on every invocation: repository source manifests

@@ -144,6 +144,8 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
         run.step.dependOn(components);
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/test-index.json" } });
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/cache-plan.json" } });
+        run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/lexer-pilot.json" } });
+        run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/parser-pilot.json" } });
     }
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
 }
@@ -788,6 +790,8 @@ pub fn build(b: *std.Build) void {
         pilot.addArtifactArg(component_tool);
         pilot.addArg("--compiler");
         pilot.addArtifactArg(exe);
+        pilot.addArg("--component-dir");
+        pilot.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
         b.step(b.fmt("test-selfhost-{s}-pilot", .{lane}), b.fmt("Qualify the {s} pilot independently", .{lane})).dependOn(&pilot.step);
         pilots_step.dependOn(&pilot.step);
     }

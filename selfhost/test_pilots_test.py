@@ -20,6 +20,34 @@ def load(name, path):
 
 
 class QualificationTests(unittest.TestCase):
+    def test_full_parser_rejects_missing_or_incomplete_corpus(self):
+        full = '3 passed, 0 failed, 0 skipped; complete field AST/diagnostic comparison for declared fixtures\n'
+        roundtrip = 'oracle-only roundtrip: 7 selected modules, 5 AST, 1 diagnostics, 1 verified lexical exclusions, 0 failures, 0 skipped; no Selka parity asserted\n'
+        corpus = 'full corpus: 7 selected modules; 5 exact AST, 1 exact diagnostics, 0 mismatches, 0 unsupported, 1 verified lexical exclusions; 0 skipped\n'
+        complete = full + roundtrip + corpus
+        pilots.require_full_parser(complete, 3, 7)
+        for output, fixtures, modules in [(full, 3, 7), (roundtrip, 3, 7), (complete, 4, 7),
+                (complete, 3, 8), (complete.replace('0 failures', '1 failures'), 3, 7),
+                (full + complete, 3, 7), (complete, 0, 7), (full + roundtrip, 3, 7),
+                (complete.replace('0 mismatches', '1 mismatches'), 3, 7),
+                (complete.replace('0 unsupported', '1 unsupported'), 3, 7),
+                (complete.replace('1 verified lexical', '0 verified lexical'), 3, 7),
+                (complete.replace('1 verified lexical', '2 verified lexical'), 3, 7),
+                (complete.replace('5 exact AST', '6 exact AST'), 3, 7)]:
+            with self.subTest(output=output), self.assertRaises(RuntimeError):
+                pilots.require_full_parser(output, fixtures, modules)
+
+    def test_installed_parser_requires_complete_checks_and_component_only_edit(self):
+        summary = 'parser component: 3 fixtures (2 AST, 1 diagnostics), 5 framed exchanges, 28 malformed/invocation checks, 3 deployment checks; 0 failures, 0 skipped\n'
+        edit = 'component implementation edit: changed producer artifact, unchanged host, complete selected fixture comparison passed\n'
+        pilots.require_parser_component(summary + edit, 3)
+        for output in (summary, edit, summary + edit + summary,
+                       (summary + edit).replace('28 malformed', '27 malformed'),
+                       (summary + edit).replace('5 framed', '4 framed'),
+                       (summary + edit).replace('0 skipped', '1 skipped')):
+            with self.subTest(output=output), self.assertRaises(RuntimeError):
+                pilots.require_parser_component(output, 3)
+
     def test_complete_two_mode_selection(self):
         pilots.require_guest('3 passed, 0 cached, 0 failed, 0 skipped\n' * 2, 3, modes=2)
 
@@ -33,7 +61,7 @@ class QualificationTests(unittest.TestCase):
                 pilots.require_guest(output, expected, modes)
 
     def test_seed_verification_failure_stops_before_guest_execution(self):
-        args = SimpleNamespace(lane='probes', zig='zig', builder=Path('builder'), compiler=Path('compiler'))
+        args = SimpleNamespace(lane='probes', zig='zig', builder=Path('builder'), compiler=Path('compiler'), component_dir=Path('components'))
         with mock.patch.object(pilots, 'execute', side_effect=RuntimeError('invalid receipt')) as execute:
             with self.assertRaisesRegex(RuntimeError, 'invalid receipt'):
                 pilots.qualify(args)
@@ -41,7 +69,7 @@ class QualificationTests(unittest.TestCase):
             self.assertEqual(execute.call_args.args[0][-1], '--seed-only')
 
     def test_routing_and_guest_selection_cannot_override_qualification(self):
-        args = SimpleNamespace(lane='probes', zig='pinned-zig', builder=Path('builder'), compiler=Path('compiler'))
+        args = SimpleNamespace(lane='probes', zig='pinned-zig', builder=Path('builder'), compiler=Path('compiler'), component_dir=Path('components'))
         with tempfile.TemporaryDirectory() as temporary:
             seed = Path(temporary) / 'seed'
             seed.write_bytes(b'verified fake seed')
@@ -52,6 +80,7 @@ class QualificationTests(unittest.TestCase):
             environment = execute.call_args.args[1]
             self.assertEqual(environment['MYLANG_LEXER_MODE'], 'reference')
             self.assertEqual(environment['MYLANG_ZIG'], 'pinned-zig')
+            self.assertEqual(environment['MYLANG_COMPONENT_DIR'], 'components')
             self.assertEqual(environment['MYL_CORE_LEAKCHECK'], '1')
             self.assertNotIn('MYLANG_TEST_FILTER', environment)
 
@@ -88,6 +117,9 @@ class QualificationTests(unittest.TestCase):
                 self.assertNotEqual(edited, removed)
                 self.assertEqual(baseline, removed)
         self.assertTrue(inputs.covered('src/parser.zig', lists['pilot_parser']))
+        self.assertTrue(inputs.covered('tests/lang/any_new_fixture.my', lists['pilot_parser']))
+        self.assertTrue(inputs.covered('tests/value_semantics/any_new_fixture.my', lists['pilot_parser']))
+        self.assertTrue(inputs.covered('selfhost/components/lexer_pilot/lexer.my', lists['pilot_parser']))
 
 
 if __name__ == '__main__':

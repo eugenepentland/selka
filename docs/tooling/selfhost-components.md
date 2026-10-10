@@ -6,7 +6,8 @@ normal commands use its native Selka executable. Discovery, source checking,
 graph extraction and formatting remain in the Zig host.
 The separate `cache-plan` component plans Core dependency closures and reuse of
 unaffected test keys. Canonical fact extraction, storage and execution remain in
-Zig. Both components can be rebuilt without rebuilding the compiler host.
+Zig. The lexer and parser pilots add opt-in frontend comparison commands. All four
+components can be rebuilt without rebuilding the compiler host.
 
 ## Build and install
 
@@ -19,7 +20,8 @@ zig build
 ```
 
 Installation contains `tools/selka-components`, `bin/mylang` and
-`libexec/mylang/components/{test-index,cache-plan}.json` with their content-named executables.
+`libexec/mylang/components/{test-index,cache-plan,lexer-pilot,parser-pilot}.json`
+with their content-named executables.
 Keep those directories together when relocating the installation. `--prefix`
 selects another installation root. A copied host executable alone is incomplete
 for commands that need the component; other compiler commands do not launch it.
@@ -45,7 +47,10 @@ Zig toolchain, Git history containing the pinned commit (or a verified source
 archive below), and the repository's sibling `guardian-zig` build dependency.
 The original historical `selfhost/stage0-pin.json` is unchanged.
 
-Component inputs live under `selfhost/components/{test_index,cache_plan}/`. After an edit:
+Component inputs live under `selfhost/components/`. The parser shares canonical
+lexer library files through file symlinks; the coordinator hashes their contents
+and snapshots them as ordinary files, so lexer changes invalidate both artifacts.
+After an edit:
 
 ```sh
 zig build components
@@ -95,6 +100,15 @@ One command sends one bounded graph request in a private temporary directory.
 The host verifies the executable digest, enforces a 30-second deadline and
 bounded output, validates the full reply, and removes the temporary directory.
 The [wire protocol](component-protocol.md) specifies identities and limits.
+
+## Frontend comparison commands
+
+`dump-tokens` uses `MYLANG_LEXER_MODE=reference|shadow`; `dump-syntax` uses
+`MYLANG_PARSER_MODE=reference|shadow`. Both default to reference and fail explicitly
+on a selected shadow mismatch or deployment failure. Ordinary compilation and
+formatting retain the reference frontend. See the [pilot gates](selfhost-pilot-gates.md),
+[lexer contract](../../selfhost/components/lexer_pilot/README.md), and
+[complete syntax values](parser-syntax-values.md).
 
 ## Qualification
 

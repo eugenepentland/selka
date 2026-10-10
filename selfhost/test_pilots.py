@@ -46,6 +46,37 @@ def fixture_count(lane):
     return count
 
 
+def require_full_parser(output, fixtures, modules):
+    summaries = re.findall(r'^(\d+) passed, (\d+) failed, (\d+) skipped; complete field AST/diagnostic comparison for declared fixtures$', output, re.M)
+    if fixtures <= 0 or summaries != [(str(fixtures), '0', '0')]:
+        raise RuntimeError('empty/incomplete complete parser qualification')
+    roundtrips = re.findall(r'^oracle-only roundtrip: (\d+) selected modules, (\d+) AST, (\d+) diagnostics, (\d+) verified lexical exclusions, (\d+) failures, (\d+) skipped;', output, re.M)
+    if len(roundtrips) != 1:
+        raise RuntimeError('missing complete syntax roundtrip qualification')
+    count, ast, diagnostics, lexical, failed, skipped = map(int, roundtrips[0])
+    # The driver pins and rechecks the one historical provider fixture rejected
+    # before parsing. It remains selected but never counts as parser parity.
+    if modules <= 1 or count != modules or lexical != 1 or ast + diagnostics + lexical != modules or failed or skipped:
+        raise RuntimeError('empty/incomplete complete syntax roundtrip qualification')
+    corpus = re.findall(r'^full corpus: (\d+) selected modules; (\d+) exact AST, (\d+) exact diagnostics, (\d+) mismatches, (\d+) unsupported, (\d+) verified lexical exclusions; (\d+) skipped$', output, re.M)
+    if len(corpus) != 1:
+        raise RuntimeError('missing complete parser corpus qualification')
+    count, ast, diagnostics, mismatches, unsupported, lexical, skipped = map(int, corpus[0])
+    if count != modules or lexical != 1 or ast + diagnostics + lexical != modules or mismatches or unsupported or skipped:
+        raise RuntimeError('incomplete complete parser corpus qualification')
+
+
+def require_parser_component(output, fixtures):
+    rows = re.findall(r'^parser component: (\d+) fixtures \((\d+) AST, (\d+) diagnostics\), (\d+) framed exchanges, (\d+) malformed/invocation checks, (\d+) deployment checks; (\d+) failures, (\d+) skipped$', output, re.M)
+    if len(rows) != 1:
+        raise RuntimeError('missing installed parser qualification')
+    count, ast, diagnostics, frames, malformed, deployment, failed, skipped = map(int, rows[0])
+    if fixtures <= 0 or count != fixtures or ast + diagnostics != fixtures or frames < fixtures + 2 or malformed < 28 or deployment != 3 or failed or skipped:
+        raise RuntimeError('incomplete installed parser qualification')
+    if 'component implementation edit: changed producer artifact, unchanged host, complete selected fixture comparison passed' not in output:
+        raise RuntimeError('missing parser component-only rebuild qualification')
+
+
 def qualify(args):
     # Do not let user test/routing/budget flags change the selected qualification.
     # Keep component cache selection: the coordinator verifies every store used.
@@ -53,6 +84,7 @@ def qualify(args):
                    if not key.startswith('MYLANG_') or key == 'MYLANG_COMPONENT_CACHE'}
     environment['MYLANG_ZIG'] = args.zig
     environment['MYLANG_LEXER_MODE'] = 'reference'
+    environment['MYLANG_COMPONENT_DIR'] = str(args.component_dir)
     environment['MYL_CORE_LEAKCHECK'] = '1'
     provision = execute([args.builder, '--root', ROOT, '--zig', args.zig, '--seed-only'], environment, stdout_only=True)
     lines = provision.strip().splitlines()
@@ -83,7 +115,7 @@ def qualify(args):
             if release:
                 command.append('--release')
             if args.lane == 'lexer':
-                command += ['--compiler', args.compiler, '--edit-check']
+                command += ['--compiler', args.compiler, '--edit-check', '--host-shadow']
             output = execute(command, environment)
             if args.lane == 'lexer':
                 summaries = re.findall(r'lexer pilot: (\d+) fixtures, (\d+) token/error lines, (\d+) failures, (\d+) skipped; (\d+) transport checks passed', output)
@@ -99,6 +131,17 @@ def qualify(args):
                 count, failed, skipped = map(int, summaries[0])
                 if count < fixtures + 10 or failed or skipped:
                     raise RuntimeError('empty/incomplete parser qualification')
+                full_manifest = ROOT / 'selfhost/tests/fixtures/parser_pilot/full/expect.json'
+                full_fixtures = len(json.loads(full_manifest.read_text()))
+                modules = sum(len(list((ROOT / path).rglob('*.my'))) for path in ('tests/lang', 'tests/value_semantics', 'src/stdlib'))
+                full_output = execute([*command, '--full', '--oracle-roundtrip', '--full-corpus'], environment)
+                require_full_parser(full_output, full_fixtures, modules)
+                component_command = [sys.executable, ROOT / 'selfhost/tests/run_parser_component.py',
+                                     '--builder', args.builder, '--zig', args.zig,
+                                     '--compiler', args.compiler, '--component-dir', args.component_dir, '--edit-check']
+                if release:
+                    component_command.append('--release')
+                require_parser_component(execute(component_command, environment), full_fixtures)
     print(f'pilot gate {args.lane}: {expected} pure tests in each of two modes; qualification passed', flush=True)
 
 
@@ -110,9 +153,11 @@ def main():
     parser.add_argument('--builder', type=Path, required=True)
     parser.add_argument('--zig', required=True)
     parser.add_argument('--compiler', type=Path, required=True)
+    parser.add_argument('--component-dir', type=Path, required=True)
     args = parser.parse_args()
     args.builder = args.builder.resolve()
     args.compiler = args.compiler.resolve()
+    args.component_dir = args.component_dir.resolve()
     qualify(args)
 
 

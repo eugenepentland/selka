@@ -179,7 +179,7 @@ pub const noalloc_lint = my_format ++ [_][]const u8{"scripts/check_noalloc.py"};
 pub const pilot_lexer = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/components/lexer_pilot/", "selfhost/tests/fixtures/lexer_pilot/", "selfhost/tests/run_lexer_pilot.py", "selfhost/*.zig", "selfhost/component-seed.json" };
 
 /// Parser qualification copies the complete production frontend oracle closure.
-pub const pilot_parser = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/components/parser_pilot/", "selfhost/tests/fixtures/parser_pilot/", "selfhost/tests/run_parser_pilot.py", "selfhost/*.zig", "selfhost/component-seed.json", "src/" };
+pub const pilot_parser = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/components/parser_pilot/", "selfhost/components/lexer_pilot/", "selfhost/tests/fixtures/parser_pilot/", "selfhost/tests/run_parser_pilot.py", "selfhost/tests/run_parser_component.py", "selfhost/*.zig", "selfhost/component-seed.json", "src/", "tests/lang/", "tests/value_semantics/" };
 
 /// Receipt-verified compiler-shaped pure tests and standalone driver.
 pub const pilot_probes = [_][]const u8{ "selfhost/test_pilots.py", "selfhost/probes/compiler/", "selfhost/tests/run_compiler_probes.py", "selfhost/*.zig", "selfhost/component-seed.json" };
