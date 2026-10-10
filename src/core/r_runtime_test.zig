@@ -97,6 +97,120 @@ test "R integer radix partitions preserve signed order, aliases and stable decor
     try std.testing.expectEqualStrings("True -55 -9223372036854775808 9223372036854775807\n", try runFixture(arena.allocator(), sorting, .verify));
 }
 
+const small_sorting =
+    \\record Item:
+    \\    key: int
+    \\    position: int
+    \\
+    \\
+    \\func signed_value(i: int, n: int) -> int:
+    \\    if i == 0:
+    \\        return -9223372036854775807 - 1
+    \\    if i == n - 1:
+    \\        return 9223372036854775807
+    \\    return i - n // 2
+    \\
+    \\
+    \\func unsigned_value(i: int) -> u64:
+    \\    if i % 2 == 0:
+    \\        return u64(i // 2)
+    \\    return 18446744073709551615u64 - u64(i // 2)
+    \\
+    \\
+    \\func check_values(n: int) -> bool:
+    \\    mut xs = [for i in range(n) yield signed_value((i + n // 2) % n, n)]
+    \\    mut saved = xs
+    \\    xs.sort()
+    \\    mut descending = sorted(saved, reverse=True)
+    \\    mut words = [for i in range(n) yield unsigned_value(i)]
+    \\    mut saved_words = words
+    \\    words.sort()
+    \\    mut descending_words = sorted(saved_words, reverse=True)
+    \\    if len(xs) != n or len(descending) != n or len(words) != n or len(descending_words) != n:
+    \\        return False
+    \\    for i in range(n):
+    \\        if xs[i] != signed_value(i, n) or descending[n - 1 - i] != signed_value(i, n):
+    \\            return False
+    \\        if saved[i] != signed_value((i + n // 2) % n, n):
+    \\            return False
+    \\        mut expected = u64(i)
+    \\        if i >= (n + 1) // 2:
+    \\            expected = 18446744073709551615u64 - u64(n - 1 - i)
+    \\        if words[i] != expected or descending_words[n - 1 - i] != expected:
+    \\            return False
+    \\        if saved_words[i] != unsigned_value(i):
+    \\            return False
+    \\    return True
+    \\
+    \\
+    \\func item_key(item: Item) -> int:
+    \\    return item.key
+    \\
+    \\
+    \\func input_key(i: int, wide: bool) -> int:
+    \\    if not wide:
+    \\        return ((i * 5) % 8) * 1000003
+    \\    if i % 4 == 0:
+    \\        return 9223372036854775807
+    \\    if i % 4 == 1:
+    \\        return -9223372036854775807 - 1
+    \\    if i % 4 == 2:
+    \\        return 1
+    \\    return -1
+    \\
+    \\
+    \\func check_keyed(n: int, wide: bool) -> bool:
+    \\    mut original = [for i in range(n) yield Item(key=input_key(i, wide), position=i)]
+    \\    mut rows = original
+    \\    rows.sort(key=item_key)
+    \\    mut descending = sorted(original, key=item_key, reverse=True)
+    \\    if len(rows) != n or len(descending) != n:
+    \\        return False
+    \\    for i in range(n):
+    \\        if original[i].position != i or original[i].key != input_key(i, wide):
+    \\            return False
+    \\        mut a = rows[i]
+    \\        mut d = descending[i]
+    \\        if a.position < 0 or a.position >= n or d.position < 0 or d.position >= n:
+    \\            return False
+    \\        if a.key != input_key(a.position, wide) or d.key != input_key(d.position, wide):
+    \\            return False
+    \\        if i > 0:
+    \\            mut before = rows[i - 1]
+    \\            mut reverse_before = descending[i - 1]
+    \\            if before.key > a.key or reverse_before.key < d.key:
+    \\                return False
+    \\            if before.key == a.key and before.position >= a.position:
+    \\                return False
+    \\            if reverse_before.key == d.key and reverse_before.position >= d.position:
+    \\                return False
+    \\    return True
+    \\
+    \\
+    \\func main(out: Stream) -> int:
+    \\    mut correct = True
+    \\    for n in [0, 1, 2, 31, 32, 33, 63, 64, 65, 127, 128, 129, 255, 256, 257]:
+    \\        mut passed = check_values(n)
+    \\        correct = passed and correct
+    \\    for n in [31, 32, 33, 63, 64, 65, 128, 255, 256, 257]:
+    \\        mut packed = check_keyed(n, False)
+    \\        mut wide = check_keyed(n, True)
+    \\        correct = packed and wide and correct
+    \\    out.print(correct)
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-R-SORT-1
+test "R small integer sort boundaries preserve unsigned order snapshots and decorated ties" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqualStrings("True\n", try runFixture(arena.allocator(), small_sorting, .debug));
+    try std.testing.expectEqualStrings("True\n", try runFixture(arena.allocator(), small_sorting, .optimize_debug));
+    try std.testing.expectEqualStrings("True\n", try runFixture(arena.allocator(), small_sorting, .optimize_debug_verify));
+    try std.testing.expectEqualStrings("True\n", try runFixture(arena.allocator(), small_sorting, .release));
+    try std.testing.expectEqualStrings("True\n", try runFixture(arena.allocator(), small_sorting, .verify));
+}
+
 // spec: NEW-CORE-R-SRET-1
 test "R destination sharing keeps ordinary function-value signatures" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

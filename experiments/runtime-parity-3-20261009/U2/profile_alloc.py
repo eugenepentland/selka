@@ -65,10 +65,11 @@ def allocation(symbol):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--tag', required=True)
+    p.add_argument('--cache-tag', help='Scratch namespace; --tag still selects qualified binaries')
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--repeat', type=int, default=40)
     a = p.parse_args()
-    work = ROOT / '.mylang-cache/u2/profile' / a.tag
+    work = ROOT / '.mylang-cache/u2/profile' / (a.cache_tag or a.tag)
     work.mkdir(parents=True, exist_ok=True)
     result = {'tag': a.tag, 'cpu': 8, 'event': 'cpu_core/instructions/u', 'period': 100003, 'repeat': a.repeat,
               'attribution': 'Strict allocator/free frames and their visible descendants. Shared traversal and release-only helpers without a strict ancestor are reported separately as ambiguous. Each instruction period counted at most once.',

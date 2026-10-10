@@ -734,6 +734,18 @@ __attribute__((always_inline)) static inline void core_children(myl_block *block
     if (kind == MYL_KIND_STR || kind == MYL_KIND_BYTES) return;
     myl_layout *layout = layout_of(block);
     if (!layout || layout[1] == 0) return;
+    /* A guardless pointer list needs no per-element indirect callback. The
+       ordinary child release still handles null, shared and saturated counts. */
+    if (visit == core_release_child && kind == MYL_KIND_LIST &&
+        layout[0] == sizeof(myl_block *) && layout[1] == 1 &&
+        layout[2] == -1 && layout[3] == 0 && layout[4] == 0) {
+        for (int64_t i = 0; i < block->len; ++i) {
+            myl_block *child;
+            memcpy(&child, block_data(block) + i * sizeof child, sizeof child);
+            core_release_child(child, context);
+        }
+        return;
+    }
     core_layout_release release = visit == core_release_child ? layout_release(layout, 0) : NULL;
     int64_t count = element_count(block);
     for (int64_t i = 0; i < count; ++i) {

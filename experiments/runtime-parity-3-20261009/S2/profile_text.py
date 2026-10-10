@@ -27,12 +27,13 @@ def file_digest(path):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--tag', required=True)
+    p.add_argument('--cache-tag', help='Scratch namespace; --tag still selects qualified binaries')
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--repeat', type=int, default=40)
     p.add_argument('--reuse', action='store_true')
     p.add_argument('--callgraph', choices=('dwarf', 'lbr'), default='lbr')
     a = p.parse_args()
-    work = ROOT / '.mylang-cache/rp3/s2-profile' / a.tag
+    work = ROOT / '.mylang-cache/rp3/s2-profile' / (a.cache_tag or a.tag)
     work.mkdir(parents=True, exist_ok=True)
     results = {}
     for arm in corpus_perf.arms_for('base'):

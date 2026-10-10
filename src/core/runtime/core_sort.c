@@ -380,9 +380,15 @@ static int s2_sort_words(unsigned char *base, size_t count, uint64_t flip) {
     return 1;
 }
 static int s2_sort_i64(unsigned char *base, size_t count) {
+    /* Up to one radix histogram in length, retain the adaptive merge path.
+       The smallest inputs keep the allocation-free insertion path. */
+    if (count > 32 && count <= 256)
+        return s2_sort_elements(base, count, (s2_sort_kind){ .kind = SORT_I64, .order = 0, .size = 8 });
     return s2_sort_words(base, count, UINT64_C(1) << 63);
 }
 static int s2_sort_u64(unsigned char *base, size_t count) {
+    if (count > 32 && count <= 256)
+        return s2_sort_elements(base, count, (s2_sort_kind){ .kind = SORT_U64, .order = 1, .size = 8 });
     return s2_sort_words(base, count, 0);
 }
 static int s2_sort_f64(unsigned char *base, size_t count) {

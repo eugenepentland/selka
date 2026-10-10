@@ -9,6 +9,7 @@ source $WT/experiments/runtime-parity-3-20261009/tools/env.sh
 X=$WT/experiments/runtime-parity-3-20261009
 : "${RP3_FINAL:?set RP3_FINAL to the final ReleaseFast compiler}"
 C=$RP3_FINAL
+RP3_CE_TAG=${RP3_CE_TAG:-final}
 B=/home/epentland/.cache/mylang/rp3-base-41ed360fb/bin/mylang
 LOCK=/run/user/1000/mylang-slots/cpu10.lock
 L=$WT/.mylang-cache/lox
@@ -37,7 +38,7 @@ eda)
   python3 "$X/tools/quiet.py" -- python3 $WT/experiments/bench-newcore-20261008/eda/runtime.py --repo $EDA --rounds 10 --cpu 10 \
     --work $WT/.mylang-cache/rp3/eda-runtime-out --out $X/results/eda-runtime.json \
     zig-fast=$R/zig-fast/bin/eda-sch zig-safe=$R/zig-safe/bin/eda-sch rust=$R/rust-target/release/eda-sch go=$R/go/eda-sch \
-    mylang-base=$WT/.mylang-cache/rp3/ce/bin/base/eda-plain mylang-final=$WT/.mylang-cache/rp3/ce/bin/final/eda-plain
+    mylang-base=$WT/.mylang-cache/rp3/ce/bin/base/eda-plain mylang-final=$WT/.mylang-cache/rp3/ce/bin/$RP3_CE_TAG/eda-plain
   echo "eda=$?"; load "eda runtime end" ;;
 parity)
   P=$WT/.mylang-cache/rp3/parity

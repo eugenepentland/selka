@@ -1,10 +1,10 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2, S2 and R complete. All three lanes and main `fa1160602` are integrated and fully qualified at `20e7c340e`. The first complete X timing run identifies confirmed small-sort and nested-mutation regressions. Repairs, fresh qualification and final timing review remain mandatory.
+Status: M0, U2, S2 and R complete. All three lanes and main `fa1160602` are integrated and fully qualified at `20e7c340e`. The first complete X timing run identified confirmed regressions. Two runtime repairs now pass focused tests and development comparisons, including neighboring sort sizes. Fresh complete qualification and full timing run02 remain mandatory; X is still open.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
-Qualified final source: `20e7c340eb8d93320de4493f7b50665c7979ef2b`. Subsequent receipt/report commits contain evidence only; the first X timing run is complete but its performance guard is not accepted.
+Last fully qualified integrated source: `20e7c340eb8d93320de4493f7b50665c7979ef2b`. The current repair tree awaits fresh qualification. The complete first X timing run remains preserved; its performance guard was not accepted.
 
 ## Progress
 
@@ -133,3 +133,6 @@ All three lane hand-offs are accepted. These measured lane checkpoints precede f
 - Completed M0 correctness and measurement claims are limited to the receipts listed above. Lane changes and final parity claims remain pending.
 
 - First complete X measurement on source `20e7c340e` finishes all six suites/bounds and exact-binary CPU8 review (`X/timing-run-01/receipt.json`). All timed outputs match. Of197cells,6exceed1.03×: tuned text_ops1.049263 (independent confirmation1.019878), mutate_nested4096/64 1.069577/1.053759, result_propagate4096 1.049469, sort_int64 2.082902 and sort_records64 1.032840. CPU8 confirms real extra work in small radix sorting and higher cycles in generated pointer-list release. These require repairs; no performance guard or X completion is claimed. Every raw first-run observation is retained. VM/tree/EDA/parity45/rows geomean final/base is 0.908684/0.995288/0.955468/0.892146/0.993684. All lane exits are measured in the first-run snapshot, with known misses retained.
+
+- X repair checkpoint: generated guardless pointer-list release calls the same child primitive directly, with the generic callback walk and publication excluded. Integer sorting restores typed adaptive merges for 33–256 values, retaining insertion through 32 and radix above 256. Focused lifetime/shared-count and five-mode boundary tests pass. Development CPU10 candidate/base is 0.940487 for sort_int/64, 0.964911 for 65, 0.988414 for 128, 0.818041/0.901606 for mutate_nested/4096 and /64, 1.014357/0.996016 for sort_records/64 and /4096 and0.997343 for result_propagate/4096; sort_builtin stays 0.401785 base. The size 32 threshold crossing is not confirmed by its one independent confirmation (0.988528); all samples remain. These are development results, not final X acceptance. See `X/repair-probes/{01,02}/` and decision X-017.
+- Repeat preparation preserves 31 first-run outputs and 286 exact timed binaries, with relocation and lossless compression manifests. The second measurement selects qualified tag `final-fix-01` and fresh compile/profile namespaces while retaining all 197 cells and original sampling methods. Historical paths resolve through `X/timing-run-01/output-preservation.json` and `X/tool-audit/completed-evidence-archive-03.json`.

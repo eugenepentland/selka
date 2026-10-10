@@ -229,6 +229,8 @@ test "U2 checked inlined peeks retain negative-index semantics" {
 
 const release_harness =
     \\#include "core_rt.c"
+    \\#undef NDEBUG
+    \\#include <assert.h>
     \\myl_block *myl_core_task_call(void *run, myl_block *env) { return ((myl_block *(*)(myl_block *))run)(env); }
     \\const myl_core_site myl_core_sites[1];
     \\const char myl_core_source_path[] = "u2-release";
@@ -239,12 +241,33 @@ const release_harness =
     \\    ++callbacks;
     \\    myl_core_release_child_pending(value, pending);
     \\}
-    \\static const struct { int32_t words[5]; core_layout_release release[3]; } generated = {{8, 1, -1, 0, 0}, {child, NULL, NULL}};
+    \\static const struct { int32_t words[5]; core_layout_release release[3]; } generated = {{16, 1, -1, 0, 0}, {child, NULL, NULL}};
+    \\static const struct { int32_t words[5]; core_layout_release release[3]; } pointer_generated = {{8, 1, -1, 0, 0}, {child, NULL, NULL}};
+    \\static myl_block *pointer_list(myl_block *alias, myl_block *immortal) {
+    \\    myl_block *root = myl_core_list_new_slow(5, sizeof alias);
+    \\    myl_block *unique = myl_core_list_new_slow(0, 8);
+    \\    myl_block *children[5] = {NULL, alias, unique, alias, immortal};
+    \\    retain_block(alias);
+    \\    retain_block(alias);
+    \\    memcpy(block_data(root), children, sizeof children);
+    \\    root->len = 5;
+    \\    root->reserved = (int64_t)(intptr_t)&pointer_generated;
+    \\    return root;
+    \\}
+    \\static void *release_alias_owner(void *owner) {
+    \\    myl_block *alias = owner;
+    \\    for (unsigned i = 0; i < 10000; ++i) {
+    \\        retain_block(alias);
+    \\        myl_core_release(alias);
+    \\    }
+    \\    myl_core_release(alias);
+    \\    return NULL;
+    \\}
     \\int main(void) {
-    \\    myl_block *head = myl_core_list_new_slow(1, 8), *tail = head;
+    \\    myl_block *head = myl_core_list_new_slow(1, 16), *tail = head;
     \\    for (unsigned i = 0; i < 100000; ++i) {
     \\        tail->reserved = (int64_t)(intptr_t)(i % 2 ? (void *)&generated : (void *)layout_blocks);
-    \\        myl_block *next = myl_core_list_new_slow(1, 8);
+    \\        myl_block *next = myl_core_list_new_slow(1, 16);
     \\        memcpy(block_data(tail), &next, sizeof next);
     \\        tail->len = 1;
     \\        tail = next;
@@ -258,6 +281,47 @@ const release_harness =
     \\    retain_block(head);
     \\    myl_core_release(head);
     \\    myl_core_release(head);
+    \\    assert(callbacks == 50001 && live_count() == 1);
+    \\
+    \\    /* Plain fast walk: both duplicate occurrences release an owner,
+    \\       the unique child is queued, null is harmless, immortality sticks. */
+    \\    myl_block *alias = myl_core_list_new_slow(0, 8);
+    \\    myl_block *root = pointer_list(alias, immortal);
+    \\    assert(count_load(alias) == 3);
+    \\    myl_core_release(root);
+    \\    assert(count_load(alias) == 1 && live_count() == 2);
+    \\    assert(callbacks == 50001 && immortal->count == MYL_SATURATED);
+    \\    myl_core_release(alias);
+    \\    assert(live_count() == 1);
+    \\
+    \\    /* Publication must use the sharing visitor, never the release fast
+    \\       path, even for the same eligible descriptor and duplicate edges. */
+    \\    alias = myl_core_list_new_slow(0, 8);
+    \\    root = pointer_list(alias, immortal);
+    \\    myl_block *unique;
+    \\    memcpy(&unique, block_data(root) + 2 * sizeof unique, sizeof unique);
+    \\    myl_core_share(root);
+    \\    assert(count_load(root) == MYL_SHARED + 1);
+    \\    assert(count_load(alias) == MYL_SHARED + 3);
+    \\    assert(count_load(unique) == MYL_SHARED + 1);
+    \\    assert(callbacks == 50001 && immortal->count == MYL_SATURATED);
+    \\    retain_block(root);
+    \\    myl_core_release(root);
+    \\    assert(count_load(root) == MYL_SHARED + 1);
+    \\    assert(count_load(alias) == MYL_SHARED + 3);
+    \\
+    \\    /* The worker owns one alias reference; main keeps another while
+    \\       destroying both list edges through the shared count primitive.
+    \\       The worker never frees storage, keeping allocator TLS separate. */
+    \\    retain_block(alias);
+    \\    pthread_t worker;
+    \\    assert(pthread_create(&worker, NULL, release_alias_owner, alias) == 0);
+    \\    myl_core_release(root);
+    \\    assert(pthread_join(worker, NULL) == 0);
+    \\    assert(count_load(alias) == MYL_SHARED + 1 && live_count() == 2);
+    \\    assert(callbacks == 50001 && immortal->count == MYL_SATURATED);
+    \\    myl_core_release(alias);
+    \\    assert(live_count() == 1);
     \\    printf("%lu %lld %u\n", callbacks, (long long)live_count(), immortal->count == MYL_SATURATED);
     \\    return 0;
     \\}
@@ -274,7 +338,7 @@ fn releaseHarness(a: std.mem.Allocator) !void {
     const source = try std.fs.path.join(a, &.{ root, "harness.c" });
     const output = try std.fs.path.join(a, &.{ root, "harness" });
     try environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(a, &.{ root, "zig-local" }));
-    const built = try std.process.run(a, std.testing.io, .{ .argv = &.{ zig, "cc", "-O2", "-std=c11", "-o", output, source }, .environ_map = &environment });
+    const built = try std.process.run(a, std.testing.io, .{ .argv = &.{ zig, "cc", "-O2", "-std=c11", "-pthread", "-o", output, source }, .environ_map = &environment });
     try std.testing.expectEqualStrings("", built.stderr);
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
     const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{output} });
