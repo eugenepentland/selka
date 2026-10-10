@@ -1647,7 +1647,7 @@ static void NAME(T *a, T *scratch, size_t n) { \
 #define SORT_FLOAT_LT(x, y) ((x) < (y) || ((y) != (y) && (x) == (x)))
 static bool sort_text_lt(const myl_block *x, const myl_block *y) {
     int64_t common = x->len < y->len ? x->len : y->len;
-    int order = memcmp((const unsigned char *)x + MYL_HEADER, (const unsigned char *)y + MYL_HEADER, (size_t)common);
+    int order = memcmp(block_data(x), block_data(y), (size_t)common);
     return order != 0 ? order < 0 : x->len < y->len;
 }
 #define SORT_TEXT_LT(x, y) sort_text_lt((x), (y))

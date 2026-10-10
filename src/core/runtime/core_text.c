@@ -508,6 +508,22 @@ myl_block *myl_core_span_split_offsets(const unsigned char *text, uint64_t len, 
     }
     return list;
 }
+/* Only constant nonnegative indexed users observe this prefix. A too-short input
+   retains its true length, so the original located index check still traps. */
+void myl_core_span_split_fill(const unsigned char *text, uint64_t len, const unsigned char *separator,
+                             uint64_t separator_len, myl_block *list, uint64_t capacity) {
+    if (!separator_len) myl_core_s2_unsupported(-1);
+    list->len = 0;
+    int64_t at = 0;
+    while ((uint64_t)list->len < capacity) {
+        int64_t hit = core_span_find(text, (int64_t)len, separator, (int64_t)separator_len, at);
+        int64_t end = hit < 0 ? (int64_t)len : hit;
+        uint64_t *piece = (uint64_t *)block_data(list) + 2 * list->len++;
+        piece[0] = (uint64_t)at; piece[1] = (uint64_t)(end - at);
+        if (hit < 0) break;
+        at = hit + (int64_t)separator_len;
+    }
+}
 myl_block *myl_core_str_split_offsets(myl_block *text, myl_block *separator) {
     return myl_core_span_split_offsets(block_data(text), (uint64_t)text->len, block_data(separator), (uint64_t)separator->len);
 }

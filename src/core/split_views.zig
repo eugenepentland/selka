@@ -2,6 +2,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const views = @import("fuse_slice_key.zig");
+const facts = @import("facts.zig");
 
 /// Replace nonescaping split lists with offset lists; escape sites materialize their piece.
 pub fn run(arena: std.mem.Allocator, module: *ir.Module) std.mem.Allocator.Error!void {
@@ -56,12 +57,13 @@ fn before(arena: std.mem.Allocator, f: *ir.Function, ref: ir.Ref, added: []const
         }
     }
 }
-fn runtime(arena: std.mem.Allocator, module: *ir.Module, ty: ir.Type) std.mem.Allocator.Error!ir.Ref {
+fn runtime(arena: std.mem.Allocator, module: *ir.Module, ty: ir.Type, limit: ?u64) std.mem.Allocator.Error!ir.Ref {
+    const name = if (limit) |n| try std.fmt.allocPrint(arena, "myl_core_str_split_prefix_{d}", .{n}) else "myl_core_str_split_offsets";
     for (module.functions.items, 0..) |f, at| {
-        if (std.mem.eql(u8, f.name, "myl_core_str_split_offsets")) return @fromBackingInt(@intCast(at));
+        if (std.mem.eql(u8, f.name, name)) return @fromBackingInt(@intCast(at));
     }
     const ref: ir.Ref = @fromBackingInt(@intCast(module.functions.items.len));
-    try module.functions.append(arena, .{ .name = "myl_core_str_split_offsets", .signature = .{ .params = &.{ .str, .str }, .ret = ty, .linkage = .runtime_c } });
+    try module.functions.append(arena, .{ .name = name, .signature = .{ .params = &.{ .str, .str }, .ret = ty, .linkage = .runtime_c } });
     return ref;
 }
 fn rewrite(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, ref: ir.Ref) std.mem.Allocator.Error!void {
@@ -73,7 +75,7 @@ fn rewrite(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, ref: i
     if (!has_elements) return countOnly(arena, f, module, ref);
     const pair = try module.intern(arena, .{ .record = &.{ .u64, .u64 } });
     const ty = try module.intern(arena, .{ .list = pair });
-    f.insts.items[ref.index()].a = try runtime(arena, module, ty);
+    f.insts.items[ref.index()].a = try runtime(arena, module, ty, try prefixLimit(arena, f, ref));
     f.insts.items[ref.index()].ty = ty;
     const count = f.insts.items.len;
     for (0..count) |at| {
@@ -106,4 +108,39 @@ fn countOnly(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, ref:
         if (inst.op == .copy and f.resolve(inst.a) == ref) inst.ty = .u64;
         if (inst.op == .list_len and f.resolve(inst.a) == ref) inst.* = .{ .op = .copy, .ty = .u64, .a = ref, .span = inst.span };
     }
+}
+
+fn prefixLimit(arena: std.mem.Allocator, f: *const ir.Function, ref: ir.Ref) !?u64 {
+    const shape = try facts.shape(arena, f);
+    var length: u64 = 0;
+    for (f.insts.items, 0..) |inst, at| {
+        if (inst.op != .list_get and inst.op != .list_len) continue;
+        if (f.resolve(inst.a) != ref) continue;
+        const block = shape.block_of[at] orelse continue;
+        if (inst.op == .list_len) {
+            if (!deadAdjustment(f, block)) return null;
+            continue;
+        }
+        const index = f.resolve(inst.b);
+        const join = shape.block_of[index.index()] orelse return null;
+        const raw = facts.normalizedRaw(f, join, index) orelse index;
+        const value = f.inst(raw);
+        if (value.op != .iconst or value.data >= 8) return null;
+        length = @max(length, value.data + 1);
+    }
+    return if (length == 0) null else length;
+}
+fn deadAdjustment(f: *const ir.Function, block: ir.BlockId) bool {
+    const preds = f.blocks.items[block.index()].preds.items;
+    if (preds.len != 1) return false;
+    const insts = f.blocks.items[preds[0].index()].insts.items;
+    if (insts.len == 0) return false;
+    const branch = f.inst(insts[insts.len - 1]);
+    if (branch.op != .branch or ir.unpackTargets(branch.data).then != block) return false;
+    const condition = f.inst(f.resolve(branch.a));
+    if (condition.op != .cmp or condition.data != @backingInt(ir.Predicate.lt)) return false;
+    const left = f.inst(f.resolve(condition.a));
+    const right = f.inst(f.resolve(condition.b));
+    if (left.op != .iconst or left.ty != .i64 or left.data > std.math.maxInt(i64)) return false;
+    return right.op == .iconst and right.data == 0;
 }

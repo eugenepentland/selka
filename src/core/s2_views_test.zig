@@ -196,3 +196,73 @@ const substring_source =
 test "S2 stored byte substrings own their parent across nested slices and aliases" {
     try check(std.testing.allocator, substring_source, "b'cde' 3 99 101 True 7\n636465 b'cdecde' b'cde!' 1 True\nb'de' b'' Ok('cde')\n");
 }
+
+const prefix_source =
+    \\func inspect(text: str, out: Stream):
+    \\    mut fields = text.split(",")
+    \\    out.print(parse_int(fields[1]), len(fields[2]), fields[0].endswith("7"))
+    \\func main(out: Stream) -> int:
+    \\    inspect("item7,12,é😀,ignored,tail", out)
+    \\    inspect("x,3,", out)
+    \\    return 0
+;
+
+// spec: NEW-CORE-S2-SPLIT-4
+test "S2 fixed nonnegative split indices use a stack offset prefix" {
+    try expectIr(std.testing.allocator, prefix_source, "myl_core_str_split_prefix_3", "myl_core_str_split_offsets");
+    try check(std.testing.allocator, prefix_source, "Some(12) 2 True\nSome(3) 0 False\n");
+}
+
+const prefix_bounds =
+    \\func pick(text: str, out: Stream) -> int:
+    \\    mut fields = text.split(",")
+    \\    out.print("before")
+    \\    return len(fields[2])
+    \\func main(out: Stream) -> int:
+    \\    out.print(pick("a,b", out))
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-S2-SPLIT-4
+test "S2 stack split prefixes retain a short input's original located bound check" {
+    try checkRun(std.testing.allocator, prefix_bounds, "before\n", "R_LIST_BOUNDS");
+}
+
+const substring_sort_source =
+    \\func pieces() -> bytes[]:
+    \\    mut parent = b"z" * 20 + b"a" * 20 + b"m" * 20
+    \\    return [parent[0:20], parent[20:40], parent[40:60], parent[20:40]]
+    \\func key(value: bytes) -> bytes:
+    \\    return value
+    \\func main(out: Stream) -> int:
+    \\    mut values = pieces()
+    \\    values.sort()
+    \\    out.print(values[0] == b"a" * 20, values[1] == b"a" * 20, values[3] == b"z" * 20)
+    \\    values.sort(reverse=True)
+    \\    out.print(values[0] == b"z" * 20, values[3] == b"a" * 20)
+    \\    values.sort(key=key)
+    \\    out.print(values[0] == b"a" * 20, values[2] == b"m" * 20, values[3] == b"z" * 20)
+    \\    values.sort(key=key, reverse=True)
+    \\    out.print(values[0] == b"z" * 20, values[3] == b"a" * 20)
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-S2-VIEW-2
+test "S2 escaped long byte substrings sort by values with normal reverse and keyed order" {
+    try check(std.testing.allocator, substring_sort_source, "True True True\nTrue True\nTrue True True\nTrue True\n");
+}
+
+const substring_numbers =
+    \\func token(source: bytes) -> bytes:
+    \\    return source[1:-1]
+    \\func main(out: Stream) -> int:
+    \\    mut a = token(b"<" + b"1.25>")
+    \\    mut b = token(b"<" + b"-123>")
+    \\    out.print(a.parse_float(), a.parse_float_range(0, 3), b.parse_int(), b.parse_int_range(1, 4))
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-S2-VIEW-2
+test "S2 stored byte substrings parse numeric values and bounded numeric ranges" {
+    try check(std.testing.allocator, substring_numbers, "Some(1.25) Some(1.2) Some(-123) Some(123)\n");
+}

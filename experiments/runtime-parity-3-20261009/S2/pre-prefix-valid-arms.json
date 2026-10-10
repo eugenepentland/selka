@@ -1,0 +1,105 @@
+[
+ {
+  "program": "parity/knucleotide",
+  "arm": "base",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/parity-knucleotide-plain"
+  ]
+ },
+ {
+  "program": "parity/knucleotide",
+  "arm": "s2-substring",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2-substring/parity-knucleotide-plain"
+  ]
+ },
+ {
+  "program": "parity/text_ops",
+  "arm": "base",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/parity-text_ops-plain"
+  ]
+ },
+ {
+  "program": "parity/text_ops",
+  "arm": "s2-substring",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2-substring/parity-text_ops-plain"
+  ]
+ },
+ {
+  "program": "parity/scan_split",
+  "arm": "base",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/parity-scan_split-plain"
+  ]
+ },
+ {
+  "program": "parity/scan_split",
+  "arm": "s2-substring",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2-substring/parity-scan_split-plain"
+  ]
+ },
+ {
+  "program": "lox/vm/string_equality",
+  "arm": "base",
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/lox",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/lox-plain",
+   "--engine=vm",
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/lox-scripts/string_equality-100000.lox"
+  ]
+ },
+ {
+  "program": "lox/vm/string_equality",
+  "arm": "s2-substring",
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/lox",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2-substring/lox-plain",
+   "--engine=vm",
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/lox-scripts/string_equality-100000.lox"
+  ]
+ },
+ {
+  "program": "lox/tree/string_equality",
+  "arm": "base",
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/lox",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/base/lox-plain",
+   "--engine=tree",
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/lox-scripts/string_equality-10000.lox"
+  ]
+ },
+ {
+  "program": "lox/tree/string_equality",
+  "arm": "s2-substring",
+  "cwd": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/lox",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/bin/s2-substring/lox-plain",
+   "--engine=tree",
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/ce/lox-scripts/string_equality-10000.lox"
+  ]
+ },
+ {
+  "program": "parity/text_ops",
+  "arm": "zig-safe",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity-base/bin/text_ops.zig-safe"
+  ]
+ },
+ {
+  "program": "parity/scan_split",
+  "arm": "zig-safe",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity-base/bin/scan_split.zig-safe"
+  ]
+ },
+ {
+  "program": "parity/text_ops",
+  "arm": "rung3",
+  "argv": [
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-s2/.mylang-cache/rp3/s2-ladder/text_ops.r3"
+  ]
+ }
+]

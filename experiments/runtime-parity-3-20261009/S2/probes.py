@@ -32,7 +32,15 @@ def main():
    proc=subprocess.run(['taskset','-c','8',*arm['argv']],cwd=arm.get('cwd'),capture_output=True)
    checked.append({'status':proc.returncode,'stdout_sha256':hashlib.sha256(proc.stdout).hexdigest(),'stderr':proc.stderr.decode()[-1000:]})
   checks[base['program']]={'base':checked[0],'candidate':checked[1],'equal_stdout':checked[0]['stdout_sha256']==checked[1]['stdout_sha256']}
-  if any(row['status'] for row in checked):raise RuntimeError(checks)
+  if base['program'].startswith('eda/'):
+   name=base['program'].split('/')[1]
+   case=next(case for case in json.loads((ce.EDA/'golden/manifest.json').read_text())['cases'] if case['id']==name)
+   expected={name:meta['sha256'] for name,meta in case['outputs'].items()}
+   produced={str(path.relative_to(output)):ce.digest(path) for path in output.rglob('*') if path.is_file()}
+   checks[base['program']]['matches_goldens']=produced==expected
+  if any(row['status'] for row in checked) or not checks[base['program']]['equal_stdout'] or checks[base['program']].get('matches_goldens') is False:
+   a.out.with_suffix('.failed-checks.json').write_text(json.dumps(checks,indent=1)+'\n')
+   raise RuntimeError(checks)
   arms.extend((base,candidate))
  refs=Path('/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/rp3/parity-base/bin')
  for name in ('text_ops','scan_split'):

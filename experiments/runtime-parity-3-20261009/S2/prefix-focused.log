@@ -1,0 +1,36 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1 after 39s (all 3 build slot(s) busy)
+test-core
++- run test w
+guardian/test: 48 test(s) selected
+guardian/test: SLOW  5.89s  s2_views_test.test.S2 lazy split keeps empty pieces unicode and escaped values
+guardian/test: SLOW  5.38s  s2_views_test.test.S2 whitespace split insertion reuses the view probe
+guardian/test: SLOW  7.06s  s2_views_test.test.S2 escaped long byte substrings sort by values with normal reverse and keyed order
+guardian/test: SLOW  13.26s  s2_views_test.test.S2 stored byte substrings parse numeric values and bounded numeric ranges
+guardian/test: test wall 50.26s; slowest over 50ms:
+guardian/test:   13.26s  s2_views_test.test.S2 stored byte substrings parse numeric values and bounded numeric ranges
+guardian/test:   7.06s  s2_views_test.test.S2 escaped long byte substrings sort by values with normal reverse and keyed order
+guardian/test:   5.89s  s2_views_test.test.S2 lazy split keeps empty pieces unicode and escaped values
+guardian/test:   5.38s  s2_views_test.test.S2 whitespace split insertion reuses the view probe
+guardian/test:   2.44s  s2_views_test.test.S2 byte string views clamp octets and preserve nonunicode values
+guardian/test:   1.74s  s2_views_test.test.S2 fixed nonnegative split indices use a stack offset prefix
+guardian/test:   1.57s  s2_views_test.test.S2 bounded search paths preserve scalar windows and nonoverlapping matches
+guardian/test:   1.56s  s2_views_test.test.S2 private split offsets preserve indexed checks and integer grammar
+guardian/test:   1.54s  s2_views_test.test.S2 stored byte substrings own their parent across nested slices and aliases
+guardian/test:   1.30s  s2_ir_test.test.S2 IR str_append emits valid LLVM and verifies its result type
+guardian/test: PASS — 48 passed
+guardian/test: RESULT {"passed":48,"failed":0,"skipped":0}
+failed command: ./.zig-cache-rp3/o/8940b4a6264e2cec39cd8bb8f3cd4a2f/test --cache-dir=./.zig-cache-rp3 --seed=0x2382f0a5 --listen=-
+
+Build Summary: 8/8 steps succeeded; 48/48 tests passed
+test-core success
++- run test 48 pass (48 total) 50s MaxRSS:157M
+   +- compile test debug native success 20s MaxRSS:377M
+      +- run exe build-identity (build_identity) success 1s
+      |  +- compile exe build-identity debug native cached 10ms MaxRSS:38M
+      +- options success
+      |  +- compile exe mylang debug native success 14s MaxRSS:463M
+      |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+      |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 1s MaxRSS:147M
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+

@@ -555,6 +555,7 @@ const ModuleState = struct {
             \\declare ptr @myl_core_dict_new(i64, ptr) nounwind
             \\declare i32 @llvm.cttz.i32(i32, i1 immarg) nounwind readnone
             \\declare ptr @memchr(ptr, i32, i64) nounwind willreturn memory(argmem: read)
+            \\declare void @myl_core_span_split_fill(ptr, i64, ptr, i64, ptr, i64) nounwind
             \\declare zeroext i1 @myl_core_str_eq(ptr, ptr) nounwind
             \\declare i32 @myl_core_str_hash(ptr) nounwind
             \\declare void @llvm.memset.p0.i64(ptr, i8, i64, i1) nounwind
@@ -3789,7 +3790,7 @@ const FunctionEmitter = struct {
     }
 
     /// A borrowed `(data, byte_length)` span argument of an extern-C `str` parameter.
-    fn spanArgument(self: *FunctionEmitter, out: *Out, argument: ir.Ref) ![]const u8 {
+    pub fn spanArgument(self: *FunctionEmitter, out: *Out, argument: ir.Ref) Error![]const u8 {
         const data = try self.fresh("%span");
         const len = try self.fresh("%span");
         const text = try self.value(argument);

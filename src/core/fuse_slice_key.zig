@@ -20,6 +20,14 @@ const SpanForm = struct { text: []const u8, span: []const u8 };
 /// is a `(data, length)` span, and each answers what the text form answers.
 const span_forms = [_]SpanForm{
     .{ .text = "myl_core_str_split_offsets", .span = "myl_core_span_split_offsets" },
+    .{ .text = "myl_core_str_split_prefix_1", .span = "myl_core_span_split_prefix_1" },
+    .{ .text = "myl_core_str_split_prefix_2", .span = "myl_core_span_split_prefix_2" },
+    .{ .text = "myl_core_str_split_prefix_3", .span = "myl_core_span_split_prefix_3" },
+    .{ .text = "myl_core_str_split_prefix_4", .span = "myl_core_span_split_prefix_4" },
+    .{ .text = "myl_core_str_split_prefix_5", .span = "myl_core_span_split_prefix_5" },
+    .{ .text = "myl_core_str_split_prefix_6", .span = "myl_core_span_split_prefix_6" },
+    .{ .text = "myl_core_str_split_prefix_7", .span = "myl_core_span_split_prefix_7" },
+    .{ .text = "myl_core_str_split_prefix_8", .span = "myl_core_span_split_prefix_8" },
     .{ .text = "myl_core_str_eq", .span = "myl_core_span_eq" },
     .{ .text = "myl_core_str_chars", .span = "myl_core_span_chars" },
     .{ .text = "myl_core_str_starts", .span = "myl_core_span_starts" },
@@ -160,7 +168,7 @@ fn spanForm(module: *const ir.Module, call: ir.Inst) ?SpanForm {
         const spans = signature.linkage == .runtime_c and signature.views == (@as(u64, 1) << @intCast(signature.params.len)) - 1;
         if (!std.mem.eql(u8, callee.name, if (spans) form.span else form.text)) continue;
         if (!spans and signature.views != 0) return null;
-        const offsets = std.mem.eql(u8, form.text, "myl_core_str_split_offsets");
+        const offsets = std.mem.startsWith(u8, form.text, "myl_core_str_split_");
         if (offsets) return if (module.kind(signature.ret) == .list) form else null;
         const ret: ir.Type = if (std.mem.eql(u8, form.text, "myl_core_str_chars")) .u64 else .bool;
         return if (signature.ret == ret) form else null;

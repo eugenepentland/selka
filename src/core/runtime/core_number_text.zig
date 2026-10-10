@@ -22,7 +22,9 @@ comptime {
 }
 
 fn data(block: *const Block) [*]const u8 {
-    return @as([*]const u8, @ptrCast(block)) + @sizeOf(Block);
+    const payload = @as([*]const u8, @ptrCast(block)) + @sizeOf(Block);
+    if (block.kind & (1 << 13) != 0) return @as(*const [*]const u8, @ptrCast(@alignCast(payload + 8))).*;
+    return payload;
 }
 
 fn output(block: *Block) [*]u8 {
