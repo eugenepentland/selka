@@ -186,6 +186,8 @@ def main():
         empty = work / 'empty-path'
         empty.mkdir()
         evidence = {'host_sha256': host, 'host_build_requirement': 'ReleaseFast, built before isolation',
+                    'fixed_mode_controls': {'MYLANG_TEST_INDEX_MODE': 'reference', 'MYLANG_CACHE_PLAN_MODE': 'reference'},
+                    'measurement_scope': 'frontend-isolated workflows; auxiliary components held in reference mode, not production-default end-to-end timings',
                     'measurement_checks': 'fact/leak verification disabled; every sample validates observable status/output; separate correctness gate enables facts/leaks',
                     'affinity': sorted(os.sched_getaffinity(0)), 'packages': manifests,
                     'parser_transport': transport(args, work, empty),
