@@ -1,0 +1,74 @@
+import graph
+import codec
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_empty_and_empty_roots() -> bool fails str:
+    mut empty = try graph.build([], [], [])
+    mut roots = try graph.build([b"a" * 32], [[]], [[]])
+    return empty == [] and roots == [[]]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_all_roots_excluded_duplicates_and_cycles() -> bool fails str:
+    mut reached = try graph.build([b"a" * 32, b"b" * 32, b"c" * 32], [[1, 1], [2], [0]], [[0, 2, 0], [1]])
+    return reached == [[1], [0, 2]]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_digest_order_and_distinct_equal_digest_multiplicity() -> bool fails str:
+    mut reached = try graph.build([b"z" * 32, b"\xff" * 32, b"a" * 32, b"a" * 32, b"\x80" * 32], [[1, 4, 3, 2, 2], [], [], [], []], [[0], [2], []])
+    return reached == [[2, 3, 4, 1], [], []]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_diamond_and_disconnected() -> bool fails str:
+    mut reached = try graph.build([b"a" * 32, b"b" * 32, b"c" * 32, b"d" * 32, b"e" * 32], [[1, 2], [3], [3], [3], []], [[0], [4]])
+    return reached == [[1, 2, 3], []]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_empty_protocol_golden() -> bool fails str:
+    mut data = b"SLKCP001\x01\0\0\0\x01\0\0\0\0\0\0\0\x14\0\0\0" + b"\xff" * 40 + b"\0" * 20
+    mut request = try codec.decode(data)
+    mut reached = try graph.build(request.digests, request.adjacency, request.batches)
+    mut reply = try codec.encode(request, reached)
+    return reply == b"SLKCP001\x01\0\0\0\x01\0\0\0\x01\0\0\0\x04\0\0\0" + b"\xff" * 40 + b"\0" * 4
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_malformed_and_unsupported_contract_rejected() -> bool:
+    mut data = b"SLKCP001\x01\0\0\0\x01\0\0\0\0\0\0\0\x14\0\0\0" + b"\0" * 60
+    match codec.decode(data + b"\0"):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match codec.decode(data[:83]):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match codec.decode(data[:64] + b"\x01" + data[65:]):
+        case Ok(value):
+            return False
+        case Err(message):
+            return True
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_bad_ids_and_digests_rejected() -> bool:
+    match graph.build([b"a" * 32], [[1]], [[0]]):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match graph.build([b"a"], [[]], [[0]]):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match graph.build([b"a" * 32], [[]], [[-1]]):
+        case Ok(value):
+            return False
+        case Err(message):
+            return True

@@ -24,8 +24,19 @@ pub const Verdict = struct {
     at: []const u8 = "",
     /// Exact property trial and counterexample evidence when this is a property.
     property: ?@import("test_runner_property.zig").Evidence = null,
+    /// Current invocation decision, independent of its eventual test verdict.
+    cache: ?Cache = null,
     /// What a test run against providers was accepted under (NATIVE-TEST-5).
     identity: ?Identity = null,
+};
+
+/// Reuse evidence is disposable and authorizes only a completed deterministic success.
+pub const Cache = struct {
+    action: []const u8,
+    reason: []const u8,
+    key: ?[]const u8 = null,
+    component: []const u8,
+    key_method: []const u8 = "reachable-ir",
 };
 
 /// The identities of a provider test's acceptance, as hex digests: the production
@@ -85,6 +96,12 @@ pub fn json(allocator: std.mem.Allocator, verdicts: []const Verdict) std.mem.All
         try out.appendSlice(allocator, ",\"at\":");
         try quoted(allocator, &out, verdict.at);
         if (verdict.identity) |identity| try out.print(allocator, ",\"contract\":\"{s}\",\"provider\":\"{s}\",\"source\":\"{s}\"", .{ identity.contract, identity.provider, identity.source });
+        if (verdict.cache) |cache| {
+            try out.appendSlice(allocator, ",\"cache\":");
+            const encoded = try std.json.Stringify.valueAlloc(allocator, cache, .{});
+            defer allocator.free(encoded);
+            try out.appendSlice(allocator, encoded);
+        }
         if (verdict.property) |evidence| {
             try out.appendSlice(allocator, ",\"property\":");
             try out.appendSlice(allocator, try std.json.Stringify.valueAlloc(allocator, evidence, .{}));

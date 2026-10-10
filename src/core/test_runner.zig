@@ -34,6 +34,7 @@ const receipt = @import("test_runner_receipt.zig");
 const test_keys = @import("test_runner_identity.zig");
 const tool_identity = @import("tool_identity.zig");
 const tool_ticket = @import("tool_ticket.zig");
+const planner = @import("mylang").cache_plan_adapter;
 const case_settings = @import("test_runner_cases.zig");
 const affected = @import("test_runner_affected.zig");
 const v = @import("property_value.zig");
@@ -62,6 +63,13 @@ const SelectionContext = struct { receipt: receipt.Context, base: [32]u8, permit
 /// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable
 /// or an invalid cases file or provider fixture, 3 nothing selected or every selected test skipped.
 pub fn run(init: std.process.Init, requested: Options) Error!u8 {
+    return runRequested(init, requested) catch |err| {
+        if (err == error.ComponentUnavailable) return 2;
+        return err;
+    };
+}
+
+fn runRequested(init: std.process.Init, requested: Options) Error!u8 {
     if (directory_runner.selected(init.io, requested.path)) return directory_runner.run(init, requested, runRoot);
     return (try runEntry(init, requested, .{})).?;
 }
@@ -126,12 +134,21 @@ fn start(init: std.process.Init, requested: Options, setup: Setup) Error!Started
     // An invalid cases file or provider fixture is a setup failure, status 2 (the old core's).
     const configured_cases = try configuredCases(init, &options, located) orelse return .{ .done = 2 };
     options.controls.cases = configured_cases.path;
-    const replayed = if (setup.directed) |directed| try directedReplay(init, options, located, configured_cases.bytes, directed.guest) else try cachedReplay(init, options, located, configured_cases.bytes);
+    const cache_plan = if (setup.directed) |directed| directed.cache_plan orelse try bindPlan(init) else try bindPlan(init);
+    const replayed = if (setup.directed) |directed| try directedReplay(init, options, located, configured_cases.bytes, directed.guest, cache_plan) else try cachedReplay(init, options, located, configured_cases.bytes, cache_plan);
     if (replayed) |cached| return .{ .done = try emitted(init, setup, cached) };
     const guest = if (setup.directed) |directed| directed.guest else try guestTool(init, options) orelse return .{ .done = 1 };
     // Spawn the exact executable whose content and library tree were captured.
     options.build.zig = guest.path;
-    const context: receipt.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = configured_cases.bytes, .tool = guest };
+    const context: receipt.Context = .{
+        .arena = allocator,
+        .io = init.io,
+        .environment = init.environ_map,
+        .options = options,
+        .entry = located,
+        .case_bytes = configured_cases.bytes,
+        .identity = .{ .tool = guest, .cache_plan = cache_plan },
+    };
     var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
     const base = try receipt.settings(context, &native_inputs);
     if (try replayRun(context, base)) |cached| return .{ .done = try emitted(init, setup, cached) };
@@ -222,6 +239,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     before = collected.before;
     const chosen = collected.chosen;
     const sources = collected.sources;
+    try receipt.validatePlan(context);
     const unchanged = try receipt.unchanged(context, before.items) and try receipt.toolUnchanged(context);
     if (!unchanged) {
         try writeAll(init, std.Io.File.stderr(), "error: SourceChanged: a test input changed during checking or execution\n");
@@ -231,6 +249,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     var successful = chosen.items.len != 0;
     for (chosen.items, verdicts) |item, *verdict| {
         verdict.* = item.verdict;
+        verdict.cache = try cacheExplanation(allocator, item, context);
         successful = successful and item.identity != null and (item.verdict.status == .passed or item.verdict.status == .cached);
         if (unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
     }
@@ -483,41 +502,72 @@ fn chooseCases(init: std.process.Init, options: Options, located: project_entry.
     return affected.narrow(request, checked, filtered.items);
 }
 
-/// The whole run's recorded report, unless `--affected` selects by git state that no
-/// record captures.
+/// Describe this invocation's admission decision alongside its result and key.
+fn cacheExplanation(a: std.mem.Allocator, item: Selected, context: receipt.Context) Error!report.Cache {
+    const status = item.verdict.status;
+    const admission = receipt.reuseReason(context);
+    const reason = switch (status) {
+        .cached => item.cache_reason orelse "receipt-hit",
+        .skipped => "configured-skip",
+        .unsupported => "unsupported",
+        else => if (!std.mem.eql(u8, admission, "no-success-receipt")) admission else item.cache_reason orelse if (item.identity == null) "uncacheable-metadata" else "no-success-receipt",
+    };
+    return .{
+        .action = switch (status) {
+            .cached => "reuse",
+            .skipped => "skip",
+            .unsupported => "refuse",
+            else => "execute",
+        },
+        .reason = reason,
+        .key = if (item.identity) |identity| try std.fmt.allocPrint(a, "{s}", .{std.fmt.bytesToHex(identity, .lower)}) else null,
+        .component = try std.fmt.allocPrint(a, "{s}", .{std.fmt.bytesToHex(context.identity.cache_plan.?.identity, .lower)}),
+        .key_method = item.key_method,
+    };
+}
+
+fn bindPlan(init: std.process.Init) Error!planner.Bound {
+    return planner.bind(init.arena.allocator(), init.io, init.environ_map) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(init.arena.allocator(), "error: cache-plan component: {s}\n", .{@errorName(err)}));
+        return error.ComponentUnavailable;
+    };
+}
+
+/// The whole run's recorded report, unless `--affected` selects by unrecorded git state.
 fn replayRun(context: receipt.Context, base: [32]u8) Error!?[]const u8 {
     if (context.options.controls.against != null) return null;
     return receipt.replay(context, base);
 }
 
-fn cachedReplay(init: std.process.Init, options: Options, located: project_entry.Entry, case_bytes: []const u8) Error!?[]const u8 {
+fn cachedReplay(init: std.process.Init, options: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?[]const u8 {
     if (options.controls.against != null) return null;
-    const borrowed = try borrowedReplay(init, options, located, case_bytes);
+    const borrowed = try borrowedReplay(init, options, located, case_bytes, cache_plan);
     // The private transport never reaches native guests or a persistent key.
     _ = init.environ_map.swapRemove(tool_ticket.hint);
-    return borrowed orelse try localReplay(init, options, located, case_bytes);
+    return borrowed orelse try localReplay(init, options, located, case_bytes, cache_plan);
 }
 
-fn borrowedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8) Error!?[]const u8 {
+fn borrowedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?[]const u8 {
     const a = init.arena.allocator();
     const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
-    const guest = try tool_ticket.borrow(.{ .tool = resources, .compiler_identity = frontend.compiler_identity }) orelse return null;
-    return directedReplay(init, requested, located, case_bytes, guest);
+    const guest = try tool_ticket.borrow(.{ .tool = resources, .compiler_identity = frontend.compiler_identity, .component_identity = cache_plan.identity }) orelse return null;
+    return directedReplay(init, requested, located, case_bytes, guest, cache_plan);
 }
 
 /// The recorded report of an entry under `guest`, the toolchain its directory run
 /// identified and validates once for every root.
-fn directedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, guest: tool_identity.Identity) Error!?[]const u8 {
+fn directedReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, guest: tool_identity.Identity, cache_plan: planner.Bound) Error!?[]const u8 {
     if (requested.controls.against != null) return null;
     const a = init.arena.allocator();
     var options = requested;
     options.build.zig = guest.path;
-    const context: receipt.Context = .{ .arena = a, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = case_bytes, .tool = guest };
+    const context: receipt.Context = .{ .arena = a, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = case_bytes, .identity = .{ .tool = guest, .cache_plan = cache_plan } };
     var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
     return receipt.replayProvisional(context, try receipt.settings(context, &native_inputs));
 }
 
-fn localReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8) Error!?[]const u8 {
+fn localReplay(init: std.process.Init, requested: Options, located: project_entry.Entry, case_bytes: []const u8, cache_plan: planner.Bound) Error!?[]const u8 {
     const a = init.arena.allocator();
     const resources: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = requested.build.zig, .cache = requested.build.cache };
     const guest = tool_identity.lookupReplayCandidate(resources) catch |err| {
@@ -526,7 +576,7 @@ fn localReplay(init: std.process.Init, requested: Options, located: project_entr
     } orelse return null;
     var options = requested;
     options.build.zig = guest.path;
-    const context: receipt.Context = .{ .arena = a, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = case_bytes, .tool = guest };
+    const context: receipt.Context = .{ .arena = a, .io = init.io, .environment = init.environ_map, .options = options, .entry = located, .case_bytes = case_bytes, .identity = .{ .tool = guest, .cache_plan = cache_plan } };
     var native_inputs: std.ArrayList(receipt.Dependency) = .empty;
     const base = try receipt.settings(context, &native_inputs);
     // Buffer the candidate without publishing anything under its unverified key.
@@ -615,12 +665,18 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
         const configured = v.get(settings.document, case.name);
         const skip = v.get(configured, "skip");
         const refused = if (skip == .string and skip.string.len != 0) report.Verdict{ .name = case.name, .status = .skipped, .reason = skip.string } else try screen(a, checked, case, configured);
-        item.* = .{ .case = case, .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" }, .ready = refused == null, .settings = configured };
+        item.* = .{
+            .case = case,
+            .verdict = refused orelse .{ .name = case.name, .status = .failed, .reason = "not run" },
+            .ready = refused == null,
+            .cache_reason = if (refused == null and !publishes(checked, case)) "live-effects" else null,
+            .settings = configured,
+        };
     }
-    if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base)) |keys| {
+    if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base, context.identity.cache_plan.?)) |keys| {
         if (try receipt.hit(context, keys.whole.key)) {
             for (chosen, keys.tests) |*item, key| if (item.ready) {
-                item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = key, .settings = item.settings };
+                item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = key, .cache_reason = "whole-receipt-hit", .settings = item.settings };
             };
             return .{ .items = chosen };
         }
@@ -634,6 +690,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
         return .{ .items = chosen, .whole = keys.whole };
     };
     for (chosen) |*item| {
+        item.key_method = "per-test-ir-fallback";
         if (!item.ready) continue;
         var scratch = std.heap.ArenaAllocator.init(init.gpa);
         defer scratch.deinit();
@@ -670,7 +727,7 @@ const Keys = struct { tests: []const ?[32]u8, whole: Whole };
 /// Null when no test is ready, one may call `Host`, the builder refuses a function or
 /// a result, or the lowering carries metadata the digests do not know, so each test is
 /// keyed and reported from its own lowering.
-fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, base: [32]u8) Error!?Keys {
+fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, base: [32]u8, cache_plan: planner.Bound) Error!?Keys {
     const a = init.arena.allocator();
     var scratch = std.heap.ArenaAllocator.init(init.gpa);
     defer scratch.deinit();
@@ -700,10 +757,11 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
     const source_path = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, s) catch options.path;
     var schema: ?property_types.Schema = null;
     const tests = try a.alloc(?[32]u8, chosen.len);
-    var whole = std.crypto.hash.Blake3.init(.{});
-    whole.update("core-test-whole-v2");
-    for (chosen, tests) |item, *slot| {
-        slot.* = null;
+    const requests = try s.alloc(test_keys.Test, chosen.len);
+    const root_sets = try s.alloc([]const u32, chosen.len);
+    for (chosen, requests, root_sets) |item, *request, *root_set| {
+        root_set.* = &.{};
+        request.* = .{ .base = base, .name = item.case.name, .source_path = source_path, .entry = @splat(0), .schema = null, .roots = &.{} };
         if (!item.ready) continue;
         const target = try testTarget(s, options, checked, item.case, 0);
         if (needsSchema(target) and schema == null) schema = try property_types.Schema.init(s, try property_schema.definitions(s, checked.program));
@@ -712,8 +770,21 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
         const own = if (generated) try rootsFor(s, checked.program, &.{item.case}) else &.{item.case.function};
         const indices = try s.alloc(u32, own.len);
         for (own, indices) |function, *index| index.* = @intCast(std.mem.indexOfScalar(typed.FunctionId, roots, function) orelse return null);
-        const types = if (needsSchema(target)) try schemaDigest(s, schema.?, target) else null;
-        const derived = test_keys.key(shared, s, .{ .base = base, .name = item.case.name, .source_path = source_path, .entry = entryDigest(target), .schema = types, .roots = indices }) catch |err| {
+        root_set.* = indices;
+        request.* = .{ .base = base, .name = item.case.name, .source_path = source_path, .entry = entryDigest(target), .schema = if (needsSchema(target)) try schemaDigest(s, schema.?, target) else null, .roots = indices };
+    }
+    var planned = cache_plan.batch(s, .{ .digests = shared.digests, .callees = shared.callees }, root_sets) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try writeAll(init, std.Io.File.stderr(), try std.fmt.allocPrint(a, "error: cache-plan component: {s}\n", .{@errorName(err)}));
+        return error.ComponentUnavailable;
+    };
+    defer planned.deinit();
+    var whole = std.crypto.hash.Blake3.init(.{});
+    whole.update("core-test-whole-v2");
+    for (chosen, tests, requests, planned.batches) |item, *slot, request, reached| {
+        slot.* = null;
+        if (!item.ready) continue;
+        const derived = test_keys.plannedKey(shared, request, reached) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             return null;
         };

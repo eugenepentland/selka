@@ -1,0 +1,23 @@
+import graph
+import codec
+
+func exchange(fs: Filesystem, path: str) -> bytes fails str:
+    mut data = b""
+    with try fs.open(path, "rb") as file:
+        data = file.read(16777217)
+    mut request = try codec.decode(data)
+    mut reached = try graph.build(request.digests, request.adjacency, request.batches)
+    return try codec.encode(request, reached)
+
+
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) != 2 or args[0] != "--request":
+        err.print("cache-plan: expected --request FILE")
+        return 2
+    match exchange(fs, args[1]):
+        case Ok(reply):
+            _ = out.write(reply)
+            return 0
+        case Err(message):
+            err.print("cache-plan:", message)
+            return 2

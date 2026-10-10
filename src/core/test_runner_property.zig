@@ -32,7 +32,7 @@ const shrink_chunk = 128;
 /// Copied nodes one batch request may carry before the rest wait for the next.
 const batch_nodes = 500_000;
 /// Property setup, generation and execution failures.
-pub const Error = execute.Error || render.Error;
+pub const Error = execute.Error || render.Error || error{ComponentUnavailable};
 
 /// The run's identity: the seed inputs are drawn from, how many must pass,
 /// and the entry path the reproduction command names.

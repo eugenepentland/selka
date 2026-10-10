@@ -30,7 +30,7 @@ pub const Plan = union(enum) { child, replayed, together: shared.View };
 
 /// What planning needs: the run's options (its toolchain path resolved), the
 /// toolchain identity, the in-process root runner and the worker count.
-pub const Context = struct { init: std.process.Init, controls: options.Options, guest: tool_identity.Identity, run_root: shared.RunRoot, workers: usize };
+pub const Context = struct { init: std.process.Init, controls: options.Options, guest: tool_identity.Identity, cache_plan: ?@import("mylang").cache_plan_adapter.Bound = null, run_root: shared.RunRoot, workers: usize };
 
 /// The shared checks of one directory run. Their sessions own the checked programs
 /// the `together` plans read; release them after every root has run.
@@ -194,7 +194,7 @@ const Replays = struct {
         root_init.arena = &arena;
         var controls = self.context.controls;
         controls.path = self.paths[index];
-        const replayed = try self.context.run_root(root_init, controls, .{ .guest = self.context.guest, .replay_only = true }) orelse return;
+        const replayed = try self.context.run_root(root_init, controls, .{ .guest = self.context.guest, .cache_plan = self.context.cache_plan, .replay_only = true }) orelse return;
         self.outcomes[index] = .{ .code = replayed.code, .bytes = try init.arena.allocator().dupe(u8, replayed.bytes) };
         self.plans[index] = .replayed;
     }

@@ -61,30 +61,9 @@ fn same(a: []const []const u8, b: []const []const u8) bool {
     for (a, b) |left, right| if (!std.mem.eql(u8, left, right)) return false;
     return true;
 }
-const Manifest = struct { format: u32, component: []const u8, protocol: u32, schema: u32, artifact: []const u8, sha256: []const u8 };
-/// Verify manifest and binary SHA-256, returning an allocator-owned path.
+/// Verify the test-index deployment through the shared manifest boundary.
 pub fn artifact(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error![]const u8 {
-    const path = try std.fs.path.join(a, &.{ directory, "test-index.json" });
-    defer a.free(path);
-    const bytes = std.Io.Dir.cwd().readFileAlloc(io, path, a, .limited(65536)) catch |err| return mapFailure(err, error.ComponentMissing);
-    defer a.free(bytes);
-    const parsed = std.json.parseFromSlice(Manifest, a, bytes, .{ .ignore_unknown_fields = true }) catch |err| return mapFailure(err, error.ComponentManifest);
-    defer parsed.deinit();
-    const m = parsed.value;
-    if (m.format != 1 or m.protocol != 1 or m.schema != 1) return error.ComponentManifest;
-    if (!std.mem.eql(u8, m.component, "test-index") or m.sha256.len != 64) return error.ComponentManifest;
-    if (m.artifact.len == 0 or std.mem.indexOfAny(u8, m.artifact, "/\\") != null) return error.ComponentManifest;
-    if (std.mem.eql(u8, m.artifact, ".") or std.mem.eql(u8, m.artifact, "..")) return error.ComponentManifest;
-    var expected: [32]u8 = undefined;
-    _ = std.fmt.hexToBytes(&expected, m.sha256) catch |err| return mapFailure(err, error.ComponentManifest);
-    const binary = try std.fs.path.join(a, &.{ directory, m.artifact });
-    errdefer a.free(binary);
-    const contents = std.Io.Dir.cwd().readFileAlloc(io, binary, a, .limited(64 << 20)) catch |err| return mapFailure(err, error.ComponentMissing);
-    defer a.free(contents);
-    var digest: [32]u8 = undefined;
-    std.crypto.hash.sha2.Sha256.hash(contents, &digest, .{});
-    if (!std.mem.eql(u8, &digest, &expected)) return error.ComponentDigest;
-    return binary;
+    return (try @import("component_launch.zig").artifact(a, io, directory, "test-index")).path;
 }
 fn execute(runtime: Runtime, a: std.mem.Allocator, names: []const []const u8, graph: []const []const typed.FunctionId, tests: []const typed.FunctionId) Error!index.Index {
     var arena = std.heap.ArenaAllocator.init(a);
@@ -107,7 +86,7 @@ fn execute(runtime: Runtime, a: std.mem.Allocator, names: []const []const u8, gr
     const request = try wire.request(scratch, graph, tests, std.mem.readInt(u64, nonce[0..8], .little));
     std.Io.Dir.cwd().writeFile(runtime.io, .{ .sub_path = request_path, .data = request.bytes }) catch |err| return mapFailure(err, error.ComponentIo);
     const timeout: std.Io.Timeout = .{ .duration = .{ .clock = .awake, .raw = .fromMilliseconds(runtime.timeout_ms) } };
-    const result = runBounded(scratch, runtime.io, .{
+    const result = @import("component_launch.zig").runBounded(scratch, runtime.io, .{
         .argv = &.{ binary, "--request", request_path },
         .environ_map = runtime.environ,
         .timeout = timeout.toDeadline(runtime.io),
@@ -158,70 +137,4 @@ fn discard(io: std.Io, directory: []const u8) void {
         std.Io.File.stderr().writeStreamingAll(io, message) catch return;
         return;
     };
-}
-
-const LaunchEvent = union(enum) {
-    completed: std.process.RunError!std.process.RunResult,
-    deadline: std.Io.Cancelable!void,
-};
-
-/// Race the entire child lifecycle against its deadline, including wait after EOF.
-/// The allocator is the launch arena, so discarded late results die with that arena.
-fn runBounded(arena: std.mem.Allocator, io: std.Io, options: std.process.RunOptions) std.process.RunError!std.process.RunResult {
-    var events: [2]LaunchEvent = undefined;
-    var select = std.Io.Select(LaunchEvent).init(io, &events);
-    // Cancel joins every task before execute releases the launch arena. The run
-    // task's defer kills and reaps its child when cancellation interrupts wait.
-    defer select.cancelDiscard();
-    select.concurrent(.completed, runChild, .{ arena, io, options }) catch return error.SystemResources;
-    select.concurrent(.deadline, std.Io.Timeout.sleep, .{ options.timeout, io }) catch return error.SystemResources;
-    const event = try select.await();
-    return switch (event) {
-        .completed => |result| result,
-        .deadline => |result| blk: {
-            try result;
-            break :blk error.Timeout;
-        },
-    };
-}
-
-/// Own the process explicitly: canceled stdlib wait clears its ID before returning.
-fn runChild(a: std.mem.Allocator, io: std.Io, options: std.process.RunOptions) std.process.RunError!std.process.RunResult {
-    var child = try std.process.spawn(io, .{
-        .argv = options.argv,
-        .environ_map = options.environ_map,
-        .stdin = .ignore,
-        .stdout = .pipe,
-        .stderr = .pipe,
-    });
-    defer terminate(io, &child);
-    var buffer: std.Io.File.MultiReader.Buffer(2) = undefined;
-    var reader: std.Io.File.MultiReader = undefined;
-    reader.init(a, io, buffer.toStreams(), &.{ child.stdout.?, child.stderr.? });
-    defer reader.deinit();
-    while (reader.fill(64, options.timeout)) |_| {
-        if (reader.reader(0).buffered().len > wire.reply_limit) return error.StreamTooLong;
-        if (reader.reader(1).buffered().len > 65536) return error.StreamTooLong;
-    } else |err| switch (err) {
-        error.EndOfStream => {},
-        else => |other| return other,
-    }
-    try reader.checkAnyError();
-    const pid = child.id;
-    const term = child.wait(io) catch |err| {
-        // On Linux the stdlib clears ownership on cancellation without reaping.
-        // Its descriptor cleanup has already run; restore only process ownership.
-        child.id = pid;
-        return err;
-    };
-    const stdout = try reader.toOwnedSlice(0);
-    errdefer a.free(stdout);
-    return .{ .term = term, .stdout = stdout, .stderr = try reader.toOwnedSlice(1) };
-}
-
-/// SIGKILL makes reaping bounded even if a component ignores SIGTERM.
-fn terminate(io: std.Io, child: *std.process.Child) void {
-    const pid = child.id orelse return;
-    _ = std.os.linux.kill(pid, std.os.linux.SIG.KILL);
-    child.kill(io);
 }

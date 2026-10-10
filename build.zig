@@ -143,6 +143,7 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
     if (install_components) |components| {
         run.step.dependOn(components);
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/test-index.json" } });
+        run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/cache-plan.json" } });
     }
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
 }
@@ -434,9 +435,8 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
     const shards = if (inputs.filters.len == 0) @max(1, requested) else 1;
     for (0..shards) |index| {
-        const run = b.addRunArtifact(unit);
-        run.step.max_rss = rss.driver;
-        run.has_side_effects = true;
+        const run = focused(b.addRunArtifact(unit), rss.driver);
+        forwardFilters(b, run, inputs.filters);
         if (shards > 1) guardian.announceShard(run, index, shards);
         step.dependOn(&run.step);
     }

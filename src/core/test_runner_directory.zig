@@ -9,6 +9,7 @@ const budget = @import("memory_budget");
 const report = @import("test_runner_report.zig");
 const tool_identity = @import("tool_identity.zig");
 const tool_ticket = @import("tool_ticket.zig");
+const planner = @import("mylang").cache_plan_adapter;
 const case_settings = @import("test_runner_cases.zig");
 const receipt = @import("test_runner_receipt.zig");
 const Error = @import("test_runner_property.zig").Error;
@@ -20,7 +21,7 @@ const Location = struct { path: []const u8, root: []const u8, name: []const u8, 
 const Selection = struct { entries: []const []const u8, tested: []const []const u8, inputs: []const Input, discovered: []const []const u8, locations: []const Location = &.{} };
 const Orphan = struct { path: []const u8, closure: []const []const u8 };
 const Outcome = root_share.Outcome;
-const Fanout = struct { compiler: []const u8, directory: []const u8, controls: options.Options, jobs: usize, ticket: []const u8, run_root: root_share.RunRoot, guest: tool_identity.Identity };
+const Fanout = struct { compiler: []const u8, directory: []const u8, controls: options.Options, jobs: usize, ticket: []const u8, run_root: root_share.RunRoot, identity: struct { guest: tool_identity.Identity, cache_plan: planner.Bound } };
 const Discovery = struct { allocator: std.mem.Allocator, gpa: std.mem.Allocator, io: std.Io };
 const Snapshot = struct {
     allocator: std.mem.Allocator,
@@ -106,6 +107,11 @@ pub fn run(init: std.process.Init, opts: options.Options, run_root: root_share.R
         try write(init.io, std.Io.File.stdout(), if (opts.json) try report.jsonSources(a, &.{}, &.{}) else try report.text(a, &.{}));
         return 3;
     }
+    const cache_plan = planner.bind(a, init.io, init.environ_map) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try write(init.io, std.Io.File.stderr(), try std.fmt.allocPrint(a, "error: cache-plan component: {s}\n", .{@errorName(err)}));
+        return 2;
+    };
     const compiler = std.Io.Dir.cwd().realPathFileAlloc(init.io, "/proc/self/exe", a) catch return error.ReadFailed;
     var nonce: [16]u8 = undefined;
     std.Io.random(init.io, &nonce);
@@ -119,7 +125,7 @@ pub fn run(init: std.process.Init, opts: options.Options, run_root: root_share.R
         return 1;
     };
     const ticket = try std.fs.path.join(a, &.{ directory, "tool-ticket.json" });
-    const encoded = tool_ticket.encode(.{ .tool = request, .compiler_identity = frontend.compiler_identity }, guest) catch |err| {
+    const encoded = tool_ticket.encode(.{ .tool = request, .compiler_identity = frontend.compiler_identity, .component_identity = cache_plan.identity }, guest) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return error.ReadFailed;
     };
@@ -129,10 +135,10 @@ pub fn run(init: std.process.Init, opts: options.Options, run_root: root_share.R
     const free = budget.available(init.io);
     const workers = options.width(opts.controls, init.environ_map, selection.entries.len, free);
     const overall = options.width(opts.controls, init.environ_map, std.math.maxInt(usize), free);
-    const fanout: Fanout = .{ .compiler = compiler, .directory = directory, .controls = controls, .jobs = overall, .ticket = ticket, .run_root = run_root, .guest = guest };
+    const fanout: Fanout = .{ .compiler = compiler, .directory = directory, .controls = controls, .jobs = overall, .ticket = ticket, .run_root = run_root, .identity = .{ .guest = guest, .cache_plan = cache_plan } };
     const outcomes = try a.alloc(Outcome, selection.entries.len);
     const plans = try a.alloc(together.Plan, selection.entries.len);
-    var checks = try together.plan(.{ .init = init, .controls = controls, .guest = guest, .run_root = run_root, .workers = workers }, selection.entries, outcomes, plans);
+    var checks = try together.plan(.{ .init = init, .controls = controls, .guest = guest, .cache_plan = cache_plan, .run_root = run_root, .workers = workers }, selection.entries, outcomes, plans);
     defer checks.deinit();
     var order: std.ArrayList(usize) = .empty;
     for (try largestFirst(a, init.io, selection.entries)) |index| if (plans[index] != .replayed) try order.append(a, index);
@@ -145,6 +151,11 @@ pub fn run(init: std.process.Init, opts: options.Options, run_root: root_share.R
     const unchanged = tool_identity.unchanged(request, guest) catch |err| unchanged: {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         break :unchanged false;
+    };
+    cache_plan.validate(a) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        try write(init.io, std.Io.File.stderr(), try std.fmt.allocPrint(a, "error: cache-plan component: {s}\n", .{@errorName(err)}));
+        return 2;
     };
     return summarize(init, opts, selection, outcomes, unchanged);
 }
@@ -446,7 +457,7 @@ const Worker = struct {
         var controls = self.fanout.controls;
         controls.path = path;
         controls.controls.jobs = self.fanout.jobs;
-        const outcome = try self.fanout.run_root(init, controls, .{ .guest = self.fanout.guest, .view = view, .permits = self.queue.permits }) orelse return .{};
+        const outcome = try self.fanout.run_root(init, controls, .{ .guest = self.fanout.identity.guest, .cache_plan = self.fanout.identity.cache_plan, .view = view, .permits = self.queue.permits }) orelse return .{};
         return .{ .code = outcome.code, .bytes = try self.init.arena.allocator().dupe(u8, outcome.bytes) };
     }
 
@@ -553,6 +564,10 @@ fn summarize(init: std.process.Init, opts: options.Options, selection: Selection
         for (tests.array.items) |test_value| {
             const status = std.meta.stringToEnum(report.Status, string(test_value, "status")) orelse .failed;
             var item: report.Verdict = .{ .name = string(test_value, "name"), .status = status, .reason = string(test_value, "reason"), .at = string(test_value, "at") };
+            if (!try explanation(a, test_value, &item)) {
+                try verdicts.append(a, item);
+                continue;
+            }
             if (test_value == .object) if (test_value.object.get("property")) |evidence| {
                 const parsed_evidence = std.json.parseFromValueLeaky(@import("test_runner_property.zig").Evidence, a, evidence, .{}) catch {
                     item.status = .failed;
@@ -577,6 +592,23 @@ fn summarize(init: std.process.Init, opts: options.Options, selection: Selection
     std.mem.sort([]const u8, sources.items, {}, before);
     try write(init.io, std.Io.File.stdout(), if (opts.json) try report.jsonSources(a, verdicts.items, sources.items) else try report.text(a, verdicts.items));
     return if (setup_failed) 2 else report.exitStatus(verdicts.items);
+}
+
+fn explanation(a: std.mem.Allocator, value: std.json.Value, item: *report.Verdict) Error!bool {
+    if (value != .object) return true;
+    if (value.object.get("cache")) |cache| {
+        item.cache = std.json.parseFromValueLeaky(report.Cache, a, cache, .{}) catch {
+            item.status = .failed;
+            item.reason = "invalid cache explanation in test report";
+            return false;
+        };
+    }
+    if (value.object.get("contract") != null) item.identity = .{
+        .contract = string(value, "contract"),
+        .provider = string(value, "provider"),
+        .source = string(value, "source"),
+    };
+    return true;
 }
 
 fn sourceChanged(a: std.mem.Allocator, io: std.Io, opts: options.Options, selection: Selection) Error!bool {
@@ -843,4 +875,16 @@ test "sharedClosures loads headerless roots together and leaves a failed load to
     const alone = try sharedClosures(init, &roots, &fresh);
     try std.testing.expectEqual(@as(?[]const []const u8, null), alone[0]);
     try std.testing.expectEqual(@as(?[]const []const u8, null), alone[1]);
+}
+
+// spec-case: SELFHOST-CACHE-REPORT-1
+test "explanation rejects malformed child cache metadata instead of preserving a passed verdict" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const malformed = try std.json.parseFromSliceLeaky(std.json.Value, a, "{\"cache\":{\"action\":1}}", .{});
+    var item: report.Verdict = .{ .name = "app::test", .status = .passed };
+    try std.testing.expect(!try explanation(a, malformed, &item));
+    try std.testing.expectEqual(report.Status.failed, item.status);
+    try std.testing.expectEqualStrings("invalid cache explanation in test report", item.reason);
 }

@@ -1,4 +1,4 @@
-//! Production consumers of the independently built Selka test index.
+//! Production consumers and relocatable installations of native Selka components.
 const std = @import("std");
 const t = std.testing;
 const compiler = @import("test_options").compiler_path;
@@ -77,14 +77,18 @@ test "CLI component bootstrap rebuilds and installs without an interpreter on PA
     defer release(result);
     errdefer std.debug.print("component bootstrap without PATH: {s}\n", .{result.stderr});
     try t.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
-    const manifest_path = try std.fs.path.join(t.allocator, &.{ installation, "test-index.json" });
-    defer t.allocator.free(manifest_path);
-    const manifest_bytes = try std.Io.Dir.cwd().readFileAlloc(t.io, manifest_path, t.allocator, .limited(65536));
-    defer t.allocator.free(manifest_bytes);
-    const manifest = try std.json.parseFromSlice(PackageManifest, t.allocator, manifest_bytes, .{ .ignore_unknown_fields = true });
-    defer manifest.deinit();
-    try t.expectEqualStrings("test-index", manifest.value.component);
-    try t.expectEqual(@as(usize, 64), manifest.value.sha256.len);
+    for ([_][]const u8{ "test-index", "cache-plan" }) |component| {
+        const filename = try std.fmt.allocPrint(t.allocator, "{s}.json", .{component});
+        defer t.allocator.free(filename);
+        const manifest_path = try std.fs.path.join(t.allocator, &.{ installation, filename });
+        defer t.allocator.free(manifest_path);
+        const manifest_bytes = try std.Io.Dir.cwd().readFileAlloc(t.io, manifest_path, t.allocator, .limited(65536));
+        defer t.allocator.free(manifest_bytes);
+        const manifest = try std.json.parseFromSlice(PackageManifest, t.allocator, manifest_bytes, .{ .ignore_unknown_fields = true });
+        defer manifest.deinit();
+        try t.expectEqualStrings(component, manifest.value.component);
+        try t.expectEqual(@as(usize, 64), manifest.value.sha256.len);
+    }
 }
 
 // spec-case: SELFHOST-COMPONENT-1
@@ -144,20 +148,29 @@ pub fn stageInstalledHost(a: std.mem.Allocator, io: std.Io, root: []const u8, so
     var inherited = try std.process.Environ.createMap(t.environ, arena);
     defer inherited.deinit();
     const source_components = inherited.get("MYLANG_COMPONENT_DIR") orelse return error.MissingComponentFixture;
-    const source_manifest = try std.fs.path.join(arena, &.{ source_components, "test-index.json" });
+    const destination = try std.fs.path.join(arena, &.{ root, "installation", "libexec", "mylang", "components" });
+    for ([_][]const u8{ "test-index", "cache-plan" }) |component| try stageComponent(arena, io, source_components, destination, component);
+    const host = try std.fs.path.join(a, &.{ root, "installation", "bin", "mylang" });
+    errdefer a.free(host);
+    try std.Io.Dir.cwd().copyFile(source_host, .cwd(), host, io, .{ .make_path = true });
+    return host;
+}
+
+fn stageComponent(arena: std.mem.Allocator, io: std.Io, source: []const u8, destination: []const u8, component: []const u8) !void {
+    const filename = try std.fmt.allocPrint(arena, "{s}.json", .{component});
+    const source_manifest = try std.fs.path.join(arena, &.{ source, filename });
     const cwd = std.Io.Dir.cwd();
     const manifest_bytes = try cwd.readFileAlloc(io, source_manifest, arena, .limited(65536));
     const manifest = try std.json.parseFromSlice(PackageManifest, arena, manifest_bytes, .{ .ignore_unknown_fields = true });
     defer manifest.deinit();
     const m = manifest.value;
     if (m.format != 1 or m.protocol != 1 or m.schema != 1) return error.InvalidComponentFixture;
-    if (!std.mem.eql(u8, m.component, "test-index") or m.sha256.len != 64) return error.InvalidComponentFixture;
+    if (!std.mem.eql(u8, m.component, component) or m.sha256.len != 64) return error.InvalidComponentFixture;
     if (m.artifact.len == 0 or std.mem.indexOfAny(u8, m.artifact, "/\\") != null) return error.InvalidComponentFixture;
     if (std.mem.eql(u8, m.artifact, ".") or std.mem.eql(u8, m.artifact, "..")) return error.InvalidComponentFixture;
-    const destination = try std.fs.path.join(arena, &.{ root, "installation", "libexec", "mylang", "components" });
-    const destination_manifest = try std.fs.path.join(arena, &.{ destination, "test-index.json" });
+    const destination_manifest = try std.fs.path.join(arena, &.{ destination, filename });
     const destination_binary = try std.fs.path.join(arena, &.{ destination, m.artifact });
-    const source_binary = try std.fs.path.join(arena, &.{ source_components, m.artifact });
+    const source_binary = try std.fs.path.join(arena, &.{ source, m.artifact });
     try cwd.copyFile(source_binary, cwd, destination_binary, io, .{ .make_path = true });
     const binary = try cwd.readFileAlloc(io, destination_binary, arena, .limited(64 << 20));
     var digest: [32]u8 = undefined;
@@ -166,8 +179,4 @@ pub fn stageInstalledHost(a: std.mem.Allocator, io: std.Io, root: []const u8, so
     _ = try std.fmt.hexToBytes(&expected, m.sha256);
     if (!std.mem.eql(u8, &digest, &expected)) return error.InvalidComponentFixture;
     try cwd.writeFile(io, .{ .sub_path = destination_manifest, .data = manifest_bytes });
-    const host = try std.fs.path.join(a, &.{ root, "installation", "bin", "mylang" });
-    errdefer a.free(host);
-    try cwd.copyFile(source_host, cwd, host, io, .{ .make_path = true });
-    return host;
 }

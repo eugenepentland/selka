@@ -1,7 +1,8 @@
 # Selka toolchain caching plan
 
-Status: proposed implementation plan, 2026-10-10. No implementation or new
-benchmark qualification is claimed by this document.
+Status: Wave 1 implemented and qualified on the integration branch, 2026-10-10.
+Later waves remain proposals. The implementation evidence below is separate
+from the original baseline review.
 
 ## Objective and contract
 
@@ -44,6 +45,82 @@ Also reviewed the progressive self-hosting implementation in this worktree and
 the earlier [interop plan](selka-zig-interop-plan-2026-10-09.md). Reconcile both
 branches with their latest qualified revisions before implementation; this plan
 does not propose overwriting either branch or replacing its caches.
+
+### Wave 1 integration and evidence
+
+Implementation branch: `codex/selka-cache-wave1-incremental`, in
+`/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang`.
+Its starting point is the exact committed incremental revision
+`ef6e0144fbe507d3b51f5512eec8d3465fd137a3` plus the self-hosting foundation
+commit `c2eea010b`. This does not incorporate the active worktree's unfinished
+packed-cache changes or merge later main optimizer changes that would need
+their own incremental-cache qualification. Both original working trees were
+left untouched.
+
+The native coordinator now independently builds `test-index` and `cache-plan`
+with the existing qualified seed. Zig still owns canonical IR, complete call
+and function-reference extraction, receipt eligibility and publication. Selka
+owns batched reachable-function traversal. Reference, shadow and component
+modes preserve the existing ordered-root and sorted-nonroot hash contribution.
+Verified planner identity participates before every test replay path, including
+directory tickets and whole reports. The existing `--json` test report carries
+per-test cache actions and reasons. See the exact
+[wire and identity contract](../tooling/component-protocol.md#core-cache-planner-v1).
+
+This implementation uses disposable successful-test evidence. The explicit
+policy contract rejects durable retention, checkpoint commit, run/step
+occurrences and effect replay. It does not implement application recovery,
+new compiler query storage, fuzz scheduling or performance-result reuse.
+
+Focused qualification completed during implementation:
+
+| Check | Evidence |
+| --- | --- |
+| Selka pure traversal and codec | 7 tests passed at debug and release, with fact verification and leak checking |
+| Native protocol oracle | 102 independent graphs plus malformed-frame, unsupported-policy, missing-file, output-failure and aggregate-work-limit checks passed for debug and release components |
+| Core edit behavior | Cold run executes; unchanged rerun executes zero tests; helper, callback-target and constant edits preserve unrelated receipts; newly discovered tests execute |
+| Planner generation | Behavior-preserving binary identity change invalidates warm file/directory evidence; missing/corrupt manifests and failed component execution refuse reuse |
+| Host boundary | Repeated roots, equal digests, cycles, malformed replies, mode identity, deployment changes, timeout and forced process reaping are covered |
+| Coordinator | 18 blackbox cases passed, including independent source invalidation, corrupted artifacts, failed planner compilation, unchanged selected manifests on that failure, and isolation from caller Zig global caches |
+| Sealed launch integration | 26/26 focused build steps and 14 selected Zig tests passed; 1,534 language, 140 value-semantics and 98 ported tests each passed at debug and release with fact verification and leak checking on the release runs |
+
+Final `zig build test fmt-check -j3 --maxrss 8589934592 --summary all`, through
+the shared gate slot, passed all 100 steps and 2,336 Zig tests. The 21,491 skip
+entries in the build summary are tests outside each shard's selection. The gate
+also passed the language, native protocol, coordinator, Python tooling and
+documentation suites, including the real empty-`PATH` component rebuild. Its warm
+Debug language run reported 1,534 cached, zero executed and zero failed tests.
+Guardian passed all 88 checks without policy or baseline changes. Local evidence
+is retained under `.mylang-cache/cache-wave1-validation/`, particularly
+`full-gate-sealed.log`, `sealed-snapshot-qualification.log` and the explicitly
+transcript-derived `component-qualification.txt`.
+
+The native transport sample, before the bootstrap cache isolation fix, used
+the debug planner on reserved CPU 10 with
+1,000 nodes, 10,000 edges and 100 root batches. Across five runs, process launch,
+planning and captured output took a median 33.891 ms (32.510–34.351 ms), with a
+76,884-byte request and 400,068-byte reply. This excludes request construction,
+host manifest validation and private executable copying, so it is not an
+end-to-end test-command measurement or a comparison with the Zig reference.
+A port alone is not a speedup claim. Persisted dependency summaries and reduced
+planning work belong to Wave 2.
+
+Full-gate bootstrap qualification exposed a reproducibility dependency on the
+caller's shared Zig global cache: cached libc startup objects retained historic
+working directories in DWARF. The captured mismatch had identical `.text` but
+different debug sections. Fresh component builds now use their own deterministic
+Zig global cache, and their identity includes the resolved component store root.
+Both components reproduced byte-for-byte under empty `PATH` with a different
+caller global cache. Building both components from fresh staging took 17.65 s;
+the uncached verification took 16.96 s. These are unreserved shared-machine
+observations, include the qualified-seed check, and are not performance gates.
+
+Concurrent language-suite qualification also exposed Linux `ETXTBSY` when a
+sibling fork briefly inherited the writable descriptor of a private executable
+copy. Stage-specific diagnostics confirmed `FileBusy` at child spawn. Planner
+launch now uses a verified, sealed memory-file snapshot whose descriptor remains
+alive through child completion, preventing that inherited-writer race without
+retrying failed process creation or weakening artifact verification.
 
 The incremental worktree already contains:
 

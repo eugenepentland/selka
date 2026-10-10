@@ -145,5 +145,4 @@ pub const selfhost_numeric = [_][]const u8{"selfhost/"};
 pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/component-seed.json" };
 
 /// Qualified-seed pure tests and native protocol oracle.
-pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py" };
-
+pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" };

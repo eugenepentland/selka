@@ -1,0 +1,63 @@
+# Core receipt traversal over immutable snapshot-local function IDs.
+# Roots are contributed by the host in their original order, including duplicates.
+# spec: SELFHOST-CACHE-PLAN-1
+public func build(digests: bytes[], adjacency: int[][], batches: int[][]) -> int[][] fails str:
+    if len(digests) != len(adjacency):
+        fail "invalid function table"
+    for digest in digests:
+        if len(digest) != 32:
+            fail "invalid function digest"
+    for row in adjacency:
+        for target in row:
+            if target < 0 or target >= len(digests):
+                fail "invalid callee function index"
+    mut answer: int[][] = []
+    mut work = 0
+    mut payload_size = 4
+    mut seen: int[] = []
+    for node in range(len(digests)):
+        seen.append(0)
+    mut generation = 0
+    for roots in batches:
+        generation += 1
+        mut pending: int[] = []
+        for root in roots:
+            if root < 0 or root >= len(digests):
+                fail "invalid root function index"
+            if seen[root] != generation:
+                seen[root] = generation
+                pending.append(root)
+        mut sortable: bytes[] = []
+        mut next = 0
+        while next < len(pending):
+            mut current = pending[next]
+            next += 1
+            work += 1
+            if work > 16000000:
+                fail "planning work exceeds limit"
+            for target in adjacency[current]:
+                work += 1
+                if work > 16000000:
+                    fail "planning work exceeds limit"
+                if seen[target] != generation:
+                    seen[target] = generation
+                    pending.append(target)
+                    payload_size += 4
+                    if payload_size > 67108800:
+                        fail "response frame exceeds limit"
+                    mut empty: int[] = []
+                    mut suffix = byte_buffer(empty)
+                    _ = suffix.append_byte((target // 16777216) % 256)
+                    _ = suffix.append_byte((target // 65536) % 256)
+                    _ = suffix.append_byte((target // 256) % 256)
+                    _ = suffix.append_byte(target % 256)
+                    sortable.append(digests[target] + bytes(suffix))
+        sortable.sort()
+        mut reached: int[] = []
+        for entry in sortable:
+            reached.append(entry[32] * 16777216 + entry[33] * 65536 + entry[34] * 256 + entry[35])
+        payload_size += 4
+        if payload_size > 67108800:
+            fail "response frame exceeds limit"
+        answer.append(reached)
+    return answer

@@ -29,7 +29,7 @@ pub const Error = property.Error;
 
 /// One selected test and its place in the report. `ready` tests have no verdict yet:
 /// their `verdict` is filled in by building and running them.
-pub const Selected = struct { case: discover.Case, verdict: report.Verdict, ready: bool, identity: ?[32]u8 = null, settings: Value = .null };
+pub const Selected = struct { case: discover.Case, verdict: report.Verdict, ready: bool, identity: ?[32]u8 = null, cache_reason: ?[]const u8 = null, key_method: []const u8 = "reachable-ir", settings: Value = .null };
 
 /// The cases-file key holding a test's expected result.
 pub const expectation = "expected";

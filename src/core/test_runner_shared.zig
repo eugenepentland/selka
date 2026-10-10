@@ -22,7 +22,7 @@ pub const View = struct { checked: frontend.Checked, modules: []const *const Mod
 /// What a directory run hands a root it runs in process: the toolchain the run
 /// identified, the shared check when the root took part in one, and the run's test
 /// process permits. A `replay_only` run stops after setup and replay.
-pub const Directed = struct { guest: tool_identity.Identity, view: ?View = null, permits: ?*Permits = null, replay_only: bool = false };
+pub const Directed = struct { guest: tool_identity.Identity, cache_plan: ?@import("mylang").cache_plan_adapter.Bound = null, view: ?View = null, permits: ?*Permits = null, replay_only: bool = false };
 
 /// A directory run's budget of concurrent test processes, shared by every root
 /// (NEW-CORE-TEST-UNION-1): an in-process root holds one permit per test process it

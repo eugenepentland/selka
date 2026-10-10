@@ -31,6 +31,7 @@ pub const Shared = struct {
         for (module.functions.items, digests, callees, 0..) |function, *digest, *targets, index| {
             digest.* = try canon.functionDigest(@intCast(index));
             targets.* = try calls(a, function);
+            for (targets.*) |target| if (target >= digests.len) return error.UnknownMetadata;
         }
         return .{ .digests = digests, .callees = callees };
     }
@@ -38,6 +39,7 @@ pub const Shared = struct {
     /// Feed `hash` the digests of `roots`, in order, and then of every other function
     /// they reach, sorted, so the key does not depend on the shared module's order.
     pub fn reach(self: Shared, a: std.mem.Allocator, roots: []const u32, hash: *std.crypto.hash.Blake3) Error!void {
+        if (self.callees.len != self.digests.len) return error.UnknownMetadata;
         const seen = try a.alloc(bool, self.digests.len);
         @memset(seen, false);
         var queue: std.ArrayList(u32) = .empty;
@@ -52,6 +54,7 @@ pub const Shared = struct {
         var next: usize = 0;
         while (next < queue.items.len) : (next += 1) {
             for (self.callees[queue.items[next]]) |callee| {
+                if (callee >= self.digests.len) return error.UnknownMetadata;
                 if (seen[callee]) continue;
                 seen[callee] = true;
                 try queue.append(a, callee);
@@ -81,6 +84,31 @@ pub fn key(shared: Shared, a: std.mem.Allocator, t: Test) Error!Digest {
     put(&hash, u8, @intFromBool(t.schema != null));
     if (t.schema) |schema| hash.update(&schema);
     try shared.reach(a, t.roots, &hash);
+    return final(&hash);
+}
+
+/// Hash a verified planner's non-root closure using the established key contract.
+/// Roots contribute in their original order, including repeats; equal non-root
+/// digests remain separate contributions when they belong to distinct functions.
+pub fn plannedKey(shared: Shared, t: Test, reached: []const u32) Error!Digest {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    text(&hash, "core-test-keys-v1");
+    hash.update(&t.base);
+    text(&hash, t.name);
+    text(&hash, @import("native_artifact.zig").extension);
+    text(&hash, t.source_path);
+    hash.update(&t.entry);
+    put(&hash, u8, @intFromBool(t.schema != null));
+    if (t.schema) |schema| hash.update(&schema);
+    for (t.roots) |root| {
+        if (root >= shared.digests.len) return error.UnknownMetadata;
+        hash.update(&shared.digests[root]);
+    }
+    put(&hash, u64, reached.len);
+    for (reached) |node| {
+        if (node >= shared.digests.len) return error.UnknownMetadata;
+        hash.update(&shared.digests[node]);
+    }
     return final(&hash);
 }
 
@@ -220,4 +248,22 @@ test "a loop's program-wide checker id is outside both kinds of test key; its bl
     module.functions.items[0].loops.items[0].latch = @fromBackingInt(1);
     try std.testing.expect(!std.mem.eql(u8, &derived, &try keyOf(a, &module, 0)));
     try std.testing.expect(!std.mem.eql(u8, &whole, &receipt.programKey(@splat(1), "app::test_one", program)));
+}
+
+// spec-case: SELFHOST-CACHE-PLAN-1
+test "planned receipt contribution preserves repeated roots cycles and equal nonroot digests" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const shared: Shared = .{ .digests = &.{ @splat(5), @splat(7), @splat(7), @splat(9) }, .callees = &.{ &.{ 1, 2 }, &.{0}, &.{1}, &.{} } };
+    const t: Test = .{ .base = @splat(1), .name = "app::test", .source_path = "app.my", .entry = @splat(2), .schema = @splat(3), .roots = &.{ 0, 0 } };
+    const expected = try key(shared, a, t);
+    try std.testing.expectEqual(expected, try plannedKey(shared, t, &.{ 1, 2 }));
+    try std.testing.expect(!std.mem.eql(u8, &expected, &try plannedKey(shared, t, &.{1})));
+    var reordered = t;
+    reordered.roots = &.{ 1, 0 };
+    try std.testing.expectEqual(try key(shared, a, reordered), try plannedKey(shared, reordered, &.{2}));
+    reordered.roots = &.{ 0, 1 };
+    try std.testing.expect(!std.mem.eql(u8, &try key(shared, a, reordered), &try plannedKey(shared, t, &.{ 1, 2 })));
+    try std.testing.expectError(error.UnknownMetadata, plannedKey(shared, t, &.{4}));
 }

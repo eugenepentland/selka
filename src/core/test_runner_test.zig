@@ -235,3 +235,206 @@ test "a filter narrows the run, and a filter that selects nothing exits 3" {
     try std.testing.expectEqual(@as(u8, 3), none.status);
     try std.testing.expectEqual(@as(usize, 0), none.parsed.value.object.get("tests").?.array.items.len);
 }
+
+/// A private source, receipt store and component deployment for admission tests.
+const CacheProject = struct {
+    arena: std.mem.Allocator,
+    root: []const u8,
+    environment: std.process.Environ.Map,
+
+    fn init(a: std.mem.Allocator, root: []const u8) !CacheProject {
+        var environment = try std.testing.environ.createMap(a);
+        errdefer environment.deinit();
+        try environment.put("MYLANG_CACHE_PLAN_MODE", "component");
+        const artifact = try language.cache_plan_adapter.bind(a, std.testing.io, &environment);
+        const contents = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, artifact.artifact.?.path, a, .limited(64 << 20));
+
+        const directory = try std.fs.path.join(a, &.{ root, "components" });
+        try std.Io.Dir.cwd().createDirPath(std.testing.io, directory);
+        try environment.put("MYLANG_COMPONENT_DIR", directory);
+        var project: CacheProject = .{ .arena = a, .root = root, .environment = environment };
+        try project.deploy(contents);
+        return project;
+    }
+
+    fn path(self: CacheProject, relative: []const u8) ![]const u8 {
+        return std.fs.path.join(self.arena, &.{ self.root, relative });
+    }
+
+    fn deploy(self: CacheProject, contents: []const u8) !void {
+        const binary = try self.path("components/cache-plan");
+        try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = binary, .data = contents });
+        try std.Io.Dir.cwd().setFilePermissions(std.testing.io, binary, .executable_file, .{});
+        var digest: [32]u8 = undefined;
+        std.crypto.hash.sha2.Sha256.hash(contents, &digest, .{});
+        const hex = std.fmt.bytesToHex(digest, .lower);
+        const manifest = try std.json.Stringify.valueAlloc(self.arena, .{ .format = 1, .component = "cache-plan", .protocol = 1, .schema = 1, .artifact = "cache-plan", .sha256 = @as([]const u8, &hex) }, .{});
+        try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = try self.path("components/cache-plan.json"), .data = manifest });
+    }
+
+    fn run(self: *CacheProject, relative: []const u8, extra: []const []const u8) !std.process.RunResult {
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(self.arena, &.{ options.core_path, "test", try self.path(relative), "--json", "--cache-dir", try self.path("cache") });
+        try argv.appendSlice(self.arena, extra);
+        return std.process.run(self.arena, std.testing.io, .{ .argv = argv.items, .environ_map = &self.environment });
+    }
+};
+
+const cache_source =
+    \\func helper() -> int:
+    \\    return 1
+    \\
+    \\
+    \\func test_dependent() -> bool:
+    \\    return helper() > 0
+    \\
+    \\
+    \\func test_unrelated() -> bool:
+    \\    return True
+    \\
+;
+
+fn cacheReport(a: std.mem.Allocator, result: std.process.RunResult) !std.json.Value {
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    return std.json.parseFromSliceLeaky(std.json.Value, a, result.stdout, .{});
+}
+
+fn cacheExplanation(value: std.json.Value, name: []const u8) !std.json.Value {
+    for (value.object.get("tests").?.array.items) |item| {
+        if (std.mem.endsWith(u8, item.object.get("name").?.string, name)) return item.object.get("cache").?;
+    }
+    return error.MissingTestExplanation;
+}
+
+// spec: SELFHOST-CACHE-REPORT-1
+// spec-case: SELFHOST-CACHE-PLAN-1
+test "cache planner cacheExplanation reuses unrelated tests after a helper edit and explains current invocation" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var project = try CacheProject.init(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = cache_source });
+    const cold = try cacheReport(a, try project.run("app.my", &.{}));
+    try expectVerdict(cold, "app::test_dependent", "passed", "");
+    try std.testing.expectError(error.MissingTestExplanation, cacheExplanation(cold, "missing test"));
+    const warm = try cacheReport(a, try project.run("app.my", &.{}));
+    try std.testing.expectEqual(@as(i64, 0), warm.object.get("passed").?.integer);
+    try std.testing.expectEqual(@as(i64, 2), warm.object.get("cached").?.integer);
+    try std.testing.expectEqualStrings("whole-report-hit", (try cacheExplanation(warm, "test_dependent")).object.get("reason").?.string);
+    const edited = try a.dupe(u8, cache_source);
+    edited[std.mem.indexOf(u8, edited, "return 1").? + "return ".len] = '2';
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = edited });
+    const changed = try cacheReport(a, try project.run("app.my", &.{}));
+    try expectVerdict(changed, "app::test_dependent", "passed", "");
+    try expectVerdict(changed, "app::test_unrelated", "cached", "");
+    try std.testing.expectEqualStrings("execute", (try cacheExplanation(changed, "test_dependent")).object.get("action").?.string);
+    try std.testing.expectEqualStrings("reuse", (try cacheExplanation(changed, "test_unrelated")).object.get("action").?.string);
+}
+
+// spec: SELFHOST-CACHE-IDENTITY-1
+// spec-case: SELFHOST-CACHE-REPORT-1
+test "bindPlan and sharedKeys ComponentUnavailable prevent warm file and directory replay with changed missing or corrupt cache planner" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var project = try CacheProject.init(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    try temporary.dir.createDir(std.testing.io, "tests", .default_dir);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "tests/app.my", .data = cache_source });
+    _ = try cacheReport(a, try project.run("tests/app.my", &.{}));
+    const warm = try cacheReport(a, try project.run("tests", &.{}));
+    try std.testing.expectEqual(@as(i64, 2), warm.object.get("cached").?.integer);
+    const binary = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try project.path("components/cache-plan"), a, .limited(64 << 20));
+    // ELF permits trailing bytes: same behavior, independently changed implementation identity.
+    try project.deploy(try std.mem.concat(a, u8, &.{ binary, "\nidentity-only-qualification\n" }));
+    const changed = try cacheReport(a, try project.run("tests", &.{}));
+    try std.testing.expectEqual(@as(i64, 2), changed.object.get("passed").?.integer);
+    const before = (try cacheExplanation(warm, "test_dependent")).object.get("component").?.string;
+    const after = (try cacheExplanation(changed, "test_dependent")).object.get("component").?.string;
+    try std.testing.expect(!std.mem.eql(u8, before, after));
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "components/cache-plan.json", .data = "broken manifest" });
+    for ([_][]const u8{ "tests/app.my", "tests" }) |path| {
+        const damaged = try project.run(path, &.{});
+        try std.testing.expectEqual(std.process.Child.Term{ .exited = 2 }, damaged.term);
+        try std.testing.expect(std.mem.indexOf(u8, damaged.stderr, "ComponentManifest") != null);
+    }
+    try temporary.dir.deleteFile(std.testing.io, "components/cache-plan.json");
+    const missing = try project.run("tests/app.my", &.{});
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+    try std.testing.expect(std.mem.indexOf(u8, missing.stderr, "ComponentMissing") != null);
+    try project.deploy("#!/bin/sh\nexit 1\n");
+    const failed = try project.run("tests/app.my", &.{});
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = 2 }, failed.term);
+    try std.testing.expect(std.mem.indexOf(u8, failed.stderr, "ComponentFailed") != null);
+}
+
+const callback_cache_source =
+    \\const NUMBER: int = 3
+    \\
+    \\func helper() -> int:
+    \\    return 1
+    \\
+    \\func choose() -> func() -> int:
+    \\    return helper
+    \\
+    \\func test_callback() -> bool:
+    \\    mut callback = choose()
+    \\    return callback() > 0
+    \\
+    \\func test_constant() -> bool:
+    \\    return NUMBER > 0
+    \\
+    \\func test_unrelated() -> bool:
+    \\    return True
+    \\
+;
+
+// spec-case: SELFHOST-CACHE-PLAN-1
+// spec-case: SELFHOST-CACHE-IDENTITY-1
+test "cache planner qualifies reference shadow and component modes with callback constants and discovery edits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var project = try CacheProject.init(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    var previous_identity: []const u8 = "";
+    for ([_][]const u8{ "reference", "shadow", "component" }) |mode| {
+        try project.environment.put("MYLANG_CACHE_PLAN_MODE", mode);
+        const identity = try qualifyCallbacks(&project, temporary.dir);
+        try std.testing.expect(!std.mem.eql(u8, previous_identity, identity));
+        previous_identity = identity;
+    }
+}
+
+fn qualifyCallbacks(project: *CacheProject, directory: std.Io.Dir) ![]const u8 {
+    const a = project.arena;
+    const source = try a.dupe(u8, callback_cache_source);
+    try directory.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = source });
+    const cold = try cacheReport(a, try project.run("app.my", &.{}));
+    try std.testing.expectEqual(@as(i64, 3), cold.object.get("passed").?.integer);
+    const identity = (try cacheExplanation(cold, "test_callback")).object.get("component").?.string;
+    const warm = try cacheReport(a, try project.run("app.my", &.{}));
+    try std.testing.expectEqual(@as(i64, 3), warm.object.get("cached").?.integer);
+    source[std.mem.indexOf(u8, source, "return 1").? + "return ".len] = '2';
+    try directory.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = source });
+    const callback = try cacheReport(a, try project.run("app.my", &.{}));
+    try expectVerdict(callback, "app::test_callback", "passed", "");
+    try expectVerdict(callback, "app::test_constant", "cached", "");
+    try expectVerdict(callback, "app::test_unrelated", "cached", "");
+    source[std.mem.indexOf(u8, source, "int = 3").? + "int = ".len] = '4';
+    try directory.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = source });
+    const constant = try cacheReport(a, try project.run("app.my", &.{}));
+    try expectVerdict(constant, "app::test_constant", "passed", "");
+    try expectVerdict(constant, "app::test_callback", "cached", "");
+    try expectVerdict(constant, "app::test_unrelated", "cached", "");
+    const added = try std.mem.concat(a, u8, &.{ source, "\nfunc test_new() -> bool:\n    return True\n" });
+    try directory.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = added });
+    const discovery = try cacheReport(a, try project.run("app.my", &.{}));
+    try expectVerdict(discovery, "app::test_new", "passed", "");
+    try std.testing.expectEqual(@as(i64, 3), discovery.object.get("cached").?.integer);
+    return identity;
+}

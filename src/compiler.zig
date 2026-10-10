@@ -70,6 +70,8 @@ pub const navigation_views = @import("navigation_views.zig");
 pub const navigation_syntax = @import("navigation_syntax.zig");
 /// Explicit native Selka component boundary for informational test reachability.
 pub const component_adapter = @import("component_adapter.zig");
+/// Verified independently built planner used by every test receipt path.
+pub const cache_plan_adapter = @import("cache_plan_adapter.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
 /// `mylang lint` driver, rule registry and profiles.

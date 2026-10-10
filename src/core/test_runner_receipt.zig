@@ -13,6 +13,7 @@ const emit_llvm = @import("emit_llvm.zig");
 const ir = @import("ir.zig");
 const Error = @import("test_runner_property.zig").Error;
 const Digest = [32]u8;
+const planner = @import("mylang").cache_plan_adapter;
 
 /// Command resources and freshly resolved project configuration.
 pub const Context = struct {
@@ -22,7 +23,7 @@ pub const Context = struct {
     options: options.Options,
     entry: project_entry.Entry,
     case_bytes: []const u8 = "",
-    tool: tool_identity.Identity,
+    identity: struct { tool: tool_identity.Identity, cache_plan: ?planner.Bound = null },
 };
 /// A file's exact identity, including absence for optional generated interfaces.
 pub const Dependency = struct { path: []const u8, digest: ?Digest };
@@ -35,12 +36,13 @@ const Envelope = struct { version: []const u8, payload: []const u8, checksum: Di
 pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Digest {
     const a = context.arena;
     var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-test-settings-v4");
+    field(&hash, "core-test-settings-v5");
+    if (context.identity.cache_plan) |bound| field(&hash, &bound.identity) else field(&hash, "missing-cache-plan");
     field(&hash, frontend.compiler_identity);
     field(&hash, context.entry.path);
     field(&hash, context.entry.root);
     field(&hash, context.options.build.zig);
-    field(&hash, &context.tool.digest);
+    field(&hash, &context.identity.tool.digest);
     if (context.options.controls.cases) |path| {
         field(&hash, path);
         field(&hash, context.case_bytes);
@@ -270,9 +272,17 @@ pub fn replayProvisional(context: Context, base: Digest) Error!?[]const u8 {
         const succeeded = std.mem.eql(u8, status.string, "passed") or std.mem.eql(u8, status.string, "cached");
         if (!succeeded) return null;
         try test_value.object.put(a, "status", .{ .string = "cached" });
+        var explanation: std.json.ObjectMap = .empty;
+        try explanation.put(a, "action", .{ .string = "reuse" });
+        try explanation.put(a, "reason", .{ .string = "whole-report-hit" });
+        try explanation.put(a, "component", .{ .string = try std.fmt.allocPrint(a, "{s}", .{std.fmt.bytesToHex(context.identity.cache_plan.?.identity, .lower)}) });
+        try explanation.put(a, "key_method", .{ .string = "checked-file-manifest" });
+        if (test_value.object.get("cache")) |previous| if (previous == .object) if (previous.object.get("key")) |key| try explanation.put(a, "key", key);
+        try test_value.object.put(a, "cache", .{ .object = explanation });
     }
     try value.object.put(a, "passed", .{ .integer = 0 });
     try value.object.put(a, "cached", .{ .integer = @intCast(tests.array.items.len) });
+    try validatePlan(context);
     if (context.options.json) {
         const encoded = try std.fmt.allocPrint(a, "{s}\n", .{try std.json.Stringify.valueAlloc(a, value, .{})});
         return encoded;
@@ -287,10 +297,36 @@ pub fn replayProvisional(context: Context, base: Digest) Error!?[]const u8 {
     return rendered;
 }
 
-// Explicit native links may include headers not captured by this runner. Until
-// the driver supplies their complete dependency set, run them every time.
+/// Explain the execution contract that prevents reusing successful evidence.
+/// `no-success-receipt` means admission is permitted, subject to receipt lookup.
+pub fn reuseReason(context: Context) []const u8 {
+    if (context.identity.cache_plan == null) return "missing-cache-plan";
+    if (!context.identity.tool.cacheable) return "uncacheable-toolchain";
+    if (context.options.controls.force) return "force";
+    if (context.options.build.facts == .verify) return "verify-facts";
+    if (context.options.build.links.len != 0) return "native-links";
+    const checking = context.environment.get("MYL_CORE_LEAKCHECK") orelse "0";
+    if (!std.mem.eql(u8, checking, "0")) return "leak-check";
+    var entries = context.environment.iterator();
+    while (entries.next()) |entry| if (std.mem.startsWith(u8, entry.key_ptr.*, "LD_") and entry.value_ptr.len != 0) return "untracked-loader-environment";
+    return "no-success-receipt";
+}
+
+/// Revalidate the component deployment before accepting replay or publishing receipts.
+pub fn validatePlan(context: Context) Error!void {
+    const bound = context.identity.cache_plan orelse return;
+    bound.validate(context.arena) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        const message = try std.fmt.allocPrint(context.arena, "error: cache-plan component: {s}\n", .{@errorName(err)});
+        var writer = std.Io.File.stderr().writer(context.io, &.{});
+        writer.interface.writeAll(message) catch return error.WriteFailed;
+        return error.ComponentUnavailable;
+    };
+}
+
 fn reusable(context: Context) bool {
-    if (!context.tool.cacheable) return false;
+    if (context.identity.cache_plan == null) return false;
+    if (!context.identity.tool.cacheable) return false;
     if (context.options.controls.force or context.options.build.facts == .verify or context.options.build.links.len != 0) return false;
     const checking = context.environment.get("MYL_CORE_LEAKCHECK") orelse "0";
     if (!std.mem.eql(u8, checking, "0")) return false;
@@ -400,7 +436,7 @@ pub fn remember(context: Context, base: Digest, files: []const Dependency, json:
 
 /// The captured executable, CPU and library tree must remain the same generation.
 pub fn toolUnchanged(context: Context) Error!bool {
-    return tool_identity.unchanged(.{ .arena = context.arena, .io = context.io, .environment = context.environment, .executable = context.options.build.zig, .cache = context.options.build.cache }, context.tool) catch |err| {
+    return tool_identity.unchanged(.{ .arena = context.arena, .io = context.io, .environment = context.environment, .executable = context.options.build.zig, .cache = context.options.build.cache }, context.identity.tool) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return false;
     };
@@ -541,7 +577,7 @@ test "readDigest fileDigest and toolUnchanged refuse missing inputs and damaged 
         .environment = &environment,
         .options = .{ .path = "app.my", .build = .{ .zig = tool, .cache = root }, .json = true },
         .entry = .{ .path = try std.fs.path.join(a, &.{ root, "app.my" }), .root = root, .name = "app" },
-        .tool = captured_tool,
+        .identity = .{ .tool = captured_tool, .cache_plan = .{ .identity = @splat(11), .mode = .reference, .io = std.testing.io, .environ = &environment, .directory = null, .artifact = null } },
     };
     var setting_inputs: std.ArrayList(Dependency) = .empty;
     const without_ticket = try settings(context, &setting_inputs);
@@ -565,7 +601,11 @@ test "readDigest fileDigest and toolUnchanged refuse missing inputs and damaged 
     const valid = try report.jsonSources(a, &.{.{ .name = "app::test_one", .status = .passed }}, &.{context.entry.path});
     try remember(context, identity, files, valid);
     try std.testing.expect(try replay(context, identity) != null);
-    try std.testing.expect(try replayProvisional(context, identity) != null);
+    const replayed = (try replayProvisional(context, identity)).?;
+    const parsed_replay = try std.json.parseFromSliceLeaky(std.json.Value, a, replayed, .{});
+    const explanation = parsed_replay.object.get("tests").?.array.items[0].object.get("cache").?;
+    try std.testing.expectEqualStrings("whole-report-hit", explanation.object.get("reason").?.string);
+    try std.testing.expectEqualStrings("reuse", explanation.object.get("action").?.string);
     try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = context.entry.path, .data = "edited" });
     try std.testing.expect(try replay(context, identity) == null);
     try std.Io.Dir.cwd().writeFile(context.io, .{ .sub_path = try manifestPath(context), .data = "damaged" });
@@ -585,7 +625,7 @@ fn fakeToolContext(a: std.mem.Allocator, root: []const u8, environment: *const s
         .environment = environment,
         .options = .{ .path = "app.my", .build = .{ .zig = tool, .cache = root }, .json = true },
         .entry = .{ .path = try std.fs.path.join(a, &.{ root, "app.my" }), .root = root, .name = "app" },
-        .tool = identity,
+        .identity = .{ .tool = identity, .cache_plan = .{ .identity = @splat(11), .mode = .reference, .io = std.testing.io, .environ = environment, .directory = null, .artifact = null } },
     };
 }
 
@@ -601,6 +641,9 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
     const context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
     var inputs: std.ArrayList(Dependency) = .empty;
     const plain = try settings(context, &inputs);
+    var other_planner = context;
+    other_planner.identity.cache_plan.?.identity[0] ^= 1;
+    try std.testing.expect(!std.mem.eql(u8, &plain, &try settings(other_planner, &inputs)));
     var optimized = context;
     optimized.options.build.mode = .optimized_debug;
     try std.testing.expect(!std.mem.eql(u8, &plain, &try settings(optimized, &inputs)));
@@ -615,4 +658,28 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
     try std.testing.expect(!std.mem.eql(u8, &plain, &optioned));
     try environment.put("ZIG_LIB_DIR", "/other-lib");
     try std.testing.expect(!std.mem.eql(u8, &optioned, &try settings(context, &inputs)));
+}
+
+// spec-case: SELFHOST-CACHE-IDENTITY-1
+test "validatePlan returns ComponentUnavailable when a verified component changes before receipt admission" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_COMPONENT_DIR", root);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "cache-plan", .data = "original planner" });
+    var digest: Digest = undefined;
+    std.crypto.hash.sha2.Sha256.hash("original planner", &digest, .{});
+    const hex = std.fmt.bytesToHex(digest, .lower);
+    const manifest = try std.json.Stringify.valueAlloc(a, .{ .format = 1, .component = "cache-plan", .protocol = 1, .schema = 1, .artifact = "cache-plan", .sha256 = @as([]const u8, &hex) }, .{});
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "cache-plan.json", .data = manifest });
+    var context = try fakeToolContext(a, root, &environment);
+    context.identity.cache_plan = try planner.bind(a, std.testing.io, &environment);
+    try validatePlan(context);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "cache-plan", .data = "changed planner" });
+    try std.testing.expectError(error.ComponentUnavailable, validatePlan(context));
 }

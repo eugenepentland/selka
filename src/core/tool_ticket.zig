@@ -5,7 +5,7 @@
 const std = @import("std");
 const tool = @import("tool_identity.zig");
 const linux = std.os.linux;
-const version = "core-tool-ticket-v1";
+const version = "core-tool-ticket-v2";
 const limit = 16 << 10;
 
 /// Internal stdin transport marker; omit it from receipt keys and guest env.
@@ -15,17 +15,18 @@ pub const hint = "MYL_CORE_PARENT_TOOL_TICKET";
 pub const Request = struct {
     tool: tool.Request,
     compiler_identity: []const u8,
+    component_identity: [32]u8 = @splat(0),
     input: std.Io.File = .stdin(),
 };
 
-const Envelope = struct { version: []const u8, compiler_identity: []const u8, parent_pid: linux.pid_t, identity: tool.Identity, executable_generation: ?[32]u8, checksum: [32]u8 = @splat(0) };
+const Envelope = struct { version: []const u8, compiler_identity: []const u8, component_identity: [32]u8, parent_pid: linux.pid_t, identity: tool.Identity, executable_generation: ?[32]u8, checksum: [32]u8 = @splat(0) };
 /// Invalid foreign tickets fall back to full capture; only allocation escapes.
 pub const Error = error{OutOfMemory};
 
 /// Encode a captured identity to an invocation-owned private stdin file.
 pub fn encode(request: Request, identity: tool.Identity) tool.Error![]const u8 {
     const stamp = if (identity.cacheable) try tool.executableGeneration(request.tool, identity.path) else null;
-    var envelope: Envelope = .{ .version = version, .compiler_identity = request.compiler_identity, .parent_pid = linux.getpid(), .identity = identity, .executable_generation = stamp };
+    var envelope: Envelope = .{ .version = version, .compiler_identity = request.compiler_identity, .component_identity = request.component_identity, .parent_pid = linux.getpid(), .identity = identity, .executable_generation = stamp };
     envelope.checksum = try checksum(request.tool.arena, envelope);
     return std.json.Stringify.valueAlloc(request.tool.arena, envelope, .{});
 }
@@ -55,6 +56,7 @@ fn checked(request: Request, bytes: []const u8, parent: linux.pid_t) Error!?tool
     if (!std.mem.eql(u8, &envelope.checksum, &try checksum(request.tool.arena, envelope))) return null;
     if (!std.mem.eql(u8, envelope.version, version)) return null;
     if (!std.mem.eql(u8, envelope.compiler_identity, request.compiler_identity)) return null;
+    if (!std.mem.eql(u8, &envelope.component_identity, &request.component_identity)) return null;
     if (envelope.parent_pid != parent or !sameCompiler(parent)) return null;
     if (!envelope.identity.cacheable or !std.fs.path.isAbsolute(envelope.identity.path)) return null;
     const path = tool.resolve(request.tool) catch |err| {
@@ -150,4 +152,9 @@ test "valid tool tickets bind the executable generation and native CPU" {
     envelope.checksum = try checksum(a, envelope);
     const other_cpu = try std.json.Stringify.valueAlloc(a, envelope, .{});
     try std.testing.expectEqual(@as(?tool.Identity, null), try checked(request, other_cpu, linux.getpid()));
+    envelope = try std.json.parseFromSliceLeaky(Envelope, a, bytes, .{});
+    envelope.component_identity[0] ^= 1;
+    envelope.checksum = try checksum(a, envelope);
+    const other_component = try std.json.Stringify.valueAlloc(a, envelope, .{});
+    try std.testing.expectEqual(@as(?tool.Identity, null), try checked(request, other_component, linux.getpid()));
 }

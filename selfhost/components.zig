@@ -195,14 +195,23 @@ fn snapshot(ctx: *Context, source: []const u8, destination: []const u8) !void {
     }
 }
 
-fn component(ctx: *Context, config: Config, seed: Seed) ![]const u8 {
-    const sources = try ctx.path(&.{ config.root, "selfhost", "components", "test_index" });
+const Component = struct { source: []const u8, name: []const u8 };
+const components = [_]Component{
+    .{ .source = "test_index", .name = "test-index" },
+    .{ .source = "cache_plan", .name = "cache-plan" },
+};
+
+fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {
+    const sources = try ctx.path(&.{ config.root, "selfhost", "components", descriptor.source });
     const tool = try std.process.executablePathAlloc(ctx.io, ctx.a);
     var flags = std.json.Array.init(ctx.a);
     try flags.append(files.string("debug"));
     try flags.append(files.string("fresh-private-cache"));
+    try flags.append(files.string("private-zig-global-v1"));
     const identity = try files.object(ctx.a, &.{
         .{ .name = "format", .value = files.integer(2) },
+        .{ .name = "component", .value = files.string(descriptor.name) },
+        .{ .name = "build_cache_root", .value = files.string(config.cache) },
         .{ .name = "protocol", .value = files.integer(1) },
         .{ .name = "schema", .value = files.integer(1) },
         .{ .name = "target", .value = try nativeTarget(ctx) },
@@ -217,7 +226,7 @@ fn component(ctx: *Context, config: Config, seed: Seed) ![]const u8 {
     const artifacts = try ctx.path(&.{ config.cache, "artifacts" });
     try cwd().createDirPath(ctx.io, artifacts);
     const stored = try ctx.path(&.{ artifacts, &key });
-    const executable = try ctx.path(&.{ stored, "test-index" });
+    const executable = try ctx.path(&.{ stored, descriptor.name });
     const receipt = try ctx.path(&.{ stored, "receipt.json" });
     const has_receipt = try files.exists(ctx.io, receipt);
     var metadata: Value = undefined;
@@ -234,7 +243,7 @@ fn component(ctx: *Context, config: Config, seed: Seed) ![]const u8 {
         const copied = try ctx.path(&.{ work, "src" });
         try snapshot(ctx, sources, copied);
         if (!try equals(ctx.a, try files.tree(ctx.a, ctx.io, copied), try get(identity, "sources"))) return ctx.fail("component source changed during snapshot");
-        const output = try ctx.path(&.{ work, "test-index" });
+        const output = try ctx.path(&.{ work, descriptor.name });
         var environment = std.process.Environ.Map.init(ctx.a);
         defer environment.deinit();
         var iterator = ctx.environ.iterator();
@@ -244,11 +253,19 @@ fn component(ctx: *Context, config: Config, seed: Seed) ![]const u8 {
         }
         try environment.put("MYLANG_ZIG", config.zig);
         try environment.put("MYLANG_CORE_RUNTIME_CACHE", "");
+        // Shared Zig CRT objects retain the directory of their first compilation
+        // in DWARF. A deterministic private cache makes every byte reproducible.
+        try environment.put("ZIG_GLOBAL_CACHE_DIR", try ctx.path(&.{ work, "cache", "zig-global" }));
         const compile_output = try ctx.checked(&.{ seed.binary, "build", try ctx.path(&.{ copied, "main.my" }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) }, work, &environment);
         if (compile_output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, compile_output);
         const fresh = try files.object(ctx.a, &.{ .{ .name = "identity", .value = identity }, .{ .name = "sha256", .value = try ctx.hashValue(output) } });
         if (has_receipt) {
-            if (!std.mem.eql(u8, try text(try get(metadata, "sha256")), try text(try get(fresh, "sha256")))) return ctx.fail("uncached component build is not reproducible");
+            const expected_digest = try text(try get(metadata, "sha256"));
+            const actual_digest = try text(try get(fresh, "sha256"));
+            if (!std.mem.eql(u8, expected_digest, actual_digest)) {
+                ctx.message = try std.fmt.allocPrint(ctx.a, "uncached {s} build is not reproducible: expected {s}, got {s}", .{ descriptor.name, expected_digest, actual_digest });
+                return error.CoordinatorFailure;
+            }
         } else {
             metadata = fresh;
             try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ work, "receipt.json" }), metadata, 0o600);
@@ -260,18 +277,18 @@ fn component(ctx: *Context, config: Config, seed: Seed) ![]const u8 {
     }
     try cwd().createDirPath(ctx.io, config.install);
     const expected = try text(try get(metadata, "sha256"));
-    const name = try std.fmt.allocPrint(ctx.a, "test-index-{s}", .{expected});
+    const name = try std.fmt.allocPrint(ctx.a, "{s}-{s}", .{ descriptor.name, expected });
     const installed = try ctx.path(&.{ config.install, name });
     if (try files.exists(ctx.io, installed)) {
         if (!try digestEquals(ctx.io, installed, expected)) return ctx.fail("installed component digest mismatch");
     } else try files.copy(ctx.io, executable, installed, 0o555);
     const manifest = try files.object(ctx.a, &.{
-        .{ .name = "format", .value = files.integer(1) },                    .{ .name = "component", .value = files.string("test-index") },
+        .{ .name = "format", .value = files.integer(1) },                    .{ .name = "component", .value = files.string(descriptor.name) },
         .{ .name = "protocol", .value = files.integer(1) },                  .{ .name = "schema", .value = files.integer(1) },
         .{ .name = "artifact", .value = files.string(name) },                .{ .name = "sha256", .value = files.string(expected) },
         .{ .name = "key", .value = files.string(try ctx.a.dupe(u8, &key)) },
     });
-    try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ config.install, "test-index.json" }), manifest, 0o644);
+    try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ config.install, try std.fmt.allocPrint(ctx.a, "{s}.json", .{descriptor.name}) }), manifest, 0o644);
     return ctx.a.dupe(u8, &key);
 }
 
@@ -329,9 +346,16 @@ fn run(ctx: *Context, args: []const []const u8) !void {
     try lock.lock(ctx.io, .exclusive);
     defer lock.unlock(ctx.io);
     const seed = try qualifySeed(ctx, config);
-    const output = if (seed_only) seed.binary else try component(ctx, config, seed);
-    try std.Io.File.stdout().writeStreamingAll(ctx.io, output);
-    try std.Io.File.stdout().writeStreamingAll(ctx.io, "\n");
+    if (seed_only) {
+        try std.Io.File.stdout().writeStreamingAll(ctx.io, seed.binary);
+        try std.Io.File.stdout().writeStreamingAll(ctx.io, "\n");
+    } else {
+        for (components) |descriptor| {
+            const output = try component(ctx, config, seed, descriptor);
+            try std.Io.File.stdout().writeStreamingAll(ctx.io, output);
+            try std.Io.File.stdout().writeStreamingAll(ctx.io, "\n");
+        }
+    }
 }
 
 fn diagnostic(io: std.Io, message: []const u8) void {

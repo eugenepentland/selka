@@ -23,20 +23,23 @@ def main():
     environment = {name: value for name, value in os.environ.items()
                    if not name.startswith("MYLANG_") and name != "ZIG"}
     environment.update(MYLANG_ZIG=args.zig, MYLANG_CORE_RUNTIME_CACHE="", MYL_CORE_LEAKCHECK="1")
-    with tempfile.TemporaryDirectory(prefix="selka-component-tests-") as temporary:
-        for flags in ([], ["--release"]):
-            subprocess.run([seed, "test", ROOT / "selfhost/components/test_index/tests.my",
-                "--no-cache", "--cache-dir", temporary, "--verify-facts", *flags],
+    for source, name in (("test_index", "test-index"), ("cache_plan", "cache-plan")):
+        oracle = ROOT / f"selfhost/tests/run_{source}_component.py"
+        with tempfile.TemporaryDirectory(prefix="selka-component-tests-") as temporary:
+            for flags in ([], ["--release"]):
+                subprocess.run([seed, "test", ROOT / f"selfhost/components/{source}/tests.my",
+                    "--no-cache", "--cache-dir", temporary, "--verify-facts", *flags],
+                    env=environment, check=True)
+            release = Path(temporary) / f"{name}-release"
+            subprocess.run([seed, "build", ROOT / f"selfhost/components/{source}/main.my",
+                "--release", "--verify-facts", "--no-cache", "--cache-dir", temporary,
+                "-o", release], env=environment, check=True)
+            subprocess.run([sys.executable, oracle, "--component", release],
                 env=environment, check=True)
-        release = Path(temporary) / "test-index-release"
-        subprocess.run([seed, "build", ROOT / "selfhost/components/test_index/main.my",
-            "--release", "--verify-facts", "--no-cache", "--cache-dir", temporary,
-            "-o", release], env=environment, check=True)
-        subprocess.run([sys.executable, ROOT / "selfhost/tests/run_test_index_component.py",
-            "--component", release], env=environment, check=True)
-    manifest = json.loads((args.component_dir / "test-index.json").read_text())
-    subprocess.run([sys.executable, ROOT / "selfhost/tests/run_test_index_component.py",
-        "--component", args.component_dir / manifest["artifact"]], env=environment, check=True)
+        manifest = json.loads((args.component_dir / f"{name}.json").read_text())
+        subprocess.run([sys.executable, oracle,
+            "--component", args.component_dir / manifest["artifact"]], env=environment, check=True)
+
 
 
 if __name__ == "__main__":

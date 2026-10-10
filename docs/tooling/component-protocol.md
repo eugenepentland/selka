@@ -58,3 +58,107 @@ zero u32 node count. `tests.my:test_empty_protocol_golden` pins these octets and
 uses all-255 identity bytes to cover unsigned identity echo. Host boundary tests
 also exercise the native process and malformed frames. Run the pure library and
 codec tests with `mylang test selfhost/components/test_index/tests.my --force`.
+
+## Core cache planner v1
+
+`selfhost/components/cache_plan/main.my` implements `cache-plan-v1`. The
+coordinator builds it independently with the same qualified seed and installs
+`cache-plan` and `cache-plan.json` beside `test-index`. The host retains Core IR
+canonicalization and graph extraction, including both calls and function
+references. This graph is separate from the informational test-index graph.
+Publication is atomic for each component manifest. The two components are
+independently versioned; their installation is not one atomic bundle.
+Fresh component builds use a private Zig global cache as well as private
+compiler staging. The pinned Zig's cached libc startup objects can retain
+debug paths from the working directory where they were first built; borrowing
+the caller's global cache made otherwise identical rebuilds differ in their
+debug sections. The private cache removes that dependency on caller cache
+history. The resolved component store root is part of the build identity,
+because those debug paths still depend on it. Reproducibility checks compare
+the complete executable bytes within that declared build context.
+
+The planner uses the same 64-byte envelope, with magic `SLKCP001`, protocol 1
+and schema 1. The host sets the snapshot to SHA-256 of the complete request
+payload and checks both the request ID and snapshot in the reply. IDs are local
+to that immutable request and have no persistent meaning.
+
+The request payload contains, in order:
+
+1. Three u32 policy codes: computation `pure = 0`, retention `disposable = 0`,
+   admission `success_only = 0`. Other codes are refused.
+2. u32 node count and u32 batch count.
+3. Each node's 32-byte canonical function digest, u32 edge count and edge IDs.
+4. Each batch's u32 root count and ordered root IDs.
+
+The reply payload contains the u32 batch count, then each batch's u32 nonroot
+count and nonroot IDs. Traversal marks every root before following edges. It
+returns every other reachable node once, sorted by unsigned digest bytes and
+then node ID. Equal digests on distinct nodes remain distinct entries. Cycles
+terminate, duplicate edges do not duplicate nodes, and batches are independent.
+
+The Zig host contributes root digests in their original order, including
+duplicates, then the existing little-endian u64 nonroot count and sorted
+nonroot digests to the test key. This preserves the established reachable-IR
+contribution. Planner identity is an additional settings dependency, so old
+receipts are deliberately invalidated once when this contract is introduced.
+
+The identities have separate purposes:
+
+| Identity | Meaning in Wave 1 |
+| --- | --- |
+| Operation | `cache-plan-v1`, its schema and the declared pure/disposable policy |
+| Producer | Verified planner binary digest, or the explicit host algorithm revision, plus execution mode |
+| Snapshot | Complete immutable graph and ordered batch inputs; replies also echo a per-request correlation ID |
+| Reusable computation | Existing test settings, canonical reachable IR, test roots/schema, source location and tracked inputs, now including producer identity |
+| Receipt | Existing checksummed successful-result evidence under that computation key; whole-report replay additionally validates its dependency manifest |
+| Execution occurrence | Reserved future application run/step identity; never inferred from a content hash or compiler receipt |
+
+The component computes closures only. Zig decides receipt eligibility, verifies
+stored evidence, executes tests and publishes successful results. Source,
+toolchain and planner checks around publication prevent a result from being
+presented as current after an observed input change. No graph IDs escape their
+snapshot, and no component reply by itself asserts that a test passed.
+
+Limits are 100,000 nodes, 100,000 batches, 1,000,000 total edges, 1,000,000 total
+root occurrences, 16 MiB request and 64 MiB reply (including headers). A batch
+request is also limited to 16,000,000 units of traversal work: each visited node
+and each examined edge counts, including duplicate edges and repeated work in
+different batches. Both the reference and Selka implementations refuse work
+beyond that bound. Exceeding a bound is a command failure, never permission to
+skip tests. The host rejects out-of-range, duplicate, root-containing or
+noncanonical reply lists. Shadow mode additionally checks the exact closure.
+
+`MYLANG_CACHE_PLAN_MODE` selects `component` (default), `reference` (explicit
+host execution), or `shadow` (component plus exact reference comparison).
+`MYLANG_COMPONENT_DIR` overrides deployment discovery. The host binds mode,
+schema and verified implementation digest before test receipt lookup, including
+directory tickets and whole-report replay, and revalidates before accepting
+replay or publishing results. It runs a private executable snapshot whose digest
+matches that binding. On the supported Linux host, the snapshot is a sealed
+memory file: writes and size changes are prohibited before launch, and the host
+holds its descriptor until the child has finished. This avoids the `ETXTBSY`
+race where a concurrent fork briefly inherits a disk executable's writable
+descriptor. The process has a 30-second deadline, bounded stdout and
+stderr, and is killed and reaped on timeout. Component failure has no automatic
+reference fallback.
+
+`mylang test --json` adds a `cache` object to each verdict with `action`,
+`reason`, `key`, `component` and `key_method`. `component` identifies the bound
+planner, including its mode. Typical reasons are `no-success-receipt`,
+`receipt-hit`, `whole-report-hit`, `force`, `verify-facts`, `leak-check`,
+`native-links` and `live-effects`. Whole-report reuse reports the current reuse
+decision rather than replaying the earlier execution reason. This explains
+admission to existing test caches; it does not yet report every compiler stage
+or schedule the entire toolchain.
+
+The policy types reserve separate content identity and run/step occurrence
+identity, disposable and durable retention, cache publication and durable
+checkpoint commit, and pure recomputation versus effect replay/idempotency/
+reconciliation. Wave 1 explicitly refuses the unsupported policies. It provides
+no application journal, crash recovery or exactly-once external effects.
+
+`zig build test-components` qualifies both components using the pinned seed,
+forced pure tests, native debug/release builds and independent protocol oracles.
+The host protocol/identity tests and Core edited-program receipt tests run in
+`zig build test`. Python is used by qualification drivers only; source install
+and installed compiler commands remain Python-free.

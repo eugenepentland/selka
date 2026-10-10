@@ -127,6 +127,7 @@ test {
     _ = @import("affected_tests.zig");
     _ = @import("navigation_test.zig");
     _ = @import("component_protocol_test.zig");
+    _ = @import("cache_plan_protocol_test.zig");
     _ = @import("navigation_scale_test.zig");
     _ = @import("context_test.zig");
     _ = @import("ref_diff.zig");
