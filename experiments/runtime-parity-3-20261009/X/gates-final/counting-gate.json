@@ -1,0 +1,43 @@
+{
+ "complete": true,
+ "tag": "final",
+ "cells": 199,
+ "groups": {
+  "lox": {
+   "cells": 74,
+   "all_status_zero": true,
+   "all_same_output": true,
+   "all_counts_present": true,
+   "all_match_m0": true,
+   "receipt": "results/final/lox.json",
+   "sha256": "9243f321c7d5ef6ac19f0f09d7f10b30eeed024fc8d7331f923101d1a3a75c8b"
+  },
+  "eda": {
+   "cells": 34,
+   "all_status_zero": true,
+   "all_same_output": true,
+   "all_counts_present": true,
+   "all_match_m0": true,
+   "receipt": "results/final/eda.json",
+   "sha256": "27197e3a27f973e25788b767c22e226ead318186373e9efbd9fcebbd833fc264"
+  },
+  "parity": {
+   "cells": 45,
+   "all_status_zero": true,
+   "all_same_output": true,
+   "all_counts_present": true,
+   "all_match_m0": true,
+   "receipt": "results/final/parity.json",
+   "sha256": "3febc10883b84b15b37bc41ad6142398855d001f3172c9d70cdb10278a6a8140"
+  },
+  "rows": {
+   "cells": 46,
+   "all_status_zero": true,
+   "all_same_output": true,
+   "all_counts_present": true,
+   "all_match_m0": true,
+   "receipt": "results/final/rows.json",
+   "sha256": "7f619e60f1483d3326b1693242396aee38972c91e86532aa8d6d3930f1832ee0"
+  }
+ }
+}

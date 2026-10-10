@@ -1,0 +1,61 @@
+{
+ "method": "Completed command journal retained in owned cache; matrix.json retains every family's native comparison and qualification totals. No failed or incomplete run is compacted.",
+ "command_count": 4400,
+ "source_paths": 200,
+ "counts": [
+  {
+   "role": "debug",
+   "building": false,
+   "status": "0",
+   "count": 600
+  },
+  {
+   "role": "debug",
+   "building": true,
+   "status": "0",
+   "count": 200
+  },
+  {
+   "role": "old",
+   "building": false,
+   "status": "0",
+   "count": 1800
+  },
+  {
+   "role": "old",
+   "building": true,
+   "status": "0",
+   "count": 200
+  },
+  {
+   "role": "release",
+   "building": false,
+   "status": "0",
+   "count": 600
+  },
+  {
+   "role": "release",
+   "building": true,
+   "status": "0",
+   "count": 200
+  },
+  {
+   "role": "verify",
+   "building": false,
+   "status": "0",
+   "count": 600
+  },
+  {
+   "role": "verify",
+   "building": true,
+   "status": "0",
+   "count": 200
+  }
+ ],
+ "uncompressed_bytes": 3045754,
+ "uncompressed_sha256": "6493dda2f23bdb8f41f9a9ac5cd9cea569e13dbc3f813b592b7f991d54794907",
+ "gzip_sha256": "1a2664bbecc9c0fb123f97fdb1646b8e367a64273a26d5994444015a4cca0b7a",
+ "raw_scratch": ".mylang-cache/rp3/fuzz-journals/X/gates-final/fuzz/rc/commands.jsonl.gz",
+ "worker_qualified": true,
+ "native_complete": true
+}

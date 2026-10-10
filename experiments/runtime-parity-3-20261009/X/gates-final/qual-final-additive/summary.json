@@ -1,0 +1,542 @@
+{
+  "source_commit": "20e7c340eb8d93320de4493f7b50665c7979ef2b",
+  "references_sha256": "b6703c9fc0f135844131130cab4c0c8e263d2966ac5e85d24d380ae5deece3bc",
+  "compiler": "zig-out/bin/mylang",
+  "core_shards": 64,
+  "results": [
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "python3",
+        "experiments/new-core-s3-20261006/wave-a/exclusive_core.py",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/install-core.seconds",
+        "zig",
+        "build",
+        "install",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/install-core.log",
+      "status": 0,
+      "seconds": 1.09,
+      "wall_including_admission": 6.155762922018766
+    },
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/test-core.seconds",
+        "zig",
+        "build",
+        "test-core",
+        "-Dcore-shards=64",
+        "--summary",
+        "all"
+      ],
+      "log": "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/test-core.log",
+      "status": 0,
+      "seconds": 58.71,
+      "wall_including_admission": 67.41395154292695,
+      "build_inspection": {
+        "build_summaries": [
+          "71/71 steps succeeded; 749/47936 tests passed (47187 skipped)"
+        ],
+        "maxrss": [
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 4s MaxRSS:195M",
+            "display": "195M",
+            "bytes": 204472320.0,
+            "test_run": true
+          },
+          {
+            "line": "|  +- compile test debug native cached 6ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |  +- compile exe build-identity debug native cached 6ms MaxRSS:40M",
+            "display": "40M",
+            "bytes": 41943040.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |  +- compile exe mylang debug native cached 7ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "|     |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:41M",
+            "display": "41M",
+            "bytes": 42991616.0,
+            "test_run": false
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 9s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 2s MaxRSS:67M",
+            "display": "67M",
+            "bytes": 70254592.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 1s MaxRSS:64M",
+            "display": "64M",
+            "bytes": 67108864.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:61M",
+            "display": "61M",
+            "bytes": 63963136.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 2s MaxRSS:60M",
+            "display": "60M",
+            "bytes": 62914560.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:69M",
+            "display": "69M",
+            "bytes": 72351744.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:60M",
+            "display": "60M",
+            "bytes": 62914560.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 2s MaxRSS:75M",
+            "display": "75M",
+            "bytes": 78643200.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:75M",
+            "display": "75M",
+            "bytes": 78643200.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 1s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 5s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 26s MaxRSS:235M",
+            "display": "235M",
+            "bytes": 246415360.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 6s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 11s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 9s MaxRSS:81M",
+            "display": "81M",
+            "bytes": 84934656.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 10s MaxRSS:79M",
+            "display": "79M",
+            "bytes": 82837504.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 5s MaxRSS:100M",
+            "display": "100M",
+            "bytes": 104857600.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 2s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 7s MaxRSS:258M",
+            "display": "258M",
+            "bytes": 270532608.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 18s MaxRSS:573M",
+            "display": "573M",
+            "bytes": 600834048.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 9s MaxRSS:259M",
+            "display": "259M",
+            "bytes": 271581184.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 9s MaxRSS:247M",
+            "display": "247M",
+            "bytes": 258998272.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 9s MaxRSS:258M",
+            "display": "258M",
+            "bytes": 270532608.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 14s MaxRSS:251M",
+            "display": "251M",
+            "bytes": 263192576.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 7s MaxRSS:263M",
+            "display": "263M",
+            "bytes": 275775488.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 8s MaxRSS:258M",
+            "display": "258M",
+            "bytes": 270532608.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 6s MaxRSS:259M",
+            "display": "259M",
+            "bytes": 271581184.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 3s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 23s MaxRSS:478M",
+            "display": "478M",
+            "bytes": 501219328.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 8s MaxRSS:259M",
+            "display": "259M",
+            "bytes": 271581184.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 1s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 4s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 4s MaxRSS:206M",
+            "display": "206M",
+            "bytes": 216006656.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 1s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 5s MaxRSS:54M",
+            "display": "54M",
+            "bytes": 56623104.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 12 pass, 737 skip (749 total) 1s MaxRSS:54M",
+            "display": "54M",
+            "bytes": 56623104.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 2s MaxRSS:54M",
+            "display": "54M",
+            "bytes": 56623104.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 1s MaxRSS:54M",
+            "display": "54M",
+            "bytes": 56623104.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 15s MaxRSS:166M",
+            "display": "166M",
+            "bytes": 174063616.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 7s MaxRSS:164M",
+            "display": "164M",
+            "bytes": 171966464.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 4s MaxRSS:162M",
+            "display": "162M",
+            "bytes": 169869312.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 13s MaxRSS:57M",
+            "display": "57M",
+            "bytes": 59768832.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 5s MaxRSS:163M",
+            "display": "163M",
+            "bytes": 170917888.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 2s MaxRSS:64M",
+            "display": "64M",
+            "bytes": 67108864.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 6s MaxRSS:74M",
+            "display": "74M",
+            "bytes": 77594624.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 1s MaxRSS:48M",
+            "display": "48M",
+            "bytes": 50331648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 12s MaxRSS:169M",
+            "display": "169M",
+            "bytes": 177209344.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 1s MaxRSS:48M",
+            "display": "48M",
+            "bytes": 50331648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 2s MaxRSS:58M",
+            "display": "58M",
+            "bytes": 60817408.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 1s MaxRSS:49M",
+            "display": "49M",
+            "bytes": 51380224.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 1s MaxRSS:48M",
+            "display": "48M",
+            "bytes": 50331648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 1s MaxRSS:48M",
+            "display": "48M",
+            "bytes": 50331648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 2s MaxRSS:48M",
+            "display": "48M",
+            "bytes": 50331648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 1s MaxRSS:48M",
+            "display": "48M",
+            "bytes": 50331648.0,
+            "test_run": true
+          },
+          {
+            "line": "+- run test 11 pass, 738 skip (749 total) 4s MaxRSS:201M",
+            "display": "201M",
+            "bytes": 210763776.0,
+            "test_run": true
+          }
+        ],
+        "rss_overrun_notices": [],
+        "reported_admission_seconds": {
+          "gate": 0,
+          "build": 0
+        },
+        "errors": []
+      },
+      "longest_shard_seconds": 26.22,
+      "tests": {
+        "passed": 749,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "command": [
+        "scripts/build-slot.sh",
+        "gate",
+        "--",
+        "bash",
+        "-c",
+        "\"$@\"; result=$?; exit \"$result\"",
+        "--",
+        "scripts/build-slot.sh",
+        "build",
+        "--",
+        "/usr/bin/time",
+        "-q",
+        "-f",
+        "%e",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/full-conformance.seconds",
+        "python3",
+        "experiments/new-core-s5-20261007/tools/conformance_ref.py",
+        "--references",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/references/conformance-v1.json",
+        "--set",
+        "all",
+        "--core",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/zig-out/bin/mylang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/s5/integration-qualify/qual-final-additive/conformance",
+        "--jobs",
+        "4",
+        "--why",
+        "--leakcheck",
+        "--verify",
+        "--frontend-reference",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/frontend-fixes-20261009/s5-frontend-reference.json",
+        "--frontend-journal",
+        "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/frontend-conformance.json"
+      ],
+      "log": "experiments/runtime-parity-3-20261009/X/gates-final/qual-final-additive/full-conformance.log",
+      "status": 0,
+      "seconds": 21.3,
+      "wall_including_admission": 26.348687185905874
+    }
+  ],
+  "qualified": true,
+  "core_sha256": "9dfe3e01d53585909ebb67a3cab6d6b254752a9e4841ffe0279c49e6150daa51"
+}
