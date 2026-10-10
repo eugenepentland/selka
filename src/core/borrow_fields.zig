@@ -7,6 +7,7 @@ const facts = @import("facts.zig");
 const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
 
+const ReadKey = struct { call: ir.Ref, field: u32 };
 const Change = struct { result: ir.Ref, writes: effects.Paths };
 const Source = struct { root: ir.Ref, reads: [ir.FieldPath.max_steps]ir.Ref = undefined, len: usize = 0 };
 
@@ -14,6 +15,13 @@ const Source = struct { root: ir.Ref, reads: [ir.FieldPath.max_steps]ir.Ref = un
 /// Phi operands remain on their original edges; all other replacements dominate use.
 pub fn run(a: std.mem.Allocator, m: *const ir.Module, f: *ir.Function, summaries: *const effects.Summaries, origin: ?origins.Context) std.mem.Allocator.Error!void {
     const shape = try facts.shape(a, f);
+    var reads: std.AutoHashMapUnmanaged(ReadKey, ir.Ref) = .empty;
+    for (f.insts.items, 0..) |inst, i| {
+        if (inst.op != .record_get) continue;
+        const key: ReadKey = .{ .call = f.resolve(inst.a), .field = @intCast(inst.data) };
+        const entry = try reads.getOrPut(a, key);
+        if (!entry.found_existing) entry.value_ptr.* = @fromBackingInt(@intCast(i));
+    }
     const positions = try a.alloc(usize, f.insts.items.len);
     for (f.blocks.items) |block| for (block.insts.items, 0..) |ref, at| {
         positions[ref.index()] = at;
@@ -32,7 +40,7 @@ pub fn run(a: std.mem.Allocator, m: *const ir.Module, f: *ir.Function, summaries
                 const final = effects.finalOf(m, signature, k) orelse continue;
                 const result = switch (final) {
                     .whole => ref,
-                    .field => |field| finalRead(f, ref, field) orelse continue,
+                    .field => |field| reads.get(.{ .call = ref, .field = field }) orelse continue,
                 };
                 try changes[f.resolve(arg).index()].append(a, .{ .result = result, .writes = summaries.of(inst.a.index(), k).writes });
             }
@@ -68,13 +76,6 @@ fn replaceExtra(a: std.mem.Allocator, f: *ir.Function, inst: *ir.Inst, extra: []
     const start: u32 = @intCast(f.extra.items.len);
     try f.extra.appendSlice(a, extra);
     inst.data = (ir.ExtraSlice{ .start = start, .len = @intCast(extra.len) }).pack();
-}
-
-fn finalRead(f: *const ir.Function, call: ir.Ref, field: u32) ?ir.Ref {
-    for (f.insts.items, 0..) |inst, i| {
-        if (inst.op == .record_get and f.resolve(inst.a) == call and inst.data == field) return @fromBackingInt(@intCast(i));
-    }
-    return null;
 }
 
 const Context = struct {

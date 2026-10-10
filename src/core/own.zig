@@ -1513,11 +1513,14 @@ const Taking = struct {
         const f = self.f;
         const field = f.inst(through.update).data;
         const holders = through.chain.len + 1;
+        // The taken field belongs to the original record. A later holder's
+        // definition may lie between that read and its users; stopping there
+        // would hide live borrows through the preserving update.
+        const def = if (f.inst(through.earlier).op == .param) 0 else self.graph.block_of[through.earlier.index()];
         for (0..holders) |k| {
             const holder = if (k == through.chain.len) through.earlier else through.chain[k];
             // The one use that carries the hole on: the next update of the chain, or `update`.
             const next = if (k == 0) through.update else through.chain[k - 1];
-            const def = if (f.inst(holder).op == .param) 0 else self.graph.block_of[holder.index()];
             for (self.graph.uses[holder.index()].items) |user| {
                 const inst = f.inst(user);
                 if (user == through.get or user == next) continue;

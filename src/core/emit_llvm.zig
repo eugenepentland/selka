@@ -18,6 +18,7 @@ const c_abi = @import("c_abi.zig");
 const flags = @import("flags.zig");
 const elements = @import("elements.zig");
 const emit_dict = @import("emit_dict.zig");
+const emit_release = @import("emit_release.zig");
 const emit_bytes = @import("emit_bytes.zig");
 const emit_text_split = @import("emit_text_split.zig");
 const emit_text = @import("emit_text.zig");
@@ -472,12 +473,9 @@ const ModuleState = struct {
         try layoutParts(self.allocator, self.module, ty, 0, 0, &parts);
         const index = self.layouts.types.items.len;
         try self.layouts.types.append(self.allocator, ty);
-        const words = 3 + 2 * parts.refs.items.len + 3 * parts.guards.items.len;
-        try self.layouts.text.print(self.allocator, "@myl.layout.{d} = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ index, words, @max(1, self.module.size(ty)), parts.refs.items.len, parts.guards.items.len });
-        for (parts.refs.items) |ref| try self.layouts.text.print(self.allocator, ", i32 {d}, i32 {d}", .{ ref[0], ref[1] });
-        for (parts.guards.items) |g| try self.layouts.text.print(self.allocator, ", i32 {d}, i32 {d}, i32 {d}", .{ g[0], g[1], g[2] });
-        try self.layouts.text.appendSlice(self.allocator, "], align 4\n");
-        return std.fmt.allocPrint(self.allocator, "@myl.layout.{d}", .{index});
+        const name = try std.fmt.allocPrint(self.allocator, "@myl.layout.{d}", .{index});
+        try emit_release.emit(self.allocator, &self.layouts.text, name, @max(1, self.module.size(ty)), .{ .refs = parts.refs.items, .guards = parts.guards.items });
+        return name;
     }
 
     /// Register a trap site for an operation sub-emitter.
@@ -591,6 +589,7 @@ const ModuleState = struct {
             \\declare void @myl_core_assert_fail(ptr) noreturn nounwind cold
             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
+            \\declare void @myl_core_release_child_pending(ptr, ptr) nounwind
             \\declare void @myl_core_release(ptr) nounwind
             \\declare void @myl_core_main_error_i64(i64) nounwind cold
             \\declare void @myl_core_main_error_u64(i64) nounwind cold
@@ -1018,11 +1017,8 @@ const FunctionEmitter = struct {
         var parts: LayoutParts = .{};
         try layoutParts(self.a(), self.state.module, shape.key, 0, 0, &parts);
         try layoutParts(self.a(), self.state.module, shape.value, value_offset, 0, &parts);
-        const words = 3 + 2 * parts.refs.items.len + 3 * parts.guards.items.len;
-        try self.state.layouts.text.print(self.a(), "{s}.layout = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ name, words, stride, parts.refs.items.len, parts.guards.items.len });
-        for (parts.refs.items) |reference| try self.state.layouts.text.print(self.a(), ", i32 {d}, i32 {d}", .{ reference[0], reference[1] });
-        for (parts.guards.items) |guard| try self.state.layouts.text.print(self.a(), ", i32 {d}, i32 {d}, i32 {d}", .{ guard[0], guard[1], guard[2] });
-        try self.state.layouts.text.appendSlice(self.a(), "], align 4\n");
+        const layout_name = try std.fmt.allocPrint(self.a(), "{s}.layout", .{name});
+        try emit_release.emit(self.a(), &self.state.layouts.text, layout_name, stride, .{ .refs = parts.refs.items, .guards = parts.guards.items, .split = value_offset });
         const structural = shape.key.integer() == null and shape.key != .bool and shape.key != .str and shape.key != .bytes;
         const hash = if (structural) try std.fmt.allocPrint(self.a(), "{s}.key.hash", .{name}) else "null";
         const same = if (structural) try std.fmt.allocPrint(self.a(), "{s}.key.same", .{name}) else "null";

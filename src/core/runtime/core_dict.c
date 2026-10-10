@@ -186,7 +186,14 @@ static myl_block *dict_room(myl_block *dict) {
 
 static void dict_release_part(const core_dict_descriptor *desc, unsigned char *entry, bool key, bool value) {
     myl_layout *layout = desc->layout;
-    if (!layout) return;
+    if (!layout || layout[1] == 0) return;
+    core_layout_release release_key = layout_release(layout, 1);
+    core_layout_release release_value = layout_release(layout, 2);
+    if (release_key && release_value) {
+        if (key) release_key(entry, NULL);
+        if (value) release_value(entry, NULL);
+        return;
+    }
     for (int32_t r = 0; r < layout[1]; ++r) {
         int32_t offset = layout[3 + 2 * r];
         if ((offset < (int32_t)desc->value_offset && !key) || (offset >= (int32_t)desc->value_offset && !value)) continue;
@@ -334,9 +341,11 @@ myl_block *myl_core_dict_clear(myl_block *dict) {
    children to the same visitor used for both sharing and destruction. */
 static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context) {
     core_dict_meta *meta = dict_meta(dict);
-    if (!meta->desc->layout) return;
+    if (!meta->desc->layout || meta->desc->layout[1] == 0) return;
+    core_layout_release release = visit == core_release_child ? layout_release(meta->desc->layout, 0) : NULL;
     for (uint64_t i = 0; i < meta->elen; ++i) {
         if (!dict_live(meta, i)) continue;
+        if (release) { release(dict_entry(dict, i), context); continue; }
         for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
             myl_block *child = reference_at(meta->desc->layout, dict_entry(dict, i), r);
             if (child) visit(child, context);
