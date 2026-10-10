@@ -1,0 +1,39 @@
+{
+  "stage": "after failed full gate, before retry publication",
+  "shared_successes": [
+    {
+      "key": "8826180c5b0399aceebd57e1fd94ebd28d775a781212847b38444aba158adee5",
+      "result_kind": null,
+      "result_keys": [
+        "artifacts",
+        "expected",
+        "files",
+        "record",
+        "version"
+      ]
+    },
+    {
+      "key": "bb32b5902a14479d5c3b735c72a33252a664b20c1a28d3454eedc7d98ce7d7c1",
+      "result_kind": null,
+      "result_keys": [
+        "artifacts",
+        "expected",
+        "files",
+        "record",
+        "version"
+      ]
+    },
+    {
+      "key": "c506d17a0fb24d1b1e0e241d78dbf11b8acbc3383dad9e93ca9025f93451bf4e",
+      "result_kind": null,
+      "result_keys": [
+        "artifacts",
+        "expected",
+        "files",
+        "record",
+        "version"
+      ]
+    }
+  ],
+  "verification_success_count": 0
+}

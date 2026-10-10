@@ -7,7 +7,7 @@
 # timer, deletes only output a build regenerates:
 #
 #   idle  A worktree nobody has built in, committed in or written scratch to
-#         for --idle-days loses `.zig-cache`, `.mylang-cache`, `zig-out`, any
+#         for --idle-days loses `.zig-cache`, `zig-out`, any
 #         per-worktree `.zig-*-cache`, and, inside its `.tmp*` scratch folders,
 #         nested cache folders, `zig-out` folders, ELF binaries and `.o`/`.a`/
 #         `.so` files. Logs, JSON, sources and notes in scratch are kept.
@@ -22,6 +22,9 @@
 #         every build that uses an object reads it), then the least recently
 #         read ones until it fits --store-cap-gb, and `.partial` files over a day
 #         old. Entries are keyed by content, so a deleted one is only recompiled.
+#   evidence Versioned evidence stores have leases and retention pins. They are
+#         collected explicitly with scripts/cache_retention.py. Never remove a
+#         worktree's whole .mylang-cache: it can contain protected evidence.
 #   core  In every worktree that is not idle, `.mylang-cache/core` loses linked
 #         programs (`programs-v1`), `--link` objects (`foreign-v1`) and replay
 #         records (`replay-v1`) unread for --store-days, and staging directories
@@ -164,6 +167,13 @@ remove_dir() {
 # install trees, native binaries and objects. Everything else stays.
 prune_scratch() {
     local scratch="$1" kib=0 bytes
+    # Scratch can hold explicitly selected shared evidence too. Its permanent
+    # lock is retained even after all payloads are evicted. The dedicated GC
+    # owns cleanup; never walk through its leased or pinned blobs here.
+    if [ -n "$(find "$scratch" -path '*/locks/retention.lock' -print -quit 2>/dev/null)" ]; then
+        echo "kept      $scratch  (evidence retention; use cache_retention.py)"
+        return
+    fi
     while IFS= read -r -d '' dir; do
         remove_dir "$dir" "cache in scratch"
     done < <(find "$scratch" -mindepth 1 -type d \( -iname '*cache*' -o -name zig-out \) -prune -print0 2>/dev/null)
@@ -280,7 +290,7 @@ while IFS= read -r line; do
     last=$(last_activity "$tree")
     if [ -n "$last" ] && [ $((now - last)) -ge "$idle_seconds" ]; then
         days=$(((now - last) / 86400))
-        for dir in "$tree/.zig-cache" "$tree/.mylang-cache" "$tree/zig-out" "$tree"/.zig-*-cache; do
+        for dir in "$tree/.zig-cache" "$tree/zig-out" "$tree"/.zig-*-cache; do
             if [ -d "$dir" ]; then remove_dir "$dir" "idle ${days}d"; fi
         done
         for scratch in "$tree"/.tmp*; do

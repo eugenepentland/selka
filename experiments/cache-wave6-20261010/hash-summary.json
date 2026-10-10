@@ -1,0 +1,110 @@
+{
+  "version": "wave6-native-content-hash-v1",
+  "scope": "isolated native Juice plan, Debug compiler, actual 226MiB-class running ELF SHA256, no measurement workers",
+  "baseline": {
+    "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave6/hash/baseline-mylang",
+    "sha256": "e4267bb9f804914aefc87ad85e1e59524639bc5db4132970f76932daa3c11485",
+    "bytes": 236118946,
+    "method": "one isolated native plan; actual running ELF hashed; no cache receipt reused; no general speedup claim"
+  },
+  "candidate": {
+    "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+    "sha256": "2bb2a1066452bdb0a1155293e564d8bbf0946ebb8b00be407f3d721850c03473",
+    "bytes": 236126200,
+    "retained_binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave6/hash/object-mylang"
+  },
+  "method": {
+    "cpu": 2,
+    "admission": "normal shared gate slot; nested taskset restores CPU2 affinity; GNU time wraps command only, queue excluded",
+    "fixture": ".mylang-cache/cache-wave6/hash/juice.toml",
+    "samples": 3,
+    "machine_cold": false,
+    "application_cache_reuse": false,
+    "order": "baseline then ineffective module-only attempt then optimized object; not interleaved; no significance or general workflow speedup claim"
+  },
+  "samples": {
+    "baseline": [
+      {
+        "wall": 21.58,
+        "user": 21.54,
+        "system": 0.02,
+        "max_rss_kib": 16776.0,
+        "time_file": "hash-baseline.time"
+      },
+      {
+        "wall": 21.6,
+        "user": 21.55,
+        "system": 0.03,
+        "max_rss_kib": 16836.0,
+        "time_file": "hash-baseline-2.time"
+      },
+      {
+        "wall": 22.2,
+        "user": 22.15,
+        "system": 0.02,
+        "max_rss_kib": 16692.0,
+        "time_file": "hash-baseline-3.time"
+      }
+    ],
+    "ineffective_module_attempt": [
+      {
+        "wall": 21.59,
+        "user": 21.54,
+        "system": 0.02,
+        "max_rss_kib": 16832.0,
+        "time_file": "hash-candidate-1.time"
+      },
+      {
+        "wall": 21.91,
+        "user": 21.87,
+        "system": 0.02,
+        "max_rss_kib": 16736.0,
+        "time_file": "hash-candidate-2.time"
+      },
+      {
+        "wall": 21.59,
+        "user": 21.56,
+        "system": 0.01,
+        "max_rss_kib": 16880.0,
+        "time_file": "hash-candidate-3.time"
+      }
+    ],
+    "optimized_object": [
+      {
+        "wall": 0.16,
+        "user": 0.13,
+        "system": 0.03,
+        "max_rss_kib": 16720.0,
+        "time_file": "hash-object-1.time"
+      },
+      {
+        "wall": 0.16,
+        "user": 0.13,
+        "system": 0.02,
+        "max_rss_kib": 16736.0,
+        "time_file": "hash-object-2.time"
+      },
+      {
+        "wall": 0.16,
+        "user": 0.14,
+        "system": 0.02,
+        "max_rss_kib": 16952.0,
+        "time_file": "hash-object-3.time"
+      }
+    ]
+  },
+  "parity": {
+    "independent_running_elf_sha256": true,
+    "all_other_plan_fields_unchanged_after_running_elf_path_and_identity_normalization": true
+  },
+  "verification": {
+    "focused_steps": 12,
+    "focused_tests": 10,
+    "install_steps": 14,
+    "guardian_checks": 88
+  },
+  "wall_medians_seconds": {
+    "baseline": 21.6,
+    "optimized_object": 0.16
+  }
+}

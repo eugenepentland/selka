@@ -17,6 +17,12 @@ threshold decisions, and cached Core cost/LLVM remark queries. Its interface is
 documented in [Juice](../tooling/juice.md#incremental-measurement-evidence) and
 [cost reports](../tooling/cost.md); qualification and limits are recorded in the
 [Wave 5 report](../../experiments/cache-wave5-20261010/REPORT.md).
+Wave 6 adds explicit shared local evidence, active-use leases, retention pins,
+bounded collection and deterministic-conflict handling. Mutable worktree indexes
+remain private and path-sensitive action identities are preserved. Its warm-path
+work includes watched in-process digest sharing and native streaming hashing;
+see [the interface](../tooling/cache-retention.md) and
+[qualification plan](../../experiments/cache-wave6-20261010/PLAN.md).
 Historical review sections below retain their original baselines.
 
 Status: Wave 1 qualified together with `main` at `e9011d9c6` on 2026-10-10;

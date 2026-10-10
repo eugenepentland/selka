@@ -230,6 +230,76 @@ def retain_corpus(store, family, spec, digest) -> None:
         spec["known_corpus"].add(digest)
 
 
+class CampaignStore:
+    """Share immutable evidence while keeping corpus ownership in this checkout."""
+    def __init__(self, private: Path, shared: Path | None):
+        self.local = evidence.Store(private)
+        self.success = self.local if shared is None or Path(shared).resolve() == self.local.root else evidence.Store(shared)
+
+    def lease(self):
+        stack = ExitStack()
+        try:
+            stack.enter_context(self.success.lease())
+            if self.local is not self.success:
+                stack.enter_context(self.local.lease())
+            return stack
+        except BaseException:
+            stack.close()
+            raise
+
+    def __getattr__(self, name):
+        return getattr(self.success, name)
+
+    def coordinator_lock(self, family):
+        # Both locks span lookup, invalidation, work, and publication. Canonical
+        # ordering also handles callers that reverse the two store roles.
+        stores = [self.success] if self.success is self.local else sorted(
+            [self.success, self.local], key=lambda store: str(store.root))
+        stack = ExitStack()
+        try:
+            for store in stores:
+                stack.enter_context(store.coordinator_lock(family))
+            return stack
+        except BaseException:
+            stack.close()
+            raise
+
+    def load_corpus(self, family):
+        return self.local.load_corpus(family)
+
+    def discard_corpus(self, family):
+        return self.local.discard_corpus(family)
+
+    def read_blob(self, digest):
+        data = self.success.read_blob(digest)
+        return self.local.read_blob(digest) if data is None else data
+
+    def put_blob(self, data):
+        digest = self.success.put_blob(data)
+        if self.local is not self.success and self.local.put_blob(data) != digest:
+            raise evidence.CorpusError("private corpus copy changed identity")
+        return digest
+
+    def publish_success(self, key, result, blobs, validate):
+        # A shared eviction must not strand the replay proof: the retained
+        # private corpus supplies the same checked bytes before publication.
+        for digest in blobs:
+            if self.success.read_blob(digest) is None:
+                data = self.local.read_blob(digest)
+                if data is None or self.success.put_blob(data) != digest:
+                    raise evidence.CorpusError("referenced corpus unavailable for shared publication")
+        if not self.success.publish_success(key, result, blobs, validate):
+            raise ValueError("completed fuzz action could not publish qualified success")
+        return True
+
+    def retain_corpus(self, family, digests):
+        for digest in digests:
+            data = self.read_blob(digest)
+            if data is None or self.local.put_blob(data) != digest:
+                raise evidence.CorpusError("corpus disappeared before its private copy")
+        return self.local.retain_corpus(family, digests)
+
+
 def execute_action(store, campaign: str, bound: dict, spec: dict, operation: str,
                    value: int | str, state: dict, args, environment: dict, snapshots, snapshot: Snapshot) -> bool:
     """Reuse or run one bounded action, then publish only fully observed success."""
@@ -246,7 +316,7 @@ def execute_action(store, campaign: str, bound: dict, spec: dict, operation: str
         return True
     # A missing blob can make an old receipt miss. A failed worker may repair
     # the blob, but must never thereby resurrect that older success.
-    store.discard_success(action_key)
+    store.invalidate_success(action_key)
     area = Path(tempfile.mkdtemp(prefix="action-", dir=args.cache_dir / "runs"))
     request = {"kind": args.kind, "name": spec["name"], "binary": str(args.binary),
                "operation": operation, "output": str(area), **spec["settings"]}
@@ -306,7 +376,7 @@ def execute_action(store, campaign: str, bound: dict, spec: dict, operation: str
         if complete and corpus is None:
             raise ValueError("completed fuzz worker did not retain its input corpus")
         if not complete and corpus is not None:
-            store.discard_success(identity.action(bound, "replay", corpus))
+            store.invalidate_success(identity.action(bound, "replay", corpus))
         row = {"target": spec["name"], "operation": operation, "value": value,
                "state": "executed", "key": action_key, "success": complete,
                "evidence": str(area), "explored": result.get("explored", 0),
@@ -341,9 +411,9 @@ def run_target(store, spec: dict, common, host, environment, args, state, snapsh
         spec["known_corpus"] = set(corpus)
         if args.force:
             for ordinal in range(args.shards):
-                store.discard_success(identity.action(bound, "explore", ordinal))
+                store.invalidate_success(identity.action(bound, "explore", ordinal))
             for digest in corpus:
-                store.discard_success(identity.action(bound, "replay", digest))
+                store.invalidate_success(identity.action(bound, "replay", digest))
         for digest in corpus:
             if not execute_action(store, campaign, bound, spec, "replay", digest,
                                   state, args, environment, snapshots, snapshot):
@@ -391,22 +461,28 @@ def execute(args) -> int:
         state["freshness_reasons"].append("external coverage target has no complete input contract (--hermetic)")
     save_report(args, state)
     try:
-        store = evidence.Store(args.cache_dir / "evidence")
+        shared = getattr(args, "shared_cache_dir", None)
+        store = CampaignStore(args.cache_dir / "evidence-v2", shared)
         binaries = [args.binary, *provider_binaries]
         recipes, files = identity.tools(environment, binaries, zig)
         with ExitStack() as stack:
-            common = stack.enter_context(Snapshot(ROOT, identity.COMMON_INPUTS + recipes, files + provider_files))
+            stack.enter_context(store.lease())
+            session = verification_snapshot.DigestSession()
+            common = stack.enter_context(Snapshot(ROOT, identity.COMMON_INPUTS + recipes, files + provider_files,
+                                                  digest_session=session))
             host = verification.HostContext()
             if identity.tools(environment, binaries, zig) != (recipes, files):
                 raise evidence.InputsChanged("tool resolution changed during input capture")
             if args.kind == "differential" and identity.components(args.components) != (provider_files, provider_binaries):
                 raise evidence.InputsChanged("component resolution changed during input capture")
-            targets_snapshots = [stack.enter_context(Snapshot(ROOT, spec["inputs"])) for spec in specs]
+            targets_snapshots = [stack.enter_context(Snapshot(ROOT, spec["inputs"], digest_session=session)) for spec in specs]
             snapshots = [common, host, *targets_snapshots]
             success = all(run_target(store, spec, common, host, environment, args, state, snapshot, snapshots)
                           for spec, snapshot in zip(specs, targets_snapshots))
             require_stable(snapshots)
             state.update(complete=success, success=success, inputs_stable=True)
+            state["snapshot_statistics"] = verification.snapshot_statistics(snapshots)
+            state["evidence_store"] = {"shared": shared is not None, "root": str(store.success.root)}
         return 0 if success else 1
     except BaseException as error:
         state["error"] = str(error) or type(error).__name__
@@ -425,6 +501,7 @@ def options(argv):
         part.add_argument("--seed", type=int, default=1)
         part.add_argument("--shards", type=int, default=1)
         part.add_argument("--cache-dir", type=Path, default=ROOT / ".mylang-cache/fuzz-v1")
+        part.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared immutable evidence; runs and corpus catalogs stay private")
         part.add_argument("--report", type=Path)
         part.add_argument("--force", action="store_true")
         part.add_argument("--discard-corrupt-corpus", action="store_true", help="Explicitly discard an unreadable retained corpus catalog; recover available inputs from valid receipts")
@@ -476,7 +553,8 @@ def main(argv) -> int:
     except evidence.InputsChanged as error:
         print("fuzz: inputs changed: " + str(error), file=sys.stderr)
         return 75
-    except (OSError, ValueError, evidence.CorpusError, SnapshotError, verification.VerificationError) as error:
+    except (OSError, ValueError, evidence.CorpusError, evidence.FormatError,
+            evidence.DeterminismError, SnapshotError, verification.VerificationError) as error:
         print("fuzz: cannot qualify campaign: " + str(error), file=sys.stderr)
         return 2
     except KeyboardInterrupt:

@@ -400,6 +400,20 @@ class EvidenceTests(unittest.TestCase):
         with patch.object(Path, 'write_bytes', side_effect=OSError('interrupted write')):
             with self.assertRaises(OSError):
                 self.store.materialize(retained, self.root / 'partial')
+
+    def test_standalone_materialization_does_not_create_store_in_nonempty_parent(self):
+        self.publish()
+        parent = self.root / 'private-output'
+        parent.mkdir()
+        unrelated = parent / 'unrelated-input.txt'
+        unrelated.write_bytes(b'keep existing private contents')
+        with self.store.lease():
+            retained = self.store.lookup(self.key, self.expected)
+            path = evidence.materialize(retained, parent / 'retained')
+        self.assertTrue(path.is_file())
+        self.assertEqual(unrelated.read_bytes(), b'keep existing private contents')
+        self.assertFalse((parent / 'format.json').exists())
+        self.assertFalse((parent / 'locks').exists())
         self.assertFalse((self.root / 'partial').exists())
 
 

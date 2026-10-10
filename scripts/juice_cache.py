@@ -314,7 +314,9 @@ def save_report(args, state):
 def protect_outputs(args, snapshots) -> None:
     """Reject input/output overlap before the first destructive report write."""
     outputs = [args.report.resolve(), (args.cache_dir / "runs").resolve(),
-               (args.cache_dir / "native").resolve(), (args.cache_dir / "evidence").resolve()]
+               (args.cache_dir / "native").resolve(), (args.cache_dir / "evidence-v2").resolve()]
+    if getattr(args, "shared_cache_dir", None) is not None:
+        outputs.append(args.shared_cache_dir.resolve())
     for snapshot in snapshots:
         if not isinstance(snapshot, Snapshot):
             continue
@@ -345,9 +347,12 @@ def execute(args) -> int:
     initialized = False
     published = False
     try:
-        store = juice_evidence.EvidenceStore(args.cache_dir / "evidence")
+        shared = getattr(args, "shared_cache_dir", None)
+        store = juice_evidence.EvidenceStore(shared or args.cache_dir / "evidence-v2")
         with ExitStack() as stack:
-            declaration = stack.enter_context(Snapshot(ROOT, [], [args.suite]))
+            stack.enter_context(store.lease())
+            session = verification_snapshot.DigestSession()
+            declaration = stack.enter_context(Snapshot(ROOT, [], [args.suite], digest_session=session))
             specs = suite(args.suite, args.target)
             preliminary = [plan(args, spec, env) for spec in specs]
             binaries = [args.compiler]
@@ -364,7 +369,8 @@ def execute(args) -> int:
             # initially empty loader contract. The unmatched suffix also guards
             # visible /etc membership; normal tool identity binds ld.so.cache.
             recipes.append("/etc/*.so.preload")
-            common = stack.enter_context(Snapshot(ROOT, IMPLEMENTATION_INPUTS + recipes, files))
+            common = stack.enter_context(Snapshot(ROOT, IMPLEMENTATION_INPUTS + recipes, files,
+                                                  digest_session=session))
             host = verification.HostContext()
             targets = []
             scopes = []
@@ -375,7 +381,7 @@ def execute(args) -> int:
                 search = None if tools is None else juice_provider.search_scopes(juice_provider.environment(native), env, tools)
                 scopes.append(search)
                 targets.append(stack.enter_context(Snapshot(ROOT, recipes, files, include_hidden=True,
-                                                            directory_membership=search or [])))
+                                                            directory_membership=search or [], digest_session=session)))
                 if tools is not None and juice_provider.search_scopes(juice_provider.environment(native), env, tools) != search:
                     raise fuzz_campaign_store.InputsChanged("runtime provider search paths changed during planning")
             snapshots = [declaration, common, host, *targets]
@@ -396,6 +402,8 @@ def execute(args) -> int:
                 save_report(args, state)
             require_stable(snapshots)
             state.update(complete=success, success=success, inputs_stable=True)
+            state["snapshot_statistics"] = verification.snapshot_statistics(snapshots)
+            state["evidence_store"] = {"shared": shared is not None, "root": str(store.backend.root)}
             save_report(args, state)
             require_stable(snapshots)
             published = True
@@ -449,7 +457,9 @@ def compare(args) -> int:
                         "min_change": args.min_change, "fail_above": args.fail_above}}
     status = 0
     with ExitStack() as stack:
-        runtime = stack.enter_context(Snapshot(ROOT, IMPLEMENTATION_INPUTS + recipes, declarations + tools))
+        session = verification_snapshot.DigestSession()
+        runtime = stack.enter_context(Snapshot(ROOT, IMPLEMENTATION_INPUTS + recipes, declarations + tools,
+                                               digest_session=session))
         inputs = [runtime]
         before, after = comparison_rows(args.baseline), comparison_rows(args.candidate)
         if before.keys() != after.keys():
@@ -487,7 +497,7 @@ def compare(args) -> int:
                 raw = Path(row["record"]).parent.resolve()
                 if output == raw or raw in output.parents:
                     raise ValueError("comparison output overlaps retained evidence")
-        inputs.append(stack.enter_context(Snapshot(ROOT, [], originals)))
+        inputs.append(stack.enter_context(Snapshot(ROOT, [], originals, digest_session=session)))
         state["inputs"] = runtime.identity
         state["runtime"] = {"environment_sha256": verification.key(env), "loaded_code": LOADED_CODE_SHA256}
         args.output.mkdir(parents=True, exist_ok=True)
@@ -499,7 +509,8 @@ def compare(args) -> int:
                 for row, retained in retained_rows[name]:
                     area = Path(tempfile.mkdtemp(prefix="input-", dir=args.output))
                     materialized = juice_evidence.materialize(retained, area / "retained")
-                    watched = stack.enter_context(Snapshot(ROOT, [str(area / "retained") + "/"], include_hidden=True))
+                    watched = stack.enter_context(Snapshot(ROOT, [str(area / "retained") + "/"], include_hidden=True,
+                                                           digest_session=session))
                     inputs.append(watched)
                     checked = juice_evidence.validate_record(materialized,
                         {kind: area / "retained/build" / kind for kind in retained.build_artifacts}, row["expected"])
@@ -521,6 +532,7 @@ def compare(args) -> int:
                 status = max(status, result.returncode if result.returncode >= 0 else 128 - result.returncode)
             require_stable(inputs)
             state.update(complete=status in (0, 1), success=status == 0)
+            state["snapshot_statistics"] = verification.snapshot_statistics(inputs)
             return status
         finally:
             try:
@@ -541,6 +553,7 @@ def options(argv):
     capture = sub.add_parser("capture")
     capture.add_argument("suite", type=Path)
     capture.add_argument("--cache-dir", type=Path, default=ROOT / ".mylang-cache/juice-v1")
+    capture.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared immutable evidence; captures and reports stay private")
     capture.add_argument("--report", type=Path)
     capture.add_argument("--target", action="append", default=[])
     capture.add_argument("--fresh", action="store_true")
@@ -582,7 +595,8 @@ def main(argv) -> int:
     except fuzz_campaign_store.InputsChanged as error:
         print("juice-cache: inputs changed: " + str(error), file=sys.stderr)
         return 75
-    except (OSError, ValueError, SnapshotError, verification.VerificationError, subprocess.TimeoutExpired) as error:
+    except (OSError, ValueError, fuzz_campaign_store.FormatError, fuzz_campaign_store.DeterminismError,
+            SnapshotError, verification.VerificationError, subprocess.TimeoutExpired) as error:
         print("juice-cache: cannot qualify evidence: " + str(error), file=sys.stderr)
         return 2
     except KeyboardInterrupt:

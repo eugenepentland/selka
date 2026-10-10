@@ -1,0 +1,10 @@
+build-slot: FIFO ticket 966, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 966 after 10s
+test_default_is_dry_run_and_apply_is_explicit (cache_retention_test.RetentionCLI.test_default_is_dry_run_and_apply_is_explicit) ... ok
+test_invalid_limit_and_unknown_format_return_error_without_deletion (cache_retention_test.RetentionCLI.test_invalid_limit_and_unknown_format_return_error_without_deletion) ... ok
+test_pin_unpin_retains_payload_and_gc_reports_active_lease (cache_retention_test.RetentionCLI.test_pin_unpin_retains_payload_and_gc_reports_active_lease) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.010s
+
+OK

@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "baseline_commit": "b2de7b2f0",
+  "branch": "codex/selka-cache-wave6",
+  "source_files_checked": 30,
+  "source_hashes_match": true,
+  "full_gate": {
+    "build_steps_passed": 124,
+    "build_steps_total": 124,
+    "native_result_rows": 29,
+    "passed": 2652,
+    "failed": 0,
+    "skipped": 0
+  },
+  "verification": {
+    "full": {
+      "success": true,
+      "inputs_stable": true,
+      "elapsed_seconds": 544.4306963970885,
+      "build_admitted_seconds": 0.0,
+      "gate_admitted_seconds": 343.3388801938854,
+      "snapshot_statistics": {
+        "bytes_hashed": 2305968547,
+        "digest_reuses": 0,
+        "directories_enumerated": 2247,
+        "files_hashed": 28403,
+        "metadata_observations": 774659,
+        "validation_calls": 476
+      },
+      "timings": {
+        "action_input_snapshot_seconds": 2.272010022075847,
+        "final_validation_seconds": 0.04819496814161539,
+        "prepare_lookup_outside_admission_seconds": 15.926501031965017,
+        "publication_seconds": 4.428450292209163,
+        "source_snapshot_seconds": 1.6300222480203956
+      },
+      "states": {
+        "fresh": 11,
+        "execute": 30
+      },
+      "admissions": [
+        {
+          "admission_wait_seconds": 180.6884730500169,
+          "admitted": true,
+          "elapsed_seconds": 524.0273532439023,
+          "kind": "gate",
+          "observed_held_seconds": 343.3388801938854,
+          "status": 0,
+          "validation_seconds": 0.048926138086244464,
+          "worker_seconds": 343.2898946949281
+        }
+      ]
+    },
+    "warm": {
+      "success": true,
+      "inputs_stable": true,
+      "elapsed_seconds": 34.51753473794088,
+      "build_admitted_seconds": 0.0,
+      "gate_admitted_seconds": 19.084049344994128,
+      "snapshot_statistics": {
+        "bytes_hashed": 2305968547,
+        "digest_reuses": 0,
+        "directories_enumerated": 2247,
+        "files_hashed": 28403,
+        "metadata_observations": 774659,
+        "validation_calls": 26
+      },
+      "timings": {
+        "action_input_snapshot_seconds": 1.4004805921576917,
+        "final_validation_seconds": 0.04628008394502103,
+        "prepare_lookup_outside_admission_seconds": 10.076049758819863,
+        "publication_seconds": 0.04553308920003474,
+        "source_snapshot_seconds": 0.8039680740330368
+      },
+      "states": {
+        "fresh": 11,
+        "reused": 30
+      },
+      "admissions": [
+        {
+          "admission_wait_seconds": 5.265486155170947,
+          "admitted": true,
+          "elapsed_seconds": 24.349535500165075,
+          "kind": "gate",
+          "observed_held_seconds": 19.084049344994128,
+          "status": 0,
+          "validation_seconds": 0.04523452091962099,
+          "worker_seconds": 19.03875433304347
+        }
+      ]
+    }
+  },
+  "juice": {
+    "cold": {
+      "success": true,
+      "inputs_stable": true,
+      "counts": {
+        "admissions": 1,
+        "executed": 1,
+        "reused": 0
+      },
+      "snapshot_statistics": {
+        "bytes_hashed": 918616525,
+        "digest_reuses": 15,
+        "directories_enumerated": 1377,
+        "files_hashed": 20419,
+        "metadata_observations": 536892,
+        "validation_calls": 36
+      }
+    },
+    "warm": {
+      "success": true,
+      "inputs_stable": true,
+      "counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 1
+      },
+      "snapshot_statistics": {
+        "bytes_hashed": 918616525,
+        "digest_reuses": 15,
+        "directories_enumerated": 1379,
+        "files_hashed": 20419,
+        "metadata_observations": 536919,
+        "validation_calls": 18
+      }
+    },
+    "retained_record_sha256": "f15e6a3160cb3cbe594b393947455afbc48833a1a1e76d44109bde83d53eb520"
+  },
+  "limits": [
+    "Reported verification admission times are operational observations, not an isolated latency comparison.",
+    "Shared receipt eligibility retains path and execution dependencies.",
+    "Application journal durability and remote trust remain separate work."
+  ]
+}

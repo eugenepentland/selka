@@ -602,6 +602,11 @@ to use instruction measurements without waiting for an idle host.
 
 ## Incremental measurement evidence
 
+The coordinator accepts `--shared-cache-dir DIR` for a shared local evidence
+store. Working directories remain private, and paths and physical execution
+context remain part of action identity. Active readers hold a retention lease;
+see [shared evidence and retention](cache-retention.md) for collection and pins.
+
 `mylang juice plan MANIFEST` prints `juice-plan-v1`: the native normalized
 manifest, selected workloads, expanded source/input hashes, build tools and
 dependencies, actual compiler executable hash, collector configuration, CPU/OS

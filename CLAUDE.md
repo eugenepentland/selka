@@ -171,6 +171,11 @@ of stack under the ceiling); a test defaults to 1,000,000 steps, 1,024 frames an
 - `scripts/prune-caches.sh` (hourly on the dev box; dry run unless `--apply`) deletes the
   caches, `zig-out` and scratch binaries of worktrees idle for 3 days, and any
   `.zig-cache` over 15 GiB. Keep evidence as text, not in caches.
+- Versioned developer evidence uses `scripts/cache_retention.py`, whose collector
+  honors process leases and explicit pins. The legacy pruner preserves whole
+  `.mylang-cache` directories and scratch containing retention locks. Coordinators
+  can share exact evidence using `--shared-cache-dir` outside worktrees; mutable
+  inventories stay private. See `docs/tooling/cache-retention.md`.
 - Builds keep content-keyed unit, runtime and number-text objects in one per-user
   store (`MYLANG_CORE_RUNTIME_CACHE`, else `~/.cache/mylang/core-runtime`) shared
   safely by every worktree, and linked programs, replay records, front-end caches

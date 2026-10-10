@@ -1,0 +1,22 @@
+Focused command (build admission ticket 1015):
+scripts/build-slot.sh build env TMPDIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/tmp PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s scripts -p 'juice_worker_test.py' -q
+
+Captured terminal result:
+Ran 12 tests in 6.724s
+OK
+Exit status: 0
+
+Deterministic old-fixture publication reproduction (build admission ticket 1017):
+scripts/build-slot.sh build env TMPDIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/tmp PYTHONDONTWRITEBYTECODE=1 python3 -B experiments/cache-wave6-20261010/worker-readiness-repro.py
+Exit status: 0
+Detailed result: worker-readiness-repro.json
+
+The retained failed full-gate log shows the native fixture did not publish its
+root PID. Its child stderr was not exposed in that test failure, so the log
+alone does not establish its immediate cause. The deterministic reproduction
+proves the old existence-based handoff can feed empty JSON to the native
+reader, causing JSONDecodeError before it publishes its PID. The fixture fix
+publishes closed JSON via atomic replacement; a gated unfinished-write test
+proves the readiness path is absent until publication. Existing cancellation,
+distinct-session, timeout-budget, and complete descendant-reaping assertions
+remain intact. Production scripts/juice_worker.py is unchanged.

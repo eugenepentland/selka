@@ -12,6 +12,10 @@ verdicts. `zig build test-fuzz-campaign` tests the new coordination and storage
 contracts as part of the full gate. These Python commands are developer tools;
 building and running the installed compiler still requires no Python.
 
+`--shared-cache-dir DIR` shares exact success receipts and immutable blobs while
+keeping corpus catalogs private. Collection honors active leases and explicit
+retention pins; see [shared evidence and retention](cache-retention.md).
+
 ## Compiler differential campaigns
 
 ```bash

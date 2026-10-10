@@ -1,0 +1,32 @@
+build-slot: FIFO ticket 922, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 922 after 5s
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test-core
++- run test w
+guardian/test: 10 test(s) selected by filter: "Juice"
+guardian/test: test wall 0.06s
+guardian/test: PASS — 10 passed
+guardian/test: RESULT {"passed":10,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components ./.zig-cache/o/f9dc75e0e2c8550b87a89195e7a7aade/test --guardian-filter=Juice --cache-dir=./.zig-cache --seed=0xdf396f48 --listen=-
+
+Build Summary: 12/12 steps succeeded; 10/10 tests passed
+test-core success
++- run test 10 pass (10 total) 83ms MaxRSS:7M
+   +- compile test debug native success 384ms MaxRSS:202M
+   |  +- WriteFile cached
+   |  +- compile obj juice_bytes_hash fast native success 100ms MaxRSS:111M
+   |  +- compile obj juice_bytes_hash fast native (reused)
+   |  +- run exe build-identity (build_identity) success 32ms
+   |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:41M
+   |  +- options success
+   |  |  +- compile exe mylang debug native success 3s MaxRSS:544M
+   |  |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |  |     +- WriteFile (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:41M
+   |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+   +- run exe selka-components success 391ms
+      +- compile exe selka-components safe native cached 7ms MaxRSS:42M
+

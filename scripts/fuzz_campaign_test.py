@@ -4,6 +4,7 @@ from contextlib import ExitStack, redirect_stdout
 import io
 import hashlib
 import json
+import multiprocessing
 import os
 from pathlib import Path
 import signal
@@ -16,6 +17,15 @@ from unittest.mock import patch
 import fuzz_campaign as campaign
 import fuzz_campaign_identity as identity
 import fuzz_campaign_store as evidence
+
+
+def campaign_lock_process(private, shared, family, channel):
+    store = campaign.CampaignStore(private, shared)
+    with store.lease():
+        channel.send("waiting")
+        with store.coordinator_lock(family):
+            channel.send(("entered", store.success.gc(dry_run=False)["skipped_active"]))
+            channel.recv()
 
 
 class StableHost:
@@ -66,7 +76,7 @@ class CampaignTests(unittest.TestCase):
         self.stack.enter_context(patch.object(campaign.verification, "normalized_environment", side_effect=lambda _root: dict(self.environment)))
         self.stack.enter_context(patch.object(campaign.verification, "HostContext", StableHost))
         self.stack.enter_context(patch.object(campaign.verification, "run_admitted", side_effect=self.admitted))
-        self.store = evidence.Store(self.root / "cache/evidence")
+        self.store = evidence.Store(self.root / "cache/evidence-v2")
 
     def admitted(self, root, kind, command, environment, unchanged, timings):
         self.assertEqual("gate", kind)
@@ -106,8 +116,165 @@ class CampaignTests(unittest.TestCase):
                     "--components", str(self.components), "--steps", "2"]
         argv += ["--cache-dir", str(self.root / "cache"), *extra]
         with redirect_stdout(io.StringIO()):
-            status = campaign.execute(campaign.options(argv))
-        return status, json.loads((self.root / "cache/last-run.json").read_text())
+            args = campaign.options(argv)
+            status = campaign.execute(args)
+        return status, json.loads((args.cache_dir / "last-run.json").read_text())
+
+    def test_shared_success_reuses_across_private_caches_with_private_corpus_copies(self):
+        shared = self.root / "shared-evidence"
+        args = ("--target", "incremental", "--shared-cache-dir", str(shared))
+        status, cold = self.run_campaign(*args)
+        self.assertEqual(status, 0)
+        key = cold["actions"][0]["key"]
+        backend = evidence.Store(shared)
+        corpus = backend.load_success(key)["corpus"]
+        self.assertEqual([], list((shared / "corpus").glob("*.json")))
+        self.calls.clear()
+        other = self.root / "other-private-cache"
+        status, warm = self.run_campaign(*args, "--cache-dir", str(other))
+        self.assertEqual((status, self.calls, warm["admissions"]), (0, [], []))
+        self.assertEqual(warm["counts"]["reused_shards"], 1)
+        local = evidence.Store(other / "evidence-v2")
+        family = identity.family(self.root, "differential", "incremental")
+        self.assertEqual(local.load_corpus(family), [corpus])
+        self.assertEqual(local.read_blob(corpus), backend.read_blob(corpus))
+        backend._path("blobs", corpus).unlink()
+        self.assertIsNotNone(local.read_blob(corpus))
+        self.assertIsNone(backend.load_success(key))
+
+    def test_shared_changed_candidate_misses_and_revert_recovers_exact_receipts(self):
+        args = ("--target", "incremental", "--shared-cache-dir", str(self.root / "shared-evidence"))
+        _, first = self.run_campaign(*args)
+        original = self.binary.read_bytes()
+        self.binary.write_bytes(original + b"# changed candidate\n")
+        self.calls.clear()
+        _, changed = self.run_campaign(*args)
+        self.assertEqual(changed["counts"]["executed_shards"], 1)
+        self.assertEqual(changed["counts"]["executed_replays"], 1)
+        self.binary.write_bytes(original)
+        self.calls.clear()
+        _, reverted = self.run_campaign(*args)
+        self.assertEqual((self.calls, reverted["counts"]["reused_shards"]), ([], 1))
+        self.assertEqual(first["actions"][0]["key"], reverted["actions"][-1]["key"])
+
+    def test_evicted_shared_corpus_republishes_changed_candidate_replay_for_warm_reuse(self):
+        shared = self.root / "shared-evidence"
+        args = ("--target", "incremental", "--shared-cache-dir", str(shared))
+        _, cold = self.run_campaign(*args)
+        backend = evidence.Store(shared)
+        corpus = backend.load_success(cold["actions"][0]["key"])["corpus"]
+        backend._path("blobs", corpus).unlink()
+        self.binary.write_bytes(self.binary.read_bytes() + b"# changed candidate\n")
+        self.calls.clear()
+        status, changed = self.run_campaign(*args)
+        self.assertEqual((status, changed["counts"]["executed_replays"]), (0, 1))
+        replay = next(row for row in changed["actions"] if row["operation"] == "replay")
+        self.assertEqual(backend.load_success(replay["key"]), {"corpus": corpus})
+        self.assertIsNotNone(backend.read_blob(corpus))
+        self.calls.clear()
+        status, warm = self.run_campaign(*args)
+        self.assertEqual((status, self.calls, warm["admissions"]), (0, [], []))
+
+    def test_forced_different_corpus_conflicts_with_previous_deterministic_success(self):
+        shared = self.root / "shared-evidence"
+        args = ("--target", "incremental", "--shared-cache-dir", str(shared))
+        _, cold = self.run_campaign(*args)
+        key = cold["actions"][0]["key"]
+        self.failure = True
+        status, failed = self.run_campaign(*args, "--force")
+        self.assertEqual((status, failed["success"]), (1, False))
+        self.assertIsNone(evidence.Store(shared).load_success(key))
+        self.failure = False
+        def change(request):
+            if request["operation"] == "explore":
+                bundle = Path(request["output"]) / "corpus.json"
+                payload = json.loads(bundle.read_text())
+                payload["different-output"] = True
+                bundle.write_text(json.dumps(payload))
+        self.after = change
+        with self.assertRaises(evidence.DeterminismError):
+            self.run_campaign(*args, "--force")
+        self.assertIsNone(evidence.Store(shared).load_success(key))
+        self.assertFalse(json.loads((self.root / "cache/last-run.json").read_text())["success"])
+
+    def test_rejected_success_publication_cannot_report_completed_campaign(self):
+        with patch.object(evidence.Store, "publish_success", return_value=False):
+            with self.assertRaisesRegex(ValueError, "could not publish qualified success"):
+                self.run_campaign("--target", "incremental")
+        self.assertFalse(json.loads((self.root / "cache/last-run.json").read_text())["complete"])
+
+    def test_shared_evidence_lease_prevents_gc_during_worker_consumption(self):
+        shared = self.root / "shared-evidence"
+        observed = []
+        self.before = lambda *_: observed.append(evidence.Store(shared).gc(dry_run=False))
+        status, result = self.run_campaign("--target", "incremental", "--shared-cache-dir", str(shared))
+        self.assertEqual(status, 0)
+        self.assertTrue(observed)
+        self.assertTrue(all(row["skipped_active"] for row in observed))
+        self.assertGreater(result["snapshot_statistics"]["files_hashed"], 0)
+
+    def lock_process(self, private, shared, family):
+        context = multiprocessing.get_context('spawn')
+        channel, child = context.Pipe()
+        process = context.Process(target=campaign_lock_process, args=(private, shared, family, child))
+        process.start()
+        child.close()
+        def cleanup():
+            if process.is_alive():
+                process.kill()
+            process.join(timeout=5)
+            channel.close()
+        self.addCleanup(cleanup)
+        self.assertTrue(channel.poll(5), 'lock process did not start')
+        self.assertEqual(channel.recv(), 'waiting')
+        return process, channel
+
+    def test_shared_family_workflow_blocks_other_private_cache_and_releases_after_crash(self):
+        for crashed in (False, True):
+            with self.subTest(crashed=crashed):
+                shared = self.root / ('shared-lock-' + str(crashed))
+                family = hashlib.sha256(b'same campaign').hexdigest()
+                first, active = self.lock_process(self.root / ('private-first-' + str(crashed)), shared, family)
+                self.assertTrue(active.poll(5))
+                self.assertEqual(active.recv(), ('entered', True))
+                second, waiting = self.lock_process(self.root / ('private-second-' + str(crashed)), shared, family)
+                self.assertFalse(waiting.poll(0.2), 'shared refresh lock failed to block another private cache')
+                if crashed:
+                    first.kill()
+                else:
+                    active.send('release')
+                first.join(timeout=5)
+                self.assertFalse(first.is_alive())
+                self.assertTrue(waiting.poll(5), 'shared workflow lock was not released')
+                self.assertEqual(waiting.recv(), ('entered', True))
+                waiting.send('release')
+                second.join(timeout=5)
+                self.assertEqual(second.exitcode, 0)
+
+    def test_aliased_private_and_shared_store_lock_is_acquired_once(self):
+        private = self.root / 'aliased-store'
+        private.mkdir()
+        alias = self.root / 'aliased-path'
+        alias.symlink_to(private, target_is_directory=True)
+        store = campaign.CampaignStore(private, alias)
+        self.assertIs(store.local, store.success)
+        process, channel = self.lock_process(private, alias, hashlib.sha256(b'alias').hexdigest())
+        self.assertTrue(channel.poll(5), 'alias attempted to lock the same flock twice')
+        self.assertEqual(channel.recv(), ('entered', True))
+        channel.send('release')
+        process.join(timeout=5)
+        self.assertEqual(process.exitcode, 0)
+
+    def test_identical_binary_bytes_at_changed_path_do_not_share_action_success(self):
+        args = ("--target", "incremental", "--shared-cache-dir", str(self.root / "shared-evidence"))
+        _, cold = self.run_campaign(*args)
+        other = self.root / "candidate-at-other-path"
+        other.write_bytes(self.binary.read_bytes())
+        other.chmod(self.binary.stat().st_mode & 0o7777)
+        self.calls.clear()
+        _, changed = self.run_campaign(*args, "--compiler", str(other))
+        self.assertEqual(changed["counts"]["executed_shards"], 1)
+        self.assertNotEqual(cold["actions"][0]["key"], changed["actions"][-1]["key"])
 
     def test_completed_shards_reuse_before_admission_and_extension_only_adds_one(self):
         status, cold = self.run_campaign("--target", "incremental", "--shards", "2")
@@ -162,7 +329,7 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaises(evidence.InputsChanged):
             self.run_campaign("--target", "incremental")
         self.assertEqual(self.calls, [])
-        self.assertFalse((self.store.root / "success").exists())
+        self.assertEqual([], list((self.store.root / "success").glob("*.json")))
 
     def test_staged_replay_bundle_aba_prevents_new_target_success(self):
         self.run_campaign("--target", "incremental")
@@ -189,7 +356,7 @@ class CampaignTests(unittest.TestCase):
         self.after = change
         with self.assertRaises(evidence.InputsChanged):
             self.run_campaign("--hermetic", coverage=True)
-        self.assertFalse((self.store.root / "success").exists())
+        self.assertEqual([], list((self.store.root / "success").glob("*.json")))
 
     def test_coverage_request_binds_only_the_staged_initial_digests(self):
         self.run_campaign("--hermetic", coverage=True)
@@ -208,7 +375,7 @@ class CampaignTests(unittest.TestCase):
             with self.assertRaisesRegex(evidence.InputsChanged, "during capture"):
                 self.run_campaign("--hermetic", coverage=True)
         self.assertEqual(self.calls, [])
-        self.assertFalse((self.store.root / "success").exists())
+        self.assertEqual([], list((self.store.root / "success").glob("*.json")))
 
     def test_staged_request_watch_survives_until_post_publication_guard(self):
         publish = evidence.Store.publish_success
@@ -236,7 +403,7 @@ class CampaignTests(unittest.TestCase):
         with self.assertRaises(evidence.InputsChanged):
             self.run_campaign("--hermetic", coverage=True)
         self.assertEqual(self.calls, [])
-        self.assertFalse((self.store.root / "success").exists())
+        self.assertEqual([], list((self.store.root / "success").glob("*.json")))
 
     def test_staging_write_to_watch_gap_cannot_bless_modified_request(self):
         atomic = campaign.verification.atomic_record
@@ -249,7 +416,7 @@ class CampaignTests(unittest.TestCase):
             with self.assertRaisesRegex(evidence.InputsChanged, "during capture"):
                 self.run_campaign("--target", "incremental")
         self.assertEqual(self.calls, [])
-        self.assertFalse((self.store.root / "success").exists())
+        self.assertEqual([], list((self.store.root / "success").glob("*.json")))
 
     def test_seed_and_execution_settings_change_action_identity(self):
         self.run_campaign("--target", "incremental")
@@ -326,7 +493,7 @@ class CampaignTests(unittest.TestCase):
         self.after = change
         with self.assertRaises(evidence.InputsChanged):
             self.run_campaign("--target", "incremental")
-        self.assertFalse((self.store.root / "success").exists())
+        self.assertEqual([], list((self.store.root / "success").glob("*.json")))
         self.assertFalse(json.loads((self.root / "cache/last-run.json").read_text())["success"])
 
     def test_completed_target_remains_watched_during_later_target(self):
@@ -340,13 +507,11 @@ class CampaignTests(unittest.TestCase):
         self.assertFalse(json.loads((self.root / "cache/last-run.json").read_text())["success"])
 
     def test_valid_envelope_with_wrong_result_shape_is_a_miss(self):
-        _, cold = self.run_campaign("--target", "incremental")
-        key = cold["actions"][0]["key"]
-        self.store.discard_success(key)
-        self.store.publish_success(key, {}, [], lambda: True)
-        self.calls.clear()
         self.run_campaign("--target", "incremental")
-        self.assertEqual(["explore"], [r["operation"] for r in self.calls])
+        self.calls.clear()
+        with patch.object(evidence.Store, "load_success", return_value={}):
+            self.run_campaign("--target", "incremental")
+        self.assertEqual(["replay", "explore"], [r["operation"] for r in self.calls])
 
     def test_corrupt_catalog_recovers_from_qualified_shard_without_execution(self):
         self.run_campaign("--target", "incremental")

@@ -1,0 +1,6 @@
+juice-cache: capture selka
+build-slot: FIFO ticket 102, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 102 after 11s
+juice: selka (perf, 2 samples)
+/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave6/juice/native/wave6-selka/records/capture-o0ek1ajk/record.json
+{"complete": true, "counts": {"admissions": 1, "executed": 1, "reused": 0}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/experiments/cache-wave6-20261010/shared-juice-cold.json", "success": true}

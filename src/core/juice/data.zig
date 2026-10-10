@@ -1,5 +1,6 @@
 //! JSON contracts shared by Juice commands; independent of collectors and hosts.
 const std = @import("std");
+const bytes_hash = @import("bytes_hash.zig");
 /// Shared JSON field spelling for timeout seconds.
 pub const key_timeout_seconds = "timeout_seconds";
 /// Shared JSON field spelling for exit code.
@@ -119,7 +120,7 @@ pub const Context = struct {
         defer file.close(c.io);
         var buffer: [65536]u8 = undefined;
         var reader = file.reader(c.io, &buffer);
-        var sha = std.crypto.hash.sha2.Sha256.init(.{});
+        var sha = bytes_hash.Hasher.init();
         while (true) {
             const bytes = reader.interface.peekGreedy(1) catch |err| switch (err) {
                 error.EndOfStream => break,
@@ -128,7 +129,7 @@ pub const Context = struct {
             sha.update(bytes);
             reader.interface.toss(bytes.len);
         }
-        return string(try c.a.dupe(u8, &std.fmt.bytesToHex(sha.finalResult(), .lower)));
+        return string(try c.a.dupe(u8, &std.fmt.bytesToHex(sha.final(), .lower)));
     }
     /// Hash sorted JSON with an explicit native identity domain.
     pub fn hash(c: *Context, document: Value) Error!Value {
@@ -143,8 +144,7 @@ pub const Context = struct {
         return hashBytesImpl(c, bytes) catch |err| failure(c, err);
     }
     fn hashBytesImpl(c: *Context, bytes: []const u8) !Value {
-        var result: [32]u8 = undefined;
-        std.crypto.hash.sha2.Sha256.hash(bytes, &result, .{});
+        const result = bytes_hash.hash(bytes);
         return string(try c.a.dupe(u8, &std.fmt.bytesToHex(result, .lower)));
     }
 };

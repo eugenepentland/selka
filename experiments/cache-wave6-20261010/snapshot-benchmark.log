@@ -1,0 +1,159 @@
+build-slot: gate slot 1, FIFO ticket 96 after 0s
+{
+  "input": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave6/hash/baseline-mylang",
+  "rows": [
+    {
+      "arm": "uncached",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30984,
+      "seconds": 0.5106621631421149,
+      "work": {
+        "bytes_hashed": 944475784,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "files_hashed": 4,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "session",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30888,
+      "seconds": 0.13130200002342463,
+      "work": {
+        "bytes_hashed": 236118946,
+        "digest_reuses": 3,
+        "directories_enumerated": 0,
+        "files_hashed": 1,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "session",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30856,
+      "seconds": 0.12887836317531765,
+      "work": {
+        "bytes_hashed": 236118946,
+        "digest_reuses": 3,
+        "directories_enumerated": 0,
+        "files_hashed": 1,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "uncached",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30816,
+      "seconds": 0.5888142758049071,
+      "work": {
+        "bytes_hashed": 944475784,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "files_hashed": 4,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "uncached",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30788,
+      "seconds": 0.5417494438588619,
+      "work": {
+        "bytes_hashed": 944475784,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "files_hashed": 4,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "session",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30656,
+      "seconds": 0.12962671392597258,
+      "work": {
+        "bytes_hashed": 236118946,
+        "digest_reuses": 3,
+        "directories_enumerated": 0,
+        "files_hashed": 1,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "session",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30560,
+      "seconds": 0.12728521903045475,
+      "work": {
+        "bytes_hashed": 236118946,
+        "digest_reuses": 3,
+        "directories_enumerated": 0,
+        "files_hashed": 1,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "uncached",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30824,
+      "seconds": 0.5021263619419187,
+      "work": {
+        "bytes_hashed": 944475784,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "files_hashed": 4,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "uncached",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30808,
+      "seconds": 0.4984183118212968,
+      "work": {
+        "bytes_hashed": 944475784,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "files_hashed": 4,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    },
+    {
+      "arm": "session",
+      "identity": "59fd309a6f8907e770bde74bbad0a33f5e08af73153bc8c4cf9a5630916f4bf6",
+      "max_rss_kib": 30688,
+      "seconds": 0.12768309586681426,
+      "work": {
+        "bytes_hashed": 236118946,
+        "digest_reuses": 3,
+        "directories_enumerated": 0,
+        "files_hashed": 1,
+        "metadata_observations": 132,
+        "validation_calls": 8
+      }
+    }
+  ],
+  "snapshots_per_invocation": 4,
+  "success": true,
+  "summaries": {
+    "session": {
+      "median_max_rss_kib": 30688,
+      "median_seconds": 0.12887836317531765
+    },
+    "uncached": {
+      "median_max_rss_kib": 30816,
+      "median_seconds": 0.5106621631421149
+    }
+  },
+  "version": 1
+}

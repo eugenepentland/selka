@@ -77,13 +77,17 @@ class Supervision(unittest.TestCase):
     def assert_reaped(self, pids):
         self.assertTrue(all(not Path(f'/proc/{pid}').exists() for pid in pids.values()), pids)
 
-    def tree(self, path, *, ignore=False, exit_code=None):
+    def tree(self, path, *, ignore=False, exit_code=None, readiness_gate=None):
         descendant = IGNORE_TERM if ignore else SLEEPER
         middle = (
             'import os,sys,json,subprocess,time,signal\n'
             + ('signal.signal(signal.SIGTERM,signal.SIG_IGN)\n' if ignore else '')
             + f'g=subprocess.Popen([sys.executable,"-c",{descendant!r}],start_new_session=True)\n'
-            'open(sys.argv[1],"w").write(json.dumps({"middle":os.getpid(),"leaf":g.pid}))\n'
+            'temporary=sys.argv[1]+".middle.tmp"\n'
+            'with open(temporary,"w") as stream:\n'
+            + (f' while not os.path.exists({str(readiness_gate)!r}): time.sleep(.01)\n' if readiness_gate else '')
+            + ' stream.write(json.dumps({"middle":os.getpid(),"leaf":g.pid}))\n'
+            'os.replace(temporary,sys.argv[1])\n'
             'time.sleep(60)\n')
         code = (
             'import os,sys,json,subprocess,time,signal\n'
@@ -91,7 +95,9 @@ class Supervision(unittest.TestCase):
             + f'p=subprocess.Popen([sys.executable,"-c",{middle!r},sys.argv[1]],start_new_session=True)\n'
             'while not os.path.exists(sys.argv[1]): time.sleep(.01)\n'
             'row=json.load(open(sys.argv[1])); row["native"]=os.getpid()\n'
-            'temporary=sys.argv[1]+".tmp"; open(temporary,"w").write(json.dumps(row)); os.replace(temporary,sys.argv[1])\n'
+            'temporary=sys.argv[1]+".native.tmp"\n'
+            'with open(temporary,"w") as stream: stream.write(json.dumps(row))\n'
+            'os.replace(temporary,sys.argv[1])\n'
             + (f'sys.exit({exit_code})\n' if exit_code is not None else 'time.sleep(60)\n'))
         process = self.start(code, path)
         deadline = time.monotonic() + 5
@@ -117,6 +123,31 @@ class Supervision(unittest.TestCase):
         process, pids = self.tree(self.root / 'cancel.json')
         self.assertNotEqual(os.getpgid(pids['native']), process.pid)
         self.assertNotEqual(os.getpgid(pids['middle']), os.getpgid(pids['native']))
+        os.killpg(process.pid, signal.SIGTERM)
+        _, stderr = process.communicate(timeout=7)
+        self.assertEqual(process.returncode, 143, stderr)
+        self.assert_reaped(pids)
+
+    def test_tree_readiness_is_hidden_until_closed_json_is_published(self):
+        path = self.root / 'atomic-ready.json'
+        gate = self.root / 'publish-ready'
+        start = self.start
+        def observe_unfinished_write(*args, **kwargs):
+            process = start(*args, **kwargs)
+            deadline = time.monotonic() + 5
+            temporary = Path(str(path) + '.middle.tmp')
+            try:
+                while not temporary.exists() and time.monotonic() < deadline:
+                    time.sleep(.01)
+                self.assertTrue(temporary.exists(), 'fixture never began readiness publication')
+                self.assertEqual(temporary.read_bytes(), b'')
+                self.assertFalse(path.exists(), 'root could observe unfinished readiness JSON')
+            finally:
+                gate.touch()
+            return process
+        with patch.object(self, 'start', side_effect=observe_unfinished_write):
+            process, pids = self.tree(path, readiness_gate=gate)
+        self.assertEqual(set(pids), {'native', 'middle', 'leaf'})
         os.killpg(process.pid, signal.SIGTERM)
         _, stderr = process.communicate(timeout=7)
         self.assertEqual(process.returncode, 143, stderr)

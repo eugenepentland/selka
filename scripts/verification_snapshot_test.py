@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from verification_snapshot import Snapshot, SnapshotError
+from verification_snapshot import DigestSession, Snapshot, SnapshotError
 
 
 class InputSnapshot(unittest.TestCase):
@@ -36,6 +36,113 @@ class InputSnapshot(unittest.TestCase):
         path.write_bytes(b'different')
         with Snapshot(self.root, ['input.txt']) as changed:
             self.assertNotEqual(json.dumps(changed.identity, sort_keys=True), identity)
+
+    def test_session_reads_overlapping_bytes_once_without_changing_identity(self):
+        self.file('input', b'content')
+        session = DigestSession()
+        with Snapshot(self.root, ['input'], digest_session=session) as first:
+            with Snapshot(self.root, ['input'], digest_session=session) as second:
+                self.assertEqual(first.identity, second.identity)
+                self.assertEqual(first.statistics['bytes_hashed'], 7)
+                self.assertEqual(second.statistics['bytes_hashed'], 0)
+                self.assertEqual(second.statistics['digest_reuses'], 1)
+                self.assertTrue(first.unchanged() and second.unchanged())
+
+    def test_session_closed_owner_requires_content_read(self):
+        self.file('input')
+        session = DigestSession()
+        with Snapshot(self.root, ['input'], digest_session=session) as first:
+            expected = first.identity
+        with Snapshot(self.root, ['input'], digest_session=session) as second:
+            self.assertEqual(second.identity, expected)
+            self.assertEqual(second.statistics['files_hashed'], 1)
+            self.assertEqual(second.statistics['digest_reuses'], 0)
+
+    def test_session_inherited_by_a_new_process_requires_content_read(self):
+        self.file('input')
+        session = DigestSession()
+        with Snapshot(self.root, ['input'], digest_session=session) as first:
+            with patch('verification_snapshot.os.getpid', return_value=os.getpid() + 1):
+                with Snapshot(self.root, ['input'], digest_session=session) as second:
+                    self.assertEqual(second.identity, first.identity)
+                    self.assertEqual(second.statistics['files_hashed'], 1)
+                    self.assertEqual(second.statistics['digest_reuses'], 0)
+
+    def test_session_restored_bytes_and_mtime_reject_old_watch(self):
+        path = self.file('input')
+        session = DigestSession()
+        with Snapshot(self.root, ['input'], digest_session=session) as first:
+            before = path.stat()
+            path.write_bytes(b'mutation')
+            path.write_bytes(b'original')
+            os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns))
+            with Snapshot(self.root, ['input'], digest_session=session) as second:
+                self.assertEqual(second.identity, first.identity)
+                self.assertEqual(second.statistics['files_hashed'], 1)
+                self.assertFalse(first.unchanged())
+                self.assertTrue(second.unchanged())
+
+    def test_session_same_size_restored_mtime_cannot_reuse_old_digest(self):
+        path = self.file('input')
+        session = DigestSession()
+        with Snapshot(self.root, ['input'], digest_session=session) as first:
+            before = path.stat()
+            path.write_bytes(b'mutation')
+            os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns))
+            with Snapshot(self.root, ['input'], digest_session=session) as second:
+                self.assertNotEqual(first.identity, second.identity)
+                self.assertEqual(second.statistics['bytes_hashed'], 8)
+                self.assertFalse(first.unchanged())
+
+    def test_session_watch_failure_cannot_supply_a_hash(self):
+        self.file('input')
+        session = DigestSession()
+        with Snapshot(self.root, ['input'], digest_session=session) as first:
+            first._watcher.failure = 'injected event loss'
+            with self.assertRaisesRegex(SnapshotError, 'event loss'):
+                with Snapshot(self.root, ['input'], digest_session=session):
+                    pass
+
+    def test_session_receiver_keeps_own_watch_after_owner_closes(self):
+        path = self.file('input')
+        session = DigestSession()
+        with Snapshot(self.root, ['input'], digest_session=session) as first:
+            with Snapshot(self.root, ['input'], digest_session=session) as second:
+                first.close()
+                path.write_bytes(b'mutation')
+                self.assertFalse(second.unchanged())
+
+    def test_session_bound_eviction_only_costs_reads(self):
+        self.file('a')
+        self.file('b')
+        session = DigestSession(max_entries=1)
+        with Snapshot(self.root, ['a', 'b'], digest_session=session) as first:
+            with Snapshot(self.root, ['a', 'b'], digest_session=session) as second:
+                self.assertEqual(first.identity, second.identity)
+                self.assertEqual(second.statistics['files_hashed'], 1)
+                self.assertEqual(second.statistics['digest_reuses'], 1)
+                self.assertEqual(len(session._entries), 1)
+
+    def test_session_shares_alias_bytes_but_keeps_alias_identity(self):
+        self.file('input')
+        (self.root / 'alias').symlink_to('input')
+        session = DigestSession()
+        with Snapshot(self.root, ['input'], digest_session=session) as first:
+            with Snapshot(self.root, ['alias'], digest_session=session) as second:
+                self.assertEqual(second.statistics['digest_reuses'], 1)
+                self.assertNotEqual(first.identity, second.identity)
+                (self.root / 'alias').unlink()
+                (self.root / 'alias').symlink_to('input')
+                self.assertFalse(second.unchanged())
+
+    def test_statistics_are_detached_and_not_semantic_inputs(self):
+        self.file('input')
+        with Snapshot(self.root, ['input']) as snapshot:
+            before = snapshot.identity
+            stats = snapshot.statistics
+            stats['bytes_hashed'] = -1
+            self.assertGreaterEqual(snapshot.statistics['bytes_hashed'], 0)
+            self.assertEqual(snapshot.identity, before)
 
     def test_membership_is_direct_inclusive_and_does_not_hash_or_follow_children(self):
         self.file('loader/.hidden')

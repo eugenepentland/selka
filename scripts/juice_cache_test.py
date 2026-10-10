@@ -152,6 +152,55 @@ class Coordinator(unittest.TestCase):
             status = cache.execute(self.args(*extra))
         return status, cache.document(self.root / "cache/last-run.json")
 
+    def test_shared_measurements_reuse_without_admission_and_outputs_stay_private(self):
+        shared = self.root / "shared-evidence"
+        args = ("--target", "alpha", "--shared-cache-dir", str(shared))
+        _, cold = self.capture(*args)
+        self.calls.clear()
+        _, warm = self.capture(*args)
+        self.assertEqual((self.calls, warm["counts"]), ([], {"executed": 0, "reused": 1, "admissions": 0}))
+        self.assertEqual(cold["actions"][0]["key"], warm["actions"][0]["key"])
+        self.assertTrue(Path(warm["actions"][0]["record"]).is_relative_to(self.root / "cache/runs"))
+        self.assertFalse((shared / "runs").exists())
+        self.assertTrue(warm["evidence_store"]["shared"])
+        self.assertGreater(warm["snapshot_statistics"]["files_hashed"], 0)
+
+    def test_shared_workload_path_change_remains_an_exact_identity_miss(self):
+        shared = self.root / "shared-evidence"
+        _, cold = self.capture("--target", "alpha", "--shared-cache-dir", str(shared))
+        other = self.root / "compiler-at-other-path"
+        other.write_bytes(self.binary.read_bytes())
+        other.chmod(0o755)
+        self.calls.clear()
+        _, moved = self.capture("--target", "alpha", "--shared-cache-dir", str(shared), "--compiler", str(other))
+        self.assertEqual(self.calls, ["alpha"])
+        self.assertNotEqual(cold["actions"][0]["key"], moved["actions"][0]["key"])
+
+    def test_shared_gc_cannot_remove_lazy_evidence_during_materialization(self):
+        shared = self.root / "shared-evidence"
+        args = ("--target", "alpha", "--shared-cache-dir", str(shared))
+        self.capture(*args)
+        materialize = evidence.EvidenceStore.materialize
+        observed = []
+        def protected(retained, destination):
+            observed.append(cache.fuzz_campaign_store.Store(shared).gc(dry_run=False))
+            return materialize(retained, destination)
+        with patch.object(evidence.EvidenceStore, "materialize", side_effect=protected):
+            _, warm = self.capture(*args)
+        self.assertEqual(warm["counts"]["reused"], 1)
+        self.assertTrue(observed[0]["skipped_active"])
+
+    def test_shared_store_cannot_overlap_declared_source_scope(self):
+        source = self.root / "alpha"
+        original = self.plan
+        def scoped(*arguments):
+            value = original(*arguments)
+            value["input_scopes"]["directories"] = [str(source)]
+            return value
+        with patch.object(cache, "plan", side_effect=scoped), self.assertRaisesRegex(ValueError, "overlap"):
+            self.capture("--target", "alpha", "--shared-cache-dir", str(source / "shared-evidence"))
+        self.assertEqual(self.calls, [])
+
     def policies(self, **fields):
         value = cache.document(self.contract)
         for row in value["workloads"]:
@@ -218,7 +267,7 @@ class Coordinator(unittest.TestCase):
 
     def test_corrupt_retained_raw_bytes_remeasure_only_affected_workloads(self):
         _, cold = self.capture("--target", "alpha")
-        store = evidence.EvidenceStore(self.root / "cache/evidence")
+        store = evidence.EvidenceStore(self.root / "cache/evidence-v2")
         receipt = store.lookup(cold["actions"][0]["key"], cold["actions"][0]["expected"])
         store.backend._path("blobs", receipt.record_digest).write_bytes(b"damaged")
         self.calls.clear()

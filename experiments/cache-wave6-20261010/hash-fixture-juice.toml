@@ -1,0 +1,14 @@
+version = 1
+name = "test-project"
+sources = ["program.c"]
+inputs = ["data.txt"]
+[build]
+compiler = "cc"
+command = ["{compiler}", "-O2", "-g", "{root}/program.c", "-o", "{binary}"]
+[[workloads]]
+name = "quick"
+family = "test"
+unit = "record"
+units = 8
+args = []
+expected_stdout = "ok\n"

@@ -151,6 +151,7 @@ pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
 
 /// Receipt admission and immutable-snapshot adversarial tests use fake actions.
 pub const verification_cache = [_][]const u8{
+    "scripts/fuzz_campaign_store.py",
     "scripts/verify_cache.py",
     "scripts/verification_snapshot.py",
     "scripts/verification_artifacts.py",
@@ -166,6 +167,8 @@ pub const fuzz_campaign = [_][]const u8{
     "scripts/fuzz_campaign_identity.py",
     "scripts/fuzz_campaign_store.py",
     "scripts/fuzz_campaign_store_test.py",
+    "scripts/cache_retention.py",
+    "scripts/cache_retention_test.py",
     "scripts/fuzz_campaign_test.py",
     "scripts/fuzz_coverage.py",
     "scripts/fuzz_coverage_test.py",

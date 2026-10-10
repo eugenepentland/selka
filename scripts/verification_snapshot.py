@@ -180,6 +180,46 @@ def _directory_identity(value: os.stat_result) -> tuple[int, ...]:
     return value.st_dev, value.st_ino, stat.S_IFMT(value.st_mode)
 
 
+class DigestSession:
+    """Reuse hashes only across overlapping, still-watched snapshots in one process.
+
+    This is bounded scratch, never a persisted metadata-to-digest index. Closing
+    the source snapshot, a relevant event or watcher failure removes its authority.
+    The receiving snapshot installs its own watch before consulting this session.
+    """
+
+    def __init__(self, max_entries: int = 16384) -> None:
+        if type(max_entries) is not int or not 0 <= max_entries <= 65536:
+            raise ValueError("digest session bound must be between 0 and 65536")
+        self.max_entries = max_entries
+        self._entries: dict[Path, tuple] = {}
+        self._pid = os.getpid()
+
+    def _current_process(self) -> None:
+        if self._pid != os.getpid():
+            # Forked readers must not consume the parent's watch queue as proof.
+            self._entries.clear()
+            self._pid = os.getpid()
+
+    def lookup(self, path: Path, metadata: os.stat_result) -> tuple[str, int] | None:
+        self._current_process()
+        entry = self._entries.get(path)
+        if entry is None:
+            return None
+        identity, result, owner = entry
+        if (owner._watcher is None or identity != _file_identity(metadata)
+                or not owner._watcher.drain()):
+            self._entries.pop(path, None)
+            return None
+        return result
+
+    def remember(self, path: Path, metadata: os.stat_result,
+                 result: tuple[str, int], owner: Snapshot) -> None:
+        self._current_process()
+        if path in self._entries or len(self._entries) < self.max_entries:
+            self._entries[path] = (_file_identity(metadata), result, owner)
+
+
 class Snapshot:
     """Watch and stream-hash declared inputs until the context is released.
 
@@ -203,7 +243,8 @@ class Snapshot:
 
     def __init__(self, root: Path, recipes: list[str], extra_files: list[Path] | None = None,
                  *, include_hidden: bool = False,
-                 directory_membership: Iterable[Path] = ()) -> None:
+                 directory_membership: Iterable[Path] = (),
+                 digest_session: DigestSession | None = None) -> None:
         self._requested_root = Path(root).absolute()
         self.recipes = list(recipes)
         self.extra_files = list(extra_files or ())
@@ -219,6 +260,15 @@ class Snapshot:
                 raise SnapshotError("too many directory membership roots")
             self.directory_membership.append(self._input_path(path))
         self._missing: set[Path] = set()
+        self._digest_session = digest_session
+        self._statistics = dict(files_hashed=0, bytes_hashed=0, digest_reuses=0,
+                                directories_enumerated=0, metadata_observations=0,
+                                validation_calls=0)
+
+    @property
+    def statistics(self) -> dict[str, int]:
+        """Actual snapshot work, separate from content identities and cache keys."""
+        return dict(self._statistics)
 
     @property
     def identity(self) -> dict:
@@ -301,6 +351,7 @@ class Snapshot:
             return str(path)
 
     def _observe(self, path: Path, value: os.stat_result) -> None:
+        self._statistics["metadata_observations"] += 1
         directory = stat.S_ISDIR(value.st_mode)
         identity = _directory_identity(value) if directory else _file_identity(value)
         previous = self._paths.setdefault(path, (directory, identity))
@@ -362,6 +413,7 @@ class Snapshot:
         # is relevant, but no child directory or directory alias target is traversed.
         self._watcher.add(actual, directory=True).membership = True
         entries = []
+        self._statistics["directories_enumerated"] += 1
         with os.scandir(actual) as directory:
             for entry in directory:
                 if len(entries) >= _MAX_MEMBERSHIP_ENTRIES:
@@ -432,6 +484,7 @@ class Snapshot:
             raise SnapshotError(f"declared recipe names no directory: {base}")
         self._watcher.add(actual, directory=True).scopes.add((suffix, recursive))
         found = []
+        self._statistics["directories_enumerated"] += 1
         with os.scandir(actual) as entries:
             ordered = sorted(entries, key=lambda entry: entry.name)
         for entry in ordered:
@@ -460,6 +513,12 @@ class Snapshot:
 
     def _hash_file(self, path: Path) -> tuple[str, int]:
         before = path.lstat()
+        if self._digest_session is not None:
+            reused = self._digest_session.lookup(path, before)
+            if reused is not None:
+                self._observe(path, before)
+                self._statistics["digest_reuses"] += 1
+                return reused
         flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK
         fd = os.open(path, flags)
         with os.fdopen(fd, "rb") as handle:
@@ -467,21 +526,27 @@ class Snapshot:
             if not stat.S_ISREG(opened.st_mode) or _file_identity(opened) != _file_identity(before):
                 raise SnapshotError(f"input changed before hashing: {path}")
             digest = hashlib.sha256()
+            self._statistics["files_hashed"] += 1
             size = 0
             while chunk := handle.read(_CHUNK_SIZE):
                 digest.update(chunk)
                 size += len(chunk)
+                self._statistics["bytes_hashed"] += len(chunk)
             after = os.fstat(handle.fileno())
         if (_file_identity(before) != _file_identity(after) or
                 _file_identity(path.lstat()) != _file_identity(before) or size != before.st_size):
             raise SnapshotError(f"input changed while hashing: {path}")
         self._observe(path, after)
-        return digest.hexdigest(), size
+        result = digest.hexdigest(), size
+        if self._digest_session is not None:
+            self._digest_session.remember(path, after, result, self)
+        return result
 
     def unchanged(self) -> bool:
         """Reject relevant events or changed path identities without rehashing files."""
         if self._watcher is None or self._identity is None:
             raise SnapshotError("snapshot is not active")
+        self._statistics["validation_calls"] += 1
         clean = self._watcher.drain()
         for path in self._missing:
             try:

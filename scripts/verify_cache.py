@@ -32,6 +32,7 @@ import time
 
 from verification_snapshot import Snapshot, SnapshotError
 import verification_snapshot
+import fuzz_campaign_store
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = 1
@@ -43,7 +44,7 @@ CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
 PREPARE_INPUTS = ["src/", "test/", "tests/", "selfhost/",
                   "docs/", "README.md", "SPEC.md", "benchmarks/runtime/ports/native_clock.c"]
 COORDINATOR_INPUTS = ["scripts/verify_cache.py", "scripts/verification_snapshot.py",
-                      "scripts/verification_artifacts.py", "scripts/build-slot.sh"]
+                      "scripts/verification_artifacts.py", "scripts/fuzz_campaign_store.py", "scripts/build-slot.sh"]
 # These are the host tools used by the registered test adapters and admission.
 # An adapter needing another external provider must declare it here or stay fresh.
 HOST_TOOLS = ("python3", "sh", "bash", "env", "grep", "sort", "mktemp", "rm",
@@ -410,6 +411,18 @@ def check_all(snapshots: list[Snapshot]) -> bool:
     return all(snapshot.unchanged() for snapshot in snapshots)
 
 
+def snapshot_statistics(snapshots) -> dict[str, int]:
+    """Sum observed filesystem work, counting each live snapshot only once."""
+    result, seen = {}, set()
+    for snapshot in snapshots:
+        if id(snapshot) in seen:
+            continue
+        seen.add(id(snapshot))
+        for name, value in getattr(snapshot, "statistics", {}).items():
+            result[name] = result.get(name, 0) + value
+    return result
+
+
 def publish_checked(path: Path, value: dict, snapshots: list[Snapshot]) -> None:
     published = False
     try:
@@ -434,8 +447,9 @@ def zig_command(zig: Path, targets: list[str], options: list[str], rerun: bool =
 
 def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[str, str],
             common: dict, snapshots: list[Snapshot], stack: ExitStack,
-            timings: list[dict] | None = None, phases: dict | None = None) -> tuple[dict, Snapshot, float]:
-    config = stack.enter_context(Snapshot(root, CONFIG_INPUTS + COORDINATOR_INPUTS))
+            timings: list[dict] | None = None, phases: dict | None = None,
+            digest_session=None) -> tuple[dict, Snapshot, float]:
+    config = stack.enter_context(Snapshot(root, CONFIG_INPUTS + COORDINATOR_INPUTS, digest_session=digest_session))
     snapshots.append(config)
     common["build_configuration"] = key(config.identity)
     config_key = key({"common": common, "configuration": config.identity})
@@ -460,7 +474,7 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
         plan = inventory(plan_path)
         publish_checked(plan_receipt, {"key": config_key, "inventory": key(plan)}, snapshots)
     source_started = time.monotonic()
-    sources = stack.enter_context(Snapshot(root, PREPARE_INPUTS))
+    sources = stack.enter_context(Snapshot(root, PREPARE_INPUTS, digest_session=digest_session))
     if phases is not None:
         phases["source_snapshot_seconds"] = time.monotonic() - source_started
     snapshots.append(sources)
@@ -469,7 +483,7 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
     artifacts = None
     if saved and saved.get("key") == preparation_key:
         try:
-            candidate = stack.enter_context(Snapshot(root, [], artifact_paths(root)))
+            candidate = stack.enter_context(Snapshot(root, [], artifact_paths(root), digest_session=digest_session))
             if saved.get("artifacts") == candidate.identity:
                 artifacts = candidate
             else:
@@ -482,14 +496,15 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
         held += seconds
         if status or not check_all(snapshots):
             raise VerificationError("artifact preparation failed or its inputs changed (exit %d)" % status)
-        artifacts = stack.enter_context(Snapshot(root, [], artifact_paths(root)))
+        artifacts = stack.enter_context(Snapshot(root, [], artifact_paths(root), digest_session=digest_session))
         publish_checked(cache / "preparation.json", {"key": preparation_key, "artifacts": artifacts.identity},
                         snapshots + [artifacts])
     snapshots.append(artifacts)
     return plan, artifacts, held
 
 
-def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False) -> int:
+def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False,
+            shared_cache_dir: Path | None = None) -> int:
     started = time.monotonic()
     admissions, phases = [], {}
     (root / "zig-out/verification").mkdir(parents=True, exist_ok=True)
@@ -498,7 +513,13 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
     env["MYLANG_ZIG"] = str(zig)
     tool_recipes, tool_files = tool_contract(zig, env)
     with ExitStack() as stack:
-        tools = stack.enter_context(Snapshot(root, tool_recipes, tool_files))
+        shared = None if shared_cache_dir is None else fuzz_campaign_store.Store(shared_cache_dir)
+        if shared is not None:
+            stack.enter_context(shared.lease())
+            coordinator = key({"domain": "verification-coordinator-v1", "root": str(root)})
+            stack.enter_context(shared.coordinator_lock(coordinator))
+        session = verification_snapshot.DigestSession()
+        tools = stack.enter_context(Snapshot(root, tool_recipes, tool_files, digest_session=session))
         if tool_contract(zig, env) != (tool_recipes, tool_files) or not tools.unchanged():
             raise VerificationError("tool resolution changed while installing input watches")
         host = HostContext()
@@ -506,15 +527,16 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         common = {"version": VERSION, "root": str(root), "options": options,
                   "environment": key(env), "platform": host.identity,
                   "tools": key(tools.identity),
-                  "implementation": [LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256]}
-        plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack, admissions, phases)
+                  "implementation": [LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
+                                     fuzz_campaign_store.LOADED_CODE_SHA256]}
+        plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack, admissions, phases, session)
         common["artifacts"] = key(artifacts.identity)
         common["inventory"] = key(plan)
         providers = artifact_providers(root, artifacts)
         groups = plan["groups"]
         recipes = sorted({entry for group in groups for entry in group["inputs"]})
         input_started = time.monotonic()
-        inputs = stack.enter_context(Snapshot(root, recipes))
+        inputs = stack.enter_context(Snapshot(root, recipes, digest_session=session))
         phases["action_input_snapshot_seconds"] = time.monotonic() - input_started
         snapshots.append(inputs)
         unsupported = [name for name in UNTRACKED_ENV if env.get(name)]
@@ -529,7 +551,10 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             action_key = action_identity(group, inputs, common, root, providers)
             keys[group["id"]] = action_key
             reusable = group["cacheable"] and not force and not unsupported
-            hit = reusable and valid_receipt(cache / "actions" / (action_key + ".json"), action_key)
+            expected_receipt = {"version": VERSION, "kind": "verification-success", "key": action_key}
+            saved = shared.load_success(action_key) if reusable and shared is not None else None
+            hit = reusable and (saved == expected_receipt if shared is not None else
+                                valid_receipt(cache / "actions" / (action_key + ".json"), action_key))
             state = "reused" if hit else "execute" if reusable else "fresh"
             reason = "valid prior success" if hit else "no valid receipt" if reusable else group["reason"]
             if unsupported:
@@ -539,6 +564,8 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             results.append({"id": group["id"], "state": state, "reason": reason})
             print("verification: %s %s (%s)" % (state, group["id"], reason), flush=True)
             if not hit:
+                if shared is not None:
+                    shared.invalidate_success(action_key)
                 selected.append(group)
         if not check_all(snapshots):
             raise VerificationError("inputs changed during cache lookup; rerun verification")
@@ -569,6 +596,14 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                         path = cache / "actions" / (action_key + ".json")
                         published.append(path)
                         save_receipt(path, action_key)
+                        if shared is not None:
+                            value = {"version": VERSION, "kind": "verification-success", "key": action_key}
+                            try:
+                                if not shared.publish_success(action_key, value, [], lambda: check_all(snapshots)):
+                                    raise VerificationError("shared verification success publication rejected")
+                            except fuzz_campaign_store.InputsChanged:
+                                status = RETRY
+                                break
                 if not check_all(snapshots):
                     status = RETRY
                 publication_valid = status == 0
@@ -576,11 +611,16 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 if not publication_valid:
                     for path in published:
                         path.unlink(missing_ok=True)
+                        if shared is not None:
+                            shared.invalidate_success(path.stem)
         phases["publication_seconds"] = time.monotonic() - publication_started
         report = {"version": VERSION, "success": status == 0, "status": status,
                   "actions": results, "inputs_stable": stable,
                   "build_admitted_seconds": build_seconds, "gate_admitted_seconds": gate_seconds,
                   "admissions": admissions, "timings": phases,
+                  "snapshot_statistics": snapshot_statistics(snapshots),
+                  "evidence_store": {"shared": shared is not None,
+                                     "root": str(shared.root if shared is not None else cache / "actions")},
                   "elapsed_seconds": time.monotonic() - started}
         atomic_record(cache / "last-run.json", report)
         print("verification: %s; %d reused, %d selected; build admitted %.3fs, gate admitted %.3fs" %
@@ -624,6 +664,7 @@ def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--zig", default=os.environ.get("MYLANG_ZIG") or os.environ.get("ZIG") or "zig")
     parser.add_argument("--force", action="store_true", help="execute every required action, retaining fresh successful evidence")
+    parser.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared success evidence; inventory and runs stay private")
     parser.add_argument("options", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     cancellation = 130
@@ -642,8 +683,9 @@ def main(argv: list[str]) -> int:
         # slots, so preparation and forced invalidation cannot race one another.
         with (cache / "coordinator.lock").open("a") as lock:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force)
-    except (VerificationError, SnapshotError, OSError) as error:
+            return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, args.shared_cache_dir)
+    except (VerificationError, SnapshotError, OSError, ValueError,
+            fuzz_campaign_store.FormatError, fuzz_campaign_store.DeterminismError) as error:
         print("verification: FAIL: " + str(error), file=sys.stderr)
         return 2
     except KeyboardInterrupt:

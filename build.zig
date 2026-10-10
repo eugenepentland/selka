@@ -389,6 +389,14 @@ const CoreInputs = struct {
 ///   that step, which `zig build test` depends on.
 fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     const platform = b.createModule(.{ .root_source_file = b.path("src/config_core_tool_platform.zig") });
+    // A separate object also optimizes the standard-library SHA rounds, which
+    // otherwise inherit the root's Debug mode even through an optimized module.
+    const juice_bytes_hash = b.addObject(.{ .name = "juice_bytes_hash", .max_rss = rss.compile, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/core/juice/bytes_hash_impl.zig"),
+        .target = inputs.target,
+        .optimize = .ReleaseFast,
+        .pic = true,
+    }) });
     // The test runner's frame and byte ceilings share the run budget rules.
     const budget = b.modules.get("memory_budget") orelse @panic("memory_budget module");
     const options = b.addOptions();
@@ -434,6 +442,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     });
     inputs.compiler.root_module.addImport("mylang_core", cli);
     for ([_]*std.Build.Module{ unit.root_module, cli }) |module| {
+        module.addObject(juice_bytes_hash);
         module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
     }
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
@@ -865,6 +874,7 @@ pub fn build(b: *std.Build) void {
     for ([_][]const u8{
         "scripts/fuzz_campaign_store_test.py", "scripts/fuzz_campaign_test.py",
         "scripts/fuzz_coverage_test.py",       "tests/test_differential_corpus.py",
+        "scripts/cache_retention_test.py",
     }) |script| {
         const fuzz_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "fuzz_campaign");
         fuzz_run.addArgs(&.{ "python3", script });

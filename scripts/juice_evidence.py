@@ -495,6 +495,10 @@ class EvidenceStore:
     def __init__(self, root):
         self.backend = Store(Path(root))
 
+    def lease(self):
+        """Protect all lazy evidence reads/materialization from local shared GC."""
+        return self.backend.lease()
+
     def _lock(self, key, domain):
         _sha(key)
         identity = hashlib.sha256((domain + ':' + key).encode()).hexdigest()
@@ -561,7 +565,8 @@ class EvidenceStore:
         with self._lock(key, 'juice-publication-v1'):
             self.backend.discard_success(key)
 
-    def materialize(self, evidence, destination):
+    @staticmethod
+    def materialize(evidence, destination):
         """Atomically create a new record/raw directory and exact executable copies."""
         destination = Path(destination)
         _require(not destination.exists() and not destination.is_symlink(), 'destination already exists')
@@ -590,5 +595,4 @@ class EvidenceStore:
 
 def materialize(evidence, destination):
     """Materialize validated evidence without requiring a cache/action alias."""
-    # materialize uses only Evidence's own readers, never this temporary backend.
-    return EvidenceStore(Path(destination).parent).materialize(evidence, destination)
+    return EvidenceStore.materialize(evidence, destination)

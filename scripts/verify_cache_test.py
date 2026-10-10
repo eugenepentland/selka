@@ -117,9 +117,88 @@ class VerificationCoordinator(unittest.TestCase):
                             'worker_seconds': 0.0, 'observed_held_seconds': 0.0, 'elapsed_seconds': 0.0})
         return status, 0.0
 
-    def execute(self, options=None, force=False):
+    def execute(self, options=None, force=False, shared=None):
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            return coordinator.execute(self.root, self.cache, self.zig, options or ['-j3'], force)
+            return coordinator.execute(self.root, self.cache, self.zig, options or ['-j3'], force, shared)
+
+    def test_shared_success_reuses_after_private_action_receipts_removed(self):
+        shared = self.root / '.shared-evidence'
+        self.plan['groups'][0]['inputs'].append('tools/dependency')
+        self.save_plan()
+        self.assertEqual(self.execute(shared=shared), 0)
+        for path in self.receipts():
+            path.unlink()
+        self.admissions.clear()
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.assertEqual(self.admissions, [])
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertGreater(report['snapshot_statistics']['digest_reuses'], 0)
+        self.assertTrue(report['evidence_store']['shared'])
+        self.assertTrue((self.cache / 'inventory.json').is_file())
+        self.assertFalse((shared / 'inventory.json').exists())
+
+    def test_shared_changed_tool_path_does_not_reuse_exact_receipt(self):
+        shared = self.root / '.shared-evidence'
+        self.assertEqual(self.execute(shared=shared), 0)
+        changed = self.write('tools/zig-other-path', self.zig.read_text())
+        changed.chmod(0o755)
+        self.zig = changed
+        self.stack.enter_context(patch.object(coordinator, 'tool_contract', return_value=([], [self.zig, self.tool])))
+        self.admissions.clear()
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.assertIn('gate', [kind for kind, _ in self.admissions])
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+    def test_shared_lease_prevents_collection_across_admission(self):
+        shared = self.root / '.shared-evidence'
+        observed = []
+        self.before_gate = lambda: observed.append(coordinator.fuzz_campaign_store.Store(shared).gc(dry_run=False))
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.assertTrue(observed[0]['skipped_active'])
+
+    def test_shared_root_workflow_lock_spans_admission_and_publication(self):
+        shared = self.root / '.shared-evidence'
+        expected = coordinator.key({'domain': 'verification-coordinator-v1', 'root': str(self.root)})
+        lock = coordinator.fuzz_campaign_store.Store.coordinator_lock
+        publish = coordinator.fuzz_campaign_store.Store.publish_success
+        held, publications = [], []
+        @contextlib.contextmanager
+        def workflow(store, key):
+            self.assertEqual(key, expected)
+            with lock(store, key):
+                held.append(key)
+                try:
+                    yield
+                finally:
+                    held.pop()
+        def guarded_publish(*args, **kwargs):
+            self.assertEqual(held, [expected])
+            publications.append(args[1])
+            return publish(*args, **kwargs)
+        self.before_gate = lambda: self.assertEqual(held, [expected])
+        with patch.object(coordinator.fuzz_campaign_store.Store, 'coordinator_lock', new=workflow), \
+                patch.object(coordinator.fuzz_campaign_store.Store, 'publish_success', new=guarded_publish):
+            self.assertEqual(self.execute(shared=shared), 0)
+        self.assertEqual(len(publications), 2)
+        self.assertEqual(held, [])
+
+    def test_shared_forced_failure_removes_prior_success(self):
+        shared = self.root / '.shared-evidence'
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.gate_status = 17
+        self.assertEqual(self.execute(force=True, shared=shared), 17)
+        self.gate_status = None
+        self.admissions.clear()
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.assertIn('gate', [kind for kind, _ in self.admissions])
+
+    def test_shared_rejected_publication_is_not_success(self):
+        shared = self.root / '.shared-evidence'
+        with patch.object(coordinator.fuzz_campaign_store.Store, 'publish_success', return_value=False):
+            with self.assertRaisesRegex(coordinator.VerificationError, 'publication rejected'):
+                self.execute(shared=shared)
+        self.assertEqual(self.receipts(), [])
 
     def events(self, phase):
         path = self.root / '.events.json'

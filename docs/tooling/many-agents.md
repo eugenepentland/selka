@@ -212,6 +212,12 @@ reason cost little, so they do not count toward the four.
 
 ## Per-worktree environment
 
+Developer verification, fuzz and Juice coordinators can share exact evidence
+through `--shared-cache-dir DIR`, separate from their private worktree caches.
+Use a dedicated directory outside checkouts. The shared store has process leases,
+retention pins and an explicit collector; see [cache retention](cache-retention.md).
+Path-sensitive action identities remain distinct across worktrees.
+
 ```bash
 export ZIG_LOCAL_CACHE_DIR=$HOME/.cache/mylang/zig-local-cache-<lane>
 export TMPDIR=$HOME/.cache/mylang-tmp/<lane>

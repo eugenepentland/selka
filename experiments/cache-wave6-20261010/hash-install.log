@@ -1,0 +1,39 @@
+build-slot: build slot 1, FIFO ticket 898 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9525 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (deprecated-alias, repeated-string-literal)
+guardian: failures grouped by check (2):
+  deprecated-alias (1 finding)
+    - src/core/juice/tests.zig:246: std.builtin → use std.lang (std.builtin is removed after 0.17.0)
+      fix: rename to std.lang (std.builtin is removed after 0.17.0)
+  repeated-string-literal (2 findings)
+    - src/core/juice/tests.zig: string literal artifact appears 8 times (lines 193, 258, 261, 262, 265, 266, 267, 276) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+    - src/core/juice/tests.zig: string literal replacement appears 3 times (lines 274, 275, 276) — extract a const
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+Build Summary: 9/12 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native cached 6ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:37M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:38M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- install generated to selka-components cached
+|  +- compile exe selka-components safe native cached 6ms MaxRSS:39M
++- run exe selka-components success 361ms
+|  +- compile exe selka-components safe native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

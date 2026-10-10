@@ -2,20 +2,58 @@
 """Bounded campaign cache tests; no compiler or server admission is needed."""
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
+import fcntl
 import json
+import multiprocessing
 import os
 from pathlib import Path
 import tempfile
 import threading
+import time
 import unittest
 from unittest.mock import patch
 
 import fuzz_campaign_store as storage
-from fuzz_campaign_store import CorpusError, InputsChanged, Store
+from fuzz_campaign_store import CorpusError, InputsChanged, Store, DeterminismError, FormatError, RetentionError
 
 
 def identity(value):
     return hashlib.sha256(value.encode()).hexdigest()
+
+
+def leased_process(root, channel):
+    with Store(Path(root)).lease() as store:
+        digest = store.put_blob(b'active unpublished input')
+        channel.send(digest)
+        channel.recv()
+
+
+def competing_process(root, key, count, start, channel):
+    store = Store(Path(root))
+    start.wait(timeout=5)
+    try:
+        channel.send(store.publish_success(key, {'passed': count}, [], lambda: True))
+    except DeterminismError:
+        channel.send('conflict')
+
+
+def gc_process(root, channel):
+    channel.send(Store(Path(root)).gc(max_bytes=0, dry_run=False))
+
+
+def waiting_key_process(root, family, channel):
+    store = Store(Path(root))
+    original = store._lock_descriptor
+
+    def tracked(path):
+        if path.parent.name == 'coordinator':
+            channel.send('opening-key')
+        return original(path)
+
+    store._lock_descriptor = tracked
+    with store.coordinator_lock(family):
+        channel.send('acquired-key')
+        channel.recv()
 
 
 class CampaignStore(unittest.TestCase):
@@ -207,13 +245,19 @@ class CampaignStore(unittest.TestCase):
         original = self.success_path().read_bytes()
         self.assertTrue(self.publish())
         self.assertEqual(self.success_path().read_bytes(), original)
-        self.assertFalse(self.store.publish_success(self.key, {'passed': 7},
-                                                   [self.blob], lambda: True))
-        self.assertEqual(self.success_path().read_bytes(), original)
         replies = iter([True, False])
         with self.assertRaises(InputsChanged):
             self.publish(lambda: next(replies))
         self.assertEqual(self.success_path().read_bytes(), original)
+        with self.assertRaises(DeterminismError):
+            self.store.publish_success(self.key, {'passed': 7}, [self.blob], lambda: True)
+        self.assertEqual(self.success_path().read_bytes(), original)
+        self.assertIsNone(self.store.load_success(self.key))
+        self.store.discard_success(self.key)
+        with self.assertRaises(DeterminismError):
+            self.publish()
+        self.store.clear_conflict(self.key)
+        self.assertTrue(self.publish())
 
     def test_concurrent_publication_first_writer_cas(self):
         start = threading.Barrier(2)
@@ -221,14 +265,17 @@ class CampaignStore(unittest.TestCase):
         def publish(count):
             independent = Store(self.root)
             start.wait(timeout=5)
-            return independent.publish_success(self.key, {'passed': count}, [], lambda: True)
+            try:
+                return independent.publish_success(self.key, {'passed': count}, [], lambda: True)
+            except DeterminismError:
+                return 'conflict'
 
         with ThreadPoolExecutor(max_workers=2) as pool:
             futures = [pool.submit(publish, count) for count in (11, 22)]
             outcomes = [future.result(timeout=5) for future in futures]
-        self.assertEqual(sum(outcomes), 1)
-        self.assertEqual(self.store.load_success(self.key),
-                         {'passed': (11, 22)[outcomes.index(True)]})
+        self.assertCountEqual(outcomes, [True, 'conflict'])
+        self.assertIsNone(self.store.load_success(self.key))
+        self.assertTrue((self.root / 'conflicts' / (self.key + '.json')).is_file())
 
     def test_load_cannot_observe_publication_before_post_guard(self):
         published = threading.Event()
@@ -362,6 +409,392 @@ class CampaignStore(unittest.TestCase):
                     self.assertFalse(entered.is_set())
             future.result(timeout=5)
         self.assertTrue(entered.is_set())
+
+    def process(self, target, *args):
+        process = multiprocessing.get_context('fork').Process(target=target, args=args)
+        process.start()
+
+        def cleanup():
+            if process.is_alive():
+                process.kill()
+            process.join(timeout=5)
+
+        self.addCleanup(cleanup)
+        return process
+
+    def test_format_rejection_empty_initialization_and_interrupted_marker_recovery(self):
+        marker = self.root / 'format.json'
+        self.assertEqual(storage._decode(marker.read_bytes()), storage._FORMAT)
+        original = marker.read_bytes()
+        for value in ({**storage._FORMAT, 'version': True},
+                      {**storage._FORMAT, 'version': 2}, {'version': 1}):
+            marker.write_bytes(storage._envelope(value))
+            with self.assertRaises(FormatError):
+                Store(self.root)
+            with self.assertRaises(FormatError):
+                self.store.read_blob(self.blob)
+        marker.write_bytes(original)
+        old = self.root / 'old'
+        old.mkdir()
+        (old / 'blobs').mkdir()
+        with self.assertRaisesRegex(FormatError, 'new empty versioned cache root'):
+            Store(old)
+        recover = self.root / 'recover'
+        recover.mkdir()
+        (recover / '.format.json-crashed').write_bytes(b'partial marker')
+        recovered = Store(recover)
+        self.assertTrue((recovered.root / 'format.json').is_file())
+        self.assertFalse((recover / '.format.json-crashed').exists())
+
+    def test_canonical_root_alias_uses_same_retention_lock(self):
+        alias = self.root.parent / (self.root.name + '-alias')
+        alias.symlink_to(self.root, target_is_directory=True)
+        self.addCleanup(alias.unlink)
+        other = Store(alias)
+        self.assertEqual(other.root, self.store.root)
+        with self.store.lease():
+            self.assertTrue(other.gc(dry_run=False)['skipped_active'])
+
+    def test_category_symlinks_cannot_redirect_collection_outside_store(self):
+        outside = self.root / 'outside'
+        outside.mkdir()
+        (self.root / 'pins').rmdir()
+        (self.root / 'pins').symlink_to(outside, target_is_directory=True)
+        with self.assertRaises(FormatError):
+            Store(self.root)
+        with self.assertRaises(FormatError):
+            self.store.gc(dry_run=False)
+
+    def test_replaced_root_alias_cannot_redirect_an_existing_store_or_gc(self):
+        other = self.root / 'other-root'
+        Store(other)
+        moved = self.root.parent / (self.root.name + '-moved')
+        self.root.rename(moved)
+        self.root.symlink_to(moved / 'other-root', target_is_directory=True)
+
+        def restore():
+            self.root.unlink()
+            moved.rename(self.root)
+
+        self.addCleanup(restore)
+        with self.assertRaises(FormatError):
+            self.store.gc(dry_run=False)
+        with self.assertRaises(FormatError):
+            self.store.read_blob(self.blob)
+        self.assertTrue((moved / 'blobs' / self.blob).is_file())
+
+    def test_conflict_post_guard_failure_removes_only_new_tombstone(self):
+        self.assertTrue(self.publish())
+        replies = iter([True, True, False])
+        with self.assertRaises(InputsChanged):
+            self.store.publish_success(self.key, {'passed': 7}, [self.blob], lambda: next(replies))
+        self.assertEqual(self.store.load_success(self.key), self.result)
+        self.assertFalse((self.root / 'conflicts' / (self.key + '.json')).exists())
+
+    def test_invalidated_identical_refresh_restores_hit_and_divergence_poison(self):
+        self.assertTrue(self.publish())
+        self.store.invalidate_success(self.key)
+        self.assertIsNone(self.store.load_success(self.key))
+        self.assertTrue(self.publish())
+        self.assertEqual(self.store.load_success(self.key), self.result)
+        self.store.invalidate_success(self.key)
+        with self.assertRaises(DeterminismError):
+            self.store.publish_success(self.key, {'passed': 7}, [self.blob], lambda: True)
+        self.assertIsNone(self.store.load_success(self.key))
+        self.assertTrue((self.root / 'conflicts' / (self.key + '.json')).exists())
+
+    def test_invalidated_failed_refresh_never_revives_hit_and_preserves_comparison(self):
+        self.assertTrue(self.publish())
+        original = self.success_path().read_bytes()
+        self.store.invalidate_success(self.key)
+        for replies in ([False], [True, False], [True, True, False]):
+            answers = iter(replies)
+            with self.subTest(replies=replies), self.assertRaises(InputsChanged):
+                self.publish(lambda: next(answers))
+            self.assertIsNone(self.store.load_success(self.key))
+            self.assertEqual(self.success_path().read_bytes(), original)
+        self.assertTrue(self.publish())
+        self.assertEqual(self.store.load_success(self.key), self.result)
+
+    def test_invalidation_gc_cohort_and_pin_preserve_negative_evidence(self):
+        self.assertTrue(self.publish())
+        self.store.invalidate_success(self.key)
+        pin = identity('invalidated reference pin')
+        self.store.pin(pin, success=[self.key])
+        report = self.store.gc(max_bytes=0, dry_run=False)
+        self.assertTrue(report['budget_unmet'])
+        self.assertIsNone(self.store.load_success(self.key))
+        marker = self.root / 'invalidated' / (self.key + '.json')
+        self.assertTrue(marker.exists())
+        self.assertTrue(self.success_path().exists())
+        self.store.unpin(pin)
+        report = self.store.gc(max_bytes=0, dry_run=False)
+        self.assertFalse(report['budget_unmet'])
+        self.assertFalse(marker.exists())
+        self.assertFalse(self.success_path().exists())
+        self.assertIsNone(self.store.read_blob(self.blob))
+
+    def test_gc_interruption_deletes_reference_before_invalidation_marker(self):
+        self.assertTrue(self.publish())
+        self.store.invalidate_success(self.key)
+        marker = self.root / 'invalidated' / (self.key + '.json')
+        original = Path.unlink
+
+        def interrupted(path, *args, **kwargs):
+            if path == marker:
+                raise KeyboardInterrupt('collector interrupted')
+            return original(path, *args, **kwargs)
+
+        with patch.object(Path, 'unlink', interrupted):
+            with self.assertRaises(KeyboardInterrupt):
+                self.store.gc(max_bytes=0, dry_run=False)
+        self.assertFalse(self.success_path().exists())
+        self.assertTrue(marker.exists())
+        self.assertIsNone(self.store.load_success(self.key))
+        self.store.gc(max_bytes=0, dry_run=False)
+        self.assertFalse(marker.exists())
+
+    def test_orphan_invalidation_marker_is_bounded_by_cache_eviction(self):
+        self.store.invalidate_success(self.key)
+        marker = self.root / 'invalidated' / (self.key + '.json')
+        self.assertTrue(marker.exists())
+        self.store.gc(max_bytes=0, dry_run=False)
+        self.assertFalse(marker.exists())
+
+    def test_invalidation_restore_io_failure_discards_proof_instead_of_reviving_hit(self):
+        self.assertTrue(self.publish())
+        self.store.invalidate_success(self.key)
+        answers = iter([True, True, False])
+        with patch.object(storage, '_atomic', side_effect=OSError('restoration failed')):
+            with self.assertRaises(OSError):
+                self.publish(lambda: next(answers))
+        self.assertIsNone(self.store.load_success(self.key))
+        self.assertFalse(self.success_path().exists())
+
+    def test_invalidated_marker_unlink_interruption_restores_negative_evidence(self):
+        self.assertTrue(self.publish())
+        self.store.invalidate_success(self.key)
+        marker = self.root / 'invalidated' / (self.key + '.json')
+        original = Path.unlink
+
+        def interrupted(path, *args, **kwargs):
+            result = original(path, *args, **kwargs)
+            if path == marker:
+                raise KeyboardInterrupt('interrupted after marker unlink')
+            return result
+
+        with patch.object(Path, 'unlink', interrupted):
+            with self.assertRaises(KeyboardInterrupt):
+                self.publish()
+        self.assertTrue(marker.exists())
+        self.assertIsNone(self.store.load_success(self.key))
+
+    def test_missing_old_payload_still_compares_completed_result_identity(self):
+        self.assertTrue(self.publish())
+        self.store.invalidate_success(self.key)
+        (self.root / 'blobs' / self.blob).unlink()
+        self.assertIsNone(self.store.load_success(self.key))
+        new = self.store.put_blob(b'changed deterministic output')
+        with self.assertRaises(DeterminismError):
+            self.store.publish_success(self.key, self.result, [new], lambda: True)
+        self.assertIsNone(self.store.load_success(self.key))
+        self.assertTrue((self.root / 'conflicts' / (self.key + '.json')).exists())
+
+    def test_same_action_blob_manifest_order_is_not_a_conflict(self):
+        second = self.store.put_blob(b'second payload')
+        self.assertTrue(self.store.publish_success(self.key, self.result, [self.blob, second], lambda: True))
+        self.assertTrue(self.store.publish_success(self.key, self.result, [second, self.blob], lambda: True))
+        self.assertEqual(self.store.load_success(self.key), self.result)
+
+    def test_different_blob_manifest_poison_survives_discard_and_gc(self):
+        self.assertTrue(self.publish())
+        second = self.store.put_blob(b'different deterministic payload')
+        with self.assertRaises(DeterminismError):
+            self.store.publish_success(self.key, self.result, [second], lambda: True)
+        self.store.discard_success(self.key)
+        result = self.store.gc(max_bytes=0, dry_run=False)
+        self.assertTrue(result['budget_unmet'])
+        self.assertEqual(self.store.read_blob(self.blob), b'concrete corpus case')
+        self.assertEqual(self.store.read_blob(second), b'different deterministic payload')
+        self.assertIsNone(self.store.load_success(self.key))
+
+    def test_multiprocess_divergent_publication_poison_and_atomic_marker_init(self):
+        context = multiprocessing.get_context('fork')
+        barrier = context.Barrier(2)
+        channels, processes = [], []
+        root = self.root / 'new-shared-store'
+        for count in (11, 22):
+            parent, child = context.Pipe()
+            channels.append(parent)
+            self.addCleanup(parent.close)
+            processes.append(self.process(competing_process, root, self.key, count, barrier, child))
+            child.close()
+        outcomes = []
+        for channel in channels:
+            self.assertTrue(channel.poll(5))
+            outcomes.append(channel.recv())
+        for process in processes:
+            process.join(timeout=5)
+            self.assertEqual(process.exitcode, 0)
+        self.assertCountEqual(outcomes, [True, 'conflict'])
+        self.assertIsNone(Store(root).load_success(self.key))
+
+    def test_gc_dry_run_preserves_roots_then_collects_unreferenced_blobs(self):
+        self.assertTrue(self.publish())
+        orphan = self.store.put_blob(b'orphan bytes')
+        planned = self.store.gc()
+        self.assertFalse(planned['skipped_active'])
+        self.assertIn('blobs/' + orphan, planned['paths'])
+        self.assertNotIn('blobs/' + self.blob, planned['paths'])
+        self.assertNotIn('success/' + self.key + '.json', planned['paths'])
+        self.assertEqual(self.store.read_blob(orphan), b'orphan bytes')
+        collected = self.store.gc(dry_run=False)
+        self.assertEqual(collected['paths'], planned['paths'])
+        self.assertIsNone(self.store.read_blob(orphan))
+        self.assertEqual(self.store.load_success(self.key), self.result)
+
+    def test_gc_size_eviction_respects_shared_blob_reference_counts(self):
+        newer = identity('newer receipt')
+        self.assertTrue(self.publish())
+        self.assertTrue(self.store.publish_success(newer, {'passed': 7}, [self.blob], lambda: True))
+        old_path = self.success_path()
+        os.utime(old_path, (time.time() - 100, time.time() - 100))
+        total = self.store.gc()['bytes_before']
+        result = self.store.gc(max_bytes=total - old_path.stat().st_size, dry_run=False)
+        self.assertIn('success/' + self.key + '.json', result['paths'])
+        self.assertNotIn('success/' + newer + '.json', result['paths'])
+        self.assertIsNone(self.store.load_success(self.key))
+        self.assertEqual(self.store.load_success(newer), {'passed': 7})
+        self.assertEqual(self.store.read_blob(self.blob), b'concrete corpus case')
+
+    def test_pins_retain_receipt_and_corpus_snapshot_payloads_after_mutation(self):
+        self.assertTrue(self.publish())
+        second = self.store.put_blob(b'pinned replay input')
+        self.assertTrue(self.store.retain_corpus(self.family, [second]))
+        pin = identity('user pinned campaign')
+        self.store.pin(pin, success=[self.key], corpus=[self.family])
+        self.store.discard_corpus(self.family)
+        report = self.store.gc(max_bytes=0, max_age=0, dry_run=False)
+        self.assertTrue(report['budget_unmet'])
+        self.assertGreaterEqual(report['protected_entries'], 4)
+        self.assertEqual(self.store.read_blob(second), b'pinned replay input')
+        self.assertEqual(self.store.load_success(self.key), self.result)
+        self.store.unpin(pin)
+        self.store.gc(max_bytes=0, dry_run=False)
+        self.assertIsNone(self.store.read_blob(second))
+        self.assertIsNone(self.store.load_success(self.key))
+
+    def test_corrupt_manifests_and_pins_fail_closed_before_any_collection(self):
+        self.assertTrue(self.publish())
+        orphan = self.store.put_blob(b'collectable orphan')
+        paths = [self.success_path()]
+        self.store.pin(identity('pin'), success=[self.key])
+        paths.append(self.root / 'pins' / (identity('pin') + '.json'))
+        for path in paths:
+            original = path.read_bytes()
+            path.write_bytes(b'corrupt')
+            with self.assertRaises(RetentionError):
+                self.store.gc(max_bytes=0, dry_run=False)
+            self.assertEqual(self.store.read_blob(orphan), b'collectable orphan')
+            path.write_bytes(original)
+
+    def test_gc_age_filter_and_atomic_leftovers_preserve_permanent_lease_inode(self):
+        self.assertTrue(self.publish())
+        old = time.time() - 1000
+        os.utime(self.success_path(), (old, old))
+        temporary = self.root / 'blobs' / ('.' + self.blob + '-crashed')
+        temporary.write_bytes(b'uncommitted blob bytes')
+        locks = {path: path.stat().st_ino for path in (self.root / 'locks').rglob('*.lock')}
+        result = self.store.gc(max_age=500, dry_run=False)
+        self.assertFalse(temporary.exists())
+        self.assertEqual(result['lock_files'], len(locks))
+        self.assertEqual(result['retained_lock_files'], 1)
+        self.assertGreater(result['format_bytes'], 0)
+        for path, inode in locks.items():
+            if path.name == 'retention.lock':
+                self.assertEqual(path.stat().st_ino, inode)
+            else:
+                self.assertFalse(path.exists())
+        self.assertIsNone(self.store.load_success(self.key))
+        self.assertEqual(self.store.read_blob(self.blob), b'concrete corpus case')
+
+    def test_gc_inventory_and_metadata_bounds_are_non_destructive(self):
+        self.assertTrue(self.publish())
+        with self.assertRaises(RetentionError):
+            self.store.gc(max_bytes=0, dry_run=False, max_entries=1)
+        with patch.object(storage, '_GC_METADATA_MAX_BYTES', 1):
+            with self.assertRaises(RetentionError):
+                self.store.gc(max_bytes=0, dry_run=False)
+        self.assertEqual(self.store.load_success(self.key), self.result)
+        for kwargs in ({'max_bytes': -1}, {'max_age': float('nan')}, {'max_entries': 0}, {'dry_run': 1}):
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                self.store.gc(**kwargs)
+
+    def test_nested_leases_exclude_gc_until_last_release(self):
+        with self.store.lease():
+            with self.store.lease():
+                self.assertEqual(self.store.read_blob(self.blob), b'concrete corpus case')
+                self.assertTrue(Store(self.root).gc(dry_run=False)['skipped_active'])
+            self.assertTrue(Store(self.root).gc(dry_run=False)['skipped_active'])
+        self.assertFalse(self.store.gc()['skipped_active'])
+
+    def test_live_process_unpublished_input_survives_gc_and_crash_releases_lease(self):
+        context = multiprocessing.get_context('fork')
+        parent, child = context.Pipe()
+        self.addCleanup(parent.close)
+        process = self.process(leased_process, self.root, child)
+        child.close()
+        self.assertTrue(parent.poll(5))
+        digest = parent.recv()
+        self.assertTrue(self.store.gc(max_bytes=0, dry_run=False)['skipped_active'])
+        self.assertEqual(self.store.read_blob(digest), b'active unpublished input')
+        process.kill()
+        process.join(timeout=5)
+        self.assertIsNotNone(process.exitcode)
+        self.assertFalse(self.store.gc(max_bytes=0, dry_run=False)['skipped_active'])
+        self.assertIsNone(self.store.read_blob(digest))
+
+    def test_other_process_gc_skips_thread_owned_complete_operation(self):
+        context = multiprocessing.get_context('fork')
+        parent, child = context.Pipe()
+        self.addCleanup(parent.close)
+        with self.store.coordinator_lock(self.family):
+            process = self.process(gc_process, self.root, child)
+            child.close()
+            self.assertTrue(parent.poll(5))
+            self.assertTrue(parent.recv()['skipped_active'])
+            process.join(timeout=5)
+            self.assertEqual(process.exitcode, 0)
+
+    def test_blocked_per_key_waiter_already_leases_old_inode_before_gc(self):
+        with self.store.coordinator_lock(self.family):
+            pass
+        path = self.root / 'locks/coordinator' / (self.family + '.lock')
+        original_inode = path.stat().st_ino
+        descriptor = os.open(path, os.O_RDWR | os.O_CLOEXEC)
+        self.addCleanup(os.close, descriptor)
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        context = multiprocessing.get_context('fork')
+        parent, child = context.Pipe()
+        self.addCleanup(parent.close)
+        process = self.process(waiting_key_process, self.root, self.family, child)
+        child.close()
+        self.assertTrue(parent.poll(5))
+        self.assertEqual(parent.recv(), 'opening-key')
+        self.assertTrue(self.store.gc(dry_run=False)['skipped_active'])
+        self.assertEqual(path.stat().st_ino, original_inode)
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        self.assertTrue(parent.poll(5))
+        self.assertEqual(parent.recv(), 'acquired-key')
+        self.assertTrue(self.store.gc(dry_run=False)['skipped_active'])
+        parent.send('release')
+        process.join(timeout=5)
+        self.assertEqual(process.exitcode, 0)
+        report = self.store.gc(dry_run=False)
+        self.assertGreater(report['removed_lock_files'], 0)
+        self.assertFalse(path.exists())
+        with Store(self.root).coordinator_lock(self.family):
+            self.assertTrue(path.is_file())
 
 
 if __name__ == '__main__':

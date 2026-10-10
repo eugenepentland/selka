@@ -9,6 +9,8 @@ const normalize = @import("normalize.zig");
 const manifest = @import("manifest.zig");
 const command = @import("command.zig");
 const platform = @import("platform.zig");
+const artifact_name = "artifact";
+const replacement_name = "replacement";
 fn context(a: std.mem.Allocator) !d.Context {
     const env = try a.create(std.process.Environ.Map);
     env.* = try std.testing.environ.createMap(a);
@@ -190,7 +192,6 @@ test "Juice native captureImpl retains failed builds and refuses record overwrit
 }
 
 fn hashFiles(c: *d.Context) !void {
-    const artifact_name = "artifact";
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
     const root = try temporary.dir.realPathFileAlloc(t.io, ".", c.a);
@@ -226,4 +227,64 @@ test "Juice runtime counters require the entire unscaled group" {
     try t.expectError(error.InvalidExperiment, profiles.runtime(&c, complete ++ "150;;ref-cycles:u;12;100\n", "instructions:u"));
     try t.expectError(error.InvalidExperiment, profiles.runtime(&c, "100;;instructions:u;12;100\n200;;cycles:u;12;100\n150;;ref-cycles:u;12;99.99\n", "instructions:u"));
     try t.expectError(error.InvalidExperiment, profiles.runtime(&c, "100;;instructions:u;12;100\n200;;cycles:u;12;100\n0;;ref-cycles:u;12;100\n", "instructions:u"));
+}
+
+fn optimizedHashParity(bytes: []const u8) !void {
+    const optimized = @import("bytes_hash.zig");
+    var expected: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(bytes, &expected, .{});
+    try t.expectEqualSlices(u8, &expected, &optimized.hash(bytes));
+    var streaming = optimized.Hasher.init();
+    streaming.update(bytes[0..17]);
+    streaming.update(bytes[17..65537]);
+    streaming.update(bytes[65537..]);
+    try t.expectEqualSlices(u8, &expected, &streaming.final());
+}
+
+// spec: JUICE-CONTENT-HASH-1
+test "Juice optimized content hash module retains exact standard SHA256 and streaming boundaries" {
+    const optimized = @import("bytes_hash.zig");
+    try t.expectEqual(std.lang.Optimize.fast, optimized.compiledOptimize());
+    try t.expectEqualStrings("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", &std.fmt.bytesToHex(optimized.hash(""), .lower));
+    try t.expectEqualStrings("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", &std.fmt.bytesToHex(optimized.hash("abc"), .lower));
+    var bytes: [65539]u8 = @splat('x');
+    bytes[bytes.len - 1] = 'z';
+    try optimizedHashParity(&bytes);
+}
+
+fn timestampHashMutation(c: *d.Context) !void {
+    var directory = t.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(t.io, ".", c.a);
+    const path = try c.join(&.{ root, artifact_name });
+    const original = try c.a.alloc(u8, 4 * 65536 + 17);
+    @memset(original, 'x');
+    try directory.dir.writeFile(t.io, .{ .sub_path = artifact_name, .data = original });
+    const before = try directory.dir.statFile(t.io, artifact_name, .{});
+    const first = try c.fileHash(path);
+    original[65536 + 13] = 'y';
+    try directory.dir.writeFile(t.io, .{ .sub_path = artifact_name, .data = original });
+    try directory.dir.setTimestamps(t.io, artifact_name, .{ .modify_timestamp = .{ .new = before.mtime } });
+    const after = try directory.dir.statFile(t.io, artifact_name, .{});
+    try t.expectEqual(before.size, after.size);
+    try t.expectEqual(before.mtime.nanoseconds, after.mtime.nanoseconds);
+    const changed = try c.fileHash(path);
+    try t.expect(!d.equal(first, changed));
+    try t.expect(d.equal(try c.hashBytes(original), changed));
+    original[65536 + 13] = 'x';
+    try directory.dir.writeFile(t.io, .{ .sub_path = replacement_name, .data = original });
+    try directory.dir.setTimestamps(t.io, replacement_name, .{ .modify_timestamp = .{ .new = before.mtime } });
+    try directory.dir.rename(replacement_name, directory.dir, artifact_name, t.io);
+    try t.expect(d.equal(first, try c.fileHash(path)));
+    try t.expectError(error.FileNotFound, c.fileHash(try c.join(&.{ root, "missing" })));
+    try t.expectError(error.InvalidExperiment, c.fileHash(root));
+}
+
+// spec-case: JUICE-CONTENT-HASH-1
+test "Juice fileHash rereads same-size restored-mtime edits and atomic replacement within one context" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    var c = try context(arena.allocator());
+    try timestampHashMutation(&c);
+    try t.expectEqualStrings("expected a regular file", c.message);
 }
