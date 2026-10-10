@@ -279,6 +279,51 @@
    "archive": "experiments/runtime-parity-3-20261009/S2/gates/s2-final-02-compare.log.gz",
    "archive_sha256": "b4cab67a8ba72e88ba38c6e59b62eeb24122f14062f8b9f0a0153cd1fa046e08",
    "archive_bytes": 64
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/S2/final-focused-corrected.log",
+   "raw_cache": ".mylang-cache/rp3/s2-evidence/focused/final-focused-corrected.log",
+   "raw_sha256": "47b1ae867ad8e485bf21227ac5185f0dc7e2c2af97c58d5b73af6228924135a2",
+   "raw_bytes": 2201,
+   "archive": "experiments/runtime-parity-3-20261009/S2/final-focused-corrected.log.gz",
+   "archive_sha256": "c8e18230bfe2f0060c6cadda9dafe08f290aa683657ea9fd0aaacb2951cf5a38",
+   "archive_bytes": 916
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/S2/final-focused.log",
+   "raw_cache": ".mylang-cache/rp3/s2-evidence/focused/final-focused.log",
+   "raw_sha256": "4b9a3586f3f6885760e5677b83f868d010ff1f6911cac613d8e4825610094bf3",
+   "raw_bytes": 2181,
+   "archive": "experiments/runtime-parity-3-20261009/S2/final-focused.log.gz",
+   "archive_sha256": "e563fe36ff4104fec897c1ac140ff8f7d3e412beb04f98c29001a69037c35e7f",
+   "archive_bytes": 865
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/S2/focused-01.log",
+   "raw_cache": ".mylang-cache/rp3/s2-evidence/focused/focused-01.log",
+   "raw_sha256": "7f3938449167a37e3f89618d335cd62fc12a668f9ba6e9b8c0138763509c3b61",
+   "raw_bytes": 2359,
+   "archive": "experiments/runtime-parity-3-20261009/S2/focused-01.log.gz",
+   "archive_sha256": "a1d06891f494b3433f6aff713d6359b6080b323806b9bf879e2eb61ff495e164",
+   "archive_bytes": 946
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/S2/prefix-focused.log",
+   "raw_cache": ".mylang-cache/rp3/s2-evidence/focused/prefix-focused.log",
+   "raw_sha256": "751ed14730928ecdc877e3705858f57d5ac04eb935b2b181d386a1276cfc7286",
+   "raw_bytes": 2678,
+   "archive": "experiments/runtime-parity-3-20261009/S2/prefix-focused.log.gz",
+   "archive_sha256": "933d96f140637741772541ce8c07051ae1eb627eb476cefbb4045052b8311351",
+   "archive_bytes": 964
+  },
+  {
+   "original": "experiments/runtime-parity-3-20261009/S2/substring-focused.log",
+   "raw_cache": ".mylang-cache/rp3/s2-evidence/focused/substring-focused.log",
+   "raw_sha256": "0db10a487b9f65aa189ccd290bcf026172dfece4b38f79ccf39a080c90bbe258",
+   "raw_bytes": 2273,
+   "archive": "experiments/runtime-parity-3-20261009/S2/substring-focused.log.gz",
+   "archive_sha256": "1e96cd3322f9dae841af93ee763a42f74c0f2f2d61a1081cb895ec5babba3cdd",
+   "archive_bytes": 923
   }
  ]
 }
