@@ -5,7 +5,7 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const launch = @import("component_launch.zig");
 const wire = @import("lexer_component_protocol.zig");
-const reference_mode = "reference";
+const reference_mode = config.reference_mode;
 const component_name = "lexer-pilot";
 const config = @import("config/component_runtime.zig");
 /// Bounded component failures are host errors, never lexical diagnostics.
