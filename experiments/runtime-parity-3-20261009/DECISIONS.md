@@ -175,3 +175,19 @@
 - Evidence: the saved M0 receipts contain all 199 cell identities and plain-output hashes; row stdout includes a checksum followed by variable native-clock time. EDA records both process status and golden comparison separately.
 - Choice: validate_counts.py requires every registered cell, zero plain/counting status, counter presence, matching on/off output, and matching M0 output (checksum only for rows). Parity expectations and EDA golden files remain explicit checks. outputs.py's EDA branch additionally rejects nonzero status even if files happen to match. The complete M0 receipt passes this validation unchanged.
 - Reversibility: stricter receipt validation only; no oracle, workload, or threshold changes.
+
+## X-003 — exclude nondefault build slots from binding timing
+
+- Question: the shared wrapper defaults to three build slots, but another run was observed building directly under build4.lock.
+- Options: keep the original three-slot quiet guard, or reserve every numbered slot present plus the known fourth slot.
+- Evidence: external process 3790925 ran a ReleaseFast build under build4.lock on 2026-10-10; build5.lock and build6.lock also exist. These files and processes belong to other runs and are not modified or stopped by this task.
+- Choice: quiet.py now discovers numbered build/gate locks on every nonblocking acquisition attempt, always includes build1–4 and gate1, and retains admission/CPU-10 locks. On contention it releases all held locks before retrying. A scratch test verifies that cleanup, a newly appearing build7 lock on retry, and complete release on exit. All subsequent CPU-10 measurements use this guard.
+- Reversibility: measurement admission only; production code and thresholds remain unchanged.
+
+## X-004 — preserve the row method for the R5 bound
+
+- Question: a generic wall-time ladder comparison would omit the startup subtraction required by the row measurements.
+- Options: compare elapsed process times, or use the inherited row sampling and normalization for the two R5 exit cells.
+- Evidence: the prescribed cells are result_propagate/4096 and option_handle/64; M0 retains their full workloads, startup checksums and measured checksums. R's probe receipts identify prebuilt baseline and barrier-removed binaries.
+- Choice: confirm_rows_bound.py validates those exact cells and binary hashes, uses the inherited CPU-10 sample function, takes three startup samples and seven shuffled rounds per batch, and reports the median of three within-batch ratios. Every output must match M0's corresponding checksum. It runs with the updated quiet guard and final X binaries. A prepare-only check validates command construction; actual X measurement remains pending.
+- Reversibility: additive comparison only; it replaces none of the full row timing batches.

@@ -9,6 +9,7 @@ import contextlib
 import fcntl
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import time
@@ -17,10 +18,16 @@ import time
 @contextlib.contextmanager
 def quiet():
     directory = Path('/run/user/1000/mylang-slots')
-    names = ['admit.lock', 'gate1.lock', 'build1.lock', 'build2.lock',
-             'build3.lock', 'cpu10.lock']
     started = time.monotonic()
     while True:
+        # Some concurrent runs use a fourth build slot directly. Include every
+        # numbered slot already present and reserve that known fourth slot even
+        # before it appears. Retrying discovery also covers newly created slots.
+        slots = {'gate1.lock', 'build1.lock', 'build2.lock',
+                 'build3.lock', 'build4.lock'}
+        slots.update(path.name for path in directory.iterdir()
+                     if re.fullmatch(r'(?:build|gate)[1-9][0-9]*\.lock', path.name))
+        names = ['admit.lock', *sorted(slots), 'cpu10.lock']
         held = []
         try:
             for name in names:
