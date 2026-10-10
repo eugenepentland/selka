@@ -1,0 +1,43 @@
+{
+ "complete": true,
+ "tag": "merge-s2-main-02",
+ "cells": 199,
+ "groups": {
+  "lox": {
+   "cells": 74,
+   "all_status_zero": true,
+   "all_same_output": true,
+   "all_counts_present": true,
+   "all_match_m0": true,
+   "receipt": "results/merge-s2-main-02/lox.json",
+   "sha256": "9243f321c7d5ef6ac19f0f09d7f10b30eeed024fc8d7331f923101d1a3a75c8b"
+  },
+  "eda": {
+   "cells": 34,
+   "all_status_zero": true,
+   "all_same_output": true,
+   "all_counts_present": true,
+   "all_match_m0": true,
+   "receipt": "results/merge-s2-main-02/eda.json",
+   "sha256": "27197e3a27f973e25788b767c22e226ead318186373e9efbd9fcebbd833fc264"
+  },
+  "parity": {
+   "cells": 45,
+   "all_status_zero": true,
+   "all_same_output": true,
+   "all_counts_present": true,
+   "all_match_m0": true,
+   "receipt": "results/merge-s2-main-02/parity.json",
+   "sha256": "3febc10883b84b15b37bc41ad6142398855d001f3172c9d70cdb10278a6a8140"
+  },
+  "rows": {
+   "cells": 46,
+   "all_status_zero": true,
+   "all_same_output": true,
+   "all_counts_present": true,
+   "all_match_m0": true,
+   "receipt": "results/merge-s2-main-02/rows.json",
+   "sha256": "47674edac4667c7ac397e8eb2a5153c79e27dedd16faabb443333e612de5edc2"
+  }
+ }
+}

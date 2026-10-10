@@ -1,0 +1,74 @@
+{
+  "kind": "s1",
+  "cases_requested": 200,
+  "seed": 3302,
+  "cases_seen": 200,
+  "accepted": 200,
+  "old_rejected": 0,
+  "core_refused": 0,
+  "core_build_failed": 0,
+  "comparisons_expected": 3000,
+  "native_runs": 4000,
+  "harness": {
+    "cases": 200,
+    "old_rejected": 0,
+    "refused": 0,
+    "compared": 3000,
+    "mismatch": 0,
+    "fact": 0,
+    "traps": 227,
+    "caught": 0
+  },
+  "harness_status": 0,
+  "complete": true,
+  "qualified": true,
+  "error": null,
+  "failures": [],
+  "elapsed_seconds": 348.13627607701346,
+  "cache_root": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/s5/fuzz/20261010T060310Z-2fa791484f70/s1",
+  "tmpdir": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/s5/fuzz/20261010T060310Z-2fa791484f70/s1/tmp",
+  "saved_sources": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/X/gates-merge-s2-main-02/fuzz/s1/sources",
+  "zig_local_cache": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/.mylang-cache/s5/fuzz/20261010T060310Z-2fa791484f70/s1/zig",
+  "affinity": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "oracles": {
+    "old": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/tools/frozen-old-core",
+      "sha256": "ca55bbb15d1ef6accc6aa834f23651d5b3182ddf2e59136b93115ac3e41a7091"
+    },
+    "new": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/runtime-parity-3-20261009/tools/mylang-migrating",
+      "sha256": "8e4177618c2dca2180c76c5539306a34861d47d543fb83ef632c1e4a87a8c9e8"
+    }
+  },
+  "oracle_unchanged": true,
+  "harness_path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s1-20261005/fuzz.py",
+  "harness_sha256": "7ac171d986a15e3be23547ef6d3c10442e4b4538c25ff69bb690cdc97caf6dc1",
+  "native_comparisons": 3000,
+  "native_complete": true,
+  "command_count": 4800,
+  "references": {
+    "path": "/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz",
+    "sha256": "f8db2bd9ccebf42d5f4fbbf3974a15980d97204d46a4f8ac3ca5d93f41d8c1b0",
+    "oracle": {
+      "path": "/home/epentland/ai/canopy/mylang-worktrees/claude-s4-finish/.mylang-cache/s3/oracle/mylang",
+      "sha256": "d36658dbfb78d29213224532a13fd5ad8b7c0e290dbfb87613d9815678305c79"
+    }
+  }
+}

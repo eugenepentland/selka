@@ -1,6 +1,6 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2, S2 and R complete. X is in progress. U2 is fully qualified after integration; S2 is merged. Main advanced again to `fa1160602`; its integration passes four focused cache compatibility regressions and fresh full combined gates are next. The R merge and final CPU-10 timing remain.
+Status: M0, U2, S2 and R complete. X is in progress. U2 and S2 are fully qualified after integration with main at `fa1160602`. The R merge and complete final qualification, CPU-10 timing and report remain.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
@@ -16,7 +16,7 @@ Historical checkpoints are retained below; the current state is stated above.
 - M0 Debug compiler build: 9/9 steps, exit 0. Guardian: 88 checks pass.
 - M0 formatting: exit 0; 818 live `.my` files checked, zero formatting failures; six formatter-gate tests pass.
 - Copied corpora: 473 Lox files and 210 EDA files, excluding `.tmp/`, `results/` and Git metadata. Source hashes are in `M0/corpora-source-sha256.json`; only the owned Lox baseline compiler path in `bench.json` was retargeted.
-- M0 ReleaseFast compiler build: 9/9 steps, exit 0; compiler SHA-256 and source hashes recorded in `M0/compiler-base.json`. Debug and ReleaseFast compiler sources equal the launch base.
+- M0 ReleaseFast compiler build: 9/9 steps, exit 0; compiler SHA-256 and source hashes recorded in `M0/compiler-base.json.gz`. Debug and ReleaseFast compiler sources equal the launch base.
 - External base gates: Lox conformance 974/974; Lox port tests 65 passed, no cached results; EDA tests 310 passed, no cached results; EDA goldens 34/34 byte-identical. Initial external gates use release guest binaries built with the Debug base compiler; ReleaseFast-built guests are prepared separately for timing.
 - Row build: all 46 old/new pairs compile after two private syntax-migration repairs (`M0/row-migration.patch`); no timed work was optimized. All 16 reference binaries rebuilt; 480 registry edge probes pass. All 46 rows match their registered references at sizes 64 and 4096 (`M0/rows-qualification.json`).
 - Retargeted timing/counterfactual tools are prepared. Counting covers all 45 parity programs, plus Lox, EDA and rows. CPU-10 timing excludes all admitted builds.
@@ -89,6 +89,8 @@ Historical checkpoints are retained below; the current state is stated above.
 
 - The U2+S2+main1ab tree `74adf3466` passes build9/9, repository95/95 (2,459 tests;22,554 routing skips), fmt15/15, exact raw1516/4/0 and additive1547/0/0 in both modes,64shards/712 core tests, and frozen9×200 (1,800 cases;25,800 comparisons;35,600 runs;42,800 commands) with unchanged source/oracles. Main advances to `fa1160602` during fuzz; the completed matrix is retained and compacted, then the driver correctly stops at its main-identity check before external/counting/instruction stages. This is a partial integration checkpoint, not complete qualification.
 - The second mandatory main merge resolves `passes.zig`/`fuse_slice_key.zig` while preserving U2/S2 behavior. New demand-level fusion replay does not cover S2-generated compound types, all split-helper requests, or duplicate count helpers. A narrow eager-preparation fallback for eligible split catalogs retains ordinary stage/emission caches; byte/slice-only catalogs keep demand reuse. All four new cache regressions pass in trusted and verify modes (8/8 build steps;4/4 host tests), including cold/warm, dirty helper-order changes, and unaffected byte-only reuse. `X/main-fa116-merge-review.json` records the compatibility bound. Complete fresh `merge-s2-main-02` gates still precede the R merge.
+
+- S2/main integration fully qualifies source `ffee2b9d703e61386e968e7eff20f4f98623ef05` against integrated main `fa11606022ed217896a27976f8fe6d95db95f465` (`X/gates-merge-s2-main-02/receipt.json`). Debug and ReleaseFast builds pass 9/9, repository 95/95 with 2,492 passing tests and 22,821 shard-routing skips, formatting 15/15, Guardian 88 checks. Raw conformance exactly matches M0 in both modes and all 12 known PROBLEM lines; additive is 1547/0/0 in both, with 736 core tests in each 64-shard run. Fuzz passes all 1,800 cases, 25,800 comparisons and 35,600 native runs with source/oracles unchanged. Lox is 974/974 plus 65/65, EDA 310/310 plus 34 goldens, all 199 counting/output cells pass, and 151 paired instruction cells pass three rounds with no ratio above 1.03 (maximum rows/int_parse 1.009142367). All 683 source files, both compiler hashes and 186 guest binary hashes remain unchanged. Six conformance logs are losslessly compressed with hashes and revalidated. The original M0 compiler receipt is also losslessly compressed; its archive receipt preserves both hashes. Final CPU-10 outcomes remain unmeasured.
 
 ## Lane exits at current checkpoints
 
