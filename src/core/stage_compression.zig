@@ -2,8 +2,28 @@
 const std = @import("std");
 pub const Error = std.mem.Allocator.Error || error{InvalidEncoding};
 
+/// Write policy affects new blocks only; both encodings remain readable.
+pub const Policy = enum {
+    zlib,
+    none,
+
+    /// Parse the diagnostic environment control, retaining compression by default.
+    pub fn parse(value: ?[]const u8) error{InvalidCompression}!Policy {
+        const selected = value orelse return .zlib;
+        if (std.mem.eql(u8, selected, "zlib")) return .zlib;
+        if (std.mem.eql(u8, selected, "none")) return .none;
+        return error.InvalidCompression;
+    }
+};
+
 /// Prefix zero preserves incompressible input; prefix one contains a zlib stream.
 pub fn encode(a: std.mem.Allocator, input: []const u8) std.mem.Allocator.Error![]u8 {
+    return encodeWithPolicy(a, input, .zlib);
+}
+
+/// Select compression explicitly without changing the block protocol.
+pub fn encodeWithPolicy(a: std.mem.Allocator, input: []const u8, policy: Policy) std.mem.Allocator.Error![]u8 {
+    if (policy == .none) return rawBlock(a, input);
     var scratch = std.heap.ArenaAllocator.init(a);
     defer scratch.deinit();
     const work = scratch.allocator();
@@ -14,6 +34,10 @@ pub fn encode(a: std.mem.Allocator, input: []const u8) std.mem.Allocator.Error![
     compressor.writer.writeAll(input) catch return error.OutOfMemory;
     compressor.finish() catch return error.OutOfMemory;
     if (output.written().len < input.len + 1) return a.dupe(u8, output.written());
+    return rawBlock(a, input);
+}
+
+fn rawBlock(a: std.mem.Allocator, input: []const u8) std.mem.Allocator.Error![]u8 {
     const raw = try a.alloc(u8, input.len + 1);
     raw[0] = 0;
     @memcpy(raw[1..], input);

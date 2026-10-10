@@ -38,16 +38,16 @@ const Journal = struct { file: u32, length: u64 = journal_header, records: std.A
 
 /// Shallow Store copies share this state; callers own exactly one deinitialization.
 pub const State = struct {
-    config: struct { a: std.mem.Allocator, io: std.Io, root: []const u8, identity: Digest },
+    config: struct { a: std.mem.Allocator, io: std.Io, root: []const u8, identity: Digest, compression: compression.Policy },
     mutex: std.Io.Mutex = .init,
     catalog: struct { files: std.ArrayList(File) = .empty, entries: std.AutoHashMapUnmanaged(Digest, Location) = .empty, sequence: u64 = 0, max_sequence: u64 = 0, scanned: bool = false } = .{},
     journal: ?Journal = null,
     cached: struct { blocks: [32]?CachedBlock = @splat(null), statistics: Statistics = .{} } = .{},
 
     /// Allocate shared state without creating or trusting cache files.
-    pub fn init(a: std.mem.Allocator, io: std.Io, root: []const u8, identity: Digest) Error!*State {
+    pub fn init(a: std.mem.Allocator, io: std.Io, root: []const u8, identity: Digest, policy: compression.Policy) Error!*State {
         const self = try a.create(State);
-        self.* = .{ .config = .{ .a = a, .io = io, .root = root, .identity = identity } };
+        self.* = .{ .config = .{ .a = a, .io = io, .root = root, .identity = identity, .compression = policy } };
         return self;
     }
 
@@ -459,7 +459,7 @@ pub const State = struct {
                 try adjusted.append(a, next);
                 offset += size;
             }
-            const bytes = try compression.encode(a, plain);
+            const bytes = try compression.encodeWithPolicy(a, plain, self.config.compression);
             try encoded.append(a, bytes);
             try blocks.append(a, .{ .offset = 0, .encoded = @intCast(bytes.len), .plain = @intCast(plain.len), .checksum = checksum(bytes) });
             first = end;

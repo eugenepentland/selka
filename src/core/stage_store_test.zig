@@ -587,3 +587,43 @@ fn expectStoredPayloads(storage: *const store.Store, a: std.mem.Allocator, keys:
         try std.testing.expectEqualSlices(u8, payload, loaded);
     }
 }
+
+// spec-case: NEW-CORE-STAGE-PACK-1
+test "stage store raw policy persists and fresh compressed readers preserve mixed mode keys" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var raw = try store.Store.initWithOptions(std.testing.allocator, std.testing.io, root, .{ .compression = .none });
+    defer raw.deinit();
+    const payload: [1024]u8 = @splat(7);
+    const key = raw.key("policy", &.{});
+    try std.testing.expect(try raw.save(key, &payload));
+    try std.testing.expect(try raw.flush());
+    const pack = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, (try raw.artifactPath(a, key)).?, a, .unlimited);
+    const offset = std.mem.readInt(u64, pack[97..105], .little);
+    try std.testing.expectEqual(@as(u8, 0), pack[@intCast(offset)]);
+    var compressed = try store.Store.init(std.testing.allocator, std.testing.io, root);
+    defer compressed.deinit();
+    try std.testing.expectEqual(key, compressed.key("policy", &.{}));
+    try expectStoredPayloads(&compressed, std.testing.allocator, &.{key}, &payload);
+    const other = compressed.key("compressed-policy", &.{});
+    try std.testing.expect(try compressed.save(other, &payload));
+    try std.testing.expect(try compressed.flush());
+    const encoded = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, (try compressed.artifactPath(a, other)).?, a, .unlimited);
+    const encoded_offset = std.mem.readInt(u64, encoded[97..105], .little);
+    try std.testing.expectEqual(@as(u8, 1), encoded[@intCast(encoded_offset)]);
+    try expectStoredPayloads(&raw, std.testing.allocator, &.{other}, &payload);
+}
+
+// spec-case: NEW-CORE-STAGE-PACK-1
+test "stage store compression policy rejects invalid settings and defaults to zlib" {
+    const policy = @import("stage_compression.zig").Policy;
+    try std.testing.expectEqual(policy.zlib, try policy.parse(null));
+    try std.testing.expectEqual(policy.zlib, try policy.parse("zlib"));
+    try std.testing.expectEqual(policy.none, try policy.parse("none"));
+    try std.testing.expectError(error.InvalidCompression, policy.parse(""));
+    try std.testing.expectError(error.InvalidCompression, policy.parse("gzip"));
+}

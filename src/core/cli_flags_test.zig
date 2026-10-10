@@ -349,3 +349,25 @@ test "a build --release executable drops debug lines, a debug build and a run ke
     try std.testing.expectEqualStrings("42\n", ran.stdout);
     try std.testing.expect(contains(ran.stderr, "debugging 41\n"));
 }
+
+// spec-case: NEW-CORE-STAGE-PACK-1
+test "CLI rejects invalid stage compression with a configuration diagnostic" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.core_path, a);
+    var environment = try std.testing.environ.createMap(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_STAGE_CACHE_COMPRESSION", "invalid");
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "func main() -> int:\n    return 0\n" });
+    const source = try temporary.dir.realPathFileAlloc(std.testing.io, "app.my", a);
+    const result = try std.process.run(a, std.testing.io, .{
+        .argv = &.{ executable, "build", source, "-o", "unused-compression-test" },
+        .environ_map = &environment,
+    });
+    try std.testing.expect(result.term == .exited);
+    try std.testing.expect(result.term.exited != 0);
+    try std.testing.expect(contains(result.stderr, "MYLANG_STAGE_CACHE_COMPRESSION must be 'zlib' or 'none'"));
+}

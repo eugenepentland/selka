@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import statistics
 import re
+import subprocess
 import sys
 import time
 sys.path.insert(0, str(Path(__file__).parents[1] / 'demand-artifacts-20261009'))
@@ -23,6 +24,7 @@ def module(name, path):
 
 object_audit = module('object_audit', Path(__file__).parents[1] / 'demand-builds-20261009/object_audit.py')
 benchmark = module('benchmark', Path(__file__).parents[1] / 'incremental-stages-20261009/benchmark.py')
+capacity = module('capacity', Path(__file__).with_name('single_build_cache.py'))
 
 
 def main():
@@ -33,6 +35,9 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--copies', type=int, nargs='+', default=[12, 32])
     parser.add_argument('--repeats', type=int, default=3)
+    parser.add_argument('--baseline-cache-compression', choices=['zlib', 'none'])
+    parser.add_argument('--candidate-cache-compression', choices=['zlib', 'none'])
+    parser.add_argument('--capture-setup-cache', action='store_true', help='Record disk allocation after each variant setup, before edits')
     parser.add_argument('--resume', action='store_true', help='Continue fresh edits in the completed output caches, writing warm-results.json')
     args = parser.parse_args()
     root = args.output.resolve()
@@ -44,6 +49,7 @@ def main():
         root.mkdir(parents=True, exist_ok=False)
         (root / 'tmp').mkdir()
     compilers = {'baseline': args.baseline.resolve(), 'candidate': args.candidate.resolve()}
+    compression = {'baseline': args.baseline_cache_compression, 'candidate': args.candidate_cache_compression}
     env = {k: v for k, v in os.environ.items() if not k.startswith(('MYLANG_', 'MYL_CORE_', 'ZIG_'))}
     env.update(MYLANG_JOBS='4', TMPDIR=str(root / 'tmp'))
     seed_report = json.loads((args.native_seed / 'results.json').read_text())
@@ -57,6 +63,7 @@ def main():
               'guest_mode': 'optimized_debug', 'compiler_host_mode': 'ReleaseFast',
               'affinity': sorted(os.sched_getaffinity(0)), 'jobs': 4,
               'repeats': args.repeats, 'golden_manifest_sha256': benchmark.sha(golden_manifest),
+              'cache_compression': compression,
               'method': 'Same source paths and identical edits for both compilers; separate per-compiler frontend, stage and native caches. '
                         'Native caches seeded only with validated original cold objects. Fresh intermediate-cache setup is excluded from '
                         'incremental medians. Edits change source length on every sample; baseline/candidate order alternates. '
@@ -69,6 +76,7 @@ def main():
 
     if prior:
         assert prior['compilers'] == report['compilers'], 'Compiler binaries changed'
+        assert prior.get('cache_compression', {'baseline': None, 'candidate': None}) == compression, 'Compression policies changed'
         report['initial_comparison'] = str(root / 'results.json')
         report['method'] = ('Continued warm caches from a completed comparison; no setup is measured. '
                             'Every edit has a new sample number and fresh source bytes. ' + report['method'])
@@ -105,6 +113,8 @@ def main():
         compiler = compilers[variant]
         assert benchmark.sha(compiler) == report['compilers'][variant]['sha256']
         environment = dict(env, MYLANG_CORE_RUNTIME_CACHE=str(directory / 'native'))
+        if compression[variant] is not None:
+            environment['MYLANG_STAGE_CACHE_COMPRESSION'] = compression[variant]
         command = [compiler, 'build', 'main.my', '-o', binary, '--cache-dir', directory / 'cache', '--report', '--optimize-debug']
         metrics = output / 'metrics.json'
         timed = ['/usr/bin/time', '-f', '{"peak_rss_kb":%M,"user_s":%U,"system_s":%S}', '-o', metrics, *command]
@@ -119,6 +129,8 @@ def main():
         records = [json.loads(line) for line in stderr.decode().splitlines() if line.startswith('{"version":"cache-report-v1"')]
         assert len(records) == 1
         cache = records[0]
+        if compression[variant] is not None:
+            assert cache['storage']['compression'] == compression[variant], cache.get('storage')
         if phase.endswith('edit'):
             assert cache['program'] == 'linked'
             assert cache['compiled'] == (3 if phase == 'three_file_edit' else 1), cache
@@ -130,6 +142,20 @@ def main():
         report['records'].append(record)
         save()
         record['execution_check'] = validate(binary, output, copies, token)
+        if phase == 'setup' and args.capture_setup_cache:
+            # The native seed contains exactly the original required units;
+            # ensure setup used every one and produced no additional objects.
+            assert cache['compiled'] == 0 and cache['reused'] == cache['units']
+            assert cache['units'] == report['native_seeds'][f'{copies}/{variant}']['unit_object_count']
+            subprocess.run(['sync', '-f', directory / 'cache'], check=True)
+            components = {p.name: capacity.disk_usage(p) for p in (directory / 'cache').iterdir() if p.is_dir()}
+            components['native'] = capacity.disk_usage(directory / 'native')
+            totals = [capacity.disk_usage(directory / 'cache'), components['native']]
+            record['setup_disk'] = {
+                'method': 'One build with empty frontend/stage/program caches and a validated seed containing exactly the required native objects; measured before any edits. Source, output binary and logs excluded.',
+                'components': components,
+                'total': {key: sum(row[key] for row in totals) for key in totals[0]},
+            }
         save()
         print(copies, variant, phase, sample, f'{seconds:.3f}s', f'{record["peak_rss_kb"] / 1048576:.3f}GiB',
               cache.get('stages', {}).get('lowering') if cache.get('stages') else None, flush=True)

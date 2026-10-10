@@ -12,6 +12,9 @@ pub const Error = std.mem.Allocator.Error;
 const magic = "mylang-stage-v1\n";
 const packs = @import("stage_pack.zig");
 
+/// Store-local diagnostic write settings; existing blocks retain their encoding.
+pub const Options = struct { compression: @import("stage_compression.zig").Policy = .zlib };
+
 /// Immutable shared store settings. Backing must support concurrent callers when
 /// emission workers share this store; each operation uses a private scratch arena.
 pub const Store = struct {
@@ -23,11 +26,16 @@ pub const Store = struct {
 
     /// Prepare a lazily created store bound to the complete compiler identity.
     pub fn init(backing: std.mem.Allocator, io: std.Io, cache_root: []const u8) Error!Store {
+        return initWithOptions(backing, io, cache_root, .{});
+    }
+
+    /// Select new block encoding while preserving stage keys and read compatibility.
+    pub fn initWithOptions(backing: std.mem.Allocator, io: std.Io, cache_root: []const u8, options: Options) Error!Store {
         const root = try std.fs.path.join(backing, &.{ cache_root, "stages-packed-v1" });
         errdefer backing.free(root);
         var identity: Digest = undefined;
         std.crypto.hash.Blake3.hash(@import("frontend_reuse.zig").compiler_identity, &identity, .{});
-        return .{ .backing = backing, .io = io, .root = root, .identity = identity, .storage = try packs.State.init(backing, io, root, identity) };
+        return .{ .backing = backing, .io = io, .root = root, .identity = identity, .storage = try packs.State.init(backing, io, root, identity, options.compression) };
     }
 
     /// Release the owned path after all users of the store finish.

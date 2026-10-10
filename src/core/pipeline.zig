@@ -125,11 +125,15 @@ const BuildRequest = struct {
 
 fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8), allow_lazy: bool) Error!u8 {
     const allocator = init.arena.allocator();
+    const compression = @import("stage_compression.zig").Policy.parse(init.environ_map.get("MYLANG_STAGE_CACHE_COMPRESSION")) catch {
+        try report.appendSlice(allocator, "mylang-core: MYLANG_STAGE_CACHE_COMPRESSION must be 'zlib' or 'none'\n");
+        return error.ConfigurationFailed;
+    };
     const entry = try project_entry.resolve(allocator, init.io, path, report);
     const replaying = options.show.llvm == null;
     const context: build_replay.Context = .{ .arena = allocator, .io = init.io, .environment = init.environ_map, .cache = options.cache, .zig = options.zig, .flags = try flags(init, options, budget), .entry = entry };
     if (try replayBuild(context, options, report)) return 0;
-    var storage = try stage_store.Store.init(init.gpa, init.io, options.cache);
+    var storage = try stage_store.Store.initWithOptions(init.gpa, init.io, options.cache, .{ .compression = compression });
     defer storage.deinit();
     var stages: stage_metrics.Report = .{};
     if (!allow_lazy) stages.lowering.fallbacks = 1;
@@ -213,7 +217,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     materializationMetrics(&stages, prepared.lazy);
     const flush_start = stage_metrics.now(init.io);
     const flushed = try storage.flush();
-    const publication: stage_metrics.Storage = .{ .flush_nanoseconds = stage_metrics.elapsed(init.io, flush_start), .flush_succeeded = flushed, .reads = storage.statistics() };
+    const publication: stage_metrics.Storage = .{ .flush_nanoseconds = stage_metrics.elapsed(init.io, flush_start), .flush_succeeded = flushed, .reads = storage.statistics(), .compression = @tagName(compression) };
     // A record that cannot be written costs the next build its replay, nothing more.
     if (replaying) build_replay.remember(context, prepared.sources, outcome.tool, .{ .program = outcome.program, .foreign = outcome.foreign }, report.items) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
