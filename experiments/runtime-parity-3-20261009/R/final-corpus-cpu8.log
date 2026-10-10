@@ -1,0 +1,39 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3 after 55s (all 3 build slot(s) busy)
+round 1: 25/302
+round 1: 50/302
+round 1: 75/302
+round 1: 100/302
+round 1: 125/302
+round 1: 150/302
+round 1: 175/302
+round 1: 200/302
+round 1: 225/302
+round 1: 250/302
+round 1: 275/302
+round 1: 300/302
+round 2: 25/302
+round 2: 50/302
+round 2: 75/302
+round 2: 100/302
+round 2: 125/302
+round 2: 150/302
+round 2: 175/302
+round 2: 200/302
+round 2: 225/302
+round 2: 250/302
+round 2: 275/302
+round 2: 300/302
+round 3: 25/302
+round 3: 50/302
+round 3: 75/302
+round 3: 100/302
+round 3: 125/302
+round 3: 150/302
+round 3: 175/302
+round 3: 200/302
+round 3: 225/302
+round 3: 250/302
+round 3: 275/302
+round 3: 300/302
+complete: 302 arms, 3 rounds

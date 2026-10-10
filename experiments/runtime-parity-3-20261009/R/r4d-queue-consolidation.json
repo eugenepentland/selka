@@ -1,0 +1,22 @@
+{
+  "time": 1791596358.1360626,
+  "reason": "Four wrappers were still queued. Consolidate Debug build, native fixtures, EDA probe and focused core tests into one dependency-ordered admission so fixture compiler is current. No test or build ran in these cancelled wrappers. Initial cancellation helper failed parsing /proc/stat process names, then corrected before any admission.",
+  "jobs": [
+    {
+      "pid": 514303,
+      "command": "bash scripts/build-slot.sh build bash -c python3 experiments/runtime-parity-3-20261009/R/fixtures.py --compiler zig-out/bin/mylang --tag r4c && python3 experiments/runtime-parity-3-20261009/R/payload_probe.py --compiler zig-out/bin/mylang --tag r4c "
+    },
+    {
+      "pid": 1685455,
+      "command": "bash scripts/build-slot.sh build zig build --summary all "
+    },
+    {
+      "pid": 1691450,
+      "command": "bash scripts/build-slot.sh build zig build test-core -Dtest-filter=R  --summary all "
+    },
+    {
+      "pid": 1698089,
+      "command": "bash scripts/build-slot.sh build bash -c zig build --summary all && python3 experiments/runtime-parity-3-20261009/R/fixtures.py --compiler zig-out/bin/mylang --tag r4d && python3 experiments/runtime-parity-3-20261009/R/payload_probe.py --compiler zig-out/bin/mylang --tag r4d && zig build test-core -Dtest-filter=\"R \" --summary all "
+    }
+  ]
+}

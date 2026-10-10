@@ -1,0 +1,11 @@
+source_commit=fa5bf207d328d1918416db3909127c23a9167965
+$ /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/scripts/build-slot.sh build -- nice -n 10 /usr/bin/python3 /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/new-core-s5-20261007/tools/fuzz_frozen.py --kind s0 --references /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/new-core-s5-20261007/references/fuzz-v1.json.gz --cases 50 --seed 3301 --old /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/new-core-s5-20261007/tools/frozen-old-core --new /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/tools/mylang-migrating --evidence /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/experiments/runtime-parity-3-20261009/R/fuzz-final-02/s0 --cache-root /home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/s5/fuzz/20261010T030728Z-19ea7a474414/s0
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 3 after 74s (all 3 build slot(s) busy)
+qualification progress: s0: seen=25 elapsed=17.20s
+qualification progress: s0: seen=50 elapsed=35.07s
+cases=50 old_rejected=0 new_refused=0 compared=750 mismatch=0 fact=0 traps=103 caught=0 vectorized=15 versioned=1
+qualification {"kind": "s0", "qualified": true, "accepted": 50, "native_comparisons": 750, "elapsed_seconds": 36.8040135379415}
+
+exit=0

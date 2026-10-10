@@ -1,6 +1,6 @@
 # Runtime parity wave 3 — 2026-10-09
 
-Status: M0, U2, S2 and R complete. X is in progress. U2 and S2 are fully qualified after integration with main at `fa1160602`. The R merge and complete final qualification, CPU-10 timing and report remain.
+Status: M0, U2, S2 and R complete. X is in progress. All three lanes are integrated with main at `fa1160602`. U2 and S2 integration gates passed; the R/main cache compatibility tests pass. Complete final-tree qualification and binding CPU-10 timing/report remain.
 
 Base: `main` `41ed360fb361c49938488ad111795bad8a726b73`. Integration branch: `codex/runtime-parity-3`.
 Worktree: `/home/epentland/ai/canopy/mylang-worktrees/codex-runtime-parity-3` (locked, prune-keep).
@@ -91,6 +91,8 @@ Historical checkpoints are retained below; the current state is stated above.
 - The second mandatory main merge resolves `passes.zig`/`fuse_slice_key.zig` while preserving U2/S2 behavior. New demand-level fusion replay does not cover S2-generated compound types, all split-helper requests, or duplicate count helpers. A narrow eager-preparation fallback for eligible split catalogs retains ordinary stage/emission caches; byte/slice-only catalogs keep demand reuse. All four new cache regressions pass in trusted and verify modes (8/8 build steps;4/4 host tests), including cold/warm, dirty helper-order changes, and unaffected byte-only reuse. `X/main-fa116-merge-review.json` records the compatibility bound. Complete fresh `merge-s2-main-02` gates still precede the R merge.
 
 - S2/main integration fully qualifies source `ffee2b9d703e61386e968e7eff20f4f98623ef05` against integrated main `fa11606022ed217896a27976f8fe6d95db95f465` (`X/gates-merge-s2-main-02/receipt.json`). Debug and ReleaseFast builds pass 9/9, repository 95/95 with 2,492 passing tests and 22,821 shard-routing skips, formatting 15/15, Guardian 88 checks. Raw conformance exactly matches M0 in both modes and all 12 known PROBLEM lines; additive is 1547/0/0 in both, with 736 core tests in each 64-shard run. Fuzz passes all 1,800 cases, 25,800 comparisons and 35,600 native runs with source/oracles unchanged. Lox is 974/974 plus 65/65, EDA 310/310 plus 34 goldens, all 199 counting/output cells pass, and 151 paired instruction cells pass three rounds with no ratio above 1.03 (maximum rows/int_parse 1.009142367). All 683 source files, both compiler hashes and 186 guest binary hashes remain unchanged. Six conformance logs are losslessly compressed with hashes and revalidated. The original M0 compiler receipt is also losslessly compressed; its archive receipt preserves both hashes. Final CPU-10 outcomes remain unmeasured.
+
+- R is integrated by a real merge of accepted hand-off `e83dfeb6dda34f7ff26a873174fbae506dff9d26` into qualified S2 receipt checkpoint `d6fe321c6842d9b1eaf6ab432a5b5837b634688b`. There are no textual conflicts. The no-record field-analysis shortcut now retains module type information for R array facts; two focused eager/cached/verify regressions pass, 8/8 steps (`X/r-main-merge-review.json`, X-015). The accepted R fuzz journals are summarized under X-008 with exact originals retained in owned cache. R1/R2 are the shipped optimizations; the rejected R3/R4 prototypes remain rejected and F1's barrier remains intact. Fresh complete final-tree gates are next.
 
 ## Lane exits at current checkpoints
 

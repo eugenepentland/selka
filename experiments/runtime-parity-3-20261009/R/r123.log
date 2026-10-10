@@ -1,0 +1,16 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: all 3 build slot(s) busy; waiting (61s so far)
+build-slot: all 3 build slot(s) busy; waiting (121s so far)
+build-slot: all 3 build slot(s) busy; waiting (181s so far)
+build-slot: all 3 build slot(s) busy; waiting (242s so far)
+build-slot: all 3 build slot(s) busy; waiting (302s so far)
+build-slot: all 3 build slot(s) busy; waiting (362s so far)
+build-slot: all 3 build slot(s) busy; waiting (422s so far)
+build-slot: build slot 1 after 467s (all 3 build slot(s) busy)
+qualified parity-fannkuch_redux
+qualified parity-fannkuch_redux_array
+qualified parity-fannkuch_redux_tuned
+qualified parity-sort_builtin
+qualified parity-records
+qualified row-record_pass
+qualified row-sort_records

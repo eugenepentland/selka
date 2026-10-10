@@ -1,0 +1,138 @@
+{
+ "compiler_sha256": "00e854ac6d7f759fb3bfa2d64b21b8d703460261e1465a674244af4ac119bdf3",
+ "rows": [
+  {
+   "label": "parity-fannkuch_redux_array",
+   "kind": "plain",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/bench/parity/suite/fannkuch_redux_array.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/objects",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/parity-fannkuch_redux_array-plain",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/parity-fannkuch_redux_array-plain.ll"
+   ],
+   "status": 0,
+   "stderr": "",
+   "llvm_sha256": "8d3b24a9c4d4e917b20217a8cf003d7767f70a99f374d619760f1059e9250a26",
+   "binary_sha256": "4eaab3f88086afefbc28c8671d65f77d2e845cbfd9a2136dff01abf41098699f",
+   "archive": "experiments/runtime-parity-3-20261009/R/llvm/final-parity-fannkuch_redux_array-plain.ll.gz"
+  },
+  {
+   "label": "parity-fannkuch_redux_array",
+   "kind": "count",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/bench/parity/suite/fannkuch_redux_array.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/objects",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/parity-fannkuch_redux_array-count",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/parity-fannkuch_redux_array-count.ll",
+    "--counters"
+   ],
+   "status": 0,
+   "stderr": "",
+   "llvm_sha256": "1751e21e4c0a499298c75e64dddf88541ce96332cbba6b49f158c4f7ebec3fa6",
+   "binary_sha256": "8af6cf69765d9cb7ff591e49f7fe90de83cbc0f86a4344bc0cc0e6f57d7599db",
+   "archive": "experiments/runtime-parity-3-20261009/R/llvm/final-parity-fannkuch_redux_array-count.ll.gz"
+  },
+  {
+   "label": "parity-fannkuch_redux_tuned",
+   "kind": "plain",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/bench/parity/suite/fannkuch_redux_tuned.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/objects",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/parity-fannkuch_redux_tuned-plain",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/parity-fannkuch_redux_tuned-plain.ll"
+   ],
+   "status": 0,
+   "stderr": "",
+   "llvm_sha256": "6b3c4c61efcf04776e069984bdbbd66df06b57b9adb85d3f5d4522071086a138",
+   "binary_sha256": "3413dc1e979b0d046c4eb144e97086429d5a70ba0a77f88a177051bc6567959a",
+   "archive": "experiments/runtime-parity-3-20261009/R/llvm/final-parity-fannkuch_redux_tuned-plain.ll.gz"
+  },
+  {
+   "label": "parity-fannkuch_redux_tuned",
+   "kind": "count",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/bench/parity/suite/fannkuch_redux_tuned.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/objects",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/parity-fannkuch_redux_tuned-count",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/parity-fannkuch_redux_tuned-count.ll",
+    "--counters"
+   ],
+   "status": 0,
+   "stderr": "",
+   "llvm_sha256": "28caea9c44433d737e27512d8472ca3206f841b851e3a848c21c343ecd38bfa9",
+   "binary_sha256": "f1b418960b1d7d3f9754ac663d655b9e84d2cbb062c9021c84214aae02ba3661",
+   "archive": "experiments/runtime-parity-3-20261009/R/llvm/final-parity-fannkuch_redux_tuned-count.ll.gz"
+  },
+  {
+   "label": "row-record_pass",
+   "kind": "plain",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/test/core/row_record_pass.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/objects",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/row-record_pass-plain",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/row-record_pass-plain.ll",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/benchmarks/runtime/ports/native_clock.c"
+   ],
+   "status": 0,
+   "stderr": "",
+   "llvm_sha256": "fb7b79f8b66ce6716e694ce68f6c360612b4667564d68e19416c19a1a36b4ab8",
+   "binary_sha256": "f8f191ddde9a175b8e4f30b45215edb0361b14af09121e77331b5dd3934096d4",
+   "archive": "experiments/runtime-parity-3-20261009/R/llvm/final-row-record_pass-plain.ll.gz"
+  },
+  {
+   "label": "row-record_pass",
+   "kind": "count",
+   "command": [
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/test/core/row_record_pass.my",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/objects",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/row-record_pass-count",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/cache/r-final-ir/row-record_pass-count.ll",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/benchmarks/runtime/ports/native_clock.c",
+    "--counters"
+   ],
+   "status": 0,
+   "stderr": "",
+   "llvm_sha256": "e64ad86fb653c58009c3159c482d6eab3a80952f5b06e97ebc20d779b70679f5",
+   "binary_sha256": "08cb25b22faeda01608ce8c364a778ac4a57887f97d43319968c52d520b8b197",
+   "archive": "experiments/runtime-parity-3-20261009/R/llvm/final-row-record_pass-count.ll.gz"
+  }
+ ]
+}

@@ -1,0 +1,285 @@
+{
+ "source": "M0 exact raw count files in owned cache",
+ "note": "Context only: parse_list call/alloc totals are not an exact count of nonempty lists, so do not assert them as the unavoidable first-push copy bound. Runtime lending intentionally excludes full/shared lists.",
+ "totals": {
+  "p6_copies": 9267364,
+  "p6_bytes": 444833472,
+  "calls": 2862665,
+  "list_grows": 2905728,
+  "allocs": 5768393
+ },
+ "cells": [
+  {
+   "design": "eda-barracuda-via-fence",
+   "p6_copies": 331107,
+   "p6_bytes": 15893136,
+   "calls": 102206,
+   "list_grows": 103847,
+   "allocs": 206053
+  },
+  {
+   "design": "eda-cyclops-kband-pcb",
+   "p6_copies": 263755,
+   "p6_bytes": 12660240,
+   "calls": 80853,
+   "list_grows": 82011,
+   "allocs": 162864
+  },
+  {
+   "design": "eda-stm32n6",
+   "p6_copies": 383474,
+   "p6_bytes": 18406752,
+   "calls": 117414,
+   "list_grows": 119431,
+   "allocs": 236845
+  },
+  {
+   "design": "eda-labstation+no-vendor-symbols",
+   "p6_copies": 314812,
+   "p6_bytes": 15110976,
+   "calls": 97599,
+   "list_grows": 99774,
+   "allocs": 197373
+  },
+  {
+   "design": "eda-rf-switch-8way",
+   "p6_copies": 185261,
+   "p6_bytes": 8892528,
+   "calls": 57076,
+   "list_grows": 57722,
+   "allocs": 114798
+  },
+  {
+   "design": "eda-black-canyon",
+   "p6_copies": 257021,
+   "p6_bytes": 12337008,
+   "calls": 79536,
+   "list_grows": 80668,
+   "allocs": 160204
+  },
+  {
+   "design": "eda-straps-base",
+   "p6_copies": 381952,
+   "p6_bytes": 18333696,
+   "calls": 118746,
+   "list_grows": 120334,
+   "allocs": 239080
+  },
+  {
+   "design": "eda-adf5901",
+   "p6_copies": 175415,
+   "p6_bytes": 8419920,
+   "calls": 54155,
+   "list_grows": 54751,
+   "allocs": 108906
+  },
+  {
+   "design": "eda-cyclops-analog",
+   "p6_copies": 320909,
+   "p6_bytes": 15403632,
+   "calls": 99170,
+   "list_grows": 100730,
+   "allocs": 199900
+  },
+  {
+   "design": "eda-cyclops-xband-sip",
+   "p6_copies": 235732,
+   "p6_bytes": 11315136,
+   "calls": 72959,
+   "list_grows": 73854,
+   "allocs": 146813
+  },
+  {
+   "design": "eda-rds3",
+   "p6_copies": 576119,
+   "p6_bytes": 27653712,
+   "calls": 179759,
+   "list_grows": 182910,
+   "allocs": 362669
+  },
+  {
+   "design": "eda-poe-pd-flyback-tps23757",
+   "p6_copies": 193107,
+   "p6_bytes": 9269136,
+   "calls": 59652,
+   "list_grows": 60372,
+   "allocs": 120024
+  },
+  {
+   "design": "eda-lmk05318b-clock",
+   "p6_copies": 205291,
+   "p6_bytes": 9853968,
+   "calls": 63088,
+   "list_grows": 63849,
+   "allocs": 126937
+  },
+  {
+   "design": "eda-cyclops-breakout",
+   "p6_copies": 188534,
+   "p6_bytes": 9049632,
+   "calls": 57842,
+   "list_grows": 58435,
+   "allocs": 116277
+  },
+  {
+   "design": "eda-cyclops-kband-breakout",
+   "p6_copies": 256145,
+   "p6_bytes": 12294960,
+   "calls": 78680,
+   "list_grows": 79736,
+   "allocs": 158416
+  },
+  {
+   "design": "eda-barracuda",
+   "p6_copies": 374456,
+   "p6_bytes": 17973888,
+   "calls": 115660,
+   "list_grows": 117641,
+   "allocs": 233301
+  },
+  {
+   "design": "eda-cyclops-interposer",
+   "p6_copies": 241328,
+   "p6_bytes": 11583744,
+   "calls": 74170,
+   "list_grows": 75149,
+   "allocs": 149319
+  },
+  {
+   "design": "eda-labstation",
+   "p6_copies": 475290,
+   "p6_bytes": 22813920,
+   "calls": 147105,
+   "list_grows": 149782,
+   "allocs": 296887
+  },
+  {
+   "design": "eda-cyclops-digital-pcb",
+   "p6_copies": 326056,
+   "p6_bytes": 15650688,
+   "calls": 99613,
+   "list_grows": 101039,
+   "allocs": 200652
+  },
+  {
+   "design": "eda-straps",
+   "p6_copies": 298820,
+   "p6_bytes": 14343360,
+   "calls": 92529,
+   "list_grows": 94011,
+   "allocs": 186540
+  },
+  {
+   "design": "eda-remora-rf",
+   "p6_copies": 288599,
+   "p6_bytes": 13852752,
+   "calls": 89380,
+   "list_grows": 90845,
+   "allocs": 180225
+  },
+  {
+   "design": "eda-Cyclops-Flex",
+   "p6_copies": 160569,
+   "p6_bytes": 7707312,
+   "calls": 49559,
+   "list_grows": 50058,
+   "allocs": 99617
+  },
+  {
+   "design": "eda-rds3-rf-selector",
+   "p6_copies": 166114,
+   "p6_bytes": 7973472,
+   "calls": 51219,
+   "list_grows": 51757,
+   "allocs": 102976
+  },
+  {
+   "design": "eda-rds3+flat",
+   "p6_copies": 498153,
+   "p6_bytes": 23911344,
+   "calls": 154673,
+   "list_grows": 157356,
+   "allocs": 312029
+  },
+  {
+   "design": "eda-rf-switch-eval",
+   "p6_copies": 194566,
+   "p6_bytes": 9339168,
+   "calls": 60078,
+   "list_grows": 60771,
+   "allocs": 120849
+  },
+  {
+   "design": "eda-cyclops-kband",
+   "p6_copies": 302835,
+   "p6_bytes": 14536080,
+   "calls": 93781,
+   "list_grows": 95174,
+   "allocs": 188955
+  },
+  {
+   "design": "eda-barracuda-base",
+   "p6_copies": 398688,
+   "p6_bytes": 19137024,
+   "calls": 123077,
+   "list_grows": 125159,
+   "allocs": 248236
+  },
+  {
+   "design": "eda-black-canyon+flat",
+   "p6_copies": 248145,
+   "p6_bytes": 11910960,
+   "calls": 76686,
+   "list_grows": 77743,
+   "allocs": 154429
+  },
+  {
+   "design": "eda-w55rp20",
+   "p6_copies": 205653,
+   "p6_bytes": 9871344,
+   "calls": 63215,
+   "list_grows": 63974,
+   "allocs": 127189
+  },
+  {
+   "design": "eda-max860-inverter",
+   "p6_copies": 164625,
+   "p6_bytes": 7902000,
+   "calls": 50793,
+   "list_grows": 51309,
+   "allocs": 102102
+  },
+  {
+   "design": "eda-dual-flash",
+   "p6_copies": 170746,
+   "p6_bytes": 8195808,
+   "calls": 52651,
+   "list_grows": 53203,
+   "allocs": 105854
+  },
+  {
+   "design": "eda-cyclops-analog+no-vendor-symbols",
+   "p6_copies": 169139,
+   "p6_bytes": 8118672,
+   "calls": 52461,
+   "list_grows": 53568,
+   "allocs": 106029
+  },
+  {
+   "design": "eda-blinky-breakout",
+   "p6_copies": 14308,
+   "p6_bytes": 686784,
+   "calls": 4421,
+   "list_grows": 4518,
+   "allocs": 8939
+  },
+  {
+   "design": "eda-remora-base",
+   "p6_copies": 300640,
+   "p6_bytes": 14430720,
+   "calls": 92859,
+   "list_grows": 94247,
+   "allocs": 187106
+  }
+ ]
+}

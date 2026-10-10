@@ -1,0 +1,24 @@
+{
+ "production_commit": "09ed227098f3b5447643317ab640eec85c4f6772",
+ "src_tree": "fe0b181189883547ffd4b576793f3c8403357fbf",
+ "compiler_debug": {
+  "source_commit": "09ed227098f3b5447643317ab640eec85c4f6772",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-debug-final/bin/mylang",
+  "compiler_sha256": "629e42a9993605e4d99c7f48f67410e5aa49f553c4f52bca4c754349f5adad0f",
+  "optimization": "Debug",
+  "build_log": "R/build-final-01.log.gz"
+ },
+ "compiler_release": {
+  "source_commit": "09ed227098f3b5447643317ab640eec85c4f6772",
+  "compiler": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/r-fast-05/bin/mylang",
+  "compiler_sha256": "00e854ac6d7f759fb3bfa2d64b21b8d703460261e1465a674244af4ac119bdf3",
+  "optimization": "ReleaseFast",
+  "build_log": "R/build-final-01.log.gz"
+ },
+ "files": {
+  "SPEC.md": "bb50ded193bf30108b14de6e2eba86307329477d3697e945524d90751f891ab1",
+  "build.zig": "76c1bd6bf0bccff8acf91dbcebb90a889db670475b4ce5df265e79fbee999551",
+  "build.zig.zon": "04631504ac5a3940ea69738e04a91bcd892be6a5f725b2ce8fe275dde54572e4",
+  "guardian.toml": "18ed40471ba3a5ebc2f5d2179c14aecc8be9040bb2ca1374567a60e576ca5dd3"
+ }
+}

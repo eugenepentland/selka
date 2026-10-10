@@ -211,8 +211,10 @@ fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir
             .returns = returns,
             .shortcut = if (shortcut) |*state| state else null,
             .provenance = &result.provenance,
+            .fields = .{ .module = module },
         }, .{ .temporary = &temporary, .scratch = &scratch, .parameters = &parameter_summary, .inlined = inlined, .result = &result });
-        break :blk facts.FieldIntervals{};
+        // Array facts also need type information when no record field rounds run.
+        break :blk facts.FieldIntervals{ .module = module };
     };
     const parameters = parameter_summary.finish();
     try resolveParameters(arena, if (shortcut) |*state| state else null, parameters, inlined, &result);

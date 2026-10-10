@@ -1,0 +1,46 @@
+[
+ {
+  "program": "row-result_propagate",
+  "arguments": [
+   "4096",
+   "4000",
+   "7"
+  ],
+  "binaries": {
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/bin/base/row-result_propagate-plain": "768f59bf6d9a71b04cb25cd6ad12bde67f6159544a2fc6cc30ecf0acf20a9b4d",
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-result_propagate/base.exe": "ada7ce9fa6fcf445f6f0a91aa0e12f0b74cacf3ea6bef4dd7ed8127bffd57744",
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-result_propagate/real": "4f94c6158e8cb93b742aa0149625ef91ce2d37eb935f386bb153289ce89920f4"
+  },
+  "same_as_m0": false,
+  "same_as_rebuilt_compiler_binary": false,
+  "compiler_binary_same_as_m0": false,
+  "reconstruction_differences": {
+   "clock_compile": "Probe: zig cc -c -O3 native_clock.c; compiler adds -target x86_64-linux-gnu.2.31 and target.cpu_flags.",
+   "object_order": "Probe runtime, clock, LLVM unit; compiler runtime, LLVM unit, clock.",
+   "link_flags": "Probe uses cf.ZIG_FLAGS and always -lm; compiler adds -pthread and links -lm only if needed.",
+   "source_identity": "Fresh compiler rebuild and M0 used different owned source/cache paths, so metadata and LLVM object names may differ; binary identity is explicitly false, not assumed."
+  }
+ },
+ {
+  "program": "row-option_handle",
+  "arguments": [
+   "64",
+   "250000",
+   "7"
+  ],
+  "binaries": {
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/ce/bin/base/row-option_handle-plain": "da79591fd5fdad92324ce3ea47a5c2b6b1d5b55d16a268210ac58616acba8ef5",
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-option_handle/base.exe": "f3c41b82bebfeb4d98cedf4d45a2aa88d3158eddf8284b6395c09762cecd8492",
+   "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/base-probes/row-option_handle/real": "3f2ee4d7ab83b2f2affaa0b1633151e91bc51946da0d20ec0d1774f94a545c8e"
+  },
+  "same_as_m0": false,
+  "same_as_rebuilt_compiler_binary": false,
+  "compiler_binary_same_as_m0": false,
+  "reconstruction_differences": {
+   "clock_compile": "Probe: zig cc -c -O3 native_clock.c; compiler adds -target x86_64-linux-gnu.2.31 and target.cpu_flags.",
+   "object_order": "Probe runtime, clock, LLVM unit; compiler runtime, LLVM unit, clock.",
+   "link_flags": "Probe uses cf.ZIG_FLAGS and always -lm; compiler adds -pthread and links -lm only if needed.",
+   "source_identity": "Fresh compiler rebuild and M0 used different owned source/cache paths, so metadata and LLVM object names may differ; binary identity is explicitly false, not assumed."
+  }
+ }
+]

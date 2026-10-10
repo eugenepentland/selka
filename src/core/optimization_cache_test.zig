@@ -1594,3 +1594,99 @@ test "RP3 cache integration byte views retain demand checkpoint reuse and dirty 
     try checkByteDemand(std.testing.allocator, .verify);
     try checkByteDemand(std.testing.allocator, .trusted);
 }
+
+const array_only =
+    \\func sum() -> int:
+    \\    mut xs = FixedArray[int, 5]([0, 1, 2, 3, 4])
+    \\    xs[2] = -7
+    \\    return xs[3]
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(sum())
+    \\    return 0
+;
+
+fn expectArrayOnly(backing: std.mem.Allocator) !void {
+    var arena = std.heap.ArenaAllocator.init(backing);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: build.Refusal = .{};
+    const module = try support.buildSource(a, array_only, &refusal);
+    var found_array = false;
+    for (module.compounds.items) |compound| {
+        try std.testing.expect(compound != .record);
+        found_array = found_array or compound == .array;
+    }
+    try std.testing.expect(found_array);
+}
+
+fn expectArrayHulls(value: Produced) !void {
+    var literal = false;
+    var updated = false;
+    for (value.result.known) |optional| if (optional) |known| {
+        for (known.aggregates.lists) |aggregate| {
+            const length = aggregate.len orelse continue;
+            if (length.lo != 5 or length.hi != 5) continue;
+            const elements = aggregate.elements orelse continue;
+            literal = literal or std.meta.eql(elements, facts.Interval{ .lo = 0, .hi = 4 });
+            updated = updated or std.meta.eql(elements, facts.Interval{ .lo = -7, .hi = 4 });
+        }
+    };
+    try std.testing.expect(literal);
+    try std.testing.expect(updated);
+}
+
+// spec-case: NEW-CORE-R-ARRAY-2
+test "R array-only modules preserve literal and update facts through deferred cold and warm caches" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    try expectArrayOnly(std.testing.allocator);
+    const oracle = try compile(a, std.testing.allocator, array_only, null, .trusted);
+    try expectArrayHulls(oracle);
+    try std.testing.expect(std.mem.indexOf(u8, oracle.llvm, "icmp uge i64") == null);
+    const cold = try compileDeferred(a, std.testing.allocator, array_only, &storage);
+    const warm = try compileDeferred(a, std.testing.allocator, array_only, &storage);
+    try equal(oracle, cold.output);
+    try equal(oracle, warm.output);
+    try std.testing.expect(total(&warm.output.statistics.hits) > 0);
+    try std.testing.expectEqual(@as(usize, 0), total(&warm.output.statistics.misses));
+    const demand_cold = try compileDemandGuarded(a, std.testing.allocator, array_only, &storage, .{ .mode = .trusted, .omit = false });
+    const demand_warm = try compileDemandGuarded(a, std.testing.allocator, array_only, &storage, .{ .mode = .trusted, .omit = true });
+    try equal(oracle, demand_cold.output);
+    try equal(oracle, demand_warm.output);
+    try std.testing.expect(demand_warm.omitted > 0);
+    try std.testing.expectEqual(@as(usize, 0), demand_warm.final_restored);
+    try std.testing.expectEqual(@as(u32, 0), demand_warm.emission.work.keys_built);
+}
+
+// spec-case: NEW-CORE-R-ARRAY-2
+test "R cached array-only verify builds restore bounds checks while retaining the same array hulls" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const oracle = try compile(a, std.testing.allocator, array_only, null, .verify);
+    try expectArrayHulls(oracle);
+    try std.testing.expect(std.mem.indexOf(u8, oracle.llvm, "icmp uge i64") != null);
+    const cold = try compile(a, std.testing.allocator, array_only, &storage, .verify);
+    const warm = try compile(a, std.testing.allocator, array_only, &storage, .verify);
+    try equal(oracle, cold);
+    try equal(oracle, warm);
+    try std.testing.expect(total(&warm.statistics.hits) > 0);
+    try std.testing.expectEqual(@as(usize, 0), total(&warm.statistics.misses));
+    const demand_cold = try compileDemandGuarded(a, std.testing.allocator, array_only, &storage, .{ .mode = .verify, .omit = false });
+    const demand_warm = try compileDemandGuarded(a, std.testing.allocator, array_only, &storage, .{ .mode = .verify, .omit = true });
+    try equal(oracle, demand_cold.output);
+    try equal(oracle, demand_warm.output);
+    try std.testing.expect(demand_warm.omitted > 0);
+    try std.testing.expectEqual(@as(usize, 0), demand_warm.final_restored);
+    try std.testing.expectEqual(@as(u32, 0), demand_warm.emission.work.keys_built);
+}

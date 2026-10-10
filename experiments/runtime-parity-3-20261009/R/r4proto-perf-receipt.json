@@ -1,0 +1,13 @@
+{
+  "raw_gzip": "experiments/runtime-parity-3-20261009/R/r4proto-cpu8.json.gz",
+  "raw_sha256": "a507267fc2c0c23e2ca9583a4cb6089e2172058c8a2884bcf88ab59706c86955",
+  "raw_scratch": "/home/epentland/ai/canopy/mylang-worktrees/codex-rp3-r/.mylang-cache/rp3/R/journals/r4proto-cpu8.json",
+  "cpu": 8,
+  "rounds": 3,
+  "programs": 60,
+  "tags": [
+    "base",
+    "r4proto"
+  ],
+  "all_status_zero": true
+}

@@ -1,0 +1,40 @@
+build-slot: all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2 after 20s (all 3 build slot(s) busy)
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73: 8/577 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 4/88 failed (error-discipline, cognitive-complexity, line-length, repeated-string-literal) — diff-scoped vs 41ed360fb361c49938488ad111795bad8a726b73, 8 file(s) in scope
+guardian: failures grouped by check (4):
+  error-discipline (1 finding)
+    - src/core/emit_payload.zig: pub fn shapes uses inferred error set `!T` (use `MyErr!T`)
+      fix: declare an explicit error set — `pub const MyError = error{ Foo, Bar };` — and return `MyError!void`.
+  cognitive-complexity (1 finding)
+    - src/core/emit_llvm.zig: fn call cognitive complexity 30 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  line-length (1 finding)
+    - src/core/emit_llvm.zig:2134: line is 264 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  repeated-string-literal (2 findings)
+    - src/core/emit_llvm.zig: string literal   {s} = load i64, ptr {s}, align 8,  appears 3 times (lines 264, 3728, 3881) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+    - src/core/emit_llvm.zig: string literal %payload appears 4 times (lines 1503, 3672, 3689, 3712) — extract a const
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+install
++- install mylang
+   +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 6/9 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native success 5s MaxRSS:499M
+|  |  +- run exe build-identity (build_identity) success 210ms
+|  |  |  +- compile exe build-identity debug native cached 5ms MaxRSS:41M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 7ms MaxRSS:42M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

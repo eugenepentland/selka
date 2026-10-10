@@ -34,6 +34,7 @@ const effects = @import("effects.zig");
 /// Which home transformations are on. `share_sret` (CE2-B step 3, `Planner.shareable`) is off: a
 /// callee that shares its by-value parameter's memory with `%ret` loses `noalias` on both, and the
 /// rows' `record_pass` ran 15-19% slower than the copy it saved (CE2-X, NEW-CORE-CE2-RESULTS-5).
+/// R3's sole-pointer noalias prototype also regressed: instructions were 1.207x off.
 pub const steps: struct { homes: bool, views: bool, write_backs: bool, in_out: bool, share_sret: bool } = .{ .homes = true, .views = true, .write_backs = true, .in_out = true, .share_sret = false };
 
 /// No class: a value that is not homed (a register value, a view, or one with a private slot).
@@ -441,7 +442,7 @@ const Planner = struct {
     /// The operand index `defining` may read from `ref`'s own home after writing it: the record
     /// a `record_set` updates, or an in-out call's argument for its final value.
     fn exempt(self: *const Planner, ref: ir.Ref, defining: ir.Inst) u32 {
-        if (defining.op == .record_set) return 0;
+        if (defining.op == .record_set or defining.op == .array_set) return 0;
         const argument = self.places.final[ref.index()];
         if (argument == none) return none;
         // A call's arguments follow its direct operands (`call_indirect` reads its callee first).
@@ -643,7 +644,7 @@ const Planner = struct {
         const f = self.fun();
         for (self.tracked.refs.items, 0..) |ref, d| {
             const inst = f.inst(ref);
-            if (!steps.homes or inst.op != .record_set) continue;
+            if (!steps.homes or (inst.op != .record_set and inst.op != .array_set)) continue;
             const old = self.places.dense[f.resolve(inst.a).index()];
             if (old != none) _ = try self.merge(@intCast(d), old);
         }

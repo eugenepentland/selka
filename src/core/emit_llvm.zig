@@ -2930,6 +2930,18 @@ const FunctionEmitter = struct {
         try self.loadValue(out, inst.ty, at, name);
     }
 
+    /// The backing storage of a memory-sized fixed array access. Reads address the existing
+    /// array; writes reuse a proven dead input's home, copying only a still-live snapshot.
+    pub fn arrayStorage(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error![]const u8 {
+        const old = self.function.resolve(inst.a);
+        if (inst.op == .array_get) return self.value(old);
+        const size = self.state.module.size(inst.ty);
+        const into = try self.destination(name, size);
+        if (!self.memory.homes.holds(self.current, 0, old)) try self.copyBytes(out, into.ptr, try self.value(old), size, false);
+        if (into.fresh) try out.print(self.a(), identity_line, .{ name, into.ptr });
+        return into.ptr;
+    }
+
     /// `record_set`: `insertvalue` for a record in registers. A record in memory is copied into
     /// the new value's home and the field stored there; when the old value shares that home
     /// (it has no later reader, `emit_homes.zig`) the field is written where it is.

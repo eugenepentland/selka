@@ -1,0 +1,305 @@
+{
+ "note": "Diagnostic overall change vs M0; R1/R2 confound isolated R4 effect. Exact prototype-vs-ordinary control follows.",
+ "cells": [
+  {
+   "program": "lox/vm/binary_trees",
+   "instructions": 1.0000000057408034,
+   "cycles": 1.0085776144974523
+  },
+  {
+   "program": "lox/tree/binary_trees",
+   "instructions": 0.9999288220618024,
+   "cycles": 1.0095869966683109
+  },
+  {
+   "program": "lox/vm/closures",
+   "instructions": 1.0000000031607985,
+   "cycles": 0.9879057011364704
+  },
+  {
+   "program": "lox/tree/closures",
+   "instructions": 0.9997708232878633,
+   "cycles": 1.0231744437816663
+  },
+  {
+   "program": "lox/vm/equality",
+   "instructions": 1.0000000055022356,
+   "cycles": 1.001151710236467
+  },
+  {
+   "program": "lox/tree/equality",
+   "instructions": 1.0000000719184639,
+   "cycles": 1.0071303279594506
+  },
+  {
+   "program": "lox/vm/fib",
+   "instructions": 1.0000000015154449,
+   "cycles": 0.9874082622028784
+  },
+  {
+   "program": "lox/tree/fib",
+   "instructions": 0.9996245465229258,
+   "cycles": 1.0000325013372662
+  },
+  {
+   "program": "lox/vm/instantiation",
+   "instructions": 0.9999999988226393,
+   "cycles": 0.9938741987947765
+  },
+  {
+   "program": "lox/tree/instantiation",
+   "instructions": 1.0000001863875607,
+   "cycles": 1.0142332449468763
+  },
+  {
+   "program": "lox/vm/invocation",
+   "instructions": 0.9999999938259304,
+   "cycles": 0.9573132750071792
+  },
+  {
+   "program": "lox/tree/invocation",
+   "instructions": 1.0000001720326617,
+   "cycles": 1.0094442942766189
+  },
+  {
+   "program": "lox/vm/method_call",
+   "instructions": 1.0000000037709826,
+   "cycles": 0.9996856780287133
+  },
+  {
+   "program": "lox/tree/method_call",
+   "instructions": 1.000000179872105,
+   "cycles": 1.022107819005061
+  },
+  {
+   "program": "lox/vm/properties",
+   "instructions": 1.000000000936569,
+   "cycles": 0.9833951900142802
+  },
+  {
+   "program": "lox/tree/properties",
+   "instructions": 1.0000003251282015,
+   "cycles": 1.0117266055794236
+  },
+  {
+   "program": "lox/vm/string_equality",
+   "instructions": 1.00000008688726,
+   "cycles": 0.9992332003015548
+  },
+  {
+   "program": "lox/tree/string_equality",
+   "instructions": 1.000001681250257,
+   "cycles": 1.006329653132454
+  },
+  {
+   "program": "lox/vm/strings",
+   "instructions": 1.000000002505802,
+   "cycles": 1.0025207069712638
+  },
+  {
+   "program": "lox/tree/strings",
+   "instructions": 1.0000000909738769,
+   "cycles": 0.9970684598312869
+  },
+  {
+   "program": "lox/vm/trees",
+   "instructions": 1.0000000021555404,
+   "cycles": 1.0054585340117275
+  },
+  {
+   "program": "lox/tree/trees",
+   "instructions": 0.9999682744206159,
+   "cycles": 1.0086472965228974
+  },
+  {
+   "program": "lox/vm/zoo",
+   "instructions": 0.9999999984946627,
+   "cycles": 0.9996798679993121
+  },
+  {
+   "program": "lox/tree/zoo",
+   "instructions": 1.000000064536953,
+   "cycles": 1.0069524368988785
+  },
+  {
+   "program": "lox/vm/zoo_batch",
+   "instructions": 0.9999999989206865,
+   "cycles": 0.9897867631633339
+  },
+  {
+   "program": "lox/tree/zoo_batch",
+   "instructions": 1.000000087303214,
+   "cycles": 1.011024381572375
+  },
+  {
+   "program": "eda/blinky-breakout",
+   "instructions": 1.0064545488729708,
+   "cycles": 1.0307915519558268
+  },
+  {
+   "program": "eda/adf5901",
+   "instructions": 1.0092138790244347,
+   "cycles": 1.0498791269886094
+  },
+  {
+   "program": "eda/barracuda",
+   "instructions": 1.0079956199218685,
+   "cycles": 1.0584274455597595
+  },
+  {
+   "program": "eda/barracuda-base",
+   "instructions": 1.0079180259180436,
+   "cycles": 1.0509128349349928
+  },
+  {
+   "program": "eda/barracuda-via-fence",
+   "instructions": 1.0081391029507836,
+   "cycles": 1.0593700743059855
+  },
+  {
+   "program": "eda/black-canyon",
+   "instructions": 1.0085601419093575,
+   "cycles": 1.0696765760862943
+  },
+  {
+   "program": "eda/cyclops-analog",
+   "instructions": 1.0079932168530357,
+   "cycles": 1.0418992189675895
+  },
+  {
+   "program": "eda/cyclops-breakout",
+   "instructions": 1.0089487337274587,
+   "cycles": 1.0573699768920353
+  },
+  {
+   "program": "eda/cyclops-digital-pcb",
+   "instructions": 1.0072127353759261,
+   "cycles": 1.0407510283002854
+  },
+  {
+   "program": "eda/cyclops-interposer",
+   "instructions": 1.0082369972703928,
+   "cycles": 1.0551870362228892
+  },
+  {
+   "program": "eda/cyclops-kband-breakout",
+   "instructions": 1.008095995638011,
+   "cycles": 1.0513553899170351
+  },
+  {
+   "program": "eda/cyclops-kband-pcb",
+   "instructions": 1.0077599414111784,
+   "cycles": 1.0387742276604457
+  },
+  {
+   "program": "eda/cyclops-kband",
+   "instructions": 1.0080719931927502,
+   "cycles": 1.0526977637767694
+  },
+  {
+   "program": "eda/cyclops-xband-sip",
+   "instructions": 1.0086177980606665,
+   "cycles": 1.0432613453756403
+  },
+  {
+   "program": "eda/stm32n6",
+   "instructions": 1.0076415063421609,
+   "cycles": 1.0427100010571952
+  },
+  {
+   "program": "eda/labstation",
+   "instructions": 1.0074843649395786,
+   "cycles": 1.054111696302481
+  },
+  {
+   "program": "eda/rds3",
+   "instructions": 1.0073120011489454,
+   "cycles": 1.0438779802883213
+  },
+  {
+   "program": "eda/remora-base",
+   "instructions": 1.0082173002350177,
+   "cycles": 1.054228113333149
+  },
+  {
+   "program": "eda/remora-rf",
+   "instructions": 1.0080686560175793,
+   "cycles": 1.0553352806859395
+  },
+  {
+   "program": "eda/rf-switch-8way",
+   "instructions": 1.0090718405763286,
+   "cycles": 1.0522630228831098
+  },
+  {
+   "program": "eda/rf-switch-eval",
+   "instructions": 1.009023919764866,
+   "cycles": 1.0676282298524569
+  },
+  {
+   "program": "eda/straps-base",
+   "instructions": 1.007100323832078,
+   "cycles": 1.050919871998527
+  },
+  {
+   "program": "eda/straps",
+   "instructions": 1.0081280563593384,
+   "cycles": 1.051516802932103
+  },
+  {
+   "program": "eda/Cyclops-Flex",
+   "instructions": 1.0095866171762855,
+   "cycles": 1.0643706502470034
+  },
+  {
+   "program": "eda/dual-flash",
+   "instructions": 1.009286356079665,
+   "cycles": 1.0538662561593737
+  },
+  {
+   "program": "eda/rds3-rf-selector",
+   "instructions": 1.0094508242225952,
+   "cycles": 1.0500357351087257
+  },
+  {
+   "program": "eda/poe-pd-flyback-tps23757",
+   "instructions": 1.0090497591192706,
+   "cycles": 1.0688338612254145
+  },
+  {
+   "program": "eda/w55rp20",
+   "instructions": 1.0087799651769125,
+   "cycles": 1.0565835197272058
+  },
+  {
+   "program": "eda/lmk05318b-clock",
+   "instructions": 1.008857174664712,
+   "cycles": 1.0525161460616888
+  },
+  {
+   "program": "eda/max860-inverter",
+   "instructions": 1.0095223702583882,
+   "cycles": 1.0596699880074723
+  },
+  {
+   "program": "eda/rds3+flat",
+   "instructions": 1.0058456673655656,
+   "cycles": 1.0322344271066817
+  },
+  {
+   "program": "eda/black-canyon+flat",
+   "instructions": 1.0082311665708437,
+   "cycles": 1.0471564749832336
+  },
+  {
+   "program": "eda/labstation+no-vendor-symbols",
+   "instructions": 1.0067597138237323,
+   "cycles": 1.0268367876755276
+  },
+  {
+   "program": "eda/cyclops-analog+no-vendor-symbols",
+   "instructions": 1.006922423526955,
+   "cycles": 1.0462887814830084
+  }
+ ]
+}
