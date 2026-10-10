@@ -12,6 +12,7 @@ const help =
     \\usage: mylang juice <command> [options]
     \\  doctor [--collector perf|callgrind|cachegrind] [--cpu N]
     \\  analyze MANIFEST --output REPORT.json [--against OLD.json]
+    \\  plan MANIFEST [--tier quick|validation|all] [--repeats N]
     \\  record MANIFEST --name LABEL [--tier quick|validation|all] [--repeats N]
     \\  compare BASE.json CANDIDATE.json --output REPORT.json [--mode application|backend|combined]
     \\  validate QUICK.json LARGER.json --output REPORT.json [--tolerance N]
@@ -36,6 +37,7 @@ fn contains(words: []const u8, word: []const u8) bool {
 fn allowed(command: []const u8) ?[]const u8 {
     if (std.mem.eql(u8, command, "doctor")) return "collector cpu perf valgrind profile";
     if (std.mem.eql(u8, command, "record")) return "name compiler cache-dir tier repeats workload static collector cpu perf valgrind profile";
+    if (std.mem.eql(u8, command, "plan")) return "compiler cache-dir tier repeats workload static collector cpu perf valgrind profile";
     if (std.mem.eql(u8, command, "analyze")) return "compiler cache-dir output against";
     if (std.mem.eql(u8, command, "compare")) return "mode output max-spread min-change fail-above model";
     if (std.mem.eql(u8, command, "validate")) return "tolerance output";
@@ -185,6 +187,13 @@ fn execute(c: *d.Context, r: Request) !u8 {
             .bool = true,
         }),
     };
+    if (std.mem.eql(u8, r.command, "plan")) {
+        const planned = try engine.plan(c, m, try collector(c, r), options, try input(r, 0));
+        try std.Io.File.stdout().writeStreamingAll(c.io, try std.fmt.allocPrint(c.a, "{s}\n", .{
+            try std.json.Stringify.valueAlloc(c.a, planned, .{}),
+        }));
+        return 0;
+    }
     if (std.mem.eql(u8, r.command, "record")) {
         const path = try engine.capture(c, m, try collector(c, r), options);
         try std.Io.File.stdout().writeStreamingAll(c.io, try std.fmt.allocPrint(c.a, "{s}\n", .{path}));

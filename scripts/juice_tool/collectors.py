@@ -2,14 +2,20 @@
 from __future__ import annotations
 
 import glob
+import hashlib
+import marshal
 import math
 import os
 from pathlib import Path
 import re
 import statistics
 import subprocess
+import sys
 
 from .common import JuiceError, digest, executable, file_hash, run, tool_identity
+
+
+LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
 
 
 def cpu_set(text):

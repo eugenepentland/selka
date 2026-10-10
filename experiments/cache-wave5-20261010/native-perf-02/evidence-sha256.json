@@ -1,0 +1,16 @@
+{
+  "cold.log": "24d0faf7dd0925ea9a6d75031ba7787d5ce7d31282dadb064ae825131a99a3b9",
+  "fixtures/alpha/build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+  "fixtures/alpha/juice.json": "f3a36dc48183b19dcd5c0be1e52a3dcdddb8b861dacf232094a3d5886944775f",
+  "fixtures/alpha/work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9",
+  "fixtures/beta/build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+  "fixtures/beta/juice.json": "4be94ae139a5629d8331775b11189f798efe2613a8fcfa78d8b62b117dcdd8af",
+  "fixtures/beta/work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9",
+  "fixtures/gamma/build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+  "fixtures/gamma/juice.json": "ec9bd783790190b764a4d679be68b8087673e404f7d428a65ad42221b8a0f55f",
+  "fixtures/gamma/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95",
+  "fixtures/gamma/work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9",
+  "fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95",
+  "results.json": "bd39ac962a8efa4d8046ed3e4ffd54369f3464825a528471bf01a82a0329a20f",
+  "suite.json": "8306b36a065def8b5307e24339b720ffc0f5262b440fdbbda5d2967a25a629c3"
+}

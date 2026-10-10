@@ -99,35 +99,42 @@ pub fn measure(a: std.mem.Allocator, module: *const ir.Module, result: *const pa
     var total: Counts = .{};
     for (module.functions.items, 0..) |*function, index| {
         if (function.signature.linkage != .internal or !matches(function.name, filter)) continue;
-        const events = if (index < result.per_function.len) result.per_function[index] else passes.FunctionStats{};
-        var local: Counts = .{
-            .checks = .{ .proved = events.counts.proven },
-            .updates = .{ .in_place = events.own.in_place, .tested = events.own.tested, .copied = events.own.copied },
-            .rc = .{ .retains = events.own.retains, .releases = events.own.releases, .elided_pairs = events.own.elided, .stack_lists = events.own.promoted },
-            .inlined_calls = events.counts.inlined,
-            .loops = .{ .unswitched = events.counts.unswitched, .versioned = events.counts.versioned, .vector_plans = events.counts.vectorized, .unknown = @intCast(function.loops.items.len) },
-        };
-        const known = if (index < result.known.len) result.known[index] else null;
-        for (function.blocks.items, 0..) |block, b| {
-            if (known) |facts| if (b < facts.reachable.len and !facts.reachable[b]) continue;
-            for (block.insts.items) |ref| {
-                const inst = function.inst(ref);
-                if (inst.op == .copy) continue;
-                if (inst.check == .exact or (result.emission.verifying and inst.check == .proven)) local.checks.kept += 1;
-                switch (allocation(module, function, inst)) {
-                    .never => {},
-                    .may => local.allocation.sites += 1,
-                    .unresolved => {
-                        local.allocation.sites += 1;
-                        local.allocation.unresolved_calls += 1;
-                    },
-                }
-            }
-        }
+        const local = functionCounts(module, result, index);
         try functions.append(a, .{ .name = function.name, .counts = local });
         total.add(local);
     }
     return .{ .functions = try functions.toOwnedSlice(a), .totals = total };
+}
+
+/// Measure one final body and its exact pass events; query caches use this oracle.
+pub fn functionCounts(module: *const ir.Module, result: *const passes.Result, index: usize) Counts {
+    const function = &module.functions.items[index];
+    const events = if (index < result.per_function.len) result.per_function[index] else passes.FunctionStats{};
+    var local: Counts = .{
+        .checks = .{ .proved = events.counts.proven },
+        .updates = .{ .in_place = events.own.in_place, .tested = events.own.tested, .copied = events.own.copied },
+        .rc = .{ .retains = events.own.retains, .releases = events.own.releases, .elided_pairs = events.own.elided, .stack_lists = events.own.promoted },
+        .inlined_calls = events.counts.inlined,
+        .loops = .{ .unswitched = events.counts.unswitched, .versioned = events.counts.versioned, .vector_plans = events.counts.vectorized, .unknown = @intCast(function.loops.items.len) },
+    };
+    const known = if (index < result.known.len) result.known[index] else null;
+    for (function.blocks.items, 0..) |block, b| {
+        if (known) |facts| if (b < facts.reachable.len and !facts.reachable[b]) continue;
+        for (block.insts.items) |ref| {
+            const inst = function.inst(ref);
+            if (inst.op == .copy) continue;
+            if (inst.check == .exact or (result.emission.verifying and inst.check == .proven)) local.checks.kept += 1;
+            switch (allocation(module, function, inst)) {
+                .never => {},
+                .may => local.allocation.sites += 1,
+                .unresolved => {
+                    local.allocation.sites += 1;
+                    local.allocation.unresolved_calls += 1;
+                },
+            }
+        }
+    }
+    return local;
 }
 
 /// Select report rows after LLVM remarks have been attached; totals still sum rows.
@@ -184,5 +191,7 @@ pub fn stats(a: std.mem.Allocator, out: *std.ArrayList(u8), c: Counts) std.mem.A
 pub fn llvmStats(a: std.mem.Allocator, out: *std.ArrayList(u8), counts: Counts, remarks: @import("driver.zig").OptimizationRemarks) std.mem.Allocator.Error!void {
     try out.appendSlice(a, "mylang-core: LLVM vectorized ");
     if (counts.llvm_vectorized_loops) |known| try out.print(a, "{d}", .{known}) else try out.appendSlice(a, "unknown");
-    try out.print(a, "; {d} unknown loops; remarks {s}; {d} compiles in {d} ns\n", .{ counts.loops.unknown, if (remarks.yaml != null) "available" else "unavailable", remarks.processes, remarks.compile_ns });
+    try out.print(a, "; {d} unknown loops; remarks {s}; {d} compiles in {d} ns; {d} remark queries reused\n", .{
+        counts.loops.unknown, if (remarks.yaml != null) "available" else "unavailable", remarks.processes, remarks.compile_ns, remarks.reused,
+    });
 }

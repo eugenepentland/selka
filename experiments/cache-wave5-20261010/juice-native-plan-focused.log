@@ -1,0 +1,12 @@
+build-slot: build slot 1, FIFO ticket 794 after 0s
+test_plan_dependency_resources_and_default_valgrind_scope_are_explicit (__main__.NativeJuice.test_plan_dependency_resources_and_default_valgrind_scope_are_explicit) ... ok
+test_plan_inspects_exact_contract_without_building_or_creating_cache (__main__.NativeJuice.test_plan_inspects_exact_contract_without_building_or_creating_cache) ... ok
+test_plan_is_stable_and_declares_glob_membership_for_new_sources (__main__.NativeJuice.test_plan_is_stable_and_declares_glob_membership_for_new_sources) ... ok
+test_plan_native_toml_json_selection_and_profile_semantics_match (__main__.NativeJuice.test_plan_native_toml_json_selection_and_profile_semantics_match) ... ok
+test_plan_never_acquires_capture_workspace_lock (__main__.NativeJuice.test_plan_never_acquires_capture_workspace_lock) ... ok
+test_plan_preserves_provider_symlink_paths_for_mutation_watches (__main__.NativeJuice.test_plan_preserves_provider_symlink_paths_for_mutation_watches) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.658s
+
+OK

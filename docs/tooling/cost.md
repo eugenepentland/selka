@@ -65,9 +65,38 @@ and is removed before matching. Remaining source loops stay unclassified because
 LLVM can clone, inline or eliminate them. Debug's content-named synthetic helpers
 may therefore remain unknown even when LLVM supplies a helper remark.
 
-Capture currently recompiles the requested units to obtain fresh matched remarks.
-It has no persisted remark cache; repeated collection cannot serve stale evidence.
-Ordinary builds without `--stats` do not request this additional compile.
+Successful remark collections are cached for the exact instrumented LLVM unit,
+compiler/tool contract, CPU, target, layout, build mode and sanitizer settings.
+Failed or missing collections remain unknown and are attempted again. Ordinary
+builds without `--stats` do not request this additional compile.
+
+## Incremental queries
+
+Cost uses the existing frontend, lowering and optimizer caches, then caches static
+counts per final Core function. Query identities include declaration/type layout,
+allocation classification dependencies, optimization events, reachable blocks and
+verification mode. An edit can reuse unaffected rows; a helper change invalidates
+any changed optimized caller body. Counts remain static sites, never a machine
+cost or elapsed-time prediction.
+
+```bash
+mylang cost program.my --json --cache-dir .mylang-cache/cost --cache-report
+mylang cost program.my --json --cache-dir .mylang-cache/cost --verify-cache
+mylang cost program.my --json --no-cache
+```
+
+`--cache-report` writes `cost-query-work-v1` to stderr. Its policy identifies
+whether reuse and cache verification are enabled. Frontend, lowering and optimizer
+groups expose existing cache instrumentation; zeroes when those caches are bypassed
+do not mean those stages skipped fresh analysis. Cost rows distinguish actual
+computed, reused, verified and bypassed queries; LLVM reports remark processes
+and reuse.
+The normal text and `cost-v1` JSON output are unchanged. Function selection and
+formatting happen after querying, so changing either can reuse the underlying
+rows. `--verify-cache` checks saved rows against independent fresh computation and
+collects LLVM remarks freshly; `--no-cache` bypasses reuse. Missing or damaged
+query storage computes fresh. Supplied `--llvm-remarks` and `--counters` files are
+read on every invocation and never folded into saved static rows.
 
 ## The allocation definition
 

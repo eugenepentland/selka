@@ -3,12 +3,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import marshal
 import os
 from pathlib import Path
 import shutil
 import signal
 import subprocess
 import time
+import sys
+
+LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
 
 
 class JuiceError(Exception):

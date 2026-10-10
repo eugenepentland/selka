@@ -1,0 +1,29 @@
+{
+  "version": "juice-suite-v1",
+  "workloads": [
+    {
+      "complete": true,
+      "dependencies": [],
+      "id": "alpha",
+      "manifest": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-01/fixtures/alpha/juice.json",
+      "reuse": "historical",
+      "workload": "alpha"
+    },
+    {
+      "complete": true,
+      "dependencies": [],
+      "id": "beta",
+      "manifest": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-01/fixtures/beta/juice.json",
+      "reuse": "historical",
+      "workload": "beta"
+    },
+    {
+      "complete": true,
+      "dependencies": [],
+      "id": "gamma",
+      "manifest": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-01/fixtures/gamma/juice.json",
+      "reuse": "historical",
+      "workload": "gamma"
+    }
+  ]
+}

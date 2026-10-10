@@ -1,0 +1,42 @@
+{
+  "adapter": "native",
+  "build": {
+    "command": [
+      "/bin/sh",
+      "{root}/build.sh",
+      "{compiler}",
+      "/usr/bin/ld",
+      "{root}",
+      "{binary}",
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/fixtures/shared"
+    ],
+    "compiler": "/usr/bin/as",
+    "dependencies": [
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/fixtures/shared"
+    ],
+    "tools": [
+      "/bin/sh",
+      "/usr/bin/ld",
+      "size",
+      "nm",
+      "objdump",
+      "ldd"
+    ]
+  },
+  "name": "wave5-beta",
+  "sources": [
+    "build.sh",
+    "work.S"
+  ],
+  "version": 1,
+  "workloads": [
+    {
+      "expected_stdout": "!\n",
+      "family": "synthetic-static-counting",
+      "name": "beta",
+      "timeout_seconds": 10,
+      "unit": "completed scenario",
+      "units": 1
+    }
+  ]
+}

@@ -1,0 +1,292 @@
+{
+  "version": "juice-v1",
+  "identity_scheme": "mylang-juice-native-v1",
+  "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+  "name": "capture-ryg_wtqu",
+  "status": "complete",
+  "manifest": {
+    "adapter": "native",
+    "build": {
+      "command": [
+        "/bin/sh",
+        "{root}/build.sh",
+        "{compiler}",
+        "/usr/bin/ld",
+        "{root}",
+        "{binary}",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+      ],
+      "compiler": "/usr/bin/as",
+      "dependencies": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+      ],
+      "tools": [
+        "/bin/sh",
+        "/usr/bin/ld",
+        "size",
+        "nm",
+        "objdump",
+        "ldd"
+      ],
+      "timeout_seconds": 300,
+      "flags": [],
+      "prefix": []
+    },
+    "name": "wave5-beta",
+    "sources": [
+      "build.sh",
+      "work.S"
+    ],
+    "version": 1,
+    "workloads": [
+      {
+        "expected_stdout": "!\n",
+        "family": "synthetic-static-counting",
+        "name": "beta",
+        "timeout_seconds": 10,
+        "unit": "completed scenario",
+        "units": 1,
+        "tier": "quick",
+        "weight": 1,
+        "args": [],
+        "check": [],
+        "outputs": [],
+        "expected_stderr": "",
+        "exit_code": 0
+      }
+    ],
+    "inputs": [],
+    "environment": {}
+  },
+  "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/beta",
+  "sources": {
+    "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+    "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+  },
+  "contract": {
+    "name": "wave5-beta",
+    "inputs": {},
+    "environment": {},
+    "workloads": [
+      {
+        "expected_stdout": "!\n",
+        "family": "synthetic-static-counting",
+        "name": "beta",
+        "timeout_seconds": 10,
+        "unit": "completed scenario",
+        "units": 1,
+        "tier": "quick",
+        "weight": 1,
+        "args": [],
+        "check": [],
+        "outputs": [],
+        "expected_stderr": "",
+        "exit_code": 0
+      }
+    ]
+  },
+  "collector": {
+    "kind": "perf",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    },
+    "event": "cpu_core/instructions/u",
+    "cpu": 0,
+    "scope": "user instructions; process and inherited children; whole workload"
+  },
+  "workloads": {
+    "beta": {
+      "units": 1,
+      "unit": "completed scenario",
+      "family": "synthetic-static-counting",
+      "tier": "quick",
+      "region": null,
+      "scope": "complete scenario",
+      "weight": 1,
+      "correctness": {
+        "stdout": "7ddcfda184b55ee06b0c81e0ad136b1aa4a86daeb1078bcaeccc246eb2c8693b",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "files": {}
+      },
+      "metrics": {
+        "instructions": {
+          "samples": [
+            196720,
+            196720,
+            196720
+          ],
+          "median": 196720,
+          "min": 196720,
+          "max": 196720,
+          "spread": 0
+        }
+      },
+      "samples": [
+        {
+          "exit_code": 0,
+          "wall_seconds": 0.010678403,
+          "stdout_sha256": "7ddcfda184b55ee06b0c81e0ad136b1aa4a86daeb1078bcaeccc246eb2c8693b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "functions": [],
+          "lines": [],
+          "metrics": {
+            "instructions": 196720
+          }
+        },
+        {
+          "exit_code": 0,
+          "wall_seconds": 0.00548469,
+          "stdout_sha256": "7ddcfda184b55ee06b0c81e0ad136b1aa4a86daeb1078bcaeccc246eb2c8693b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "functions": [],
+          "lines": [],
+          "metrics": {
+            "instructions": 196720
+          }
+        },
+        {
+          "exit_code": 0,
+          "wall_seconds": 0.005331273,
+          "stdout_sha256": "7ddcfda184b55ee06b0c81e0ad136b1aa4a86daeb1078bcaeccc246eb2c8693b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "functions": [],
+          "lines": [],
+          "metrics": {
+            "instructions": 196720
+          }
+        }
+      ],
+      "functions": [],
+      "lines": []
+    }
+  },
+  "build_config": {
+    "compiler": {
+      "path": "/usr/bin/x86_64-linux-gnu-as",
+      "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+      "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+    },
+    "tools": {
+      "/bin/sh": {
+        "path": "/usr/bin/dash",
+        "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+        "version": "/usr/bin/dash: 0: Illegal option --"
+      },
+      "/usr/bin/ld": {
+        "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+        "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+        "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+      },
+      "size": {
+        "path": "/usr/bin/x86_64-linux-gnu-size",
+        "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+        "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+      },
+      "nm": {
+        "path": "/usr/bin/x86_64-linux-gnu-nm",
+        "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+        "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+      },
+      "objdump": {
+        "path": "/usr/bin/x86_64-linux-gnu-objdump",
+        "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+        "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+      },
+      "ldd": {
+        "path": "/usr/bin/ldd",
+        "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+        "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+      }
+    },
+    "dependencies": {
+      "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+    },
+    "spec": {
+      "command": [
+        "/bin/sh",
+        "{root}/build.sh",
+        "{compiler}",
+        "/usr/bin/ld",
+        "{root}",
+        "{binary}",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+      ],
+      "compiler": "/usr/bin/as",
+      "dependencies": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+      ],
+      "tools": [
+        "/bin/sh",
+        "/usr/bin/ld",
+        "size",
+        "nm",
+        "objdump",
+        "ldd"
+      ],
+      "timeout_seconds": 300,
+      "flags": [],
+      "prefix": []
+    },
+    "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6"
+  },
+  "build": {
+    "key": "c164c724fe1c80e2226e7b91b1367fa041f31111b33012c9dd2a22a20599efde",
+    "cached": false,
+    "build_seconds": 0.005431018,
+    "artifacts": {
+      "plain": "98212f7d665f516863495e3c942a98768e7c1298cc1622df5cf9a965f37e1892"
+    },
+    "code": {
+      "sections": {
+        ".text": 53,
+        ".data": 2
+      },
+      "functions": {
+        "_start": {
+          "bytes": 0
+        }
+      },
+      "available": true
+    }
+  },
+  "context": {
+    "system": "Linux",
+    "kernel": "7.0.0-31-generic",
+    "machine": "x86_64",
+    "cpu": {
+      "vendor_id": "GenuineIntel",
+      "cpu family": "6",
+      "model": "154",
+      "model name": "12th Gen Intel(R) Core(TM) i7-12700H",
+      "stepping": "3",
+      "microcode": "0x43b",
+      "flags": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities"
+    },
+    "libraries": {},
+    "execution_path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-beta/workspace/run",
+    "collector": {
+      "kind": "perf",
+      "tool": {
+        "path": "/usr/bin/perf",
+        "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+        "version": "perf version 7.0.14"
+      },
+      "event": "cpu_core/instructions/u",
+      "cpu": 0,
+      "scope": "user instructions; process and inherited children; whole workload"
+    }
+  },
+  "evidence": {
+    "beta-2-sample.perf": "fc6f94434dce8a9a5f502f455bc22289e54a824777cd444e58c0b334c45c5207",
+    "beta-2-sample.stdout": "7ddcfda184b55ee06b0c81e0ad136b1aa4a86daeb1078bcaeccc246eb2c8693b",
+    "beta-1-sample.perf": "eb7c04ee66169426f5fe3ffdbdfa4d90e95fbe9c7c7e8dcb6efea6866bc89a49",
+    "beta-0-sample.stdout": "7ddcfda184b55ee06b0c81e0ad136b1aa4a86daeb1078bcaeccc246eb2c8693b",
+    "beta-2-sample.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "beta-0-sample.perf": "b1948fa3c6f72af5e8103b1b6113ce170f515be011ec658639445ca239c5b7e5",
+    "beta-0-sample.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "beta-1-sample.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "beta-1-sample.stdout": "7ddcfda184b55ee06b0c81e0ad136b1aa4a86daeb1078bcaeccc246eb2c8693b"
+  }
+}

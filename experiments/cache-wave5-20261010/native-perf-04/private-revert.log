@@ -1,0 +1,4 @@
+juice-cache: reuse alpha (historical evidence)
+juice-cache: reuse beta (historical evidence)
+juice-cache: reuse gamma (historical evidence)
+{"complete": true, "counts": {"admissions": 0, "executed": 0, "reused": 3}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/private-revert.json", "success": true}

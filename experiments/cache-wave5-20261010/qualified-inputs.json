@@ -1,0 +1,39 @@
+{
+  "baseline": "bb2007483e53df9dc49f88d3fcd9050db7c9954f",
+  "branch": "codex/selka-cache-wave5",
+  "compiler": {
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+    "sha256": "c9d01d4dae08be861d9f5b365b39a93293491b805ea3f5522bb3c94232ad5785"
+  },
+  "files": {
+    "SPEC.md": "24f3cb2652e7b8c52407f453f84c0b9447ed07e69d2b84f9789809b13b7f2dab",
+    "build.zig": "30d717e99b2acd543c903ca7dec04a4254a037b4adde1d863be56a16e20b9b6e",
+    "build_test_inputs.zig": "f3213dcb80246ccbb08e140d8f084f9b64418cb5b4a86b1dd84c623e815cb1e9",
+    "docs/audits/selka-toolchain-cache-plan-2026-10-10.md": "b518ffab803fb14d39297bbcc0c4a68ad1d571ebcf11dda96c4a3806fef802a5",
+    "docs/tooling/cost.md": "676879498c1d4d0d052ae69572371d7d39bde96d2efd9dbf9a734d95008e89a4",
+    "docs/tooling/juice.md": "2d8d869817a63e6657973dabeaf7a383907b884bc0fe3c931205e9fc6b57a6a2",
+    "scripts/juice_cache.py": "46683e7cb02d6e6c6698805bf16ab74aa72a973f94e8f19efced8faa1aff48d2",
+    "scripts/juice_cache_test.py": "3ebfe1e894d0c00f21100ce03665881553b0096e43d18e3aaae1f9b88d114460",
+    "scripts/juice_evidence.py": "9cd3ee7092099bf8e02d4f34383b5f2cea69f6a94c06c8de7aa7dff487a9a07c",
+    "scripts/juice_provider.py": "541acd23877182a0f0b15e4907a900e6cd6fbe2ff43c6c4d710069c18132d261",
+    "scripts/juice_provider_test.py": "2d441f4f83a3e4ca785101b9fdbcd1fb98eff95cf3049a00e14349643f4a78f2",
+    "scripts/juice_tool/collectors.py": "0bb4fa691b9b5b1d8de76bf2cd49c7bb62c1230fef979a30db3888095b24e33b",
+    "scripts/juice_tool/common.py": "19c21e229fdb6fd5684df79a725752c7d07ac3f604e66b93f313bee695d124e7",
+    "scripts/juice_worker.py": "08c0c958824daf5b61c529710b1b4b8b9df9411254c882ca1ccdd0a3c40a585e",
+    "scripts/juice_worker_test.py": "bcf537052182272fe66cd81a7d18158a91fdb49c3daa6ef289e9679077b61401",
+    "scripts/verification_snapshot.py": "af8cbbd32f7e37115174cb933ff0dac4d4a90b8e3c8c7d64f5d1b9eef944934d",
+    "scripts/verification_snapshot_test.py": "ca86f7b6467c5476f4c0230dd20af0ef1db2cf938a3042af4b547970edcbebfe",
+    "src/core/cost.zig": "67fa967cd869df309b72edc2cccc8661cb66b9ff29def2c7051aaff99652bd12",
+    "src/core/cost_command.zig": "b0f29195e5050d55e83cc3da49ed5267996431898cb0bd0b28d028d778700871",
+    "src/core/cost_query.zig": "46e7bc45ac12ff46dc348050327f197ee72812bf1819dfa784a212b5ca7ca0ec",
+    "src/core/cost_query_test.zig": "495abf5ed5275d06ca93609ddc7e1d5f4d06e5573350449d576b3d979a8e124f",
+    "src/core/driver.zig": "f49248229b7972c01fb63cab4076ecfbc30e42fa338c37f20d757dc2973e2b65",
+    "src/core/juice/command.zig": "2306a1928b77f564c90cac06654256ddb99c19b68f5473fe5f28e082291eba60",
+    "src/core/juice/engine.zig": "6affd8450a6cfe7221b2ef302b915f93a4fd6415ba7ebebf8f86e9a9a610103e",
+    "src/core/juice/tests.zig": "8ff7900d4fc237ab5550b727c7dc0f547fb085b867947750f58bd77a5faf7294",
+    "src/core/pipeline.zig": "089db79bdbd5e800be013bc8b27e346a68255830331cd595811f770468d4ac51",
+    "src/core/root_test.zig": "824d121b08d8787f79470fe2e44db60981983455d50de3ace7c0c7444254fefd",
+    "tests/test_juice_evidence.py": "35245994098b5360446fba733bd9fae14a319c9a6ca1f40cfae7f6cd864df997",
+    "tests/test_juice_native.py": "4105f4b9bad542127199b0f16ad5595ec9caf3095dfb7cafe170575d5cc4e0cb"
+  }
+}

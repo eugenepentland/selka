@@ -1,0 +1,3083 @@
+{
+  "checks": {
+    "cold": {
+      "counts": {
+        "admissions": 3,
+        "executed": 3,
+        "reused": 0
+      },
+      "expected_counts": {
+        "admissions": 3,
+        "executed": 3,
+        "reused": 0
+      },
+      "passed": true
+    },
+    "private-edit": {
+      "counts": {
+        "admissions": 1,
+        "executed": 1,
+        "reused": 2
+      },
+      "expected_counts": {
+        "admissions": 1,
+        "executed": 1,
+        "reused": 2
+      },
+      "passed": true
+    },
+    "private-revert": {
+      "counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "expected_counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "passed": true
+    },
+    "shared-edit": {
+      "counts": {
+        "admissions": 2,
+        "executed": 2,
+        "reused": 1
+      },
+      "expected_counts": {
+        "admissions": 2,
+        "executed": 2,
+        "reused": 1
+      },
+      "passed": true
+    },
+    "shared-revert": {
+      "counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "expected_counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "passed": true
+    },
+    "warm": {
+      "counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "expected_counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "passed": true
+    }
+  },
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/juice_cache.py",
+        "capture",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/suite.json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cold.json",
+        "--repeats",
+        "3",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang"
+      ],
+      "expected_status": 0,
+      "label": "cold",
+      "log": "cold.log",
+      "status": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/juice_cache.py",
+        "capture",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/suite.json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/warm.json",
+        "--repeats",
+        "3",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang"
+      ],
+      "expected_status": 0,
+      "label": "warm",
+      "log": "warm.log",
+      "status": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/juice_cache.py",
+        "capture",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/suite.json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/private-edit.json",
+        "--repeats",
+        "3",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang"
+      ],
+      "expected_status": 0,
+      "label": "private-edit",
+      "log": "private-edit.log",
+      "status": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/juice_cache.py",
+        "capture",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/suite.json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/private-revert.json",
+        "--repeats",
+        "3",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang"
+      ],
+      "expected_status": 0,
+      "label": "private-revert",
+      "log": "private-revert.log",
+      "status": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/juice_cache.py",
+        "capture",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/suite.json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/shared-edit.json",
+        "--repeats",
+        "3",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang"
+      ],
+      "expected_status": 0,
+      "label": "shared-edit",
+      "log": "shared-edit.log",
+      "status": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/juice_cache.py",
+        "capture",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/suite.json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/shared-revert.json",
+        "--repeats",
+        "3",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang"
+      ],
+      "expected_status": 0,
+      "label": "shared-revert",
+      "log": "shared-revert.log",
+      "status": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/juice_cache.py",
+        "capture",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/suite.json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/context-repeats.json",
+        "--repeats",
+        "3",
+        "--repeats",
+        "2",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang"
+      ],
+      "expected_status": 0,
+      "label": "context-repeats",
+      "log": "context-repeats.log",
+      "status": 130
+    }
+  ],
+  "compiler": {
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+    "sha256": "c9d01d4dae08be861d9f5b365b39a93293491b805ea3f5522bb3c94232ad5785"
+  },
+  "error": "context-repeats returned 130; see /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/experiments/cache-wave5-20261010/native-perf-03/context-repeats.log",
+  "output_directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/experiments/cache-wave5-20261010/native-perf-03",
+  "removed_environment_variables": [],
+  "reports": {
+    "cold": {
+      "actions": [
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-alpha/builds/c164c724fe1c80e2226e7b91b1367fa041f31111b33012c9dd2a22a20599efde/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-alpha",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "alpha",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/alpha",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "alpha",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": true,
+          "freshness_reasons": [],
+          "id": "alpha",
+          "key": "52ca7e843628748b09ce8944249b473a266d865e268b727a405726fe0e65ec96",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-alpha/records/capture-6q_21rup/record.json",
+          "record_sha256": "0247375bc6a1df564edc00ba24fed8e1470843660e647899b456fac55ac9dad0",
+          "state": "executed",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-beta/builds/c164c724fe1c80e2226e7b91b1367fa041f31111b33012c9dd2a22a20599efde/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-beta",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "beta",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/beta",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "beta",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": true,
+          "freshness_reasons": [],
+          "id": "beta",
+          "key": "1a1371ecaed013fd8b273dccba227ec06e95e56665ca5d3b9e4c2b301a96d51e",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-beta/records/capture-ryg_wtqu/record.json",
+          "record_sha256": "f3050b732e33cced8f6b41c291fdbffab241a228e11e938694def91fe516d069",
+          "state": "executed",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-gamma/builds/3dbdd35f3da439ca344c3f9f64861fde811d3b962050b5b6d31dfbeafbb2f4c9/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {},
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "{root}"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-gamma",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "gamma",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/gamma",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "gamma",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": true,
+          "freshness_reasons": [],
+          "id": "gamma",
+          "key": "8600f6db7b567bf10db20e13b1758c39fc11c03a1fc1862f41a7c23830d83aa3",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-gamma/records/capture-pjrt8rtd/record.json",
+          "record_sha256": "085ac53085ec89f40cfec0051afbf4b2814f97c07ecb16e7a18610b874b06402",
+          "state": "executed",
+          "success": true
+        }
+      ],
+      "admissions": [
+        {
+          "admission_wait_seconds": 0.2304181018844247,
+          "admitted": true,
+          "elapsed_seconds": 0.4524753480218351,
+          "kind": "gate",
+          "observed_held_seconds": 0.2220572461374104,
+          "status": 0,
+          "validation_seconds": 0.0021324600093066692,
+          "worker_seconds": 0.21987598715350032
+        },
+        {
+          "admission_wait_seconds": 0.2258988560643047,
+          "admitted": true,
+          "elapsed_seconds": 0.43117566709406674,
+          "kind": "gate",
+          "observed_held_seconds": 0.20527681102976203,
+          "status": 0,
+          "validation_seconds": 0.002173015149310231,
+          "worker_seconds": 0.20305429492145777
+        },
+        {
+          "admission_wait_seconds": 0.22443740209564567,
+          "admitted": true,
+          "elapsed_seconds": 0.44796850509010255,
+          "kind": "gate",
+          "observed_held_seconds": 0.2235311029944569,
+          "status": 0,
+          "validation_seconds": 0.002158421790227294,
+          "worker_seconds": 0.2213225660379976
+        }
+      ],
+      "complete": true,
+      "counts": {
+        "admissions": 3,
+        "executed": 3,
+        "reused": 0
+      },
+      "inputs_stable": true,
+      "success": true,
+      "version": "juice-run-v1"
+    },
+    "context-repeats": {
+      "actions": [
+        {
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-alpha",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "alpha",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 2,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/alpha",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "alpha",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": true,
+          "freshness_reasons": [],
+          "id": "alpha",
+          "key": "ee883c33cd3810972d6bd8bfddc35785f8a43897b415225e9eaa7dabe85a3608",
+          "policy": "historical",
+          "qualified": false,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-alpha/records/capture-vigagg2y/record.json",
+          "state": "executed",
+          "success": false
+        }
+      ],
+      "admissions": [],
+      "complete": false,
+      "counts": {
+        "admissions": 0,
+        "executed": 1,
+        "reused": 0
+      },
+      "error": "KeyboardInterrupt",
+      "success": false,
+      "version": "juice-run-v1"
+    },
+    "private-edit": {
+      "actions": [
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-alpha/builds/ff4e5ad623abb13041215c5766299d3f9864ce0c487fbd5a31b67a58337393c7/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-alpha",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "alpha",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/alpha",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "f8a392073f53cd0c263ed98ebb04d84c8e0538f8b83ace79d7213a540ad71e4d"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "alpha",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": true,
+          "freshness_reasons": [],
+          "id": "alpha",
+          "key": "9f0d9e3741971078d9c9651009587e99eb427339444542ba9b47e27a5f72c739",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-alpha/records/capture-9nnm81sm/record.json",
+          "record_sha256": "8a04e7ce213c56532a18bea1e3448fe87438e3f5b1bdead761a01886edf02a2e",
+          "state": "executed",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-8oz9je3a/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-beta",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "beta",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/beta",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "beta",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "beta",
+          "key": "1a1371ecaed013fd8b273dccba227ec06e95e56665ca5d3b9e4c2b301a96d51e",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-8oz9je3a/retained/record/record.json",
+          "record_sha256": "f3050b732e33cced8f6b41c291fdbffab241a228e11e938694def91fe516d069",
+          "state": "reused",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-6hys2i84/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {},
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "{root}"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-gamma",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "gamma",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/gamma",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "gamma",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "gamma",
+          "key": "8600f6db7b567bf10db20e13b1758c39fc11c03a1fc1862f41a7c23830d83aa3",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-6hys2i84/retained/record/record.json",
+          "record_sha256": "085ac53085ec89f40cfec0051afbf4b2814f97c07ecb16e7a18610b874b06402",
+          "state": "reused",
+          "success": true
+        }
+      ],
+      "admissions": [
+        {
+          "admission_wait_seconds": 15.265724661992863,
+          "admitted": true,
+          "elapsed_seconds": 15.488316871924326,
+          "kind": "gate",
+          "observed_held_seconds": 0.222592209931463,
+          "status": 0,
+          "validation_seconds": 0.002625860972329974,
+          "worker_seconds": 0.2199085659813136
+        }
+      ],
+      "complete": true,
+      "counts": {
+        "admissions": 1,
+        "executed": 1,
+        "reused": 2
+      },
+      "inputs_stable": true,
+      "success": true,
+      "version": "juice-run-v1"
+    },
+    "private-revert": {
+      "actions": [
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-kmdbcohq/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-alpha",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "alpha",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/alpha",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "alpha",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "alpha",
+          "key": "52ca7e843628748b09ce8944249b473a266d865e268b727a405726fe0e65ec96",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-kmdbcohq/retained/record/record.json",
+          "record_sha256": "0247375bc6a1df564edc00ba24fed8e1470843660e647899b456fac55ac9dad0",
+          "state": "reused",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-j4u40auj/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-beta",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "beta",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/beta",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "beta",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "beta",
+          "key": "1a1371ecaed013fd8b273dccba227ec06e95e56665ca5d3b9e4c2b301a96d51e",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-j4u40auj/retained/record/record.json",
+          "record_sha256": "f3050b732e33cced8f6b41c291fdbffab241a228e11e938694def91fe516d069",
+          "state": "reused",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-5375jbto/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {},
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "{root}"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-gamma",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "gamma",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/gamma",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "gamma",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "gamma",
+          "key": "8600f6db7b567bf10db20e13b1758c39fc11c03a1fc1862f41a7c23830d83aa3",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-5375jbto/retained/record/record.json",
+          "record_sha256": "085ac53085ec89f40cfec0051afbf4b2814f97c07ecb16e7a18610b874b06402",
+          "state": "reused",
+          "success": true
+        }
+      ],
+      "admissions": [],
+      "complete": true,
+      "counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "inputs_stable": true,
+      "success": true,
+      "version": "juice-run-v1"
+    },
+    "shared-edit": {
+      "actions": [
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-alpha/builds/883cc1023afd3cbc8329a0aa5ae7ddbd45b6d0cd6614e0cca5d491203c7dcdf1/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "44860984627fb8743be671bbf6e30554bc72256e43578ccb37ecd23997250cbd"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-alpha",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "alpha",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/alpha",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "alpha",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": true,
+          "freshness_reasons": [],
+          "id": "alpha",
+          "key": "acbf2399edabe44815ee9494c45674fe6708e4d05dd9894f33581d2aae9ab439",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-alpha/records/capture-s1wr5z90/record.json",
+          "record_sha256": "de67085e7ffee9956ace4d379762921579326d0b7e47bb9393693ac2a6db774c",
+          "state": "executed",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-beta/builds/883cc1023afd3cbc8329a0aa5ae7ddbd45b6d0cd6614e0cca5d491203c7dcdf1/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "44860984627fb8743be671bbf6e30554bc72256e43578ccb37ecd23997250cbd"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-beta",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "beta",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/beta",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "beta",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": true,
+          "freshness_reasons": [],
+          "id": "beta",
+          "key": "d20736fc10c6ce0c8631b33733ad1c333131809988600e0195ae5286638d8ee2",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/native/wave5-beta/records/capture-duli47nb/record.json",
+          "record_sha256": "4c34d460053a28cb4adc9248f3dc8539b8d55332091b9c756a84f1141acca98d",
+          "state": "executed",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-d255xe9x/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {},
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "{root}"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-gamma",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "gamma",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/gamma",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "gamma",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "gamma",
+          "key": "8600f6db7b567bf10db20e13b1758c39fc11c03a1fc1862f41a7c23830d83aa3",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-d255xe9x/retained/record/record.json",
+          "record_sha256": "085ac53085ec89f40cfec0051afbf4b2814f97c07ecb16e7a18610b874b06402",
+          "state": "reused",
+          "success": true
+        }
+      ],
+      "admissions": [
+        {
+          "admission_wait_seconds": 5.239375595934689,
+          "admitted": true,
+          "elapsed_seconds": 5.467013337882236,
+          "kind": "gate",
+          "observed_held_seconds": 0.2276377419475466,
+          "status": 0,
+          "validation_seconds": 0.0022293399088084698,
+          "worker_seconds": 0.225359661038965
+        },
+        {
+          "admission_wait_seconds": 0.2109448581468314,
+          "admitted": true,
+          "elapsed_seconds": 0.4557036201003939,
+          "kind": "gate",
+          "observed_held_seconds": 0.2447587619535625,
+          "status": 0,
+          "validation_seconds": 0.0023185620084404945,
+          "worker_seconds": 0.24238864006474614
+        }
+      ],
+      "complete": true,
+      "counts": {
+        "admissions": 2,
+        "executed": 2,
+        "reused": 1
+      },
+      "inputs_stable": true,
+      "success": true,
+      "version": "juice-run-v1"
+    },
+    "shared-revert": {
+      "actions": [
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-_3nf711q/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-alpha",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "alpha",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/alpha",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "alpha",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "alpha",
+          "key": "52ca7e843628748b09ce8944249b473a266d865e268b727a405726fe0e65ec96",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-_3nf711q/retained/record/record.json",
+          "record_sha256": "0247375bc6a1df564edc00ba24fed8e1470843660e647899b456fac55ac9dad0",
+          "state": "reused",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-euw2iibg/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-beta",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "beta",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/beta",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "beta",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "beta",
+          "key": "1a1371ecaed013fd8b273dccba227ec06e95e56665ca5d3b9e4c2b301a96d51e",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-euw2iibg/retained/record/record.json",
+          "record_sha256": "f3050b732e33cced8f6b41c291fdbffab241a228e11e938694def91fe516d069",
+          "state": "reused",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-dt4p0u49/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {},
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "{root}"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-gamma",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "gamma",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/gamma",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "gamma",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "gamma",
+          "key": "8600f6db7b567bf10db20e13b1758c39fc11c03a1fc1862f41a7c23830d83aa3",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-dt4p0u49/retained/record/record.json",
+          "record_sha256": "085ac53085ec89f40cfec0051afbf4b2814f97c07ecb16e7a18610b874b06402",
+          "state": "reused",
+          "success": true
+        }
+      ],
+      "admissions": [],
+      "complete": true,
+      "counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "inputs_stable": true,
+      "success": true,
+      "version": "juice-run-v1"
+    },
+    "warm": {
+      "actions": [
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-3e6geoqn/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-alpha",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "alpha",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/alpha",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "alpha",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "alpha",
+          "key": "52ca7e843628748b09ce8944249b473a266d865e268b727a405726fe0e65ec96",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-3e6geoqn/retained/record/record.json",
+          "record_sha256": "0247375bc6a1df564edc00ba24fed8e1470843660e647899b456fac55ac9dad0",
+          "state": "reused",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-gvpw9ahy/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {
+                "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared/step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95"
+              },
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [
+                  "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/shared"
+                ],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-beta",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "beta",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/beta",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "beta",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "beta",
+          "key": "1a1371ecaed013fd8b273dccba227ec06e95e56665ca5d3b9e4c2b301a96d51e",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-gvpw9ahy/retained/record/record.json",
+          "record_sha256": "f3050b732e33cced8f6b41c291fdbffab241a228e11e938694def91fe516d069",
+          "state": "reused",
+          "success": true
+        },
+        {
+          "artifacts": {
+            "plain": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-qc4p6m2s/retained/build/plain"
+          },
+          "expected": {
+            "build_config": {
+              "compiler": {
+                "path": "/usr/bin/x86_64-linux-gnu-as",
+                "sha256": "4e5fcaa3cdc160173cb5cfe7aa35dc39d7aa1f06ba8d75b8d923bbae5473991b",
+                "version": "GNU assembler (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `x86_64-linux-gnu'."
+              },
+              "dependencies": {},
+              "environment_sha256": "a48bf386840c96fe50273a75686162d2eb5650e6df710667ad843032e46432a6",
+              "spec": {
+                "command": [
+                  "/bin/sh",
+                  "{root}/build.sh",
+                  "{compiler}",
+                  "/usr/bin/ld",
+                  "{root}",
+                  "{binary}",
+                  "{root}"
+                ],
+                "compiler": "/usr/bin/as",
+                "dependencies": [],
+                "flags": [],
+                "prefix": [],
+                "timeout_seconds": 300,
+                "tools": [
+                  "/bin/sh",
+                  "/usr/bin/ld",
+                  "size",
+                  "nm",
+                  "objdump",
+                  "ldd"
+                ]
+              },
+              "tools": {
+                "/bin/sh": {
+                  "path": "/usr/bin/dash",
+                  "sha256": "c626229526bb58ec2d0f585f3c3ae1412e6f973b4353385042d11c38d8426917",
+                  "version": "/usr/bin/dash: 0: Illegal option --"
+                },
+                "/usr/bin/ld": {
+                  "path": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+                  "sha256": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+                  "version": "GNU ld (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+                },
+                "ldd": {
+                  "path": "/usr/bin/ldd",
+                  "sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+                  "version": "ldd (Ubuntu GLIBC 2.43-2ubuntu2.4) 2.43\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+                },
+                "nm": {
+                  "path": "/usr/bin/x86_64-linux-gnu-nm",
+                  "sha256": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+                  "version": "GNU nm (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "objdump": {
+                  "path": "/usr/bin/x86_64-linux-gnu-objdump",
+                  "sha256": "44f07f8da860b15bd4dec909f229dec536595fb170a616fe3ab29c7b21c9736f",
+                  "version": "GNU objdump (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                },
+                "size": {
+                  "path": "/usr/bin/x86_64-linux-gnu-size",
+                  "sha256": "43c246874188527c8c661894771fc6123c00f19dc38b61f695c5dbce9c6b1a59",
+                  "version": "GNU size (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty."
+                }
+              }
+            },
+            "collector": {
+              "cpu": 0,
+              "event": "cpu_core/instructions/u",
+              "kind": "perf",
+              "scope": "user instructions; process and inherited children; whole workload",
+              "tool": {
+                "path": "/usr/bin/perf",
+                "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+                "version": "perf version 7.0.14"
+              }
+            },
+            "contract": {
+              "environment": {},
+              "inputs": {},
+              "name": "wave5-gamma",
+              "workloads": [
+                {
+                  "args": [],
+                  "check": [],
+                  "exit_code": 0,
+                  "expected_stderr": "",
+                  "expected_stdout": "!\n",
+                  "family": "synthetic-static-counting",
+                  "name": "gamma",
+                  "outputs": [],
+                  "tier": "quick",
+                  "timeout_seconds": 10,
+                  "unit": "completed scenario",
+                  "units": 1,
+                  "weight": 1
+                }
+              ]
+            },
+            "profile": "work",
+            "repeats": 3,
+            "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/gamma",
+            "sources": {
+              "build.sh": "038f1fb883b9eae78d5a5e598a5afb92a8027059379d0b0acfac7d71938e71aa",
+              "step.inc": "b4fc28cd0e903b61a849130515545189af4d02638e053b0815940fbf36936f95",
+              "work.S": "5c58845989a3a47db605855e320876c13f914253c626b4461d63fd12b7197bd9"
+            },
+            "tool_id": "d766aa3b2a6e4944d391ea7e13683bec22c8871547dabc131782a118715c080c",
+            "workload": {
+              "args": [],
+              "check": [],
+              "exit_code": 0,
+              "expected_stderr": "",
+              "expected_stdout": "!\n",
+              "family": "synthetic-static-counting",
+              "name": "gamma",
+              "outputs": [],
+              "tier": "quick",
+              "timeout_seconds": 10,
+              "unit": "completed scenario",
+              "units": 1,
+              "weight": 1
+            }
+          },
+          "fresh": false,
+          "freshness_reasons": [],
+          "id": "gamma",
+          "key": "8600f6db7b567bf10db20e13b1758c39fc11c03a1fc1862f41a7c23830d83aa3",
+          "policy": "historical",
+          "qualified": true,
+          "record": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/cache/runs/capture-qc4p6m2s/retained/record/record.json",
+          "record_sha256": "085ac53085ec89f40cfec0051afbf4b2814f97c07ecb16e7a18610b874b06402",
+          "state": "reused",
+          "success": true
+        }
+      ],
+      "admissions": [],
+      "complete": true,
+      "counts": {
+        "admissions": 0,
+        "executed": 0,
+        "reused": 3
+      },
+      "inputs_stable": true,
+      "success": true,
+      "version": "juice-run-v1"
+    }
+  },
+  "scope": "real native perf counting, workload reuse and invalidation; no elapsed-time claim",
+  "success": false,
+  "version": "juice-wave5-native-qualification-v1",
+  "work_directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03"
+}

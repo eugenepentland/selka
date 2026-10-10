@@ -1,0 +1,8 @@
+import helper
+
+func idle(n: int) -> int:
+    return n % 5
+
+func main(args: str[], out: Stream) -> int:
+    out.print(idle(len(args) + 9), helper.shared(len(args) + 7))
+    return 0

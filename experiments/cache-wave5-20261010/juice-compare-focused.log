@@ -1,0 +1,38 @@
+build-slot: FIFO ticket 807, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 807 after 10s
+test_absent_provider_directory_aba_blocks_execution (__main__.Coordinator.test_absent_provider_directory_aba_blocks_execution) ... ok
+test_cancellation_preserves_only_completed_actions (__main__.Coordinator.test_cancellation_preserves_only_completed_actions) ... ok
+test_capture_report_cannot_overwrite_suite_manifest_or_dependency (__main__.Coordinator.test_capture_report_cannot_overwrite_suite_manifest_or_dependency) ... ok
+test_collector_context_and_repetition_changes_invalidate (__main__.Coordinator.test_collector_context_and_repetition_changes_invalidate) ... ok
+test_comparison_output_cannot_overwrite_its_declaration (__main__.Coordinator.test_comparison_output_cannot_overwrite_its_declaration) ... ok
+test_comparison_preserves_retained_raw_and_artifact_inputs (__main__.Coordinator.test_comparison_preserves_retained_raw_and_artifact_inputs) ... ok
+test_comparison_rejects_path_traversal_ids (__main__.Coordinator.test_comparison_rejects_path_traversal_ids) ... ok
+test_comparison_rejects_reserved_coordinator_report_id (__main__.Coordinator.test_comparison_rejects_reserved_coordinator_report_id) ... ok
+test_comparison_rejects_runtime_loader_injection_before_outputs (__main__.Coordinator.test_comparison_rejects_runtime_loader_injection_before_outputs) ... ok
+test_comparison_runtime_change_during_publication_revokes_completed_decision (__main__.Coordinator.test_comparison_runtime_change_during_publication_revokes_completed_decision) ... ok
+test_comparison_runtime_library_and_loaded_source_changes_cannot_publish_success (__main__.Coordinator.test_comparison_runtime_library_and_loaded_source_changes_cannot_publish_success) ... ok
+test_comparison_workload_outputs_cannot_overwrite_reports_model_or_compiler (__main__.Coordinator.test_comparison_workload_outputs_cannot_overwrite_reports_model_or_compiler) ... ok
+test_corrupt_retained_raw_bytes_remeasure_only_affected_workloads (__main__.Coordinator.test_corrupt_retained_raw_bytes_remeasure_only_affected_workloads) ... ok
+test_dynamic_providers_require_watched_files_and_current_resolution (__main__.Coordinator.test_dynamic_providers_require_watched_files_and_current_resolution) ... ok
+test_dynamic_resolution_requires_supported_search_scopes (__main__.Coordinator.test_dynamic_resolution_requires_supported_search_scopes) ... ok
+test_fresh_failed_capture_does_not_revive_previous_success (__main__.Coordinator.test_fresh_failed_capture_does_not_revive_previous_success) ... ok
+test_guard_of_previously_reused_workload_remains_live (__main__.Coordinator.test_guard_of_previously_reused_workload_remains_live) ... ok
+test_injection_environment_and_loaded_validator_changes_miss (__main__.Coordinator.test_injection_environment_and_loaded_validator_changes_miss) ... ok
+test_killed_comparator_cannot_publish_a_success (__main__.Coordinator.test_killed_comparator_cannot_publish_a_success) ... ok
+test_private_edit_runs_only_its_workload_and_revert_reuses (__main__.Coordinator.test_private_edit_runs_only_its_workload_and_revert_reuses) ... ok
+test_provider_search_candidate_aba_blocks_publication (__main__.Coordinator.test_provider_search_candidate_aba_blocks_publication) ... ok
+test_queued_aba_prevents_execution (__main__.Coordinator.test_queued_aba_prevents_execution) ... ok
+test_runtime_aba_never_publishes_a_receipt (__main__.Coordinator.test_runtime_aba_never_publishes_a_receipt) ... ok
+test_shared_helper_runs_all_consumers_only (__main__.Coordinator.test_shared_helper_runs_all_consumers_only) ... ok
+test_suite_validation_rejects_unknown_fields_duplicate_ids_and_output_overlap (__main__.Coordinator.test_suite_validation_rejects_unknown_fields_duplicate_ids_and_output_overlap) ... ok
+test_threshold_only_comparison_never_admits_measurements (__main__.Coordinator.test_threshold_only_comparison_never_admits_measurements) ... ok
+test_unbound_runtime_provider_stays_fresh (__main__.Coordinator.test_unbound_runtime_provider_stays_fresh) ... ok
+test_uncovered_library_cannot_borrow_another_workloads_contract (__main__.Coordinator.test_uncovered_library_cannot_borrow_another_workloads_contract) ... ok
+test_unknown_and_physical_deterministic_contracts_always_run (__main__.Coordinator.test_unknown_and_physical_deterministic_contracts_always_run) ... ok
+test_unknown_provider_resolution_stays_fresh (__main__.Coordinator.test_unknown_provider_resolution_stays_fresh) ... ok
+test_warm_reuses_before_admission_and_labels_historical_evidence (__main__.Coordinator.test_warm_reuses_before_admission_and_labels_historical_evidence) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 1.509s
+
+OK

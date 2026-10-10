@@ -6,14 +6,19 @@ Juice compares **instructions per completed application unit**, with baseline
 generated code, source attribution and repeat variability help explain the
 result. Ordinary use needs neither an idle machine nor a full production run.
 
-Juice is built into the installed compiler: `mylang juice --help`. All seven
-commands run native Zig code; no Python interpreter, repository checkout or
+Juice is built into the installed compiler: `mylang juice --help`. Its commands
+run native Zig code; no Python interpreter, repository checkout or
 companion script is needed. It supports generic native programs and mylang
 applications. Capture currently requires Linux x86_64, a build toolchain and
 `perf` or Valgrind. Binutils provides optional static diagnostics; `ldd` identifies
 loaded libraries. Comparing, validating and calibrating saved JSON needs only
 the compiler binary. The original `scripts/juice` Python tool remains a developer
 reference for differential tests, not an installed dependency.
+
+The developer [incremental evidence coordinator](#incremental-measurement-evidence)
+adds automatic lookup before server admission. It reuses qualified measurements
+and reevaluates thresholds separately; native `juice record` still requests a new
+immutable capture on every invocation.
 
 An experimental [compile-only IR estimator](../../experiments/juice-ir-proxy-20261010/README.md)
 derives counts for canonical scalar loops and adds a dependency-based cost score.
@@ -595,6 +600,118 @@ Held-out error is reported as validation evidence, not a statistical guarantee.
 Representative timing calibration is occasional work; the edit loop continues
 to use instruction measurements without waiting for an idle host.
 
+## Incremental measurement evidence
+
+`mylang juice plan MANIFEST` prints `juice-plan-v1`: the native normalized
+manifest, selected workloads, expanded source/input hashes, build tools and
+dependencies, actual compiler executable hash, collector configuration, CPU/OS
+context and expected workspace paths. It runs tool identity probes but creates
+no workspace, acquires no cache lock, builds nothing and executes no workload.
+It accepts the capture selection, compiler, cache and collector options.
+Prebuild libraries and undeclared provider resources are explicitly incomplete.
+
+`scripts/juice_cache.py` uses that native plan with a `juice-suite-v1` JSON file:
+
+```json
+{
+  "version": "juice-suite-v1",
+  "workloads": [
+    {
+      "id": "csv-parse",
+      "manifest": "csv/juice.toml",
+      "workload": "small",
+      "dependencies": ["shared/", "providers/"],
+      "complete": true,
+      "reuse": "historical"
+    }
+  ]
+}
+```
+
+Paths are relative to the suite file. Dependencies are literal files or recursive
+directories ending in `/`; native manifest globs remain supported. A glob watches
+its complete fixed-prefix directory conservatively, including hidden files and
+new members. Put cache and report outputs outside those scopes. Recursive
+dependency directories containing directory symlinks are rejected; declare the
+resolved provider as its own scope. Declared base symlinks and file symlinks are
+watched through their lookup paths and targets.
+
+`complete: true` is an explicit assertion that the workload and build have no
+undeclared inputs or effects. Include transitive code, harness setup/teardown,
+data, output checkers and their resources, compiler/linker/SDK files, runtime
+providers, dynamic loading and child tools. It is not a sandbox or an inference
+from observed coverage. The coordinator also binds its loaded implementation,
+Python/admission tools, executable aliases, loader libraries, environment and
+host context. Missing or unsupported contracts stay fresh. Selka harnesses need
+a declared enclosing `mylang.json` to prevent implicit ancestor configuration;
+the coordinator watches their selected Zig installation's `lib` directory.
+Declare any external components too.
+
+Runtime provider validation currently supports static amd64 ELF programs and
+ordinary glibc dynamic linking. It resolves both plain and counted executables
+under the native runtime environment, and checks the selected library bytes
+against files watched before capture. Loader cache, aliases, direct search
+directory membership and reported `glibc-hwcaps` subdirectories are guarded,
+including initially absent paths. Library search injection, RPATH/RUNPATH,
+unsupported loaders and unresolved providers stay fresh. Explicitly declared
+application resources are still required; this check cannot discover arbitrary
+file reads or certify `dlopen` behavior.
+
+Reuse policies are explicit:
+
+| Policy | Meaning |
+|---|---|
+| `fresh` (default) | Capture on every request; no reusable receipt. |
+| `deterministic` | Reuse software counts only for a complete deterministic execution and instrumentation contract. Select Cachegrind/Callgrind and an explicit `VALGRIND_LIB`; its complete resource directory is watched. |
+| `historical` | Reuse an earlier observation for the same declared build and measurement context, including physical `perf` counters. Reports always mark reused observations `fresh: false`. |
+
+```bash
+python3 scripts/juice_cache.py capture perf-suite.json --report perf-before.json
+python3 scripts/juice_cache.py capture perf-suite.json --report perf-after.json
+python3 scripts/juice_cache.py compare perf-before.json perf-after.json \
+  --output perf-comparison --fail-above 101
+python3 scripts/juice_cache.py capture perf-suite.json --fresh
+```
+
+The coordinator owns admission; do not wrap it in `build-slot.sh`. Plan, hash,
+lookup, validation and publication occur outside the server gate. Only missing
+captures acquire the gate. `--target ID` selects workload IDs; `--repeats`,
+`--collector`, `--profile`, `--cpu`, `--perf`, `--valgrind`, `--static` and
+`--build-compiler` configure native capture. `--compiler` selects the installed
+Selka executable running Juice. This optional developer command uses Python;
+the installed compiler and source-build install graph do not.
+
+Separate manifests and isolated harness binaries provide locality. An edited
+private source schedules its workload; a shared helper schedules every declaring
+consumer. Changing a shared executable invalidates every physical workload using
+it, since unrelated code can change link layout and addresses. A counter region
+does not eliminate setup execution. Keep representative end-to-end workloads as
+well as focused harnesses, and add workloads for newly reachable behavior.
+
+The evidence store retains exact original native records, raw collector/oracle
+files, semantic counters and plain/counted binaries. It checks complete sample
+sets and artifact inventories and independently reconciles raw collector counts.
+Incomplete, corrupt or missing evidence misses; mutations observed while planning,
+queued, executing or publishing prevent qualification, even if bytes are restored.
+Runtime libraries must already belong to the watched contract before capture.
+Cancellation retains only previously completed actions. `--fresh` invalidates the
+requested prior receipt before running; a failed refresh cannot restore it.
+The admitted worker supervises and reaps native collector descendants, including
+children in separate process groups, before releasing its admission on cancellation.
+
+Run reports distinguish executed/reused actions, freshness, qualification reasons
+and admission counts. Comparison revalidates immutable evidence and invokes native
+Juice without measurements or admission. Changing a threshold or calibration
+model changes the decision, not the original samples. Changed instrumentation,
+CPU/OS policy or providers cannot inherit a compatible measurement accidentally.
+Historical observations do not establish fresh wall-clock performance; retain
+periodic isolated timing and calibration outside the ordinary edit gate.
+
+Storage is local, bounded and disposable: at most 1,000 raw files, 16 MiB record
+JSON, 64 MiB per raw file/executable and 1 GiB total evidence. Oversized captures
+are refused as reusable evidence. This is not a durable journal, remote trust
+protocol, garbage collector or application crash-recovery guarantee.
+
 ## Verification and retained evidence
 
 `zig build test-juice` runs the reference tests and native CLI tests, including
@@ -602,6 +719,8 @@ relocation with an empty `PATH`, comparison/calibration parity, cache integrity,
 immutable captures, failed oracles and incomplete counts. It needs no PMU or
 Valgrind and is part of the full gate. `test-core -Dtest-filter=Juice` covers the
 native parsers, normalization and process deadlines.
+`zig build test-juice-cache` verifies evidence integrity, admission, affected
+selection, cancellation and comparison-only decisions using isolated collectors.
 Real collector qualification, including load interference and known regressions:
 
 ```bash

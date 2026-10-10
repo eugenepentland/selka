@@ -11,6 +11,12 @@ Wave 4B adds independent differential and libFuzzer seed shards, concrete corpus
 replay, and evidence lookup before admission. The developer interface and its
 coverage-target boundary are documented in [fuzz campaigns](../tooling/fuzz-campaigns.md);
 qualification is recorded in the [Wave 4B report](../../experiments/cache-wave4b-20261010/REPORT.md).
+Wave 5 adds native `juice plan`, per-workload measurement lookup before admission,
+retained raw evidence and binaries, guarded provider resolution, comparison-only
+threshold decisions, and cached Core cost/LLVM remark queries. Its interface is
+documented in [Juice](../tooling/juice.md#incremental-measurement-evidence) and
+[cost reports](../tooling/cost.md); qualification and limits are recorded in the
+[Wave 5 report](../../experiments/cache-wave5-20261010/REPORT.md).
 Historical review sections below retain their original baselines.
 
 Status: Wave 1 qualified together with `main` at `e9011d9c6` on 2026-10-10;
@@ -771,6 +777,10 @@ again; cancellation resumes completed ranges without reporting an unfinished
 campaign as passed.
 
 ### Wave 5 — Incremental performance evidence through Juice
+
+Implemented on `codex/selka-cache-wave5`, based on Wave 4B `bb2007483`.
+See the [qualification report](../../experiments/cache-wave5-20261010/REPORT.md)
+for supported provider contracts, measured action selection and remaining limits.
 
 Use Juice's existing workload manifests, immutable records, build identities,
 oracles and comparison rules. Add workload-to-code/data dependency manifests

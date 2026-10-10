@@ -1,0 +1,33 @@
+{
+  "adapter": "mylang",
+  "build": {
+    "compiler": "mylang",
+    "counter_semantics": "Selka Core runtime counters; plain perf capture",
+    "entry": "main.my",
+    "tools": [
+      "size",
+      "nm",
+      "objdump",
+      "ldd"
+    ]
+  },
+  "name": "wave5-selka",
+  "sources": [
+    "main.my",
+    "mylang.json"
+  ],
+  "version": 1,
+  "workloads": [
+    {
+      "args": [
+        "nonce"
+      ],
+      "expected_stdout": "65569\n",
+      "family": "selka-dynamic-counting",
+      "name": "selka",
+      "timeout_seconds": 10,
+      "unit": "completed scenario",
+      "units": 1
+    }
+  ]
+}

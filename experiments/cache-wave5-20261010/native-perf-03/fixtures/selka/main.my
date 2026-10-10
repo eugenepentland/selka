@@ -1,0 +1,6 @@
+func main(args: str[], out: Stream) -> int:
+    mut total = 0
+    for i in range(len(args) + 65568):
+        total += 1
+    out.print(total)
+    return 0

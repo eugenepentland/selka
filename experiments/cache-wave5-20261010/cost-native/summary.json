@@ -1,0 +1,1881 @@
+{
+  "version": "wave5-cost-qualification-v1",
+  "completed_utc": "2026-10-10T21:47:02.752982+00:00",
+  "compiler": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+  "compiler_sha256": "c9d01d4dae08be861d9f5b365b39a93293491b805ea3f5522bb3c94232ad5785",
+  "invocations": 23,
+  "success": true,
+  "damaged_records": 8,
+  "scope": "native static compiler-query correctness; no performance claims",
+  "records": [
+    {
+      "label": "cold",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "21860cc392cd43f2a2d5c27cbeab814b1af41765728752853a2182f0335aee19",
+      "inputs": {
+        "main.my": "fbe1e77ff899c4cdd2b7bd37ef21bf8f31cb8d7396388596f75f0cb1a173d087",
+        "helper.my": "c721f1f44584ace37fb6aba4892293afb79653666edec2677d31fcf437d5c5d1"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 3,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 2,
+          "stored": 3,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 3
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 3,
+          "fresh_work": 3,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "warm",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "1af42064db563f46b571388ca70da950a2f22f6e517a6a85bf83c2349f2a1c65",
+      "inputs": {
+        "main.my": "fbe1e77ff899c4cdd2b7bd37ef21bf8f31cb8d7396388596f75f0cb1a173d087",
+        "helper.my": "c721f1f44584ace37fb6aba4892293afb79653666edec2677d31fcf437d5c5d1"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 2,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            3,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 2,
+          "active_functions": 3,
+          "fresh_work": 0,
+          "restores": {
+            "final": 3,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 3,
+          "computed": 0,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 0,
+          "reused": 1
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "private-edit",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "a0f56f1c3fb9f280ea5088462d31661124a7e2825ecce11e4e80dd9a5ff18e8d",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "c721f1f44584ace37fb6aba4892293afb79653666edec2677d31fcf437d5c5d1"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 1,
+          "reused": 2,
+          "summaries": 1,
+          "syntax_hits": 1,
+          "syntax_misses": 1,
+          "stored": 1,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 2,
+          "computed": 1
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "misses": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            0
+          ],
+          "bypassed": 1,
+          "active_functions": 3,
+          "fresh_work": 2,
+          "restores": {
+            "final": 1,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 1,
+          "computed": 2,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "private-fresh",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "fe618bdace5c0314a495f02916c85b58267acf26de304adac3542c480c45158b",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "c721f1f44584ace37fb6aba4892293afb79653666edec2677d31fcf437d5c5d1"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": false,
+          "verify": false,
+          "stage_instrumentation": false
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 3
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "shared-helper-edit",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "7c15802a0bbd10094847588efa6d3cc52e7641c901441dd2d46ac7b2953219dc",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 1,
+          "reused": 2,
+          "summaries": 0,
+          "syntax_hits": 1,
+          "syntax_misses": 1,
+          "stored": 1,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 2,
+          "computed": 1
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "misses": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            0
+          ],
+          "bypassed": 1,
+          "active_functions": 3,
+          "fresh_work": 2,
+          "restores": {
+            "final": 1,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 1,
+          "computed": 2,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "shared-helper-fresh",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "e296903f15bf52dffdf2d1d3991f46ec7a4acd03385c38fe60b14830fb1f4083",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": false,
+          "verify": false,
+          "stage_instrumentation": false
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 3
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "verified",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--verify-cache"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "1625208f957449d5f4a42cf27f5ac284540cfd2c2744a26ebb5653a242efbf2d",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": true,
+          "stage_instrumentation": false
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 3,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "corrupt-fallback",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "c1fc40841408c140e490c6f857dae931db8035149a231d5712e7f1d539e060e2",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 3
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 3,
+          "fresh_work": 3,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "corrupt-fresh",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "c82e4b5f228ddc9459708fa8f94cdad3c70a5b9f486265dc5f4b0b313b79ef9e",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": false,
+          "verify": false,
+          "stage_instrumentation": false
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 3
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "corrupt-repair-warm",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "7735726c79c6172f9d665e5eb1e7dd328968b18d3e729f025061949df8c0c763",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            3,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 2,
+          "active_functions": 3,
+          "fresh_work": 0,
+          "restores": {
+            "final": 3,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 3,
+          "computed": 0,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 0,
+          "reused": 1
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "missing-fallback",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report"
+      ],
+      "exit": 0,
+      "report_sha256": "1d43a39f7b79f1fadf873633bfe4d1236d62f5a6c84e16d0194b04e97421d4bd",
+      "stderr_sha256": "303c2abc7e13bf1b8ec8e69614f957dca957ea99b01e2b1cdeb0944ea064f001",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 3
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 3,
+          "fresh_work": 3,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "external-before",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--llvm-remarks",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/remarks.yaml",
+        "--counters",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/counters.json"
+      ],
+      "exit": 0,
+      "report_sha256": "2fb611ccb15be1bff1e48e13023fb337eb1ec6d8930a4297253651241aebd7a0",
+      "stderr_sha256": "811f96fdbda7a0ff6e8fdf129889960ce7017a604ca822ac09e0d33eb87d4bb2",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            3,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 2,
+          "active_functions": 3,
+          "fresh_work": 0,
+          "restores": {
+            "final": 3,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 3,
+          "computed": 0,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 0,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "external-edit",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--llvm-remarks",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/remarks.yaml",
+        "--counters",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/counters.json"
+      ],
+      "exit": 0,
+      "report_sha256": "15c57921eae4aadf194f8f5eab6267adb7b45ca74b431a0266b85dd020a93f95",
+      "stderr_sha256": "811f96fdbda7a0ff6e8fdf129889960ce7017a604ca822ac09e0d33eb87d4bb2",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            3,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 2,
+          "active_functions": 3,
+          "fresh_work": 0,
+          "restores": {
+            "final": 3,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 3,
+          "computed": 0,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 0,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "external-fresh",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--llvm-remarks",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/remarks.yaml",
+        "--counters",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/counters.json",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "report_sha256": "15c57921eae4aadf194f8f5eab6267adb7b45ca74b431a0266b85dd020a93f95",
+      "stderr_sha256": "1aa88932106f66e2f55d34b75939b4afa1c3c0fcdeba653fac7f411d25f667e1",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": false,
+          "verify": false,
+          "stage_instrumentation": false
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 3
+        },
+        "llvm": {
+          "processes": 0,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "debug",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--debug"
+      ],
+      "exit": 0,
+      "report_sha256": "3a8e8f277cd54dede7ce55e55a32a9fa86b3467c89846b057afbb46947d1ba1a",
+      "stderr_sha256": "b8bac26e5d6f26d6298a45ec82eeff13a83e4bbf3236145b14f5d8d64ad37a99",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 3
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 3,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "debug-warm",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--debug"
+      ],
+      "exit": 0,
+      "report_sha256": "3a8e8f277cd54dede7ce55e55a32a9fa86b3467c89846b057afbb46947d1ba1a",
+      "stderr_sha256": "ec779314178fc1ff82939aafc37aae3ccfe3815d14ba7a4c994bd5263ad1175a",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 3,
+          "computed": 0,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 0,
+          "reused": 3
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "debug-fresh",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--debug",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "report_sha256": "3a8e8f277cd54dede7ce55e55a32a9fa86b3467c89846b057afbb46947d1ba1a",
+      "stderr_sha256": "e6cfc283d914c389213047b3103ea42f1198baf0e9556867677d41b9f257eb2d",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": false,
+          "verify": false,
+          "stage_instrumentation": false
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 3
+        },
+        "llvm": {
+          "processes": 3,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "no-facts",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--no-facts"
+      ],
+      "exit": 0,
+      "report_sha256": "eeafadbe0b21621b174e4889eb448878282b42080a3d4fb0bafebe4288cbcbb5",
+      "stderr_sha256": "102b8f905a4240ceab27274023743e507f70c3d783379e604244e97ca0cb9c57",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            3,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 2,
+          "computed": 1,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "no-facts-warm",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--no-facts"
+      ],
+      "exit": 0,
+      "report_sha256": "eeafadbe0b21621b174e4889eb448878282b42080a3d4fb0bafebe4288cbcbb5",
+      "stderr_sha256": "b87ebbcc45ed8b0eaa9995461c353f137c267ef2d1abcbf8b95f5c02a5a1fb19",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            3,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 3,
+          "computed": 0,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 0,
+          "reused": 1
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "no-facts-fresh",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--no-facts",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "report_sha256": "eeafadbe0b21621b174e4889eb448878282b42080a3d4fb0bafebe4288cbcbb5",
+      "stderr_sha256": "864128a31aeee1bbd149a387e3af0c38e65c6f339cee06c8b86a1594676c0a60",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": false,
+          "verify": false,
+          "stage_instrumentation": false
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 3
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "verify-facts",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--verify-facts"
+      ],
+      "exit": 0,
+      "report_sha256": "1cc2e7b1196e30e9faf14991f295807bc894e96282b427a339baae0199c26f45",
+      "stderr_sha256": "2f2ac3c09f998916769f9face401ac550f6d413a207bdd2cc26aa47b918a4d2c",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 3,
+          "fresh_work": 3,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "verify-facts-warm",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--verify-facts"
+      ],
+      "exit": 0,
+      "report_sha256": "1cc2e7b1196e30e9faf14991f295807bc894e96282b427a339baae0199c26f45",
+      "stderr_sha256": "7735726c79c6172f9d665e5eb1e7dd328968b18d3e729f025061949df8c0c763",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": true,
+          "verify": false,
+          "stage_instrumentation": true
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 3,
+          "summaries": 0,
+          "syntax_hits": 2,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 3,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            3,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 2,
+          "active_functions": 3,
+          "fresh_work": 0,
+          "restores": {
+            "final": 3,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 3
+        },
+        "cost": {
+          "reused": 3,
+          "computed": 0,
+          "verified": 0,
+          "bypassed": 0
+        },
+        "llvm": {
+          "processes": 0,
+          "reused": 1
+        }
+      },
+      "functions": 3
+    },
+    {
+      "label": "verify-facts-fresh",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/release-install/bin/mylang",
+        "cost",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/main.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/cost-qualification/cache",
+        "--cache-report",
+        "--verify-facts",
+        "--no-cache"
+      ],
+      "exit": 0,
+      "report_sha256": "1cc2e7b1196e30e9faf14991f295807bc894e96282b427a339baae0199c26f45",
+      "stderr_sha256": "5fd984e580aeafd76ecd36ab0b58d004b7b0d388f2e1839a2c29d8b7a6eba7ef",
+      "inputs": {
+        "main.my": "8eef1129a25de1ad73291eb472ba604c60b8ee39cc7e29216aaa2f0a955cb3cf",
+        "helper.my": "026b38bb867f621668baa4d0159c6acbf7d53951d554bd20014254327f59da0f"
+      },
+      "work": {
+        "version": "cost-query-work-v1",
+        "policy": {
+          "enabled": false,
+          "verify": false,
+          "stage_instrumentation": false
+        },
+        "frontend": {
+          "checked": 0,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 0,
+          "stored": 0,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "computed": 0
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "bypassed": 0,
+          "active_functions": 0,
+          "fresh_work": 0,
+          "restores": {
+            "final": 0,
+            "checkpoints": 0,
+            "fusions": 0
+          },
+          "final_loaded": 0
+        },
+        "cost": {
+          "reused": 0,
+          "computed": 3,
+          "verified": 0,
+          "bypassed": 3
+        },
+        "llvm": {
+          "processes": 1,
+          "reused": 0
+        }
+      },
+      "functions": 3
+    }
+  ]
+}

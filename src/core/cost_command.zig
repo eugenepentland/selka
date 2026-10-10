@@ -9,6 +9,10 @@ const remarks = @import("cost_remarks.zig");
 const pipeline = @import("pipeline.zig");
 const driver = @import("driver.zig");
 const cli_run = @import("cli_run.zig");
+const storage = @import("stage_store.zig");
+const query = @import("cost_query.zig");
+const lowering_cache = @import("lowering_cache.zig");
+const stage_metrics = @import("stage_metrics.zig");
 const dynamic = @import("cost_dynamic.zig");
 
 /// A malformed request is rendered as usage, with exit 2.
@@ -22,7 +26,7 @@ pub const Request = struct {
     /// `--counters FILE.json`: a counting run's counts, added after the static report.
     counters: ?[]const u8 = null,
 };
-const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] [--counters FILE.json]\n";
+const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] [--counters FILE.json] [--cache-dir DIR] [--no-cache | --verify-cache] [--cache-report]\n";
 
 /// Parse supported modes and reject flags rather than silently changing the analysis.
 pub fn parse(args: []const []const u8) ?Request {
@@ -47,6 +51,11 @@ pub fn parse(args: []const []const u8) ?Request {
             if (request == null or request.?.counters != null or index + 1 == args.len) return null;
             index += 1;
             request.?.counters = args[index];
+        } else if (std.mem.eql(u8, arg, "--cache-dir")) {
+            if (request == null or index + 1 == args.len) return null;
+            index += 1;
+        } else if (std.mem.eql(u8, arg, "--no-cache") or std.mem.eql(u8, arg, "--verify-cache") or std.mem.eql(u8, arg, "--cache-report")) {
+            if (request == null) return null;
         } else if (std.mem.startsWith(u8, arg, "--")) return null else if (request == null) {
             request = .{ .path = arg };
         } else if (request.?.function == null) {
@@ -68,23 +77,63 @@ pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    const rendered = try output(init, request);
+    const rendered = try outputWithQuery(init, request, QueryOptions.parse(args));
     try std.Io.File.stdout().writeStreamingAll(init.io, rendered.text);
     return rendered.status;
 }
 
 /// Shared output for cost and list-interfaces --cost; one pipeline and schema.
 pub fn output(init: std.process.Init, request: Request) Error!Output {
+    return outputWithQuery(init, request, .{});
+}
+
+/// Native query policy, separate from the established seven-field cost request.
+pub const QueryOptions = struct {
+    cache: []const u8 = ".mylang-cache/core",
+    enabled: bool = true,
+    verify: bool = false,
+    report: bool = false,
+
+    fn parse(args: []const []const u8) QueryOptions {
+        var options: QueryOptions = .{};
+        var index: usize = 0;
+        while (index < args.len) : (index += 1) {
+            if (std.mem.eql(u8, args[index], "--cache-dir")) {
+                index += 1;
+                options.cache = args[index];
+            } else if (std.mem.eql(u8, args[index], "--llvm-remarks") or std.mem.eql(u8, args[index], "--counters")) {
+                index += 1;
+            } else if (std.mem.eql(u8, args[index], "--no-cache")) {
+                options.enabled = false;
+            } else if (std.mem.eql(u8, args[index], "--verify-cache")) {
+                options.verify = true;
+            } else if (std.mem.eql(u8, args[index], "--cache-report")) {
+                options.report = true;
+            }
+        }
+        return options;
+    }
+};
+
+/// Check current sources and reuse only exact compiler-query inputs.
+pub fn outputWithQuery(init: std.process.Init, request: Request, policy: QueryOptions) Error!Output {
     const a = init.arena.allocator();
+    var store = try storage.Store.init(init.gpa, init.io, policy.cache);
+    defer store.deinit();
+    var queries: query.Cache = .{ .store = &store, .verify = policy.verify };
+    var stages: stage_metrics.Report = .{};
+    var lowering = lowering_cache.Cache.init(&store);
     var diagnostics: std.ArrayList(u8) = .empty;
     const entry = project_entry.resolve(a, init.io, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
     entry.configure(&session);
+    if (policy.enabled and !policy.verify) try session.enableCache(init.gpa, policy.cache);
     const checked = session.checkFile(a, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     entry.validate(a, &session, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     var refusal: build.Refusal = .{};
-    var module = build.buildExecutable(a, .{ .program = checked.program, .source = checked.src, .drop_debug = !request.debug }, &refusal) catch |err| {
+    const input: build.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = !request.debug };
+    var module = (if (policy.enabled and !policy.verify) build.buildExecutableCached(a, input, &refusal, &lowering) else build.buildExecutable(a, input, &refusal)) catch |err| {
         if (err != error.Unsupported) return err;
         const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
         try diagnostics.print(a, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
@@ -95,15 +144,47 @@ pub fn output(init: std.process.Init, request: Request) Error!Output {
         .mode = if (request.debug) .debug else .release,
         .facts = if (request.mode == .verify) .verify else if (request.mode == .off) .off else .on,
         .show = .{ .stats = true },
+        .cache = policy.cache,
     };
-    const emission = pipeline.emittedWithScratch(a, init.gpa, &module, try pipeline.unitFor(a, checked, entry.path, session.single != null), options, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
+    const unit = try pipeline.unitFor(a, checked, entry.path, session.single != null);
+    const emission = (if (policy.enabled) pipeline.emittedQuery(.{ .arena = a, .backing = init.gpa }, &module, unit, options, .{
+        .store = &store,
+        .io = init.io,
+        .metrics = &stages,
+        .cost = &queries,
+        .fresh = policy.verify,
+    }, &diagnostics) else pipeline.emittedWithScratch(a, init.gpa, &module, unit, options, &diagnostics)) catch |err| return failure(init, diagnostics.items, err);
     var report = emission.cost_report.?;
+    if (!policy.enabled) queries.statistics = .{ .computed = report.functions.len, .bypassed = report.functions.len };
+    var llvm_work: struct { processes: u32 = 0, reused: u32 = 0 } = .{};
     if (request.llvm_remarks == null) {
-        const captured = try driver.optimizationRemarks(a, init.io, init.environ_map, .{ .zig = options.zig, .work = options.cache, .output = "", .mode = options.mode, .links = &.{}, .units = emission.units });
+        const captured = try driver.optimizationRemarks(a, init.io, init.environ_map, .{
+            .zig = options.zig,
+            .work = options.cache,
+            .output = "",
+            .mode = options.mode,
+            .links = &.{},
+            .units = emission.units,
+            .verify = !policy.enabled or policy.verify,
+        });
+        llvm_work = .{ .processes = captured.processes, .reused = captured.reused };
         if (captured.yaml) |yaml| remarks.apply(&report, yaml);
         var timing: std.ArrayList(u8) = .empty;
         try cost.llvmStats(a, &timing, report.totals, captured);
         try std.Io.File.stderr().writeStreamingAll(init.io, timing.items);
+    }
+    if (policy.enabled) _ = try store.flush();
+    if (policy.report) {
+        const work = .{
+            .version = "cost-query-work-v1",
+            .policy = .{ .enabled = policy.enabled, .verify = policy.verify, .stage_instrumentation = policy.enabled and !policy.verify },
+            .frontend = session.statistics(),
+            .lowering = .{ .reused = lowering.reused, .computed = lowering.lowered },
+            .optimizer = stages.optimizer,
+            .cost = queries.statistics,
+            .llvm = llvm_work,
+        };
+        try std.Io.File.stderr().writeStreamingAll(init.io, try std.fmt.allocPrint(a, "{s}\n", .{try std.json.Stringify.valueAlloc(a, work, .{})}));
     }
     report = try cost.select(a, report, request.function);
     if (report.functions.len == 0) {

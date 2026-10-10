@@ -15,6 +15,7 @@
 //! A minimal driver rather than the old core's `qbe_build_llvm_compile.zig`:
 //! that one is bound to the QBE manifest, fragment store and object cache.
 const std = @import("std");
+const build_mode = @import("build_mode.zig");
 const target_policy = @import("target.zig");
 const target = target_policy.current;
 const number_runtime = @import("number_runtime.zig");
@@ -25,6 +26,7 @@ const native_receipt = @import("native_receipt.zig");
 const count_runtime = @import("count_runtime.zig");
 const sanitize_llvm = @import("sanitize_llvm.zig");
 const Digest = unit_cache.Digest;
+const query_store = @import("stage_store.zig");
 const stage_metrics = @import("stage_metrics.zig");
 
 /// The runtime C source, compiled into every program.
@@ -43,7 +45,7 @@ pub const Request = struct {
     /// The build's cache directory: foreign objects, linked programs and staging.
     work: []const u8,
     output: []const u8,
-    mode: @import("build_mode.zig").Mode = .optimized_debug,
+    mode: build_mode.Mode = .optimized_debug,
     /// Extra C sources to compile and link (`--link`).
     links: []const []const u8,
     /// Independent LLVM inputs, in link order (`emit_units`, or `wholeUnit`).
@@ -276,10 +278,10 @@ fn instrumented(a: std.mem.Allocator, environment: *const std.process.Environ.Ma
 /// Optional LLVM optimization records from a separate compile of the exact units.
 /// Failure or a tool that accepts the flags but writes no YAML leaves it unknown.
 /// This never replaces a cached object, changes emitted text, or enters the link.
-pub const OptimizationRemarks = struct { yaml: ?[]const u8 = null, processes: u32 = 0, compile_ns: u64 = 0 };
+pub const OptimizationRemarks = struct { yaml: ?[]const u8 = null, processes: u32 = 0, compile_ns: u64 = 0, reused: u32 = 0 };
 
-/// Compile only when requested by cost/--stats; identical-input remark caching is
-/// deferred until timings justify it. Every spawn is timed and tool-validated.
+/// Compile missing exact-unit remark queries; hits still validate tool resources.
+/// Failed or absent records remain unknown; verify requests compile every unit.
 pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request) std.mem.Allocator.Error!OptimizationRemarks {
     if (environ.get(layout_variable) != null and layoutArguments(environ).len == 0) return .{};
     if (environ.get(sanitize_variable) != null and sanitizeArguments(environ).len == 0) return .{};
@@ -297,33 +299,16 @@ pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std
         return .{};
     };
     if (!guest.cacheable) environment.put("ZIG_GLOBAL_CACHE_DIR", try std.fs.path.join(a, &.{ staging, "global" })) catch return error.OutOfMemory;
+    var queries = try query_store.Store.init(a, io, request.work);
+    defer queries.deinit();
     var counts: Counts = .{};
     var log: std.ArrayList(u8) = .empty;
     const native: Native = .{ .arena = a, .io = io, .environment = &environment, .zig = guest.path, .log = &log, .guard = .{ .resources = resources, .identity = guest }, .counts = &counts };
     var yaml: std.ArrayList(u8) = .empty;
     var result: OptimizationRemarks = .{};
+    const context: RemarkContext = .{ .store = &queries, .staging = staging, .mode = request.mode, .cacheable = guest.cacheable, .verify = request.verify };
     for (request.units, 0..) |unit, index| {
-        const source = try std.fmt.allocPrint(a, "{s}/{d}.ll", .{ staging, index });
-        const object = try std.fmt.allocPrint(a, "{s}/{d}.o", .{ staging, index });
-        const records = try std.fmt.allocPrint(a, "{s}/{d}.opt.yaml", .{ staging, index });
-        const text = unitText(a, unit) catch |err| {
-            if (err == error.OutOfMemory) return error.OutOfMemory;
-            return result;
-        };
-        std.Io.Dir.cwd().writeFile(io, .{ .sub_path = source, .data = try instrumented(a, environ, text) }) catch return result;
-        var args: std.ArrayList([]const u8) = .empty;
-        try args.appendSlice(a, try compileArguments(native, request.mode.level(), object, source));
-        try args.appendSlice(a, &.{ "-fsave-optimization-record", try std.fmt.allocPrint(a, "-foptimization-record-file={s}", .{records}) });
-        const started = std.Io.Timestamp.now(io, .awake);
-        run(native, args.items) catch |err| {
-            if (err == error.OutOfMemory) return error.OutOfMemory;
-            result.processes = counts.processes;
-            result.compile_ns += @intCast(@max(0, started.durationTo(std.Io.Timestamp.now(io, .awake)).nanoseconds));
-            return result;
-        };
-        result.compile_ns += @intCast(@max(0, started.durationTo(std.Io.Timestamp.now(io, .awake)).nanoseconds));
-        result.processes = counts.processes;
-        const bytes = std.Io.Dir.cwd().readFileAlloc(io, records, a, .limited(64 << 20)) catch return result;
+        const bytes = try remarkUnit(native, context, unit, index, &result) orelse return result;
         try yaml.appendSlice(a, bytes);
         try yaml.append(a, '\n');
     }
@@ -331,8 +316,71 @@ pub fn optimizationRemarks(a: std.mem.Allocator, io: std.Io, environ: *const std
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return result;
     };
+    _ = try queries.flush();
     result.yaml = try yaml.toOwnedSlice(a);
     return result;
+}
+
+const RemarkContext = struct { store: *query_store.Store, staging: []const u8, mode: build_mode.Mode, cacheable: bool, verify: bool };
+
+fn remarkUnit(native: Native, context: RemarkContext, unit: emit_units.Unit, index: usize, outcome: *OptimizationRemarks) std.mem.Allocator.Error!?[]const u8 {
+    const a = native.arena;
+    const text = unitText(a, unit) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    const actual = try instrumented(a, native.environment, text);
+    const key = try remarkKey(a, context.store, native.guard.identity, context.mode, native.environment, actual);
+    if (context.cacheable and !context.verify) if (try context.store.load(a, key)) |saved| {
+        if (saved.len <= 64 << 20) {
+            outcome.reused += 1;
+            return saved;
+        }
+    };
+    const source = try std.fmt.allocPrint(a, "{s}/{d}.ll", .{ context.staging, index });
+    const object = try std.fmt.allocPrint(a, "{s}/{d}.o", .{ context.staging, index });
+    const records = try std.fmt.allocPrint(a, "{s}/{d}.opt.yaml", .{ context.staging, index });
+    std.Io.Dir.cwd().writeFile(native.io, .{ .sub_path = source, .data = actual }) catch return null;
+    var args: std.ArrayList([]const u8) = .empty;
+    try args.appendSlice(a, try compileArguments(native, context.mode.level(), object, source));
+    try args.appendSlice(a, &.{ "-fsave-optimization-record", try std.fmt.allocPrint(a, "-foptimization-record-file={s}", .{records}) });
+    const started = std.Io.Timestamp.now(native.io, .awake);
+    const ran = run(native, args.items);
+    outcome.processes = native.counts.processes;
+    outcome.compile_ns += @intCast(@max(0, started.durationTo(std.Io.Timestamp.now(native.io, .awake)).nanoseconds));
+    ran catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    const bytes = std.Io.Dir.cwd().readFileAlloc(native.io, records, a, .limited(64 << 20)) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    native.guard.check(native.log) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return null;
+    };
+    if (context.cacheable and !context.verify) _ = try context.store.save(key, bytes);
+    return bytes;
+}
+
+fn remarkKey(a: std.mem.Allocator, store: *const query_store.Store, tool: tool_identity.Identity, mode: build_mode.Mode, environment: *const std.process.Environ.Map, text: []const u8) std.mem.Allocator.Error!Digest {
+    var flags: std.ArrayList(u8) = .empty;
+    defer flags.deinit(a);
+    // Exact semantic arguments; private output/input paths are not compiler inputs.
+    for (target.cpu_flags) |argument| {
+        try flags.appendSlice(a, argument);
+        try flags.append(a, 0);
+    }
+    for (layoutArguments(environment)) |argument| {
+        try flags.appendSlice(a, argument);
+        try flags.append(a, 0);
+    }
+    for (sanitizeArguments(environment)) |argument| {
+        try flags.appendSlice(a, argument);
+        try flags.append(a, 0);
+    }
+    return store.key("llvm-optimization-record-v1:cc-c-Wno-override-module-fsave-optimization-record", &.{ &tool.digest, &tool.native_target, mode.level(), target_policy.native_link_target, flags.items, text });
 }
 
 /// Copy `program` to `output` under a temporary name and rename it into place.
@@ -877,7 +925,7 @@ test "publishOutput reports an unwritable output and servedForeign misses on dam
 }
 
 // spec-case: FRONTEND-COST-1
-test "cost optimizationRemarks returns unknown for unwritable staging missing tools and failed native compile" {
+test "cost optimizationRemarks and remarkUnit return unknown for unwritable staging missing tools and failed native compile" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -905,4 +953,41 @@ test "cost optimizationRemarks returns unknown for unwritable staging missing to
     try std.testing.expect(failed.yaml == null);
     try std.testing.expectEqual(@as(u32, 1), failed.processes);
     try std.testing.expect(failed.compile_ns > 0);
+}
+
+// spec-case: NEW-CORE-COST-QUERY-1
+test "cost query LLVM remark keys bind exact text tool CPU mode layout and instrumentation" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var store = try query_store.Store.init(a, std.testing.io, root);
+    defer store.deinit();
+    var environment = std.process.Environ.Map.init(a);
+    defer environment.deinit();
+    var identity: tool_identity.Identity = .{
+        .path = "/qualified/zig",
+        .digest = @splat(1),
+        .generation = @splat(2),
+        .native_target = @splat(3),
+        .inputs = 1,
+        .memo_hit = false,
+        .cacheable = true,
+    };
+    const original = try remarkKey(a, &store, identity, .release, &environment, "LLVM A");
+    try std.testing.expect(!std.mem.eql(u8, &original, &try remarkKey(a, &store, identity, .release, &environment, "LLVM B")));
+    try std.testing.expect(!std.mem.eql(u8, &original, &try remarkKey(a, &store, identity, .debug, &environment, "LLVM A")));
+    identity.digest = @splat(4);
+    try std.testing.expect(!std.mem.eql(u8, &original, &try remarkKey(a, &store, identity, .release, &environment, "LLVM A")));
+    identity.digest = @splat(1);
+    identity.native_target = @splat(5);
+    try std.testing.expect(!std.mem.eql(u8, &original, &try remarkKey(a, &store, identity, .release, &environment, "LLVM A")));
+    identity.native_target = @splat(3);
+    try environment.put(layout_variable, "4");
+    const laid_out = try remarkKey(a, &store, identity, .release, &environment, "LLVM A");
+    try std.testing.expect(!std.mem.eql(u8, &original, &laid_out));
+    try environment.put(sanitize_variable, "thread");
+    try std.testing.expect(!std.mem.eql(u8, &laid_out, &try remarkKey(a, &store, identity, .release, &environment, "LLVM A")));
 }

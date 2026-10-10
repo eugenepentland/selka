@@ -1,0 +1,99 @@
+{
+  "version": "juice-comparison-v1",
+  "identity_scheme": "mylang-juice-native-v1",
+  "base": "capture-eu9rccmb",
+  "candidate": "capture-eu9rccmb",
+  "mode": "combined",
+  "context_id": "9d19a4173fcdebf9cf78fefd8fe853f2cdf206b099515ec16eef027249a2f02e",
+  "collector": {
+    "kind": "perf",
+    "tool": {
+      "path": "/usr/bin/perf",
+      "sha256": "1371ae5cb9fa59632d1d0e34b877d7251df4029810ba67dc56e946545e87b531",
+      "version": "perf version 7.0.14"
+    },
+    "event": "cpu_core/instructions/u",
+    "cpu": 0,
+    "scope": "user instructions; process and inherited children; whole workload"
+  },
+  "source_roots": {
+    "base": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/fixtures/beta",
+    "candidate": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/fixtures/beta"
+  },
+  "library_changes": {},
+  "base_id": "6040b40d128f3578aa349c0563b3c798c7f6234f9eb42b8f324b4ea7bb99696f",
+  "candidate_id": "6040b40d128f3578aa349c0563b3c798c7f6234f9eb42b8f324b4ea7bb99696f",
+  "workloads": {
+    "beta": {
+      "units": 1,
+      "unit": "completed scenario",
+      "family": "synthetic-static-counting",
+      "tier": "quick",
+      "scope": "complete scenario",
+      "weight": 1,
+      "assessment": "unchanged",
+      "coverage": "measured scenario only; whole-job representativeness unverified",
+      "direction": "unchanged",
+      "envelope_meaning": "observed min/max repeat range, not a statistical confidence interval",
+      "functions": [],
+      "instruction_ratio": 1,
+      "juice": 100,
+      "lines": [],
+      "metrics": {
+        "instructions": {
+          "base": {
+            "samples": [
+              196720,
+              196720
+            ],
+            "median": 196720,
+            "min": 196720,
+            "max": 196720,
+            "spread": 0
+          },
+          "candidate": {
+            "samples": [
+              196720,
+              196720
+            ],
+            "median": 196720,
+            "min": 196720,
+            "max": 196720,
+            "spread": 0
+          }
+        }
+      },
+      "ratio_envelope": [
+        1,
+        1
+      ],
+      "repeatable": true,
+      "risks": [],
+      "runtime_proxy": {
+        "status": "unavailable",
+        "reason": "capture both builds with --profile runtime"
+      },
+      "semantic": {
+        "status": "unavailable"
+      }
+    }
+  },
+  "change_id": "5c81070954bd235bf1d3d81b4b6c121b47cd2bcf334f82b445cc0ff253e8eec5",
+  "meaning": "100 × candidate instructions per completed unit / baseline; not a time ratio",
+  "max_spread": 0.1,
+  "min_change": 0,
+  "runtime_prediction": {
+    "status": "uncalibrated"
+  },
+  "code": {
+    "available": true,
+    "sections": {},
+    "functions": {},
+    "scope": "static bytes and instruction sites, not executions"
+  },
+  "static_cost": {
+    "status": "unavailable or incompatible"
+  },
+  "suite_juice": 100,
+  "suite_meaning": "weighted geometric mean of selected scenarios; not whole-job runtime"
+}

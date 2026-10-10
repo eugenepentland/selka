@@ -1,0 +1,17 @@
+{
+  "version": "juice-suite-v1",
+  "workloads": [
+    {
+      "complete": true,
+      "dependencies": [
+        "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "/usr/lib/x86_64-linux-gnu/libm.so.6",
+        "/lib64/ld-linux-x86-64.so.2"
+      ],
+      "id": "selka",
+      "manifest": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-03/fixtures/selka/juice.json",
+      "reuse": "historical",
+      "workload": "selka"
+    }
+  ]
+}

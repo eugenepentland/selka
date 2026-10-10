@@ -182,6 +182,24 @@ pub const fuzz_campaign = [_][]const u8{
 /// `tests/input_manifest.py --self-test`.
 pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};
 
+/// Qualified Juice evidence and admission tests use isolated simulated collectors.
+pub const juice_cache = [_][]const u8{
+    "scripts/juice_cache.py",
+    "scripts/juice_cache_test.py",
+    "scripts/juice_evidence.py",
+    "scripts/juice_provider.py",
+    "scripts/juice_provider_test.py",
+    "scripts/juice_worker.py",
+    "scripts/juice_worker_test.py",
+    "tests/test_juice_evidence.py",
+    "scripts/juice_tool/",
+    "scripts/fuzz_campaign_identity.py",
+    "scripts/fuzz_campaign_store.py",
+    "scripts/verify_cache.py",
+    "scripts/verification_snapshot.py",
+    "scripts/build-slot.sh",
+};
+
 /// Isolated CLI cache, frame-diagnostic and guest-address-space probes.
 pub const tooling_isolation = [_][]const u8{"tests/tooling_cache_isolation.py"};
 

@@ -2,6 +2,7 @@
 """Installed native Juice parity and lifecycle checks; no PMU or Valgrind required."""
 from __future__ import annotations
 import copy
+import fcntl
 import hashlib
 import json
 import os
@@ -154,6 +155,137 @@ unset IFS
         self.command("record", manifest, "--name", name, "--repeats", 2,
                      "--perf", perf, "--cache-dir", self.root / "cache", code=code)
         return self.root / "cache/test-project/records" / name / "record.json"
+
+    def plan(self, manifest, perf, *args, env=None):
+        result = self.command("plan", manifest, "--perf", perf,
+                              "--cache-dir", self.root / "cache", *args, env=env)
+        return json.loads(result.stdout)
+
+    def test_plan_inspects_exact_contract_without_building_or_creating_cache(self):
+        manifest, perf = self.project()
+        launcher = self.root / "version-only-compiler"
+        marker = self.root / "unexpected-build"
+        launcher.write_text('#!/bin/sh\nif [ "$1" = --version ]; then echo fixture-compiler; '
+                            'else touch "' + str(marker) + '"; exit 79; fi\n')
+        launcher.chmod(0o755)
+        manifest.write_text(MANIFEST.replace('compiler = "cc"',
+                                            'compiler = "' + str(launcher) + '"'))
+        before = sorted(p.name for p in self.root.iterdir())
+        planned = self.plan(manifest, perf, "--repeats", 2, "--workload", "quick")
+        self.assertEqual(planned["version"], "juice-plan-v1")
+        self.assertEqual(planned["root"], str(self.root))
+        self.assertEqual(planned["manifest_path"], str(manifest))
+        self.assertEqual(planned["sources"]["program.c"],
+                         hashlib.sha256((self.root / "program.c").read_bytes()).hexdigest())
+        self.assertEqual(planned["inputs"]["data.txt"],
+                         hashlib.sha256((self.root / "data.txt").read_bytes()).hexdigest())
+        self.assertEqual(planned["selected_workloads"][0]["name"], "quick")
+        self.assertEqual(planned["selected_workloads"][0]["exit_code"], 0)
+        self.assertEqual(planned["measurement"]["repeats"], 2)
+        self.assertEqual(planned["measurement"]["context"]["libraries"], {})
+        self.assertEqual(planned["implementation"]["running_elf"]["sha256"],
+                         hashlib.sha256(COMPILER.read_bytes()).hexdigest())
+        self.assertEqual(planned["build_config"]["compiler"]["path"], str(launcher))
+        self.assertIn(str(launcher), planned["input_scopes"]["files"])
+        self.assertEqual(sorted(p.name for p in self.root.iterdir()), before)
+        self.assertFalse(marker.exists())
+        self.assertFalse((self.root / "cache").exists())
+
+    def test_plan_never_acquires_capture_workspace_lock(self):
+        manifest, perf = self.project()
+        cache = self.root / "cache/test-project"
+        cache.mkdir(parents=True)
+        with (cache / ".lock").open("wb") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            # Use the suite's normal deadline: Debug plan also hashes the full
+            # compiler ELF. The lock stays held for the entire bounded request.
+            result = self.command("plan", manifest, "--perf", perf,
+                                  "--cache-dir", self.root / "cache")
+            self.assertEqual(json.loads(result.stdout)["paths"]["cache"], str(cache))
+        self.assertFalse((cache / "workspace").exists())
+
+    def test_plan_is_stable_and_declares_glob_membership_for_new_sources(self):
+        manifest, perf = self.project()
+        manifest.write_text(MANIFEST.replace('["program.c"]', '["*.c"]'))
+        first = self.plan(manifest, perf)
+        self.assertEqual(first, self.plan(manifest, perf))
+        self.assertIn(str(self.root), first["input_scopes"]["directories"])
+        (self.root / "new.c").write_text("/* newly matching transitive source */\n")
+        second = self.plan(manifest, perf)
+        self.assertIn("new.c", second["sources"])
+        self.assertIn(str(self.root / "new.c"), second["input_scopes"]["files"])
+        (self.root / "program.c").write_text("/* changed source, same declared path */\n")
+        self.assertNotEqual(first["sources"]["program.c"],
+                            self.plan(manifest, perf)["sources"]["program.c"])
+        self.assertFalse((self.root / "cache").exists())
+
+    def test_plan_dependency_resources_and_default_valgrind_scope_are_explicit(self):
+        manifest, perf = self.project()
+        resources = self.root / "provider"
+        resources.mkdir()
+        header = resources / "header.h"
+        header.write_text("#define VALUE 1\n")
+        manifest.write_text(MANIFEST.replace('[build]', '[build]\ndependencies = ["provider"]\ntools = ["sh"]'))
+        first = self.plan(manifest, perf)
+        self.assertIn(str(resources), first["input_scopes"]["directories"])
+        self.assertEqual(first["build_config"]["dependencies"][str(header)],
+                         hashlib.sha256(header.read_bytes()).hexdigest())
+        self.assertIn(first["build_config"]["tools"]["sh"]["path"],
+                      first["input_scopes"]["files"])
+        header.write_text("#define VALUE 2\n")
+        self.assertNotEqual(first["build_config"]["dependencies"],
+                            self.plan(manifest, perf)["build_config"]["dependencies"])
+        environment = dict(os.environ)
+        environment.pop("VALGRIND_LIB", None)
+        unscoped = self.plan(manifest, perf, "--collector", "callgrind", "--valgrind", perf,
+                             env=environment)
+        self.assertEqual(unscoped["collector_runtime"]["provider_scope"], "incomplete")
+        self.assertFalse(unscoped["collector_runtime"]["closure_complete"])
+        engine = resources / "callgrind-fixture"
+        engine.write_text("collector engine contents\n")
+        environment["VALGRIND_LIB"] = str(resources)
+        scoped = self.plan(manifest, perf, "--collector", "callgrind", "--valgrind", perf,
+                           env=environment)
+        self.assertEqual(scoped["collector_runtime"]["provider_scope"], "explicit")
+        self.assertFalse(scoped["collector_runtime"]["closure_complete"])
+        self.assertEqual(scoped["collector_runtime"]["environment"]["VALGRIND_LIB"], str(resources))
+        self.assertEqual(scoped["measurement"]["collector"]["engines"][engine.name],
+                         hashlib.sha256(engine.read_bytes()).hexdigest())
+
+    def test_plan_native_toml_json_selection_and_profile_semantics_match(self):
+        manifest, perf = self.project()
+        first = self.plan(manifest, perf, "--profile", "runtime", "--repeats", 5)
+        equivalent = self.write("juice.json", first["manifest"])
+        second = self.plan(equivalent, perf, "--profile", "runtime", "--repeats", 5)
+        for field in ("manifest", "sources", "inputs", "selected_workloads", "build_config", "measurement"):
+            self.assertEqual(first[field], second[field])
+        self.assertIn("event_group", first["measurement"]["collector"])
+        self.assertIn("scheduling_policy", first["measurement"]["context"])
+        self.command("plan", manifest, "--perf", perf, "--workload", "absent", code=2)
+        self.command("plan", manifest, "--name", "not-allowed", code=2)
+        self.command("plan", manifest, "--output", self.root / "not-allowed.json", code=2)
+        self.assertFalse((self.root / "cache").exists())
+
+    def test_plan_preserves_provider_symlink_paths_for_mutation_watches(self):
+        manifest, perf = self.project()
+        resource = self.root / "sdk"
+        resource.mkdir()
+        header = resource / "header.h"
+        header.write_text("/* external provider */\n")
+        alias = self.root / "sdk-alias"
+        alias.symlink_to(resource, target_is_directory=True)
+        file_alias = self.root / "header-alias.h"
+        file_alias.symlink_to(header)
+        manifest.write_text(MANIFEST.replace('[build]',
+                            '[build]\ndependencies = ["sdk-alias", "header-alias.h"]'))
+        planned = self.plan(manifest, perf)
+        self.assertIn(str(alias), planned["input_scopes"]["directories"])
+        self.assertIn(str(resource), planned["input_scopes"]["directories"])
+        self.assertIn(str(file_alias), planned["input_scopes"]["files"])
+        self.assertIn(str(header), planned["input_scopes"]["files"])
+        self.assertEqual(planned["build_config"]["dependencies"][str(header)],
+                         hashlib.sha256(header.read_bytes()).hexdigest())
+        self.assertFalse((self.root / "cache").exists())
 
     def test_capture_build_cache_immutability_and_evidence_integrity(self):
         manifest, perf = self.project()

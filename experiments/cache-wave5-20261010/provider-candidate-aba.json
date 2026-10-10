@@ -1,0 +1,27 @@
+{
+  "baseline": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+  "candidate": "<temp>/search/libc.so.6",
+  "command": [
+    "/usr/bin/ldd",
+    "/usr/bin/true"
+  ],
+  "mutations": [
+    "ELF class 32",
+    "ELF class 64",
+    "ELF class 32"
+  ],
+  "original_libc_sha256": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+  "passed": true,
+  "restored": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+  "scope": "ldd resolution traces; no guest main or compiler execution",
+  "statuses": [
+    0,
+    0,
+    0
+  ],
+  "symlink_identity_unchanged": true,
+  "target": "<temp>/outside/candidate.so",
+  "target_inode_unchanged": true,
+  "transient": "<temp>/search/libc.so.6",
+  "version": "juice-provider-candidate-aba-v1"
+}

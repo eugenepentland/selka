@@ -1,0 +1,2 @@
+public func shared(n: int) -> int:
+    return n % 3

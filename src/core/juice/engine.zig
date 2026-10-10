@@ -2,6 +2,8 @@
 const std = @import("std");
 const key_compiler = "compiler";
 const key_correctness = "correctness";
+const key_dependencies = "dependencies";
+const workspace_name = "workspace";
 const d = @import("data.zig");
 const p = @import("platform.zig");
 const manifest = @import("manifest.zig");
@@ -21,7 +23,7 @@ fn workspace(c: *C, m: M, options: Options) !Workspace {
     const lock = try std.Io.Dir.cwd().createFile(c.io, try c.join(&.{ cache, ".lock" }), .{ .truncate = false });
     errdefer lock.close(c.io);
     try lock.lock(c.io, .exclusive);
-    const root = try c.join(&.{ cache, "workspace" });
+    const root = try c.join(&.{ cache, workspace_name });
     try c.mkdir(root);
     return .{ .cache = cache, .root = root, .project = try c.join(&.{ root, "project" }), .run = try c.join(&.{ root, "run" }), .lock = lock };
 }
@@ -74,9 +76,117 @@ fn config(c: *C, m: M, override: ?[]const u8) !V {
     return c.value(.{
         .compiler = try p.identity(c, compiler),
         .tools = tools,
-        .dependencies = try dependencies(c, m.root, d.get(b, "dependencies")),
+        .dependencies = try dependencies(c, m.root, d.get(b, key_dependencies)),
         .spec = b,
         .environment_sha256 = try p.buildEnvironment(c),
+    });
+}
+fn addPaths(c: *C, paths: *V, identities: V) !void {
+    for (try d.keys(c, identities)) |name| try d.put(c, paths, name, .null);
+}
+fn addInventory(c: *C, files: *V, root: []const u8, identities: V) !void {
+    for (try d.keys(c, identities)) |name| try d.put(c, files, try c.join(&.{ root, name }), .null);
+}
+fn globScopes(c: *C, directories: *V, root: []const u8, patterns: V) !void {
+    for (try d.items(patterns)) |pattern| {
+        const glob = try d.str(pattern);
+        const special = std.mem.indexOfAny(u8, glob, "*?[") orelse continue;
+        const slash = std.mem.lastIndexOfScalar(u8, glob[0..special], '/');
+        const prefix = if (slash) |at| glob[0..at] else "";
+        const declared = try c.join(&.{ root, prefix });
+        try d.put(c, directories, declared, .null);
+        try d.put(c, directories, try p.real(c, declared), .null);
+    }
+}
+fn dependencyScopes(c: *C, files: *V, directories: *V, root: []const u8, names: V) !void {
+    for (try d.items(names)) |name| {
+        const text = try d.str(name);
+        const declared = if (std.fs.path.isAbsolute(text)) text else try c.join(&.{ root, text });
+        const path = try p.real(c, declared);
+        if (std.Io.Dir.cwd().openDir(c.io, path, .{})) |opened| {
+            var dir = opened;
+            dir.close(c.io);
+            try d.put(c, directories, declared, .null);
+            try d.put(c, directories, path, .null);
+        } else |err| {
+            if (err != error.NotDir) return err;
+            try d.put(c, files, declared, .null);
+        }
+    }
+}
+fn pathArray(c: *C, paths: V) !V {
+    var result = d.array(c);
+    for (try d.keys(c, paths)) |path| try d.add(c, &result, d.string(path));
+    return result;
+}
+fn inputScopes(c: *C, m: M, collector: collectors.Collector, configuration: V, path: []const u8) !V {
+    var files = d.object();
+    var directories = d.object();
+    try d.put(c, &files, path, .null);
+    try d.put(c, &files, try p.real(c, c.self), .null);
+    try addInventory(c, &files, m.root, m.sources);
+    try addInventory(c, &files, m.root, m.inputs);
+    try addPaths(c, &files, d.get(configuration, key_dependencies));
+    try d.put(c, &files, try d.str(d.get(d.get(configuration, key_compiler), "path")), .null);
+    for (try d.keys(c, d.get(configuration, "tools"))) |name| {
+        try d.put(c, &files, try d.str(d.get(d.get(d.get(configuration, "tools"), name), "path")), .null);
+    }
+    try d.put(c, &files, try d.str(d.get(d.get(collector.identity, "tool"), "path")), .null);
+    try globScopes(c, &directories, m.root, d.get(m.data, "sources"));
+    try globScopes(c, &directories, m.root, d.get(m.data, "inputs"));
+    try dependencyScopes(c, &files, &directories, m.root, d.get(d.get(m.data, "build"), key_dependencies));
+    const lib = d.get(collector.extra, "VALGRIND_LIB");
+    if (lib != .null) try d.put(c, &directories, try d.str(lib), .null);
+    return c.value(.{ .files = try pathArray(c, files), .directories = try pathArray(c, directories) });
+}
+fn collectorRuntime(c: *C, collector: collectors.Collector) !V {
+    var required = d.array(c);
+    try d.add(c, &required, d.string("Declare collector executable loader/libraries and all runtime providers in the external closed contract."));
+    const explicit_lib = d.get(collector.extra, "VALGRIND_LIB") != .null;
+    if (!std.mem.eql(u8, collector.kind, "perf") and !explicit_lib) {
+        try d.add(c, &required, d.string("Default Valgrind engine, preload, suppression and support resources are not inventoried; declare the complete installation."));
+    }
+    return c.value(.{
+        .environment = collector.extra,
+        .provider_scope = if (explicit_lib) "explicit" else "incomplete",
+        .closure_complete = false,
+        .required_resources = required,
+    });
+}
+/// Inspect native contracts and tool identities without building, locking or creating a workspace.
+pub fn plan(c: *C, m: M, collector: collectors.Collector, options: Options, manifest_path: []const u8) d.Error!V {
+    return planImpl(c, m, collector, options, manifest_path) catch |err| d.failure(c, err);
+}
+fn planImpl(c: *C, m: M, collector: collectors.Collector, options: Options, manifest_path: []const u8) !V {
+    if (options.repeats < 2 or options.repeats > 30) return c.fail("plan requires 2..30 repeats");
+    const selected = try manifest.select(c, m, options.tier, options.workloads);
+    const configuration = try config(c, m, options.compiler);
+    const cache = try c.join(&.{ try p.absolute(c, options.cache), try d.str(d.get(m.data, "name")) });
+    const project = try c.join(&.{ cache, workspace_name, "project" });
+    const run = try c.join(&.{ cache, workspace_name, "run" });
+    const path = try p.real(c, manifest_path);
+    const self = try p.real(c, c.self);
+    return c.value(.{
+        .version = "juice-plan-v1",
+        .identity_scheme = native_id,
+        .manifest_path = path,
+        .root = m.root,
+        .manifest = m.data,
+        .sources = m.sources,
+        .inputs = m.inputs,
+        .selected_workloads = selected,
+        .build_config = configuration,
+        .implementation = .{ .embedded_identity = implementationIdentity(), .running_elf = .{ .path = self, .sha256 = try c.fileHash(self) } },
+        .measurement = .{
+            .repeats = options.repeats,
+            .static = options.static,
+            .collector = collector.identity,
+            .context = try collectors.context(c, collector, run, d.object()),
+            .libraries_status = "unavailable before build; validate retained executable and declared runtime providers",
+        },
+        .paths = .{ .cache = cache, .project = project, .run = run },
+        .input_scopes = try inputScopes(c, m, collector, configuration, path),
+        .collector_runtime = try collectorRuntime(c, collector),
     });
 }
 const Build = struct { stored: []const u8, record: V };

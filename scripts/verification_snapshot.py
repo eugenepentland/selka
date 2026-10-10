@@ -13,6 +13,7 @@ the coordinator must discard a publication if the final check fails.
 from __future__ import annotations
 
 import copy
+from collections.abc import Iterable
 import ctypes
 from dataclasses import dataclass, field
 import hashlib
@@ -34,6 +35,8 @@ class SnapshotError(RuntimeError):
 
 
 _CHUNK_SIZE = 1 << 20
+_MAX_MEMBERSHIP_ROOTS = 1024
+_MAX_MEMBERSHIP_ENTRIES = 65536
 _MODIFY = 0x00000002
 _ATTRIB = 0x00000004
 _CLOSE_WRITE = 0x00000008
@@ -59,11 +62,17 @@ class _Watch:
     names: set[bytes] = field(default_factory=set)
     scopes: set[tuple[str, bool]] = field(default_factory=set)
     file: bool = False
+    include_hidden: bool = False
+    membership: bool = False
 
     def relevant(self, name: bytes, mask: int) -> bool:
         if not name:
             return True
         if name in self.names:
+            return True
+        if self.membership:
+            return True
+        if self.include_hidden and self.scopes:
             return True
         text = os.fsdecode(name)
         if text.startswith("."):
@@ -77,7 +86,7 @@ class _Watch:
 
 
 class _Inotify:
-    def __init__(self) -> None:
+    def __init__(self, include_hidden: bool = False) -> None:
         if sys.platform != "linux":
             raise SnapshotError("verification snapshots require Linux inotify")
         try:
@@ -95,6 +104,7 @@ class _Inotify:
         self.paths: dict[Path, int] = {}
         self.dirty = False
         self.failure: str | None = None
+        self.include_hidden = include_hidden
 
     def add(self, path: Path, *, directory: bool) -> _Watch:
         if path in self.paths:
@@ -103,7 +113,7 @@ class _Inotify:
         wd = self.libc.inotify_add_watch(self.fd, os.fsencode(path), mask)
         if wd < 0:
             raise SnapshotError(f"cannot watch {path}: {os.strerror(ctypes.get_errno())}")
-        watch = self.watches.setdefault(wd, _Watch())
+        watch = self.watches.setdefault(wd, _Watch(include_hidden=self.include_hidden))
         self.paths[path] = wd
         watch.file = watch.file or not directory
         return watch
@@ -173,14 +183,27 @@ def _directory_identity(value: os.stat_result) -> tuple[int, ...]:
 class Snapshot:
     """Watch and stream-hash declared inputs until the context is released.
 
-    identity is a JSON-serializable content identity, independent of timestamps.
+    identity is a JSON-serializable content identity. File recipes do not bind
+    timestamps; optional membership scopes bind direct file metadata too, so
+    changed search candidates invalidate reuse without hashing unrelated files.
     unchanged() permanently rejects observed mutations, including restored bytes
     and mtimes (ABA). Missing required inputs and watcher errors raise SnapshotError.
     Directory symlinks within a recursive recipe are not traversed, matching
     input_manifest's os.walk(followlinks=False); a declared base symlink is followed.
+    include_hidden also inventories dot files and Python cache files, for native
+    experiment contracts. That mode rejects directory symlinks inside recursive
+    scopes: their external contents need an explicit, independently watched scope.
+    directory_membership inventories only immediate entries, including hidden
+    names, resolving child aliases without traversing directory targets or hashing
+    contents. File alias targets are watched even if the loader currently rejects
+    them: their later compatibility may change provider selection. Missing roots
+    are allowed and watched through their nearest existing ancestor. Membership
+    identities include file metadata; actual provider bytes need explicit inputs.
     """
 
-    def __init__(self, root: Path, recipes: list[str], extra_files: list[Path] | None = None) -> None:
+    def __init__(self, root: Path, recipes: list[str], extra_files: list[Path] | None = None,
+                 *, include_hidden: bool = False,
+                 directory_membership: Iterable[Path] = ()) -> None:
         self._requested_root = Path(root).absolute()
         self.recipes = list(recipes)
         self.extra_files = list(extra_files or ())
@@ -189,6 +212,13 @@ class Snapshot:
         self._links: dict[str, str] = {}
         self._identity: dict | None = None
         self._entered = False
+        self.include_hidden = include_hidden
+        self.directory_membership = []
+        for path in directory_membership:
+            if len(self.directory_membership) >= _MAX_MEMBERSHIP_ROOTS:
+                raise SnapshotError("too many directory membership roots")
+            self.directory_membership.append(self._input_path(path))
+        self._missing: set[Path] = set()
 
     @property
     def identity(self) -> dict:
@@ -200,7 +230,7 @@ class Snapshot:
         if self._entered:
             raise SnapshotError("a snapshot cannot be entered more than once")
         self._entered = True
-        self._watcher = _Inotify()
+        self._watcher = _Inotify(self.include_hidden)
         try:
             self.root = self._resolve(self._requested_root)
             if not self.root.is_dir():
@@ -230,8 +260,14 @@ class Snapshot:
                 if path != actual:
                     item["resolved"] = self._label(actual)
                 files.append(item)
+            membership = [self._membership(path) for path in
+                          sorted(set(self.directory_membership), key=str)]
             self._identity = {"format": 1, "recipes": self.recipes, "files": files,
                               "symlinks": dict(sorted(self._links.items()))}
+            if self.directory_membership:
+                self._identity["directory_membership"] = membership
+            if self.include_hidden:
+                self._identity["include_hidden"] = True
             if not self.unchanged():
                 raise SnapshotError("declared inputs changed while constructing the snapshot")
             return self
@@ -272,7 +308,7 @@ class Snapshot:
             self._watcher.dirty = True
             raise SnapshotError(f"input changed while watches were installed: {path}")
 
-    def _resolve(self, path: Path, links: int = 0) -> Path:
+    def _resolve(self, path: Path, links: int = 0, *, allow_missing: bool = False) -> Path | None:
         if links > 40:
             raise SnapshotError(f"too many symlinks in declared input: {path}")
         current = Path(path.anchor)
@@ -282,10 +318,20 @@ class Snapshot:
             if name == "..":
                 current = current.parent
                 continue
+            if allow_missing and not stat.S_ISDIR(current.lstat().st_mode):
+                self._watcher.add(current, directory=False)
+                self._missing.add(current.joinpath(*parts[index:]))
+                return None
             watch = self._watcher.add(current, directory=True)
             watch.names.add(os.fsencode(name))
             candidate = current / name
-            before = candidate.lstat()
+            try:
+                before = candidate.lstat()
+            except FileNotFoundError:
+                if not allow_missing:
+                    raise
+                self._missing.add(candidate)
+                return None
             self._observe(candidate, before)
             if stat.S_ISLNK(before.st_mode):
                 target = os.readlink(candidate)
@@ -295,9 +341,64 @@ class Snapshot:
                 destination = Path(target)
                 if not destination.is_absolute():
                     destination = current / destination
-                return self._resolve(destination.joinpath(*parts[index + 1:]), links + 1)
+                return self._resolve(destination.joinpath(*parts[index + 1:]), links + 1,
+                                     allow_missing=allow_missing)
             current = candidate
         return current
+
+    def _membership(self, path: Path) -> dict:
+        item = {"path": self._label(path)}
+        actual = self._resolve(path, allow_missing=True)
+        if actual is None:
+            return {**item, "status": "missing"}
+        if path != actual:
+            item["resolved"] = self._label(actual)
+        metadata = actual.lstat()
+        self._observe(actual, metadata)
+        if not stat.S_ISDIR(metadata.st_mode):
+            self._watcher.add(actual, directory=False)
+            return {**item, "status": "not-directory", "metadata": list(_file_identity(metadata))}
+        # Install the direct watch before even the first enumeration. Every name
+        # is relevant, but no child directory or directory alias target is traversed.
+        self._watcher.add(actual, directory=True).membership = True
+        entries = []
+        with os.scandir(actual) as directory:
+            for entry in directory:
+                if len(entries) >= _MAX_MEMBERSHIP_ENTRIES:
+                    raise SnapshotError(f"too many directory membership entries: {path}")
+                value = entry.stat(follow_symlinks=False)
+                row = {"name": entry.name, "kind": stat.S_IFMT(value.st_mode)}
+                if stat.S_ISDIR(value.st_mode):
+                    # Nested writes change directory times and do not alter a
+                    # direct loader search. Bind permissions, not those times.
+                    row["metadata"] = [stat.S_IMODE(value.st_mode), value.st_uid, value.st_gid]
+                else:
+                    row["metadata"] = list(_file_identity(value))
+                if stat.S_ISLNK(value.st_mode):
+                    row["target"] = os.readlink(actual / entry.name)
+                    if _file_identity((actual / entry.name).lstat()) != _file_identity(value):
+                        raise SnapshotError(f"membership alias changed during listing: {entry.name}")
+                    row["resolved_target"] = self._membership_alias(actual / entry.name)
+                entries.append(row)
+        item.update(status="directory", entries=sorted(entries, key=lambda entry: entry["name"]),
+                    metadata=[stat.S_IMODE(metadata.st_mode), metadata.st_uid, metadata.st_gid])
+        return item
+
+    def _membership_alias(self, path: Path) -> dict:
+        # Watching only link text misses writes to an external candidate target:
+        # an incompatible ELF may become loadable during work, then be restored.
+        actual = self._resolve(path, allow_missing=True)
+        if actual is None:
+            return {"status": "missing"}
+        value = actual.lstat()
+        self._observe(actual, value)
+        if stat.S_ISDIR(value.st_mode):
+            metadata = [stat.S_IMODE(value.st_mode), value.st_uid, value.st_gid]
+        else:
+            self._watcher.add(actual, directory=False)
+            metadata = list(_file_identity(value))
+        return {"status": "present", "path": self._label(actual),
+                "kind": stat.S_IFMT(value.st_mode), "metadata": metadata}
 
     def _required_file(self, path: Path) -> Path:
         actual = self._resolve(path)
@@ -335,11 +436,11 @@ class Snapshot:
             ordered = sorted(entries, key=lambda entry: entry.name)
         for entry in ordered:
             name = entry.name
-            if name.startswith("."):
+            if not self.include_hidden and name.startswith("."):
                 continue
             logical = base / name
             if entry.is_symlink():
-                if name.endswith(".pyc") or not name.endswith(suffix):
+                if (not self.include_hidden and name.endswith(".pyc")) or not name.endswith(suffix):
                     continue
                 # Classify under watched target parents, including a target that
                 # is a directory today but could be replaced with a matching file.
@@ -348,9 +449,11 @@ class Snapshot:
             else:
                 is_directory = entry.is_dir(follow_symlinks=False)
             if is_directory:
-                if recursive and name != "__pycache__" and not entry.is_symlink():
+                if recursive and self.include_hidden and entry.is_symlink():
+                    raise SnapshotError(f"inclusive recursive scope contains a directory symlink: {logical}")
+                if recursive and (self.include_hidden or name != "__pycache__") and not entry.is_symlink():
                     found.extend(self._expand(logical, suffix, True))
-            elif not name.endswith(".pyc") and name.endswith(suffix):
+            elif (self.include_hidden or not name.endswith(".pyc")) and name.endswith(suffix):
                 self._required_file(logical)
                 found.append(logical)
         return found
@@ -380,6 +483,15 @@ class Snapshot:
         if self._watcher is None or self._identity is None:
             raise SnapshotError("snapshot is not active")
         clean = self._watcher.drain()
+        for path in self._missing:
+            try:
+                path.lstat()
+            except (FileNotFoundError, NotADirectoryError):
+                continue
+            except OSError as error:
+                self._watcher.dirty = True
+                raise SnapshotError(f"cannot revalidate absent membership {path}: {error}") from error
+            self._watcher.dirty = True
         for path, (directory, identity) in self._paths.items():
             try:
                 current = path.lstat()

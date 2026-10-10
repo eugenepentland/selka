@@ -1,0 +1,49 @@
+{
+  "version": "wave5-qualified-evidence-v1",
+  "success": true,
+  "performance_core": {
+    "report": "native-perf-04/results.json",
+    "selected_successful_checks": [
+      "cold",
+      "warm",
+      "private-edit",
+      "private-revert",
+      "shared-edit",
+      "shared-revert",
+      "context-repeats",
+      "context-warm",
+      "threshold-pass",
+      "threshold-fail",
+      "forced-fresh",
+      "corrupt-record"
+    ],
+    "whole_attempt_success": false,
+    "excluded_case": "Selka fixture omitted libpthread; corrected and qualified independently in native-perf-05"
+  },
+  "selka": {
+    "report": "native-perf-05/results.json",
+    "selected_successful_checks": [
+      "selka-cold",
+      "selka-dynamic-providers",
+      "selka-warm"
+    ]
+  },
+  "cost": {
+    "report": "cost-native/summary.json",
+    "invocations": 23
+  },
+  "gate": {
+    "report": "verification.json",
+    "native_passed": 2650,
+    "build_steps_passed": 121,
+    "groups": 41,
+    "required_actions": 85
+  },
+  "report_sha256": {
+    "native-perf-04/results.json": "6f3ce4705bb7928e91d1d1fd16bb746252fc305161548831b79cd385e69bc358",
+    "native-perf-05/results.json": "d79459e324b88dc4817f0e835bbda7102bc1dd2955633412dd15fd259eeb7276",
+    "cost-native/summary.json": "4c059a78f4399c391f2b29408f7b6c74b51e9ee6f178b1ae847848987dd9d847",
+    "verification.json": "e70f7e726fd552f804d40ed0c465857efcb50ca9fc72f6dc39b7fc0e23643853",
+    "qualified-inputs.json": "2c8dac4dec9fd51accb432c19c263465851ff6a419f62c808e5f000dd563e550"
+  }
+}

@@ -386,7 +386,15 @@ fn linkEmittedCached(init: std.process.Init, module: *ir.Module, unit: Unit, opt
     stages.nanoseconds.linker = outcome.counts.link_ns;
     if (emission.cost_report) |measured| {
         var final = measured;
-        const remarks = try driver.optimizationRemarks(allocator, init.io, init.environ_map, .{ .zig = options.zig, .work = options.cache, .output = "", .mode = options.mode, .links = &.{}, .units = emission.units });
+        const remarks = try driver.optimizationRemarks(allocator, init.io, init.environ_map, .{
+            .zig = options.zig,
+            .work = options.cache,
+            .output = "",
+            .mode = options.mode,
+            .links = &.{},
+            .units = emission.units,
+            .verify = options.show.verify_cache,
+        });
         if (remarks.yaml) |yaml| cost_remarks.apply(&final, yaml);
         try cost.llvmStats(allocator, report, final.totals, remarks);
         outcome.counts.processes += remarks.processes;
@@ -409,7 +417,22 @@ pub fn emittedWithScratch(allocator: std.mem.Allocator, scratch: std.mem.Allocat
     return emittedCached(.{ .result = allocator, .scratch = scratch }, module, unit, options, null, report);
 }
 
-const StageContext = struct { storage: ?*stage_store.Store, io: std.Io, lanes: usize, metrics: *stage_metrics.Report, demand: ?*@import("demand_ir.zig").Context = null };
+/// Use existing checked compiler stages and exact static queries without a build receipt.
+pub fn emittedQuery(memory: QueryMemory, module: *ir.Module, unit: Unit, options: Options, query: QueryContext, report: *std.ArrayList(u8)) Error!Emission {
+    return emittedCached(.{ .result = memory.arena, .scratch = memory.backing }, module, unit, options, .{
+        .storage = if (query.fresh) null else query.store,
+        .io = query.io,
+        .lanes = 1,
+        .metrics = query.metrics,
+        .queries = query.cost,
+    }, report);
+}
+/// Returned IR lives in arena; transient work uses backing.
+pub const QueryMemory = struct { arena: std.mem.Allocator, backing: std.mem.Allocator };
+/// Borrowed compiler stores and current invocation counters.
+pub const QueryContext = struct { store: *stage_store.Store, io: std.Io, metrics: *stage_metrics.Report, cost: *@import("cost_query.zig").Cache, fresh: bool = false };
+
+const StageContext = struct { queries: ?*@import("cost_query.zig").Cache = null, storage: ?*stage_store.Store, io: std.Io, lanes: usize, metrics: *stage_metrics.Report, demand: ?*@import("demand_ir.zig").Context = null };
 
 const Memory = struct { result: std.mem.Allocator, scratch: std.mem.Allocator };
 
@@ -454,7 +477,16 @@ fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Option
     } else if (optimized) try passes.runWithScratch(allocator, scratch, module, mode) else try passes.debugWithScratch(allocator, scratch, module);
     if (stage) |s| s.metrics.nanoseconds.optimizer = stage_metrics.elapsed(s.io, optimizer_start);
     if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);
-    const measured = if (options.show.stats) try cost.measure(allocator, module, &result, null) else null;
+    const measured = if (!options.show.stats) null else if (stage != null and stage.?.queries != null)
+        stage.?.queries.?.measure(allocator, module, &result, locator(&unit.src)) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InvalidQuery => {
+                try report.appendSlice(allocator, "error[E_CORE_CACHE]: cached static cost differs from fresh measurement\n");
+                return error.InvalidIr;
+            },
+        }
+    else
+        try cost.measure(allocator, module, &result, null);
     if (measured) |snapshot| try cost.stats(allocator, report, snapshot.totals);
     // One summary of the final IR serves every unit a debug build emits.
     const summaries = result.emission.effects orelse try @import("effects.zig").analyze(allocator, module);

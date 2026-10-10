@@ -1,0 +1,13 @@
+juice-cache: capture alpha
+build-slot: gate slot 1, FIFO ticket 82 after 0s
+juice: alpha (perf, 2 samples)
+/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/cache/native/wave5-alpha/records/capture-2ajzsgtn/record.json
+juice-cache: capture beta
+build-slot: gate slot 1, FIFO ticket 83 after 0s
+juice: beta (perf, 2 samples)
+/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/cache/native/wave5-beta/records/capture-7f4y4p82/record.json
+juice-cache: capture gamma
+build-slot: gate slot 1, FIFO ticket 84 after 0s
+juice: gamma (perf, 2 samples)
+/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/cache/native/wave5-gamma/records/capture-8q60_jm1/record.json
+{"complete": true, "counts": {"admissions": 3, "executed": 3, "reused": 0}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-04/forced-fresh.json", "success": true}

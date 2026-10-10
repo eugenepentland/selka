@@ -1,0 +1,2 @@
+{"complete": false, "counts": {"admissions": 0, "executed": 0, "reused": 0}, "report": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-01/cold.json", "success": false}
+juice-cache: interrupted; incomplete captures cannot be reused

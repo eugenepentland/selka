@@ -1,0 +1,41 @@
+{
+  "adapter": "native",
+  "build": {
+    "command": [
+      "/bin/sh",
+      "{root}/build.sh",
+      "{compiler}",
+      "/usr/bin/ld",
+      "{root}",
+      "{binary}",
+      "{root}"
+    ],
+    "compiler": "/usr/bin/as",
+    "dependencies": [],
+    "tools": [
+      "/bin/sh",
+      "/usr/bin/ld",
+      "size",
+      "nm",
+      "objdump",
+      "ldd"
+    ]
+  },
+  "name": "wave5-gamma",
+  "sources": [
+    "build.sh",
+    "work.S",
+    "step.inc"
+  ],
+  "version": 1,
+  "workloads": [
+    {
+      "expected_stdout": "!\n",
+      "family": "synthetic-static-counting",
+      "name": "gamma",
+      "timeout_seconds": 10,
+      "unit": "completed scenario",
+      "units": 1
+    }
+  ]
+}

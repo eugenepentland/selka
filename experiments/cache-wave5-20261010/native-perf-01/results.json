@@ -1,0 +1,38 @@
+{
+  "checks": {},
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/juice_cache.py",
+        "capture",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-01/suite.json",
+        "--cache-dir",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-01/cache",
+        "--report",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-01/cold.json",
+        "--repeats",
+        "3",
+        "--compiler",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang"
+      ],
+      "expected_status": 0,
+      "label": "cold",
+      "log": "cold.log",
+      "status": 130
+    }
+  ],
+  "compiler": {
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+    "sha256": "92a7c639f36ae748bfc7f90fc860e9b85da341dbef2f5c5b6829ae4803fdec66"
+  },
+  "error": "cold returned 130; see /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/experiments/cache-wave5-20261010/native-perf-01/cold.log",
+  "output_directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/experiments/cache-wave5-20261010/native-perf-01",
+  "removed_environment_variables": [],
+  "reports": {},
+  "scope": "real native perf counting, workload reuse and invalidation; no elapsed-time claim",
+  "success": false,
+  "version": "juice-wave5-native-qualification-v1",
+  "work_directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave5/native-qualification-01"
+}

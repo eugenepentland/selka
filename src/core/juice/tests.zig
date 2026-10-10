@@ -50,6 +50,22 @@ test "Juice native manifest syntax and normalization fail closed" {
     try t.expectError(error.InvalidExperiment, command.parse(&c, &.{ "compare", "a", "b", "--typo", "value" }));
     try t.expectError(error.InvalidExperiment, d.positive(.{ .float = std.math.nan(f64) }));
 }
+// spec: NEW-CORE-JUICE-PLAN-1
+test "Juice plan parses read-only selection and refuses capture or comparison controls" {
+    const plan_name = "plan";
+    const manifest_name = "input.toml";
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    var c = try context(arena.allocator());
+    const parsed = try command.parse(&c, &.{ plan_name, manifest_name, "--workload", "first", "--workload", "second", "--repeats", "5", "--profile", "runtime", "--static" });
+    try t.expectEqualStrings(plan_name, parsed.command);
+    try t.expectEqual(@as(usize, 2), (try d.items(d.get(parsed.options, "workload"))).len);
+    try t.expectEqualStrings("5", command.option(parsed, "repeats", ""));
+    try t.expect(d.equal(d.get(parsed.options, "static"), .{ .bool = true }));
+    try t.expectError(error.InvalidExperiment, command.parse(&c, &.{ plan_name, manifest_name, "--name", "capture" }));
+    try t.expectError(error.InvalidExperiment, command.parse(&c, &.{ plan_name, manifest_name, "--output", "capture.json" }));
+    try t.expectError(error.InvalidExperiment, command.parse(&c, &.{ plan_name, manifest_name, "--fail-above", "101" }));
+}
 fn fixture(c: *d.Context, name: []const u8, count: f64) !d.Value {
     const metrics = try d.summary(c, &.{ count, count, count });
     const cell = try c.value(.{
