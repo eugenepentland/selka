@@ -280,8 +280,14 @@ const extract_value_line = "  {s} = extractvalue {s} {s}, {d}\n";
 const binary_line = "  {s} = {s} {s} {s}, {s}\n";
 
 /// Render `module` as one LLVM IR module, including the C `main` entry.
+/// Scratch uses the caller's allocator; arena callers retain its backing pages.
 pub fn emitModule(allocator: std.mem.Allocator, module: *const ir.Module, options: Options) Error![]u8 {
-    return render(allocator, module, options, null);
+    return emitModuleWithScratch(allocator, allocator, module, options);
+}
+
+/// Retain only the completed module in `allocator`; release scratch to `backing`.
+pub fn emitModuleWithScratch(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: Options) Error![]u8 {
+    return render(allocator, backing, module, options, null);
 }
 
 /// Functions and cross-unit ABI decisions for one independent LLVM module.
@@ -294,12 +300,21 @@ pub const Selection = struct {
     constants: *const emit_constants.Catalog,
 };
 
-/// Emit only selected functions or the entry, with on-demand dependency declarations.
-pub fn emitUnit(allocator: std.mem.Allocator, module: *const ir.Module, options: Options, selection: Selection) Error![]u8 {
-    return render(allocator, module, options, selection);
+/// Retain only the completed unit in `allocator`; release scratch to `backing`.
+pub fn emitUnitWithScratch(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: Options, selection: Selection) Error![]u8 {
+    return render(allocator, backing, module, options, selection);
 }
 
-fn render(allocator: std.mem.Allocator, module: *const ir.Module, given: Options, selection: ?Selection) Error![]u8 {
+fn render(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, given: Options, selection: ?Selection) Error![]u8 {
+    // This unit's names, block bodies, metadata and normalization buffers die
+    // before linking. The caller supplies reclaiming backing independently of
+    // its result arena, so scratch pages need not live until that build ends.
+    var scratch = std.heap.ArenaAllocator.init(backing);
+    defer scratch.deinit();
+    return allocator.dupe(u8, try renderScratch(scratch.allocator(), module, given, selection));
+}
+
+fn renderScratch(allocator: std.mem.Allocator, module: *const ir.Module, given: Options, selection: ?Selection) Error![]u8 {
     var options = given;
     if (options.analysis.effects == null) {
         const summaries = try allocator.create(effects.Summaries);

@@ -1,0 +1,159 @@
+{
+  "implementation_commit": "c48cfc24b",
+  "source_position_fix_commit": "7ab53ba6a",
+  "compiler_sha256": "32f377269482a2f335d62dc2003ef540736aa79728d552a12ea0343c963b4275",
+  "runtime_optimization": "O2 (unchanged)",
+  "measurements": {
+    "matrix": "matrix.json",
+    "reserved_repeat": "reserved-edits.json",
+    "previous_memory_fixed_baseline": "baseline-191k.json",
+    "qualified_full_cold_reference": "cold-native-reference.json",
+    "object_equivalence": "object-equivalence.json"
+  },
+  "qualifications": [
+    "Synthetic namespaced copies of the reachable EDA MyLang port; all copies executed and all generated modules imported.",
+    "The full matrix used four physical P cores (CPUs 0,4,6,8) on a busy shared host. The reserved repeat used two physical P cores/four threads (CPUs 2,3,10,11); package contention and other system activity can still affect timings.",
+    "The reserved repeat retained the reachable declaration introduced in the matrix, giving 510440 lines at 32 copies versus 510436 initially. Same-length edits preserve that declaration.",
+    "The final matrix starts with empty frontend/intermediate caches and validated cold native objects from the prior prototype. Setup timings are not fully cold native build times. Native seed copying and output validation are excluded.",
+    "GNU time RSS is the largest process peak, not simultaneous process-tree or machine memory. The compiler dominates these large fixtures.",
+    "The baseline used a 16 GiB host limit; the final compiler used the default 8 GiB plus 256 MiB headroom. Baseline and final timing runs were not isolated paired comparisons."
+  ],
+  "sizes": {
+    "12": {
+      "initial_lines": 191416,
+      "reserved_repeat_lines": 191416,
+      "reserved_edit_peak_rss_gib_median": 1.2040214538574219,
+      "reserved_edit_peak_rss_gib_max": 1.2070960998535156,
+      "cold_stages_peak_rss_gib": 2.048633575439453,
+      "reserved_edit_seconds_medians": {
+        "entry_edit": 8.50548309716396,
+        "helper_edit": 6.6471423311159015,
+        "three_file_edit": 7.082791920984164
+      },
+      "loaded_matrix_seconds_medians": {
+        "cold_stages_warm_native": 22.936611457029358,
+        "unchanged": 0.012974024983122945,
+        "entry_edit": 8.058496913174167,
+        "helper_edit": 6.540569523815066,
+        "three_file_edit": 7.807736709015444
+      }
+    },
+    "32": {
+      "initial_lines": 510436,
+      "reserved_repeat_lines": 510440,
+      "reserved_edit_peak_rss_gib_median": 3.1827316284179688,
+      "reserved_edit_peak_rss_gib_max": 3.1835250854492188,
+      "cold_stages_peak_rss_gib": 4.702228546142578,
+      "reserved_edit_seconds_medians": {
+        "entry_edit": 22.57301206002012,
+        "helper_edit": 33.29258493799716,
+        "three_file_edit": 23.177110614953563
+      },
+      "loaded_matrix_seconds_medians": {
+        "cold_stages_warm_native": 131.9372373300139,
+        "unchanged": 0.031389423878863454,
+        "entry_edit": 37.0286043160595,
+        "helper_edit": 37.074205520097166,
+        "dependency_edit": 40.97784508718178,
+        "shared_helper_edit": 46.89515233109705,
+        "three_file_edit": 27.09118810086511
+      }
+    }
+  },
+  "validated_final_large_builds": 47,
+  "target_15s_met_at_510k": false,
+  "memory_191k": {
+    "previous_steady_edit_peak_gib_median": 3.2738723754882812,
+    "updated_steady_edit_peak_gib_median": 1.2040214538574219,
+    "reduction_percent": 63.22332346025406
+  },
+  "representative_510k": {
+    "seconds": 22.475437924964353,
+    "stages": {
+      "version": "stage-report-v1",
+      "nanoseconds": {
+        "frontend": 11283436209,
+        "lowering": 1093825335,
+        "optimizer": 3950800229,
+        "emission": 3804301744,
+        "native": 1849012672,
+        "linker": 113552900
+      },
+      "frontend": {
+        "checked": 4673,
+        "reused": 33029,
+        "summaries": 0,
+        "syntax_hits": 1922,
+        "syntax_misses": 1,
+        "stored": 2945,
+        "damaged": 0
+      },
+      "lowering": {
+        "reused": 23597,
+        "lowered": 1
+      },
+      "optimizer": {
+        "hits": [
+          23596,
+          23596,
+          23597,
+          23597,
+          23596,
+          23597,
+          0
+        ],
+        "misses": [
+          2,
+          2,
+          1,
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      "emission": {
+        "units": 2020,
+        "reused": 2019,
+        "rendered": 1,
+        "seeds_reused": 0,
+        "seeds_rendered": 0,
+        "workers": 4
+      },
+      "frontend_misses": [
+        0,
+        608,
+        1122,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        768,
+        2943,
+        256,
+        96,
+        0,
+        0,
+        0
+      ]
+    },
+    "peak_rss_kb": 3338072,
+    "user_s": 18.97,
+    "system_s": 3.88
+  },
+  "validation": {
+    "full_test_build_steps_passed": 91,
+    "full_test_build_steps_total": 91,
+    "tests_passed": 2253,
+    "sharded_duplicate_tests_skipped": 20842,
+    "whole_tree_guardian_checks_passed": 88,
+    "focused_cache_source_position_tests_passed": 16,
+    "full_test_log": "/home/epentland/.cache/mylang-incremental-stages-20261009/full-test-verified.log",
+    "full_test_log_sha256": "30c7790a3c8d7ba580da1fa22a8948df8aa085c21253ad1a4d80971c68e4b8d7",
+    "audited_native_objects": 775,
+    "identical_native_object_hashes": 760,
+    "edited_object_pairs_with_matching_instructions_literals_debug_and_trap_locations": 15
+  }
+}

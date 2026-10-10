@@ -1,0 +1,15 @@
+{
+  "codec_bench": {
+    "deflate_random_ns": 2747380967,
+    "deflate_alloc_random_ns": 2840173772,
+    "zstd_random_ns": 743479364,
+    "random_raw_bytes": 426670282
+  },
+  "codec_direct_bench": {
+    "deflate_random_ns": 2634237503,
+    "deflate_alloc_random_ns": 2649423797,
+    "zstd_random_ns": 749102829,
+    "random_raw_bytes": 426670282
+  },
+  "method": "Three alternating-order runs pinned CPU0 on real normal-block corpus, shared-host interference. Direct decoder validates output size and input exhaustion; baseline uses indirect readSliceAll."
+}

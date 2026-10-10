@@ -19,6 +19,7 @@
 //! missing or ambiguous remap as a miss; this module never integrates a decoded
 //! body by itself.
 const std = @import("std");
+const sources = @import("semantic_sources.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const codec = @import("persist_codec.zig");
@@ -52,6 +53,8 @@ pub const SourceBytes = struct {
     old_len: usize = 0,
     body: []const u8 = &.{},
     region: []const u8 = &.{},
+    modules: []const sources.Reference = &.{},
+    trailing: []const u8 = &.{},
 };
 
 /// Persisted payload for one checked body. It carries the complete relocatable
@@ -209,7 +212,7 @@ pub const Store = struct {
             .nodes = body.nodes,
             .statements = body.statements,
             .range = body.range,
-            .source = .{ .old_len = body.source_bytes.old_len, .body_bytes = body.source_bytes.body, .region_bytes = body.source_bytes.region },
+            .source = .{ .old_len = body.source_bytes.old_len, .body_bytes = body.source_bytes.body, .region_bytes = body.source_bytes.region, .modules = body.source_bytes.modules, .trailing_bytes = body.source_bytes.trailing },
             .meta = body.meta,
         };
     }
@@ -342,6 +345,9 @@ pub const Store = struct {
         const identity = body.meta.identity;
         if (identity.key.len == 0 or identity.key.len > self.limits.max_entry_bytes) return false;
         if (body.source_bytes.old_len == 0) return false;
+        if (body.source_bytes.trailing.len > 3 or body.source_bytes.trailing.len > body.source_bytes.old_len -| body.meta.identity.region.end) return false;
+        if (body.source_bytes.modules.len > max_declarations) return false;
+        if (!sources.valid(body.source_bytes.modules, body.source_bytes.old_len)) return false;
         if (identity.body.start > identity.body.end or identity.body.end > body.source_bytes.old_len) return false;
         if (identity.region.start > identity.region.end or identity.region.end > body.source_bytes.old_len) return false;
         if (identity.body.end - identity.body.start != body.source_bytes.body.len) return false;
@@ -400,7 +406,7 @@ pub const Store = struct {
             .nodes = entry.nodes,
             .statements = entry.statements,
             .range = entry.range,
-            .source_bytes = .{ .old_len = entry.source.old_len, .body = entry.source.body_bytes, .region = entry.source.region_bytes },
+            .source_bytes = .{ .old_len = entry.source.old_len, .body = entry.source.body_bytes, .region = entry.source.region_bytes, .modules = entry.source.modules, .trailing = entry.source.trailing_bytes },
         }) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
@@ -647,6 +653,9 @@ pub const Store = struct {
     fn validOwned(self: *Store, entry: *const owned.Entry) bool {
         if (entry.meta.identity.key.len == 0 or entry.meta.identity.key.len > self.limits.max_entry_bytes) return false;
         if (entry.source.old_len == 0) return false;
+        if (entry.source.trailing_bytes.len > 3 or entry.source.trailing_bytes.len > entry.source.old_len -| entry.meta.identity.region.end) return false;
+        if (entry.source.modules.len > max_declarations) return false;
+        if (!sources.valid(entry.source.modules, entry.source.old_len)) return false;
         if (entry.meta.identity.body.start > entry.meta.identity.body.end or entry.meta.identity.body.end > entry.source.old_len) return false;
         if (entry.meta.identity.region.start > entry.meta.identity.region.end or entry.meta.identity.region.end > entry.source.old_len) return false;
         if (entry.source.body_bytes.len != entry.meta.identity.body.end - entry.meta.identity.body.start) return false;

@@ -175,6 +175,23 @@ pub const Facts = struct {
     /// Per instruction: the list parameter whose length bounds the value; null when
     /// none was computed (unreachable, or only constants at most 0 flow in).
     bounds: []?LengthBound = &.{},
+
+    /// Retain the final tables after a temporary analysis arena is reclaimed.
+    pub fn clone(self: Facts, arena: std.mem.Allocator) Error!Facts {
+        var out = self;
+        out.ranges = try arena.dupe(?Interval, self.ranges);
+        out.aggregates.lists = try arena.dupe(ListFact, self.aggregates.lists);
+        out.aggregates.dicts = try arena.dupe(DictFact, self.aggregates.dicts);
+        out.aggregates.fields = try arena.dupe(?[]const ?Interval, self.aggregates.fields);
+        for (out.aggregates.fields) |*slot| {
+            if (slot.*) |fields| slot.* = try arena.dupe(?Interval, fields);
+        }
+        out.floats = try arena.dupe(?FloatInterval, self.floats);
+        out.reachable = try arena.dupe(bool, self.reachable);
+        out.bounds = try arena.dupe(?LengthBound, self.bounds);
+        out.counted = try arena.dupe(Counted, self.counted);
+        return out;
+    }
 };
 
 /// Dominators, reverse postorder and the block of every instruction.
@@ -316,7 +333,12 @@ pub fn normalizedRaw(f: *const ir.Function, join: ir.BlockId, phi: ir.Ref) ?ir.R
 pub const Counted = struct { loop: ir.Loop, counter: ir.Ref, start: ir.Ref, bound: ir.Ref };
 
 const Analysis = struct {
-    arena: std.mem.Allocator,
+    storage: struct {
+        /// Work storage; no allocation from this allocator escapes `analyze`.
+        scratch: std.mem.Allocator,
+        results: std.mem.Allocator,
+        field_work: std.ArrayList(?Interval) = .empty,
+    },
     f: *ir.Function,
     shape: Shape,
     facts: Facts,
@@ -719,13 +741,19 @@ pub fn valueRange(known: *const Facts, f: *const ir.Function, raw: ir.Ref) ?Inte
 
 /// Compute the facts of `f` and mark every check they rule out as `proven`.
 pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Error!Facts {
+    return analyzeWithScratch(arena, arena, f, options);
+}
+
+/// Compute facts on `arena`, using independently reclaimable work storage.
+/// The caller may reset `scratch` immediately after this returns.
+pub fn analyzeWithScratch(arena: std.mem.Allocator, scratch: std.mem.Allocator, f: *ir.Function, options: Options) Error!Facts {
     var a: Analysis = .{
-        .arena = arena,
+        .storage = .{ .scratch = scratch, .results = arena },
         .sabotage = options.sabotage,
         .returns = options.returns,
         .fields = options.fields,
         .f = f,
-        .shape = try shape(arena, f),
+        .shape = try shape(scratch, f),
         .facts = .{
             .ranges = try arena.alloc(?Interval, f.insts.items.len),
             .aggregates = .{
@@ -749,10 +777,10 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
         if (inst.op == .param and inst.data < options.params.len) a.facts.ranges[index] = options.params[@intCast(inst.data)];
     }
     try findCounted(&a);
-    a.keys = try index_keys.compute(arena, f, a.shape.rpo);
-    const changes = try arena.alloc(u8, f.insts.items.len);
+    a.keys = try index_keys.compute(scratch, f, a.shape.rpo);
+    const changes = try scratch.alloc(u8, f.insts.items.len);
     @memset(changes, 0);
-    a.element_changes = try arena.alloc(u8, f.insts.items.len);
+    a.element_changes = try scratch.alloc(u8, f.insts.items.len);
     @memset(a.element_changes, 0);
     var round: usize = 0;
     var converged = false;
@@ -795,7 +823,7 @@ pub fn analyze(arena: std.mem.Allocator, f: *ir.Function, options: Options) Erro
         @memset(a.facts.bounds, null);
         @memset(a.facts.aggregates.fields, null);
     }
-    a.facts.counted = if (converged) a.counted.items else &.{};
+    a.facts.counted = if (converged) try arena.dupe(Counted, a.counted.items) else &.{};
     return a.facts;
 }
 
@@ -818,7 +846,7 @@ fn findCounted(a: *Analysis) !void {
         if (step.op != .add or a.f.resolve(step.a) != counter) continue;
         const one = a.inst(step.b);
         if (one.op != .iconst or one.data != 1) continue;
-        try a.counted.append(a.arena, .{ .loop = loop, .counter = counter, .start = a.f.resolve(operands[1 - latch_index]), .bound = a.f.resolve(condition.b) });
+        try a.counted.append(a.storage.scratch, .{ .loop = loop, .counter = counter, .start = a.f.resolve(operands[1 - latch_index]), .bound = a.f.resolve(condition.b) });
     }
 }
 
@@ -897,7 +925,7 @@ fn listFacts(a: *Analysis) !bool {
             var capped = false;
             for (a.caps.items) |cap| capped = capped or (cap.value == counted.bound and cap.block == counted.loop.exit);
             if (!capped) {
-                try a.caps.append(a.arena, .{ .block = counted.loop.exit, .value = counted.bound, .hi = max_list_length });
+                try a.caps.append(a.storage.scratch, .{ .block = counted.loop.exit, .value = counted.bound, .hi = max_list_length });
                 changed = true;
             }
         }
@@ -1114,14 +1142,17 @@ fn recordFields(a: *Analysis, ref: ir.Ref, block: ir.BlockId) !?[]const ?Interva
     switch (i.op) {
         .record_make => {
             const operands = a.f.operands(i.data);
-            const out = try a.arena.alloc(?Interval, operands.len);
+            try a.storage.field_work.resize(a.storage.scratch, operands.len);
+            const out = a.storage.field_work.items;
             for (operands, out) |operand, *field| field.* = scalarRange(a, operand, block);
             return out;
         },
         .record_set => {
             const base = fieldsOf(a, i.a) orelse return null;
             if (i.data >= base.len) return null;
-            const out = try a.arena.dupe(?Interval, base);
+            try a.storage.field_work.resize(a.storage.scratch, base.len);
+            const out = a.storage.field_work.items;
+            @memcpy(out, base);
             out[@intCast(i.data)] = scalarRange(a, i.b, block);
             return out;
         },
@@ -1133,7 +1164,11 @@ fn recordFields(a: *Analysis, ref: ir.Ref, block: ir.BlockId) !?[]const ?Interva
                 if (joined) |out| {
                     if (out.len != table.len) return null;
                     for (out, table) |*field, other| field.* = hullOf(field.*, other);
-                } else joined = try a.arena.dupe(?Interval, table);
+                } else {
+                    try a.storage.field_work.resize(a.storage.scratch, table.len);
+                    @memcpy(a.storage.field_work.items, table);
+                    joined = a.storage.field_work.items;
+                }
             }
             return joined;
         },
@@ -1229,7 +1264,7 @@ fn recomputeAggregates(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []
                 changes[ref.index()] +|= 1;
                 // A field that keeps changing joins the unknown.
                 if (changes[ref.index()] > 8) {
-                    const widened = a.arena.dupe(?Interval, next.?) catch return false;
+                    const widened = @constCast(next.?);
                     for (widened, old.?) |*field, before| {
                         if (!std.meta.eql(field.*, before)) field.* = null;
                     }
@@ -1237,7 +1272,16 @@ fn recomputeAggregates(a: *Analysis, ref: ir.Ref, block: ir.BlockId, changes: []
                 }
             }
             if (!sameFields(old, next)) {
-                a.facts.aggregates.fields[ref.index()] = next;
+                // Keep one stable result table per record instead of retaining
+                // another allocation on every fixed-point round. Transfers use a
+                // separate buffer, so a self-referential phi still reads the old table.
+                a.facts.aggregates.fields[ref.index()] = if (next) |table| blk: {
+                    if (old) |previous| if (previous.len == table.len) {
+                        @memcpy(@constCast(previous), table);
+                        break :blk previous;
+                    };
+                    break :blk a.storage.results.dupe(?Interval, table) catch return false;
+                } else null;
                 changed = true;
             }
         },

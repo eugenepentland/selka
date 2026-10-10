@@ -52,8 +52,7 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *Catalog, src: Source, sin
             }
         },
     }
-    if (catalog.templates.store) |store| for (store.index.syntax.suffixes) |suffix| {
-        if (suffix.span.start != span.start or suffix.span.end != span.end) continue;
+    if (catalog.templates.store) |store| if (store.index.syntax.suffixes.get(span)) |suffix| {
         const element = try resolve(allocator, catalog, src, sink, childBinding(binding, suffix.base, depth + 1));
         return nominal_catalog.instantiateLengths(catalog, store.index.names.get(if (suffix.kind == .growable) "list" else "Option").?, &.{element}, &.{}, span);
     };

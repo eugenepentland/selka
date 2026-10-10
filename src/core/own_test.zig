@@ -1063,3 +1063,25 @@ test "encode borrows its text without counting, and escaping bytes retain that s
     try std.testing.expectEqualStrings("", second.stderr);
     try std.testing.expect(contains(try print.module(arena.allocator(), &escaped), "retain "));
 }
+
+// spec-case: NEW-CORE-RC-2
+test "ownership IR survives reclaiming and overwriting every function's analysis storage" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var backing = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer backing.deinit();
+    const a = arena.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var expected_module = try support.buildSource(a, forms, &refusal);
+    var actual_module = try support.buildSource(a, forms, &refusal);
+    const expected_stats = try own.run(a, &expected_module, .{ .verify = true });
+    const actual_stats = try own.runWithScratch(a, backing.allocator(), &actual_module, .{ .verify = true });
+    // The backing arena preserves freed pages until this reset, allowing a
+    // deterministic overwrite of scratch graphs, marks and counting actions.
+    _ = backing.reset(.retain_capacity);
+    @memset(try backing.allocator().alloc(u8, 4 * 1024 * 1024), 0xa5);
+    try std.testing.expectEqualDeep(expected_stats, actual_stats);
+    var failure: @import("verify_ir.zig").Failure = .{};
+    try @import("verify_ir.zig").verifyModule(a, &actual_module, &failure);
+    try std.testing.expectEqualStrings(try print.module(a, &expected_module), try print.module(a, &actual_module));
+}

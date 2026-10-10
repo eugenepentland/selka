@@ -1,0 +1,58 @@
+{
+  "full_gate": {
+    "command": "zig build test fmt-check --summary all",
+    "exit_code": 0,
+    "summary": "Build Summary: 93/93 steps succeeded; 2286/23460 tests passed (21174 skipped)",
+    "log": "logs/full-test-passed.log.gz"
+  },
+  "guardian": {
+    "command": "../guardian-zig/zig-out/bin/guardian-check all . --gate",
+    "exit_code": 0,
+    "whole_tree_checks_passed": 88,
+    "policy_or_baseline_changes": false,
+    "log": "logs/guardian-complete.log.gz"
+  },
+  "optimized_host_install": {
+    "command": "zig build -Doptimize=ReleaseFast --prefix /home/epentland/.cache/mylang-demand-artifacts-20261009/compiler-native-handles --summary all",
+    "exit_code": 0,
+    "steps_passed": 9,
+    "compiler_sha256": "9a853e8c380e9c5888003abb7d6fb2264347bb535cea2ba9b8d59f77c81e7d7c"
+  },
+  "benchmark": {
+    "builds": 40,
+    "candidate_edit_builds": 18,
+    "paired_executables_with_identical_allocated_sections": 20,
+    "byte_identical_edited_native_object_pairs": 30,
+    "all_execution_golden_and_leak_checks_passed": true,
+    "full_executable_byte_identity": false,
+    "permitted_executable_differences": "Runtime-source worktree paths in DWARF only, checked by binary_audit.py.",
+    "results": "results.json.gz"
+  },
+  "cache_recovery": {
+    "phases": [
+      "setup",
+      "native-reuse-without-llvm",
+      "repair",
+      "warm-after-repair"
+    ],
+    "fallbacks": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "all_binary_hashes_and_execution_identical": true,
+    "record": "cache-recovery.json"
+  },
+  "corrected_test_expectations": [
+    "count_test accesses runtime dependencies through Unit.dependencies after grouping fields.",
+    "damaged lowering cache regression corrupts six artifacts (one body and one header for each of three functions), then proves all three functions rebuild identically and subsequently reuse."
+  ],
+  "review_limitations": [
+    "Stage timers changed attribution for demand raw loads and final effect analysis; full wall time is the comparable speed measurement.",
+    "emission.work.llvm_loaded_bytes includes fresh text copied into output buffers but excludes later native-driver reloads.",
+    "Modular replicated EDA fixture and shared host; three edits per case do not establish a latency guarantee.",
+    "Fresh intermediate-cache setup uses preseeded native objects and remains roughly94seconds/4.78GiB at510k."
+  ],
+  "raw_artifact_root": "/home/epentland/.cache/mylang-demand-artifacts-20261009/paired-final"
+}

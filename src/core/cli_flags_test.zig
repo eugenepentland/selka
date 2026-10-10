@@ -157,6 +157,7 @@ test "no-cache builds runs and tests through a private cache it removes and publ
 }
 
 // spec: NEW-CORE-S5-REPORT-1
+// spec-case: NEW-CORE-STAGE-PACK-1
 test "report prints the cache report as one JSON line and says when a build replayed" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -172,6 +173,26 @@ test "report prints the cache report as one JSON line and says when a build repl
     try std.testing.expectEqualStrings("linked", record.object.get("program").?.string);
     try std.testing.expect(record.object.get("units").?.integer > 0);
     try std.testing.expect(record.object.get("processes").?.integer > 0);
+    const storage = record.object.get("storage").?.object;
+    try std.testing.expect(storage.get("flush_succeeded").?.bool);
+    try std.testing.expect(storage.get("flush_nanoseconds").?.integer >= 0);
+    try std.testing.expect(storage.get("reads").?.object.get("decoded_bytes").?.integer >= 0);
+    const stages = record.object.get("stages").?.object;
+    try std.testing.expectEqualStrings("stage-report-v3", stages.get("version").?.string);
+    try std.testing.expect(stages.get("lowering").?.object.get("materialized").?.integer > 0);
+    const restores = stages.get("optimizer").?.object.get("restores").?.object;
+    try std.testing.expect(restores.get("final").?.integer >= 0);
+    try std.testing.expect(restores.get("checkpoints").?.integer >= 0);
+    const misses = stages.get("frontend_misses").?.object;
+    try std.testing.expect(misses.contains("lookup") and misses.contains("retention"));
+    try std.testing.expect(stages.get("nanoseconds").?.object.get("native").?.integer > 0);
+    const frontend_phases = stages.get("nanoseconds").?.object.get("frontend_phases").?.array.items;
+    try std.testing.expect(frontend_phases.len > 0);
+    for (frontend_phases) |phase| {
+        try std.testing.expect(phase.object.get("name").?.string.len > 0);
+        try std.testing.expect(phase.object.get("nanoseconds").?.integer >= 0);
+        _ = phase.object.get("inclusive").?.bool;
+    }
     const second = try context.compiler(&.{ "run", "main.my", "--cache-dir", "cache", "--report" });
     try std.testing.expectEqual(@as(u8, 42), second.status);
     try std.testing.expect(contains(second.stderr, "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,"));
@@ -383,4 +404,26 @@ fn denyDeveloperViews(context: Context, commands: []const []const u8) !void {
             try std.testing.expect(denied.stderr.len > 0);
         }
     }
+}
+
+// spec-case: NEW-CORE-STAGE-PACK-1
+test "CLI rejects invalid stage compression with a configuration diagnostic" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.core_path, a);
+    var environment = try std.testing.environ.createMap(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_STAGE_CACHE_COMPRESSION", "invalid");
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "func main() -> int:\n    return 0\n" });
+    const source = try temporary.dir.realPathFileAlloc(std.testing.io, "app.my", a);
+    const result = try std.process.run(a, std.testing.io, .{
+        .argv = &.{ executable, "build", source, "-o", "unused-compression-test" },
+        .environ_map = &environment,
+    });
+    try std.testing.expect(result.term == .exited);
+    try std.testing.expect(result.term.exited != 0);
+    try std.testing.expect(contains(result.stderr, "MYLANG_STAGE_CACHE_COMPRESSION must be 'zlib' or 'none'"));
 }

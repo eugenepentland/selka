@@ -49,7 +49,7 @@ pub const Declaration = struct {
 };
 const Alias = struct { declaration: ast.TypeAlias, visiting: bool = false };
 const Syntax = struct {
-    suffixes: []const ast.TypeSuffix = &.{},
+    suffixes: std.AutoHashMapUnmanaged(Span, ast.TypeSuffix) = .empty,
     callbacks: std.AutoHashMapUnmanaged(usize, ast.CallbackType) = .empty,
     aliases: std.StringHashMapUnmanaged(Alias) = .empty,
     arrays: std.AutoHashMapUnmanaged(usize, ast.ArrayType) = .empty,
@@ -419,11 +419,11 @@ pub const Index = struct {
         self.budget.depth += 1;
         self.budget.work += 1;
         defer self.budget.depth -= 1;
-        for (self.syntax.suffixes) |suffix| if (suffix.span.start == span.start and suffix.span.end == span.end) {
+        if (self.syntax.suffixes.get(span)) |suffix| {
             const arguments = try ctx.allocator.alloc(Expression, 1);
             arguments[0] = try self.expression(suffix.base, parameters);
             return self.preludeExpression(if (suffix.kind == .growable) "list" else "Option", arguments, &.{suffix.base}, span);
-        };
+        }
         if (self.syntax.callbacks.get(span.start)) |syntax| return self.callbackExpression(syntax, parameters);
         if (self.syntax.tuples.get(span.start)) |syntax| return self.tupleExpression(syntax, parameters);
         if (self.syntax.arrays.get(span.start)) |syntax| return self.arrayExpression(syntax, parameters);
@@ -699,7 +699,10 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     }
     try index.checkParameters(program);
     try index.addPrelude(program);
-    index.syntax.suffixes = program.types.expressions.suffixes;
+    for (program.types.expressions.suffixes) |suffix| {
+        const found = try index.syntax.suffixes.getOrPut(allocator, suffix.span);
+        if (!found.found_existing) found.value_ptr.* = suffix;
+    }
     for (program.types.expressions.callbacks) |syntax| try index.syntax.callbacks.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.arrays) |syntax| try index.syntax.arrays.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.tuples) |syntax| try index.syntax.tuples.put(allocator, syntax.span.start, syntax);

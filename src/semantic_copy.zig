@@ -64,6 +64,8 @@ pub const RefSet = struct {
     function_values: bool = false,
     /// True when the tree indirectly invokes a callable-typed slot.
     invokes: bool = false,
+    /// Source-span collection is opt-in for ordinary body persistence.
+    sources: struct { enabled: bool = false, local: ?source.Span = null, items: std.AutoHashMapUnmanaged(source.Span, void) = .empty } = .{},
 
     /// Initialize an accumulator tied to one allocator.
     pub fn init(allocator: std.mem.Allocator) RefSet {
@@ -73,9 +75,17 @@ pub const RefSet = struct {
     pub fn deinit(self: *RefSet) void {
         self.functions.deinit(self.allocator);
         self.records.deinit(self.allocator);
+        self.sources.items.deinit(self.allocator);
     }
     /// Record one declaration reference, recursing through owned value shapes.
     pub fn collect(self: *RefSet, comptime T: type, value: T) error{OutOfMemory}!void {
+        if (T == source.Span) {
+            if (self.sources.local) |local| {
+                if (value.start >= local.start and value.end <= local.end) return;
+            }
+            if (self.sources.enabled) try self.sources.items.put(self.allocator, value, {});
+            return;
+        }
         if (T == typed.FunctionId) {
             try self.functions.put(self.allocator, @backingInt(value), {});
             return;
@@ -117,6 +127,11 @@ pub fn collectRefs(allocator: std.mem.Allocator, function: typed.Function, nodes
     };
 }
 
+/// The first exact identity rejected by a checked-tree relocation.
+pub const Failure = union(enum) { none, span: source.Span, node: usize, statement: usize, function: usize, record: usize };
+/// Number of relocation failure tags, including the unset slot.
+pub const failure_count = std.meta.tags(std.meta.Tag(Failure)).len;
+
 /// Copy owned metadata, then relocate spans, local table identities and
 /// declaration/catalog references into the fresh compilation.
 pub const Mapper = struct {
@@ -137,70 +152,81 @@ pub const Mapper = struct {
     record_remaps: []const RecordRemap = &.{},
     /// Return an independently owned function subtree without borrowing cached storage.
     pub fn copy(self: Mapper, allocator: std.mem.Allocator, comptime T: type, input: T) Error!T {
+        var failure: Failure = .none;
+        const copied = try self.copyWithFailure(allocator, T, input, &failure);
+        return copied;
+    }
+    /// Copy as usual and identify the first invalid source or catalog reference.
+    pub fn copyWithFailure(self: Mapper, allocator: std.mem.Allocator, comptime T: type, input: T, failure: *Failure) Error!T {
         const clone: @import("ast_copy.zig").Mapper = .{};
         var output = clone.value(allocator, T, input) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
-        try self.relocate(T, &output);
+        try self.relocate(T, &output, failure);
         return output;
     }
-    fn relocate(self: Mapper, comptime T: type, value: *T) error{InvalidRelocation}!void {
-        if (T == source.Span) {
-            var low: usize = 0;
-            var high = self.segments.len;
-            while (low < high) {
-                const middle = low + (high - low) / 2;
-                if (self.segments[middle].before.start <= value.start) low = middle + 1 else high = middle;
-            }
-            if (low == 0) return error.InvalidRelocation;
-            const segment = self.segments[low - 1];
-            if (value.end < value.start or value.end > segment.before.end) return error.InvalidRelocation;
-            value.* = .{ .start = segment.after + value.start - segment.before.start, .end = segment.after + value.end - segment.before.start };
-            return;
+    fn relocateSpan(self: Mapper, value: *source.Span, failure: *Failure) error{InvalidRelocation}!void {
+        var low: usize = 0;
+        var high = self.segments.len;
+        while (low < high) {
+            const middle = low + (high - low) / 2;
+            if (self.segments[middle].before.start <= value.start) low = middle + 1 else high = middle;
         }
+        if (low == 0) return failed(failure, .{ .span = value.* });
+        const segment = self.segments[low - 1];
+        if (value.end < value.start or value.end > segment.before.end) return failed(failure, .{ .span = value.* });
+        value.* = .{ .start = segment.after + value.start - segment.before.start, .end = segment.after + value.end - segment.before.start };
+    }
+    fn relocate(self: Mapper, comptime T: type, value: *T, failure: *Failure) error{InvalidRelocation}!void {
+        if (T == source.Span) return self.relocateSpan(value, failure);
         if (T == typed.NodeId or T == typed.StatementId) {
             const before = if (T == typed.NodeId) self.before.nodes else self.before.statements;
             const after = if (T == typed.NodeId) self.after.nodes else self.after.statements;
             const id = @backingInt(value.*);
-            if (id < before.start or id >= before.end) return error.InvalidRelocation;
+            if (id < before.start or id >= before.end) return failed(failure, if (T == typed.NodeId) .{ .node = id } else .{ .statement = id });
             value.* = @fromBackingInt(after.start + id - before.start);
             return;
         }
         if (T == typed.FunctionId) {
             const id = @backingInt(value.*);
             if (self.function_remaps.len != 0) {
-                value.* = findFunction(self.function_remaps, id) orelse return error.InvalidRelocation;
+                value.* = findFunction(self.function_remaps, id) orelse return failed(failure, .{ .function = id });
                 return;
             }
-            if (id >= self.functions.len) return error.InvalidRelocation;
-            value.* = self.functions[id] orelse return error.InvalidRelocation;
+            if (id >= self.functions.len) return failed(failure, .{ .function = id });
+            value.* = self.functions[id] orelse return failed(failure, .{ .function = id });
             return;
         }
         if (T == typed.Type) {
             if (!value.isAggregate()) return;
             const index = value.recordIndex();
             if (self.record_remaps.len != 0) {
-                value.* = findRecord(self.record_remaps, index) orelse return error.InvalidRelocation;
+                value.* = findRecord(self.record_remaps, index) orelse return failed(failure, .{ .record = index });
                 return;
             }
-            if (index >= self.records.len) return error.InvalidRelocation;
-            value.* = self.records[index] orelse return error.InvalidRelocation;
+            if (index >= self.records.len) return failed(failure, .{ .record = index });
+            value.* = self.records[index] orelse return failed(failure, .{ .record = index });
             return;
         }
         switch (@typeInfo(T)) {
-            .@"struct" => inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |name, Field| try self.relocate(Field, &@field(value.*, name)),
+            .@"struct" => inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |name, Field| try self.relocate(Field, &@field(value.*, name), failure),
             .@"union" => inline for (@typeInfo(T).@"union".field_names, @typeInfo(T).@"union".field_types) |name, Field| {
-                if (std.meta.activeTag(value.*) == @field(std.meta.Tag(T), name)) try self.relocate(Field, &@field(value.*, name));
+                if (std.meta.activeTag(value.*) == @field(std.meta.Tag(T), name)) try self.relocate(Field, &@field(value.*, name), failure);
             },
-            .optional => |optional| if (value.*) |*present| try self.relocate(optional.child, present),
+            .optional => |optional| if (value.*) |*present| try self.relocate(optional.child, present, failure),
             .pointer => |pointer| {
                 if (pointer.size != .slice) @compileError("checked trees require owned slices");
-                if (pointer.child != u8) for (@constCast(value.*)) |*item| try self.relocate(pointer.child, item);
+                if (pointer.child != u8) for (@constCast(value.*)) |*item| try self.relocate(pointer.child, item, failure);
             },
-            .array => |array| for (value) |*item| try self.relocate(array.child, item),
+            .array => |array| for (value) |*item| try self.relocate(array.child, item, failure),
             .@"enum", .int, .float, .bool, .void => {},
             else => @compileError("checked field needs explicit relocation: " ++ @typeName(T)),
         }
     }
 };
+
+fn failed(failure: *Failure, detail: Failure) error{InvalidRelocation} {
+    failure.* = detail;
+    return error.InvalidRelocation;
+}
 
 /// Map every unchanged source interval, including relocated headers and imported files.
 /// Retained for callers that relocate whole-program syntax snapshots; per-function

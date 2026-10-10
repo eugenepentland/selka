@@ -1,0 +1,1273 @@
+{
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-frontend-packed-20261010/compiler-policy/bin/mylang",
+    "sha256": "9f35cb593fbd808861dc1526df6d5a041c33a53c4ab61908b5dfedc1cab3331c"
+  },
+  "timings": [
+    {
+      "lines": 191416,
+      "phase": "entry_edit",
+      "zlib": {
+        "median_s": 4.119290910894051,
+        "min_s": 4.11252354294993,
+        "max_s": 4.658818167867139,
+        "median_peak_rss_gib": 0.49481201171875,
+        "median_stages_s": {
+          "frontend": 1.050703272,
+          "lowering": 0.241089467,
+          "optimizer": 1.306700557,
+          "emission": 0.103208903,
+          "native": 1.361756349
+        },
+        "samples_s": [
+          4.658818167867139,
+          4.11252354294993,
+          4.119290910894051
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 651,
+            "reused": 13510,
+            "summaries": 12071,
+            "syntax_hits": 722,
+            "syntax_misses": 1,
+            "stored": 3,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 8856,
+            "lowered": 1,
+            "deferred": 10316,
+            "fallbacks": 0,
+            "materialized": 628,
+            "unloaded": 8229
+          },
+          "optimizer": {
+            "hits": [
+              626,
+              626,
+              627,
+              627,
+              626,
+              627,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              1,
+              1,
+              2,
+              1,
+              0
+            ],
+            "bypassed": 8229,
+            "active_functions": 628,
+            "fresh_work": 1,
+            "restores": {
+              "final": 627,
+              "checkpoints": 0
+            },
+            "final_loaded": 628
+          },
+          "emission": {
+            "units": 760,
+            "reused": 759,
+            "rendered": 1,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 760,
+              "keys_built": 1,
+              "llvm_loaded_bytes": 1034007,
+              "native_handles": 759
+            }
+          }
+        },
+        "native_compiled": 1,
+        "median_storage_reads": {
+          "packed_bytes_read": 31561918,
+          "decoded_bytes": 112379631,
+          "blocks_decoded": 784,
+          "payload_bytes_returned": 69195316,
+          "block_cache_hits": 14609
+        },
+        "median_flush_s": 0.007660605
+      },
+      "none": {
+        "median_s": 3.7254340229555964,
+        "min_s": 3.4805847899988294,
+        "max_s": 4.3901870478875935,
+        "median_peak_rss_gib": 0.4956016540527344,
+        "median_stages_s": {
+          "frontend": 1.113354659,
+          "lowering": 0.205541784,
+          "optimizer": 0.947473791,
+          "emission": 0.10022935,
+          "native": 1.293141626
+        },
+        "samples_s": [
+          4.3901870478875935,
+          3.7254340229555964,
+          3.4805847899988294
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 651,
+            "reused": 13510,
+            "summaries": 12071,
+            "syntax_hits": 722,
+            "syntax_misses": 1,
+            "stored": 3,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 8856,
+            "lowered": 1,
+            "deferred": 10316,
+            "fallbacks": 0,
+            "materialized": 628,
+            "unloaded": 8229
+          },
+          "optimizer": {
+            "hits": [
+              626,
+              626,
+              627,
+              627,
+              626,
+              627,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              1,
+              1,
+              2,
+              1,
+              0
+            ],
+            "bypassed": 8229,
+            "active_functions": 628,
+            "fresh_work": 1,
+            "restores": {
+              "final": 627,
+              "checkpoints": 0
+            },
+            "final_loaded": 628
+          },
+          "emission": {
+            "units": 760,
+            "reused": 759,
+            "rendered": 1,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 760,
+              "keys_built": 1,
+              "llvm_loaded_bytes": 1034007,
+              "native_handles": 759
+            }
+          }
+        },
+        "native_compiled": 1,
+        "median_storage_reads": {
+          "packed_bytes_read": 114959706,
+          "decoded_bytes": 114958922,
+          "blocks_decoded": 784,
+          "payload_bytes_returned": 69195316,
+          "block_cache_hits": 14609
+        },
+        "median_flush_s": 0.002361706
+      },
+      "none_time_change_percent": -9.56127878458023
+    },
+    {
+      "lines": 191416,
+      "phase": "helper_edit",
+      "zlib": {
+        "median_s": 3.729766509961337,
+        "min_s": 2.9878304798621684,
+        "max_s": 3.8830085799563676,
+        "median_peak_rss_gib": 0.4980430603027344,
+        "median_stages_s": {
+          "frontend": 1.309376715,
+          "lowering": 0.275708434,
+          "optimizer": 1.700781116,
+          "emission": 0.121086461,
+          "native": 0.221621947
+        },
+        "samples_s": [
+          2.9878304798621684,
+          3.8830085799563676,
+          3.729766509961337
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 649,
+            "reused": 13512,
+            "summaries": 12022,
+            "syntax_hits": 722,
+            "syntax_misses": 1,
+            "stored": 1,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 8856,
+            "lowered": 1,
+            "deferred": 10274,
+            "fallbacks": 0,
+            "materialized": 807,
+            "unloaded": 8050
+          },
+          "optimizer": {
+            "hits": [
+              805,
+              805,
+              806,
+              806,
+              805,
+              806,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              1,
+              1,
+              2,
+              1,
+              0
+            ],
+            "bypassed": 8050,
+            "active_functions": 807,
+            "fresh_work": 1,
+            "restores": {
+              "final": 806,
+              "checkpoints": 0
+            },
+            "final_loaded": 807
+          },
+          "emission": {
+            "units": 760,
+            "reused": 759,
+            "rendered": 1,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 760,
+              "keys_built": 1,
+              "llvm_loaded_bytes": 66220,
+              "native_handles": 759
+            }
+          }
+        },
+        "native_compiled": 1,
+        "median_storage_reads": {
+          "packed_bytes_read": 38160247,
+          "decoded_bytes": 141716471,
+          "blocks_decoded": 1002,
+          "payload_bytes_returned": 72073382,
+          "block_cache_hits": 15835
+        },
+        "median_flush_s": 0.001106894
+      },
+      "none": {
+        "median_s": 3.1325257851276547,
+        "min_s": 2.7181021908763796,
+        "max_s": 3.234947895165533,
+        "median_peak_rss_gib": 0.49736785888671875,
+        "median_stages_s": {
+          "frontend": 1.297825349,
+          "lowering": 0.230234923,
+          "optimizer": 1.215499586,
+          "emission": 0.110665557,
+          "native": 0.229065503
+        },
+        "samples_s": [
+          2.7181021908763796,
+          3.234947895165533,
+          3.1325257851276547
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 649,
+            "reused": 13512,
+            "summaries": 12022,
+            "syntax_hits": 722,
+            "syntax_misses": 1,
+            "stored": 1,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 8856,
+            "lowered": 1,
+            "deferred": 10274,
+            "fallbacks": 0,
+            "materialized": 807,
+            "unloaded": 8050
+          },
+          "optimizer": {
+            "hits": [
+              805,
+              805,
+              806,
+              806,
+              805,
+              806,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              1,
+              1,
+              2,
+              1,
+              0
+            ],
+            "bypassed": 8050,
+            "active_functions": 807,
+            "fresh_work": 1,
+            "restores": {
+              "final": 806,
+              "checkpoints": 0
+            },
+            "final_loaded": 807
+          },
+          "emission": {
+            "units": 760,
+            "reused": 759,
+            "rendered": 1,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 760,
+              "keys_built": 1,
+              "llvm_loaded_bytes": 66220,
+              "native_handles": 759
+            }
+          }
+        },
+        "native_compiled": 1,
+        "median_storage_reads": {
+          "packed_bytes_read": 145554122,
+          "decoded_bytes": 145553094,
+          "blocks_decoded": 1028,
+          "payload_bytes_returned": 72073382,
+          "block_cache_hits": 15809
+        },
+        "median_flush_s": 0.000313822
+      },
+      "none_time_change_percent": -16.012818047419096
+    },
+    {
+      "lines": 191416,
+      "phase": "three_file_edit",
+      "zlib": {
+        "median_s": 4.834878043970093,
+        "min_s": 4.624451264040545,
+        "max_s": 5.4539102769922465,
+        "median_peak_rss_gib": 0.49858856201171875,
+        "median_stages_s": {
+          "frontend": 1.156759271,
+          "lowering": 0.254003308,
+          "optimizer": 1.750064406,
+          "emission": 0.125301056,
+          "native": 1.449362109
+        },
+        "samples_s": [
+          5.4539102769922465,
+          4.834878043970093,
+          4.624451264040545
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 653,
+            "reused": 13508,
+            "summaries": 11972,
+            "syntax_hits": 720,
+            "syntax_misses": 3,
+            "stored": 5,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 8854,
+            "lowered": 3,
+            "deferred": 10231,
+            "fallbacks": 0,
+            "materialized": 991,
+            "unloaded": 7866
+          },
+          "optimizer": {
+            "hits": [
+              985,
+              985,
+              988,
+              988,
+              985,
+              988,
+              0
+            ],
+            "misses": [
+              6,
+              6,
+              3,
+              3,
+              6,
+              3,
+              0
+            ],
+            "bypassed": 7866,
+            "active_functions": 991,
+            "fresh_work": 3,
+            "restores": {
+              "final": 988,
+              "checkpoints": 0
+            },
+            "final_loaded": 991
+          },
+          "emission": {
+            "units": 760,
+            "reused": 757,
+            "rendered": 3,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 760,
+              "keys_built": 3,
+              "llvm_loaded_bytes": 1166447,
+              "native_handles": 757
+            }
+          }
+        },
+        "native_compiled": 3,
+        "median_storage_reads": {
+          "packed_bytes_read": 42143091,
+          "decoded_bytes": 163093845,
+          "blocks_decoded": 1167,
+          "payload_bytes_returned": 75035702,
+          "block_cache_hits": 17134
+        },
+        "median_flush_s": 0.009682069
+      },
+      "none": {
+        "median_s": 4.45690673799254,
+        "min_s": 3.9553752311039716,
+        "max_s": 5.094664559001103,
+        "median_peak_rss_gib": 0.4995536804199219,
+        "median_stages_s": {
+          "frontend": 1.302905887,
+          "lowering": 0.223947965,
+          "optimizer": 1.220440362,
+          "emission": 0.125431489,
+          "native": 1.513090607
+        },
+        "samples_s": [
+          5.094664559001103,
+          4.45690673799254,
+          3.9553752311039716
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 653,
+            "reused": 13508,
+            "summaries": 11972,
+            "syntax_hits": 720,
+            "syntax_misses": 3,
+            "stored": 5,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 8854,
+            "lowered": 3,
+            "deferred": 10231,
+            "fallbacks": 0,
+            "materialized": 991,
+            "unloaded": 7866
+          },
+          "optimizer": {
+            "hits": [
+              985,
+              985,
+              988,
+              988,
+              985,
+              988,
+              0
+            ],
+            "misses": [
+              6,
+              6,
+              3,
+              3,
+              6,
+              3,
+              0
+            ],
+            "bypassed": 7866,
+            "active_functions": 991,
+            "fresh_work": 3,
+            "restores": {
+              "final": 988,
+              "checkpoints": 0
+            },
+            "final_loaded": 991
+          },
+          "emission": {
+            "units": 760,
+            "reused": 757,
+            "rendered": 3,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 760,
+              "keys_built": 3,
+              "llvm_loaded_bytes": 1166447,
+              "native_handles": 757
+            }
+          }
+        },
+        "native_compiled": 3,
+        "median_storage_reads": {
+          "packed_bytes_read": 168855320,
+          "decoded_bytes": 168854117,
+          "blocks_decoded": 1203,
+          "payload_bytes_returned": 75035702,
+          "block_cache_hits": 17098
+        },
+        "median_flush_s": 0.002968491
+      },
+      "none_time_change_percent": -7.8175975182858455
+    },
+    {
+      "lines": 510436,
+      "phase": "entry_edit",
+      "zlib": {
+        "median_s": 9.92469885200262,
+        "min_s": 8.227517643012106,
+        "max_s": 12.012091484852135,
+        "median_peak_rss_gib": 1.2955894470214844,
+        "median_stages_s": {
+          "frontend": 4.947018909,
+          "lowering": 0.594386304,
+          "optimizer": 2.803153815,
+          "emission": 0.216526738,
+          "native": 1.139652854
+        },
+        "samples_s": [
+          12.012091484852135,
+          9.92469885200262,
+          8.227517643012106
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 1731,
+            "reused": 35970,
+            "summaries": 32131,
+            "syntax_hits": 1922,
+            "syntax_misses": 1,
+            "stored": 3,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 23596,
+            "lowered": 1,
+            "deferred": 27456,
+            "fallbacks": 0,
+            "materialized": 1668,
+            "unloaded": 21929
+          },
+          "optimizer": {
+            "hits": [
+              1666,
+              1666,
+              1667,
+              1667,
+              1666,
+              1667,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              1,
+              1,
+              2,
+              1,
+              0
+            ],
+            "bypassed": 21929,
+            "active_functions": 1668,
+            "fresh_work": 1,
+            "restores": {
+              "final": 1667,
+              "checkpoints": 0
+            },
+            "final_loaded": 1668
+          },
+          "emission": {
+            "units": 2020,
+            "reused": 2019,
+            "rendered": 1,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 2020,
+              "keys_built": 1,
+              "llvm_loaded_bytes": 1034007,
+              "native_handles": 2019
+            }
+          }
+        },
+        "native_compiled": 1,
+        "median_storage_reads": {
+          "packed_bytes_read": 82808927,
+          "decoded_bytes": 295616287,
+          "blocks_decoded": 2093,
+          "payload_bytes_returned": 184381196,
+          "block_cache_hits": 38880
+        },
+        "median_flush_s": 0.006028439
+      },
+      "none": {
+        "median_s": 7.571839736076072,
+        "min_s": 7.152078876039013,
+        "max_s": 9.75856996094808,
+        "median_peak_rss_gib": 1.3003921508789062,
+        "median_stages_s": {
+          "frontend": 3.290960479,
+          "lowering": 0.504722115,
+          "optimizer": 2.118450738,
+          "emission": 0.232555118,
+          "native": 1.266147715
+        },
+        "samples_s": [
+          9.75856996094808,
+          7.571839736076072,
+          7.152078876039013
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 1731,
+            "reused": 35970,
+            "summaries": 32131,
+            "syntax_hits": 1922,
+            "syntax_misses": 1,
+            "stored": 3,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 23596,
+            "lowered": 1,
+            "deferred": 27456,
+            "fallbacks": 0,
+            "materialized": 1668,
+            "unloaded": 21929
+          },
+          "optimizer": {
+            "hits": [
+              1666,
+              1666,
+              1667,
+              1667,
+              1666,
+              1667,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              1,
+              1,
+              2,
+              1,
+              0
+            ],
+            "bypassed": 21929,
+            "active_functions": 1668,
+            "fresh_work": 1,
+            "restores": {
+              "final": 1667,
+              "checkpoints": 0
+            },
+            "final_loaded": 1668
+          },
+          "emission": {
+            "units": 2020,
+            "reused": 2019,
+            "rendered": 1,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 2020,
+              "keys_built": 1,
+              "llvm_loaded_bytes": 1034007,
+              "native_handles": 2019
+            }
+          }
+        },
+        "native_compiled": 1,
+        "median_storage_reads": {
+          "packed_bytes_read": 284508205,
+          "decoded_bytes": 284506240,
+          "blocks_decoded": 1965,
+          "payload_bytes_returned": 184381196,
+          "block_cache_hits": 39008
+        },
+        "median_flush_s": 0.002128679
+      },
+      "none_time_change_percent": -23.7071084071411
+    },
+    {
+      "lines": 510436,
+      "phase": "helper_edit",
+      "zlib": {
+        "median_s": 7.051005240064114,
+        "min_s": 6.913543705129996,
+        "max_s": 8.045504330890253,
+        "median_peak_rss_gib": 1.2959480285644531,
+        "median_stages_s": {
+          "frontend": 3.040647499,
+          "lowering": 0.545376883,
+          "optimizer": 2.749970405,
+          "emission": 0.206965706,
+          "native": 0.277375367
+        },
+        "samples_s": [
+          7.051005240064114,
+          8.045504330890253,
+          6.913543705129996
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 1729,
+            "reused": 35972,
+            "summaries": 32082,
+            "syntax_hits": 1922,
+            "syntax_misses": 1,
+            "stored": 1,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 23596,
+            "lowered": 1,
+            "deferred": 27414,
+            "fallbacks": 0,
+            "materialized": 1847,
+            "unloaded": 21750
+          },
+          "optimizer": {
+            "hits": [
+              1845,
+              1845,
+              1846,
+              1846,
+              1845,
+              1846,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              1,
+              1,
+              2,
+              1,
+              0
+            ],
+            "bypassed": 21750,
+            "active_functions": 1847,
+            "fresh_work": 1,
+            "restores": {
+              "final": 1846,
+              "checkpoints": 0
+            },
+            "final_loaded": 1847
+          },
+          "emission": {
+            "units": 2020,
+            "reused": 2019,
+            "rendered": 1,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 2020,
+              "keys_built": 1,
+              "llvm_loaded_bytes": 66220,
+              "native_handles": 2019
+            }
+          }
+        },
+        "native_compiled": 1,
+        "median_storage_reads": {
+          "packed_bytes_read": 89478869,
+          "decoded_bytes": 323614492,
+          "blocks_decoded": 2266,
+          "payload_bytes_returned": 187259262,
+          "block_cache_hits": 40151
+        },
+        "median_flush_s": 0.000800839
+      },
+      "none": {
+        "median_s": 6.580690579023212,
+        "min_s": 6.2258222489617765,
+        "max_s": 10.473870692076162,
+        "median_peak_rss_gib": 1.2947654724121094,
+        "median_stages_s": {
+          "frontend": 3.350993346,
+          "lowering": 0.44707281,
+          "optimizer": 2.153627919,
+          "emission": 0.202648427,
+          "native": 0.280988964
+        },
+        "samples_s": [
+          6.580690579023212,
+          6.2258222489617765,
+          10.473870692076162
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 1729,
+            "reused": 35972,
+            "summaries": 32082,
+            "syntax_hits": 1922,
+            "syntax_misses": 1,
+            "stored": 1,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 23596,
+            "lowered": 1,
+            "deferred": 27414,
+            "fallbacks": 0,
+            "materialized": 1847,
+            "unloaded": 21750
+          },
+          "optimizer": {
+            "hits": [
+              1845,
+              1845,
+              1846,
+              1846,
+              1845,
+              1846,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              1,
+              1,
+              2,
+              1,
+              0
+            ],
+            "bypassed": 21750,
+            "active_functions": 1847,
+            "fresh_work": 1,
+            "restores": {
+              "final": 1846,
+              "checkpoints": 0
+            },
+            "final_loaded": 1847
+          },
+          "emission": {
+            "units": 2020,
+            "reused": 2019,
+            "rendered": 1,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 2020,
+              "keys_built": 1,
+              "llvm_loaded_bytes": 66220,
+              "native_handles": 2019
+            }
+          }
+        },
+        "native_compiled": 1,
+        "median_storage_reads": {
+          "packed_bytes_read": 343381100,
+          "decoded_bytes": 343378716,
+          "blocks_decoded": 2384,
+          "payload_bytes_returned": 187259262,
+          "block_cache_hits": 40033
+        },
+        "median_flush_s": 0.000240979
+      },
+      "none_time_change_percent": -6.6701788614275
+    },
+    {
+      "lines": 510436,
+      "phase": "three_file_edit",
+      "zlib": {
+        "median_s": 10.358534678816795,
+        "min_s": 9.804223120911047,
+        "max_s": 13.666215806035325,
+        "median_peak_rss_gib": 1.2945175170898438,
+        "median_stages_s": {
+          "frontend": 3.79706133,
+          "lowering": 0.703345931,
+          "optimizer": 3.812014634,
+          "emission": 0.31178042,
+          "native": 1.535797507
+        },
+        "samples_s": [
+          13.666215806035325,
+          9.804223120911047,
+          10.358534678816795
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 1733,
+            "reused": 35968,
+            "summaries": 32032,
+            "syntax_hits": 1920,
+            "syntax_misses": 3,
+            "stored": 5,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 23594,
+            "lowered": 3,
+            "deferred": 27371,
+            "fallbacks": 0,
+            "materialized": 2031,
+            "unloaded": 21566
+          },
+          "optimizer": {
+            "hits": [
+              2025,
+              2025,
+              2028,
+              2028,
+              2025,
+              2028,
+              0
+            ],
+            "misses": [
+              6,
+              6,
+              3,
+              3,
+              6,
+              3,
+              0
+            ],
+            "bypassed": 21566,
+            "active_functions": 2031,
+            "fresh_work": 3,
+            "restores": {
+              "final": 2028,
+              "checkpoints": 0
+            },
+            "final_loaded": 2031
+          },
+          "emission": {
+            "units": 2020,
+            "reused": 2017,
+            "rendered": 3,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 2020,
+              "keys_built": 3,
+              "llvm_loaded_bytes": 1166447,
+              "native_handles": 2017
+            }
+          }
+        },
+        "native_compiled": 3,
+        "median_storage_reads": {
+          "packed_bytes_read": 94040118,
+          "decoded_bytes": 348192779,
+          "blocks_decoded": 2450,
+          "payload_bytes_returned": 190221582,
+          "block_cache_hits": 41431
+        },
+        "median_flush_s": 0.009835963
+      },
+      "none": {
+        "median_s": 8.998054221039638,
+        "min_s": 8.594438646920025,
+        "max_s": 10.910531176021323,
+        "median_peak_rss_gib": 1.2970352172851562,
+        "median_stages_s": {
+          "frontend": 3.786908975,
+          "lowering": 0.561141585,
+          "optimizer": 2.674466631,
+          "emission": 0.297970124,
+          "native": 1.550968355
+        },
+        "samples_s": [
+          10.910531176021323,
+          8.594438646920025,
+          8.998054221039638
+        ],
+        "counts": {
+          "frontend": {
+            "checked": 1733,
+            "reused": 35968,
+            "summaries": 32032,
+            "syntax_hits": 1920,
+            "syntax_misses": 3,
+            "stored": 5,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 23594,
+            "lowered": 3,
+            "deferred": 27371,
+            "fallbacks": 0,
+            "materialized": 2031,
+            "unloaded": 21566
+          },
+          "optimizer": {
+            "hits": [
+              2025,
+              2025,
+              2028,
+              2028,
+              2025,
+              2028,
+              0
+            ],
+            "misses": [
+              6,
+              6,
+              3,
+              3,
+              6,
+              3,
+              0
+            ],
+            "bypassed": 21566,
+            "active_functions": 2031,
+            "fresh_work": 3,
+            "restores": {
+              "final": 2028,
+              "checkpoints": 0
+            },
+            "final_loaded": 2031
+          },
+          "emission": {
+            "units": 2020,
+            "reused": 2017,
+            "rendered": 3,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 4,
+            "work": {
+              "receipts_checked": 2020,
+              "keys_built": 3,
+              "llvm_loaded_bytes": 1166447,
+              "native_handles": 2017
+            }
+          }
+        },
+        "native_compiled": 3,
+        "median_storage_reads": {
+          "packed_bytes_read": 372718109,
+          "decoded_bytes": 372715545,
+          "blocks_decoded": 2564,
+          "payload_bytes_returned": 190221582,
+          "block_cache_hits": 41317
+        },
+        "median_flush_s": 0.003015778
+      },
+      "none_time_change_percent": -13.133908414279293
+    }
+  ],
+  "one_build_cache": [
+    {
+      "lines": 191416,
+      "zlib": {
+        "method": "One build with empty frontend/stage/program caches and a validated seed containing exactly the required native objects; measured before any edits. Source, output binary and logs excluded.",
+        "components": {
+          "stages-packed-v1": {
+            "allocated_bytes": 181739520,
+            "logical_file_bytes": 181485103,
+            "files": 86
+          },
+          "semantic": {
+            "allocated_bytes": 134909952,
+            "logical_file_bytes": 103849640,
+            "files": 13588
+          },
+          "replay-v1": {
+            "allocated_bytes": 151552,
+            "logical_file_bytes": 145137,
+            "files": 1
+          },
+          "frontend": {
+            "allocated_bytes": 36417536,
+            "logical_file_bytes": 35000855,
+            "files": 724
+          },
+          "programs-v1": {
+            "allocated_bytes": 17481728,
+            "logical_file_bytes": 17467187,
+            "files": 2
+          },
+          "native": {
+            "allocated_bytes": 36675584,
+            "logical_file_bytes": 31902324,
+            "files": 1523
+          }
+        },
+        "total": {
+          "allocated_bytes": 407379968,
+          "logical_file_bytes": 369850246,
+          "files": 15924
+        }
+      },
+      "none": {
+        "method": "One build with empty frontend/stage/program caches and a validated seed containing exactly the required native objects; measured before any edits. Source, output binary and logs excluded.",
+        "components": {
+          "stages-packed-v1": {
+            "allocated_bytes": 859545600,
+            "logical_file_bytes": 859255184,
+            "files": 86
+          },
+          "semantic": {
+            "allocated_bytes": 134885376,
+            "logical_file_bytes": 103849640,
+            "files": 13588
+          },
+          "replay-v1": {
+            "allocated_bytes": 151552,
+            "logical_file_bytes": 145138,
+            "files": 1
+          },
+          "frontend": {
+            "allocated_bytes": 36421632,
+            "logical_file_bytes": 35000855,
+            "files": 724
+          },
+          "programs-v1": {
+            "allocated_bytes": 17481728,
+            "logical_file_bytes": 17467187,
+            "files": 2
+          },
+          "native": {
+            "allocated_bytes": 36675584,
+            "logical_file_bytes": 31902324,
+            "files": 1523
+          }
+        },
+        "total": {
+          "allocated_bytes": 1085165568,
+          "logical_file_bytes": 1047620328,
+          "files": 15924
+        }
+      },
+      "compression_allocated_saving_percent": 62.459187794649964
+    },
+    {
+      "lines": 510436,
+      "zlib": {
+        "method": "One build with empty frontend/stage/program caches and a validated seed containing exactly the required native objects; measured before any edits. Source, output binary and logs excluded.",
+        "components": {
+          "stages-packed-v1": {
+            "allocated_bytes": 483479552,
+            "logical_file_bytes": 482912162,
+            "files": 224
+          },
+          "semantic": {
+            "allocated_bytes": 359391232,
+            "logical_file_bytes": 276766920,
+            "files": 36168
+          },
+          "replay-v1": {
+            "allocated_bytes": 393216,
+            "logical_file_bytes": 385717,
+            "files": 1
+          },
+          "frontend": {
+            "allocated_bytes": 97001472,
+            "logical_file_bytes": 93258005,
+            "files": 1924
+          },
+          "programs-v1": {
+            "allocated_bytes": 45699072,
+            "logical_file_bytes": 45684475,
+            "files": 2
+          },
+          "native": {
+            "allocated_bytes": 95801344,
+            "logical_file_bytes": 83100644,
+            "files": 4043
+          }
+        },
+        "total": {
+          "allocated_bytes": 1081769984,
+          "logical_file_bytes": 982107923,
+          "files": 42362
+        }
+      },
+      "none": {
+        "method": "One build with empty frontend/stage/program caches and a validated seed containing exactly the required native objects; measured before any edits. Source, output binary and logs excluded.",
+        "components": {
+          "stages-packed-v1": {
+            "allocated_bytes": 2291789824,
+            "logical_file_bytes": 2291106029,
+            "files": 224
+          },
+          "semantic": {
+            "allocated_bytes": 359350272,
+            "logical_file_bytes": 276766920,
+            "files": 36168
+          },
+          "replay-v1": {
+            "allocated_bytes": 393216,
+            "logical_file_bytes": 385718,
+            "files": 1
+          },
+          "frontend": {
+            "allocated_bytes": 97001472,
+            "logical_file_bytes": 93258005,
+            "files": 1924
+          },
+          "programs-v1": {
+            "allocated_bytes": 45699072,
+            "logical_file_bytes": 45684475,
+            "files": 2
+          },
+          "native": {
+            "allocated_bytes": 95801344,
+            "logical_file_bytes": 83100644,
+            "files": 4043
+          }
+        },
+        "total": {
+          "allocated_bytes": 2890039296,
+          "logical_file_bytes": 2790301791,
+          "files": 42362
+        }
+      },
+      "compression_allocated_saving_percent": 62.569021622050634
+    }
+  ],
+  "validation": {
+    "builds": 40,
+    "paired_comparisons": 20,
+    "identical_work_counts": true,
+    "byte_identical_binary_pairs": 20,
+    "golden_and_leak_checks": 40,
+    "flush_succeeded": true,
+    "native_and_executable_audits": "Passed by benchmark harness before completion"
+  }
+}

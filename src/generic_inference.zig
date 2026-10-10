@@ -36,8 +36,7 @@ pub const Context = struct {
             } else self.values[index] = actual;
             return;
         }
-        if (self.catalog.templates.store) |store| for (store.index.syntax.suffixes) |suffix| {
-            if (suffix.span.start != expected.start or suffix.span.end != expected.end) continue;
+        if (self.catalog.templates.store) |store| if (store.index.syntax.suffixes.get(expected)) |suffix| {
             const declaration = store.index.names.get(if (suffix.kind == .growable) "list" else "Option").?;
             return self.matchNominal(declaration, &.{suffix.base}, actual, depth);
         };

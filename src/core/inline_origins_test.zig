@@ -163,3 +163,45 @@ fn corruptUnique(module: *ir.Module, result: *const passes.Result) !void {
     }
     try std.testing.expect(false);
 }
+
+const checked_leaves =
+    \\func affine(x: int) -> int:
+    \\    return x * 3 + 7
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(affine(9), affine(12))
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-INLINE-1
+test "checked leaf clones and ancestry survive reclaimed caller facts and repeated proof trials" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var oracle = try support.buildSource(a, checked_leaves, &refusal);
+    var expected_origins: origins.Table = .{};
+    const expected_count = try @import("inline.zig").leafCaller(a, &oracle, oracle.entry, &.{}, &expected_origins);
+    const revisited = try @import("inline.zig").withParametersCounted(a, &oracle, &.{}, &expected_origins, null);
+    try std.testing.expectEqual(@as(u32, 0), revisited);
+    const expected_text = try @import("print.zig").module(a, &oracle);
+    var module = try support.buildSource(a, checked_leaves, &refusal);
+    var actual_origins: origins.Table = .{};
+    var scratch = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer scratch.deinit();
+    const count = try @import("inline.zig").leafCallerWithScratch(a, scratch.allocator(), &module, module.entry, &.{}, &actual_origins);
+    try std.testing.expectEqual(@as(u32, 2), count);
+    try std.testing.expectEqual(expected_count, count);
+    try std.testing.expect(scratch.queryCapacity() > 0);
+    _ = scratch.reset(.free_all);
+    try std.testing.expectEqual(@as(usize, 0), scratch.queryCapacity());
+    const overwrite = try scratch.allocator().alloc(u8, 1 << 20);
+    @memset(overwrite, 0xa5);
+    try support.verified(a, &module, &.{});
+    try std.testing.expectEqualStrings(expected_text, try @import("print.zig").module(a, &module));
+    try std.testing.expectEqualDeep(expected_origins.frames.items, actual_origins.frames.items);
+    try std.testing.expectEqual(expected_origins.instructions.count(), actual_origins.instructions.count());
+    try std.testing.expectEqual(expected_origins.blocks.count(), actual_origins.blocks.count());
+    const known = try passes.runWithScratch(a, std.testing.allocator, &module, .trusted);
+    try support.verified(a, &module, known.plans);
+}

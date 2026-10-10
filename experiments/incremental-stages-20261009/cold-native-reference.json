@@ -1,0 +1,227 @@
+{
+  "started_utc": "2026-10-09T17:22:53.453196+00:00",
+  "completed_utc": "2026-10-09T17:52:26.678815+00:00",
+  "compiler": "/home/epentland/.cache/mylang-incremental-stages-20261009/compiler-complete/bin/mylang",
+  "compiler_sha256": "a01ea9f1bc75a90887c9f44c9bce9a899b9998daa3aa0cfd7a4c4cd1bd522101",
+  "affinity": [
+    0,
+    4,
+    6,
+    8
+  ],
+  "jobs": 4,
+  "host_memory_limit": "default 8 GiB plus 256 MiB headroom",
+  "qualification": "Fully cold native compilation reference from c48cfc24b, before the cached source-position fix. Only cold rows retained here: their objects were byte-identical to the corrected compiler cold output, demonstrated by full native reuse in matrix.json. Do not use pre-fix edited outputs as correctness evidence. Wall times were heavily affected by other host work.",
+  "records": [
+    {
+      "copies": 12,
+      "mode": "optimized_debug",
+      "phase": "cold",
+      "sample": 0,
+      "seconds": 245.22527365898713,
+      "cache": {
+        "version": "cache-report-v1",
+        "program": "linked",
+        "units": 760,
+        "reused": 0,
+        "compiled": 760,
+        "verified": 0,
+        "processes": 761
+      },
+      "stages": {
+        "version": "stage-report-v1",
+        "nanoseconds": {
+          "frontend": 9708027856,
+          "lowering": 1944113068,
+          "optimizer": 20573950216,
+          "emission": 17010061168,
+          "native": 195551508586,
+          "linker": 92313631
+        },
+        "frontend": {
+          "checked": 14161,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 723,
+          "stored": 13588,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "lowered": 8857
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            8857,
+            8857,
+            8857,
+            8857,
+            8857,
+            8857,
+            0
+          ]
+        },
+        "emission": {
+          "units": 760,
+          "reused": 0,
+          "rendered": 760,
+          "seeds_reused": 0,
+          "seeds_rendered": 0,
+          "workers": 4
+        },
+        "frontend_misses": [
+          0,
+          228,
+          13933,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          288,
+          0,
+          96,
+          36,
+          0,
+          0,
+          0
+        ]
+      },
+      "physical_lines": 191416,
+      "project_modules": 721,
+      "loadavg_before": "19.29 11.35 8.26 8/1557 1628028",
+      "command": [
+        "/home/epentland/.cache/mylang-incremental-stages-20261009/compiler-complete/bin/mylang",
+        "build",
+        "main.my",
+        "-o",
+        "/home/epentland/.cache/mylang-incremental-stages-20261009/scaling-complete/12/optimized_debug/program",
+        "--cache-dir",
+        "/home/epentland/.cache/mylang-incremental-stages-20261009/scaling-complete/12/optimized_debug/cache",
+        "--report",
+        "--optimize-debug"
+      ],
+      "peak_rss_kb": 2147356,
+      "user_s": 341.16,
+      "system_s": 51.99,
+      "execution_check": "passed: all replicas ran; usage verified; export hashes match; leak check enabled",
+      "binary_bytes": 17467080
+    },
+    {
+      "copies": 32,
+      "mode": "optimized_debug",
+      "phase": "cold",
+      "sample": 0,
+      "seconds": 598.6301480289549,
+      "cache": {
+        "version": "cache-report-v1",
+        "program": "linked",
+        "units": 2020,
+        "reused": 0,
+        "compiled": 2020,
+        "verified": 0,
+        "processes": 2021
+      },
+      "stages": {
+        "version": "stage-report-v1",
+        "nanoseconds": {
+          "frontend": 63160884087,
+          "lowering": 3659332572,
+          "optimizer": 20520927119,
+          "emission": 59417591939,
+          "native": 451035445699,
+          "linker": 117553052
+        },
+        "frontend": {
+          "checked": 37701,
+          "reused": 0,
+          "summaries": 0,
+          "syntax_hits": 0,
+          "syntax_misses": 1923,
+          "stored": 36168,
+          "damaged": 0
+        },
+        "lowering": {
+          "reused": 0,
+          "lowered": 23597
+        },
+        "optimizer": {
+          "hits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses": [
+            23597,
+            23597,
+            23597,
+            23597,
+            23597,
+            23597,
+            0
+          ]
+        },
+        "emission": {
+          "units": 2020,
+          "reused": 0,
+          "rendered": 2020,
+          "seeds_reused": 0,
+          "seeds_rendered": 0,
+          "workers": 4
+        },
+        "frontend_misses": [
+          0,
+          608,
+          37093,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          768,
+          0,
+          256,
+          96,
+          0,
+          0,
+          0
+        ]
+      },
+      "physical_lines": 510436,
+      "project_modules": 1921,
+      "loadavg_before": "11.67 12.84 10.12 11/1590 1970683",
+      "command": [
+        "/home/epentland/.cache/mylang-incremental-stages-20261009/compiler-complete/bin/mylang",
+        "build",
+        "main.my",
+        "-o",
+        "/home/epentland/.cache/mylang-incremental-stages-20261009/scaling-complete/32/optimized_debug/program",
+        "--cache-dir",
+        "/home/epentland/.cache/mylang-incremental-stages-20261009/scaling-complete/32/optimized_debug/cache",
+        "--report",
+        "--optimize-debug"
+      ],
+      "peak_rss_kb": 4929024,
+      "user_s": 718.23,
+      "system_s": 121.31,
+      "execution_check": "passed: all replicas ran; usage verified; export hashes match; leak check enabled",
+      "binary_bytes": 45684368
+    }
+  ]
+}

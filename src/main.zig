@@ -1279,7 +1279,7 @@ fn recordSemanticBypass(init: Context, functions: *const language.semantic_cache
     if (delta != 0) recordBypass(init, "semantic-reuse-unavailable", delta);
     var index: usize = 0;
     while (index < language.semantic_cache.miss_reason_count) : (index += 1) {
-        const count = functions.statistics.misses[index] - prior.misses[index];
+        const count = functions.statistics.rejections.total[index] - prior.rejections.total[index];
         if (count == 0) continue;
         const why: language.semantic_cache.MissReason = @fromBackingInt(@intCast(index));
         if (why == .cache_disabled) continue;
@@ -3017,7 +3017,7 @@ fn sessionReply(
     var ordinary_misses: [language.semantic_cache.miss_reason_count]ReasonCount = undefined;
     var ordinary_len: usize = 0;
     for (std.meta.tags(language.semantic_cache.MissReason)) |why| {
-        const count = cache.functions.statistics.misses[@backingInt(why)];
+        const count = cache.functions.statistics.rejections.total[@backingInt(why)];
         if (count == 0) continue;
         ordinary_misses[ordinary_len] = .{ .reason = language.semantic_cache.missReasonName(why), .count = count };
         ordinary_len += 1;

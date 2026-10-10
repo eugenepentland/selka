@@ -187,7 +187,7 @@ const Checker = struct {
         return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("Result").?, &.{ success, failure });
     }
     fn ty(self: *Checker, span: source.Span) Error!Symbolic {
-        for (self.program.types.expressions.suffixes) |suffix| if (suffix.span.start == span.start and suffix.span.end == span.end) {
+        if (self.catalog.templates.store) |store| if (store.index.syntax.suffixes.get(span)) |suffix| {
             try self.enter(span);
             defer self.depth -= 1;
             return self.shapes().nominal(self.catalog.templates.store.?.index.names.get(if (suffix.kind == .growable) "list" else "Option").?, &.{try self.ty(suffix.base)});
@@ -579,7 +579,7 @@ const Checker = struct {
         return self.lengthType(span);
     }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
-        for (self.program.types.expressions.suffixes) |suffix| if (suffix.span.start == span.start and suffix.span.end == span.end) {
+        if (self.catalog.templates.store) |store| if (store.index.syntax.suffixes.get(span)) |suffix| {
             try self.enter(span);
             defer self.depth -= 1;
             return self.shapes().nominal(self.catalog.templates.store.?.index.names.get(if (suffix.kind == .growable) "list" else "Option").?, &.{try self.substituted(suffix.base, parameters, arguments)});
@@ -1932,7 +1932,7 @@ const Checker = struct {
     /// their fixed-octet representation, as in concrete expression checking.
     fn byteLiteral(self: *Checker, node: ast.Node) Error!Symbolic {
         if (self.expected_types.get(node.span)) |expected| {
-            if (symbolic.array(expected, self.catalog.records) != null) return self.concreteType(node.span);
+            if (symbolic.array(expected, self.catalog.records) != null) return self.arrayType(node.data.bytes.len, .{ .concrete = .u8 });
         }
         const spelling = self.src.text(node.span);
         if (spelling.len != 0 and spelling[0] == 'b') {
