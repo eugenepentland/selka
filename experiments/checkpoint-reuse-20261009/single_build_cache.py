@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import threading
 import time
 
 
@@ -26,6 +27,21 @@ def disk_usage(directory):
             result['logical_file_bytes'] += stat.st_size
             result['files'] += 1
     return result
+
+
+def sample_journals(directory, stop, result):
+    """Observe temporary journals; sampled maxima are not strict upper bounds."""
+    while not stop.is_set():
+        sizes = []
+        for path in directory.glob('*.journal'):
+            try:
+                sizes.append(path.stat().st_size)
+            except FileNotFoundError:
+                pass  # A sealed journal can disappear between glob and stat.
+        result['samples'] += 1
+        result['largest_file_bytes'] = max(result['largest_file_bytes'], max(sizes, default=0))
+        result['total_bytes'] = max(result['total_bytes'], sum(sizes))
+        stop.wait(0.1)
 
 
 def validate(binary, directory, copies, env):
@@ -86,7 +102,17 @@ def main():
                    '--cache-dir', cache, '--report', '--optimize-debug']
         print(f'START {copies}: {size["physical_lines"]} lines, all caches empty', flush=True)
         started = time.perf_counter()
-        code, stdout, stderr = benchmark.run(command, source, environment)
+        metrics = directory / 'metrics.json'
+        timed = ['/usr/bin/time', '-f', '{"peak_rss_kb":%M,"user_s":%U,"system_s":%S,"fs_inputs":%I,"fs_outputs":%O}', '-o', metrics, *command]
+        journal_samples = {'interval_seconds': 0.1, 'samples': 0, 'largest_file_bytes': 0, 'total_bytes': 0}
+        stop = threading.Event()
+        sampler = threading.Thread(target=sample_journals, args=(cache / 'stages-packed-v1', stop, journal_samples))
+        sampler.start()
+        try:
+            code, stdout, stderr = benchmark.run(timed, source, environment)
+        finally:
+            stop.set()
+            sampler.join()
         seconds = time.perf_counter() - started
         (directory / 'build.stdout').write_bytes(stdout)
         (directory / 'build.stderr').write_bytes(stderr)
@@ -108,7 +134,9 @@ def main():
                   'components': components,
                   'total': {key: sum(value[key] for value in totals) for key in totals[0]},
                   'output_executable_bytes': binary.stat().st_size,
-                  'binary_sha256': benchmark.sha(binary), 'execution_checks_passed': True}
+                  'binary_sha256': benchmark.sha(binary), 'execution_checks_passed': True,
+                  'journal_sampled_maxima': journal_samples,
+                  **json.loads(metrics.read_text())}
         report['records'].append(record)
         (root / 'results.json').write_text(json.dumps(report, indent=2) + '\n')
         print(f'DONE {copies}: {json.dumps(record["total"])}', flush=True)

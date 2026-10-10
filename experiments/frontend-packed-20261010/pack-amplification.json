@@ -1,0 +1,289 @@
+{
+  "packs": 103,
+  "packbytes": 222472289,
+  "indexbytes": 7285248,
+  "all": {
+    "blocks": 972,
+    "plain": 989452095,
+    "encoded": 215177874,
+    "records": 82238,
+    "record_bytes": 980241439,
+    "records_per_block_median": 9.0,
+    "record_size_median": 117.0,
+    "isolated_read_amplification_weighted": 22.064233326091816
+  },
+  "latest_records": 73962,
+  "latest_payload_bytes": 817178994,
+  "classes": {
+    "small_metadata": {
+      "blocks": 252,
+      "plain": 45776798,
+      "encoded": 14103659,
+      "records": 74205,
+      "record_bytes": 37465838,
+      "records_per_block_median": 112.0,
+      "record_size_median": 63,
+      "isolated_read_amplification_weighted": 499.2176012985483
+    },
+    "bodies": {
+      "blocks": 550,
+      "plain": 156159449,
+      "encoded": 30044728,
+      "records": 7863,
+      "record_bytes": 155278793,
+      "records_per_block_median": 8.0,
+      "record_size_median": 8983,
+      "isolated_read_amplification_weighted": 13.763335995276574
+    },
+    "oversized_uncached": {
+      "blocks": 170,
+      "plain": 787515848,
+      "encoded": 171029487,
+      "records": 170,
+      "record_bytes": 787496808,
+      "records_per_block_median": 1.0,
+      "record_size_median": 1035476.0,
+      "isolated_read_amplification_weighted": 1.0000241778757788
+    }
+  },
+  "largest_blocks": [
+    {
+      "pack": "28daaab98fbb47f4e85a203028c7d9d8.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839840,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "37f07e2d6de077099ea52c572283c650.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839822,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "4de00a7403e1822ecf03e2258f452297.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839842,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "4f5281a6788c0e60b0de02316d047d56.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839838,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "4fc180f7e81b10264809d6be838fbb90.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839848,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "aeb0cc2389c0895a1d26768016405eab.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839743,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "d286ec366c2de62c9e62c869cc4a8265.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839786,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "d5d856a43a9ccb0a05d69ffc6a8375f3.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839751,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "e2fd30ef156ee0d692c56e97ac616ce8.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839853,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "e38538ebfbb9b6582aa8a8fd278b7d47.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839829,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "e453a8cc27e944d11468e67d0f15253f.pack",
+      "block": 1,
+      "plain": 40840673,
+      "encoded": 7839853,
+      "record_lengths": [
+        40840561
+      ]
+    },
+    {
+      "pack": "fb3cd937a16098a0035bd47c18208027.pack",
+      "block": 3,
+      "plain": 40840673,
+      "encoded": 7839847,
+      "record_lengths": [
+        40840561
+      ]
+    }
+  ],
+  "reblocking_layout_only": {
+    "262144": {
+      "all": {
+        "blocks": 972,
+        "plain": 989452095,
+        "encoded": 0,
+        "records": 82238,
+        "record_bytes": 980241439,
+        "records_per_block_median": 9.0,
+        "record_size_median": 117.0,
+        "isolated_read_amplification_weighted": 22.064233326091816
+      },
+      "small_metadata": {
+        "blocks": 252,
+        "plain": 45776798,
+        "encoded": 0,
+        "records": 74205,
+        "record_bytes": 37465838,
+        "records_per_block_median": 112.0,
+        "record_size_median": 63,
+        "isolated_read_amplification_weighted": 499.2176012985483
+      },
+      "bodies": {
+        "blocks": 550,
+        "plain": 156159449,
+        "encoded": 0,
+        "records": 7863,
+        "record_bytes": 155278793,
+        "records_per_block_median": 8.0,
+        "record_size_median": 8983,
+        "isolated_read_amplification_weighted": 13.763335995276574
+      }
+    },
+    "131072": {
+      "all": {
+        "blocks": 1550,
+        "plain": 989452095,
+        "encoded": 0,
+        "records": 82238,
+        "record_bytes": 980241439,
+        "records_per_block_median": 8.0,
+        "record_size_median": 117.0,
+        "isolated_read_amplification_weighted": 11.640982908905569
+      },
+      "small_metadata": {
+        "blocks": 425,
+        "plain": 45776798,
+        "encoded": 0,
+        "records": 74205,
+        "record_bytes": 37465838,
+        "records_per_block_median": 66,
+        "record_size_median": 63,
+        "isolated_read_amplification_weighted": 254.04164855461127
+      },
+      "bodies": {
+        "blocks": 955,
+        "plain": 156159449,
+        "encoded": 0,
+        "records": 7863,
+        "record_bytes": 155278793,
+        "records_per_block_median": 6,
+        "record_size_median": 8983,
+        "isolated_read_amplification_weighted": 7.119933885627254
+      }
+    },
+    "65536": {
+      "all": {
+        "blocks": 2563,
+        "plain": 989452095,
+        "encoded": 0,
+        "records": 82238,
+        "record_bytes": 980241439,
+        "records_per_block_median": 6,
+        "record_size_median": 117.0,
+        "isolated_read_amplification_weighted": 6.316077594430284
+      },
+      "small_metadata": {
+        "blocks": 767,
+        "plain": 45776798,
+        "encoded": 0,
+        "records": 74205,
+        "record_bytes": 37465838,
+        "records_per_block_median": 37,
+        "record_size_median": 63,
+        "isolated_read_amplification_weighted": 128.2048303577248
+      },
+      "bodies": {
+        "blocks": 1626,
+        "plain": 156159449,
+        "encoded": 0,
+        "records": 7863,
+        "record_bytes": 155278793,
+        "records_per_block_median": 4.0,
+        "record_size_median": 8983,
+        "isolated_read_amplification_weighted": 3.86700415039934
+      }
+    },
+    "32768": {
+      "all": {
+        "blocks": 4281,
+        "plain": 989452095,
+        "encoded": 0,
+        "records": 82238,
+        "record_bytes": 980241439,
+        "records_per_block_median": 4,
+        "record_size_median": 117.0,
+        "isolated_read_amplification_weighted": 3.637715831150452
+      },
+      "small_metadata": {
+        "blocks": 1433,
+        "plain": 45776798,
+        "encoded": 0,
+        "records": 74205,
+        "record_bytes": 37465838,
+        "records_per_block_median": 20,
+        "record_size_median": 63,
+        "isolated_read_amplification_weighted": 64.79820008296625
+      },
+      "bodies": {
+        "blocks": 2678,
+        "plain": 156159449,
+        "encoded": 0,
+        "records": 7863,
+        "record_bytes": 155278793,
+        "records_per_block_median": 2.0,
+        "record_size_median": 8983,
+        "isolated_read_amplification_weighted": 2.2579070794297067
+      }
+    }
+  }
+}

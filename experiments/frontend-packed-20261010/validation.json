@@ -1,0 +1,160 @@
+{
+  "command": "zig build test fmt-check -j2 --maxrss 8589934592 --summary all",
+  "build_summary": "93/93 steps succeeded; 2315/23663 tests passed (21348 skipped)",
+  "guardian_runner_results": [
+    {
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 43,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 118,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 125,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "executed_tests": 2315,
+  "failed_tests": 0,
+  "automatic_sealing_test_in_full_run": true,
+  "note": "The full run began before the final sealing edit, but its core test binary compiled afterwards and includes the new automatic-sealing tests. Frontend and CLI changes were frozen before the run. Additional focused allocation-failure tests and the final executable recovery audit also passed.",
+  "implementation_commit": "b363bcd0b",
+  "compiler_sha256": "c1450bf0caa9a90541f894a532854a7204adcd98a1c3005b004a4d074bfb2e7b",
+  "guardian_whole_tree_checks": 88,
+  "guardian_feedback_commit": "35ebb7d",
+  "guardian_feedback_repository": "/home/epentland/ai/canopy/guardian-zig",
+  "paired_builds": 40,
+  "paired_edits": 36,
+  "all_paired_execution_checks_passed": true,
+  "all_paired_allocated_sections_identical": true,
+  "normal_build_fallbacks": 0
+}
