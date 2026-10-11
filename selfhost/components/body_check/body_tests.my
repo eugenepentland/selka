@@ -124,7 +124,8 @@ public func test_range_variable_assignment_is_native_immutable_error() -> bool f
     const source_id = try graph.field(request, context, "source")
     const source = try graph.get(request, source_id)
     const name = try syntax_value.span(mut request, 0, 1)
-    const payload = try syntax_value.object(mut request, ["name"], [name])
+    const set = try syntax_value.enumeration(mut request, b"set")
+    const payload = try syntax_value.object(mut request, ["name", "op"], [name, set])
     const data = try syntax_value.tagged(mut request, b"assignment", payload)
     const statement = try syntax_value.object(mut request, ["span", "data"], [name, data])
     mut state = try engine.make(request, source.data, program)
@@ -136,3 +137,61 @@ public func test_range_variable_assignment_is_native_immutable_error() -> bool f
             return False
         case Err(problem):
             return problem.code == "E_IMMUTABLE" and problem.message == "this binding cannot be assigned" and problem.start == 0 and problem.end == 1
+
+
+func assignment_state(op: bytes, present: bool) -> engine.State fails syntax_value.Problem:
+    mut request = try input(b"integer", b"int")
+    const root = len(request.values) - 1
+    const program = try graph.field(request, root, "program")
+    const context = try graph.field(request, root, "context")
+    const source_id = try graph.field(request, context, "source")
+    const source = try graph.get(request, source_id)
+    const name = try syntax_value.span(mut request, 0, 1)
+    const op_span = try syntax_value.span(mut request, 2, 3)
+    const whole = try syntax_value.span(mut request, 0, 8)
+    const zero = try syntax_value.integer(mut request, 0)
+    const operator = try syntax_value.enumeration(mut request, op)
+    const payload = try syntax_value.object(mut request, ["name", "op", "op_span", "value"], [name, operator, op_span, zero])
+    const data = try syntax_value.tagged(mut request, b"assignment", payload)
+    const statement = try syntax_value.object(mut request, ["span", "data"], [whole, data])
+    mut state = try engine.make(request, source.data, program)
+    state.syntax.statements = [statement]
+    if present:
+        _ = try locals.add(mut state.scope, b"f", name, 0, True, b"parameter")
+    return state
+
+
+public func test_augmented_remainder_preserves_origin_and_operator_span() -> bool fails syntax_value.Problem:
+    mut state = try assignment_state(b"rem", True)
+    _ = try engine.statement(mut state, 0)
+    const node = state.batch.nodes[2]
+    const span_id = try graph.field(state.batch.pool, node, "span")
+    const start_id = try graph.field(state.batch.pool, span_id, "start")
+    const end_id = try graph.field(state.batch.pool, span_id, "end")
+    const start = try graph.number(state.batch.pool, start_id)
+    const end = try graph.number(state.batch.pool, end_id)
+    const data_id = try graph.field(state.batch.pool, node, "data")
+    const payload = try graph.payload(state.batch.pool, data_id)
+    const op_id = try graph.field(state.batch.pool, payload, "op")
+    const op = try graph.get(state.batch.pool, op_id)
+    return state.scope.locals[0].origin == b"parameter" and state.scope.locals[0].usage.reads == 1 and state.scope.locals[0].usage.writes == 1 and start == 2 and end == 3 and op.data == b"floor_rem"
+
+
+public func test_augmented_float_division_has_exact_source_error() -> bool fails syntax_value.Problem:
+    mut state = try assignment_state(b"div", True)
+    match engine.statement(mut state, 0):
+        case Ok(value):
+            _ = value
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.start == 2 and problem.end == 3 and problem.message == "augmented `/=` produces a float; declare the binding as float or use `//=`"
+
+
+public func test_augmented_missing_name_is_unknown_name() -> bool fails syntax_value.Problem:
+    mut state = try assignment_state(b"add", False)
+    match engine.statement(mut state, 0):
+        case Ok(value):
+            _ = value
+            return False
+        case Err(problem):
+            return problem.code == "E_UNKNOWN_NAME" and problem.message == "name is not defined in this scope" and problem.start == 0 and problem.end == 1

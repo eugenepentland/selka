@@ -553,7 +553,16 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
     elif tag == b"assignment":
         const name_span = try graph.field(state.syntax.pool, payload, "name")
         const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const op_id = try graph.field(state.syntax.pool, payload, "op")
+        const op = try graph.get(state.syntax.pool, op_id)
         const slot = locals.find(state.scope, name)
+        if slot < 0 and op.data != b"set":
+            mut candidates: bytes[] = []
+            for active_slot in state.scope.active:
+                candidates.append(state.scope.locals[active_slot].name)
+            const clause = try suggestions.clause(candidates, name)
+            const rejection = try problem(state, name_span, "E_UNKNOWN_NAME", "name is not defined in this scope" + clause)
+            fail rejection
         if slot < 0:
             const rejection = try problem(state, name_span, "E_BINDING_DECLARATION", "assignment requires a declared binding; introduce a writable local with `mut`")
             state.problems.append(syntax_problem.repaired(rejection, [syntax_problem.Edit(start=rejection.start, end=rejection.start, text=b"mut ")]))
@@ -564,8 +573,6 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
         const value_id = try graph.field(state.syntax.pool, payload, "value")
         const value_raw = try graph.number(state.syntax.pool, value_id)
         mut value = try expression_expected(mut state, value_raw, state.scope.locals[slot].ty)
-        const op_id = try graph.field(state.syntax.pool, payload, "op")
-        const op = try graph.get(state.syntax.pool, op_id)
         if op.data != b"set":
             const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
             _ = try require(state, value.ty, state.scope.locals[slot].ty, operator_span)
@@ -575,16 +582,23 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
             state.scope.locals[slot].usage.reads = state.scope.locals[slot].usage.reads + 1
             const local_payload = try syntax_value.integer(mut state.batch.pool, slot)
             const left = try emission.node(mut state.batch, state.syntax.pool, name_span, value.ty, b"local", local_payload)
-            const typed_op = try syntax_value.enumeration(mut state.batch.pool, op.data)
+            if op.data == b"div":
+                const rejection = try problem(state, operator_span, "E_TYPE", "augmented `/=` produces a float; declare the binding as float or use `//=`")
+                fail rejection
+            mut operator = op.data
+            if operator == b"rem":
+                operator = b"floor_rem"
+            const typed_op = try syntax_value.enumeration(mut state.batch.pool, operator)
             const typed_left = try syntax_value.integer(mut state.batch.pool, left)
             const typed_right = try syntax_value.integer(mut state.batch.pool, value.id)
             const typed_span = try graph.clone(mut state.batch.pool, state.syntax.pool, operator_span, 0)
             const binary = try syntax_value.object(mut state.batch.pool, ["op", "left", "right", "op_span"], [typed_op, typed_left, typed_right, typed_span])
-            const combined = try emission.node(mut state.batch, state.syntax.pool, span, value.ty, b"binary", binary)
+            const combined = try emission.node(mut state.batch, state.syntax.pool, operator_span, value.ty, b"binary", binary)
             value = Expression(id=combined, ty=value.ty)
         _ = try require(state, value.ty, state.scope.locals[slot].ty, span)
         state.scope.locals[slot].usage.writes = state.scope.locals[slot].usage.writes + 1
-        state.scope.locals[slot].origin = b"local"
+        if op.data == b"set":
+            state.scope.locals[slot].origin = b"local"
         state.scope.locals[slot].initialized = True
         result_payload = try emission.store(mut state.batch, slot, value.id)
         tag = b"assign"
