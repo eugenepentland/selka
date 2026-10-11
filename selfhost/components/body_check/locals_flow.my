@@ -1,0 +1,18 @@
+import locals
+
+# Definite assignment is independent of lexical visibility and cumulative usage.
+public func snapshot(scope: locals.Scope) -> bool[]:
+    mut state: bool[] = []
+    for local in scope.locals:
+        state.append(local.initialized)
+    return state
+
+
+public func restore(mut scope: locals.Scope, state: bool[]) -> Unit:
+    for index in range(len(scope.locals)):
+        scope.locals[index].initialized = index < len(state) and state[index]
+
+
+public func intersect(mut scope: locals.Scope, state: bool[]) -> Unit:
+    for index in range(len(scope.locals)):
+        scope.locals[index].initialized = scope.locals[index].initialized and index < len(state) and state[index]

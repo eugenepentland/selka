@@ -1,0 +1,90 @@
+import syntax_value
+
+public func text(data: bytes) -> str fails syntax_value.Problem:
+    const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+    mut result = ""
+    for octet in data:
+        if octet < 32 or octet > 126:
+            fail syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="diagnostic encoding requires ASCII")
+        result = result + alphabet[octet - 32]
+    return result
+
+
+func distance(left: bytes, right: bytes) -> int:
+    if len(left) > 256 or len(right) > 256 or len(left) > len(right) + 2 or len(right) > len(left) + 2:
+        return 3
+    mut previous: int[] = []
+    for index in range(len(right) + 1):
+        previous.append(index)
+    mut row = 0
+    for a in left:
+        row = row + 1
+        mut current: int[] = [row]
+        mut column = 0
+        for b in right:
+            mut cost = 0
+            if a != b:
+                cost = 1
+            mut value = previous[column] + cost
+            if previous[column + 1] + 1 < value:
+                value = previous[column + 1] + 1
+            if current[column] + 1 < value:
+                value = current[column] + 1
+            current.append(value)
+            column = column + 1
+        previous = current
+    return previous[len(right)]
+
+
+func before(left: bytes, right: bytes) -> bool:
+    mut count = len(left)
+    if len(right) < count:
+        count = len(right)
+    for index in range(count):
+        if left[index] != right[index]:
+            return left[index] < right[index]
+    return len(left) < len(right)
+
+
+public func clause(names: bytes[], target: bytes) -> str fails syntax_value.Problem:
+    mut selected: bytes[] = []
+    for qualified in names:
+        mut start = 0
+        for index in range(len(qualified)):
+            if qualified[index] == 58 or qualified[index] == 46:
+                start = index + 1
+        const name = qualified[start:]
+        if name == target or distance(name, target) > 2:
+            continue
+        mut duplicate = False
+        for old in selected:
+            if old == name:
+                duplicate = True
+        if duplicate:
+            continue
+        mut next: bytes[] = []
+        mut inserted = False
+        for old in selected:
+            if not inserted and before(name, old):
+                next.append(name)
+                inserted = True
+            next.append(old)
+        if not inserted:
+            next.append(name)
+        if len(next) > 3:
+            next = next[:3]
+        selected = next
+    if len(selected) == 0:
+        return ""
+    mut joined = ""
+    mut index = 0
+    for name in selected:
+        if index > 0:
+            joined = joined + "`, `"
+        const rendered = try text(name)
+        joined = joined + rendered
+        index = index + 1
+    mut prefix = ""
+    if len(selected) > 1:
+        prefix = "one of: "
+    return "; did you mean " + prefix + "`" + joined + "`?"

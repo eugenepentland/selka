@@ -1,0 +1,69 @@
+import syntax_value
+import syntax_problem
+import suggestions
+import graph
+
+public func keyword_only(pool: syntax_value.Pool, source: bytes, nodes: int[], call: int, parameters: int[], boundary: int, source_index: int) -> syntax_problem.Diagnostic fails syntax_value.Problem:
+    const name_id = try graph.field(pool, call, "name")
+    const name = try graph.spelling(pool, source, name_id)
+    const arguments_id = try graph.field(pool, call, "arguments")
+    const arguments = try graph.items(pool, arguments_id)
+    const keywords_id = try graph.field(pool, call, "argument_names")
+    const keywords = try graph.items(pool, keywords_id)
+    mut labels: bytes[] = []
+    for parameter in parameters:
+        const label_id = try graph.field(pool, parameter, "name")
+        const label = try graph.spelling(pool, source, label_id)
+        labels.append(label)
+    mut remaining: bytes[] = []
+    for position in range(boundary, len(labels)):
+        mut taken = False
+        for keyword_id in keywords:
+            const keyword = try graph.get(pool, keyword_id)
+            if keyword.kind != 0:
+                const spelling = try graph.spelling(pool, source, keyword_id)
+                if spelling == labels[position]:
+                    taken = True
+        if not taken:
+            remaining.append(labels[position])
+    mut rendered = name + b"("
+    mut edits: syntax_problem.Edit[] = []
+    mut positional = 0
+    mut rejected_name = b""
+    for index in range(len(arguments)):
+        if index > 0:
+            rendered = rendered + b", "
+        const argument = try graph.number(pool, arguments[index])
+        if argument < 0 or argument >= len(nodes):
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid call operand")
+        const span = try graph.field(pool, nodes[argument], "span")
+        const value = try graph.spelling(pool, source, span)
+        mut explicit = False
+        if len(keywords) != 0:
+            const keyword = try graph.get(pool, keywords[index])
+            if keyword.kind != 0:
+                const spelling = try graph.spelling(pool, source, keywords[index])
+                rendered = rendered + spelling + b"="
+                explicit = True
+        if not explicit:
+            if positional >= boundary:
+                mut label = labels[positional]
+                if positional - boundary < len(remaining):
+                    label = remaining[positional - boundary]
+                rendered = rendered + label + b"="
+                const start_id = try graph.field(pool, span, "start")
+                const start = try graph.number(pool, start_id)
+                edits.append(syntax_problem.Edit(start=start, end=start, text=label + b"="))
+                if index == source_index:
+                    rejected_name = label
+            positional = positional + 1
+        rendered = rendered + value
+    rendered = rendered + b")"
+    const label_text = try suggestions.text(rejected_name)
+    const call_text = try suggestions.text(rendered)
+    const start_id = try graph.field(pool, name_id, "start")
+    const end_id = try graph.field(pool, name_id, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    const problem = syntax_value.Problem(code="E_KEYWORD_ONLY", start=start, end=end, message="`" + label_text + "` is keyword-only; write `" + call_text + "`")
+    return syntax_problem.repaired(problem, edits)

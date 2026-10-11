@@ -1,0 +1,76 @@
+import syntax_value
+
+public func name(ty: int) -> str:
+    if ty == 0:
+        return "int"
+    if ty == 1:
+        return "bool"
+    return "Unit"
+
+
+public func require(actual: int, expected: int, start: int, end: int) -> bool fails syntax_value.Problem:
+    if actual != expected:
+        fail syntax_value.Problem(code="E_TYPE", start=start, end=end, message="expected " + name(expected) + ", found " + name(actual))
+    return True
+
+
+public func annotation(text: bytes, start: int, end: int) -> int fails syntax_value.Problem:
+    if text == b"int" or text == b"i64":
+        return 0
+    if text == b"bool":
+        return 1
+    if text == b"Unit" or len(text) == 0:
+        return 15
+    fail syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message="B1 requires scalar int, bool or Unit types")
+
+
+# Accumulate a negative magnitude, so the signed minimum never needs an
+# unrepresentable positive intermediate in the qualified i64 language.
+public func integer(text: bytes, negative: bool, start: int, end: int) -> int fails syntax_value.Problem:
+    for suffix in [b"i8", b"i16", b"i32", b"u8", b"u16", b"u32", b"u64", b"f64"]:
+        if len(text) >= len(suffix) and text[len(text) - len(suffix):] == suffix:
+            fail syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message="B1 requires i64 integer literals")
+    mut finish = len(text)
+    if finish >= 3 and text[finish - 3:] == b"i64":
+        finish = finish - 3
+    mut base = 10
+    mut position = 0
+    if finish >= 2 and text[0] == 48:
+        if text[1] == 120 or text[1] == 88:
+            base = 16
+            position = 2
+        elif text[1] == 111 or text[1] == 79:
+            base = 8
+            position = 2
+        elif text[1] == 98 or text[1] == 66:
+            base = 2
+            position = 2
+    mut result = 0
+    mut digits = 0
+    while position < finish:
+        const octet = text[position]
+        position = position + 1
+        if octet == 95:
+            continue
+        mut digit = octet - 48
+        if octet >= 97 and octet <= 102:
+            digit = octet - 87
+        elif octet >= 65 and octet <= 70:
+            digit = octet - 55
+        if digit < 0 or digit >= base:
+            fail syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message="B1 requires i64 integer literals")
+        const threshold = -9223372036854775807 - 1 + digit
+        mut quotient = threshold // base
+        if threshold % base != 0:
+            quotient = quotient + 1
+        if result < quotient:
+            fail syntax_value.Problem(code="E_INTEGER_RANGE", start=start, end=end, message="integer literal does not fit its type; signed minimum magnitudes must be directly negated")
+        result = result * base - digit
+        digits = digits + 1
+    if digits == 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=start, end=end, message="empty integer literal")
+    if negative:
+        return result
+    if result == -9223372036854775807 - 1:
+        fail syntax_value.Problem(code="E_INTEGER_RANGE", start=start, end=end, message="integer literal does not fit its type; signed minimum magnitudes must be directly negated")
+    return -result

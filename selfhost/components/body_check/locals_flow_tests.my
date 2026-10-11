@@ -1,0 +1,35 @@
+import locals
+import locals_flow
+import syntax_value
+
+public func test_branch_restore_keeps_usage_and_local_identity() -> bool fails syntax_value.Problem:
+    mut scope = locals.empty()
+    _ = try locals.add(mut scope, b"before", 0, 0, True, b"local")
+    const before = locals_flow.snapshot(scope)
+    _ = try locals.add(mut scope, b"then", 1, 0, False, b"local")
+    scope.locals[0].usage.reads = 2
+    scope.locals[0].usage.writes = 1
+    locals_flow.restore(mut scope, before)
+    return scope.locals[0].initialized and not scope.locals[1].initialized and scope.locals[0].usage.reads == 2 and scope.locals[0].usage.writes == 1 and len(scope.active) == 2
+
+
+public func test_continuing_branches_require_assignment_on_both_paths() -> bool fails syntax_value.Problem:
+    mut scope = locals.empty()
+    _ = try locals.add(mut scope, b"both", 0, 0, True, b"local")
+    _ = try locals.add(mut scope, b"one", 1, 0, True, b"local")
+    scope.locals[1].initialized = False
+    const first = locals_flow.snapshot(scope)
+    scope.locals[1].initialized = True
+    _ = try locals.add(mut scope, b"later", 2, 0, False, b"local")
+    locals_flow.intersect(mut scope, first)
+    return scope.locals[0].initialized and not scope.locals[1].initialized and not scope.locals[2].initialized
+
+
+public func test_loop_restore_removes_body_only_assignment() -> bool fails syntax_value.Problem:
+    mut scope = locals.empty()
+    _ = try locals.add(mut scope, b"value", 0, 0, True, b"local")
+    scope.locals[0].initialized = False
+    const before = locals_flow.snapshot(scope)
+    scope.locals[0].initialized = True
+    locals_flow.restore(mut scope, before)
+    return not scope.locals[0].initialized

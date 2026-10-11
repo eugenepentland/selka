@@ -1,0 +1,81 @@
+import syntax_value
+
+public func get(pool: syntax_value.Pool, id: int) -> syntax_value.Value fails syntax_value.Problem:
+    if id < 0 or id >= len(pool.values):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid value reference")
+    return pool.values[id]
+
+
+public func field(pool: syntax_value.Pool, id: int, name: str) -> int fails syntax_value.Problem:
+    const value = try get(pool, id)
+    if value.kind != 5 or len(value.names) != len(value.children):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="expected named record")
+    mut found = -1
+    mut position = 0
+    for label in value.names:
+        if label == name:
+            if found != -1:
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="duplicate record field")
+            found = value.children[position]
+        position = position + 1
+    if found == -1:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="missing record field")
+    return found
+
+
+public func number(pool: syntax_value.Pool, id: int) -> int fails syntax_value.Problem:
+    const value = try get(pool, id)
+    if value.kind != 1:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="expected integer")
+    return value.integer
+
+
+public func items(pool: syntax_value.Pool, id: int) -> int[] fails syntax_value.Problem:
+    const value = try get(pool, id)
+    if value.kind != 6:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="expected list")
+    return value.children
+
+
+public func payload(pool: syntax_value.Pool, id: int) -> int fails syntax_value.Problem:
+    const value = try get(pool, id)
+    if value.kind != 7 or len(value.children) != 1:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="expected tagged value")
+    return value.children[0]
+
+
+public func spelling(pool: syntax_value.Pool, source: bytes, id: int) -> bytes fails syntax_value.Problem:
+    const begin_id = try field(pool, id, "start")
+    const begin = try number(pool, begin_id)
+    const finish_id = try field(pool, id, "end")
+    const finish = try number(pool, finish_id)
+    if begin < 0 or finish < begin or finish > len(source):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid source span")
+    return source[begin:finish]
+
+
+public func clone(mut destination: syntax_value.Pool, source: syntax_value.Pool, id: int, depth: int) -> int fails syntax_value.Problem:
+    if depth > 256:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="value graph depth exceeded")
+    const value = try get(source, id)
+    if value.kind == 0:
+        return try syntax_value.absent(mut destination)
+    if value.kind == 1:
+        return try syntax_value.integer(mut destination, value.integer)
+    if value.kind == 2:
+        return try syntax_value.boolean(mut destination, value.integer != 0)
+    if value.kind == 3:
+        return try syntax_value.octets(mut destination, value.data)
+    if value.kind == 4:
+        return try syntax_value.enumeration(mut destination, value.data)
+    mut children: int[] = []
+    for child in value.children:
+        const copied = try clone(mut destination, source, child, depth + 1)
+        children.append(copied)
+    if value.kind == 5:
+        return try syntax_value.object(mut destination, value.names, children)
+    if value.kind == 6:
+        return try syntax_value.sequence(mut destination, children)
+    if value.kind == 7 and len(children) == 1:
+        return try syntax_value.tagged(mut destination, value.data, children[0])
+    fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid value kind")

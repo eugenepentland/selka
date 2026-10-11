@@ -1,0 +1,69 @@
+import syntax_value
+import graph
+
+public record Facts:
+    applications: int[]
+    top_names: bytes[]
+    expected: int[]
+    local_count: int
+
+
+public record Batch:
+    pool: syntax_value.Pool
+    nodes: int[]
+    statements: int[]
+    functions: int[]
+    ranges: int[]
+    resolved: int[]
+    facts: Facts
+
+
+public func empty() -> Batch:
+    return Batch(pool=syntax_value.empty(), nodes=[], statements=[], functions=[], ranges=[], resolved=[], facts=Facts(applications=[], top_names=[], expected=[], local_count=0))
+
+
+public func node(mut batch: Batch, input: syntax_value.Pool, span: int, ty: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    if len(batch.nodes) >= 262144:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="typed node limit exceeded")
+    const ty_value = try syntax_value.integer(mut batch.pool, ty)
+    const location = try graph.clone(mut batch.pool, input, span, 0)
+    const data = try syntax_value.tagged(mut batch.pool, tag, payload)
+    const value = try syntax_value.object(mut batch.pool, ["ty", "span", "data"], [ty_value, location, data])
+    const id = len(batch.nodes)
+    batch.nodes.append(value)
+    return id
+
+
+public func statement(mut batch: Batch, input: syntax_value.Pool, span: int, terminates: bool, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    if len(batch.statements) >= 262144:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="typed statement limit exceeded")
+    const location = try graph.clone(mut batch.pool, input, span, 0)
+    const terminal = try syntax_value.boolean(mut batch.pool, terminates)
+    const data = try syntax_value.tagged(mut batch.pool, tag, payload)
+    const value = try syntax_value.object(mut batch.pool, ["span", "terminates", "data"], [location, terminal, data])
+    const id = len(batch.statements)
+    batch.statements.append(value)
+    return id
+
+
+public func ids(mut batch: Batch, values: int[]) -> int fails syntax_value.Problem:
+    mut children: int[] = []
+    for value in values:
+        const child = try syntax_value.integer(mut batch.pool, value)
+        children.append(child)
+    return try syntax_value.sequence(mut batch.pool, children)
+
+
+public func store(mut batch: Batch, slot: int, value: int) -> int fails syntax_value.Problem:
+    const slot_value = try syntax_value.integer(mut batch.pool, slot)
+    const expression = try syntax_value.integer(mut batch.pool, value)
+    const element = try syntax_value.boolean(mut batch.pool, False)
+    return try syntax_value.object(mut batch.pool, ["slot", "value", "element"], [slot_value, expression, element])
+
+
+public func finish(mut batch: Batch) -> int fails syntax_value.Problem:
+    const nodes = try syntax_value.sequence(mut batch.pool, batch.nodes)
+    const statements = try syntax_value.sequence(mut batch.pool, batch.statements)
+    const functions = try syntax_value.sequence(mut batch.pool, batch.functions)
+    const ranges = try syntax_value.sequence(mut batch.pool, batch.ranges)
+    return try syntax_value.object(mut batch.pool, ["nodes", "statements", "functions", "ranges"], [nodes, statements, functions, ranges])

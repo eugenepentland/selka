@@ -1,0 +1,135 @@
+import syntax_value
+import graph
+import checking
+import engine
+
+func input(value_tag: bytes, return_text: bytes) -> syntax_value.Pool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const absent = try syntax_value.absent(mut pool)
+    const empty = try syntax_value.sequence(mut pool, [])
+    const name = try syntax_value.span(mut pool, 0, 1)
+    const ty = try syntax_value.span(mut pool, 2, 2 + len(return_text))
+    const literal = try syntax_value.span(mut pool, 2 + len(return_text) + 1, 2 + len(return_text) + 3)
+    mut payload = literal
+    if value_tag == b"boolean":
+        payload = try syntax_value.boolean(mut pool, True)
+    const node_data = try syntax_value.tagged(mut pool, value_tag, payload)
+    const node = try syntax_value.object(mut pool, ["span", "data"], [literal, node_data])
+    const nodes = try syntax_value.sequence(mut pool, [node])
+    const zero = try syntax_value.integer(mut pool, 0)
+    const ret_data = try syntax_value.tagged(mut pool, b"ret", zero)
+    const statement = try syntax_value.object(mut pool, ["span", "data"], [literal, ret_data])
+    const statements = try syntax_value.sequence(mut pool, [statement])
+    const signature = try syntax_value.object(mut pool, ["type_parameters", "parameters", "return_type", "failure_type", "mut_positions"], [empty, empty, ty, absent, empty])
+    const no = try syntax_value.boolean(mut pool, False)
+    const policy = try syntax_value.object(mut pool, ["constant", "c_abi", "restricted", "conversion", "host", "owner", "effect_bound"], [no, no, no, no, absent, absent, absent])
+    const function = try syntax_value.object(mut pool, ["name", "signature", "body", "policy"], [name, signature, zero, policy])
+    const functions = try syntax_value.sequence(mut pool, [function])
+    const type_expressions = try syntax_value.object(mut pool, ["applications", "aliases"], [empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, type_expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "lambdas", "attributes", "types"], [nodes, statements, functions, empty, empty, types])
+    const path = try syntax_value.octets(mut pool, b"input.my")
+    mut source_text = b"f " + return_text + b" 42"
+    const source = try syntax_value.octets(mut pool, source_text)
+    const context = try syntax_value.object(mut pool, ["path", "source"], [path, source])
+    _ = try syntax_value.object(mut pool, ["context", "program", "modules"], [context, program, empty])
+    return pool
+
+
+public func test_integer_return_full_typed_batch() -> bool fails syntax_value.Problem:
+    const request = try input(b"integer", b"int")
+    const response = try checking.check(request, len(request.values) - 1)
+    const outcome = try graph.get(response, len(response.values) - 1)
+    if outcome.data != b"success":
+        return False
+    const output = try graph.payload(response, len(response.values) - 1)
+    const batch = try graph.field(response, output, "batch")
+    const nodes_id = try graph.field(response, batch, "nodes")
+    const nodes = try graph.items(response, nodes_id)
+    const node_type = try graph.field(response, nodes[0], "ty")
+    const ty = try graph.number(response, node_type)
+    const ranges_id = try graph.field(response, batch, "ranges")
+    const ranges = try graph.items(response, ranges_id)
+    return ty == 0 and len(nodes) == 1 and len(ranges) == 1
+
+
+public func test_boolean_return_type_rejected() -> bool fails syntax_value.Problem:
+    const request = try input(b"boolean", b"int")
+    const response = try checking.check(request, len(request.values) - 1)
+    const outcome = try graph.get(response, len(response.values) - 1)
+    if outcome.data != b"failure":
+        return False
+    const failures_id = try graph.payload(response, len(response.values) - 1)
+    const failures = try graph.items(response, failures_id)
+    const message_id = try graph.field(response, failures[0], "message")
+    const message = try graph.get(response, message_id)
+    return len(failures) == 1 and message.data == b"expected int, found bool"
+
+
+public func test_managed_signature_profile_refusal() -> bool fails syntax_value.Problem:
+    const request = try input(b"integer", b"bytes")
+    const response = try checking.check(request, len(request.values) - 1)
+    const outcome = try graph.get(response, len(response.values) - 1)
+    return outcome.data == b"profile"
+
+
+public func test_malformed_body_reference_is_transport_failure() -> bool fails syntax_value.Problem:
+    mut request = try input(b"integer", b"int")
+    const root = len(request.values) - 1
+    const program = try graph.field(request, root, "program")
+    const functions_id = try graph.field(request, program, "functions")
+    const functions = try graph.items(request, functions_id)
+    const body = try graph.field(request, functions[0], "body")
+    request.values[body].integer = 999
+    match checking.check(request, root):
+        case Ok(reply):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_semantic_depth_limit_is_deliberate_profile_refusal() -> bool fails syntax_value.Problem:
+    mut request = try input(b"integer", b"int")
+    const root = len(request.values) - 1
+    const program = try graph.field(request, root, "program")
+    const original_id = try graph.field(request, program, "statements")
+    const original = try graph.items(request, original_id)
+    mut statements = original
+    const span = try graph.field(request, original[0], "span")
+    for index in range(256):
+        const child = try syntax_value.integer(mut request, index)
+        const children = try syntax_value.sequence(mut request, [child])
+        const data = try syntax_value.tagged(mut request, b"block", children)
+        const statement = try syntax_value.object(mut request, ["span", "data"], [span, data])
+        statements.append(statement)
+    request.values[original_id].children = statements
+    const functions_id = try graph.field(request, program, "functions")
+    const functions = try graph.items(request, functions_id)
+    const body = try graph.field(request, functions[0], "body")
+    request.values[body].integer = 256
+    const response = try checking.check(request, root)
+    const outcome = try graph.get(response, len(response.values) - 1)
+    const payload = try graph.payload(response, len(response.values) - 1)
+    const code_id = try graph.field(response, payload, "code")
+    const code = try graph.get(response, code_id)
+    return outcome.data == b"profile" and code.data == b"P_BODY_PROFILE"
+
+
+public func test_range_variable_rebinding_is_profile_not_immutable() -> bool fails syntax_value.Problem:
+    const request = try input(b"integer", b"int")
+    const root = len(request.values) - 1
+    const program = try graph.field(request, root, "program")
+    const context = try graph.field(request, root, "context")
+    const source_id = try graph.field(request, context, "source")
+    const source = try graph.get(request, source_id)
+    mut state = try engine.make(request, source.data, program)
+    state.control.ranges = [0]
+    const nodes_id = try graph.field(request, program, "nodes")
+    const nodes = try graph.items(request, nodes_id)
+    const span = try graph.field(request, nodes[0], "span")
+    match engine.admit_assignment(state, 0, span):
+        case Ok(value):
+            _ = value
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE"

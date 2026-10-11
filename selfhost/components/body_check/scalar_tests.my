@@ -1,0 +1,57 @@
+import scalars
+import syntax_value
+import graph
+
+public func test_integer_signed_boundaries() -> bool fails syntax_value.Problem:
+    const positive = try scalars.integer(b"9223372036854775807", False, 0, 19)
+    const negative = try scalars.integer(b"9223372036854775808", True, 0, 19)
+    return positive == 9223372036854775807 and negative == -9223372036854775807 - 1
+
+
+public func test_integer_radices_and_suffix() -> bool fails syntax_value.Problem:
+    const hexadecimal = try scalars.integer(b"0x7f_ffi64", False, 0, 10)
+    const binary = try scalars.integer(b"0b1010", True, 0, 6)
+    const octal = try scalars.integer(b"0o77", False, 0, 4)
+    return hexadecimal == 32767 and binary == -10 and octal == 63
+
+
+public func test_positive_minimum_refused() -> bool:
+    match scalars.integer(b"9223372036854775808", False, 7, 26):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_INTEGER_RANGE" and problem.start == 7 and problem.end == 26
+
+
+public func test_negative_overflow_refused() -> bool:
+    match scalars.integer(b"9223372036854775809", True, 7, 26):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_INTEGER_RANGE"
+
+
+public func test_non_b1_suffix_refuses_before_magnitude_overflow() -> bool:
+    match scalars.integer(b"999999999999999999999999999999999999i8", False, 0, 38):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE"
+
+
+public func test_scalar_type_diagnostic() -> bool:
+    match scalars.require(1, 0, 3, 9):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "expected int, found bool" and problem.start == 3
+
+
+public func test_graph_preserves_names_and_bytes() -> bool fails syntax_value.Problem:
+    mut source = syntax_value.empty()
+    const text = try syntax_value.octets(mut source, b"\xff\x00")
+    const object = try syntax_value.object(mut source, ["payload"], [text])
+    mut target = syntax_value.empty()
+    const copied = try graph.clone(mut target, source, object, 0)
+    const child = try graph.field(target, copied, "payload")
+    return target.values[child].data == b"\xff\x00"

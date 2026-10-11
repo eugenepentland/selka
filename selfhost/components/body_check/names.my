@@ -1,0 +1,170 @@
+import graph
+import syntax_value
+import syntax_problem
+import suggestions
+
+public func module_at(pool: syntax_value.Pool, modules: int[], offset: int) -> int fails syntax_value.Problem:
+    for index in range(len(modules)):
+        const start_id = try graph.field(pool, modules[index], "offset")
+        const start = try graph.number(pool, start_id)
+        const context = try graph.field(pool, modules[index], "context")
+        const source_id = try graph.field(pool, context, "source")
+        const source = try graph.get(pool, source_id)
+        if offset >= start and offset <= start + len(source.data):
+            return index
+    return -1
+
+
+public func qualified(pool: syntax_value.Pool, source: bytes, modules: int[], span: int) -> bytes fails syntax_value.Problem:
+    const spelling = try graph.spelling(pool, source, span)
+    if len(modules) == 0:
+        return spelling
+    const start_id = try graph.field(pool, span, "start")
+    const start = try graph.number(pool, start_id)
+    const module = try module_at(pool, modules, start)
+    if module < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="function has no source module")
+    const context = try graph.field(pool, modules[module], "context")
+    const name_id = try graph.field(pool, context, "name")
+    const name = try graph.get(pool, name_id)
+    return name.data + b"::" + spelling
+
+
+public record Resolution:
+    key: bytes
+    from: int
+    import_index: int
+
+
+public func target(mut problems: syntax_problem.Diagnostic[], pool: syntax_value.Pool, source: bytes, modules: int[], call_span: int, owner: int, name: int) -> Resolution fails syntax_value.Problem:
+    mut spelling = try graph.spelling(pool, source, name)
+    mut raw_alias = b""
+    mut last_dot = -1
+    for position in range(len(spelling)):
+        if spelling[position] == 46:
+            last_dot = position
+    if last_dot >= 0:
+        mut alias_end = last_dot
+        while alias_end > 0 and (spelling[alias_end - 1] == 32 or spelling[alias_end - 1] == 9 or spelling[alias_end - 1] == 10 or spelling[alias_end - 1] == 13):
+            alias_end = alias_end - 1
+        raw_alias = spelling[:alias_end]
+        mut name_start = last_dot + 1
+        while name_start < len(spelling) and (spelling[name_start] == 32 or spelling[name_start] == 9 or spelling[name_start] == 10 or spelling[name_start] == 13):
+            name_start = name_start + 1
+        spelling = spelling[name_start:]
+    const owner_value = try graph.get(pool, owner)
+    mut diagnostic_span = name
+    if owner_value.kind != 0:
+        diagnostic_span = owner
+    const diagnostic_start_id = try graph.field(pool, diagnostic_span, "start")
+    const diagnostic_end_id = try graph.field(pool, diagnostic_span, "end")
+    const diagnostic_start = try graph.number(pool, diagnostic_start_id)
+    const diagnostic_end = try graph.number(pool, diagnostic_end_id)
+    if len(modules) == 0:
+        if owner_value.kind != 0:
+            const owner_text = try graph.spelling(pool, source, owner)
+            return Resolution(key=owner_text + b"." + spelling, from=-1, import_index=-1)
+        const original = try graph.spelling(pool, source, name)
+        return Resolution(key=original, from=-1, import_index=-1)
+    const start_id = try graph.field(pool, call_span, "start")
+    const start = try graph.number(pool, start_id)
+    const from = try module_at(pool, modules, start)
+    if from < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="call has no source module")
+    mut selected = from
+    mut used_import = -1
+    if owner_value.kind != 0 or len(raw_alias) != 0:
+        mut qualifier = raw_alias
+        if owner_value.kind != 0:
+            qualifier = try graph.spelling(pool, source, owner)
+        const imports_id = try graph.field(pool, modules[from], "imports")
+        const imports = try graph.items(pool, imports_id)
+        selected = -1
+        mut import_index = 0
+        for imported in imports:
+            const alias_id = try graph.field(pool, imported, "alias")
+            const alias = try graph.get(pool, alias_id)
+            const import_name_id = try graph.field(pool, imported, "name")
+            const import_name = try graph.get(pool, import_name_id)
+            if alias.data == qualifier or import_name.data == qualifier:
+                const target_id = try graph.field(pool, imported, "target")
+                selected = try graph.number(pool, target_id)
+                used_import = import_index
+                break
+            import_index = import_index + 1
+        if selected < 0:
+            fail syntax_value.Problem(code="E_UNKNOWN_IMPORT", start=diagnostic_start, end=diagnostic_end, message="name does not identify a direct import alias")
+    if selected >= len(modules):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid import target")
+    const symbols_id = try graph.field(pool, modules[selected], "symbols")
+    const symbols = try graph.items(pool, symbols_id)
+    mut canonical_name = spelling
+    mut matched = False
+    for symbol in symbols:
+        const symbol_name_id = try graph.field(pool, symbol, "name")
+        const symbol_name = try graph.get(pool, symbol_name_id)
+        if symbol_name.data != spelling:
+            continue
+        matched = True
+        const exported_id = try graph.field(pool, symbol, "exported")
+        const exported = try graph.get(pool, exported_id)
+        if selected != from and exported.integer == 0:
+            const from_context = try graph.field(pool, modules[from], "context")
+            const from_name_id = try graph.field(pool, from_context, "name")
+            const from_name = try graph.get(pool, from_name_id)
+            const target_context = try graph.field(pool, modules[selected], "context")
+            const target_name_id = try graph.field(pool, target_context, "name")
+            const target_name = try graph.get(pool, target_name_id)
+            const imported_id = try graph.field(pool, from_context, "is_imported")
+            const imported = try graph.get(pool, imported_id)
+            const tester = imported.integer == 0 and from_name.data == target_name.data + b"_test"
+            if not tester:
+                const rejection = syntax_value.Problem(code="E_PRIVATE_SYMBOL", start=diagnostic_start, end=diagnostic_end, message="declaration is private to its module")
+                const declaration = try graph.field(pool, symbol, "span")
+                const related_start_id = try graph.field(pool, declaration, "start")
+                const related_end_id = try graph.field(pool, declaration, "end")
+                const relative_start = try graph.number(pool, related_start_id)
+                const relative_end = try graph.number(pool, related_end_id)
+                const offset_id = try graph.field(pool, modules[selected], "offset")
+                const offset = try graph.number(pool, offset_id)
+                const related = syntax_problem.Related(start=offset + relative_start, end=offset + relative_end, message="declaration is here", role="related")
+                problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+                fail rejection
+        const kind_id = try graph.field(pool, symbol, "kind")
+        const kind = try graph.get(pool, kind_id)
+        if kind.data != b"function":
+            fail syntax_value.Problem(code="P_BODY_PROFILE", start=diagnostic_start, end=diagnostic_end, message="nonfunction construction is outside the B1 scalar profile")
+        const reexport_id = try graph.field(pool, symbol, "re_export")
+        const reexport = try graph.get(pool, reexport_id)
+        if reexport.kind != 0:
+            const module_id = try graph.field(pool, reexport_id, "module")
+            const symbol_id = try graph.field(pool, reexport_id, "symbol")
+            selected = try graph.number(pool, module_id)
+            const position = try graph.number(pool, symbol_id)
+            if selected < 0 or selected >= len(modules):
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid canonical module")
+            const canonical_symbols_id = try graph.field(pool, modules[selected], "symbols")
+            const canonical_symbols = try graph.items(pool, canonical_symbols_id)
+            if position < 0 or position >= len(canonical_symbols):
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid canonical symbol")
+            const canonical_name_id = try graph.field(pool, canonical_symbols[position], "name")
+            const canonical = try graph.get(pool, canonical_name_id)
+            canonical_name = canonical.data
+        break
+    if not matched:
+        mut candidates: bytes[] = []
+        for symbol in symbols:
+            const kind_id = try graph.field(pool, symbol, "kind")
+            const kind = try graph.get(pool, kind_id)
+            const name_id = try graph.field(pool, symbol, "name")
+            const candidate = try graph.get(pool, name_id)
+            const exported_id = try graph.field(pool, symbol, "exported")
+            const exported = try graph.get(pool, exported_id)
+            if kind.data == b"function" and (selected == from or exported.integer != 0):
+                candidates.append(candidate.data)
+        const clause = try suggestions.clause(candidates, spelling)
+        fail syntax_value.Problem(code="E_UNKNOWN_SYMBOL", start=diagnostic_start, end=diagnostic_end, message="declaration is not present in the resolved module" + clause)
+    const context = try graph.field(pool, modules[selected], "context")
+    const module_name_id = try graph.field(pool, context, "name")
+    const module_name = try graph.get(pool, module_name_id)
+    return Resolution(key=module_name.data + b"::" + canonical_name, from=from, import_index=used_import)

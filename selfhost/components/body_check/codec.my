@@ -1,0 +1,161 @@
+import syntax_value
+import syntax_codec
+
+public record Request:
+    pool: syntax_value.Pool
+    root: int
+
+
+record Reader:
+    data: bytes
+    pos: int
+
+
+func bad() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="malformed body-check request")
+
+
+func take(mut reader: Reader, count: int) -> bytes fails syntax_value.Problem:
+    if count < 0 or count > len(reader.data) - reader.pos:
+        fail bad()
+    const result = reader.data[reader.pos:reader.pos + count]
+    reader.pos = reader.pos + count
+    return result
+
+
+func read_u32(mut reader: Reader) -> int fails syntax_value.Problem:
+    const data = try take(mut reader, 4)
+    return data[0] + data[1] * 256 + data[2] * 65536 + data[3] * 16777216
+
+
+func blob(mut reader: Reader) -> bytes fails syntax_value.Problem:
+    const count = try read_u32(mut reader)
+    return try take(mut reader, count)
+
+
+func label(data: bytes) -> str fails syntax_value.Problem:
+    if len(data) == 0 or len(data) > 64:
+        fail bad()
+    mut result = ""
+    for octet in data:
+        if octet >= 97 and octet <= 122:
+            result = result + "abcdefghijklmnopqrstuvwxyz"[octet - 97]
+        elif octet >= 48 and octet <= 57:
+            result = result + "0123456789"[octet - 48]
+        elif octet == 95:
+            result = result + "_"
+        else:
+            fail bad()
+    return result
+
+
+public func decode(data: bytes) -> Request fails syntax_value.Problem:
+    if len(data) < 16 or len(data) > 67108800 or data[:8] != b"SLKBKI01":
+        fail bad()
+    mut reader = Reader(data=data, pos=8)
+    const count = try read_u32(mut reader)
+    const root = try read_u32(mut reader)
+    if count == 0 or count > 1048576 or root >= count:
+        fail bad()
+    mut pool = syntax_value.empty()
+    mut depths: int[] = []
+    for index in range(count):
+        const kind_byte = try take(mut reader, 1)
+        const kind = kind_byte[0]
+        const integer_bytes = try take(mut reader, 8)
+        mut integer = 0
+        mut factor = 1
+        for position in range(7):
+            integer = integer + integer_bytes[position] * factor
+            factor = factor * 256
+        mut high = integer_bytes[7]
+        if high >= 128:
+            high = high - 256
+        integer = integer + high * factor
+        const octets = try blob(mut reader)
+        const child_count = try read_u32(mut reader)
+        if child_count > 4194304 - pool.edges_used:
+            fail bad()
+        mut children: int[] = []
+        mut depth = 1
+        for unused in range(child_count):
+            const child = try read_u32(mut reader)
+            if child >= index:
+                fail bad()
+            if depths[child] + 1 > depth:
+                depth = depths[child] + 1
+            children.append(child)
+        if depth > 256:
+            fail bad()
+        const name_count = try read_u32(mut reader)
+        if name_count > 64:
+            fail bad()
+        mut names: str[] = []
+        for unused in range(name_count):
+            const raw_name = try blob(mut reader)
+            const name = try label(raw_name)
+            names.append(name)
+        mut id = -1
+        if kind == 0 and integer == 0 and len(octets) == 0 and child_count == 0 and name_count == 0:
+            id = try syntax_value.absent(mut pool)
+        elif kind == 1 and len(octets) == 0 and child_count == 0 and name_count == 0:
+            id = try syntax_value.integer(mut pool, integer)
+        elif kind == 2 and (integer == 0 or integer == 1) and len(octets) == 0 and child_count == 0 and name_count == 0:
+            id = try syntax_value.boolean(mut pool, integer == 1)
+        elif kind == 3 and integer == 0 and child_count == 0 and name_count == 0:
+            id = try syntax_value.octets(mut pool, octets)
+        elif kind == 4 and integer == 0 and child_count == 0 and name_count == 0:
+            id = try syntax_value.enumeration(mut pool, octets)
+        elif kind == 5 and integer == 0 and len(octets) == 0 and child_count == name_count:
+            id = try syntax_value.object(mut pool, names, children)
+        elif kind == 6 and integer == 0 and len(octets) == 0 and name_count == 0:
+            id = try syntax_value.sequence(mut pool, children)
+        elif kind == 7 and integer == 0 and child_count == 1 and name_count == 0:
+            id = try syntax_value.tagged(mut pool, octets, children[0])
+        else:
+            fail bad()
+        if id != index:
+            fail bad()
+        depths.append(depth)
+    if reader.pos != len(data):
+        fail bad()
+    return Request(pool=pool, root=root)
+
+
+public func request_payload(data: bytes) -> bytes fails syntax_value.Problem:
+    if len(data) < 64 or len(data) > 67108864 or data[:8] != b"SLKBCK01":
+        fail bad()
+    mut reader = Reader(data=data, pos=8)
+    const protocol = try read_u32(mut reader)
+    const schema = try read_u32(mut reader)
+    const direction = try read_u32(mut reader)
+    const length = try read_u32(mut reader)
+    if protocol != 1 or schema != 1 or direction != 0 or length != len(data) - 64:
+        fail bad()
+    return data[64:]
+
+
+func append_u32(mut buffer: byte_buffer, value: int) -> bool:
+    mut remaining = value
+    for unused in range(4):
+        _ = buffer.append_byte(remaining % 256)
+        remaining = remaining // 256
+    return True
+
+
+public func encode(pool: syntax_value.Pool) -> bytes fails syntax_value.Problem:
+    return try syntax_codec.encode_with_magic(pool, b"SLKBKR01")
+
+
+public func framed_reply(request: bytes, reply: bytes) -> bytes fails syntax_value.Problem:
+    if len(request) < 64 or len(reply) > 67108800:
+        fail bad()
+    mut buffer = byte_buffer([])
+    _ = buffer.append_range(b"SLKBCK01", 0, 8)
+    _ = append_u32(mut buffer, 1)
+    _ = append_u32(mut buffer, 1)
+    _ = append_u32(mut buffer, 1)
+    _ = append_u32(mut buffer, len(reply))
+    _ = buffer.append_range(request, 24, 64)
+    _ = buffer.append_range(reply, 0, len(reply))
+    return bytes(buffer)

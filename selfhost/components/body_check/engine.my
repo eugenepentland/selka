@@ -1,0 +1,718 @@
+import syntax_value
+import graph
+import scalars
+import emission
+import locals
+import syntax_problem
+import names
+import suggestions
+import range_lower
+import locals_flow
+import call_repairs
+import mut_markers
+
+public record Syntax:
+    pool: syntax_value.Pool
+    source: bytes
+    nodes: int[]
+    statements: int[]
+    functions: int[]
+    modules: int[]
+    usage: bool[][]
+
+
+public record State:
+    syntax: Syntax
+    batch: emission.Batch
+    scope: locals.Scope
+    return_type: int
+    depth: int
+    control: Control
+    problems: syntax_problem.Diagnostic[]
+
+
+public record Expression:
+    id: int
+    ty: int
+
+
+public record Control:
+    next: int
+    active: int[]
+    exited: bool[]
+    ranges: int[]
+
+
+public record Statement:
+    id: int
+    terminates: bool
+    looping: bool = False
+
+
+public func make(pool: syntax_value.Pool, source: bytes, program: int) -> State fails syntax_value.Problem:
+    const node_list = try graph.field(pool, program, "nodes")
+    const statement_list = try graph.field(pool, program, "statements")
+    const function_list = try graph.field(pool, program, "functions")
+    const nodes = try graph.items(pool, node_list)
+    const statements = try graph.items(pool, statement_list)
+    const functions = try graph.items(pool, function_list)
+    mut batch = emission.empty()
+    for function in functions:
+        const span = try graph.field(pool, function, "name")
+        const name = try graph.spelling(pool, source, span)
+        batch.facts.top_names.append(name)
+    const types = try graph.field(pool, program, "types")
+    for field_name in ["records", "domains", "resources", "variants", "constraints"]:
+        const list_id = try graph.field(pool, types, field_name)
+        const declarations = try graph.items(pool, list_id)
+        for declaration in declarations:
+            const span = try graph.field(pool, declaration, "name")
+            const name = try graph.spelling(pool, source, span)
+            batch.facts.top_names.append(name)
+    const expressions = try graph.field(pool, types, "expressions")
+    const applications_id = try graph.field(pool, expressions, "applications")
+    const applications = try graph.items(pool, applications_id)
+    batch.facts.applications = applications
+    const aliases_id = try graph.field(pool, expressions, "aliases")
+    const aliases = try graph.items(pool, aliases_id)
+    for alias in aliases:
+        const span = try graph.field(pool, alias, "name")
+        const name = try graph.spelling(pool, source, span)
+        batch.facts.top_names.append(name)
+    return State(syntax=Syntax(pool=pool, source=source, nodes=nodes, statements=statements, functions=functions, modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=Control(next=0, active=[], exited=[], ranges=[]), problems=[])
+
+
+public func problem(state: State, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const begin = try graph.field(state.syntax.pool, span, "start")
+    const finish = try graph.field(state.syntax.pool, span, "end")
+    const start = try graph.number(state.syntax.pool, begin)
+    const end = try graph.number(state.syntax.pool, finish)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+public func require(state: State, actual: int, expected: int, span: int) -> bool fails syntax_value.Problem:
+    if actual != expected:
+        const rejection = try problem(state, span, "E_TYPE", "expected " + scalars.name(expected) + ", found " + scalars.name(actual))
+        fail rejection
+    return True
+
+
+public func top_level(state: State, span: int) -> bool fails syntax_value.Problem:
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    if len(state.syntax.modules) == 0:
+        for candidate in state.batch.facts.top_names:
+            if candidate == name:
+                return True
+        for builtin in [b"int", b"i64", b"bool", b"Unit", b"i8", b"i16", b"i32", b"u8", b"u16", b"u32", b"u64", b"str", b"bytes", b"float"]:
+            if builtin == name:
+                return True
+        return False
+    const start_id = try graph.field(state.syntax.pool, span, "start")
+    const start = try graph.number(state.syntax.pool, start_id)
+    const module = try names.module_at(state.syntax.pool, state.syntax.modules, start)
+    if module < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="binding has no source module")
+    const symbols_id = try graph.field(state.syntax.pool, state.syntax.modules[module], "symbols")
+    const symbols = try graph.items(state.syntax.pool, symbols_id)
+    for symbol in symbols:
+        const name_id = try graph.field(state.syntax.pool, symbol, "name")
+        const candidate = try graph.get(state.syntax.pool, name_id)
+        if candidate.data == name:
+            return True
+    const imports_id = try graph.field(state.syntax.pool, state.syntax.modules[module], "imports")
+    const imports = try graph.items(state.syntax.pool, imports_id)
+    for imported in imports:
+        const name_id = try graph.field(state.syntax.pool, imported, "name")
+        const candidate = try graph.get(state.syntax.pool, name_id)
+        const alias_id = try graph.field(state.syntax.pool, imported, "alias")
+        const alias = try graph.get(state.syntax.pool, alias_id)
+        if candidate.data == name or alias.data == name:
+            return True
+    return False
+
+
+func prelude_call(name: bytes) -> bool:
+    for builtin in [b"len", b"range", b"int", b"bool", b"str", b"bytes", b"byte_buffer", b"list", b"set", b"dict", b"tuple", b"print", b"sorted", b"min", b"max", b"abs", b"sum", b"all", b"any", b"enumerate", b"reversed", b"zip", b"Some", b"Ok", b"Err"]:
+        if name == builtin:
+            return True
+    return False
+
+
+public func expression(mut state: State, raw_id: int) -> Expression fails syntax_value.Problem:
+    if raw_id < 0 or raw_id >= len(state.syntax.nodes):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid expression index")
+    if len(state.batch.resolved) != len(state.syntax.nodes):
+        state.batch.resolved = []
+        for node in state.syntax.nodes:
+            state.batch.resolved.append(-1)
+    if len(state.batch.facts.expected) != len(state.syntax.nodes):
+        state.batch.facts.expected = []
+        for node in state.syntax.nodes:
+            state.batch.facts.expected.append(-1)
+    const cached = state.batch.resolved[raw_id]
+    if cached >= 0:
+        const node = state.batch.nodes[cached]
+        const type_id = try graph.field(state.batch.pool, node, "ty")
+        const ty = try graph.number(state.batch.pool, type_id)
+        return Expression(id=cached, ty=ty)
+    if state.depth >= 256:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="body expression depth exceeded")
+    state.depth = state.depth + 1
+    const raw = state.syntax.nodes[raw_id]
+    const span = try graph.field(state.syntax.pool, raw, "span")
+    const data_id = try graph.field(state.syntax.pool, raw, "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    const payload = try graph.payload(state.syntax.pool, data_id)
+    mut ty = 15
+    mut result_payload = -1
+    if data.data == b"integer":
+        const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, payload)
+        const location = try problem(state, span, "", "")
+        const number = try scalars.integer(spelling, False, location.start, location.end)
+        result_payload = try syntax_value.integer(mut state.batch.pool, number)
+        ty = 0
+    elif data.data == b"boolean":
+        const value = try graph.get(state.syntax.pool, payload)
+        if value.kind != 2:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid Boolean payload")
+        result_payload = try syntax_value.boolean(mut state.batch.pool, value.integer != 0)
+        ty = 1
+    elif data.data == b"unit":
+        result_payload = try syntax_value.absent(mut state.batch.pool)
+    elif data.data == b"name":
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, payload)
+        const slot = locals.find(state.scope, name)
+        if slot < 0:
+            mut candidates: bytes[] = []
+            for active_slot in state.scope.active:
+                candidates.append(state.scope.locals[active_slot].name)
+            const clause = try suggestions.clause(candidates, name)
+            const rejection = try problem(state, payload, "E_UNKNOWN_NAME", "name is not defined in this scope" + clause)
+            fail rejection
+        if not state.scope.locals[slot].initialized:
+            const rejection = try problem(state, payload, "E_UNBOUND", "name may be read before it is assigned; some control-flow path reaching here leaves it unbound")
+            const previous = try problem(state, state.scope.locals[slot].declaration, "", "")
+            const related = syntax_problem.Related(start=previous.start, end=previous.end, message="binding first assigned here", role="related")
+            state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+            fail rejection
+        state.scope.locals[slot].usage.reads = state.scope.locals[slot].usage.reads + 1
+        ty = state.scope.locals[slot].ty
+        result_payload = try syntax_value.integer(mut state.batch.pool, slot)
+        const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, b"local", result_payload)
+        state.batch.resolved[raw_id] = id
+        state.depth = state.depth - 1
+        return Expression(id=id, ty=ty)
+    elif data.data == b"mut_argument":
+        const target = try graph.number(state.syntax.pool, payload)
+        const checked = try expression(mut state, target)
+        state.batch.resolved[raw_id] = checked.id
+        state.depth = state.depth - 1
+        return checked
+    elif data.data == b"unary":
+        const op_id = try graph.field(state.syntax.pool, payload, "op")
+        const op = try graph.get(state.syntax.pool, op_id)
+        const operand_id = try graph.field(state.syntax.pool, payload, "operand")
+        const operand_raw = try graph.number(state.syntax.pool, operand_id)
+        const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
+        if op.data != b"neg" and op.data != b"not":
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "unary operation is outside the B1 scalar profile")
+            fail rejection
+        if op.data == b"neg" and operand_raw >= 0 and operand_raw < len(state.syntax.nodes):
+            const operand_node = state.syntax.nodes[operand_raw]
+            const operand_data_id = try graph.field(state.syntax.pool, operand_node, "data")
+            const operand_data = try graph.get(state.syntax.pool, operand_data_id)
+            if operand_data.data == b"integer":
+                const literal_span = try graph.payload(state.syntax.pool, operand_data_id)
+                const text = try graph.spelling(state.syntax.pool, state.syntax.source, literal_span)
+                const location = try problem(state, literal_span, "", "")
+                const negative = try scalars.integer(text, True, location.start, location.end)
+                if negative == -9223372036854775807 - 1 or state.batch.facts.expected[raw_id] == 0:
+                    const minimum_payload = try syntax_value.integer(mut state.batch.pool, negative)
+                    const minimum_id = try emission.node(mut state.batch, state.syntax.pool, span, 0, b"integer", minimum_payload)
+                    state.batch.resolved[raw_id] = minimum_id
+                    state.depth = state.depth - 1
+                    return Expression(id=minimum_id, ty=0)
+        const operand = try expression(mut state, operand_raw)
+        ty = operand.ty
+        if op.data == b"not":
+            _ = try require(state, operand.ty, 1, operator_span)
+            ty = 1
+        elif operand.ty != 0:
+            const rejection = try problem(state, operator_span, "E_TYPE", "operation requires an integer type")
+            fail rejection
+        const typed_op = try syntax_value.enumeration(mut state.batch.pool, op.data)
+        const typed_operand = try syntax_value.integer(mut state.batch.pool, operand.id)
+        const typed_span = try graph.clone(mut state.batch.pool, state.syntax.pool, operator_span, 0)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["op", "operand", "op_span"], [typed_op, typed_operand, typed_span])
+    elif data.data == b"call":
+        mut call_name = try graph.field(state.syntax.pool, payload, "name")
+        const type_arguments_id = try graph.field(state.syntax.pool, payload, "type_arguments")
+        const type_arguments = try graph.items(state.syntax.pool, type_arguments_id)
+        mut explicit_count = len(type_arguments)
+        for application in state.batch.facts.applications:
+            const application_span = try graph.field(state.syntax.pool, application, "span")
+            const application_text = try graph.spelling(state.syntax.pool, state.syntax.source, application_span)
+            const call_text = try graph.spelling(state.syntax.pool, state.syntax.source, call_name)
+            if application_text == call_text:
+                call_name = try graph.field(state.syntax.pool, application, "name")
+                const arguments_id = try graph.field(state.syntax.pool, application, "arguments")
+                const application_arguments = try graph.items(state.syntax.pool, arguments_id)
+                explicit_count = len(application_arguments)
+                break
+        const owner = try graph.field(state.syntax.pool, payload, "owner")
+        const raw_callee = try graph.spelling(state.syntax.pool, state.syntax.source, call_name)
+        const owner_value = try graph.get(state.syntax.pool, owner)
+        if owner_value.kind == 0 and prelude_call(raw_callee):
+            const expected_name = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, call_name)
+            mut declared = False
+            for function in state.syntax.functions:
+                const name_span = try graph.field(state.syntax.pool, function, "name")
+                const candidate = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, name_span)
+                if candidate == expected_name:
+                    declared = True
+            if not declared:
+                const rejection = try problem(state, span, "P_BODY_PROFILE", "prelude call is outside the B1 ordinary-call profile")
+                fail rejection
+        const resolution = try names.target(mut state.problems, state.syntax.pool, state.syntax.source, state.syntax.modules, span, owner, call_name)
+        const spelling = resolution.key
+        if resolution.from >= 0 and resolution.import_index >= 0:
+            state.syntax.usage[resolution.from][resolution.import_index] = True
+        mut target = -1
+        mut target_index = 0
+        for function in state.syntax.functions:
+            const name_span = try graph.field(state.syntax.pool, function, "name")
+            const candidate = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, name_span)
+            if candidate == spelling:
+                target = target_index
+                break
+            target_index = target_index + 1
+        if target < 0:
+            const raw_spelling = try graph.spelling(state.syntax.pool, state.syntax.source, call_name)
+            for builtin in [b"len", b"range", b"int", b"bool", b"str", b"bytes", b"byte_buffer", b"list", b"set", b"dict", b"tuple", b"print", b"sorted", b"min", b"max", b"abs", b"sum", b"all", b"any", b"enumerate", b"reversed", b"zip", b"Some", b"Ok", b"Err"]:
+                if raw_spelling == builtin:
+                    const rejection = try problem(state, span, "P_BODY_PROFILE", "prelude call is outside the B1 ordinary-call profile")
+                    fail rejection
+            mut candidates: bytes[] = []
+            for function in state.syntax.functions:
+                const name_span = try graph.field(state.syntax.pool, function, "name")
+                const candidate = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, name_span)
+                candidates.append(candidate)
+            const clause = try suggestions.clause(candidates, spelling)
+            const rejection = try problem(state, call_name, "E_UNKNOWN_FUNCTION", "no function has this qualified name" + clause)
+            fail rejection
+        const target_signature = try graph.field(state.syntax.pool, state.syntax.functions[target], "signature")
+        if explicit_count != 0:
+            const rejection = try problem(state, span, "E_GENERIC_ARITY", "explicit type argument count does not match generic parameters")
+            fail rejection
+        const mutation_positions_id = try graph.field(state.syntax.pool, target_signature, "mut_positions")
+        const mutation_positions = try graph.items(state.syntax.pool, mutation_positions_id)
+        const keyword_boundary_id = try graph.field(state.syntax.pool, target_signature, "keyword_only_from")
+        const keyword_boundary = try graph.get(state.syntax.pool, keyword_boundary_id)
+        const parameter_list = try graph.field(state.syntax.pool, target_signature, "parameters")
+        const parameters = try graph.items(state.syntax.pool, parameter_list)
+        const argument_list = try graph.field(state.syntax.pool, payload, "arguments")
+        const arguments = try graph.items(state.syntax.pool, argument_list)
+        const argument_name_list = try graph.field(state.syntax.pool, payload, "argument_names")
+        const argument_names = try graph.items(state.syntax.pool, argument_name_list)
+        if len(arguments) > len(parameters):
+            const rejection = try problem(state, call_name, "E_ARITY", "too many arguments for this function: expected " + str(len(parameters)) + ", given " + str(len(arguments)))
+            fail rejection
+        mut slots: int[] = []
+        mut raw_slots: int[] = []
+        for parameter in parameters:
+            slots.append(-1)
+            raw_slots.append(-1)
+        mut order: int[] = []
+        mut supplied = 0
+        mut positional = 0
+        for argument in arguments:
+            mut position = positional
+            mut is_named = False
+            if len(argument_names) != 0:
+                if len(argument_names) != len(arguments):
+                    fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="argument name count mismatch")
+                const keyword = try graph.get(state.syntax.pool, argument_names[supplied])
+                if keyword.kind != 0:
+                    is_named = True
+                    const keyword_text = try graph.spelling(state.syntax.pool, state.syntax.source, argument_names[supplied])
+                    position = -1
+                    mut parameter_index = 0
+                    for parameter in parameters:
+                        const parameter_name = try graph.field(state.syntax.pool, parameter, "name")
+                        const parameter_text = try graph.spelling(state.syntax.pool, state.syntax.source, parameter_name)
+                        if parameter_text == keyword_text:
+                            position = parameter_index
+                            break
+                        parameter_index = parameter_index + 1
+                    if position < 0:
+                        const rejection = try problem(state, argument_names[supplied], "E_CALL_ARGUMENT", "keyword names no parameter of this function")
+                        fail rejection
+            if not is_named and keyword_boundary.kind != 0 and position >= keyword_boundary.integer:
+                const diagnostic = try call_repairs.keyword_only(state.syntax.pool, state.syntax.source, state.syntax.nodes, payload, parameters, keyword_boundary.integer, supplied)
+                state.problems.append(diagnostic)
+                fail diagnostic.problem
+            if slots[position] != -1:
+                const rejection = try problem(state, call_name, "E_CALL_ARGUMENT", "parameter receives more than one argument")
+                fail rejection
+            const argument_raw = try graph.number(state.syntax.pool, argument)
+            const type_span = try graph.field(state.syntax.pool, parameters[position], "ty")
+            const type_text = try graph.spelling(state.syntax.pool, state.syntax.source, type_span)
+            const location = try problem(state, type_span, "", "")
+            const expected = try scalars.annotation(type_text, location.start, location.end)
+            const checked = try expression_expected(mut state, argument_raw, expected)
+            const argument_span = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "span")
+            _ = try require(state, checked.ty, expected, argument_span)
+            slots[position] = checked.id
+            raw_slots[position] = argument_raw
+            order.append(position)
+            supplied = supplied + 1
+            if not is_named:
+                positional = positional + 1
+        for position in range(len(parameters)):
+            if slots[position] == -1:
+                const default_id = try graph.field(state.syntax.pool, parameters[position], "default_value")
+                const default_value = try graph.get(state.syntax.pool, default_id)
+                if default_value.kind == 0:
+                    const rejection = try problem(state, call_name, "E_ARITY", "missing required argument: expected " + str(len(parameters)) + ", given " + str(len(arguments)))
+                    fail rejection
+                const default_raw = try graph.number(state.syntax.pool, default_id)
+                const checked = try expression(mut state, default_raw)
+                slots[position] = checked.id
+                raw_slots[position] = default_raw
+                order.append(position)
+        mut mutation_indices: int[] = []
+        for position_id in mutation_positions:
+            const position = try graph.number(state.syntax.pool, position_id)
+            mutation_indices.append(position)
+        const mutation_diagnostics = try mut_markers.check(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, mut_markers.Request(call_name=call_name, arguments=raw_slots, mut_positions=mutation_indices))
+        for diagnostic in mutation_diagnostics:
+            state.problems.append(diagnostic)
+        if len(arguments) == len(parameters) and len(argument_names) == 0:
+            order = []
+        const result_span = try graph.field(state.syntax.pool, target_signature, "return_type")
+        const result_text = try graph.spelling(state.syntax.pool, state.syntax.source, result_span)
+        const result_location = try problem(state, result_span, "", "")
+        ty = try scalars.annotation(result_text, result_location.start, result_location.end)
+        const argument_values = try emission.ids(mut state.batch, slots)
+        const evaluation_order = try emission.ids(mut state.batch, order)
+        const evaluation = try syntax_value.absent(mut state.batch.pool)
+        const function = try syntax_value.integer(mut state.batch.pool, target)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["evaluation_order", "evaluation", "function", "arguments"], [evaluation_order, evaluation, function, argument_values])
+    elif data.data == b"binary":
+        const op_id = try graph.field(state.syntax.pool, payload, "op")
+        const op = try graph.get(state.syntax.pool, op_id)
+        const left_id = try graph.field(state.syntax.pool, payload, "left")
+        const right_id = try graph.field(state.syntax.pool, payload, "right")
+        const left_raw = try graph.number(state.syntax.pool, left_id)
+        const right_raw = try graph.number(state.syntax.pool, right_id)
+        const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
+        const chained_id = try graph.field(state.syntax.pool, payload, "chained")
+        const chained = try graph.get(state.syntax.pool, chained_id)
+        if chained.integer != 0 or op.data == b"python_div" or (len(op.data) >= 3 and op.data[:3] == b"f64"):
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "binary operation is outside the B1 scalar profile")
+            fail rejection
+        if state.batch.facts.expected[raw_id] == 0:
+            state.batch.facts.expected[left_raw] = 0
+            state.batch.facts.expected[right_raw] = 0
+        const left = try expression(mut state, left_raw)
+        const right = try expression(mut state, right_raw)
+        _ = try require(state, right.ty, left.ty, operator_span)
+        ty = left.ty
+        if op.data == b"logical_and" or op.data == b"logical_or":
+            _ = try require(state, left.ty, 1, operator_span)
+            ty = 1
+        elif op.data == b"eq" or op.data == b"ne":
+            ty = 1
+        else:
+            if left.ty != 0:
+                const rejection = try problem(state, operator_span, "E_TYPE", "operation requires an integer type")
+                fail rejection
+            if op.data == b"lt" or op.data == b"le" or op.data == b"gt" or op.data == b"ge":
+                ty = 1
+        const typed_op = try syntax_value.enumeration(mut state.batch.pool, op.data)
+        const typed_left = try syntax_value.integer(mut state.batch.pool, left.id)
+        const typed_right = try syntax_value.integer(mut state.batch.pool, right.id)
+        const typed_span = try graph.clone(mut state.batch.pool, state.syntax.pool, operator_span, 0)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["op", "left", "right", "op_span"], [typed_op, typed_left, typed_right, typed_span])
+    else:
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "body expression is outside the B1 scalar profile")
+        fail rejection
+    const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, data.data, result_payload)
+    state.batch.resolved[raw_id] = id
+    state.depth = state.depth - 1
+    return Expression(id=id, ty=ty)
+
+
+public func expression_expected(mut state: State, raw_id: int, expected: int) -> Expression fails syntax_value.Problem:
+    if raw_id < 0 or raw_id >= len(state.syntax.nodes):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid expected expression index")
+    if len(state.batch.facts.expected) != len(state.syntax.nodes):
+        state.batch.facts.expected = []
+        for node in state.syntax.nodes:
+            state.batch.facts.expected.append(-1)
+    state.batch.facts.expected[raw_id] = expected
+    return try expression(mut state, raw_id)
+
+
+public func statement(mut state: State, raw_id: int) -> Statement fails syntax_value.Problem:
+    if raw_id < 0 or raw_id >= len(state.syntax.statements):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid statement index")
+    if state.depth >= 256:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="body statement depth exceeded")
+    state.depth = state.depth + 1
+    const raw = state.syntax.statements[raw_id]
+    const span = try graph.field(state.syntax.pool, raw, "span")
+    const data_id = try graph.field(state.syntax.pool, raw, "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    const payload = try graph.payload(state.syntax.pool, data_id)
+    mut terminates = False
+    mut looping = False
+    mut result_payload = -1
+    mut tag = data.data
+    if tag == b"block":
+        const active = state.scope.active
+        const children = try graph.items(state.syntax.pool, payload)
+        mut checked: int[] = []
+        for child in children:
+            const child_id = try graph.number(state.syntax.pool, child)
+            if terminates and not looping:
+                const child_raw = state.syntax.statements[child_id]
+                const child_span = try graph.field(state.syntax.pool, child_raw, "span")
+                const rejection = try problem(state, child_span, "E_UNREACHABLE", "statement follows a structurally terminating statement")
+                fail rejection
+            const result = try statement(mut state, child_id)
+            checked.append(result.id)
+            terminates = result.terminates
+            looping = result.looping
+        state.scope.active = active
+        result_payload = try emission.ids(mut state.batch, checked)
+    elif tag == b"ret" or tag == b"discard":
+        const expression_id = try graph.number(state.syntax.pool, payload)
+        mut result = Expression(id=-1, ty=15)
+        if tag == b"ret":
+            result = try expression_expected(mut state, expression_id, state.return_type)
+        else:
+            result = try expression(mut state, expression_id)
+        if tag == b"ret":
+            _ = try require(state, result.ty, state.return_type, span)
+            terminates = True
+        result_payload = try syntax_value.integer(mut state.batch.pool, result.id)
+    elif tag == b"binding":
+        const name_span = try graph.field(state.syntax.pool, payload, "name")
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const top_level_name = try top_level(state, name_span)
+        if locals.find(state.scope, name) >= 0 or top_level_name:
+            const rejection = try problem(state, name_span, "E_SHADOWING", "binding shadows an active local or top-level function")
+            fail rejection
+        const value_id = try graph.field(state.syntax.pool, payload, "value")
+        const value_raw = try graph.number(state.syntax.pool, value_id)
+        const annotation_id = try graph.field(state.syntax.pool, payload, "annotation")
+        const annotation = try graph.get(state.syntax.pool, annotation_id)
+        mut value = Expression(id=-1, ty=15)
+        if annotation.kind != 0:
+            const text = try graph.spelling(state.syntax.pool, state.syntax.source, annotation_id)
+            const location = try problem(state, annotation_id, "", "")
+            const ty = try scalars.annotation(text, location.start, location.end)
+            value = try expression_expected(mut state, value_raw, ty)
+            _ = try require(state, value.ty, ty, annotation_id)
+        else:
+            value = try expression(mut state, value_raw)
+        const mutable_id = try graph.field(state.syntax.pool, payload, "mutable")
+        const mutable = try graph.get(state.syntax.pool, mutable_id)
+        const slot = try locals.add(mut state.scope, name, name_span, value.ty, mutable.integer != 0, b"local")
+        result_payload = try emission.store(mut state.batch, slot, value.id)
+        tag = b"initialize"
+    elif tag == b"branch":
+        const condition_id = try graph.field(state.syntax.pool, payload, "condition")
+        const condition_raw = try graph.number(state.syntax.pool, condition_id)
+        const condition = try expression(mut state, condition_raw)
+        const condition_span = try graph.field(state.syntax.pool, state.syntax.nodes[condition_raw], "span")
+        _ = try require(state, condition.ty, 1, condition_span)
+        const then_id = try graph.field(state.syntax.pool, payload, "then_body")
+        const then_raw = try graph.number(state.syntax.pool, then_id)
+        const before = locals_flow.snapshot(state.scope)
+        const then_body = try statement(mut state, then_raw)
+        const then_state = locals_flow.snapshot(state.scope)
+        locals_flow.restore(mut state.scope, before)
+        const else_id = try graph.field(state.syntax.pool, payload, "else_body")
+        const else_value = try graph.get(state.syntax.pool, else_id)
+        mut else_body = try syntax_value.absent(mut state.batch.pool)
+        mut else_terminates = False
+        if else_value.kind != 0:
+            const else_raw = try graph.number(state.syntax.pool, else_id)
+            const result = try statement(mut state, else_raw)
+            else_body = try syntax_value.integer(mut state.batch.pool, result.id)
+            else_terminates = result.terminates
+            terminates = then_body.terminates and result.terminates
+        if else_terminates and not then_body.terminates:
+            locals_flow.restore(mut state.scope, then_state)
+        elif not then_body.terminates and not else_terminates:
+            locals_flow.intersect(mut state.scope, then_state)
+        const checked_condition = try syntax_value.integer(mut state.batch.pool, condition.id)
+        const checked_then = try syntax_value.integer(mut state.batch.pool, then_body.id)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["condition", "then_body", "else_body"], [checked_condition, checked_then, else_body])
+    elif tag == b"assignment":
+        const name_span = try graph.field(state.syntax.pool, payload, "name")
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const slot = locals.find(state.scope, name)
+        if slot < 0:
+            const rejection = try problem(state, name_span, "E_BINDING_DECLARATION", "assignment requires a declared binding; introduce a writable local with `mut`")
+            state.problems.append(syntax_problem.repaired(rejection, [syntax_problem.Edit(start=rejection.start, end=rejection.start, text=b"mut ")]))
+            fail rejection
+        _ = try admit_assignment(state, slot, name_span)
+        if not state.scope.locals[slot].mutable:
+            const rejection = try problem(state, name_span, "E_IMMUTABLE", "this binding cannot be assigned")
+            fail rejection
+        const value_id = try graph.field(state.syntax.pool, payload, "value")
+        const value_raw = try graph.number(state.syntax.pool, value_id)
+        mut value = try expression_expected(mut state, value_raw, state.scope.locals[slot].ty)
+        const op_id = try graph.field(state.syntax.pool, payload, "op")
+        const op = try graph.get(state.syntax.pool, op_id)
+        if op.data != b"set":
+            const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
+            _ = try require(state, value.ty, state.scope.locals[slot].ty, operator_span)
+            if value.ty != 0:
+                const rejection = try problem(state, operator_span, "E_TYPE", "operation requires an integer type")
+                fail rejection
+            state.scope.locals[slot].usage.reads = state.scope.locals[slot].usage.reads + 1
+            const local_payload = try syntax_value.integer(mut state.batch.pool, slot)
+            const left = try emission.node(mut state.batch, state.syntax.pool, name_span, value.ty, b"local", local_payload)
+            const typed_op = try syntax_value.enumeration(mut state.batch.pool, op.data)
+            const typed_left = try syntax_value.integer(mut state.batch.pool, left)
+            const typed_right = try syntax_value.integer(mut state.batch.pool, value.id)
+            const typed_span = try graph.clone(mut state.batch.pool, state.syntax.pool, operator_span, 0)
+            const binary = try syntax_value.object(mut state.batch.pool, ["op", "left", "right", "op_span"], [typed_op, typed_left, typed_right, typed_span])
+            const combined = try emission.node(mut state.batch, state.syntax.pool, span, value.ty, b"binary", binary)
+            value = Expression(id=combined, ty=value.ty)
+        _ = try require(state, value.ty, state.scope.locals[slot].ty, span)
+        state.scope.locals[slot].usage.writes = state.scope.locals[slot].usage.writes + 1
+        state.scope.locals[slot].origin = b"local"
+        state.scope.locals[slot].initialized = True
+        result_payload = try emission.store(mut state.batch, slot, value.id)
+        tag = b"assign"
+    elif tag == b"loop":
+        const condition_id = try graph.field(state.syntax.pool, payload, "condition")
+        const condition_raw = try graph.number(state.syntax.pool, condition_id)
+        const condition = try expression(mut state, condition_raw)
+        const condition_span = try graph.field(state.syntax.pool, state.syntax.nodes[condition_raw], "span")
+        _ = try require(state, condition.ty, 1, condition_span)
+        const loop_id = state.control.next
+        state.control.next = loop_id + 1
+        state.control.active.append(loop_id)
+        state.control.exited.append(False)
+        const body_id = try graph.field(state.syntax.pool, payload, "body")
+        const body_raw = try graph.number(state.syntax.pool, body_id)
+        const before = locals_flow.snapshot(state.scope)
+        const body = try statement(mut state, body_raw)
+        locals_flow.restore(mut state.scope, before)
+        const last = len(state.control.active) - 1
+        const condition_node = state.batch.nodes[condition.id]
+        const condition_data = try graph.field(state.batch.pool, condition_node, "data")
+        const condition_tag = try graph.get(state.batch.pool, condition_data)
+        if condition_tag.data == b"boolean":
+            const boolean_id = try graph.payload(state.batch.pool, condition_data)
+            const boolean = try graph.get(state.batch.pool, boolean_id)
+            terminates = boolean.integer == 1 and not state.control.exited[last]
+            looping = terminates
+        state.control.active = state.control.active[:last]
+        state.control.exited = state.control.exited[:last]
+        const identity = try syntax_value.integer(mut state.batch.pool, loop_id)
+        const checked_condition = try syntax_value.integer(mut state.batch.pool, condition.id)
+        const checked_body = try syntax_value.integer(mut state.batch.pool, body.id)
+        const step = try syntax_value.absent(mut state.batch.pool)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["id", "condition", "body", "step"], [identity, checked_condition, checked_body, step])
+    elif tag == b"loop_exit":
+        if len(state.control.active) == 0:
+            const rejection = try problem(state, span, "E_LOOP_EXIT", "break and continue require an enclosing loop")
+            fail rejection
+        const last = len(state.control.active) - 1
+        const continuing = try graph.get(state.syntax.pool, payload)
+        if continuing.integer == 0:
+            state.control.exited[last] = True
+        const target = try syntax_value.integer(mut state.batch.pool, state.control.active[last])
+        const flag = try syntax_value.boolean(mut state.batch.pool, continuing.integer != 0)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["target", "continuing"], [target, flag])
+        terminates = True
+    elif tag == b"assertion":
+        const condition_id = try graph.field(state.syntax.pool, payload, "condition")
+        const condition_raw = try graph.number(state.syntax.pool, condition_id)
+        const condition = try expression(mut state, condition_raw)
+        const condition_span = try graph.field(state.syntax.pool, state.syntax.nodes[condition_raw], "span")
+        _ = try require(state, condition.ty, 1, condition_span)
+        const message_id = try graph.field(state.syntax.pool, payload, "message")
+        const message = try graph.clone(mut state.batch.pool, state.syntax.pool, message_id, 0)
+        const message_value = try graph.field(state.syntax.pool, payload, "value")
+        const message_expression = try graph.get(state.syntax.pool, message_value)
+        if message_expression.kind != 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "dynamic assertion messages are outside the B1 scalar profile")
+            fail rejection
+        const checked_condition = try syntax_value.integer(mut state.batch.pool, condition.id)
+        const absent = try syntax_value.absent(mut state.batch.pool)
+        const kind = try syntax_value.enumeration(mut state.batch.pool, b"statement")
+        result_payload = try syntax_value.object(mut state.batch.pool, ["condition", "message", "message_value", "kind"], [checked_condition, message, absent, kind])
+    elif tag == b"for_range":
+        const name_span = try graph.field(state.syntax.pool, payload, "name")
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const top_level_name = try top_level(state, name_span)
+        if name != b"_" and (locals.find(state.scope, name) >= 0 or top_level_name):
+            const rejection = try problem(state, name_span, "E_SHADOWING", "iteration binding shadows an active declaration")
+            fail rejection
+        const step_id = try graph.field(state.syntax.pool, payload, "step")
+        const step = try graph.get(state.syntax.pool, step_id)
+        if step.kind != 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "explicit range strides are outside the initial B1 scalar profile")
+            fail rejection
+        const start_id = try graph.field(state.syntax.pool, payload, "start")
+        const start_raw = try graph.number(state.syntax.pool, start_id)
+        const end_id = try graph.field(state.syntax.pool, payload, "end")
+        const end_raw = try graph.number(state.syntax.pool, end_id)
+        if start_raw < 0 or start_raw >= len(state.syntax.nodes):
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid range start")
+        const start_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[start_raw], "data")
+        const start_data = try graph.get(state.syntax.pool, start_data_id)
+        mut start = Expression(id=-1, ty=0)
+        if start_data.data == b"unit":
+            const zero = try syntax_value.integer(mut state.batch.pool, 0)
+            const zero_node = try emission.node(mut state.batch, state.syntax.pool, name_span, 0, b"integer", zero)
+            start = Expression(id=zero_node, ty=0)
+        else:
+            start = try expression(mut state, start_raw)
+        const end = try expression(mut state, end_raw)
+        if start.ty != 0:
+            const rejection = try problem(state, name_span, "E_TYPE", "operation requires an integer type")
+            fail rejection
+        const end_span = try graph.field(state.syntax.pool, state.syntax.nodes[end_raw], "span")
+        _ = try require(state, end.ty, start.ty, end_span)
+        const active = state.scope.active
+        const loop_id = state.control.next
+        state.control.next = loop_id + 1
+        const plan = try range_lower.prepare(mut state.batch, mut state.scope, state.syntax.pool, range_lower.Input(source=state.syntax.source, name=name_span, span=span, start=start.id, end=end.id, loop_id=loop_id))
+        state.control.active.append(loop_id)
+        state.control.exited.append(False)
+        state.control.ranges.append(plan.index)
+        const body_id = try graph.field(state.syntax.pool, payload, "body")
+        const body_raw = try graph.number(state.syntax.pool, body_id)
+        const before = locals_flow.snapshot(state.scope)
+        const body = try statement(mut state, body_raw)
+        locals_flow.restore(mut state.scope, before)
+        const last = len(state.control.active) - 1
+        state.control.active = state.control.active[:last]
+        state.control.exited = state.control.exited[:last]
+        state.scope.active = active
+        state.control.ranges = state.control.ranges[:len(state.control.ranges) - 1]
+        result_payload = try range_lower.finish(mut state.batch, state.syntax.pool, plan, body.id)
+        tag = b"range_loop"
+    else:
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "statement is outside the B1 scalar profile")
+        fail rejection
+    const id = try emission.statement(mut state.batch, state.syntax.pool, span, terminates, tag, result_payload)
+    state.depth = state.depth - 1
+    return Statement(id=id, terminates=terminates, looping=looping)
+
+
+public func admit_assignment(state: State, slot: int, span: int) -> bool fails syntax_value.Problem:
+    for range_slot in state.control.ranges:
+        if range_slot == slot:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "range-variable rebinding requires lowering outside B1")
+            fail rejection
+    return True

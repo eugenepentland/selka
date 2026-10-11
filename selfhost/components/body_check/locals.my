@@ -1,0 +1,68 @@
+import syntax_value
+import graph
+
+public record Usage:
+    reads: int
+    writes: int
+    dead_write_reads: int
+    dead_write_span: int
+    temporary: bool = False
+
+
+public record Local:
+    name: bytes
+    declaration: int
+    ty: int
+    mutable: bool
+    origin: bytes
+    initialized: bool
+    usage: Usage
+
+
+public record Scope:
+    locals: Local[]
+    active: int[]
+
+
+public func empty() -> Scope:
+    return Scope(locals=[], active=[])
+
+
+public func find(scope: Scope, name: bytes) -> int:
+    mut position = len(scope.active)
+    while position > 0:
+        position = position - 1
+        const slot = scope.active[position]
+        if scope.locals[slot].name == name:
+            return slot
+    return -1
+
+
+public func add(mut scope: Scope, name: bytes, declaration: int, ty: int, mutable: bool, origin: bytes) -> int fails syntax_value.Problem:
+    if len(scope.locals) >= 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="local limit exceeded")
+    const slot = len(scope.locals)
+    scope.locals.append(Local(name=name, declaration=declaration, ty=ty, mutable=mutable, origin=origin, initialized=True, usage=Usage(reads=0, writes=0, dead_write_reads=0, dead_write_span=-1)))
+    scope.active.append(slot)
+    return slot
+
+
+public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, local: Local) -> int fails syntax_value.Problem:
+    const no = try syntax_value.boolean(mut pool, False)
+    const initialized = try syntax_value.boolean(mut pool, local.initialized)
+    const absent = try syntax_value.absent(mut pool)
+    const ownership = try syntax_value.object(mut pool, ["scoped_file", "transfer_span", "initialized", "transfer_available"], [no, absent, initialized, no])
+    const reads = try syntax_value.integer(mut pool, local.usage.reads)
+    const writes = try syntax_value.integer(mut pool, local.usage.writes)
+    const dead_reads = try syntax_value.integer(mut pool, local.usage.dead_write_reads)
+    mut dead_span = absent
+    if local.usage.dead_write_span >= 0:
+        dead_span = try graph.clone(mut pool, input, local.usage.dead_write_span, 0)
+    const temporary = try syntax_value.boolean(mut pool, local.usage.temporary)
+    const usage = try syntax_value.object(mut pool, ["temporary", "reads", "writes", "dead_write_reads", "dead_write_span"], [temporary, reads, writes, dead_reads, dead_span])
+    const name = try syntax_value.octets(mut pool, local.name)
+    const declaration = try graph.clone(mut pool, input, local.declaration, 0)
+    const ty = try syntax_value.integer(mut pool, local.ty)
+    const mutable = try syntax_value.boolean(mut pool, local.mutable)
+    const origin = try syntax_value.enumeration(mut pool, local.origin)
+    return try syntax_value.object(mut pool, ["ownership", "usage", "name", "declaration", "ty", "mutable", "origin"], [ownership, usage, name, declaration, ty, mutable, origin])

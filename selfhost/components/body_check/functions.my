@@ -1,0 +1,142 @@
+import engine
+import graph
+import locals
+import scalars
+import syntax_value
+import emission
+import syntax_problem
+
+public func type_at(state: engine.State, span: int) -> int fails syntax_value.Problem:
+    const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    const location = try engine.problem(state, span, "", "")
+    return try scalars.annotation(spelling, location.start, location.end)
+
+
+public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bool fails syntax_value.Problem:
+    const first_problem = len(state.problems)
+    const first_node = len(state.batch.nodes)
+    const first_statement = len(state.batch.statements)
+    state.scope = locals.empty()
+    state.batch.resolved = []
+    state.batch.facts.expected = []
+    for node in state.syntax.nodes:
+        state.batch.resolved.append(-1)
+        state.batch.facts.expected.append(-1)
+    state.depth = 0
+    state.control = engine.Control(next=0, active=[], exited=[], ranges=[])
+    const declaration = try graph.field(state.syntax.pool, raw, "name")
+    const raw_policy = try graph.field(state.syntax.pool, raw, "policy")
+    for field_name in ["constant", "c_abi", "restricted", "conversion"]:
+        const flag_id = try graph.field(state.syntax.pool, raw_policy, field_name)
+        const flag = try graph.get(state.syntax.pool, flag_id)
+        if flag.integer != 0:
+            const rejection = try engine.problem(state, declaration, "P_BODY_PROFILE", "function policy is outside the B1 scalar profile")
+            fail rejection
+    for field_name in ["host", "owner"]:
+        const value_id = try graph.field(state.syntax.pool, raw_policy, field_name)
+        const value = try graph.get(state.syntax.pool, value_id)
+        if value.kind != 0:
+            const rejection = try engine.problem(state, declaration, "P_BODY_PROFILE", "function owner or host is outside the B1 scalar profile")
+            fail rejection
+    const signature_id = try graph.field(state.syntax.pool, raw, "signature")
+    const generics_id = try graph.field(state.syntax.pool, signature_id, "type_parameters")
+    const generics = try graph.items(state.syntax.pool, generics_id)
+    const failure_id = try graph.field(state.syntax.pool, signature_id, "failure_type")
+    const failure = try graph.get(state.syntax.pool, failure_id)
+    if len(generics) != 0 or failure.kind != 0:
+        const rejection = try engine.problem(state, declaration, "P_BODY_PROFILE", "B1 requires nongeneric functions without checked failure types")
+        fail rejection
+    const return_span = try graph.field(state.syntax.pool, signature_id, "return_type")
+    const return_type = try type_at(state, return_span)
+    state.return_type = return_type
+    const parameters_id = try graph.field(state.syntax.pool, signature_id, "parameters")
+    const parameters = try graph.items(state.syntax.pool, parameters_id)
+    mut labels: int[] = []
+    for parameter in parameters:
+        const parameter_name = try graph.field(state.syntax.pool, parameter, "name")
+        const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, parameter_name)
+        const shadows_top_level = try engine.top_level(state, parameter_name)
+        if shadows_top_level:
+            const rejection = try engine.problem(state, parameter_name, "E_SHADOWING", "parameter shadows a top-level function")
+            fail rejection
+        const previous = locals.find(state.scope, spelling)
+        if previous >= 0:
+            const rejection = try engine.problem(state, parameter_name, "E_DUPLICATE_PARAMETER", "parameter name is already declared")
+            const previous_location = try engine.problem(state, state.scope.locals[previous].declaration, "", "")
+            const related = syntax_problem.Related(start=previous_location.start, end=previous_location.end, message="previous parameter declaration", role="related")
+            state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+            fail rejection
+        const type_span = try graph.field(state.syntax.pool, parameter, "ty")
+        const ty = try type_at(state, type_span)
+        const mutable_id = try graph.field(state.syntax.pool, parameter, "mut")
+        const mutable = try graph.get(state.syntax.pool, mutable_id)
+        const default_id = try graph.field(state.syntax.pool, parameter, "default_value")
+        const default_value = try graph.get(state.syntax.pool, default_id)
+        if default_value.kind != 0:
+            const default_raw = try graph.number(state.syntax.pool, default_id)
+            const checked = try engine.expression_expected(mut state, default_raw, ty)
+            _ = try engine.require(state, checked.ty, ty, type_span)
+        _ = try locals.add(mut state.scope, spelling, parameter_name, ty, mutable.integer != 0, b"parameter")
+        const named_id = try graph.field(state.syntax.pool, parameter, "named")
+        const named = try graph.get(state.syntax.pool, named_id)
+        mut label_text = b""
+        if named.integer != 0:
+            label_text = spelling
+        const label = try syntax_value.octets(mut state.batch.pool, label_text)
+        labels.append(label)
+    const body_id = try graph.field(state.syntax.pool, raw, "body")
+    const body_raw = try graph.number(state.syntax.pool, body_id)
+    mut body = try engine.statement(mut state, body_raw)
+    if not body.terminates:
+        if state.return_type != 15:
+            const rejection = try engine.problem(state, declaration, "E_MISSING_RETURN", "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true")
+            fail rejection
+        const unit_payload = try syntax_value.absent(mut state.batch.pool)
+        const unit = try emission.node(mut state.batch, state.syntax.pool, declaration, 15, b"unit", unit_payload)
+        const return_payload = try syntax_value.integer(mut state.batch.pool, unit)
+        const ret = try emission.statement(mut state.batch, state.syntax.pool, declaration, True, b"ret", return_payload)
+        const children = try emission.ids(mut state.batch, [body.id, ret])
+        const block = try emission.statement(mut state.batch, state.syntax.pool, declaration, True, b"block", children)
+        body = engine.Statement(id=block, terminates=True)
+    if len(state.scope.locals) > 65536 - state.batch.facts.local_count:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="aggregate local limit exceeded")
+    state.batch.facts.local_count = state.batch.facts.local_count + len(state.scope.locals)
+    mut local_values: int[] = []
+    for local in state.scope.locals:
+        const encoded = try locals.encode(mut state.batch.pool, state.syntax.pool, local)
+        local_values.append(encoded)
+    const local_list = try syntax_value.sequence(mut state.batch.pool, local_values)
+    const label_list = try syntax_value.sequence(mut state.batch.pool, labels)
+    const typed_body = try syntax_value.integer(mut state.batch.pool, body.id)
+    const scope = try syntax_value.object(mut state.batch.pool, ["parameter_labels", "body", "locals"], [label_list, typed_body, local_list])
+    const no = try syntax_value.boolean(mut state.batch.pool, False)
+    const absent = try syntax_value.absent(mut state.batch.pool)
+    const empty_list = try syntax_value.sequence(mut state.batch.pool, [])
+    const zero = try syntax_value.integer(mut state.batch.pool, 0)
+    const policy_id = try graph.field(state.syntax.pool, raw, "policy")
+    const bound_id = try graph.field(state.syntax.pool, policy_id, "effect_bound")
+    const bound = try graph.clone(mut state.batch.pool, state.syntax.pool, bound_id, 0)
+    const policy = try syntax_value.object(mut state.batch.pool, ["c_abi", "host", "effect_bound", "effects", "owner", "restricted", "conversion"], [no, absent, bound, zero, absent, no, no])
+    const result_type = try syntax_value.integer(mut state.batch.pool, state.return_type)
+    const parameter_count = try syntax_value.integer(mut state.batch.pool, len(parameters))
+    const unknown = try syntax_value.tagged(mut state.batch.pool, b"unknown", absent)
+    const inferred = try syntax_value.object(mut state.batch.pool, ["writes", "external"], [no, no])
+    const declared_id = try graph.field(state.syntax.pool, signature_id, "mut_positions")
+    const declared = try graph.clone(mut state.batch.pool, state.syntax.pool, declared_id, 0)
+    const signature = try syntax_value.object(mut state.batch.pool, ["constant_arguments", "return_type", "parameter_count", "mutates", "return_origin", "declared_mutates", "inferred"], [empty_list, result_type, parameter_count, empty_list, unknown, declared, inferred])
+    const identity = try syntax_value.integer(mut state.batch.pool, id)
+    const function_name = try syntax_value.octets(mut state.batch.pool, name)
+    const location = try graph.clone(mut state.batch.pool, state.syntax.pool, declaration, 0)
+    const function = try syntax_value.object(mut state.batch.pool, ["policy", "type_arguments", "signature", "scope", "id", "name", "declaration"], [policy, empty_list, signature, scope, identity, function_name, location])
+    state.batch.functions.append(function)
+    const node_start = try syntax_value.integer(mut state.batch.pool, first_node)
+    const node_end = try syntax_value.integer(mut state.batch.pool, len(state.batch.nodes))
+    const nodes = try syntax_value.object(mut state.batch.pool, ["start", "end"], [node_start, node_end])
+    const statement_start = try syntax_value.integer(mut state.batch.pool, first_statement)
+    const statement_end = try syntax_value.integer(mut state.batch.pool, len(state.batch.statements))
+    const statements = try syntax_value.object(mut state.batch.pool, ["start", "end"], [statement_start, statement_end])
+    const range = try syntax_value.object(mut state.batch.pool, ["nodes", "statements"], [nodes, statements])
+    state.batch.ranges.append(range)
+    if len(state.problems) > first_problem:
+        fail state.problems[first_problem].problem
+    return True

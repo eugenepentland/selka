@@ -1,0 +1,46 @@
+import codec
+import graph
+import syntax_value
+import syntax_codec
+
+public func test_signed_integer_graph_roundtrip() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const minimum = try syntax_value.integer(mut pool, -9223372036854775807 - 1)
+    const maximum = try syntax_value.integer(mut pool, 9223372036854775807)
+    _ = try syntax_value.object(mut pool, ["minimum", "maximum"], [minimum, maximum])
+    const data = try syntax_codec.encode_with_magic(pool, b"SLKBKI01")
+    const request = try codec.decode(data)
+    const minimum_id = try graph.field(request.pool, request.root, "minimum")
+    const maximum_id = try graph.field(request.pool, request.root, "maximum")
+    const low = try graph.number(request.pool, minimum_id)
+    const high = try graph.number(request.pool, maximum_id)
+    return low == -9223372036854775807 - 1 and high == 9223372036854775807
+
+
+public func test_graph_forward_reference_refused() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const number = try syntax_value.integer(mut pool, 0)
+    _ = try syntax_value.object(mut pool, ["value"], [number])
+    const data = try syntax_codec.encode_with_magic(pool, b"SLKBKI01")
+    const corrupted = data[:54] + b"\x01\x00\x00\x00" + data[58:]
+    match codec.decode(corrupted):
+        case Ok(request):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_wrong_outer_direction_refused() -> bool:
+    const data = b"SLKBCK01\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00" + b"0000000000000000000000000000000000000000"
+    match codec.request_payload(data):
+        case Ok(payload):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_correlated_reply_header() -> bool fails syntax_value.Problem:
+    const identity = b"1234567812345678123456781234567812345678"
+    const request = b"SLKBCK01\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + identity
+    const reply = try codec.framed_reply(request, b"abcd")
+    return len(reply) == 68 and reply[:8] == b"SLKBCK01" and reply[16] == 1 and reply[20] == 4 and reply[24:64] == identity and reply[64:] == b"abcd"

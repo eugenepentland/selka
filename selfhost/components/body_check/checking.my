@@ -1,0 +1,119 @@
+import syntax_value
+import syntax_problem
+import syntax_diagnostics
+import graph
+import engine
+import functions
+import emission
+import names
+
+func ascii(text: str) -> bytes fails syntax_value.Problem:
+    const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+    mut buffer = byte_buffer([])
+    for character in text:
+        mut found = False
+        for index in range(len(alphabet)):
+            if character == alphabet[index]:
+                _ = buffer.append_byte(index + 32)
+                found = True
+                break
+        if not found:
+            fail syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="diagnostic encoding requires ASCII")
+    return bytes(buffer)
+
+
+func profile(problem: syntax_value.Problem) -> syntax_value.Pool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const code_bytes = try ascii(problem.code)
+    const message_bytes = try ascii(problem.message)
+    const code = try syntax_value.octets(mut pool, code_bytes)
+    const message = try syntax_value.octets(mut pool, message_bytes)
+    const span = try syntax_value.span(mut pool, problem.start, problem.end)
+    const value = try syntax_value.object(mut pool, ["code", "span", "message"], [code, span, message])
+    _ = try syntax_value.tagged(mut pool, b"profile", value)
+    return pool
+
+
+public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails syntax_value.Problem:
+    const context_id = try graph.field(pool, root, "context")
+    const path_id = try graph.field(pool, context_id, "path")
+    const path = try graph.get(pool, path_id)
+    if path.data == b"body_edit_marker":
+        return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="private operational edit marker"))
+    const source_id = try graph.field(pool, context_id, "source")
+    const source = try graph.get(pool, source_id)
+    const program_id = try graph.field(pool, root, "program")
+    for field_name in ["lambdas", "attributes"]:
+        const values_id = try graph.field(pool, program_id, field_name)
+        const values = try graph.items(pool, values_id)
+        if len(values) != 0:
+            return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="lambdas and contracts are outside the B1 scalar profile"))
+    const type_tables = try graph.field(pool, program_id, "types")
+    for field_name in ["records", "domains", "resources", "variants"]:
+        const values_id = try graph.field(pool, type_tables, field_name)
+        const values = try graph.items(pool, values_id)
+        if len(values) != 0:
+            return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="nominal and managed declarations are outside the B1 scalar body batch"))
+    const modules_id = try graph.field(pool, root, "modules")
+    const modules = try graph.items(pool, modules_id)
+    if source.kind != 3 or len(source.data) > 8392704 or len(modules) > 4096:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid body-check source context")
+    mut state = try engine.make(pool, source.data, program_id)
+    if len(state.syntax.functions) > 65536:
+        return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="function limit exceeded"))
+    state.syntax.modules = modules
+    for module in modules:
+        const used_id = try graph.field(pool, module, "import_used")
+        const used = try graph.items(pool, used_id)
+        const imports_id = try graph.field(pool, module, "imports")
+        const imports = try graph.items(pool, imports_id)
+        if len(used) != len(imports):
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="import usage count mismatch")
+        mut row: bool[] = []
+        for flag_id in used:
+            const flag = try graph.get(pool, flag_id)
+            row.append(flag.integer != 0)
+        state.syntax.usage.append(row)
+    mut diagnostics: syntax_problem.Diagnostic[] = []
+    mut id = 0
+    for function in state.syntax.functions:
+        const name_span = try graph.field(pool, function, "name")
+        const name = try names.qualified(pool, source.data, modules, name_span)
+        const first_diagnostic = len(state.problems)
+        match functions.check(mut state, function, id, name):
+            case Ok(value):
+                _ = value
+            case Err(problem):
+                if problem.code == "P_BODY_PROFILE":
+                    return try profile(problem)
+                if problem.code == "P_BODY_LIMIT" or problem.code == "P_SYNTAX_LIMIT" or problem.code == "P_DIAGNOSTIC":
+                    return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=problem.start, end=problem.end, message=problem.message))
+                if len(problem.code) > 0 and problem.code[0] == "P":
+                    fail problem
+                mut recorded = False
+                for diagnostic in state.problems[first_diagnostic:]:
+                    diagnostics.append(diagnostic)
+                    if diagnostic.problem.code == problem.code and diagnostic.problem.start == problem.start and diagnostic.problem.end == problem.end:
+                        recorded = True
+                if not recorded:
+                    diagnostics.append(syntax_problem.plain(problem))
+        id = id + 1
+    if len(diagnostics) != 0:
+        mut report = try syntax_diagnostics.report(diagnostics)
+        const diagnostic_list = try graph.field(report, len(report.values) - 1, "diagnostics")
+        _ = try syntax_value.tagged(mut report, b"failure", diagnostic_list)
+        return report
+    mut usage: int[] = []
+    for row in state.syntax.usage:
+        mut flags: int[] = []
+        for flag in row:
+            const value = try syntax_value.boolean(mut state.batch.pool, flag)
+            flags.append(value)
+        const values = try syntax_value.sequence(mut state.batch.pool, flags)
+        usage.append(values)
+    const batch = try emission.finish(mut state.batch)
+    const import_used = try syntax_value.sequence(mut state.batch.pool, usage)
+    const empty_diagnostics = try syntax_value.sequence(mut state.batch.pool, [])
+    const output = try syntax_value.object(mut state.batch.pool, ["batch", "import_used", "diagnostics"], [batch, import_used, empty_diagnostics])
+    _ = try syntax_value.tagged(mut state.batch.pool, b"success", output)
+    return state.batch.pool
