@@ -1,0 +1,52 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+
+public record Input:
+    sequence: int
+    count: int
+    ty: int
+    count_first: bool
+    loop_id: int
+
+
+public func build(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, input: Input) -> list_lower.Lowered fails syntax_value.Problem:
+    const sequence = try list_lower.temporary(mut scope, context, input.ty)
+    const count = try list_lower.temporary(mut scope, context, 0)
+    const bind_sequence = try list_lower.store(mut batch, context, sequence, input.sequence, True)
+    const bind_count = try list_lower.store(mut batch, context, count, input.count, True)
+    const gathered = try list_lower.temporary(mut scope, context, input.ty)
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const source = try list_lower.read(mut batch, context, sequence, input.ty)
+    const extend = try list_lower.operation(mut batch, context, list_lower.Operation(owner=gathered, kind=b"extend", arguments=[source], ty=15))
+    const discarded = try syntax_value.integer(mut batch.pool, extend)
+    const discard = try emission.statement(mut batch, context.input, context.span, False, b"discard", discarded)
+    const current = try list_lower.read(mut batch, context, index, 0)
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const advanced = try list_lower.binary(mut batch, context, b"add", current, one, 0)
+    const advance = try list_lower.store(mut batch, context, index, advanced, False)
+    const body_items = try emission.ids(mut batch, [discard, advance])
+    const body = try emission.statement(mut batch, context.input, context.span, False, b"block", body_items)
+    const capacity = try list_lower.integer(mut batch, context, 0, 0)
+    const capacity_id = try syntax_value.integer(mut batch.pool, capacity)
+    const acquire_payload = try syntax_value.object(mut batch.pool, ["capacity"], [capacity_id])
+    const acquired = try emission.node(mut batch, context.input, context.span, input.ty, b"acquire_buffer", acquire_payload)
+    const initialize = try list_lower.store(mut batch, context, gathered, acquired, True)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const initialize_index = try list_lower.store(mut batch, context, index, zero, True)
+    const left = try list_lower.read(mut batch, context, index, 0)
+    const right = try list_lower.read(mut batch, context, count, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", left, right, 1)
+    const loop_id = try syntax_value.integer(mut batch.pool, input.loop_id)
+    const condition_id = try syntax_value.integer(mut batch.pool, condition)
+    const body_id = try syntax_value.integer(mut batch.pool, body)
+    const no_step = try syntax_value.absent(mut batch.pool)
+    const loop_payload = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [loop_id, condition_id, body_id, no_step])
+    const loop = try emission.statement(mut batch, context.input, context.span, False, b"loop", loop_payload)
+    mut statements = [bind_sequence, bind_count, initialize, initialize_index, loop]
+    if input.count_first:
+        statements[0] = bind_count
+        statements[1] = bind_sequence
+    const result = try list_lower.read(mut batch, context, gathered, input.ty)
+    return try list_lower.block(mut batch, context, statements, result, input.ty)

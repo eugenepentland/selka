@@ -1,12 +1,14 @@
-# B2 scalar, string, and byte body checking
+# B3 scalar, string, byte, and list body checking
 
 This producer owns typing and lowering of ordinary nongeneric function bodies
 from raw ASTs. It emits complete native typed nodes, statements, functions, local
 metadata, and per-function table ranges. It does not consume a native semantic
-worklist or native checked bodies. B2 extends the qualified B1 scalar closure with
-immutable managed `str` and `bytes` values; it does not move catalog construction.
+worklist or native checked bodies. B3 extends the qualified scalar and immutable text/byte closure with growable
+lists. Selka chooses inferred list types and emits bounded catalog recipes; native
+code materializes those recipes without choosing body types.
 
-Admitted types are `int`/`i64`, `bool`, `Unit`, `str`, and `bytes`. Operations include
+Admitted types are `int`/`i64`, `bool`, `Unit`, `str`, `bytes`, and recursively
+nested lists of those admitted types. Operations include
 literals, scalar unary and binary operations, UTF-8 text and arbitrary byte
 literals, managed length and indexing (including negative indices), concatenation,
 equality and ordering, explicit `int`/`i64` conversion of admitted integer values,
@@ -29,10 +31,11 @@ fixed-array schema interning and are explicitly outside B2. Byte indexing emits 
 by an `int` cast. These internal narrow types are not exposed as new source-level
 integer types. Full typed tables retain native intermediate nodes and exact spans.
 
-Lists and other collections, generic functions, checked failure signatures,
+Other collections, generic functions, checked failure signatures,
 lambdas, resources, contracts, nominal declarations, non-i64 scalar suffixes,
 floating division, chained comparisons, dynamic assertion messages, explicit
-range strides, methods and slicing are outside this profile. Scalar alias
+range strides, keyed/callback sorting, enumerated/unpacked iteration, non-list
+methods and slicing are outside this profile. Scalar alias
 names remain in the catalog for shadow checking, but alias annotations are not
 resolved by this producer. Unsupported forms produce `P_BODY_PROFILE`; component
 mode refuses without native body fallback. Malformed graph transport fails the
@@ -47,7 +50,7 @@ body batch, diagnostics, and import usage. Component mode adopts the validated
 batch at the body-checking seam. Reference mode remains available.
 
 `main.my` accepts `--exchange FILE` or unframed `--request FILE`. The normative
-wire contract is [WIRE.md](WIRE.md): protocol 1, schema 2, correlated `SLKBCK01`
+wire contract is [WIRE.md](WIRE.md): protocol 1, schema 3, correlated `SLKBCK01`
 envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Schema-1 packages and
 requests are refused. The request contains raw ASTs, sources, declaration facts,
 and the two retained-catalog descriptors. Batch fields remain
@@ -67,3 +70,21 @@ coordinator-verified seed under `scripts/build-slot.sh build`, normally and with
 worktree-local Zig cache. Installed workflow tests compare complete
 native/component/shadow outputs and generated program execution; pure tests do
 not establish whole-checker adoption.
+
+
+The schema-3 catalog adds `base_count`, sparse authoritative existing `lists`
+(`id`, `element`), and `list_available`. The builtin can be absent or shadowed.
+List interning reuses an existing element key or assigns the next contiguous ID
+`19 + base_count + recipe ordinal`. The output adds `lists`, whose recipes retain
+the true first source span. Existing forward dependencies are checked for cycles;
+new recipes depend only on the retained catalog or earlier recipes. The total
+record limit is 65,536 and logical type depth is 256 including a scalar leaf.
+
+Lists support inferred, contextual, empty and nested literals; annotations;
+copies, rebinding, arguments and returns; length and negative indexing; equality;
+`+=` extension; repetition; indexed writes and augmentation; direct and expression
+receiver methods for append, extend, insert, pop, remove, index, reverse, sort,
+copy and clear; and single-binding iteration. List `+` remains the native source
+error. Unkeyed sorting admits int, str and bytes elements. The producer preserves
+hidden collection roots, managed cleanup, constant packing at 64 inert elements,
+full intermediate rows, and source-growth/rebinding behavior during iteration.

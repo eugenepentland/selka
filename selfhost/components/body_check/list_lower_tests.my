@@ -1,0 +1,90 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 0, 0)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+public func test_small_list_literal_exact_native_append_order_and_hidden_root() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const first = try list_lower.integer(mut fixture.batch, fixture.context, 3, 0)
+    const second = try list_lower.integer(mut fixture.batch, fixture.context, 4, 0)
+    const lowered = try list_lower.literal(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Literal(ty=40, element=0, values=[first, second]))
+    const value = try list_lower.append(mut fixture.batch, fixture.context, lowered)
+    const local = fixture.scope.locals[0]
+    const body_id = try graph.field(fixture.batch.pool, lowered.payload, "body")
+    const body = try graph.number(fixture.batch.pool, body_id)
+    const read_id = try graph.field(fixture.batch.pool, lowered.payload, "value")
+    const read = try graph.number(fixture.batch.pool, read_id)
+    return lowered.tag == b"block_value" and value == 7 and read == 6 and body == 3 and len(fixture.batch.nodes) == 8 and len(fixture.batch.statements) == 4 and len(fixture.scope.active) == 0 and local.name == b"<collection>" and local.ty == 40 and local.mutable and not local.initialized and local.usage.reads == 1 and local.usage.temporary
+
+
+public func test_empty_list_has_capacity_acquisition_and_root_read() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const lowered = try list_lower.literal(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Literal(ty=40, element=0, values=[]))
+    const acquired = fixture.batch.nodes[1]
+    const data_id = try graph.field(fixture.batch.pool, acquired, "data")
+    const data = try graph.get(fixture.batch.pool, data_id)
+    return lowered.ty == 40 and lowered.tag == b"block_value" and data.data == b"acquire_buffer" and len(fixture.batch.nodes) == 3 and len(fixture.batch.statements) == 2
+
+
+public func test_sixty_four_inert_elements_use_native_packed_array() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    mut values: int[] = []
+    for item in range(64):
+        const node = try list_lower.integer(mut fixture.batch, fixture.context, item, 0)
+        values.append(node)
+    const lowered = try list_lower.literal(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Literal(ty=40, element=0, values=values))
+    const payload = try graph.items(fixture.batch.pool, lowered.payload)
+    return lowered.tag == b"array" and len(payload) == 64 and len(fixture.batch.nodes) == 64 and len(fixture.scope.locals) == 0 and len(fixture.batch.statements) == 0
+
+
+public func test_one_nonconstant_prevents_packing_without_reordering() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const slot = try list_lower.temporary(mut fixture.scope, fixture.context, 0)
+    mut values: int[] = []
+    for item in range(63):
+        const node = try list_lower.integer(mut fixture.batch, fixture.context, item, 0)
+        values.append(node)
+    const variable = try list_lower.read(mut fixture.batch, fixture.context, slot, 0)
+    values.append(variable)
+    const lowered = try list_lower.literal(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Literal(ty=40, element=0, values=values))
+    return lowered.tag == b"block_value" and len(fixture.scope.locals) == 2 and len(fixture.batch.statements) == 66
+
+
+public func test_list_index_roots_receiver_and_normalizes_signed_index() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const empty = try syntax_value.sequence(mut fixture.batch.pool, [])
+    const base = try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 40, b"array", empty)
+    const index = try list_lower.integer(mut fixture.batch, fixture.context, -1, 0)
+    const lowered = try list_lower.access(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Access(base=base, owner_type=40, kind=b"read", arguments=[index], result_type=0, signed_length=False))
+    const value = try list_lower.append(mut fixture.batch, fixture.context, lowered)
+    const read_node = fixture.batch.nodes[9]
+    const data_id = try graph.field(fixture.batch.pool, read_node, "data")
+    const data = try graph.get(fixture.batch.pool, data_id)
+    const operation = try graph.payload(fixture.batch.pool, data_id)
+    const kind_id = try graph.field(fixture.batch.pool, operation, "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    return value == 10 and data.data == b"buffer_operation" and kind.data == b"read" and len(fixture.scope.locals) == 2 and fixture.scope.locals[1].ty == 0 and len(fixture.batch.statements) == 6
+
+
+public func test_list_length_preserves_unsigned_operation_then_signed_cast() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const owner = try list_lower.temporary(mut fixture.scope, fixture.context, 40)
+    const value = try list_lower.length(mut fixture.batch, fixture.context, owner)
+    const operation_type_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[0], "ty")
+    const operation_type = try graph.number(fixture.batch.pool, operation_type_id)
+    const cast_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[1], "data")
+    const cast = try graph.get(fixture.batch.pool, cast_id)
+    return value == 1 and operation_type == 8 and cast.data == b"cast"

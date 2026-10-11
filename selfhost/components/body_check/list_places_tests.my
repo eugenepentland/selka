@@ -1,0 +1,94 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import list_places
+
+record Fixture:
+    input: syntax_value.Pool
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 0, 1)
+    return Fixture(input=input, batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func named(mut pool: syntax_value.Pool, span: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, b"name", span)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func indexed(mut pool: syntax_value.Pool, span: int, base: int) -> int fails syntax_value.Problem:
+    const base_id = try syntax_value.integer(mut pool, base)
+    const index_id = try syntax_value.integer(mut pool, 0)
+    const payload = try syntax_value.object(mut pool, ["base", "index"], [base_id, index_id])
+    const data = try syntax_value.tagged(mut pool, b"index", payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+public func test_nested_write_marks_only_root_and_retains_parameter_origin() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const root = try named(mut fixture.input, fixture.context.span)
+    const inner = try indexed(mut fixture.input, fixture.context.span, 0)
+    const outer = try indexed(mut fixture.input, fixture.context.span, 1)
+    const slot = try locals.add(mut fixture.scope, b"x", fixture.context.span, 40, True, b"parameter")
+    const selected = try list_places.writable(fixture.input, b"x", [root, inner, outer], mut fixture.scope, 2)
+    return selected == slot and fixture.scope.locals[slot].usage.writes == 1 and fixture.scope.locals[slot].usage.reads == 0 and fixture.scope.locals[slot].origin == b"parameter"
+
+
+public func test_nested_immutable_root_exact_diagnostic_without_mutating_usage() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const root = try named(mut fixture.input, fixture.context.span)
+    const inner = try indexed(mut fixture.input, fixture.context.span, 0)
+    const slot = try locals.add(mut fixture.scope, b"x", fixture.context.span, 40, False, b"local")
+    match list_places.writable(fixture.input, b"x", [root, inner], mut fixture.scope, 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_IMMUTABLE" and problem.start == 0 and problem.end == 1 and problem.message == "this binding and its nested data are read-only; declare it with `mut` to update it" and fixture.scope.locals[slot].usage.writes == 0
+
+
+public func test_nonplace_root_exact_assignment_diagnostic() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const number = try syntax_value.integer(mut fixture.input, 1)
+    const data = try syntax_value.tagged(mut fixture.input, b"integer", number)
+    const node = try syntax_value.object(mut fixture.input, ["span", "data"], [fixture.context.span, data])
+    match list_places.writable(fixture.input, b"x", [node], mut fixture.scope, 0):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_ASSIGNMENT_TARGET" and problem.message == "a write requires a writable variable, field or element"
+
+
+public func test_plain_write_evaluates_value_before_root_and_normalizes_index() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const empty = try syntax_value.sequence(mut fixture.batch.pool, [])
+    const base = try emission.node(mut fixture.batch, fixture.input, fixture.context.span, 40, b"array", empty)
+    const index = try list_lower.integer(mut fixture.batch, fixture.context, -1, 0)
+    const value = try list_lower.integer(mut fixture.batch, fixture.context, 9, 0)
+    const lowered = try list_places.write(mut fixture.batch, mut fixture.scope, fixture.context, list_places.Write(base=base, owner_type=40, index=index, value=value))
+    const body_id = try graph.field(fixture.batch.pool, lowered.payload, "body")
+    const body = try graph.number(fixture.batch.pool, body_id)
+    const body_data = try graph.field(fixture.batch.pool, fixture.batch.statements[body], "data")
+    const children_id = try graph.payload(fixture.batch.pool, body_data)
+    const children = try graph.items(fixture.batch.pool, children_id)
+    const first = try graph.number(fixture.batch.pool, children[0])
+    const second = try graph.number(fixture.batch.pool, children[1])
+    return lowered.ty == 15 and lowered.tag == b"block_value" and first == 1 and second == 0 and len(fixture.scope.locals) == 3 and len(children) == 2
+
+
+public func test_augmented_write_snapshots_receiver_index_and_old_value_before_rhs() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const empty = try syntax_value.sequence(mut fixture.batch.pool, [])
+    const base = try emission.node(mut fixture.batch, fixture.input, fixture.context.span, 40, b"array", empty)
+    const index = try list_lower.integer(mut fixture.batch, fixture.context, -1, 0)
+    const plan = try list_places.prepare(mut fixture.batch, mut fixture.scope, fixture.context, list_places.Indexed(base=base, owner_type=40, index=index, element=0))
+    const right = try list_lower.integer(mut fixture.batch, fixture.context, 2, 0)
+    const combined = try list_lower.binary(mut fixture.batch, fixture.context, b"add", plan.current, right, 0)
+    const lowered = try list_places.finish(mut fixture.batch, mut fixture.scope, fixture.context, plan, combined)
+    return plan.owner == 0 and plan.current < right and len(plan.setup) == 3 and len(fixture.scope.locals) == 5 and len(fixture.scope.active) == 0 and lowered.ty == 15 and lowered.tag == b"block_value" and fixture.scope.locals[0].usage.temporary and fixture.scope.locals[4].usage.temporary

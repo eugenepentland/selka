@@ -1,0 +1,104 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import suggestions
+
+public record Write:
+    base: int
+    owner_type: int
+    index: int
+    value: int
+
+
+public record Indexed:
+    base: int
+    owner_type: int
+    index: int
+    element: int
+
+
+public record Plan:
+    context: list_lower.Context
+    owner: int
+    index: int
+    current: int
+    setup: int[]
+    element: int
+
+
+func problem(pool: syntax_value.Pool, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+public func writable(pool: syntax_value.Pool, source: bytes, nodes: int[], mut scope: locals.Scope, target: int) -> int fails syntax_value.Problem:
+    mut current = target
+    mut depth = 0
+    while True:
+        if current < 0 or current >= len(nodes) or depth >= 256:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid assignment path")
+        depth = depth + 1
+        const node = nodes[current]
+        const span = try graph.field(pool, node, "span")
+        const data_id = try graph.field(pool, node, "data")
+        const data = try graph.get(pool, data_id)
+        const payload = try graph.payload(pool, data_id)
+        if data.data == b"name":
+            const name = try graph.spelling(pool, source, payload)
+            const slot = locals.find(scope, name)
+            if slot < 0:
+                mut candidates: bytes[] = []
+                for active in scope.active:
+                    candidates.append(scope.locals[active].name)
+                const clause = try suggestions.clause(candidates, name)
+                fail try problem(pool, payload, "E_UNKNOWN_NAME", "name is not defined in this scope" + clause)
+            if not scope.locals[slot].mutable:
+                fail try problem(pool, span, "E_IMMUTABLE", "this binding and its nested data are read-only; declare it with `mut` to update it")
+            scope.locals[slot].usage.writes = scope.locals[slot].usage.writes + 1
+            return slot
+        if data.data == b"index" or data.data == b"field":
+            const base_id = try graph.field(pool, payload, "base")
+            current = try graph.number(pool, base_id)
+        elif data.data == b"mut_argument":
+            current = try graph.number(pool, payload)
+        else:
+            fail try problem(pool, span, "E_ASSIGNMENT_TARGET", "a write requires a writable variable, field or element")
+    return -1
+
+
+public func write(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Write) -> list_lower.Lowered fails syntax_value.Problem:
+    return try list_lower.access(mut batch, mut scope, context, list_lower.Access(base=request.base, owner_type=request.owner_type, kind=b"write", arguments=[request.index, request.value], result_type=15, signed_length=False))
+
+
+public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Indexed) -> Plan fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.owner_type)
+    const initialize = try list_lower.store(mut batch, context, owner, request.base, True)
+    const index_slot = try list_lower.temporary(mut scope, context, 0)
+    const normalized = try list_lower.index(mut batch, mut scope, context, owner, request.index)
+    const initialize_index = try list_lower.store(mut batch, context, index_slot, normalized, True)
+    const index = try list_lower.read(mut batch, context, index_slot, 0)
+    const saved = try list_lower.temporary(mut scope, context, request.element)
+    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"read", arguments=[index], ty=request.element))
+    const refresh = try list_lower.store(mut batch, context, saved, value, True)
+    const current = try list_lower.read(mut batch, context, saved, request.element)
+    return Plan(context=context, owner=owner, index=index, current=current, setup=[initialize, initialize_index, refresh], element=request.element)
+
+
+public func finish(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, plan: Plan, combined: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const stored = try list_lower.temporary(mut scope, context, plan.element)
+    const evaluate = try list_lower.store(mut batch, context, stored, combined, True)
+    mut statements = plan.setup
+    statements.append(evaluate)
+    const value = try list_lower.read(mut batch, context, stored, plan.element)
+    const write_value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"write", arguments=[plan.index, value], ty=15))
+    const payload = try syntax_value.integer(mut batch.pool, write_value)
+    const discard = try emission.statement(mut batch, context.input, context.span, False, b"discard", payload)
+    statements.append(discard)
+    const unit_payload = try syntax_value.absent(mut batch.pool)
+    const unit = try emission.node(mut batch, context.input, context.span, 15, b"unit", unit_payload)
+    return try list_lower.block(mut batch, context, statements, unit, 15)

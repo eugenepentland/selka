@@ -31,7 +31,7 @@ public func test_graph_forward_reference_refused() -> bool fails syntax_value.Pr
 
 
 public func test_wrong_outer_direction_refused() -> bool:
-    const data = b"SLKBCK01\x01\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00" + b"0000000000000000000000000000000000000000"
+    const data = b"SLKBCK01\x01\x00\x00\x00\x03\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00" + b"0000000000000000000000000000000000000000"
     match codec.request_payload(data):
         case Ok(payload):
             return False
@@ -41,13 +41,22 @@ public func test_wrong_outer_direction_refused() -> bool:
 
 public func test_correlated_reply_header() -> bool fails syntax_value.Problem:
     const identity = b"1234567812345678123456781234567812345678"
-    const request = b"SLKBCK01\x01\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + identity
+    const request = b"SLKBCK01\x01\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + identity
     const reply = try codec.framed_reply(request, b"abcd")
-    return len(reply) == 68 and reply[:8] == b"SLKBCK01" and reply[12] == 2 and reply[16] == 1 and reply[20] == 4 and reply[24:64] == identity and reply[64:] == b"abcd"
+    return len(reply) == 68 and reply[:8] == b"SLKBCK01" and reply[12] == 3 and reply[16] == 1 and reply[20] == 4 and reply[24:64] == identity and reply[64:] == b"abcd"
 
 
 public func test_schema_one_request_refused() -> bool:
     const data = b"SLKBCK01\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + b"0000000000000000000000000000000000000000"
+    match codec.request_payload(data):
+        case Ok(payload):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_schema_two_request_refused() -> bool:
+    const data = b"SLKBCK01\x01\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + b"0000000000000000000000000000000000000000"
     match codec.request_payload(data):
         case Ok(payload):
             return False

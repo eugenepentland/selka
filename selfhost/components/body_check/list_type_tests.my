@@ -1,0 +1,91 @@
+import syntax_value
+import graph
+import list_types
+
+public func test_list_intern_nested_reuse_and_first_site() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const first = try syntax_value.span(mut pool, 1, 2)
+    const second = try syntax_value.span(mut pool, 3, 4)
+    mut catalog = list_types.empty()
+    catalog.available = True
+    for unused in range(19):
+        catalog.by_element.append(-1)
+        catalog.elements.append(-1)
+    const inner = try list_types.intern(mut catalog, pool, list_types.Recipe(id=0, element=0, span=first), [])
+    const same = try list_types.intern(mut catalog, pool, list_types.Recipe(id=0, element=0, span=second), [])
+    const outer = try list_types.intern(mut catalog, pool, list_types.Recipe(id=0, element=inner, span=second), [])
+    return inner == 19 and same == inner and outer == 20 and len(catalog.recipes) == 2 and catalog.recipes[0].span == first and list_types.element_type(catalog, outer) == inner
+
+
+public func test_list_unavailable_is_explicit_profile() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const site = try syntax_value.span(mut pool, 4, 8)
+    mut catalog = list_types.empty()
+    match list_types.intern(mut catalog, pool, list_types.Recipe(id=0, element=0, span=site), []):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and problem.start == 4 and problem.end == 8
+
+
+public func test_list_depth_256_accepted_257_refused() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const site = try syntax_value.span(mut pool, 0, 0)
+    mut catalog = list_types.empty()
+    catalog.available = True
+    for unused in range(19):
+        catalog.by_element.append(-1)
+        catalog.elements.append(-1)
+    mut ty = 0
+    for unused in range(255):
+        const next = try list_types.intern(mut catalog, pool, list_types.Recipe(id=0, element=ty, span=site), [])
+        ty = next
+    match list_types.intern(mut catalog, pool, list_types.Recipe(id=0, element=ty, span=site), []):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and len(catalog.recipes) == 255
+
+
+public func test_recipe_graph_has_exact_provenance() -> bool fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const site = try syntax_value.span(mut input, 7, 11)
+    mut output = syntax_value.empty()
+    const encoded = try list_types.encode(mut output, input, [list_types.Recipe(id=42, element=0, span=site)])
+    const items = try graph.items(output, encoded)
+    const span = try graph.field(output, items[0], "span")
+    const start = try graph.field(output, span, "start")
+    const offset = try graph.number(output, start)
+    return len(items) == 1 and offset == 7
+
+
+func make_catalog(mut pool: syntax_value.Pool, elements: int[]) -> int fails syntax_value.Problem:
+    const count = try syntax_value.integer(mut pool, len(elements))
+    const available = try syntax_value.boolean(mut pool, True)
+    mut descriptors: int[] = []
+    mut position = 0
+    for element in elements:
+        const id = try syntax_value.integer(mut pool, 19 + position)
+        const child = try syntax_value.integer(mut pool, element)
+        const descriptor = try syntax_value.object(mut pool, ["id", "element"], [id, child])
+        descriptors.append(descriptor)
+        position = position + 1
+    const lists = try syntax_value.sequence(mut pool, descriptors)
+    return try syntax_value.object(mut pool, ["base_count", "list_available", "lists"], [count, available, lists])
+
+
+public func test_existing_catalog_accepts_forward_dependency_without_recipes() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const raw = try make_catalog(mut pool, [20, 0])
+    const prepared = try list_types.prepare(pool, raw, [], [])
+    return list_types.element_type(prepared, 19) == 20 and list_types.lookup(prepared, 0) == 20 and len(prepared.recipes) == 0
+
+
+public func test_existing_catalog_cycle_is_transport_not_profile() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const raw = try make_catalog(mut pool, [20, 19])
+    match list_types.prepare(pool, raw, [], []):
+        case Ok(prepared):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

@@ -1,0 +1,201 @@
+import syntax_value
+import graph
+import emission
+import locals
+
+public record Context:
+    input: syntax_value.Pool
+    span: int
+
+
+public record Lowered:
+    ty: int
+    tag: bytes
+    payload: int
+
+
+public record Operation:
+    owner: int
+    kind: bytes
+    arguments: int[]
+    ty: int
+
+
+public record Literal:
+    ty: int
+    element: int
+    values: int[]
+
+
+public record Access:
+    base: int
+    owner_type: int
+    kind: bytes
+    arguments: int[]
+    result_type: int
+    signed_length: bool
+
+
+public func integer(mut batch: emission.Batch, context: Context, value: int, ty: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, ty, b"integer", payload)
+
+
+public func temporary(mut scope: locals.Scope, context: Context, ty: int) -> int fails syntax_value.Problem:
+    const active = scope.active
+    const slot = try locals.add(mut scope, b"<collection>", context.span, ty, True, b"local")
+    scope.active = active
+    scope.locals[slot].initialized = False
+    scope.locals[slot].usage.reads = 1
+    scope.locals[slot].usage.temporary = True
+    return slot
+
+
+public func read(mut batch: emission.Batch, context: Context, slot: int, ty: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, slot)
+    return try emission.node(mut batch, context.input, context.span, ty, b"local", payload)
+
+
+public func store(mut batch: emission.Batch, context: Context, slot: int, value: int, initialize: bool) -> int fails syntax_value.Problem:
+    const payload = try emission.store(mut batch, slot, value)
+    mut tag = b"assign"
+    if initialize:
+        tag = b"initialize"
+    return try emission.statement(mut batch, context.input, context.span, False, tag, payload)
+
+
+public func operation(mut batch: emission.Batch, context: Context, request: Operation) -> int fails syntax_value.Problem:
+    const owner = try syntax_value.integer(mut batch.pool, request.owner)
+    const kind = try syntax_value.enumeration(mut batch.pool, request.kind)
+    const arguments = try emission.ids(mut batch, request.arguments)
+    const payload = try syntax_value.object(mut batch.pool, ["owner", "kind", "arguments"], [owner, kind, arguments])
+    return try emission.node(mut batch, context.input, context.span, request.ty, b"buffer_operation", payload)
+
+
+public func length(mut batch: emission.Batch, context: Context, owner: int) -> int fails syntax_value.Problem:
+    const value = try operation(mut batch, context, Operation(owner=owner, kind=b"length", arguments=[], ty=8))
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, 0, b"cast", payload)
+
+
+public func binary(mut batch: emission.Batch, context: Context, operator: bytes, left: int, right: int, ty: int) -> int fails syntax_value.Problem:
+    const op = try syntax_value.enumeration(mut batch.pool, operator)
+    const first = try syntax_value.integer(mut batch.pool, left)
+    const second = try syntax_value.integer(mut batch.pool, right)
+    const span = try graph.clone(mut batch.pool, context.input, context.span, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["op", "left", "right", "op_span"], [op, first, second, span])
+    return try emission.node(mut batch, context.input, context.span, ty, b"binary", payload)
+
+
+public func block(mut batch: emission.Batch, context: Context, statements: int[], value: int, ty: int) -> Lowered fails syntax_value.Problem:
+    const children = try emission.ids(mut batch, statements)
+    const body = try emission.statement(mut batch, context.input, context.span, False, b"block", children)
+    const body_id = try syntax_value.integer(mut batch.pool, body)
+    const value_id = try syntax_value.integer(mut batch.pool, value)
+    const payload = try syntax_value.object(mut batch.pool, ["body", "value"], [body_id, value_id])
+    return Lowered(ty=ty, tag=b"block_value", payload=payload)
+
+
+public func append(mut batch: emission.Batch, context: Context, value: Lowered) -> int fails syntax_value.Problem:
+    return try emission.node(mut batch, context.input, context.span, value.ty, value.tag, value.payload)
+
+
+func constant(batch: emission.Batch, id: int, element: int) -> bool fails syntax_value.Problem:
+    if id < 0 or id >= len(batch.nodes):
+        return False
+    const node = batch.nodes[id]
+    const type_id = try graph.field(batch.pool, node, "ty")
+    const ty = try graph.number(batch.pool, type_id)
+    if ty != element:
+        return False
+    const data_id = try graph.field(batch.pool, node, "data")
+    const data = try graph.get(batch.pool, data_id)
+    if element == 0 or element == 1:
+        return data.data == b"integer" or data.data == b"boolean"
+    if element != batch.facts.string_type and element != batch.facts.bytes_type:
+        return False
+    if data.data != b"array":
+        return False
+    const payload = try graph.payload(batch.pool, data_id)
+    const children = try graph.items(batch.pool, payload)
+    for child in children:
+        const child_id = try graph.number(batch.pool, child)
+        const child_node = batch.nodes[child_id]
+        const child_data_id = try graph.field(batch.pool, child_node, "data")
+        const child_data = try graph.get(batch.pool, child_data_id)
+        const child_type_id = try graph.field(batch.pool, child_node, "ty")
+        const child_type = try graph.number(batch.pool, child_type_id)
+        if child_data.data != b"integer" or (element == batch.facts.string_type and child_type != 7) or (element == batch.facts.bytes_type and child_type != 5):
+            return False
+    return True
+
+
+public func literal(mut batch: emission.Batch, mut scope: locals.Scope, context: Context, request: Literal) -> Lowered fails syntax_value.Problem:
+    mut packed = len(request.values) >= 64
+    if packed:
+        for value in request.values:
+            const inert = try constant(batch, value, request.element)
+            if not inert:
+                packed = False
+                break
+    if packed:
+        const payload = try emission.ids(mut batch, request.values)
+        return Lowered(ty=request.ty, tag=b"array", payload=payload)
+    const capacity = try integer(mut batch, context, len(request.values), 0)
+    const capacity_id = try syntax_value.integer(mut batch.pool, capacity)
+    const acquire_payload = try syntax_value.object(mut batch.pool, ["capacity"], [capacity_id])
+    const acquired = try emission.node(mut batch, context.input, context.span, request.ty, b"acquire_buffer", acquire_payload)
+    const owner = try temporary(mut scope, context, request.ty)
+    const initialize = try store(mut batch, context, owner, acquired, True)
+    mut statements = [initialize]
+    for value in request.values:
+        const added = try operation(mut batch, context, Operation(owner=owner, kind=b"append", arguments=[value], ty=15))
+        const payload = try syntax_value.integer(mut batch.pool, added)
+        const discard = try emission.statement(mut batch, context.input, context.span, False, b"discard", payload)
+        statements.append(discard)
+    const value = try read(mut batch, context, owner, request.ty)
+    return try block(mut batch, context, statements, value, request.ty)
+
+
+public func index(mut batch: emission.Batch, mut scope: locals.Scope, context: Context, owner: int, input: int) -> int fails syntax_value.Problem:
+    const slot = try temporary(mut scope, context, 0)
+    const initialize = try store(mut batch, context, slot, input, True)
+    const current = try read(mut batch, context, slot, 0)
+    const zero = try integer(mut batch, context, 0, 0)
+    const count = try length(mut batch, context, owner)
+    const negative = try binary(mut batch, context, b"lt", current, zero, 1)
+    const normalized = try binary(mut batch, context, b"add", count, current, 0)
+    const fix = try store(mut batch, context, slot, normalized, False)
+    const condition = try syntax_value.integer(mut batch.pool, negative)
+    const then_body = try syntax_value.integer(mut batch.pool, fix)
+    const absent = try syntax_value.absent(mut batch.pool)
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [condition, then_body, absent])
+    const branch = try emission.statement(mut batch, context.input, context.span, False, b"branch", payload)
+    const value = try block(mut batch, context, [initialize, branch], current, 0)
+    return try append(mut batch, context, value)
+
+
+public func access(mut batch: emission.Batch, mut scope: locals.Scope, context: Context, request: Access) -> Lowered fails syntax_value.Problem:
+    const owner = try temporary(mut scope, context, request.owner_type)
+    const initialize = try store(mut batch, context, owner, request.base, True)
+    mut arguments = request.arguments
+    mut statements: int[] = []
+    if request.kind == b"write":
+        const value_node = batch.nodes[arguments[1]]
+        const type_id = try graph.field(batch.pool, value_node, "ty")
+        const ty = try graph.number(batch.pool, type_id)
+        const slot = try temporary(mut scope, context, ty)
+        const stored = try store(mut batch, context, slot, arguments[1], True)
+        statements.append(stored)
+        const value = try read(mut batch, context, slot, ty)
+        arguments[1] = value
+    statements.append(initialize)
+    if request.kind == b"read" or request.kind == b"write" or request.kind == b"pop_at":
+        const normalized = try index(mut batch, mut scope, context, owner, arguments[0])
+        arguments[0] = normalized
+    mut value = -1
+    if request.signed_length:
+        value = try length(mut batch, context, owner)
+    else:
+        value = try operation(mut batch, context, Operation(owner=owner, kind=request.kind, arguments=arguments, ty=request.result_type))
+    return try block(mut batch, context, statements, value, request.result_type)

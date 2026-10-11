@@ -7,6 +7,7 @@ import functions
 import emission
 import names
 import sequences
+import list_types
 
 func ascii(text: str) -> bytes fails syntax_value.Problem:
     const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -67,6 +68,11 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="managed sequence catalog identities overlap")
     state.batch.facts.string_type = string_type
     state.batch.facts.bytes_type = bytes_type
+    const expressions = try graph.field(pool, type_tables, "expressions")
+    const suffixes_id = try graph.field(pool, expressions, "suffixes")
+    const suffixes = try graph.items(pool, suffixes_id)
+    const lists = try list_types.prepare(pool, catalog, suffixes, [string_type, bytes_type])
+    state.batch.facts.lists = lists
     if len(state.syntax.functions) > 65536:
         return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="function limit exceeded"))
     state.syntax.modules = modules
@@ -122,6 +128,7 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const batch = try emission.finish(mut state.batch)
     const import_used = try syntax_value.sequence(mut state.batch.pool, usage)
     const empty_diagnostics = try syntax_value.sequence(mut state.batch.pool, [])
-    const output = try syntax_value.object(mut state.batch.pool, ["batch", "import_used", "diagnostics"], [batch, import_used, empty_diagnostics])
+    const recipes = try list_types.encode(mut state.batch.pool, state.syntax.pool, state.batch.facts.lists.recipes)
+    const output = try syntax_value.object(mut state.batch.pool, ["batch", "import_used", "diagnostics", "lists"], [batch, import_used, empty_diagnostics, recipes])
     _ = try syntax_value.tagged(mut state.batch.pool, b"success", output)
     return state.batch.pool

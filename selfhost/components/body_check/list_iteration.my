@@ -1,0 +1,490 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+
+public record Input:
+    source: bytes
+    name: int
+    span: int
+    iterable: int
+    owner_type: int
+    element: int
+    loop_id: int
+
+
+public record Plan:
+    request: Input
+    owner: int
+    index: int
+    limit: int
+    binding: int
+    before_active: int[]
+
+
+public record Finish:
+    raw_statements: int[]
+    raw_nodes: int[]
+    body_raw: int
+    body: int
+
+
+record Scan:
+    input: syntax_value.Pool
+    source: bytes
+    nodes: int[]
+    statements: int[]
+    name: bytes
+    body: int
+
+
+record Path:
+    setup: int[]
+    refresh: int[]
+
+
+record Ancestor:
+    owner: int
+    value: int
+    index: int
+    ty: int
+
+
+record Effects:
+    rebinds: bool
+    changes: bool
+
+
+func field_number(pool: syntax_value.Pool, value: int, name: str) -> int fails syntax_value.Problem:
+    const extracted_1 = try graph.field(pool, value, name)
+    return try graph.number(pool, extracted_1)
+
+
+func named(scan: Scan, span: int) -> bool fails syntax_value.Problem:
+    const extracted_2 = try graph.spelling(scan.input, scan.source, span)
+    return (extracted_2) == scan.name
+
+
+func raw_data(scan: Scan, id: int, statement: bool) -> syntax_value.Value fails syntax_value.Problem:
+    mut values = scan.nodes
+    if statement:
+        values = scan.statements
+    if id < 0 or id >= len(values):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid iteration syntax reference")
+    const extracted_3 = try graph.field(scan.input, values[id], "data")
+    const value = try graph.get(scan.input, extracted_3)
+    if value.kind != 7 or len(value.children) != 1:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid iteration syntax tag")
+    return value
+
+
+func rooted(scan: Scan, id: int) -> bool fails syntax_value.Problem:
+    mut current = id
+    for _ in range(64):
+        const data = try raw_data(scan, current, False)
+        const payload = data.children[0]
+        if data.data == b"name":
+            return try named(scan, payload)
+        if data.data == b"field" or data.data == b"index":
+            const extracted_4 = try field_number(scan.input, payload, "base")
+            current = extracted_4
+        else:
+            return False
+    return True
+
+
+func append_number(mut work: int[], pool: syntax_value.Pool, value: int, name: str) -> Unit fails syntax_value.Problem:
+    const extracted_5 = try field_number(pool, value, name)
+    work.append(extracted_5)
+
+
+func append_optional(mut work: int[], pool: syntax_value.Pool, value: int, name: str) -> Unit fails syntax_value.Problem:
+    const extracted_6 = try graph.field(pool, value, name)
+    const child = try graph.get(pool, extracted_6)
+    if child.kind != 0:
+        const extracted_7 = try graph.field(pool, value, name)
+        const extracted_8 = try graph.number(pool, extracted_7)
+        work.append(extracted_8)
+
+
+func append_ids(mut work: int[], pool: syntax_value.Pool, value: int) -> Unit fails syntax_value.Problem:
+    const extracted_9 = try graph.items(pool, value)
+    for child in extracted_9:
+        const extracted_10 = try graph.number(pool, child)
+        work.append(extracted_10)
+
+
+func mutating(kind: bytes) -> bool:
+    return kind == b"reserve" or kind == b"take" or kind == b"truncate" or kind == b"sort_keyed" or kind == b"update" or kind == b"setdefault" or kind == b"pop_key" or kind == b"pop_default" or kind == b"buffer_reserve" or kind == b"buffer_append_byte" or kind == b"buffer_append_range" or kind == b"buffer_append_utf8" or kind == b"buffer_append_int" or kind == b"buffer_append_float" or kind == b"write" or kind == b"append" or kind == b"extend" or kind == b"insert" or kind == b"pop" or kind == b"pop_at" or kind == b"clear" or kind == b"remove" or kind == b"reverse" or kind == b"sort" or kind == b"repeat" or kind == b"resize" or kind == b"set_add" or kind == b"set_discard"
+
+
+func method_changes(name: bytes) -> bool:
+    if name == b"len" or name == b"copy" or name == b"concat" or name == b"find" or name == b"count" or name == b"index":
+        return False
+    return True
+
+
+func effects(scan: Scan) -> Effects fails syntax_value.Problem:
+    mut statements = [scan.body]
+    mut nodes: int[] = []
+    mut seen_statements: bool[] = []
+    mut seen_nodes: bool[] = []
+    for _ in scan.statements:
+        seen_statements.append(False)
+    for _ in scan.nodes:
+        seen_nodes.append(False)
+    mut result = Effects(rebinds=False, changes=False)
+    while len(statements) > 0 or len(nodes) > 0:
+        if len(statements) > 0:
+            const id = statements[-1]
+            _ = statements.pop()
+            if id < 0 or id >= len(seen_statements):
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid iteration body reference")
+            if seen_statements[id]:
+                continue
+            seen_statements[id] = True
+            const data = try raw_data(scan, id, True)
+            const payload = data.children[0]
+            const tag = data.data
+            if tag == b"assignment" or tag == b"binding":
+                const extracted_11 = try graph.field(scan.input, payload, "name")
+                const extracted_12 = try named(scan, extracted_11)
+                if extracted_12:
+                    result.changes = True
+                    if tag == b"binding":
+                        result.rebinds = True
+                    else:
+                        const extracted_13 = try graph.field(scan.input, payload, "op")
+                        const op = try graph.get(scan.input, extracted_13)
+                        if op.data == b"set":
+                            result.rebinds = True
+                try append_number(mut nodes, scan.input, payload, "value")
+            elif tag == b"block":
+                try append_ids(mut statements, scan.input, payload)
+            elif tag == b"branch":
+                try append_number(mut nodes, scan.input, payload, "condition")
+                try append_number(mut statements, scan.input, payload, "then_body")
+                try append_optional(mut statements, scan.input, payload, "else_body")
+            elif tag == b"loop":
+                try append_number(mut nodes, scan.input, payload, "condition")
+                try append_number(mut statements, scan.input, payload, "body")
+            elif tag == b"for_each":
+                try append_number(mut nodes, scan.input, payload, "iterable")
+                try append_number(mut statements, scan.input, payload, "body")
+            elif tag == b"for_range":
+                try append_number(mut nodes, scan.input, payload, "start")
+                try append_number(mut nodes, scan.input, payload, "end")
+                try append_optional(mut nodes, scan.input, payload, "step")
+                try append_number(mut statements, scan.input, payload, "body")
+            elif tag == b"discard" or tag == b"ret" or tag == b"fail" or tag == b"yield_value":
+                const extracted_14 = try graph.number(scan.input, payload)
+                nodes.append(extracted_14)
+            elif tag == b"assertion":
+                try append_number(mut nodes, scan.input, payload, "condition")
+                try append_optional(mut nodes, scan.input, payload, "value")
+            elif tag == b"with_scope":
+                try append_number(mut statements, scan.input, payload, "body")
+                try append_optional(mut nodes, scan.input, payload, "resource")
+        else:
+            const id = nodes[-1]
+            _ = nodes.pop()
+            if id < 0 or id >= len(seen_nodes):
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid iteration expression reference")
+            if seen_nodes[id]:
+                continue
+            seen_nodes[id] = True
+            const data = try raw_data(scan, id, False)
+            const payload = data.children[0]
+            const tag = data.data
+            if tag == b"mut_argument":
+                const target = try graph.number(scan.input, payload)
+                const extracted_15 = try rooted(scan, target)
+                if extracted_15:
+                    result.changes = True
+                nodes.append(target)
+            elif tag == b"method_call" or tag == b"list_operation":
+                const target = try field_number(scan.input, payload, "base")
+                mut writes = True
+                if tag == b"method_call":
+                    const extracted_16 = try graph.field(scan.input, payload, "name")
+                    const name = try graph.spelling(scan.input, scan.source, extracted_16)
+                    writes = method_changes(name)
+                else:
+                    const extracted_17 = try graph.field(scan.input, payload, "kind")
+                    const kind = try graph.get(scan.input, extracted_17)
+                    writes = mutating(kind.data)
+                const extracted_18 = try rooted(scan, target)
+                if writes and (extracted_18):
+                    result.changes = True
+                nodes.append(target)
+                const extracted_19 = try graph.field(scan.input, payload, "arguments")
+                try append_ids(mut nodes, scan.input, extracted_19)
+            elif tag == b"call" or tag == b"buffer_operation":
+                const extracted_20 = try graph.field(scan.input, payload, "owner")
+                const owner = try graph.get(scan.input, extracted_20)
+                if owner.kind != 0:
+                    const owner_span = try graph.field(scan.input, payload, "owner")
+                    const owner_matches = try named(scan, owner_span)
+                    if owner_matches:
+                        mut writes = True
+                        if tag == b"buffer_operation":
+                            const extracted_21 = try graph.field(scan.input, payload, "kind")
+                            const kind = try graph.get(scan.input, extracted_21)
+                            writes = mutating(kind.data)
+                        else:
+                            const extracted_22 = try graph.field(scan.input, payload, "name")
+                            const name = try graph.spelling(scan.input, scan.source, extracted_22)
+                            writes = method_changes(name)
+                        if writes:
+                            result.changes = True
+                const extracted_23 = try graph.field(scan.input, payload, "arguments")
+                try append_ids(mut nodes, scan.input, extracted_23)
+            elif tag == b"field_assignment" or tag == b"index_assignment":
+                const target = try field_number(scan.input, payload, "target")
+                const extracted_24 = try rooted(scan, target)
+                if extracted_24:
+                    result.changes = True
+                nodes.append(target)
+                try append_number(mut nodes, scan.input, payload, "value")
+            elif tag == b"binary":
+                try append_number(mut nodes, scan.input, payload, "left")
+                try append_number(mut nodes, scan.input, payload, "right")
+            elif tag == b"unary":
+                try append_number(mut nodes, scan.input, payload, "operand")
+            elif tag == b"index":
+                try append_number(mut nodes, scan.input, payload, "base")
+                try append_number(mut nodes, scan.input, payload, "index")
+            elif tag == b"field":
+                try append_number(mut nodes, scan.input, payload, "base")
+            elif tag == b"length" or tag == b"propagate" or tag == b"unwrap":
+                const extracted_25 = try graph.number(scan.input, payload)
+                nodes.append(extracted_25)
+            elif tag == b"list_literal" or tag == b"tuple" or tag == b"format":
+                try append_ids(mut nodes, scan.input, payload)
+            elif tag == b"conditional":
+                try append_number(mut nodes, scan.input, payload, "condition")
+                try append_number(mut nodes, scan.input, payload, "then_value")
+                try append_number(mut nodes, scan.input, payload, "else_value")
+    return result
+
+
+public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, request: Input) -> Plan fails syntax_value.Problem:
+    const context = list_lower.Context(input=input, span=request.span)
+    const before = scope.active
+    const owner = try list_lower.temporary(mut scope, context, request.owner_type)
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const limit = try list_lower.temporary(mut scope, context, 0)
+    const binding = try list_lower.temporary(mut scope, context, request.element)
+    const name = try graph.spelling(input, request.source, request.name)
+    if name != b"_":
+        scope.locals[binding].name = name
+        scope.locals[binding].declaration = request.name
+        scope.locals[binding].mutable = False
+        scope.locals[binding].origin = b"iteration"
+        scope.locals[binding].initialized = True
+        scope.active.append(binding)
+    return Plan(request=request, owner=owner, index=index, limit=limit, binding=binding, before_active=before)
+
+
+func function_start(batch: emission.Batch) -> int fails syntax_value.Problem:
+    if len(batch.ranges) == 0:
+        return 0
+    const range = batch.ranges[-1]
+    const extracted_26 = try graph.field(batch.pool, range, "statements")
+    return try field_number(batch.pool, extracted_26, "end")
+
+
+func initializer(batch: emission.Batch, scope: locals.Scope, slot: int) -> int fails syntax_value.Problem:
+    if slot < 0 or slot >= len(scope.locals) or not scope.locals[slot].usage.temporary:
+        return -1
+    const begin = try function_start(batch)
+    mut at = len(batch.statements)
+    while at > begin:
+        at = at - 1
+        const extracted_27 = try graph.field(batch.pool, batch.statements[at], "data")
+        const data = try graph.get(batch.pool, extracted_27)
+        if data.data == b"initialize":
+            const payload = data.children[0]
+            const extracted_28 = try field_number(batch.pool, payload, "slot")
+            if (extracted_28) == slot:
+                return try field_number(batch.pool, payload, "value")
+    return -1
+
+
+func typed_root(batch: emission.Batch, scope: locals.Scope, id: int) -> int fails syntax_value.Problem:
+    mut at = id
+    for _ in range(64):
+        if at < 0 or at >= len(batch.nodes):
+            return -1
+        const extracted_29 = try graph.field(batch.pool, batch.nodes[at], "data")
+        const data = try graph.get(batch.pool, extracted_29)
+        const payload = data.children[0]
+        if data.data == b"local":
+            const slot = try graph.number(batch.pool, payload)
+            if slot < 0 or slot >= len(scope.locals):
+                return -1
+            const value = try initializer(batch, scope, slot)
+            if value >= 0:
+                at = value
+            elif not scope.locals[slot].usage.temporary:
+                return slot
+            else:
+                return -1
+        elif data.data == b"block_value":
+            const extracted_30 = try field_number(batch.pool, payload, "value")
+            at = extracted_30
+        elif data.data == b"index" or data.data == b"field":
+            at = try field_number(batch.pool, payload, "base")
+        elif data.data == b"buffer_operation":
+            const kind_id = try graph.field(batch.pool, payload, "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            const arguments_id = try graph.field(batch.pool, payload, "arguments")
+            const arguments = try graph.items(batch.pool, arguments_id)
+            if kind.data != b"read" or len(arguments) != 1:
+                return -1
+            const owner = try field_number(batch.pool, payload, "owner")
+            at = try initializer(batch, scope, owner)
+        else:
+            return -1
+    return -1
+
+
+func spill(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, mut path: Path, id: int) -> int fails syntax_value.Problem:
+    const ty = try field_number(batch.pool, batch.nodes[id], "ty")
+    const slot = try list_lower.temporary(mut scope, context, ty)
+    const statement = try list_lower.store(mut batch, context, slot, id, True)
+    path.setup.append(statement)
+    return try list_lower.read(mut batch, context, slot, ty)
+
+
+func ancestor(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, mut path: Path, request: Ancestor) -> int fails syntax_value.Problem:
+    const initial = try list_lower.store(mut batch, context, request.owner, request.value, True)
+    path.setup.append(initial)
+    const refresh = try list_lower.store(mut batch, context, request.owner, request.value, False)
+    path.refresh.append(refresh)
+    const length = try list_lower.temporary(mut scope, context, 0)
+    const count = try list_lower.length(mut batch, context, request.owner)
+    const remembered = try list_lower.store(mut batch, context, length, count, True)
+    path.setup.append(remembered)
+    const bound = try list_lower.read(mut batch, context, length, 0)
+    const check = try list_lower.operation(mut batch, context, list_lower.Operation(owner=request.owner, kind=b"iteration_check", arguments=[bound], ty=15))
+    const check_payload = try syntax_value.integer(mut batch.pool, check)
+    const discard = try emission.statement(mut batch, context.input, context.span, False, b"discard", check_payload)
+    path.refresh.append(discard)
+    const index = try spill(mut batch, mut scope, context, mut path, request.index)
+    return try list_lower.operation(mut batch, context, list_lower.Operation(owner=request.owner, kind=b"read", arguments=[index], ty=request.ty))
+
+
+func rebuild(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, mut path: Path, id: int, depth: int) -> int fails syntax_value.Problem:
+    if depth >= 64 or id < 0 or id >= len(batch.nodes):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid iteration place")
+    const node = batch.nodes[id]
+    const data_id = try graph.field(batch.pool, node, "data")
+    const data = try graph.get(batch.pool, data_id)
+    const payload = data.children[0]
+    if data.data == b"local":
+        const slot = try graph.number(batch.pool, payload)
+        const value = try initializer(batch, scope, slot)
+        if value >= 0:
+            return try rebuild(mut batch, mut scope, context, mut path, value, depth + 1)
+        return try list_lower.read(mut batch, context, slot, scope.locals[slot].ty)
+    if data.data == b"block_value":
+        const value = try field_number(batch.pool, payload, "value")
+        return try rebuild(mut batch, mut scope, context, mut path, value, depth + 1)
+    if data.data == b"buffer_operation":
+        const owner = try field_number(batch.pool, payload, "owner")
+        const base = try initializer(batch, scope, owner)
+        const value = try rebuild(mut batch, mut scope, context, mut path, base, depth + 1)
+        const arguments_id = try graph.field(batch.pool, payload, "arguments")
+        const arguments = try graph.items(batch.pool, arguments_id)
+        if len(arguments) != 1:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid iteration place index")
+        const index = try graph.number(batch.pool, arguments[0])
+        const ty = try field_number(batch.pool, node, "ty")
+        return try ancestor(mut batch, mut scope, context, mut path, Ancestor(owner=owner, value=value, index=index, ty=ty))
+    const span_id = try graph.field(context.input, context.span, "start")
+    const start = try graph.number(context.input, span_id)
+    const end_id = try graph.field(context.input, context.span, "end")
+    const end = try graph.number(context.input, end_id)
+    fail syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message="non-collection iteration place is outside the admitted body profile")
+
+
+func block_statement(mut batch: emission.Batch, context: list_lower.Context, statements: int[]) -> int fails syntax_value.Problem:
+    const extracted_31 = try emission.ids(mut batch, statements)
+    return try emission.statement(mut batch, context.input, context.span, False, b"block", extracted_31)
+
+
+func guard(mut batch: emission.Batch, context: list_lower.Context, plan: Plan, refresh: int[], growing: bool) -> int fails syntax_value.Problem:
+    mut statements = refresh
+    const limit = try list_lower.read(mut batch, context, plan.limit, 0)
+    const checked = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"iteration_check", arguments=[limit], ty=15))
+    const checked_payload = try syntax_value.integer(mut batch.pool, checked)
+    const check = try emission.statement(mut batch, context.input, context.span, False, b"discard", checked_payload)
+    if growing:
+        const actual = try list_lower.length(mut batch, context, plan.owner)
+        const bound = try list_lower.read(mut batch, context, plan.limit, 0)
+        const condition = try list_lower.binary(mut batch, context, b"lt", actual, bound, 1)
+        const condition_id = try syntax_value.integer(mut batch.pool, condition)
+        const check_id = try syntax_value.integer(mut batch.pool, check)
+        const absent = try syntax_value.absent(mut batch.pool)
+        const branch = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [condition_id, check_id, absent])
+        const extracted_32 = try emission.statement(mut batch, context.input, context.span, False, b"branch", branch)
+        statements.append(extracted_32)
+        const extracted_33 = try list_lower.store(mut batch, context, plan.limit, actual, False)
+        statements.append(extracted_33)
+    else:
+        statements.append(check)
+    return try block_statement(mut batch, context, statements)
+
+
+public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, plan: Plan, body: Finish) -> list_lower.Lowered fails syntax_value.Problem:
+    const context = list_lower.Context(input=input, span=plan.request.span)
+    const root = try typed_root(batch, scope, plan.request.iterable)
+    mut source_value = plan.request.iterable
+    mut growing = False
+    mut path = Path(setup=[], refresh=[])
+    if root >= 0:
+        const scan = Scan(input=input, source=plan.request.source, nodes=body.raw_nodes, statements=body.raw_statements, name=scope.locals[root].name, body=body.body_raw)
+        const writes = try effects(scan)
+        if writes.rebinds:
+            const copy = try list_lower.access(mut batch, mut scope, context, list_lower.Access(base=source_value, owner_type=plan.request.owner_type, kind=b"copy", arguments=[], result_type=plan.request.owner_type, signed_length=False))
+            const extracted_34 = try list_lower.append(mut batch, context, copy)
+            source_value = extracted_34
+        elif writes.changes:
+            source_value = try rebuild(mut batch, mut scope, context, mut path, plan.request.iterable, 0)
+            scope.locals[root].usage.reads = scope.locals[root].usage.reads + 1
+            growing = True
+    const setup_owner = try list_lower.store(mut batch, context, plan.owner, source_value, True)
+    if growing:
+        const extracted_36 = try list_lower.store(mut batch, context, plan.owner, source_value, False)
+        path.refresh.append(extracted_36)
+    path.setup.append(setup_owner)
+    const index = try list_lower.read(mut batch, context, plan.index, 0)
+    const checked = try guard(mut batch, context, plan, path.refresh, growing)
+    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"read", arguments=[index], ty=plan.request.element))
+    const initial = try list_lower.store(mut batch, context, plan.binding, value, True)
+    const iteration = try block_statement(mut batch, context, [checked, initial, body.body])
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", index, one, 0)
+    const advance = try list_lower.store(mut batch, context, plan.index, next, False)
+    const step = try block_statement(mut batch, context, [checked, advance])
+    const unused_owner_setup = try list_lower.store(mut batch, context, plan.owner, plan.request.iterable, True)
+    _ = unused_owner_setup
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const setup_index = try list_lower.store(mut batch, context, plan.index, zero, True)
+    const length = try list_lower.length(mut batch, context, plan.owner)
+    const setup_limit = try list_lower.store(mut batch, context, plan.limit, length, True)
+    const bound = try list_lower.read(mut batch, context, plan.limit, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", index, bound, 1)
+    const loop_id = try syntax_value.integer(mut batch.pool, plan.request.loop_id)
+    const condition_id = try syntax_value.integer(mut batch.pool, condition)
+    const iteration_id = try syntax_value.integer(mut batch.pool, iteration)
+    const step_id = try syntax_value.integer(mut batch.pool, step)
+    const loop = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [loop_id, condition_id, iteration_id, step_id])
+    const loop_statement = try emission.statement(mut batch, input, plan.request.span, False, b"loop", loop)
+    path.setup.append(setup_index)
+    path.setup.append(setup_limit)
+    path.setup.append(loop_statement)
+    const extracted_37 = try emission.ids(mut batch, path.setup)
+    return list_lower.Lowered(ty=15, tag=b"block", payload=extracted_37)

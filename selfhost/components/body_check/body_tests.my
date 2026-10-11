@@ -26,14 +26,14 @@ func input(value_tag: bytes, return_text: bytes) -> syntax_value.Pool fails synt
     const policy = try syntax_value.object(mut pool, ["constant", "c_abi", "restricted", "conversion", "host", "owner", "effect_bound"], [no, no, no, no, absent, absent, absent])
     const function = try syntax_value.object(mut pool, ["name", "signature", "body", "policy"], [name, signature, zero, policy])
     const functions = try syntax_value.sequence(mut pool, [function])
-    const type_expressions = try syntax_value.object(mut pool, ["applications", "aliases"], [empty, empty])
+    const type_expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
     const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, type_expressions])
     const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "lambdas", "attributes", "types"], [nodes, statements, functions, empty, empty, types])
     const path = try syntax_value.octets(mut pool, b"input.my")
     mut source_text = b"f " + return_text + b" 42"
     const source = try syntax_value.octets(mut pool, source_text)
     const context = try syntax_value.object(mut pool, ["path", "source"], [path, source])
-    const catalog = try syntax_value.object(mut pool, ["string", "bytes"], [absent, absent])
+    const catalog = try syntax_value.object(mut pool, ["string", "bytes", "base_count", "lists", "list_available"], [absent, absent, zero, empty, no])
     _ = try syntax_value.object(mut pool, ["context", "program", "modules", "catalog"], [context, program, empty, catalog])
     return pool
 

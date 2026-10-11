@@ -1,5 +1,6 @@
 import syntax_value
 import graph
+import list_types
 
 public record Facts:
     applications: int[]
@@ -8,6 +9,7 @@ public record Facts:
     local_count: int
     string_type: int
     bytes_type: int
+    lists: list_types.Catalog
 
 
 public record Batch:
@@ -21,7 +23,7 @@ public record Batch:
 
 
 public func empty() -> Batch:
-    return Batch(pool=syntax_value.empty(), nodes=[], statements=[], functions=[], ranges=[], resolved=[], facts=Facts(applications=[], top_names=[], expected=[], local_count=0, string_type=-1, bytes_type=-1))
+    return Batch(pool=syntax_value.empty(), nodes=[], statements=[], functions=[], ranges=[], resolved=[], facts=Facts(applications=[], top_names=[], expected=[], local_count=0, string_type=-1, bytes_type=-1, lists=list_types.empty()))
 
 
 public func node(mut batch: Batch, input: syntax_value.Pool, span: int, ty: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:

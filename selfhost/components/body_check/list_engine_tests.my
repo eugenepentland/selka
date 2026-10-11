@@ -1,0 +1,107 @@
+import syntax_value
+import graph
+import engine
+import emission
+import locals
+
+func fresh() -> engine.State:
+    mut batch = emission.empty()
+    batch.facts.lists.available = True
+    for unused in range(19):
+        batch.facts.lists.by_element.append(-1)
+        batch.facts.lists.elements.append(-1)
+    return engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"1", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=engine.Control(next=0, active=[], exited=[]), problems=[])
+
+
+func add(mut state: engine.State, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const data = try syntax_value.tagged(mut state.syntax.pool, tag, payload)
+    const node = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, data])
+    const id = len(state.syntax.nodes)
+    state.syntax.nodes.append(node)
+    return id
+
+
+public func test_inferred_nested_list_owns_type_choices_and_full_lowering() -> bool fails syntax_value.Problem:
+    mut state = fresh()
+    const spelling = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const integer = try add(mut state, b"integer", spelling)
+    const integer_id = try syntax_value.integer(mut state.syntax.pool, integer)
+    const items = try syntax_value.sequence(mut state.syntax.pool, [integer_id])
+    const inner = try add(mut state, b"list_literal", items)
+    const inner_id = try syntax_value.integer(mut state.syntax.pool, inner)
+    const outer_items = try syntax_value.sequence(mut state.syntax.pool, [inner_id])
+    const outer = try add(mut state, b"list_literal", outer_items)
+    const result = try engine.expression(mut state, outer)
+    return result.ty == 20 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[0].element == 0 and state.batch.facts.lists.recipes[1].element == 19 and len(state.scope.locals) == 2 and len(state.batch.statements) == 6
+
+
+public func test_empty_inferred_list_has_exact_source_error() -> bool fails syntax_value.Problem:
+    mut state = fresh()
+    const items = try syntax_value.sequence(mut state.syntax.pool, [])
+    const raw = try add(mut state, b"list_literal", items)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_LIST_INFERENCE" and problem.start == 0 and problem.end == 1 and problem.message == "empty list requires an expected List type"
+
+
+public func test_list_repetition_preserves_evaluation_and_hidden_loop() -> bool fails syntax_value.Problem:
+    mut state = fresh()
+    const spelling = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const integer = try add(mut state, b"integer", spelling)
+    const integer_id = try syntax_value.integer(mut state.syntax.pool, integer)
+    const items = try syntax_value.sequence(mut state.syntax.pool, [integer_id])
+    const list = try add(mut state, b"list_literal", items)
+    const left = try syntax_value.integer(mut state.syntax.pool, list)
+    const right = try syntax_value.integer(mut state.syntax.pool, integer)
+    const op = try syntax_value.enumeration(mut state.syntax.pool, b"mul")
+    const chained = try syntax_value.boolean(mut state.syntax.pool, False)
+    const binary = try syntax_value.object(mut state.syntax.pool, ["op", "left", "right", "op_span", "chained"], [op, left, right, spelling, chained])
+    const raw = try add(mut state, b"binary", binary)
+    const result = try engine.expression(mut state, raw)
+    return result.ty == 19 and state.control.next == 1 and len(state.scope.locals) == 5 and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_named_list_append_updates_root_without_extra_local_probe() -> bool fails syntax_value.Problem:
+    mut state = fresh()
+    state.syntax.source = b"1 xs append"
+    state.batch.facts.lists.base_count = 1
+    state.batch.facts.lists.by_element.append(-1)
+    state.batch.facts.lists.elements.append(0)
+    state.batch.facts.lists.by_element[0] = 19
+    const owner = try syntax_value.span(mut state.syntax.pool, 2, 4)
+    const slot = try locals.add(mut state.scope, b"xs", owner, 19, True, b"local")
+    const spelling = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const integer = try add(mut state, b"integer", spelling)
+    const argument = try syntax_value.integer(mut state.syntax.pool, integer)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [argument])
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const name = try syntax_value.span(mut state.syntax.pool, 5, 11)
+    const call = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "type_arguments", "arguments", "argument_names"], [name, owner, empty, arguments, empty])
+    const raw = try add(mut state, b"call", call)
+    const result = try engine.expression(mut state, raw)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 15 and result.id == 1 and data.data == b"buffer_operation" and state.scope.locals[slot].usage.reads == 1 and state.scope.locals[slot].usage.writes == 1
+
+
+public func test_list_index_boolean_uses_native_collection_diagnostic() -> bool fails syntax_value.Problem:
+    mut state = fresh()
+    const spelling = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const integer = try add(mut state, b"integer", spelling)
+    const integer_id = try syntax_value.integer(mut state.syntax.pool, integer)
+    const items = try syntax_value.sequence(mut state.syntax.pool, [integer_id])
+    const list = try add(mut state, b"list_literal", items)
+    const truth = try syntax_value.boolean(mut state.syntax.pool, True)
+    const boolean = try add(mut state, b"boolean", truth)
+    const base = try syntax_value.integer(mut state.syntax.pool, list)
+    const index = try syntax_value.integer(mut state.syntax.pool, boolean)
+    const indexed = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [base, index])
+    const raw = try add(mut state, b"index", indexed)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.start == 0 and problem.end == 1 and problem.message == "collection index requires an integer"

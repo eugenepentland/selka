@@ -1,0 +1,171 @@
+import syntax_value
+import graph
+
+public record Schema:
+    id: int
+    element: int
+
+
+public record Recipe:
+    id: int
+    element: int
+    span: int
+
+
+public record Catalog:
+    base_count: int
+    available: bool
+    known: Schema[]
+    recipes: Recipe[]
+    suffixes: int[]
+    by_element: int[]
+    elements: int[]
+
+
+public func empty() -> Catalog:
+    return Catalog(base_count=0, available=False, known=[], recipes=[], suffixes=[], by_element=[], elements=[])
+
+
+func bad() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid list catalog")
+
+
+public func prepare(pool: syntax_value.Pool, id: int, suffixes: int[], managed: int[]) -> Catalog fails syntax_value.Problem:
+    const count_id = try graph.field(pool, id, "base_count")
+    const count = try graph.number(pool, count_id)
+    const available_id = try graph.field(pool, id, "list_available")
+    const available = try graph.get(pool, available_id)
+    if count < 0 or count > 65536 or available.kind != 2:
+        fail bad()
+    mut catalog = empty()
+    catalog.base_count = count
+    catalog.available = available.integer != 0
+    catalog.suffixes = suffixes
+    for unused in range(19 + count):
+        catalog.by_element.append(-1)
+        catalog.elements.append(-1)
+    const list_id = try graph.field(pool, id, "lists")
+    const values = try graph.items(pool, list_id)
+    mut previous = 18
+    for value in values:
+        const schema_id = try graph.field(pool, value, "id")
+        const element_id = try graph.field(pool, value, "element")
+        const schema = try graph.number(pool, schema_id)
+        const element = try graph.number(pool, element_id)
+        if schema <= previous or schema >= 19 + count or element < 0 or element >= 19 + count or catalog.by_element[element] >= 0:
+            fail bad()
+        catalog.known.append(Schema(id=schema, element=element))
+        catalog.by_element[element] = schema
+        catalog.elements[schema] = element
+        previous = schema
+    mut depths: int[] = []
+    for unused in catalog.elements:
+        depths.append(0)
+    depths[0] = 1
+    depths[1] = 1
+    depths[15] = 1
+    for leaf in managed:
+        if leaf >= 0:
+            if leaf < 19 or leaf >= len(depths):
+                fail bad()
+            depths[leaf] = 1
+    for schema in catalog.known:
+        if depths[schema.id] == 1:
+            fail bad()
+        mut current = schema.id
+        mut path: int[] = []
+        while depths[current] == 0:
+            if len(path) >= 256 or catalog.elements[current] < 0:
+                fail bad()
+            for prior in path:
+                if prior == current:
+                    fail bad()
+            path.append(current)
+            current = catalog.elements[current]
+        mut depth = depths[current]
+        mut position = len(path)
+        while position > 0:
+            position = position - 1
+            depth = depth + 1
+            if depth > 256:
+                fail bad()
+            depths[path[position]] = depth
+    return catalog
+
+
+public func element_type(catalog: Catalog, id: int) -> int:
+    if id < 0 or id >= len(catalog.elements):
+        return -1
+    return catalog.elements[id]
+
+
+public func lookup(catalog: Catalog, element: int) -> int:
+    if element < 0 or element >= len(catalog.by_element):
+        return -1
+    return catalog.by_element[element]
+
+
+func refusal(pool: syntax_value.Pool, span: int, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message=message)
+
+
+public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recipe, managed: int[]) -> int fails syntax_value.Problem:
+    if not catalog.available:
+        const problem = try refusal(pool, request.span, "builtin List is unavailable")
+        fail problem
+    mut current = request.element
+    mut depth = 2
+    mut slow = current
+    mut steps = 0
+    while current >= 19:
+        mut leaf = False
+        for id in managed:
+            if current == id:
+                leaf = True
+        if leaf:
+            break
+        current = element_type(catalog, current)
+        steps = steps + 1
+        if steps % 2 == 0:
+            slow = element_type(catalog, slow)
+        if current >= 19 and current == slow:
+            fail bad()
+        if current < 0:
+            const problem = try refusal(pool, request.span, "list element type is outside the admitted body profile")
+            fail problem
+        depth = depth + 1
+        if depth > 256:
+            const problem = try refusal(pool, request.span, "list type depth limit exceeded")
+            fail problem
+    if current != 0 and current != 1 and current != 15 and current < 19:
+        const problem = try refusal(pool, request.span, "list element type is outside the admitted body profile")
+        fail problem
+    const existing = lookup(catalog, request.element)
+    if existing >= 0:
+        return existing
+    if catalog.base_count + len(catalog.recipes) >= 65536:
+        const problem = try refusal(pool, request.span, "list schema limit exceeded")
+        fail problem
+    const id = 19 + catalog.base_count + len(catalog.recipes)
+    if request.element < 0 or request.element >= id:
+        fail bad()
+    catalog.recipes.append(Recipe(id=id, element=request.element, span=request.span))
+    catalog.by_element[request.element] = id
+    catalog.by_element.append(-1)
+    catalog.elements.append(request.element)
+    return id
+
+
+public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, recipes: Recipe[]) -> int fails syntax_value.Problem:
+    mut values: int[] = []
+    for recipe in recipes:
+        const id = try syntax_value.integer(mut pool, recipe.id)
+        const element = try syntax_value.integer(mut pool, recipe.element)
+        const span = try graph.clone(mut pool, input, recipe.span, 0)
+        const value = try syntax_value.object(mut pool, ["id", "element", "span"], [id, element, span])
+        values.append(value)
+    return try syntax_value.sequence(mut pool, values)
