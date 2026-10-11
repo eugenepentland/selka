@@ -13,8 +13,8 @@ from test_pilots import require_guest
 ROOT=Path(__file__).resolve().parents[1]
 
 
-def execute(command, env):
-    result=subprocess.run([str(arg) for arg in command],cwd=ROOT,env=env,capture_output=True,text=True,timeout=600)
+def execute(command, env, timeout=600):
+    result=subprocess.run([str(arg) for arg in command],cwd=ROOT,env=env,capture_output=True,text=True,timeout=timeout)
     print(result.stdout,end='',flush=True)
     print(result.stderr,end='',file=sys.stderr,flush=True)
     if result.returncode:raise RuntimeError(f'body_check gate command exited {result.returncode}')
@@ -67,7 +67,9 @@ def main():
             command.extend(['--report', report])
         if release:command.append('--release')
         else:command.append('--edit-check')
-        require_summary(execute(command,env), edit=not release)
+        # The complete matrix includes hundreds of workflows and edit rebuilds.
+        # Its outer deadline is separate from each guest/transport execution limit.
+        require_summary(execute(command,env,timeout=1800), edit=not release)
     print(f'body_check gate: {total} pure tests per mode; complete qualification passed')
 
 if __name__=='__main__':main()

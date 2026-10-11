@@ -263,7 +263,14 @@ passes 281 pure tests per mode, all three 443-workflow matrices, library admissi
 and both 349-operation entry-generation lanes. All seven generated binaries are
 byte-identical between generations in each lane. The full gate still exits 1:
 its sole failed action is a packaging test expecting schema 6 instead of 7.
-The assertion is corrected separately; complete qualification must be rerun.
+The assertion is corrected separately. After artifact authentication and body
+adoption allocation improvements, the [optimized root attempt](evidence/selka-body-entry-optimized-timeout-20261011/README.md)
+at `3e44a64df3` passes both 349-operation entry-generation lanes and library
+admission. All seven binaries again match between generations in each lane.
+Its full gate still exits 1 because the separate normal/edit matrix exceeds its
+outer 600-second deadline; that matrix and the remaining body-gate release phase
+are incomplete. Extending the whole-matrix deadline does not change guest limits
+or required selections, and complete qualification must be rerun.
 The native catalog, later semantic passes, backend and compiler driver remain
 in use; a complete Selka compiler and full-compiler bootstrap fixed point remain
 unproven.
