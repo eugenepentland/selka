@@ -389,3 +389,36 @@ test "body pure closure rejects foreign join result element owner and arity" {
     try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, bytes, bytes, .join, &.{}, false));
     try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, c.templates.byte_buffer.identity.?.id, bytes, .join, &.{bytes_list}, true));
 }
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body pure closure admits native augmented repetition first demand operator site" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "func value() -> int:\n    mut text = \"x\"\n    text *= 3\n    return len(text)\n");
+    var site: source.Span = undefined;
+    var found = false;
+    for (f.input.program.statements.items) |statement| {
+        if (statement.data == .assignment and statement.data.assignment.op == .mul) {
+            site = statement.data.assignment.op_span;
+            found = true;
+        }
+    }
+    try std.testing.expect(found);
+    const recipe: value.CatalogRecipe = .{ .list = .{ .id = @fromBackingInt(typed.Type.record_base + f.input.catalog.base_count), .element = f.input.catalog.string.?.id, .span = site } };
+    _ = try recipes.expanded(a, f.input, &.{recipe});
+    var forged = recipe;
+    forged.list.span.end -= 1;
+    try std.testing.expectError(error.ComponentProtocol, recipes.expanded(a, f.input, &.{forged}));
+    var changed = f.input;
+    const statements = try a.dupe(@import("ast.zig").Statement, changed.program.statements.items);
+    changed.program.statements.items = statements;
+    removeRepetitionOperators(statements);
+    try std.testing.expectError(error.ComponentProtocol, recipes.expanded(a, changed, &.{recipe}));
+}
+
+fn removeRepetitionOperators(statements: []@import("ast.zig").Statement) void {
+    for (statements) |*statement| {
+        if (statement.data == .assignment and statement.data.assignment.op == .mul) statement.data.assignment.op = .add;
+    }
+}

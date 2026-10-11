@@ -95,7 +95,12 @@ fn sites(a: std.mem.Allocator, input: value.Input) Error!Sites {
         try output.put(a, node.span, {});
         if (node.data == .call) if (node.data.call.owner) |owner| try output.put(a, owner, {});
     }
-    for (input.program.statements.items) |statement| try output.put(a, statement.span, {});
+    for (input.program.statements.items) |statement| {
+        try output.put(a, statement.span, {});
+        if (statement.data == .assignment and statement.data.assignment.op == .mul) {
+            try output.put(a, statement.data.assignment.op_span, {});
+        }
+    }
     for (input.program.functions) |function| {
         try output.put(a, function.name, {});
         try output.put(a, function.signature.return_type, {});
