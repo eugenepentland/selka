@@ -1,0 +1,33 @@
+public record Plan:
+    kind: bytes
+    valid: bool = False
+    arity: int = 0
+    result: int = 0
+    argument: int = 0
+    signature: str = ""
+
+
+public func plan(receiver: str, spelling: bytes, count: int) -> Plan:
+    if spelling == b"encode" and receiver == "str":
+        return Plan(valid=True, kind=b"encode", result=1, signature="() -> bytes")
+    if spelling == b"decode" and receiver != "str":
+        return Plan(valid=True, kind=b"decode", result=4, signature="() -> Result[str, str]")
+    if spelling == b"split" or spelling == b"split_whitespace":
+        if count == 0 or spelling == b"split_whitespace":
+            return Plan(valid=True, kind=b"split_whitespace", result=3, signature="() -> list[" + receiver + "]")
+        return Plan(valid=True, kind=b"split", arity=1, result=3, argument=1, signature="(separator: " + receiver + ") -> list[" + receiver + "]")
+    mut kind = b""
+    if spelling == b"startswith" or spelling == b"starts_with" or spelling == b"starts_with_start" or spelling == b"starts_with_range":
+        kind = b"starts_with"
+    if spelling == b"endswith" or spelling == b"ends_with" or spelling == b"ends_with_start" or spelling == b"ends_with_range":
+        kind = b"ends_with"
+    if kind != b"":
+        mut arity = 1
+        if count == 2:
+            kind = kind + b"_start"
+            arity = 2
+        if count == 3:
+            kind = kind + b"_range"
+            arity = 3
+        return Plan(valid=True, kind=kind, arity=arity, result=5, argument=2, signature="(sub: " + receiver + ", start: int = 0, end: int = len(self)) -> bool")
+    return Plan(kind=b"")

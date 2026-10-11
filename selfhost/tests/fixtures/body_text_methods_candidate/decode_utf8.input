@@ -1,0 +1,9 @@
+func main() -> int:
+    match b"\xc3\xa9".decode():
+        case Ok(text):
+            if text != "é":
+                return 1
+        case Err(reason):
+            _ = reason
+            return 2
+    return 7

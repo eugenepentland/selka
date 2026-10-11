@@ -1,0 +1,4 @@
+func main() -> int:
+    if "a".startswith():
+        return 1
+    return 7

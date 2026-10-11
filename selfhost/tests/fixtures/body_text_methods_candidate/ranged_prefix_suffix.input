@@ -1,0 +1,7 @@
+func main() -> int:
+    if not "éabc".startswith("a", 1, 3):
+        return 1
+    const raw = b"abc"
+    if not raw.endswith(b"b", 0, 2) or not raw.startswith(b"b", 1):
+        return 2
+    return 7

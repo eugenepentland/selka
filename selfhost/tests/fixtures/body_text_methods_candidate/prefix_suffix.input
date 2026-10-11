@@ -1,0 +1,7 @@
+func main() -> int:
+    const text = "éabc"
+    if not text.startswith("é") or not text.endswith("bc"):
+        return 1
+    if not b"abc".startswith(b"ab") or b"abc".endswith(b"z"):
+        return 2
+    return 7

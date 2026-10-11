@@ -1,0 +1,6 @@
+func main() -> int:
+    const text = "é,a,b"
+    const parts = text.split(",")
+    if len(parts) != 3 or parts[0] != "é":
+        return 1
+    return 7

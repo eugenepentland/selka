@@ -1,0 +1,6 @@
+func main() -> int:
+    const raw = byte_buffer([65, 44, 66])
+    const parts = raw.split(b",")
+    if len(parts) != 2:
+        return 1
+    return 7

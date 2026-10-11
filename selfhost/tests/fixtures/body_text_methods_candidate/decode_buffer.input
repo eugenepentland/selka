@@ -1,0 +1,10 @@
+func main() -> int:
+    const raw = byte_buffer([65, 66])
+    match raw.decode():
+        case Ok(text):
+            if text != "AB":
+                return 1
+        case Err(reason):
+            _ = reason
+            return 2
+    return 7

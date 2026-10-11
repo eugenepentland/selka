@@ -1,0 +1,10 @@
+func main() -> int:
+    const raw = b"\xff"
+    match raw.decode():
+        case Ok(text):
+            _ = text
+            return 1
+        case Err(reason):
+            if len(reason) == 0:
+                return 2
+    return 7

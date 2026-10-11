@@ -9,6 +9,7 @@ import floating_literals
 import chained_compare
 import numeric_lower
 import sequences
+import text_methods
 import emission
 import locals
 import syntax_problem
@@ -3937,7 +3938,77 @@ func sequence_type(state: State, ty: int) -> bool:
     return ty >= 19 and (ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or ty == state.batch.facts.lists.types.buffer.id)
 
 
+func text_method(mut state: State, span: int, name: int, owner_span: int, owner: int, base: Expression, spelling: bytes, inputs: int[], plan: text_methods.Plan) -> Expression fails syntax_value.Problem:
+    mut site = span
+    if owner >= 0:
+        site = owner_span
+        _ = try require_readable(mut state, owner, owner_span)
+    if len(inputs) != plan.arity:
+        mut plural = "s"
+        if plan.arity == 1:
+            plural = ""
+        const method_name = try suggestions.text(spelling)
+        const rejection = try problem(state, span, "E_ARITY", "`" + type_name(state, base.ty) + "." + method_name + plan.signature + "` takes " + str(plan.arity) + " argument" + plural + ", but this call passes " + str(len(inputs)))
+        if plan.kind == b"split" or plan.kind == b"split_whitespace":
+            mut note_span = name
+            if owner < 0:
+                note_span = span
+            const location = try problem(state, note_span, "", "")
+            const note = syntax_problem.Related(start=location.start, end=location.end, message="`split()` with no argument splits on runs of ASCII whitespace and drops empty parts; `split(separator)` splits on one exact separator", role="alternative")
+            state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[note], origin=[], requirement=[], edits=[])))
+        fail rejection
+    mut arguments: int[] = []
+    for position in range(len(inputs)):
+        const raw = try graph.number(state.syntax.pool, inputs[position])
+        const integer = plan.argument == 2 and position > 0
+        if plan.argument == 2 and not integer and base.ty == state.batch.facts.string_type:
+            const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+            const data = try graph.get(state.syntax.pool, data_id)
+            if data.data == b"bytes":
+                const input_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+                const rejection = try problem(state, input_span, "E_TYPE", "bytes needle or charset cannot be used as str")
+                fail rejection
+        mut expected = base.ty
+        if integer:
+            expected = 0
+        const argument = try expression_expected(mut state, raw, expected)
+        if integer:
+            if not scalars.is_integer(argument.ty):
+                const rejection = try problem(state, site, "E_TYPE", "operation requires an integer type")
+                fail rejection
+        else:
+            match require(state, argument.ty, base.ty, site):
+                case Ok(unused):
+                    pass
+                case Err(rejection):
+                    if owner < 0:
+                        const method_name = try suggestions.text(spelling)
+                        state.problems.append(syntax_problem.alternative(rejection, type_name(state, base.ty) + "." + method_name + plan.signature))
+                    fail rejection
+        arguments.append(argument.id)
+    mut ty = base.ty
+    if plan.result == 1:
+        ty = state.batch.facts.bytes_type
+    if plan.result == 3:
+        ty = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=base.ty, span=site), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+    if plan.result == 4:
+        ty = try list_types.union_intern(mut state.batch.facts.lists, mut state.syntax.pool, state.batch.facts.string_type, state.batch.facts.string_type, site, True)
+    if plan.result == 5:
+        ty = 1
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    if owner >= 0:
+        state.scope.locals[owner].usage.reads = state.scope.locals[owner].usage.reads + 1
+        const id = try list_lower.operation(mut state.batch, context, list_lower.Operation(owner=owner, kind=plan.kind, arguments=arguments, ty=ty))
+        return Expression(id=id, ty=ty)
+    const lowered = try list_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=plan.kind, arguments=arguments, result_type=ty, signed_length=False))
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=ty)
+
+
 func sequence_method(mut state: State, span: int, name: int, owner_span: int, owner: int, base: Expression, spelling: bytes, inputs: int[]) -> Expression fails syntax_value.Problem:
+    const text_plan = text_methods.plan(type_name(state, base.ty), spelling, len(inputs))
+    if text_plan.valid:
+        return try text_method(mut state, span, name, owner_span, owner, base, spelling, inputs, text_plan)
     mut kind = spelling
     mut arity = 2
     mut signature = "(start: int, end: int) -> " + type_name(state, base.ty)

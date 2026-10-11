@@ -1,0 +1,22 @@
+import text_methods
+
+public func test_conversion_receiver_and_result_contracts() -> bool:
+    const encode = text_methods.plan("str", b"encode", 0)
+    const decode = text_methods.plan("bytes", b"decode", 0)
+    const buffer = text_methods.plan("byte_buffer", b"decode", 0)
+    return encode.valid and encode.result == 1 and decode.valid and decode.result == 4 and buffer.valid and not text_methods.plan("bytes", b"encode", 0).valid and not text_methods.plan("str", b"decode", 0).valid
+
+
+public func test_split_resolves_whitespace_and_separator_without_dropping_arity() -> bool:
+    const whitespace = text_methods.plan("str", b"split", 0)
+    const separator = text_methods.plan("bytes", b"split", 1)
+    const excess = text_methods.plan("str", b"split", 2)
+    return whitespace.kind == b"split_whitespace" and whitespace.arity == 0 and whitespace.result == 3 and separator.kind == b"split" and separator.arity == 1 and separator.argument == 1 and excess.arity == 1
+
+
+public func test_prefix_suffix_range_kinds_and_excess_arity() -> bool:
+    const prefix = text_methods.plan("str", b"startswith", 1)
+    const start = text_methods.plan("bytes", b"endswith", 2)
+    const range = text_methods.plan("str", b"starts_with_range", 3)
+    const excess = text_methods.plan("str", b"endswith", 4)
+    return prefix.kind == b"starts_with" and prefix.result == 5 and start.kind == b"ends_with_start" and start.arity == 2 and range.kind == b"starts_with_range" and range.arity == 3 and excess.arity == 1 and prefix.argument == 2

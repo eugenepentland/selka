@@ -1,0 +1,5 @@
+func main() -> int:
+    const text = "hé"
+    if len(text.encode()) != 3:
+        return 1
+    return 7

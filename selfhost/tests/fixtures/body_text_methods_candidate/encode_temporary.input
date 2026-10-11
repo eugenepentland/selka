@@ -1,0 +1,5 @@
+func main() -> int:
+    const raw = "é".encode()
+    if raw != b"\xc3\xa9":
+        return 1
+    return 7

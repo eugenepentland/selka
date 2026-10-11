@@ -1,0 +1,4 @@
+func main() -> int:
+    if "a".endswith("a", "bad"):
+        return 1
+    return 7

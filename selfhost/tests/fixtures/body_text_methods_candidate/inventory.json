@@ -1,0 +1,28 @@
+{
+  "counts": {
+    "fixtures": 17,
+    "success": 11,
+    "diagnostic": 6,
+    "profiles": 0
+  },
+  "source_cases": [
+    "bad_bytes_split.my",
+    "bad_decode_arity.my",
+    "bad_encode_arity.my",
+    "bad_prefix_arity.my",
+    "bad_split_arity.my",
+    "bad_suffix_bound.my",
+    "decode_buffer.my",
+    "decode_invalid.my",
+    "decode_utf8.my",
+    "encode_local.my",
+    "encode_temporary.my",
+    "prefix_suffix.my",
+    "ranged_prefix_suffix.my",
+    "split_buffer.my",
+    "split_bytes.my",
+    "split_text.my",
+    "split_whitespace.my"
+  ],
+  "donors": {}
+}

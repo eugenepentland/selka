@@ -1,0 +1,171 @@
+{
+  "bad_bytes_split.my": {
+    "status": 1,
+    "source_sha256": "4db257f372e506155af9c32031160f8cad2839c66ad772e9298c243d4919a1be",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected bytes, found str",
+        "bytes": {
+          "start": 35,
+          "end": 51
+        },
+        "notes": [
+          {
+            "role": "alternative",
+            "message": "bytes.split(separator: bytes) -> list[bytes]",
+            "bytes": {
+              "start": 35,
+              "end": 51
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "bad_decode_arity.my": {
+    "status": 1,
+    "source_sha256": "b0377829cd3c33691efab5d486df0ecb3a0ac4e57a7b704e86aec2fe68e72eea",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`bytes.decode() -> Result[str, str]` takes 0 arguments, but this call passes 1",
+        "bytes": {
+          "start": 35,
+          "end": 51
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_encode_arity.my": {
+    "status": 1,
+    "source_sha256": "b2b219eeaf4255dd7e1eac6772da398fa3f9a8397860f401c324c69f9b43c718",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`str.encode() -> bytes` takes 0 arguments, but this call passes 1",
+        "bytes": {
+          "start": 35,
+          "end": 50
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_prefix_arity.my": {
+    "status": 1,
+    "source_sha256": "7b767574beaf444679a4936cbec17b8c272a8ba48ad7b8cab268350a7a6eb151",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`str.startswith(sub: str, start: int = 0, end: int = len(self)) -> bool` takes 1 argument, but this call passes 0",
+        "bytes": {
+          "start": 27,
+          "end": 43
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_split_arity.my": {
+    "status": 1,
+    "source_sha256": "893437fb0b43f2cdf2a8c26aa3d20d546de41d4edd8825d0adc8e1da971b11d0",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`str.split(separator: str) -> list[str]` takes 1 argument, but this call passes 2",
+        "bytes": {
+          "start": 35,
+          "end": 54
+        },
+        "notes": [
+          {
+            "role": "alternative",
+            "message": "`split()` with no argument splits on runs of ASCII whitespace and drops empty parts; `split(separator)` splits on one exact separator",
+            "bytes": {
+              "start": 35,
+              "end": 54
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "bad_suffix_bound.my": {
+    "status": 1,
+    "source_sha256": "9e8e22dffc8b8bffd276b714d4e9d319f06b2e529af54c18950e1eb59e8f2a05",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "operation requires an integer type",
+        "bytes": {
+          "start": 27,
+          "end": 51
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "decode_buffer.my": {
+    "status": 0,
+    "source_sha256": "f21f0db5a3e191f615b2aa41b1d92c7f6f061c9e9d132dd742f983e108e2f44a",
+    "diagnostics": []
+  },
+  "decode_invalid.my": {
+    "status": 0,
+    "source_sha256": "8ac9dfbe36bee0af973afb0e0b4b2406f09543670037683d7890c182f4839cef",
+    "diagnostics": []
+  },
+  "decode_utf8.my": {
+    "status": 0,
+    "source_sha256": "c92afc6fc6c24837483898e477e2a7ac55413b2b25e39b0460a6a26ab3ab5b12",
+    "diagnostics": []
+  },
+  "encode_local.my": {
+    "status": 0,
+    "source_sha256": "37e4c5b4d7cfec1231d610c8f6cdab07fb287d6d001de2399a868d90d000e652",
+    "diagnostics": []
+  },
+  "encode_temporary.my": {
+    "status": 0,
+    "source_sha256": "f32a68c9d7bf1fd4957b55099335d6d292a68928613608d8b000335081176d78",
+    "diagnostics": []
+  },
+  "prefix_suffix.my": {
+    "status": 0,
+    "source_sha256": "16c00bc23474e7c62cd9ea9cf3b67d36170a7c9041f7d494c91f71de7eb234fc",
+    "diagnostics": []
+  },
+  "ranged_prefix_suffix.my": {
+    "status": 0,
+    "source_sha256": "7a5e6ed8bf410c522f9f4a9ad38bccd91e764a8ed41bfcad6ac4c3de172d6dd1",
+    "diagnostics": []
+  },
+  "split_buffer.my": {
+    "status": 0,
+    "source_sha256": "3f399f2462a274618ce0f257c41148c1b98714f1aee331ec6f584a41baf070af",
+    "diagnostics": []
+  },
+  "split_bytes.my": {
+    "status": 0,
+    "source_sha256": "d1fafd988b52e8dee066b17551ba92a9606476af23220406550f7cc2423df9a6",
+    "diagnostics": []
+  },
+  "split_text.my": {
+    "status": 0,
+    "source_sha256": "2fddda2e53df5ba95174d792c12e9711cdd68edad783a689f0fa98ae0285d704",
+    "diagnostics": []
+  },
+  "split_whitespace.my": {
+    "status": 0,
+    "source_sha256": "cf609f31a58be64f3e0ca3dfe54743fd289391a83c981038fc1430a258e77679",
+    "diagnostics": []
+  }
+}
