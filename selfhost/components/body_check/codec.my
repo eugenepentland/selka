@@ -40,6 +40,8 @@ func label(data: bytes) -> str fails syntax_value.Problem:
     for octet in data:
         if octet >= 97 and octet <= 122:
             result = result + "abcdefghijklmnopqrstuvwxyz"[octet - 97]
+        elif octet >= 65 and octet <= 90:
+            result = result + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[octet - 65]
         elif octet >= 48 and octet <= 57:
             result = result + "0123456789"[octet - 48]
         elif octet == 95:

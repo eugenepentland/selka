@@ -1,0 +1,35 @@
+import codec
+import graph
+import syntax_value
+import syntax_codec
+
+func native_label(lower: str, label: bytes, expected: str) -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const missing = try syntax_value.absent(mut pool)
+    _ = try syntax_value.object(mut pool, [lower], [missing])
+    const data = try syntax_codec.encode_with_magic(pool, b"SLKBKI01")
+    const native = data[:len(data) - len(label)] + label
+    const request = try codec.decode(native)
+    const value = try graph.field(request.pool, request.root, expected)
+    return value == missing
+
+
+public func test_native_collection_basis_field_labels_decode() -> bool fails syntax_value.Problem:
+    const item = try native_label("dictitem", b"DictItem", "DictItem")
+    const keys = try native_label("dictkeys", b"DictKeys", "DictKeys")
+    const values = try native_label("dictvalues", b"DictValues", "DictValues")
+    const items = try native_label("dictitems", b"DictItems", "DictItems")
+    return item and keys and values and items
+
+
+public func test_field_label_punctuation_is_refused() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const missing = try syntax_value.absent(mut pool)
+    _ = try syntax_value.object(mut pool, ["name"], [missing])
+    const data = try syntax_codec.encode_with_magic(pool, b"SLKBKI01")
+    const invalid = data[:len(data) - 4] + b"-ame"
+    match codec.decode(invalid):
+        case Ok(request):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
