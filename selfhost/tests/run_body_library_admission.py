@@ -8,6 +8,7 @@ import re
 import shutil
 import tempfile
 import run_body_check_qualification as D
+import run_body_library_join as J
 
 F = D.F
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_library_followup'
@@ -109,6 +110,7 @@ def main():
     manifest = json.loads((FIXTURES / 'manifest.json').read_text())
     require_manifest(manifest)
     records = []
+    join_records, join_capture = [], None
     modes = ['reference'] if args.native_controls else ['reference', 'shadow', 'component']
     identity = deployment_identity(args)
     seed_sha256 = None
@@ -137,7 +139,8 @@ def main():
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(json.dumps({'complete': False, 'selected_admission': 'pending',
                                                **identity,
-                                               'records': records}, indent=2) + '\n')
+                                               'records': records, 'join_forged_records': join_records,
+                                               'join_capture': join_capture}, indent=2) + '\n')
             return result
         for name, spec in manifest.items():
             entry = source / name
@@ -175,6 +178,17 @@ def main():
                     for mode in modes:
                         verdict = require_tests(execute(mode, command, relative + ('-release' if release else '-normal')), expected)
                         records[-1]['tests'] = verdict
+        if not args.native_controls:
+            def checkpoint_join(verdicts, capture):
+                nonlocal join_records, join_capture
+                join_records, join_capture = list(verdicts), capture
+                args.report.write_text(json.dumps({'complete': False, 'selected_admission': 'pending',
+                    **identity, 'records': records, 'join_forged_records': join_records,
+                    'join_capture': join_capture}, indent=2) + '\n')
+            evidence = args.report.resolve().with_suffix('')
+            evidence = evidence.parent / (evidence.name + '-join-exchanges')
+            join_records, join_capture = J.run(args, evidence, empty, checkpoint_join)
+            F.require(len(join_records) == 4, 'incomplete join forged acceptance')
     expected_fixture_runs = (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes)
     F.require(len(records) == expected_fixture_runs + (0 if args.native_controls else 63), 'incomplete operation accounting')
     require_deployment(args, identity)
@@ -185,6 +199,7 @@ def main():
               'helper_runs': 0 if args.native_controls else 63,
               'fixture_runs': (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes),
               'operations': len(records), 'records': records,
+              'join_forged_checks': len(join_records), 'join_forged_records': join_records, 'join_capture': join_capture,
               'failed': 0, 'skipped': 0}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + '\n')

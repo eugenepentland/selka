@@ -13,7 +13,7 @@ independent 1,048,576 ceiling; declaration and type-interface key/catalog bounds
 remain independent as well. Body readers admit the existing eight-field
 `typed.Record` schema while syntax readers retain seven fields. The actual-library
 gate selects body checking with the other six component modes set to reference,
-checks all 24 fixtures, nine libraries and six test roots, and requires 183 uncached
+checks all 30 fixtures, nine libraries and six test roots, and requires 213 uncached
 operations without profile skips. A changed authenticated package key binds the
 new body policy; this developer harness update alone does not qualify an install.
 
@@ -55,3 +55,5 @@ The schema-6 transport keeps protocol 1 and adds grouped Templates.byte_buffer w
 The [initial installed B6 core lane](../audits/selka-body-bytes-buffer-contract-2026-10-11.md#initial-installed-core-evidence) passes schema-6 installation, 440 release/facts/leak workflows with 880 full shadow/component comparisons and all 92 forged-reply rejections. The normal/source-edit lane, ReleaseFast-host lane, full gate and actual compiler helper-library admission remain pending. The candidate library/test checklist does not establish seven-package bootstrap. B5 remains the last fully qualified boundary.
 
 The buffer-function shadow control checks both command contexts: standalone `check` succeeds; `check-project` reports E_TYPE at the call/return span. Frozen B3 and current B5 agree. The previous native `run-project` result 7 is retained as a different context, not used to infer project checking success.
+
+Library admission separately requires four authentic join-forgery rejections and seven adversarial harness selfchecks. The main body suite retains its 92 forged checks. Selected library acceptance remains pending; raw captures and partial forged verdicts are preserved beside its report.

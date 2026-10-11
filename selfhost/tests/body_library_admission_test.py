@@ -23,6 +23,60 @@ class LibraryAdmissionTests(unittest.TestCase):
         self.assertEqual(manifest['iteration_shadow_error.my']['diagnostics'][0]['code'],'E_SHADOWING')
         self.assertEqual(manifest['comprehension_filter_error.my']['diagnostics'][0]['code'],'E_TYPE')
 
+    def test_join_forgery_selection_and_shapes_are_independent_of_workflow_count(self):
+        import struct
+        J=D.J
+        rows=[]
+        def add(kind,integer=0,data=b'',children=(),names=()):
+            rows.append((kind,integer,data,list(children),list(names)));return len(rows)-1
+        def integer(value):return add(1,value)
+        def obj(**fields):return add(5,children=fields.values(),names=[name.encode() for name in fields])
+        def seq(values):return add(6,children=values)
+        def tag(name,value):return add(7,data=name,children=[value])
+        def join(ty,owner,argument):
+            arguments=seq([integer(argument)])
+            operation=obj(kind=add(3,data=b'join'),owner=integer(owner),arguments=arguments)
+            return obj(ty=integer(ty),data=tag(b'buffer_operation',operation))
+        text=join(19,0,2);octets=join(20,1,3)
+        locals_=seq([obj(ty=integer(19),mutable=add(2,0)),obj(ty=integer(20),mutable=add(2,0)),obj(ty=integer(21),mutable=add(2,1))])
+        functions=seq([obj(scope=obj(locals=locals_))])
+        batch=obj(nodes=seq([text,octets]),statements=seq([]),functions=functions)
+        output=obj(batch=batch,recipes=seq([tag(b'byte_buffer',obj(id=integer(21)))]))
+        root=tag(b'success',output)
+        payload=bytearray(b'SLKBKR01'+struct.pack('<II',len(rows),root))
+        for kind,value,data,children,names in rows:
+            payload.extend(bytes([kind])+struct.pack('<q',value)+D.D.blob(data)+struct.pack('<I',len(children)))
+            payload.extend(b''.join(struct.pack('<I',child) for child in children))
+            payload.extend(struct.pack('<I',len(names)))
+            for name in names:payload.extend(D.D.blob(name))
+        attacks=J.mutations(bytes(payload))
+        self.assertEqual(tuple(attacks),J.NAMES)
+        self.assertEqual(len(set(attacks.values())),4)
+        graphs={name:D.D.CapturedGraph(value) for name,value in attacks.items()}
+        changed=graphs['wrong_result'];self.assertEqual(changed.rows[changed.field(changed.nodes[1],b'ty')]['integer'],0)
+        changed=graphs['wrong_arity'];_,op=changed.tagged(changed.nodes,b'buffer_operation');self.assertTrue(changed.nodes)
+        self.assertNotEqual(attacks['wrong_arity'],payload)
+        changed=graphs['mutable_buffer_owner'];self.assertEqual(changed.rows[changed.field(changed.nodes[1],b'ty')]['integer'],21)
+        with self.assertRaises(RuntimeError):J.mutations(b'not authenticated graph')
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        request=D.D.frame(b'authentic-input')
+        reply=b'SLKBCK01'+struct.pack('<IIII',1,6,1,len(payload))+request[24:64]+payload
+        checkpoints=[]
+        def save(records,capture):checkpoints.append((list(records),dict(capture)))
+        with tempfile.TemporaryDirectory() as temporary:
+            work=Path(temporary)/'evidence'
+            args=SimpleNamespace(compiler=Path('/compiler'),component_dir=Path('/components'),zig=Path('/zig'))
+            with patch.object(J.D,'private_fixture',return_value=(Path('/private'),Path('/real'))), \
+                 patch.object(J.D,'capture_exchange',return_value=((0,b'',b''),request,reply)), \
+                 patch.object(J.F,'execute',side_effect=[(0,b'',b''),(0,b'',b'')]) as execute:
+                with self.assertRaisesRegex(RuntimeError,'escaped protocol rejection'):J.run(args,work,Path('/empty'),save)
+                self.assertEqual(len(checkpoints[-1][0]),1)
+                self.assertEqual(checkpoints[-1][0][0]['status'],0)
+                self.assertTrue((work/'wrong_result.bin').is_file())
+                self.assertIn('--no-cache',execute.call_args.args[0])
+
+
     def test_imported_donor_inventory_cannot_reuse_or_omit_changed_source(self):
         from unittest.mock import patch
         import shutil

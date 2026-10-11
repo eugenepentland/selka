@@ -1,11 +1,16 @@
-func count(mut calls: int) -> int:
-    calls += 1
+func sequence(mut trace: int) -> str:
+    trace = trace * 10 + 1
+    return "é"
+func count(mut trace: int) -> int:
+    trace = trace * 10 + 2
     return 2
 func main() -> int:
-    mut calls = 0
-    const left = "é" * count(mut calls)
-    const right = count(mut calls) * "é"
+    mut trace = 0
+    const left = sequence(mut trace) * count(mut trace)
+    assert trace == 12
+    trace = 0
+    const right = count(mut trace) * sequence(mut trace)
+    assert trace == 21
     assert left == right
     assert len(left) == 2
-    assert calls == 2
     return 7

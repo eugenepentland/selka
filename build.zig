@@ -919,7 +919,7 @@ pub fn build(b: *std.Build) void {
     body_libraries_step.dependOn(&body_libraries_run.step);
     // These admission selfchecks need no compiler installation or seed build.
     const body_libraries_checks = b.addSystemCommand(&.{ "python3", "selfhost/tests/body_library_admission_test.py" });
-    body_libraries_checks.setName("actual library admission: six adversarial selfchecks");
+    body_libraries_checks.setName("actual library admission: seven adversarial selfchecks");
     body_libraries_checks.setCwd(b.path("."));
     body_libraries_checks.expectExitCode(0);
     body_libraries_checks.step.max_rss = rss.script;
