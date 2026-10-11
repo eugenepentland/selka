@@ -1,0 +1,84 @@
+import syntax_value
+import syntax_problem
+import mutation_places
+
+func root() -> mutation_places.Place:
+    return mutation_places.Place(argument=0, root=b"x", root_node=0, steps=[], valid=True)
+
+
+func indexed(value: int, known: bool) -> mutation_places.Place:
+    mut place = root()
+    place.steps.append(mutation_places.Step(node=0, field=b"", indexed=True, known=known, key=value))
+    return place
+
+
+func field(name: bytes) -> mutation_places.Place:
+    mut place = root()
+    place.steps.append(mutation_places.Step(node=0, field=name, indexed=False, known=False, key=0))
+    return place
+
+
+public func test_distinct_fields_are_disjoint_but_root_contains_field() -> bool:
+    return mutation_places.overlap(field(b"a"), field(b"b")) == -1 and mutation_places.overlap(root(), field(b"a")) == 0 and mutation_places.overlap(field(b"a"), field(b"a")) == 1
+
+
+public func test_index_overlap_matches_native_known_and_uncertain_sign_rules() -> bool:
+    return mutation_places.overlap(indexed(1, True), indexed(1, True)) == 1 and mutation_places.overlap(indexed(1, True), indexed(2, True)) == -1 and mutation_places.overlap(indexed(-1, True), indexed(-2, True)) == -1 and mutation_places.overlap(indexed(-1, True), indexed(2, True)) == -1 and mutation_places.overlap(indexed(0, False), indexed(0, True)) == -1
+
+
+public func test_deeper_distinct_fields_override_uncertain_parent_index() -> bool:
+    mut a = indexed(0, False)
+    mut b = indexed(0, False)
+    a.steps.append(mutation_places.Step(node=0, field=b"a", indexed=False, known=False, key=0))
+    b.steps.append(mutation_places.Step(node=0, field=b"b", indexed=False, known=False, key=0))
+    return mutation_places.overlap(a, b) == -1
+
+
+func named(mut pool: syntax_value.Pool, span: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, b"name", span)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func marked(mut pool: syntax_value.Pool, span: int, target: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut pool, target)
+    const data = try syntax_value.tagged(mut pool, b"mut_argument", payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+public func test_overlap_diagnostic_uses_later_source_argument_and_exact_related_note() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const callee = try syntax_value.span(mut pool, 0, 1)
+    const first_name = try syntax_value.span(mut pool, 6, 7)
+    const second_name = try syntax_value.span(mut pool, 13, 14)
+    const first_span = try syntax_value.span(mut pool, 2, 7)
+    const second_span = try syntax_value.span(mut pool, 9, 14)
+    const a = try named(mut pool, first_name)
+    const b = try named(mut pool, second_name)
+    const ma = try marked(mut pool, first_span, 0)
+    const mb = try marked(mut pool, second_span, 1)
+    const context = mutation_places.Context(pool=pool, source=b"f(mut x, mut x)", nodes=[a, b, ma, mb], typed_pool=syntax_value.empty(), typed_nodes=[], resolved=[])
+    const problems = try mutation_places.check(context, callee, [3, 2])
+    return len(problems) == 1 and problems[0].problem.code == "E_MUTATION_OVERLAP" and problems[0].problem.start == 9 and problems[0].problem.end == 14 and len(problems[0].notes.related) == 1 and problems[0].notes.related[0].start == 2 and problems[0].problem.message == "`f` receives overlapping `mut` arguments `mut x` and `mut x`: both name `x`, and two `mut` arguments of one call must name disjoint places. Copy one into a local, pass `mut` that local and store it back (`copy = x`, pass `mut copy`, then `x = copy`), or pass the enclosing value `mut x` once"
+
+
+public func test_raw_index_place_uses_checked_integer_key_and_original_root() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const full = try syntax_value.span(mut pool, 0, 4)
+    const root_span = try syntax_value.span(mut pool, 0, 1)
+    const index_span = try syntax_value.span(mut pool, 2, 3)
+    const name = try named(mut pool, root_span)
+    const number = try syntax_value.integer(mut pool, 1)
+    const integer_data = try syntax_value.tagged(mut pool, b"integer", number)
+    const integer_node = try syntax_value.object(mut pool, ["span", "data"], [index_span, integer_data])
+    const base = try syntax_value.integer(mut pool, 0)
+    const index = try syntax_value.integer(mut pool, 1)
+    const index_payload = try syntax_value.object(mut pool, ["base", "index"], [base, index])
+    const index_data = try syntax_value.tagged(mut pool, b"index", index_payload)
+    const index_node = try syntax_value.object(mut pool, ["span", "data"], [full, index_data])
+    mut typed_pool = syntax_value.empty()
+    const value = try syntax_value.integer(mut typed_pool, 1)
+    const typed_data = try syntax_value.tagged(mut typed_pool, b"integer", value)
+    const typed_node = try syntax_value.object(mut typed_pool, ["data"], [typed_data])
+    const context = mutation_places.Context(pool=pool, source=b"x[1]", nodes=[name, integer_node, index_node], typed_pool=typed_pool, typed_nodes=[typed_node], resolved=[-1, 0, -1])
+    const place = try mutation_places.analyze(context, 2)
+    return place.valid and place.root == b"x" and place.root_node == 0 and len(place.steps) == 1 and place.steps[0].known and place.steps[0].key == 1

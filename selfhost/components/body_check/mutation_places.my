@@ -1,0 +1,207 @@
+import syntax_value
+import syntax_problem
+import graph
+import suggestions
+
+public record Context:
+    pool: syntax_value.Pool
+    source: bytes
+    nodes: int[]
+    typed_pool: syntax_value.Pool
+    typed_nodes: int[]
+    resolved: int[]
+
+
+public record Step:
+    node: int
+    field: bytes
+    indexed: bool
+    known: bool
+    key: int
+
+
+public record Place:
+    argument: int
+    root: bytes
+    root_node: int
+    steps: Step[]
+    valid: bool
+
+
+record Key:
+    known: bool
+    value: int
+
+
+func location(context: Context, node: int) -> int fails syntax_value.Problem:
+    return try graph.field(context.pool, context.nodes[node], "span")
+
+
+func checked_key(context: Context, raw: int) -> Key fails syntax_value.Problem:
+    if raw < 0 or raw >= len(context.resolved):
+        return Key(known=False, value=0)
+    const checked = context.resolved[raw]
+    if checked < 0 or checked >= len(context.typed_nodes):
+        return Key(known=False, value=0)
+    const data = try graph.field(context.typed_pool, context.typed_nodes[checked], "data")
+    const tag = try graph.get(context.typed_pool, data)
+    const payload = try graph.payload(context.typed_pool, data)
+    if tag.data == b"integer":
+        const value = try graph.number(context.typed_pool, payload)
+        return Key(known=True, value=value)
+    if tag.data == b"boolean":
+        const value = try graph.get(context.typed_pool, payload)
+        return Key(known=True, value=value.integer)
+    if tag.data == b"unary":
+        const op_id = try graph.field(context.typed_pool, payload, "op")
+        const op = try graph.get(context.typed_pool, op_id)
+        if op.data == b"neg":
+            const operand_id = try graph.field(context.typed_pool, payload, "operand")
+            const operand = try graph.number(context.typed_pool, operand_id)
+            const inner_data = try graph.field(context.typed_pool, context.typed_nodes[operand], "data")
+            const inner = try graph.get(context.typed_pool, inner_data)
+            if inner.data == b"integer":
+                const inner_payload = try graph.payload(context.typed_pool, inner_data)
+                const value = try graph.number(context.typed_pool, inner_payload)
+                if value != -9223372036854775808:
+                    return Key(known=True, value=-value)
+    return Key(known=False, value=0)
+
+
+public func analyze(context: Context, argument: int) -> Place fails syntax_value.Problem:
+    mut at = argument
+    mut steps: Step[] = []
+    mut depth = 0
+    while depth < 256:
+        depth = depth + 1
+        const data = try graph.field(context.pool, context.nodes[at], "data")
+        const tag = try graph.get(context.pool, data)
+        const payload = try graph.payload(context.pool, data)
+        if tag.data == b"mut_argument":
+            at = try graph.number(context.pool, payload)
+            continue
+        if tag.data == b"name":
+            const root = try graph.spelling(context.pool, context.source, payload)
+            mut ordered: Step[] = []
+            mut position = len(steps)
+            while position > 0:
+                position = position - 1
+                ordered.append(steps[position])
+            return Place(argument=argument, root=root, root_node=at, steps=ordered, valid=True)
+        if tag.data == b"field":
+            const name = try graph.field(context.pool, payload, "name")
+            const field = try graph.spelling(context.pool, context.source, name)
+            steps.append(Step(node=at, field=field, indexed=False, known=False, key=0))
+        elif tag.data == b"index":
+            const index_id = try graph.field(context.pool, payload, "index")
+            const index = try graph.number(context.pool, index_id)
+            const key = try checked_key(context, index)
+            steps.append(Step(node=at, field=b"", indexed=True, known=key.known, key=key.value))
+        else:
+            return Place(argument=argument, root=b"", root_node=at, steps=[], valid=False)
+        const base_id = try graph.field(context.pool, payload, "base")
+        at = try graph.number(context.pool, base_id)
+    fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="mutation place depth exceeded")
+
+
+# -1 means disjoint or uncertain (native body overlap checking defers uncertain
+# keys to the retained origins pass); nonnegative means exact overlap depth.
+public func overlap(first: Place, second: Place) -> int:
+    if not first.valid or not second.valid or first.root != second.root:
+        return -1
+    mut shared = len(first.steps)
+    if len(second.steps) < shared:
+        shared = len(second.steps)
+    mut uncertain = False
+    for position in range(shared):
+        const left = first.steps[position]
+        const right = second.steps[position]
+        if not left.indexed and not right.indexed:
+            if left.field != right.field:
+                return -1
+        elif left.indexed and right.indexed:
+            if not left.known or not right.known:
+                uncertain = True
+            elif left.key != right.key:
+                if (left.key < 0) != (right.key < 0):
+                    uncertain = True
+                else:
+                    return -1
+        else:
+            uncertain = True
+    if uncertain:
+        return -1
+    return shared
+
+
+func spelling(context: Context, place: Place, depth: int) -> str fails syntax_value.Problem:
+    mut node = place.root_node
+    if depth > 0:
+        node = place.steps[depth - 1].node
+    const span = try location(context, node)
+    const raw = try graph.spelling(context.pool, context.source, span)
+    return try suggestions.text(raw)
+
+
+func diagnostic(context: Context, call_name: int, first: Place, second: Place, depth: int) -> syntax_problem.Diagnostic fails syntax_value.Problem:
+    const a_span = try location(context, first.argument)
+    const b_span = try location(context, second.argument)
+    const a_raw = try graph.spelling(context.pool, context.source, a_span)
+    const b_raw = try graph.spelling(context.pool, context.source, b_span)
+    const a = try suggestions.text(a_raw)
+    const b = try suggestions.text(b_raw)
+    const first_text = try spelling(context, first, len(first.steps))
+    const second_text = try spelling(context, second, len(second.steps))
+    const prefix = try spelling(context, second, depth)
+    const callee_raw = try graph.spelling(context.pool, context.source, call_name)
+    const callee = try suggestions.text(callee_raw)
+    mut why = "both name `" + first_text + "`"
+    mut part = second_text
+    if len(first.steps) != len(second.steps):
+        if len(first.steps) > len(second.steps):
+            why = "`" + first_text + "` is part of `" + second_text + "`"
+            part = first_text
+        else:
+            why = "`" + second_text + "` is part of `" + first_text + "`"
+    const message = "`" + callee + "` receives overlapping `mut` arguments `" + a + "` and `" + b + "`: " + why + ", and two `mut` arguments of one call must name disjoint places. Copy one into a local, pass `mut` that local and store it back (`copy = " + part + "`, pass `mut copy`, then `" + part + " = copy`), or pass the enclosing value `mut " + prefix + "` once"
+    const b_start_id = try graph.field(context.pool, b_span, "start")
+    const b_end_id = try graph.field(context.pool, b_span, "end")
+    const start = try graph.number(context.pool, b_start_id)
+    const end = try graph.number(context.pool, b_end_id)
+    const a_start_id = try graph.field(context.pool, a_span, "start")
+    const a_end_id = try graph.field(context.pool, a_span, "end")
+    const previous_start = try graph.number(context.pool, a_start_id)
+    const previous_end = try graph.number(context.pool, a_end_id)
+    mut result = syntax_problem.plain(syntax_value.Problem(code="E_MUTATION_OVERLAP", start=start, end=end, message=message))
+    result.notes.related.append(syntax_problem.Related(start=previous_start, end=previous_end, message="the other `mut` argument naming an overlapping place", role="related"))
+    return result
+
+
+public func check(context: Context, call_name: int, arguments: int[]) -> syntax_problem.Diagnostic[] fails syntax_value.Problem:
+    mut places: Place[] = []
+    for argument in arguments:
+        const data = try graph.field(context.pool, context.nodes[argument], "data")
+        const tag = try graph.get(context.pool, data)
+        if tag.data == b"mut_argument":
+            const place = try analyze(context, argument)
+            if place.valid:
+                places.append(place)
+    for first in range(len(places)):
+        for second in range(first + 1, len(places)):
+            mut a = places[first]
+            mut b = places[second]
+            const depth = overlap(a, b)
+            if depth < 0:
+                continue
+            const a_span = try location(context, a.argument)
+            const b_span = try location(context, b.argument)
+            const a_start_id = try graph.field(context.pool, a_span, "start")
+            const b_start_id = try graph.field(context.pool, b_span, "start")
+            const a_start = try graph.number(context.pool, a_start_id)
+            const b_start = try graph.number(context.pool, b_start_id)
+            if a_start > b_start:
+                a = places[second]
+                b = places[first]
+            const result = try diagnostic(context, call_name, a, b, depth)
+            return [result]
+    return []

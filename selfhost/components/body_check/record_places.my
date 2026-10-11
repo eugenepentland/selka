@@ -1,0 +1,157 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+
+public record Destination:
+    owner: int
+    index: int
+    value: int
+    refresh: int
+    setup: int[]
+    dead_owner: int
+
+
+public record Receiver:
+    base: int
+    ty: int
+
+
+public record Index:
+    value: int
+    element: int
+
+
+public record Path:
+    bases: int[]
+    indices: int[]
+    current: int
+    ty: int
+
+
+public record Finish:
+    destination: Destination
+    path: Path
+    value: int
+    mode: bytes
+    reference_parameter: bool
+
+
+public func prepare_local(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, slot: int) -> Destination fails syntax_value.Problem:
+    scope.locals[slot].usage.writes = scope.locals[slot].usage.writes + 1
+    scope.locals[slot].usage.reads = scope.locals[slot].usage.reads + 1
+    const ty = scope.locals[slot].ty
+    const saved = try list_lower.temporary(mut scope, context, ty)
+    const value = try list_lower.read(mut batch, context, slot, ty)
+    const refresh = try list_lower.store(mut batch, context, saved, value, True)
+    const current = try list_lower.read(mut batch, context, saved, ty)
+    return Destination(owner=slot, index=-1, value=current, refresh=refresh, setup=[refresh], dead_owner=slot)
+
+
+public func receiver(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Receiver) -> Destination fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.ty)
+    const initialize = try list_lower.store(mut batch, context, owner, request.base, True)
+    return Destination(owner=owner, index=-1, value=-1, refresh=-1, setup=[initialize], dead_owner=-1)
+
+
+public func indexed(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, destination: Destination, request: Index) -> Destination fails syntax_value.Problem:
+    const slot = try list_lower.temporary(mut scope, context, 0)
+    const normalized = try list_lower.index(mut batch, mut scope, context, destination.owner, request.value)
+    const initialize = try list_lower.store(mut batch, context, slot, normalized, True)
+    const index = try list_lower.read(mut batch, context, slot, 0)
+    const saved = try list_lower.temporary(mut scope, context, request.element)
+    const read = try list_lower.operation(mut batch, context, list_lower.Operation(owner=destination.owner, kind=b"read", arguments=[index], ty=request.element))
+    const refresh = try list_lower.store(mut batch, context, saved, read, True)
+    const value = try list_lower.read(mut batch, context, saved, request.element)
+    mut setup = destination.setup
+    setup.append(initialize)
+    setup.append(refresh)
+    return Destination(owner=destination.owner, index=index, value=value, refresh=refresh, setup=setup, dead_owner=-1)
+
+
+public func field(mut batch: emission.Batch, context: list_lower.Context, base: int, index: int, ty: int) -> int fails syntax_value.Problem:
+    const base_id = try syntax_value.integer(mut batch.pool, base)
+    const index_id = try syntax_value.integer(mut batch.pool, index)
+    const payload = try syntax_value.object(mut batch.pool, ["base", "index"], [base_id, index_id])
+    return try emission.node(mut batch, context.input, context.span, ty, b"field", payload)
+
+
+func update(mut batch: emission.Batch, context: list_lower.Context, base: int, index: int, value: int) -> int fails syntax_value.Problem:
+    const type_id = try graph.field(batch.pool, batch.nodes[base], "ty")
+    const ty = try graph.number(batch.pool, type_id)
+    const index_id = try syntax_value.integer(mut batch.pool, index)
+    const value_id = try syntax_value.integer(mut batch.pool, value)
+    const entry = try syntax_value.object(mut batch.pool, ["index", "value"], [index_id, value_id])
+    const fields = try syntax_value.sequence(mut batch.pool, [entry])
+    const base_id = try syntax_value.integer(mut batch.pool, base)
+    const payload = try syntax_value.object(mut batch.pool, ["base", "fields"], [base_id, fields])
+    return try emission.node(mut batch, context.input, context.span, ty, b"update", payload)
+
+
+func note_write(mut scope: locals.Scope, context: list_lower.Context, owner: int, reference_parameter: bool) -> bool:
+    if owner < 0:
+        return False
+    const origin = scope.locals[owner].origin
+    if origin == b"local" or origin == b"iteration":
+        return False
+    if origin == b"parameter" and reference_parameter:
+        return False
+    scope.locals[owner].usage.dead_write_reads = scope.locals[owner].usage.reads
+    scope.locals[owner].usage.dead_write_span = context.span
+    return True
+
+
+func discard(mut batch: emission.Batch, context: list_lower.Context, value: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.statement(mut batch, context.input, context.span, False, b"discard", payload)
+
+
+public func finish(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Finish) -> list_lower.Lowered fails syntax_value.Problem:
+    const destination = request.destination
+    if len(request.path.bases) != len(request.path.indices) or len(request.path.bases) == 0 or destination.refresh < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid record mutation plan")
+    _ = note_write(mut scope, context, destination.dead_owner, request.reference_parameter)
+    mut statements = destination.setup
+    mut value = request.value
+    if request.mode == b"extend":
+        const leaf_receiver = try list_lower.temporary(mut scope, context, request.path.ty)
+        const initialize = try list_lower.store(mut batch, context, leaf_receiver, request.path.current, True)
+        statements.append(initialize)
+        const extend = try list_lower.operation(mut batch, context, list_lower.Operation(owner=leaf_receiver, kind=b"extend", arguments=[value], ty=15))
+        const extend_statement = try discard(mut batch, context, extend)
+        statements.append(extend_statement)
+        const stored = try list_lower.temporary(mut scope, context, request.path.ty)
+        const read = try list_lower.read(mut batch, context, leaf_receiver, request.path.ty)
+        const evaluate = try list_lower.store(mut batch, context, stored, read, True)
+        statements.append(evaluate)
+        statements.append(destination.refresh)
+        value = try list_lower.read(mut batch, context, stored, request.path.ty)
+    elif request.mode == b"set" or request.mode == b"augmented":
+        const stored = try list_lower.temporary(mut scope, context, request.path.ty)
+        const evaluate = try list_lower.store(mut batch, context, stored, value, True)
+        if request.mode == b"set":
+            mut reordered = [evaluate]
+            for statement in statements:
+                reordered.append(statement)
+            statements = reordered
+        else:
+            statements.append(evaluate)
+        statements.append(destination.refresh)
+        value = try list_lower.read(mut batch, context, stored, request.path.ty)
+    else:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid record mutation mode")
+    mut position = len(request.path.bases)
+    while position > 0:
+        position = position - 1
+        value = try update(mut batch, context, request.path.bases[position], request.path.indices[position], value)
+    if destination.index >= 0:
+        const write = try list_lower.operation(mut batch, context, list_lower.Operation(owner=destination.owner, kind=b"write", arguments=[destination.index, value], ty=15))
+        const statement = try discard(mut batch, context, write)
+        statements.append(statement)
+    else:
+        const statement = try list_lower.store(mut batch, context, destination.owner, value, False)
+        statements.append(statement)
+    const absent = try syntax_value.absent(mut batch.pool)
+    const unit = try emission.node(mut batch, context.input, context.span, 15, b"unit", absent)
+    return try list_lower.block(mut batch, context, statements, unit, 15)

@@ -1,0 +1,88 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import record_places
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 0, 3)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func children(batch: emission.Batch, lowered: list_lower.Lowered) -> int[] fails syntax_value.Problem:
+    const body_id = try graph.field(batch.pool, lowered.payload, "body")
+    const body = try graph.number(batch.pool, body_id)
+    const data = try graph.field(batch.pool, batch.statements[body], "data")
+    const payload = try graph.payload(batch.pool, data)
+    const rows = try graph.items(batch.pool, payload)
+    mut result: int[] = []
+    for row in rows:
+        const value = try graph.number(batch.pool, row)
+        result.append(value)
+    return result
+
+
+public func test_plain_record_write_saves_rhs_before_refresh_and_preserves_reference_origin() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const slot = try locals.add(mut fixture.scope, b"x", fixture.context.span, 40, True, b"parameter")
+    const destination = try record_places.prepare_local(mut fixture.batch, mut fixture.scope, fixture.context, slot)
+    const current = try record_places.field(mut fixture.batch, fixture.context, destination.value, 0, 0)
+    const rhs = try list_lower.integer(mut fixture.batch, fixture.context, 9, 0)
+    const path = record_places.Path(bases=[destination.value], indices=[0], current=current, ty=0)
+    const lowered = try record_places.finish(mut fixture.batch, mut fixture.scope, fixture.context, record_places.Finish(destination=destination, path=path, value=rhs, mode=b"set", reference_parameter=True))
+    const body = try children(fixture.batch, lowered)
+    return len(body) == 4 and body[0] == 1 and body[1] == destination.refresh and body[2] == destination.refresh and fixture.scope.locals[slot].origin == b"parameter" and fixture.scope.locals[slot].usage.dead_write_span == -1 and fixture.scope.locals[slot].usage.writes == 1 and fixture.scope.locals[slot].usage.reads == 1
+
+
+public func test_nested_record_update_rebuilds_inner_before_outer_and_tracks_value_parameter_write() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const slot = try locals.add(mut fixture.scope, b"x", fixture.context.span, 40, True, b"parameter")
+    const destination = try record_places.prepare_local(mut fixture.batch, mut fixture.scope, fixture.context, slot)
+    const inner = try record_places.field(mut fixture.batch, fixture.context, destination.value, 2, 41)
+    const current = try record_places.field(mut fixture.batch, fixture.context, inner, 3, 0)
+    const rhs = try list_lower.integer(mut fixture.batch, fixture.context, 9, 0)
+    const path = record_places.Path(bases=[destination.value, inner], indices=[2, 3], current=current, ty=0)
+    const lowered = try record_places.finish(mut fixture.batch, mut fixture.scope, fixture.context, record_places.Finish(destination=destination, path=path, value=rhs, mode=b"augmented", reference_parameter=False))
+    const body = try children(fixture.batch, lowered)
+    const last = fixture.batch.nodes[len(fixture.batch.nodes) - 2]
+    const data = try graph.field(fixture.batch.pool, last, "data")
+    const payload = try graph.payload(fixture.batch.pool, data)
+    const base_id = try graph.field(fixture.batch.pool, payload, "base")
+    const base = try graph.number(fixture.batch.pool, base_id)
+    return base == destination.value and body[0] == destination.refresh and fixture.scope.locals[slot].usage.dead_write_span == fixture.context.span and lowered.ty == 15
+
+
+public func test_indexed_record_receiver_is_reserved_before_index_and_refreshes_same_slot() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const empty = try syntax_value.sequence(mut fixture.batch.pool, [])
+    const base = try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 42, b"array", empty)
+    const receiver = try record_places.receiver(mut fixture.batch, mut fixture.scope, fixture.context, record_places.Receiver(base=base, ty=42))
+    const index = try list_lower.integer(mut fixture.batch, fixture.context, -1, 0)
+    const destination = try record_places.indexed(mut fixture.batch, mut fixture.scope, fixture.context, receiver, record_places.Index(value=index, element=40))
+    const current = try record_places.field(mut fixture.batch, fixture.context, destination.value, 0, 0)
+    const rhs = try list_lower.integer(mut fixture.batch, fixture.context, 8, 0)
+    const path = record_places.Path(bases=[destination.value], indices=[0], current=current, ty=0)
+    const lowered = try record_places.finish(mut fixture.batch, mut fixture.scope, fixture.context, record_places.Finish(destination=destination, path=path, value=rhs, mode=b"set", reference_parameter=False))
+    const body = try children(fixture.batch, lowered)
+    return receiver.owner == 0 and destination.owner == 0 and destination.index >= 0 and len(destination.setup) == 3 and len(body) == 6 and body[4] == destination.refresh and len(fixture.scope.active) == 0
+
+
+public func test_list_field_extension_keeps_refresh_and_publishes_rebuilt_record() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const slot = try locals.add(mut fixture.scope, b"x", fixture.context.span, 40, True, b"local")
+    const destination = try record_places.prepare_local(mut fixture.batch, mut fixture.scope, fixture.context, slot)
+    const current = try record_places.field(mut fixture.batch, fixture.context, destination.value, 0, 42)
+    const empty = try syntax_value.sequence(mut fixture.batch.pool, [])
+    const rhs = try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 42, b"array", empty)
+    const path = record_places.Path(bases=[destination.value], indices=[0], current=current, ty=42)
+    const lowered = try record_places.finish(mut fixture.batch, mut fixture.scope, fixture.context, record_places.Finish(destination=destination, path=path, value=rhs, mode=b"extend", reference_parameter=False))
+    const body = try children(fixture.batch, lowered)
+    return len(body) == 6 and body[0] == destination.refresh and body[4] == destination.refresh and fixture.scope.locals[slot].usage.dead_write_span == -1 and lowered.ty == 15
