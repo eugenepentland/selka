@@ -1,0 +1,84 @@
+import syntax_value
+import graph
+import engine
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh(kind: bytes) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 2)
+    const first = try syntax_value.span(mut pool, 0, 1)
+    const second = try syntax_value.span(mut pool, 1, 2)
+    const key_node = try node(mut pool, first, b"integer", first)
+    const value_node = try node(mut pool, second, b"integer", second)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const absent = try syntax_value.absent(mut pool)
+    const key = if kind == b"dict" then zero else absent
+    const step_data = try syntax_value.object(mut pool, ["value", "key"], [one, key])
+    const step = try node(mut pool, span, b"gather_step", step_data)
+    const steps = try syntax_value.sequence(mut pool, [zero])
+    const loop = try node(mut pool, span, b"block", steps)
+    const shape = try syntax_value.enumeration(mut pool, kind)
+    const gather_data = try syntax_value.object(mut pool, ["shape", "loop", "open"], [shape, one, first])
+    const gather = try node(mut pool, span, b"gather", gather_data)
+    const nodes = try syntax_value.sequence(mut pool, [key_node, value_node, gather])
+    const statements = try syntax_value.sequence(mut pool, [step, loop])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, statements, empty, types])
+    mut state = try engine.make(pool, b"07", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    state.batch.facts.lists.available = True
+    for unused in range(19):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+public func test_dictionary_gather_first_step_allocates_owner_then_key_and_value() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    const result = try engine.expression(mut state, 2)
+    const recipe = state.batch.facts.lists.recipes[0]
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[4], "data")
+    const operation = try graph.payload(state.batch.pool, data_id)
+    const owner_id = try graph.field(state.batch.pool, operation, "owner")
+    const owner = try graph.number(state.batch.pool, owner_id)
+    return result.ty == 19 and result.id == 7 and len(state.batch.nodes) == 8 and len(state.batch.statements) == 7 and len(state.scope.locals) == 3 and owner == 0 and state.scope.locals[0].ty == 19 and state.scope.locals[1].ty == 0 and state.scope.locals[2].ty == 0 and not state.scope.locals[0].flags.initialized and state.scope.locals[0].usage.temporary and len(state.scope.active) == 0 and len(state.control.values.gathers) == 0 and recipe.kind == "dict" and recipe.element == 0 and recipe.failure == 0
+
+
+public func test_set_gather_step_and_finish_do_not_emit_list_capacity() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"set")
+    const result = try engine.expression(mut state, 2)
+    mut acquisitions = 0
+    for row in state.batch.nodes:
+        const data_id = try graph.field(state.batch.pool, row, "data")
+        const data = try graph.get(state.batch.pool, data_id)
+        if data.data == b"acquire_buffer":
+            acquisitions += 1
+    return result.ty == 19 and acquisitions == 0 and len(state.scope.locals) == 1 and state.batch.facts.lists.recipes[0].kind == "set" and len(state.control.values.gathers) == 0
+
+
+public func test_nested_dictionary_gather_restores_outer_sink_and_recipe_order() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const zero = try syntax_value.integer(mut state.syntax.pool, 0)
+    const inner = try syntax_value.integer(mut state.syntax.pool, 2)
+    const body_index = try syntax_value.integer(mut state.syntax.pool, 3)
+    const step_index = try syntax_value.integer(mut state.syntax.pool, 2)
+    const step_data = try syntax_value.object(mut state.syntax.pool, ["value", "key"], [inner, zero])
+    const step = try node(mut state.syntax.pool, span, b"gather_step", step_data)
+    const steps = try syntax_value.sequence(mut state.syntax.pool, [step_index])
+    const loop = try node(mut state.syntax.pool, span, b"block", steps)
+    state.syntax.statements.append(step)
+    state.syntax.statements.append(loop)
+    const shape = try syntax_value.enumeration(mut state.syntax.pool, b"dict")
+    const gather_data = try syntax_value.object(mut state.syntax.pool, ["shape", "loop", "open"], [shape, body_index, span])
+    const gather = try node(mut state.syntax.pool, span, b"gather", gather_data)
+    state.syntax.nodes.append(gather)
+    const result = try engine.expression(mut state, 3)
+    return result.ty == 20 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[0].failure == 0 and state.batch.facts.lists.recipes[1].failure == 19 and len(state.scope.locals) == 6 and state.scope.locals[0].ty == 19 and state.scope.locals[3].ty == 20 and len(state.control.values.gathers) == 0

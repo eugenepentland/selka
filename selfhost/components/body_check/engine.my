@@ -48,6 +48,7 @@ import loop_assigns
 import hash_keys
 import set_lower
 import membership_lower
+import gather_lower
 import dictionary_view_contains
 
 public record Syntax:
@@ -75,11 +76,18 @@ public record Expression:
     ty: int
 
 
+public record GatherSink:
+    kind: bytes
+    expected: int
+    owner: int
+
+
 public record Values:
     yield_type: int
     yield_slot: int
     depth: int
     temporaries: int[]
+    gathers: GatherSink[]
     trapping_open: int = -1
 
 
@@ -432,6 +440,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         return Expression(id=id, ty=ty)
     elif data.data == b"conditional":
         const result = try conditional_value(mut state, payload, span, state.batch.facts.expected[raw_id])
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
+    elif data.data == b"gather":
+        const result = try gather_value(mut state, payload, span, state.batch.facts.expected[raw_id])
         state.batch.resolved[raw_id] = result.id
         state.depth = state.depth - 1
         return result
@@ -1459,7 +1472,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         state.scope.locals[slot].flags.initialized = False
         state.scope.locals[slot].usage.temporary = True
         state.scope.locals[slot].usage.reads = 1
-        state.control.values = Values(yield_type=expected, yield_slot=slot, depth=0, temporaries=[])
+        state.control.values = Values(yield_type=expected, yield_slot=slot, depth=0, temporaries=[], gathers=saved.gathers)
         const body = try match_payload(mut state, payload, span)
         const result_type = state.control.values.yield_type
         if result_type < 0:
@@ -1733,7 +1746,11 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
     mut looping = False
     mut result_payload = -1
     mut tag = data.data
-    if tag == b"block":
+    if tag == b"gather_step":
+        const lowered = try gather_step(mut state, payload, span)
+        tag = lowered.tag
+        result_payload = lowered.payload
+    elif tag == b"block":
         const first_local = len(state.scope.locals)
         const active = state.scope.active
         const children = try graph.items(state.syntax.pool, payload)
@@ -3114,7 +3131,7 @@ func error_case(state: State, expected: int, actual: int) -> int fails syntax_va
 
 
 public func fresh_control() -> Control:
-    return Control(next=0, active=[], exited=[], values=Values(yield_type=-1, yield_slot=-1, depth=0, temporaries=[]), options=option_flow.State(present=[]))
+    return Control(next=0, active=[], exited=[], values=Values(yield_type=-1, yield_slot=-1, depth=0, temporaries=[], gathers=[]), options=option_flow.State(present=[]))
 
 
 func yields_every_path(state: State, raw_id: int, depth: int) -> bool fails syntax_value.Problem:
@@ -4721,3 +4738,118 @@ func membership_value(mut state: State, payload: int, span: int) -> Expression f
     const lowered = try membership_lower.contains(mut state.batch, mut state.scope, context, membership_lower.Input(needle=needle.id, needle_type=needle.ty, container=container.id, container_type=container.ty, negate=negate_value.integer != 0))
     const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=1)
+
+
+func gather_value(mut state: State, payload: int, span: int, expected: int) -> Expression fails syntax_value.Problem:
+    const shape_id = try graph.field(state.syntax.pool, payload, "shape")
+    const shape = try graph.get(state.syntax.pool, shape_id)
+    if shape.data != b"dict" and shape.data != b"set" and shape.data != b"list":
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "generator gather requires an admitted consuming call")
+        fail rejection
+    const loop_id = try graph.field(state.syntax.pool, payload, "loop")
+    const raw_loop = try graph.number(state.syntax.pool, loop_id)
+    state.control.values.gathers.append(GatherSink(kind=shape.data, expected=expected, owner=-1))
+    mut loop = Statement(id=-1, terminates=False)
+    match statement(mut state, raw_loop):
+        case Ok(checked):
+            loop = checked
+        case Err(failure):
+            _ = state.control.values.gathers.pop()
+            fail failure
+    const sink = state.control.values.gathers[len(state.control.values.gathers) - 1]
+    _ = state.control.values.gathers.pop()
+    if sink.owner < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="gather has no accumulator step")
+    const ty = state.scope.locals[sink.owner].ty
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const lowered = try gather_lower.finish(mut state.batch, state.scope, context, sink.owner, loop.id, sink.kind)
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=ty)
+
+
+func gather_storable(mut state: State, ty: int, span: int, dictionary: bool) -> Unit fails syntax_value.Problem:
+    mut valid = (ty >= 0 and ty <= 8) or ty == 15
+    if ty >= 19:
+        if list_types.element_type(state.batch.facts.lists, ty) >= 0:
+            valid = True
+        const row = record_types.schema(state.batch.facts.lists.types.records, ty)
+        if row >= 0:
+            const contract = try graph.field(state.syntax.pool, row, "contract")
+            const storable_id = try graph.field(state.syntax.pool, contract, "storable")
+            const move_id = try graph.field(state.syntax.pool, contract, "move_only")
+            const pending_id = try graph.field(state.syntax.pool, contract, "requires_handling")
+            const storable = try graph.get(state.syntax.pool, storable_id)
+            const move = try graph.get(state.syntax.pool, move_id)
+            const pending = try graph.get(state.syntax.pool, pending_id)
+            valid = storable.integer != 0 and move.integer == 0 and pending.integer == 0
+    if not valid:
+        mut code = "E_LIST_TYPE"
+        mut message = "list elements require copyable storable values without pending results"
+        if dictionary:
+            code = "E_DICT_TYPE"
+            message = "dictionary values require copyable storable values without pending results"
+        const rejection = try problem(state, span, code, message)
+        fail rejection
+
+
+func gather_step(mut state: State, payload: int, span: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const position = len(state.control.values.gathers) - 1
+    if position < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="gather step has no active sink")
+    const sink = state.control.values.gathers[position]
+    const value_id = try graph.field(state.syntax.pool, payload, "value")
+    const value_raw = try graph.number(state.syntax.pool, value_id)
+    const key_id = try graph.field(state.syntax.pool, payload, "key")
+    const key_value = try graph.get(state.syntax.pool, key_id)
+    mut key = Expression(id=-1, ty=-1)
+    mut element_hint = -1
+    const expected = collection_types.schema(state.batch.facts.lists.types.collections, sink.expected)
+    if sink.kind == b"dict":
+        if key_value.kind == 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "dictionary generator pairs require tuple gather projection")
+            fail rejection
+        const key_raw = try graph.number(state.syntax.pool, key_id)
+        mut key_hint = -1
+        if expected.id >= 0 and expected.kind == 0:
+            key_hint = expected.key
+            element_hint = expected.value
+        key = try expression_expected(mut state, key_raw, key_hint)
+    elif sink.kind == b"set":
+        if expected.id >= 0 and expected.kind == 1:
+            element_hint = expected.key
+    else:
+        element_hint = list_types.element_type(state.batch.facts.lists, sink.expected)
+    const value = try expression_expected(mut state, value_raw, element_hint)
+    mut ty = sink.expected
+    if sink.kind == b"dict":
+        if expected.id < 0 or expected.kind != 0:
+            const inferred = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=0, key=key.ty, value=value.ty, owner=-1), span)
+            ty = inferred
+        const schema = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+        _ = try require_hash_key(mut state, key.ty, span, False)
+        _ = try require(state, key.ty, schema.key, span)
+        _ = try require(state, value.ty, schema.value, span)
+        try gather_storable(mut state, value.ty, span, True)
+    elif sink.kind == b"set":
+        _ = try require_set_element(mut state, value.ty, span)
+        if element_hint < 0:
+            const inferred = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=1, key=value.ty, value=15, owner=-1), span)
+            ty = inferred
+        const schema = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+        const value_span = try graph.field(state.syntax.pool, state.syntax.nodes[value_raw], "span")
+        _ = try require(state, value.ty, schema.key, value_span)
+    else:
+        try gather_storable(mut state, value.ty, span, False)
+        if element_hint < 0:
+            const inferred = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=value.ty, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+            ty = inferred
+        const element = list_types.element_type(state.batch.facts.lists, ty)
+        const value_span = try graph.field(state.syntax.pool, state.syntax.nodes[value_raw], "span")
+        _ = try require(state, value.ty, element, value_span)
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    mut owner = sink.owner
+    if owner < 0:
+        const accumulator = try list_lower.temporary(mut state.scope, context, ty)
+        owner = accumulator
+        state.control.values.gathers[position].owner = owner
+    return try gather_lower.step(mut state.batch, mut state.scope, context, gather_lower.Step(owner=owner, key=key.id, value=value.id, kind=sink.kind))
