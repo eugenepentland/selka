@@ -149,10 +149,11 @@
     "result": 7
   },
   "profile_chained_comparison.my": {
-    "status": 2,
-    "boundary": "profile",
-    "typed": false,
-    "library": false
+    "status": 0,
+    "boundary": "chained-comparison-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "private_import.my": {
     "status": 1,
