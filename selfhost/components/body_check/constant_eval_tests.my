@@ -1,0 +1,360 @@
+import constant_eval
+import constant_context
+import list_types
+import constant_value
+import record_types
+import array_types
+import syntax_value
+
+record Fixture:
+    pool: syntax_value.Pool
+    source: bytes
+    nodes: int[]
+    statements: int[]
+    functions: int[]
+
+
+func fixture(source: bytes) -> Fixture:
+    return Fixture(pool=syntax_value.empty(), source=source, nodes=[], statements=[], functions=[])
+
+
+func span(mut input: Fixture, start: int, end: int) -> int fails syntax_value.Problem:
+    return try syntax_value.span(mut input.pool, start, end)
+
+
+func node(mut input: Fixture, site: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut input.pool, tag, payload)
+    const raw = try syntax_value.object(mut input.pool, ["span", "data"], [site, data])
+    input.nodes.append(raw)
+    return len(input.nodes) - 1
+
+
+func integer(mut input: Fixture, start: int, end: int) -> int fails syntax_value.Problem:
+    const site = try span(mut input, start, end)
+    return try node(mut input, site, b"integer", site)
+
+
+func binary(mut input: Fixture, op: bytes, left: int, right: int, site: int) -> int fails syntax_value.Problem:
+    const operation = try syntax_value.octets(mut input.pool, op)
+    const first = try syntax_value.integer(mut input.pool, left)
+    const last = try syntax_value.integer(mut input.pool, right)
+    const chained = try syntax_value.boolean(mut input.pool, False)
+    const payload = try syntax_value.object(mut input.pool, ["op", "left", "right", "op_span", "chained"], [operation, first, last, site, chained])
+    return try node(mut input, site, b"binary", payload)
+
+
+func statement(mut input: Fixture, site: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut input.pool, tag, payload)
+    const raw = try syntax_value.object(mut input.pool, ["span", "data"], [site, data])
+    input.statements.append(raw)
+    return len(input.statements) - 1
+
+
+func declaration(mut input: Fixture, name: int, ty: int, value: int) -> int fails syntax_value.Problem:
+    const value_id = try syntax_value.integer(mut input.pool, value)
+    const returned = try statement(mut input, name, b"ret", value_id)
+    const ret_id = try syntax_value.integer(mut input.pool, returned)
+    const children = try syntax_value.sequence(mut input.pool, [ret_id])
+    const block = try statement(mut input, name, b"block", children)
+    const body = try syntax_value.integer(mut input.pool, block)
+    const empty = try syntax_value.sequence(mut input.pool, [])
+    const absent = try syntax_value.absent(mut input.pool)
+    const yes = try syntax_value.boolean(mut input.pool, True)
+    const policy = try syntax_value.object(mut input.pool, ["constant", "owner", "host"], [yes, absent, absent])
+    const signature = try syntax_value.object(mut input.pool, ["return_type", "parameters", "type_parameters", "keyword_only_from"], [ty, empty, empty, absent])
+    const function = try syntax_value.object(mut input.pool, ["name", "signature", "body", "policy"], [name, signature, body, policy])
+    input.functions.append(function)
+    return len(input.functions) - 1
+
+
+func context(input: Fixture) -> constant_context.Context:
+    const tables = constant_context.Tables(nodes=input.nodes, statements=input.statements, functions=input.functions)
+    const types = constant_context.Types(records=record_types.empty(), floating=19, string=20, bytes_type=21, catalog=list_types.empty(), applications=[])
+    return constant_context.Context(pool=input.pool, source=input.source, tables=tables, modules=[], types=types, problems=[], usage=[])
+
+
+public func test_expected_width_flows_through_arithmetic() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"N u8 250 5")
+    const name = try span(mut input, 0, 1)
+    const ty = try span(mut input, 2, 4)
+    const first = try integer(mut input, 5, 8)
+    const last = try integer(mut input, 9, 10)
+    const site = try span(mut input, 5, 10)
+    const result = try binary(mut input, b"add", first, last, site)
+    const index = try declaration(mut input, name, ty, result)
+    mut state = context(input)
+    const value = try constant_eval.evaluate(mut state, index)
+    return value.ty == 5 and value.bits == 255u64
+
+
+public func test_forward_dependency_uses_declared_type_and_public_name_probe() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"A B u64 18446744073709551615u64")
+    const a = try span(mut input, 0, 1)
+    const b = try span(mut input, 2, 3)
+    const ty = try span(mut input, 4, 7)
+    const dependency = try node(mut input, b, b"name", b)
+    _ = try declaration(mut input, a, ty, dependency)
+    const literal = try integer(mut input, 8, len(input.source))
+    _ = try declaration(mut input, b, ty, literal)
+    mut state = context(input)
+    const result = try constant_eval.evaluate_name(mut state, a)
+    if result is not None:
+        return result.ty == 8 and result.bits == 18446744073709551615u64
+    return False
+
+
+public func test_cycle_precedes_declared_type_resolution() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"A B Unknown int")
+    const a = try span(mut input, 0, 1)
+    const b = try span(mut input, 2, 3)
+    const unknown = try span(mut input, 4, 11)
+    const ty = try span(mut input, 12, 15)
+    const first = try node(mut input, b, b"name", b)
+    const last = try node(mut input, a, b"name", a)
+    _ = try declaration(mut input, a, unknown, first)
+    _ = try declaration(mut input, b, ty, last)
+    mut state = context(input)
+    match constant_eval.evaluate(mut state, 0):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_CONSTANT_CYCLE" and problem.start == 0 and problem.end == 1
+
+
+public func test_dead_logical_operand_is_validated_before_short_circuit() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"A bool X")
+    const name = try span(mut input, 0, 1)
+    const ty = try span(mut input, 2, 6)
+    const missing = try span(mut input, 7, 8)
+    const no = try syntax_value.boolean(mut input.pool, False)
+    const first = try node(mut input, name, b"boolean", no)
+    const last = try node(mut input, missing, b"name", missing)
+    const result = try binary(mut input, b"logical_and", first, last, name)
+    _ = try declaration(mut input, name, ty, result)
+    mut state = context(input)
+    match constant_eval.evaluate(mut state, 0):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_CONSTANT_NAME" and problem.start == 7
+
+
+public func test_validated_dead_division_does_not_execute() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"A bool 1 0")
+    const name = try span(mut input, 0, 1)
+    const ty = try span(mut input, 2, 6)
+    const no = try syntax_value.boolean(mut input.pool, False)
+    const first = try node(mut input, name, b"boolean", no)
+    const one = try integer(mut input, 7, 8)
+    const zero = try integer(mut input, 9, 10)
+    const divided = try binary(mut input, b"div", one, zero, name)
+    const compared = try binary(mut input, b"eq", divided, zero, name)
+    const result = try binary(mut input, b"logical_and", first, compared, name)
+    _ = try declaration(mut input, name, ty, result)
+    mut state = context(input)
+    const value = try constant_eval.evaluate(mut state, 0)
+    return value.ty == 1 and value.bits == 0u64
+
+
+public func test_float_initializer_preserves_negative_zero() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"A float 0.0")
+    const name = try span(mut input, 0, 1)
+    const ty = try span(mut input, 2, 7)
+    const zero = try integer(mut input, 8, 11)
+    const operand = try syntax_value.integer(mut input.pool, zero)
+    const operation = try syntax_value.octets(mut input.pool, b"neg")
+    const payload = try syntax_value.object(mut input.pool, ["op", "operand"], [operation, operand])
+    const negative = try node(mut input, name, b"unary", payload)
+    _ = try declaration(mut input, name, ty, negative)
+    mut state = context(input)
+    const value = try constant_eval.evaluate(mut state, 0)
+    return value.ty == 19 and value.bits == 9223372036854775808u64
+
+
+func parameter(mut input: Fixture, name: int, ty: int, default_raw: int) -> int fails syntax_value.Problem:
+    mut default_value = try syntax_value.absent(mut input.pool)
+    if default_raw >= 0:
+        const present = try syntax_value.integer(mut input.pool, default_raw)
+        default_value = present
+    return try syntax_value.object(mut input.pool, ["name", "ty", "default_value"], [name, ty, default_value])
+
+
+func source_function(mut input: Fixture, name: int, ty: int, parameters: int[], body: int) -> int fails syntax_value.Problem:
+    const body_id = try syntax_value.integer(mut input.pool, body)
+    const absent = try syntax_value.absent(mut input.pool)
+    const empty = try syntax_value.sequence(mut input.pool, [])
+    const no = try syntax_value.boolean(mut input.pool, False)
+    const policy = try syntax_value.object(mut input.pool, ["constant", "owner", "host"], [no, absent, absent])
+    const parameter_list = try syntax_value.sequence(mut input.pool, parameters)
+    const signature = try syntax_value.object(mut input.pool, ["return_type", "parameters", "type_parameters", "keyword_only_from"], [ty, parameter_list, empty, absent])
+    const function = try syntax_value.object(mut input.pool, ["name", "signature", "body", "policy"], [name, signature, body_id, policy])
+    input.functions.append(function)
+    return len(input.functions) - 1
+
+
+func call(mut input: Fixture, name: int, arguments: int[], labels: int[]) -> int fails syntax_value.Problem:
+    const absent = try syntax_value.absent(mut input.pool)
+    const empty = try syntax_value.sequence(mut input.pool, [])
+    mut values: int[] = []
+    for argument in arguments:
+        const value = try syntax_value.integer(mut input.pool, argument)
+        values.append(value)
+    const argument_list = try syntax_value.sequence(mut input.pool, values)
+    const label_list = try syntax_value.sequence(mut input.pool, labels)
+    const payload = try syntax_value.object(mut input.pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name, argument_list, label_list, empty])
+    return try node(mut input, name, b"call", payload)
+
+
+func return_statement(mut input: Fixture, site: int, value: int) -> int fails syntax_value.Problem:
+    const raw = try syntax_value.integer(mut input.pool, value)
+    return try statement(mut input, site, b"ret", raw)
+
+
+func block_statement(mut input: Fixture, site: int, statements: int[]) -> int fails syntax_value.Problem:
+    mut values: int[] = []
+    for child in statements:
+        const raw = try syntax_value.integer(mut input.pool, child)
+        values.append(raw)
+    const payload = try syntax_value.sequence(mut input.pool, values)
+    return try statement(mut input, site, b"block", payload)
+
+
+public func test_source_call_defaults_and_keywords_bind_parameter_order() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"N f a b int 10 3")
+    const name = try span(mut input, 0, 1)
+    const function_name = try span(mut input, 2, 3)
+    const first_name = try span(mut input, 4, 5)
+    const last_name = try span(mut input, 6, 7)
+    const ty = try span(mut input, 8, 11)
+    const ten = try integer(mut input, 12, 14)
+    const three = try integer(mut input, 15, 16)
+    const invocation = try call(mut input, function_name, [three, ten], [last_name, first_name])
+    _ = try declaration(mut input, name, ty, invocation)
+    const first = try node(mut input, first_name, b"name", first_name)
+    const last = try node(mut input, last_name, b"name", last_name)
+    const difference = try binary(mut input, b"sub", first, last, function_name)
+    const body = try return_statement(mut input, function_name, difference)
+    const first_parameter = try parameter(mut input, first_name, ty, -1)
+    const last_parameter = try parameter(mut input, last_name, ty, three)
+    _ = try source_function(mut input, function_name, ty, [first_parameter, last_parameter], body)
+    mut state = context(input)
+    const named = try constant_eval.evaluate(mut state, 0)
+    const default_call = try call(mut input, function_name, [ten], [])
+    _ = try declaration(mut input, name, ty, default_call)
+    state = context(input)
+    const defaulted = try constant_eval.evaluate(mut state, 2)
+    return named.bits == 7u64 and defaulted.bits == 7u64
+
+
+public func test_source_call_range_locals_and_compound_assignment() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"N f i total int 0 5 1")
+    const name = try span(mut input, 0, 1)
+    const function_name = try span(mut input, 2, 3)
+    const counter = try span(mut input, 4, 5)
+    const total = try span(mut input, 6, 11)
+    const ty = try span(mut input, 12, 15)
+    const zero = try integer(mut input, 16, 17)
+    const five = try integer(mut input, 18, 19)
+    const one = try integer(mut input, 20, 21)
+    const invocation = try call(mut input, function_name, [], [])
+    _ = try declaration(mut input, name, ty, invocation)
+    const absent = try syntax_value.absent(mut input.pool)
+    const yes = try syntax_value.boolean(mut input.pool, True)
+    const zero_id = try syntax_value.integer(mut input.pool, zero)
+    const binding = try syntax_value.object(mut input.pool, ["name", "annotation", "mutable", "value"], [total, ty, yes, zero_id])
+    const initialize = try statement(mut input, total, b"binding", binding)
+    const counter_read = try node(mut input, counter, b"name", counter)
+    const counter_id = try syntax_value.integer(mut input.pool, counter_read)
+    const add = try syntax_value.octets(mut input.pool, b"add")
+    const assignment = try syntax_value.object(mut input.pool, ["name", "value", "op", "op_span"], [total, counter_id, add, total])
+    const increment = try statement(mut input, total, b"assignment", assignment)
+    const unit = try node(mut input, counter, b"unit", absent)
+    const start_id = try syntax_value.integer(mut input.pool, unit)
+    const end_id = try syntax_value.integer(mut input.pool, five)
+    const step_id = try syntax_value.integer(mut input.pool, one)
+    const body_id = try syntax_value.integer(mut input.pool, increment)
+    const range_data = try syntax_value.object(mut input.pool, ["name", "start", "end", "step", "body"], [counter, start_id, end_id, step_id, body_id])
+    const loop = try statement(mut input, counter, b"for_range", range_data)
+    const total_read = try node(mut input, total, b"name", total)
+    const ret = try return_statement(mut input, total, total_read)
+    const body = try block_statement(mut input, function_name, [initialize, loop, ret])
+    _ = try source_function(mut input, function_name, ty, [], body)
+    mut state = context(input)
+    const value = try constant_eval.evaluate(mut state, 0)
+    return value.ty == 0 and value.bits == 10u64
+
+
+public func test_recursive_source_call_stops_at_native_depth_budget() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"N f int")
+    const name = try span(mut input, 0, 1)
+    const function_name = try span(mut input, 2, 3)
+    const ty = try span(mut input, 4, 7)
+    const invocation = try call(mut input, function_name, [], [])
+    _ = try declaration(mut input, name, ty, invocation)
+    const recursive = try call(mut input, function_name, [], [])
+    const body = try return_statement(mut input, function_name, recursive)
+    _ = try source_function(mut input, function_name, ty, [], body)
+    mut state = context(input)
+    match constant_eval.evaluate(mut state, 0):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_CONSTANT_LIMIT" and problem.start == 2 and problem.message == "constant evaluation exceeds nesting or work budget"
+
+
+public func test_nonterminating_source_loop_stops_at_native_work_budget() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"N f int True 1")
+    const name = try span(mut input, 0, 1)
+    const function_name = try span(mut input, 2, 3)
+    const ty = try span(mut input, 4, 7)
+    const boolean_span = try span(mut input, 8, 12)
+    const one = try integer(mut input, 13, 14)
+    const invocation = try call(mut input, function_name, [], [])
+    _ = try declaration(mut input, name, ty, invocation)
+    const yes = try syntax_value.boolean(mut input.pool, True)
+    const condition_node = try node(mut input, boolean_span, b"boolean", yes)
+    const value_id = try syntax_value.integer(mut input.pool, one)
+    const discard = try statement(mut input, function_name, b"discard", value_id)
+    const condition_id = try syntax_value.integer(mut input.pool, condition_node)
+    const body_id = try syntax_value.integer(mut input.pool, discard)
+    const loop_data = try syntax_value.object(mut input.pool, ["condition", "body"], [condition_id, body_id])
+    const loop = try statement(mut input, function_name, b"loop", loop_data)
+    _ = try source_function(mut input, function_name, ty, [], loop)
+    mut state = context(input)
+    match constant_eval.evaluate(mut state, 0):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_CONSTANT_LIMIT" and problem.message == "constant evaluation exceeds nesting or work budget"
+
+
+public func test_constant_annotations_recognize_retained_array_and_application() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"[2]int FixedArray[int,2]")
+    const array_span = try span(mut input, 0, 6)
+    const length = try span(mut input, 1, 2)
+    const element = try span(mut input, 3, 6)
+    const index = try syntax_value.tagged(mut input.pool, b"length", length)
+    const array = try syntax_value.object(mut input.pool, ["span", "element", "index"], [array_span, element, index])
+    const application_span = try span(mut input, 7, 24)
+    const application_name = try span(mut input, 7, 17)
+    const application_element = try span(mut input, 18, 21)
+    const application_length = try span(mut input, 22, 23)
+    const arguments = try syntax_value.sequence(mut input.pool, [application_element, application_length])
+    const application = try syntax_value.object(mut input.pool, ["span", "name", "arguments"], [application_span, application_name, arguments])
+    mut state = context(input)
+    _ = try array_types.add(mut state.types.catalog.types.arrays, array_types.Array(id=22, element=0, length=2, key=-1))
+    state.types.catalog.types.arrays.sources = [array]
+    state.types.applications = [application]
+    const direct = try constant_context.annotation(mut state, array_span, 0)
+    const applied = try constant_context.annotation(mut state, application_span, 0)
+    return direct == 22 and applied == 22
+
+
+public func test_constant_annotations_recognize_reserved_capabilities() -> bool fails syntax_value.Problem:
+    mut input = fixture(b"Filesystem Stream")
+    const filesystem = try span(mut input, 0, 10)
+    const stream = try span(mut input, 11, 17)
+    mut state = context(input)
+    const first = try constant_context.annotation(mut state, filesystem, 0)
+    const second = try constant_context.annotation(mut state, stream, 0)
+    return first == 11 and second == 18

@@ -1,0 +1,140 @@
+{
+  "schema": 10,
+  "selected_operations": 228,
+  "failed": 0,
+  "skipped": 0,
+  "pure_tests_each_mode": 17,
+  "supplemental_captures": 5,
+  "source_base": "f47c2d72f6105123fc3dcd1800bce12525071bb3",
+  "archives": {
+    "initial-checks.json.gz": {
+      "sha256": "c80bfdbb6676717d88e903465483a8a29c9df4933a64d83c2001c14726ff5b95",
+      "bytes": 35382
+    },
+    "fixed-checks-old-host.json.gz": {
+      "sha256": "db5b47be575705d798e75e9cf4c0c9d5824862407c9bcc23998e09b87fba2c7e",
+      "bytes": 35837
+    },
+    "selected-final.json.gz": {
+      "sha256": "ac2703c2b8785bc3e7d788e76364848e02ecd95af78e3fbf353eb3f2f66b79fb",
+      "bytes": 540542
+    },
+    "native-controls.json.gz": {
+      "sha256": "d82ca93988f27f971367f3e893f36dac5987f4dd987b33019f47aae1b39e74bc",
+      "bytes": 11898
+    },
+    "captures-final.json.gz": {
+      "sha256": "94bf8ee5a2b82d6eef83768b9edf09ca1449e74afb3f77b94717a69060d439f0",
+      "bytes": 1446
+    },
+    "package-initial.json.gz": {
+      "sha256": "a2ab6301313ef5bc131db3bb53e31787068686fc31b5260ce391fbc1e35a16bf",
+      "bytes": 313
+    },
+    "package-fixed-old-host.json.gz": {
+      "sha256": "eca9993759c49439c9676ea9cd9d2a7ea4d721c1d08b1a53ffe2c1152f1f16f9",
+      "bytes": 313
+    },
+    "package-final.json.gz": {
+      "sha256": "51fa62898f50a21bb227ecac20a9cc9a11b372a2669c1f5e7d0f2632d3062411",
+      "bytes": 313
+    },
+    "capture-buffer-request.bin.gz": {
+      "sha256": "9bfed57ab17b81fdb5197cc970d171b9f1acbdb5329a333e02064afd219bd978",
+      "bytes": 14653
+    },
+    "capture-buffer-reply.bin.gz": {
+      "sha256": "09db7f82d284ec14d84b29462c8445f4410d3d2e61a63ee5cf78068b6e42d756",
+      "bytes": 21558
+    },
+    "capture-triple-request.bin.gz": {
+      "sha256": "ef676115912f2b034a94724d8dffce13ab56ecf90ec3bca187454434d4f46ce3",
+      "bytes": 12109
+    },
+    "capture-triple-reply.bin.gz": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "capture-final-buffer_enumerate-request.bin.gz": {
+      "sha256": "f7544127b7c26d7038a6ed39324d459a3c49be7cd32f19c83c55fd27dbbcc985",
+      "bytes": 14653
+    },
+    "capture-final-buffer_enumerate-reply.bin.gz": {
+      "sha256": "21940ffc7e7cbcc961303c48ace1e077b87a19c82ff6ae5f93763f5436404e01",
+      "bytes": 21558
+    },
+    "capture-final-array_tuple_rebind-request.bin.gz": {
+      "sha256": "330c0a78c1de083acc00b730fe62b3051cc6c230a1570a7396e0aac1679569de",
+      "bytes": 20088
+    },
+    "capture-final-array_tuple_rebind-reply.bin.gz": {
+      "sha256": "1c3edc966f4f598795363936f379a63b742715cab18d2641438aa2b1e20f67b8",
+      "bytes": 23019
+    },
+    "capture-final-zip_text-request.bin.gz": {
+      "sha256": "08b5e611567801c48e951fd2bc24ded99c6571f2b6594839a22a076aa666e52d",
+      "bytes": 14028
+    },
+    "capture-final-zip_text-reply.bin.gz": {
+      "sha256": "7e1d00f70ff1b09c9bd675ad59a5288de9be9157e7466483855d0ac98e548449",
+      "bytes": 31865
+    },
+    "capture-final-list_dictionary_items-request.bin.gz": {
+      "sha256": "5040cbadb051259a0bdffb2d19ff25fa8682ab82015c5351b216113ddc37c1b1",
+      "bytes": 15751
+    },
+    "capture-final-list_dictionary_items-reply.bin.gz": {
+      "sha256": "09934dc1baf2c0ecb5d8ef73e92aebf6a8593d01bd5b4d244ec83251209c13e4",
+      "bytes": 34694
+    },
+    "capture-final-array_enumerate-request.bin.gz": {
+      "sha256": "491e1256ad5837a3284dcb38977db964a92a2e55b9e8847d6b718750253c5fd2",
+      "bytes": 16302
+    },
+    "capture-final-array_enumerate-reply.bin.gz": {
+      "sha256": "c8256260e12697d948c3c3ab02133de29683843ad08b399c347e97b7cfe403b9",
+      "bytes": 15108
+    },
+    "install-final.log.gz": {
+      "sha256": "6b4950e2f91cd396c55315f2d4fdf55fe333964447042996da3f0e9d8acc5b16",
+      "bytes": 4503
+    },
+    "selected-final.log.gz": {
+      "sha256": "02742c436c85328fe53d59b6f3f870b069ad9d4e75379cdf2987062ec43c64c0",
+      "bytes": 119
+    },
+    "captures-final.log.gz": {
+      "sha256": "c319c0ed4d4dfb4507f7c4cabdbc9891ec471f20c8e3dcd535d10453d184323f",
+      "bytes": 195
+    },
+    "preflight-final.log.gz": {
+      "sha256": "f7084ff21b8d369cd5e5bd6727e804bf57b5ad90bef041f32a452e9db31904b3",
+      "bytes": 3503
+    },
+    "helper-release.log.gz": {
+      "sha256": "34763ae13bade3b6eed89b86eab288f8d8c2f292687283c33241f3b25b18d7fe",
+      "bytes": 365
+    },
+    "diagnostics-release.log.gz": {
+      "sha256": "e91a73c041d8e0dfff8d991f5a1ad4ac2dcf8e5fe00ea7782b5576c6756ebd95",
+      "bytes": 480
+    },
+    "list-helper-release-final.log.gz": {
+      "sha256": "c2b80cd97ddc79d923eb8fc86e206302139a7e3824bde7e758fa7a13c64eaa3f",
+      "bytes": 1309
+    },
+    "initial-checks.log.gz": {
+      "sha256": "fd3f4160165d99769cf8c9b3b26164f8f77dd01fa49582dba85258105ddec5c2",
+      "bytes": 2327
+    },
+    "fixed-checks-old-host.log.gz": {
+      "sha256": "55ba73f91be7b136d0ece0621797c1f428b7af43f512380596ee7c0150ffb722",
+      "bytes": 2419
+    },
+    "producer-final.json.gz": {
+      "sha256": "ee7c1f53d310b42079b50a6cb57d4711a95ee4502be441694e2a383fcc8ef505",
+      "bytes": 2278133
+    }
+  },
+  "historical_source_snapshots": "unavailable: coordinator removes successful temporary build sources; historical authentic package identities and complete verdicts retained"
+}

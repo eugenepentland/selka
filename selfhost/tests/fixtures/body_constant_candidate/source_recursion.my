@@ -1,0 +1,12 @@
+func f(n: int) -> int:
+    if n <= 1:
+        return 1
+    return n * f(n - 1)
+
+
+const A: int = f(5)
+
+
+func main() -> int:
+    assert A == 120
+    return 7

@@ -1,0 +1,13 @@
+func f(x: int, y: int = 2) -> int:
+    return x + y
+
+
+const A: int = f(5)
+
+
+const B: int = f(y=3, x=4)
+
+
+func main() -> int:
+    assert A == B
+    return A

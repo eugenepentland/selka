@@ -1,0 +1,4 @@
+func main() -> int:
+    for value in reversed(FixedArray[int, 2]([3, 4])):
+        _ = value
+    return 7

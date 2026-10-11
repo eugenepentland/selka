@@ -1,0 +1,109 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+import comprehension_lower
+import constant_value
+
+public record Plan:
+    ty: int
+    value: int
+    known: bool
+    bits: int
+    negative: bool
+    slot: int
+
+
+public func implicit() -> Plan:
+    return Plan(ty=0, value=-1, known=True, bits=1, negative=False, slot=-1)
+
+
+public func is_ascending(plan: Plan) -> bool:
+    return plan.known and not plan.negative and plan.bits != 0
+
+
+public func make(mut scope: locals.Scope, context: list_lower.Context, ty: int, value: int, known: bool, bits: int) -> Plan fails syntax_value.Problem:
+    mut slot = -1
+    if not known:
+        slot = try list_lower.temporary(mut scope, context, ty)
+    return Plan(ty=ty, value=value, known=known, bits=bits, negative=constant_value.signed(ty) and bits < 0, slot=slot)
+
+
+func zero(mut batch: emission.Batch, context: list_lower.Context, plan: Plan) -> int fails syntax_value.Problem:
+    return try list_lower.integer(mut batch, context, 0, plan.ty)
+
+
+func step(mut batch: emission.Batch, context: list_lower.Context, plan: Plan) -> int fails syntax_value.Problem:
+    if not plan.known:
+        return try list_lower.read(mut batch, context, plan.slot, plan.ty)
+    mut payload = -1
+    if plan.ty == 8 and plan.bits < 0:
+        payload = try syntax_value.upper_integer(mut batch.pool, plan.bits)
+    else:
+        payload = try syntax_value.integer(mut batch.pool, plan.bits)
+    return try emission.node(mut batch, context.input, context.span, plan.ty, b"integer", payload)
+
+
+func compare(mut batch: emission.Batch, context: list_lower.Context, plan: Plan, op: bytes, first: int, last: int) -> int fails syntax_value.Problem:
+    const left = try list_lower.read(mut batch, context, first, plan.ty)
+    const right = try list_lower.read(mut batch, context, last, plan.ty)
+    return try list_lower.binary(mut batch, context, op, left, right, 1)
+
+
+func directed(mut batch: emission.Batch, context: list_lower.Context, plan: Plan, ascending: int, descending: int) -> int fails syntax_value.Problem:
+    if plan.known:
+        if plan.negative:
+            return descending
+        return ascending
+    const up_step = try list_lower.read(mut batch, context, plan.slot, plan.ty)
+    const up_zero = try zero(mut batch, context, plan)
+    const growing = try list_lower.binary(mut batch, context, b"gt", up_step, up_zero, 1)
+    const up = try list_lower.binary(mut batch, context, b"logical_and", growing, ascending, 1)
+    const down_step = try list_lower.read(mut batch, context, plan.slot, plan.ty)
+    const down_zero = try zero(mut batch, context, plan)
+    const shrinking = try list_lower.binary(mut batch, context, b"lt", down_step, down_zero, 1)
+    const down = try list_lower.binary(mut batch, context, b"logical_and", shrinking, descending, 1)
+    return try list_lower.binary(mut batch, context, b"logical_or", up, down, 1)
+
+
+public func condition_node(mut batch: emission.Batch, context: list_lower.Context, plan: Plan, index: int, limit: int) -> int fails syntax_value.Problem:
+    const ascending = try compare(mut batch, context, plan, b"lt", index, limit)
+    const descending = try compare(mut batch, context, plan, b"gt", index, limit)
+    return try directed(mut batch, context, plan, ascending, descending)
+
+
+public func advance(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, plan: Plan, index: int, limit: int) -> int fails syntax_value.Problem:
+    const next = try list_lower.temporary(mut scope, context, plan.ty)
+    const left = try list_lower.read(mut batch, context, index, plan.ty)
+    const right = try step(mut batch, context, plan)
+    const sum = try list_lower.binary(mut batch, context, b"wrapping_add", left, right, plan.ty)
+    const below = try compare(mut batch, context, plan, b"lt", next, index)
+    const above = try compare(mut batch, context, plan, b"gt", next, index)
+    const wrapped = try directed(mut batch, context, plan, below, above)
+    const limit_read = try list_lower.read(mut batch, context, limit, plan.ty)
+    const finish = try list_lower.store(mut batch, context, index, limit_read, False)
+    const next_read = try list_lower.read(mut batch, context, next, plan.ty)
+    const proceed = try list_lower.store(mut batch, context, index, next_read, False)
+    const initialize = try list_lower.store(mut batch, context, next, sum, True)
+    const condition_id = try syntax_value.integer(mut batch.pool, wrapped)
+    const yes = try syntax_value.integer(mut batch.pool, finish)
+    const no = try syntax_value.integer(mut batch.pool, proceed)
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [condition_id, yes, no])
+    const branch = try emission.statement(mut batch, context.input, context.span, False, b"branch", payload)
+    return try comprehension_lower.block_statement(mut batch, context, [initialize, branch])
+
+
+public func setup(mut batch: emission.Batch, context: list_lower.Context, plan: Plan) -> int[] fails syntax_value.Problem:
+    if plan.value < 0 or plan.known:
+        return []
+    const hold = try list_lower.store(mut batch, context, plan.slot, plan.value, True)
+    const value = try list_lower.read(mut batch, context, plan.slot, plan.ty)
+    const empty = try zero(mut batch, context, plan)
+    const condition = try list_lower.binary(mut batch, context, b"ne", value, empty, 1)
+    const checked = try syntax_value.integer(mut batch.pool, condition)
+    const message = try syntax_value.octets(mut batch.pool, b"range() arg 3 must not be zero")
+    const absent = try syntax_value.absent(mut batch.pool)
+    const kind = try syntax_value.enumeration(mut batch.pool, b"statement")
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "message", "message_value", "kind"], [checked, message, absent, kind])
+    const asserted = try emission.statement(mut batch, context.input, context.span, False, b"assertion", payload)
+    return [hold, asserted]

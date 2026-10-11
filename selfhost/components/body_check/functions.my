@@ -1,4 +1,5 @@
 import engine
+import constant_value
 import graph
 import locals
 import syntax_value
@@ -29,8 +30,12 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
     const raw_policy = try graph.field(state.syntax.pool, raw, "policy")
     const constant_id = try graph.field(state.syntax.pool, raw_policy, "constant")
     const constant = try graph.get(state.syntax.pool, constant_id)
+    mut folded_value: constant_value.Value? = None
     if constant.integer != 0:
-        _ = try engine.constant_literal(mut state, raw)
+        const constant_type = try engine.constant_literal(mut state, raw)
+        if constant_type != state.batch.facts.string_type and constant_type != state.batch.facts.bytes_type:
+            const value = try engine.constant_evaluate(mut state, raw)
+            folded_value = value
     for field_name in ["c_abi", "restricted", "conversion"]:
         const flag_id = try graph.field(state.syntax.pool, raw_policy, field_name)
         const flag = try graph.get(state.syntax.pool, flag_id)
@@ -100,8 +105,8 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
     const body_id = try graph.field(state.syntax.pool, raw, "body")
     const body_raw = try graph.number(state.syntax.pool, body_id)
     mut body = try engine.statement(mut state, body_raw)
-    if constant.integer != 0 and (state.return_type == 0 or state.return_type == 1 or state.return_type == 15):
-        const folded = try engine.constant_scalar(mut state, raw, declaration)
+    if folded_value is not None:
+        const folded = try engine.constant_emit(mut state, folded_value, declaration)
         const folded_payload = try syntax_value.integer(mut state.batch.pool, folded.id)
         const folded_statement = try emission.statement(mut state.batch, state.syntax.pool, declaration, True, b"ret", folded_payload)
         body = engine.Statement(id=folded_statement, terminates=True)

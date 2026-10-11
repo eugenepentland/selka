@@ -1,30 +1,12 @@
 import syntax_value
 import syntax_problem
 
-func ascii(value: str) -> bytes fails syntax_value.Problem:
-    const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-    mut buffer = byte_buffer([])
-    for ch in value:
-        mut byte = -1
-        if ch == "\n":
-            byte = 10
-        elif ch == "\r":
-            byte = 13
-        elif ch == "\t":
-            byte = 9
-        else:
-            for i in range(len(alphabet)):
-                if alphabet[i] == ch:
-                    byte = i + 32
-                    break
-        if byte < 0:
-            fail syntax_value.Problem(code="P_DIAGNOSTIC", start=0, end=0, message="diagnostic text requires an unqualified encoding operation")
-        _ = buffer.append_byte(byte)
-    return bytes(buffer)
+func utf8(value: str) -> bytes:
+    return value.encode()
 
 
 func text(mut pool: syntax_value.Pool, value: str) -> int fails syntax_value.Problem:
-    const data = try ascii(value)
+    const data = utf8(value)
     return try syntax_value.octets(mut pool, data)
 
 
@@ -36,7 +18,7 @@ func related(mut pool: syntax_value.Pool, notes: syntax_problem.Related[]) -> in
     const note = notes[0]
     const span = try syntax_value.span(mut pool, note.start, note.end)
     const message = try text(mut pool, note.message)
-    const role_text = try ascii(note.role)
+    const role_text = utf8(note.role)
     const role = try syntax_value.enumeration(mut pool, role_text)
     return try syntax_value.object(mut pool, ["span", "message", "role"], [span, message, role])
 
@@ -61,7 +43,7 @@ func fix(mut pool: syntax_value.Pool, edits: syntax_problem.Edit[]) -> int fails
 
 func diagnostic(mut pool: syntax_value.Pool, value: syntax_problem.Diagnostic) -> int fails syntax_value.Problem:
     const code = try text(mut pool, value.problem.code)
-    const severity_text = try ascii(value.severity)
+    const severity_text = utf8(value.severity)
     const severity = try syntax_value.enumeration(mut pool, severity_text)
     const span = try syntax_value.span(mut pool, value.problem.start, value.problem.end)
     const message = try text(mut pool, value.problem.message)

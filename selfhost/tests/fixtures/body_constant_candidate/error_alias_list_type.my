@@ -1,0 +1,8 @@
+type Numbers = int[]
+
+
+const VALUE: Numbers = 1
+
+
+func main() -> int:
+    return 7

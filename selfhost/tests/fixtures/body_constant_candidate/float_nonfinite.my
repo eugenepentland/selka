@@ -1,0 +1,12 @@
+const INF: float = 1.0 / 0.0
+
+
+const NAN: float = 0.0 / 0.0
+
+
+const YES: bool = NAN != NAN
+
+
+func main() -> int:
+    assert YES and INF > 1.0
+    return 7

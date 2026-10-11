@@ -1,0 +1,8 @@
+func main() -> int:
+    const values = [(3, True), (4, False)]
+    mut total = 0
+    for value, flag in values:
+        total += value
+        if flag:
+            total += 0
+    return total

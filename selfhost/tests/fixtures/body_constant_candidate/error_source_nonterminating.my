@@ -1,0 +1,11 @@
+func f() -> int:
+    while True:
+        _ = 1
+    return 7
+
+
+const A: int = f()
+
+
+func main() -> int:
+    return 0

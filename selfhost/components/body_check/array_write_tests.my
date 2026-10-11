@@ -1,0 +1,190 @@
+import syntax_value
+import graph
+import engine
+import tuple_types
+import list_types
+import array_types
+import locals
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh(kind: bytes) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 2)
+    const first = try syntax_value.span(mut pool, 0, 1)
+    const second = try syntax_value.span(mut pool, 1, 2)
+    const key_node = try node(mut pool, first, b"integer", first)
+    const value_node = try node(mut pool, second, b"integer", second)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const absent = try syntax_value.absent(mut pool)
+    const key = if kind == b"dict" then zero else absent
+    const step_data = try syntax_value.object(mut pool, ["value", "key"], [one, key])
+    const step = try node(mut pool, span, b"gather_step", step_data)
+    const steps = try syntax_value.sequence(mut pool, [zero])
+    const loop = try node(mut pool, span, b"block", steps)
+    const shape = try syntax_value.enumeration(mut pool, kind)
+    const gather_data = try syntax_value.object(mut pool, ["shape", "loop", "open"], [shape, one, first])
+    const gather = try node(mut pool, span, b"gather", gather_data)
+    const tuple_data = try syntax_value.sequence(mut pool, [zero, one])
+    const tuple_node = try node(mut pool, span, b"tuple", tuple_data)
+    const nodes = try syntax_value.sequence(mut pool, [key_node, value_node, gather, tuple_node])
+    const statements = try syntax_value.sequence(mut pool, [step, loop])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, statements, empty, types])
+    mut state = try engine.make(pool, b"07", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    state.batch.facts.lists.available = True
+    for unused in range(19):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+func mutation(nested: bool, slot: bool, mutable: bool) -> engine.State fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    state.syntax.source = b"a17"
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 3)
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const key = try syntax_value.span(mut state.syntax.pool, 1, 2)
+    const right = try syntax_value.span(mut state.syntax.pool, 2, 3)
+    const inner = try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, 0, 2, span)
+    mut ty = inner
+    if nested:
+        ty = try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, inner, 2, span)
+    if slot:
+        ty = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=inner, span=span), [-1, -1])
+    const root = try locals.add(mut state.scope, b"a", name, ty, mutable, b"local")
+    state.scope.locals[root].flags.initialized = True
+    const zero = try syntax_value.integer(mut state.syntax.pool, 0)
+    const one = try syntax_value.integer(mut state.syntax.pool, 1)
+    const two = try syntax_value.integer(mut state.syntax.pool, 2)
+    const four = try syntax_value.integer(mut state.syntax.pool, 4)
+    const local = try node(mut state.syntax.pool, name, b"name", name)
+    const key_node = try node(mut state.syntax.pool, key, b"integer", key)
+    const right_node = try node(mut state.syntax.pool, right, b"integer", right)
+    const access = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [zero, one])
+    const indexed = try node(mut state.syntax.pool, span, b"index", access)
+    const kind = try syntax_value.enumeration(mut state.syntax.pool, b"write")
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [one, two])
+    const base = if nested or slot then four else zero
+    const write = try syntax_value.object(mut state.syntax.pool, ["base", "kind", "arguments"], [base, kind, arguments])
+    const write_node = try node(mut state.syntax.pool, span, b"list_operation", write)
+    const add = try syntax_value.enumeration(mut state.syntax.pool, b"add")
+    const augmented = try syntax_value.object(mut state.syntax.pool, ["target", "value", "op"], [four, two, add])
+    const augmented_node = try node(mut state.syntax.pool, span, b"index_assignment", augmented)
+    state.syntax.nodes = [local, key_node, right_node, write_node, indexed, augmented_node]
+    state.batch.resolved = []
+    state.batch.facts.expected = []
+    return state
+
+
+func read_payload(pool: syntax_value.Pool, row: int, tag: bytes) -> int fails syntax_value.Problem:
+    const id = try graph.field(pool, row, "data")
+    const data = try graph.get(pool, id)
+    if data.data != tag:
+        fail syntax_value.Problem(code="TEST_TAG", start=0, end=0, message="unexpected array write graph")
+    return try graph.payload(pool, id)
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, name)
+    return try graph.number(pool, value)
+
+
+func body(state: engine.State, id: int) -> int[] fails syntax_value.Problem:
+    const block = try read_payload(state.batch.pool, state.batch.nodes[id], b"block_value")
+    const statement = try number(state.batch.pool, block, "body")
+    const children = try read_payload(state.batch.pool, state.batch.statements[statement], b"block")
+    const values = try graph.items(state.batch.pool, children)
+    mut ids: int[] = []
+    for value in values:
+        const child = try graph.number(state.batch.pool, value)
+        ids.append(child)
+    return ids
+
+
+public func test_plain_array_write_keeps_checked_read_and_element_store_usage() -> bool fails syntax_value.Problem:
+    mut state = try mutation(False, False, True)
+    const value = try engine.expression(mut state, 3)
+    const statements = try body(state, value.id)
+    const assigned = try read_payload(state.batch.pool, state.batch.statements[statements[0]], b"assign")
+    const replacement_id = try number(state.batch.pool, assigned, "value")
+    const replacement = try read_payload(state.batch.pool, state.batch.nodes[replacement_id], b"replace")
+    const element_id = try graph.field(state.batch.pool, assigned, "element")
+    const element = try graph.get(state.batch.pool, element_id)
+    const checked_index = try read_payload(state.batch.pool, state.batch.nodes[2], b"index")
+    const replacement_base = try number(state.batch.pool, replacement, "base")
+    const checked_key = try number(state.batch.pool, checked_index, "index")
+    return value.ty == 15 and len(statements) == 1 and state.scope.locals[0].usage.reads == 1 and state.scope.locals[0].usage.writes == 1 and element.integer == 1 and replacement_base == 0 and checked_key == 1
+
+
+public func test_augmented_array_write_preserves_outer_writable_probe_and_old_element() -> bool fails syntax_value.Problem:
+    mut state = try mutation(False, False, True)
+    const value = try engine.expression(mut state, 5)
+    const statements = try body(state, value.id)
+    const assignment = try read_payload(state.batch.pool, state.batch.statements[statements[0]], b"assign")
+    const replaced = try number(state.batch.pool, assignment, "value")
+    const replacement = try read_payload(state.batch.pool, state.batch.nodes[replaced], b"replace")
+    const combined = try number(state.batch.pool, replacement, "value")
+    const binary = try read_payload(state.batch.pool, state.batch.nodes[combined], b"binary")
+    const left = try number(state.batch.pool, binary, "left")
+    _ = try read_payload(state.batch.pool, state.batch.nodes[left], b"index")
+    const op_id = try graph.field(state.batch.pool, binary, "op")
+    const op = try graph.get(state.batch.pool, op_id)
+    return value.ty == 15 and len(statements) == 1 and state.scope.locals[0].usage.writes == 2 and state.scope.locals[0].usage.reads == 1 and op.data == b"add" and left == 2
+
+
+public func test_nested_array_write_rebuilds_inner_then_outer_from_one_root_read() -> bool fails syntax_value.Problem:
+    mut state = try mutation(True, False, True)
+    const value = try engine.expression(mut state, 3)
+    const statements = try body(state, value.id)
+    const assignment = try read_payload(state.batch.pool, state.batch.statements[statements[0]], b"assign")
+    const outer_id = try number(state.batch.pool, assignment, "value")
+    const outer = try read_payload(state.batch.pool, state.batch.nodes[outer_id], b"replace")
+    const inner_id = try number(state.batch.pool, outer, "value")
+    const inner = try read_payload(state.batch.pool, state.batch.nodes[inner_id], b"replace")
+    const base = try number(state.batch.pool, inner, "base")
+    _ = try read_payload(state.batch.pool, state.batch.nodes[base], b"index")
+    const outer_base = try number(state.batch.pool, outer, "base")
+    return inner_id < outer_id and outer_base == 0 and state.scope.locals[0].usage.reads == 1 and state.scope.locals[0].usage.writes == 1
+
+
+public func test_array_inside_list_reserves_owner_index_element_before_slot_write() -> bool fails syntax_value.Problem:
+    mut state = try mutation(False, True, True)
+    const value = try engine.expression(mut state, 3)
+    const statements = try body(state, value.id)
+    const first = try read_payload(state.batch.pool, state.batch.statements[statements[0]], b"initialize")
+    const second = try read_payload(state.batch.pool, state.batch.statements[statements[1]], b"initialize")
+    const third = try read_payload(state.batch.pool, state.batch.statements[statements[2]], b"initialize")
+    const discarded = try read_payload(state.batch.pool, state.batch.statements[statements[3]], b"discard")
+    const write_id = try graph.number(state.batch.pool, discarded)
+    const operation = try read_payload(state.batch.pool, state.batch.nodes[write_id], b"buffer_operation")
+    const owner = try number(state.batch.pool, operation, "owner")
+    const first_slot = try number(state.batch.pool, first, "slot")
+    const second_slot = try number(state.batch.pool, second, "slot")
+    const third_slot = try number(state.batch.pool, third, "slot")
+    return len(state.scope.locals) == 5 and len(statements) == 4 and owner == 1 and first_slot == 1 and second_slot == 2 and third_slot == 4 and state.scope.locals[0].usage.reads == 1
+
+
+public func test_plain_array_readonly_diagnostic_comes_from_element_root() -> bool fails syntax_value.Problem:
+    mut state = try mutation(False, False, False)
+    match engine.expression(mut state, 3):
+        case Ok(unused):
+            return False
+        case Err(error):
+            return error.code == "E_IMMUTABLE" and error.message == "element assignment requires a mutable binding" and error.start == 0 and error.end == 1 and len(state.batch.nodes) == 0
+
+
+public func test_augmented_array_readonly_diagnostic_keeps_writable_root_priority() -> bool fails syntax_value.Problem:
+    mut state = try mutation(False, False, False)
+    match engine.expression(mut state, 5):
+        case Ok(unused):
+            return False
+        case Err(error):
+            return error.code == "E_IMMUTABLE" and error.message == "this binding and its nested data are read-only; declare it with `mut` to update it" and len(state.batch.nodes) == 0

@@ -1,0 +1,8 @@
+import modules.constant_support as support
+
+const VALUE: u8 = support.TOTAL + 1u8
+
+
+func main() -> int:
+    assert VALUE == 7u8
+    return 7

@@ -1,0 +1,9 @@
+const A: bool = False and (1 // 0 == 1)
+
+
+const B: bool = True or (127i8 + 1i8 == 0i8)
+
+
+func main() -> int:
+    assert not A and B
+    return 7

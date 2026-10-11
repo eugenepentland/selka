@@ -1,0 +1,5 @@
+const A: Unit = ()
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,4 @@
+func main() -> int:
+    for value, value in zip([3], [4]):
+        _ = value
+    return 7

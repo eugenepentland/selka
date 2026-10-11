@@ -1,0 +1,5 @@
+func main() -> int:
+    mut total = 0
+    for value in FixedArray[int, 2]([3, 4]):
+        total += value
+    return total

@@ -1,0 +1,154 @@
+import constant_value
+import floating_literals
+import syntax_value
+import math
+
+func scale(exponent: int) -> float:
+    mut power = exponent
+    mut factor = 2.0
+    if power < 0:
+        power = -power
+        factor = 0.5
+    mut value = 1.0
+    while power > 0:
+        if power % 2 != 0:
+            value = value * factor
+        power = power // 2
+        if power != 0:
+            factor = factor * factor
+    return value
+
+
+public func decode(bits: u64) -> float:
+    const magnitude = bit_and(bits, 9223372036854775807u64)
+    const exponent = int(shift_right(magnitude, 52u64))
+    const fraction = bit_and(magnitude, 4503599627370495u64)
+    mut value = 0.0
+    if exponent == 2047:
+        if fraction == 0u64:
+            value = 1.0 / 0.0
+        else:
+            value = 0.0 / 0.0
+    elif exponent == 0:
+        value = float(fraction) * scale(-1074)
+    else:
+        value = 1.0 + float(fraction) / 4503599627370496.0
+        value = value * scale(exponent - 1023)
+    if bits >= 9223372036854775808u64:
+        value = -value
+    return value
+
+
+public func encode(value: float, ty: int, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    if value != value:
+        return constant_value.Value(ty=ty, bits=9221120237041090560u64)
+    const negative = value < 0.0 or (value == 0.0 and 1.0 / value < 0.0)
+    mut magnitude = value
+    if negative:
+        magnitude = -magnitude
+    mut bits = 9218868437227405312u64
+    if magnitude <= 1.7976931348623157e308:
+        const recovered = try floating_literals.bits(magnitude, site.start, site.end)
+        bits = u64(recovered)
+    if negative:
+        bits = bit_or(bits, 9223372036854775808u64)
+    return constant_value.Value(ty=ty, bits=bits)
+
+
+public func numeric(value: constant_value.Value, float_type: int, site: syntax_value.Problem) -> float fails syntax_value.Problem:
+    if value.ty == float_type:
+        return decode(value.bits)
+    if not constant_value.integer(value.ty):
+        fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="a constant float operation requires numbers")
+    if value.ty == 8:
+        return float(value.bits)
+    return float(constant_value.wire(value.bits))
+
+
+public func to_integer(value: constant_value.Value, ty: int, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    if not constant_value.integer(ty):
+        fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="a float constant converts only to an integer type")
+    const number = trunc(decode(value.bits))
+    mut upper = 1.0
+    mut exponent = constant_value.width(ty)
+    mut lower = 0.0
+    if constant_value.signed(ty):
+        exponent = exponent - 1
+    for unused in range(exponent):
+        upper = upper * 2.0
+    if constant_value.signed(ty):
+        lower = -upper
+    if number != number or number < lower or number >= upper:
+        fail syntax_value.Problem(code="E_CONSTANT_ARITHMETIC", start=site.start, end=site.end, message="constant floating conversion is outside the integer range")
+    if constant_value.signed(ty):
+        return constant_value.Value(ty=ty, bits=constant_value.pack(int(number)))
+    return constant_value.Value(ty=ty, bits=u64(number))
+
+
+public func binary(op: bytes, left: constant_value.Value, right: constant_value.Value, float_type: int, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    const first = try numeric(left, float_type, site)
+    const last = try numeric(right, float_type, site)
+    mut value = 0.0
+    if op == b"add":
+        value = first + last
+    elif op == b"sub":
+        value = first - last
+    elif op == b"mul":
+        value = first * last
+    elif op == b"div" or op == b"python_div":
+        value = first / last
+    elif op == b"floor_div" or op == b"floor_rem":
+        value = floor(first / last)
+        if op == b"floor_rem":
+            const product = value * last
+            value = first - product
+    elif op == b"eq" or op == b"ne" or op == b"lt" or op == b"le" or op == b"gt" or op == b"ge":
+        const holds = (op == b"eq" and first == last) or (op == b"ne" and first != last) or (op == b"lt" and first < last) or (op == b"le" and first <= last) or (op == b"gt" and first > last) or (op == b"ge" and first >= last)
+        mut bits = 0u64
+        if holds:
+            bits = 1u64
+        return constant_value.Value(ty=1, bits=bits)
+    else:
+        fail syntax_value.Problem(code="E_FLOAT_OPERATION", start=site.start, end=site.end, message="float supports arithmetic and numeric comparison")
+    return try encode(value, float_type, site)
+
+
+public func unary(op: bytes, value: constant_value.Value, float_type: int, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    mut number = decode(value.bits)
+    if op == b"neg" or op == b"f64_neg":
+        number = -number
+    elif op == b"f64_abs":
+        number = abs(number)
+    elif op == b"f64_sqrt":
+        number = sqrt(number)
+    elif op == b"f64_floor":
+        number = floor(number)
+    elif op == b"f64_ceil":
+        number = ceil(number)
+    elif op == b"f64_trunc":
+        number = trunc(number)
+    elif op == b"f64_sin":
+        number = math.sin(number)
+    elif op == b"f64_cos":
+        number = math.cos(number)
+    else:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=site.start, end=site.end, message="unknown constant float unary operation")
+    return try encode(number, float_type, site)
+
+
+public func representation(op: bytes, value: constant_value.Value, float_type: int, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    if op == b"f64_from_i64":
+        const number = float(constant_value.wire(value.bits))
+        const encoded = try encode(number, float_type, site)
+        return constant_value.Value(ty=8, bits=encoded.bits)
+    if op == b"f64_from_u64":
+        const number = float(value.bits)
+        const encoded = try encode(number, float_type, site)
+        return constant_value.Value(ty=8, bits=encoded.bits)
+    const operations = [b"f64_to_i64", b"", b"f64_to_i8", b"f64_to_i16", b"f64_to_i32", b"f64_to_u8", b"f64_to_u16", b"f64_to_u32", b"f64_to_u64"]
+    for ty in range(len(operations)):
+        if operations[ty] == op:
+            const converted = try to_integer(value, ty, site)
+            return constant_value.Value(ty=8, bits=converted.bits)
+    const result = try unary(op, value, float_type, site)
+    return constant_value.Value(ty=8, bits=result.bits)

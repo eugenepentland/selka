@@ -1,0 +1,9 @@
+record Shape:
+    value: int
+
+
+const VALUE: int = Shape
+
+
+func main() -> int:
+    return 7

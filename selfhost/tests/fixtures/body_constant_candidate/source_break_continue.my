@@ -1,0 +1,17 @@
+func f() -> int:
+    mut total = 0
+    for i in range(0, 8, 2):
+        if i == 2:
+            continue
+        if i == 6:
+            break
+        total += i
+    return total
+
+
+const VALUE: int = f()
+
+
+func main() -> int:
+    assert VALUE == 4
+    return 7

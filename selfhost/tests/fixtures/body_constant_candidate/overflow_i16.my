@@ -1,0 +1,5 @@
+const VALUE: i16 = 32767 + 1
+
+
+func main() -> int:
+    return 0

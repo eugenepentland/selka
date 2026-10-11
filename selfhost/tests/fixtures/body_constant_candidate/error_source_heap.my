@@ -1,0 +1,10 @@
+func f() -> int:
+    const values = [1]
+    return len(values)
+
+
+const A: int = f()
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,5 @@
+const A: int = int(9223372036854775808.0)
+
+
+func main() -> int:
+    return 0

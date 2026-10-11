@@ -1,0 +1,86 @@
+import constant_integer
+import constant_value
+import syntax_value
+
+func site() -> syntax_value.Problem:
+    return syntax_value.Problem(code="", start=12, end=19, message="")
+
+
+func value(ty: int, number: int) -> constant_value.Value:
+    return constant_value.Value(ty=ty, bits=constant_value.pack(number))
+
+
+public func test_signed_width_boundaries_and_unsigned_upper_half() -> bool fails syntax_value.Problem:
+    const first = try constant_integer.binary(b"add", value(2, 126), value(2, 1), site())
+    const unsigned = try constant_integer.binary(b"add", constant_value.Value(ty=8, bits=9223372036854775808u64), constant_value.Value(ty=8, bits=9223372036854775807u64), site())
+    return first.bits == 127u64 and first.ty == 2 and unsigned.bits == 18446744073709551615u64 and unsigned.ty == 8
+
+
+public func test_signed_and_unsigned_overflow_reports_preserve_site() -> bool:
+    match constant_integer.binary(b"add", value(2, 127), value(2, 1), site()):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "E_CONSTANT_ARITHMETIC" or problem.start != 12 or problem.end != 19:
+                return False
+    match constant_integer.binary(b"mul", constant_value.Value(ty=8, bits=18446744073709551615u64), constant_value.Value(ty=8, bits=2u64), site()):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.message == "constant arithmetic overflows its integer type"
+
+
+public func test_signed_minimum_multiplication_division_and_remainder() -> bool fails syntax_value.Problem:
+    const minimum = value(0, -9223372036854775807 - 1)
+    const preserved = try constant_integer.binary(b"mul", minimum, value(0, 1), site())
+    const remainder = try constant_integer.binary(b"rem", minimum, value(0, -1), site())
+    match constant_integer.binary(b"div", minimum, value(0, -1), site()):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return preserved.bits == minimum.bits and remainder.bits == 0u64 and problem.code == "E_CONSTANT_ARITHMETIC"
+
+
+public func test_floor_and_truncated_remainders_follow_divisor_and_dividend() -> bool fails syntax_value.Problem:
+    const floor = try constant_integer.binary(b"floor_div", value(0, -7), value(0, 3), site())
+    const floor_remainder = try constant_integer.binary(b"floor_rem", value(0, -7), value(0, 3), site())
+    const truncated = try constant_integer.binary(b"div", value(0, -7), value(0, 3), site())
+    const remainder = try constant_integer.binary(b"rem", value(0, -7), value(0, 3), site())
+    const negative_divisor = try constant_integer.binary(b"floor_rem", value(0, 7), value(0, -3), site())
+    return constant_value.wire(floor.bits) == -3 and floor_remainder.bits == 2u64 and constant_value.wire(truncated.bits) == -2 and constant_value.wire(remainder.bits) == -1 and constant_value.wire(negative_divisor.bits) == -2
+
+
+public func test_wrapping_saturating_and_signed_shifts_obey_width() -> bool fails syntax_value.Problem:
+    const wrapped = try constant_integer.binary(b"wrapping_add", value(2, 127), value(2, 1), site())
+    const saturated = try constant_integer.binary(b"saturating_sub", value(2, -128), value(2, 1), site())
+    const shifted = try constant_integer.binary(b"shift_right", value(2, -128), value(2, 7), site())
+    const left = try constant_integer.binary(b"shift_left", value(2, 127), value(2, 1), site())
+    return constant_value.wire(wrapped.bits) == -128 and constant_value.wire(saturated.bits) == -128 and constant_value.wire(shifted.bits) == -1 and constant_value.wire(left.bits) == -2
+
+
+public func test_casts_negation_and_shift_errors_are_checked_before_execution() -> bool:
+    match constant_integer.cast(5, value(0, -1), site()):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "E_CONSTANT_ARITHMETIC":
+                return False
+    match constant_integer.negate(value(0, -9223372036854775807 - 1), site()):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "E_CONSTANT_ARITHMETIC":
+                return False
+    match constant_integer.binary(b"shift_left", value(2, 1), value(2, 8), site()):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.message == "constant shift count is outside its integer width"
+
+
+public func test_unsigned_order_and_width_signed_extension_are_distinct() -> bool fails syntax_value.Problem:
+    const upper = constant_value.Value(ty=8, bits=18446744073709551615u64)
+    const order = try constant_integer.binary(b"gt", upper, constant_value.Value(ty=8, bits=9223372036854775808u64), site())
+    const signed = constant_value.normalize(2, 255u64)
+    const unsigned = constant_value.normalize(5, 255u64)
+    return order.bits == 1u64 and signed.bits == 18446744073709551615u64 and unsigned.bits == 255u64

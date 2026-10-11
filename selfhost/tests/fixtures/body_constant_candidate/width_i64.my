@@ -1,0 +1,12 @@
+const LO: i64 = -9223372036854775808
+
+
+const HI: i64 = 9223372036854775807
+
+
+const VALUE: i64 = 3 * 2 + 1
+
+
+func main() -> int:
+    assert LO <= VALUE and VALUE <= HI
+    return int(VALUE)

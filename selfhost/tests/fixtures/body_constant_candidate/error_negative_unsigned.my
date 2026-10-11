@@ -1,0 +1,5 @@
+const A: u8 = -1u8
+
+
+func main() -> int:
+    return 0

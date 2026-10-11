@@ -1,0 +1,5 @@
+const VALUE: u64 = 18446744073709551615 + 1
+
+
+func main() -> int:
+    return 0

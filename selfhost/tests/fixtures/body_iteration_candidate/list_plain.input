@@ -1,0 +1,6 @@
+func main() -> int:
+    const values = [3, 4]
+    mut total = 0
+    for value in values:
+        total += value
+    return total

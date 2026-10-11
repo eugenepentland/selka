@@ -1,0 +1,10 @@
+func f(x: u8) -> u8:
+    const y: u8 = x + 1
+    return y
+
+
+const A: u8 = f(6)
+
+
+func main() -> int:
+    return int(A)

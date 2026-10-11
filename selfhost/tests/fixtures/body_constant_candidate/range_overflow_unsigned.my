@@ -1,0 +1,13 @@
+func f() -> int:
+    mut total = 0
+    for i in range(254u8, 255u8, 2u8):
+        total += int(i)
+    return total
+
+
+const VALUE: int = f()
+
+
+func main() -> int:
+    assert VALUE == 254
+    return 7

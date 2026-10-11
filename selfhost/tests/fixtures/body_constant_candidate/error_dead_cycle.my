@@ -1,0 +1,8 @@
+const A: bool = False and B
+
+
+const B: bool = A
+
+
+func main() -> int:
+    return 0

@@ -175,11 +175,12 @@ func getter(kind: int) -> Getter fails syntax_value.Problem:
     mut state = try fresh(pool, source, [node], [ret, block])
     state.batch.facts.string_type = 19
     state.batch.facts.bytes_type = 20
+    state.syntax.functions = [function]
     return Getter(state=state, function=function, use_span=name)
 
 
 public func test_scalar_literal_getters_fold_at_use_span_without_call_or_temporary() -> bool fails syntax_value.Problem:
-    for kind in [0, 1, 2]:
+    for kind in [0, 1]:
         mut fixture = try getter(kind)
         const result = try engine.constant_scalar(mut fixture.state, fixture.function, fixture.use_span)
         const folded = try typed_data(fixture.state.batch.pool, fixture.state.batch.nodes[result.id])
@@ -222,3 +223,12 @@ public func test_managed_literal_getters_keep_unicode_and_byte_element_types() -
         if len(fixture.state.batch.nodes) != 2 or len(fixture.state.batch.statements) != 0 or len(fixture.state.scope.locals) != 0:
             return False
     return True
+
+
+public func test_unit_constant_has_native_constant_type_rejection() -> bool fails syntax_value.Problem:
+    mut fixture = try getter(2)
+    match engine.constant_scalar(mut fixture.state, fixture.function, fixture.use_span):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_CONSTANT_TYPE" and problem.start == 0 and problem.end == 4 and problem.message == "constant types currently require builtin integers, bool or float"

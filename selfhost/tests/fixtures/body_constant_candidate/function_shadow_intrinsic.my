@@ -1,0 +1,10 @@
+func abs(x: int) -> int:
+    return x + 4
+
+
+const VALUE: int = abs(3)
+
+
+func main() -> int:
+    assert VALUE == 7
+    return 7

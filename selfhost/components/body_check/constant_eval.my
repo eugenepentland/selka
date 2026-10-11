@@ -1,0 +1,938 @@
+import constant_context
+import constant_value
+import constant_integer
+import constant_float
+import constant_call
+import integer_literals
+import floating_literals
+import syntax_value
+import graph
+import names
+
+record Local:
+    name: int
+    value: constant_value.Value?
+    mutable: bool
+
+
+record Frame:
+    locals: Local[]
+    base: int
+    result: int
+
+
+record Evaluator:
+    context: constant_context.Context
+    values: constant_value.Value?[]
+    visiting: bool[]
+    work: int
+    frame: Frame
+
+
+record Flow:
+    tag: int
+    value: constant_value.Value
+
+
+record Chain:
+    holds: bool
+    last: constant_value.Value
+
+
+func empty_flow(tag: int) -> Flow:
+    return Flow(tag=tag, value=constant_value.Value(ty=15, bits=0u64))
+
+
+func make(context: constant_context.Context) -> Evaluator:
+    mut values: constant_value.Value?[] = []
+    mut visiting: bool[] = []
+    for function in context.tables.functions:
+        values.append(None)
+        visiting.append(False)
+    return Evaluator(context=context, values=values, visiting=visiting, work=0, frame=Frame(locals=[], base=0, result=-1))
+
+
+func rejection(evaluator: Evaluator, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    return try constant_context.problem(evaluator.context, span, code, message)
+
+
+func take(mut evaluator: Evaluator, span: int, depth: int) -> bool fails syntax_value.Problem:
+    evaluator.work = evaluator.work + 1
+    if depth >= 256 or evaluator.work > 65536:
+        const problem = try rejection(evaluator, span, "E_CONSTANT_LIMIT", "constant evaluation exceeds nesting or work budget")
+        fail problem
+    return True
+
+
+func local(mut evaluator: Evaluator, name: int) -> int fails syntax_value.Problem:
+    const spelling = try graph.spelling(evaluator.context.pool, evaluator.context.source, name)
+    mut index = len(evaluator.frame.locals)
+    while index > evaluator.frame.base:
+        index = index - 1
+        const evaluated_72 = try take(mut evaluator, name, 0)
+        _ = evaluated_72
+        const candidate = try graph.spelling(evaluator.context.pool, evaluator.context.source, evaluator.frame.locals[index].name)
+        if spelling == candidate:
+            return index
+    return -1
+
+
+func bind(mut evaluator: Evaluator, name: int, value: constant_value.Value?, mutable: bool) -> bool:
+    evaluator.frame.locals.append(Local(name=name, value=value, mutable=mutable))
+    return True
+
+
+func scalar(mut evaluator: Evaluator, span: int) -> int fails syntax_value.Problem:
+    const ty = try constant_context.annotation(mut evaluator.context, span, 0)
+    if not constant_value.integer(ty) and ty != 1:
+        const problem = try rejection(evaluator, span, "E_CONSTANT_TYPE", "compile-time function values require scalar integer or bool types")
+        fail problem
+    return ty
+
+
+func call_index(mut evaluator: Evaluator, call: int, span: int) -> int fails syntax_value.Problem:
+    const owner_id = try graph.field(evaluator.context.pool, call, "owner")
+    const owner = try graph.get(evaluator.context.pool, owner_id)
+    const types_id = try graph.field(evaluator.context.pool, call, "type_arguments")
+    const types = try graph.items(evaluator.context.pool, types_id)
+    if owner.kind != 0 or len(types) != 0:
+        const problem = try rejection(evaluator, span, "E_CONSTANT_EXPRESSION", "compile-time calls require nongeneric free functions")
+        fail problem
+    const name = try graph.field(evaluator.context.pool, call, "name")
+    const resolution = try names.target(mut evaluator.context.problems, evaluator.context.pool, evaluator.context.source, evaluator.context.modules, span, owner_id, name)
+    if resolution.from >= 0 and resolution.import_index >= 0:
+        evaluator.context.usage[resolution.from][resolution.import_index] = True
+    for index in range(len(evaluator.context.tables.functions)):
+        const evaluated_105 = try take(mut evaluator, span, 0)
+        _ = evaluated_105
+        const function = evaluator.context.tables.functions[index]
+        const policy = try graph.field(evaluator.context.pool, function, "policy")
+        const declared_owner_id = try graph.field(evaluator.context.pool, policy, "owner")
+        const declared_owner = try graph.get(evaluator.context.pool, declared_owner_id)
+        if declared_owner.kind != 0:
+            continue
+        const declaration = try graph.field(evaluator.context.pool, function, "name")
+        const identity = try names.qualified(evaluator.context.pool, evaluator.context.source, evaluator.context.modules, declaration)
+        if identity != resolution.key:
+            continue
+        const host_id = try graph.field(evaluator.context.pool, policy, "host")
+        const host = try graph.get(evaluator.context.pool, host_id)
+        const signature = try graph.field(evaluator.context.pool, function, "signature")
+        const generics_id = try graph.field(evaluator.context.pool, signature, "type_parameters")
+        const generics = try graph.items(evaluator.context.pool, generics_id)
+        if host.kind != 0 or len(generics) != 0:
+            const problem = try rejection(evaluator, span, "E_CONSTANT_EFFECT", "compile-time calls cannot use host functions or generics")
+            fail problem
+        const evaluated_124 = try constant_call.bind(mut evaluator.context, call, signature)
+        _ = evaluated_124
+        const return_type = try graph.field(evaluator.context.pool, signature, "return_type")
+        const evaluated_126 = try scalar(mut evaluator, return_type)
+        _ = evaluated_126
+        const parameters_id = try graph.field(evaluator.context.pool, signature, "parameters")
+        const parameters = try graph.items(evaluator.context.pool, parameters_id)
+        for parameter in parameters:
+            const ty = try graph.field(evaluator.context.pool, parameter, "ty")
+            const evaluated_131 = try scalar(mut evaluator, ty)
+            _ = evaluated_131
+        return index
+    const problem = try rejection(evaluator, name, "E_CONSTANT_NAME", "compile-time call requires a visible source function")
+    fail problem
+
+
+func top_level(evaluator: Evaluator, name: int) -> bool fails syntax_value.Problem:
+    const spelling = try graph.spelling(evaluator.context.pool, evaluator.context.source, name)
+    if len(evaluator.context.modules) == 0:
+        for function in evaluator.context.tables.functions:
+            const declaration = try graph.field(evaluator.context.pool, function, "name")
+            const candidate = try graph.spelling(evaluator.context.pool, evaluator.context.source, declaration)
+            if spelling == candidate:
+                return True
+        return False
+    const start_id = try graph.field(evaluator.context.pool, name, "start")
+    const start = try graph.number(evaluator.context.pool, start_id)
+    const module = try names.module_at(evaluator.context.pool, evaluator.context.modules, start)
+    if module < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="constant name has no source module")
+    const symbols_id = try graph.field(evaluator.context.pool, evaluator.context.modules[module], "symbols")
+    const symbols = try graph.items(evaluator.context.pool, symbols_id)
+    for symbol in symbols:
+        const symbol_name_id = try graph.field(evaluator.context.pool, symbol, "name")
+        const symbol_name = try graph.get(evaluator.context.pool, symbol_name_id)
+        if spelling == symbol_name.data:
+            return True
+    return False
+
+
+func builtin(evaluator: Evaluator, call: int) -> bytes fails syntax_value.Problem:
+    const owner_id = try graph.field(evaluator.context.pool, call, "owner")
+    const owner = try graph.get(evaluator.context.pool, owner_id)
+    const types_id = try graph.field(evaluator.context.pool, call, "type_arguments")
+    const types = try graph.items(evaluator.context.pool, types_id)
+    if owner.kind != 0 or len(types) != 0:
+        return b""
+    const name = try graph.field(evaluator.context.pool, call, "name")
+    const spelling = try graph.spelling(evaluator.context.pool, evaluator.context.source, name)
+    if spelling != b"float" and spelling != b"int" and spelling != b"sqrt" and spelling != b"floor" and spelling != b"ceil" and spelling != b"trunc" and spelling != b"abs":
+        return b""
+    const shadowed = try top_level(evaluator, name)
+    if shadowed:
+        return b""
+    return spelling
+
+
+func validate_builtin(mut evaluator: Evaluator, call: int, span: int, depth: int) -> bool fails syntax_value.Problem:
+    const arguments_id = try graph.field(evaluator.context.pool, call, "arguments")
+    const arguments = try graph.items(evaluator.context.pool, arguments_id)
+    const labels_id = try graph.field(evaluator.context.pool, call, "argument_names")
+    const labels = try graph.items(evaluator.context.pool, labels_id)
+    if len(arguments) != 1 or len(labels) != 0:
+        const problem = try rejection(evaluator, span, "E_CONSTANT_EXPRESSION", "float, int, sqrt, floor, ceil, trunc and abs take one positional argument in a constant")
+        fail problem
+    const argument = try graph.number(evaluator.context.pool, arguments[0])
+    return try validate_expression(mut evaluator, argument, depth + 1)
+
+
+func validate_call(mut evaluator: Evaluator, call: int, span: int, depth: int) -> bool fails syntax_value.Problem:
+    const arguments_id = try graph.field(evaluator.context.pool, call, "arguments")
+    const arguments = try graph.items(evaluator.context.pool, arguments_id)
+    for argument in arguments:
+        const id = try graph.number(evaluator.context.pool, argument)
+        const evaluated_195 = try validate_expression(mut evaluator, id, depth + 1)
+        _ = evaluated_195
+    const index = try call_index(mut evaluator, call, span)
+    if evaluator.visiting[index]:
+        return True
+    evaluator.visiting[index] = True
+    const before = len(evaluator.frame.locals)
+    const base = evaluator.frame.base
+    evaluator.frame.base = before
+    const function = evaluator.context.tables.functions[index]
+    const signature = try graph.field(evaluator.context.pool, function, "signature")
+    const parameters_id = try graph.field(evaluator.context.pool, signature, "parameters")
+    const parameters = try graph.items(evaluator.context.pool, parameters_id)
+    for parameter in parameters:
+        const name = try graph.field(evaluator.context.pool, parameter, "name")
+        _ = bind(mut evaluator, name, None, False)
+    const body_id = try graph.field(evaluator.context.pool, function, "body")
+    const body = try graph.number(evaluator.context.pool, body_id)
+    const evaluated_212 = try validate_statement(mut evaluator, body, depth + 1)
+    _ = evaluated_212
+    evaluator.frame.locals = evaluator.frame.locals[:before]
+    evaluator.frame.base = base
+    evaluator.visiting[index] = False
+    return True
+
+
+func validate_declaration(mut evaluator: Evaluator, index: int, depth: int) -> bool fails syntax_value.Problem:
+    const before = len(evaluator.frame.locals)
+    const base = evaluator.frame.base
+    evaluator.frame.base = before
+    const function = evaluator.context.tables.functions[index]
+    const name = try graph.field(evaluator.context.pool, function, "name")
+    if depth >= 256:
+        const problem = try rejection(evaluator, name, "E_CONSTANT_LIMIT", "constant dependency nesting exceeds 256")
+        fail problem
+    if evaluator.visiting[index]:
+        const problem = try rejection(evaluator, name, "E_CONSTANT_CYCLE", "constant initializers must have acyclic dependencies")
+        fail problem
+    evaluator.visiting[index] = True
+    const initializer = try constant_context.initializer(evaluator.context, function)
+    const evaluated_233 = try validate_expression(mut evaluator, initializer, depth + 1)
+    _ = evaluated_233
+    evaluator.visiting[index] = False
+    evaluator.frame.locals = evaluator.frame.locals[:before]
+    evaluator.frame.base = base
+    return True
+
+
+func validate_expression(mut evaluator: Evaluator, id: int, depth: int) -> bool fails syntax_value.Problem:
+    const node = evaluator.context.tables.nodes[id]
+    const span = try graph.field(evaluator.context.pool, node, "span")
+    const evaluated_243 = try take(mut evaluator, span, depth)
+    _ = evaluated_243
+    const data_id = try graph.field(evaluator.context.pool, node, "data")
+    const data = try graph.get(evaluator.context.pool, data_id)
+    const payload = try graph.payload(evaluator.context.pool, data_id)
+    if data.data == b"unit" or data.data == b"integer" or data.data == b"boolean":
+        return True
+    if data.data == b"call":
+        const built = try builtin(evaluator, payload)
+        if len(built) != 0:
+            return try validate_builtin(mut evaluator, payload, span, depth + 1)
+        return try validate_call(mut evaluator, payload, span, depth + 1)
+    if data.data == b"name":
+        const slot = try local(mut evaluator, payload)
+        if slot >= 0:
+            return True
+        evaluator.work = evaluator.work + len(evaluator.context.tables.functions)
+        const evaluated_259 = try take(mut evaluator, payload, depth)
+        _ = evaluated_259
+        const index = try constant_context.lookup(mut evaluator.context, payload)
+        if index < 0:
+            const problem = try rejection(evaluator, payload, "E_CONSTANT_NAME", "constant initializers may refer only to other constants")
+            fail problem
+        return try validate_declaration(mut evaluator, index, depth + 1)
+    if data.data == b"unary" or data.data == b"cast":
+        mut field = "operand"
+        if data.data == b"cast":
+            field = "value"
+        const value_id = try graph.field(evaluator.context.pool, payload, field)
+        const value = try graph.number(evaluator.context.pool, value_id)
+        return try validate_expression(mut evaluator, value, depth + 1)
+    if data.data == b"binary":
+        const left_id = try graph.field(evaluator.context.pool, payload, "left")
+        const right_id = try graph.field(evaluator.context.pool, payload, "right")
+        const left = try graph.number(evaluator.context.pool, left_id)
+        const right = try graph.number(evaluator.context.pool, right_id)
+        const evaluated_277 = try validate_expression(mut evaluator, left, depth + 1)
+        _ = evaluated_277
+        return try validate_expression(mut evaluator, right, depth + 1)
+    const problem = try rejection(evaluator, span, "E_CONSTANT_EXPRESSION", "constant evaluation permits scalar expressions and source functions; allocation and external effects are excluded")
+    fail problem
+
+
+func validate_statement(mut evaluator: Evaluator, id: int, depth: int) -> bool fails syntax_value.Problem:
+    const statement = evaluator.context.tables.statements[id]
+    const span = try graph.field(evaluator.context.pool, statement, "span")
+    const evaluated_286 = try take(mut evaluator, span, depth)
+    _ = evaluated_286
+    const data_id = try graph.field(evaluator.context.pool, statement, "data")
+    const data = try graph.get(evaluator.context.pool, data_id)
+    const payload = try graph.payload(evaluator.context.pool, data_id)
+    if data.data == b"ret" or data.data == b"discard":
+        const value = try graph.number(evaluator.context.pool, payload)
+        return try validate_expression(mut evaluator, value, depth + 1)
+    if data.data == b"loop_exit":
+        return True
+    if data.data == b"block":
+        const before = len(evaluator.frame.locals)
+        const children = try graph.items(evaluator.context.pool, payload)
+        for child in children:
+            const value = try graph.number(evaluator.context.pool, child)
+            const evaluated_300 = try validate_statement(mut evaluator, value, depth + 1)
+            _ = evaluated_300
+        evaluator.frame.locals = evaluator.frame.locals[:before]
+        return True
+    if data.data == b"binding" or data.data == b"assignment":
+        const value_id = try graph.field(evaluator.context.pool, payload, "value")
+        const value = try graph.number(evaluator.context.pool, value_id)
+        const evaluated_306 = try validate_expression(mut evaluator, value, depth + 1)
+        _ = evaluated_306
+        const name = try graph.field(evaluator.context.pool, payload, "name")
+        if data.data == b"binding":
+            const annotation = try graph.field(evaluator.context.pool, payload, "annotation")
+            const raw = try graph.get(evaluator.context.pool, annotation)
+            if raw.kind != 0:
+                const evaluated_312 = try scalar(mut evaluator, annotation)
+                _ = evaluated_312
+            const mutable_id = try graph.field(evaluator.context.pool, payload, "mutable")
+            const mutable = try graph.get(evaluator.context.pool, mutable_id)
+            _ = bind(mut evaluator, name, None, mutable.integer != 0)
+        else:
+            const op_id = try graph.field(evaluator.context.pool, payload, "op")
+            const op = try graph.get(evaluator.context.pool, op_id)
+            const slot = try local(mut evaluator, name)
+            if op.data == b"set" and slot < 0:
+                _ = bind(mut evaluator, name, None, True)
+        return True
+    if data.data == b"branch" or data.data == b"loop":
+        const condition_id = try graph.field(evaluator.context.pool, payload, "condition")
+        const condition = try graph.number(evaluator.context.pool, condition_id)
+        const evaluated_326 = try validate_expression(mut evaluator, condition, depth + 1)
+        _ = evaluated_326
+        mut field = "body"
+        if data.data == b"branch":
+            field = "then_body"
+        const body_id = try graph.field(evaluator.context.pool, payload, field)
+        const body = try graph.number(evaluator.context.pool, body_id)
+        const evaluated_332 = try validate_statement(mut evaluator, body, depth + 1)
+        _ = evaluated_332
+        if data.data == b"branch":
+            const other_id = try graph.field(evaluator.context.pool, payload, "else_body")
+            const other = try graph.get(evaluator.context.pool, other_id)
+            if other.kind != 0:
+                const evaluated_337 = try validate_statement(mut evaluator, other.integer, depth + 1)
+                _ = evaluated_337
+        return True
+    if data.data == b"for_range":
+        const start_id = try graph.field(evaluator.context.pool, payload, "start")
+        const start = try graph.number(evaluator.context.pool, start_id)
+        const node_data_id = try graph.field(evaluator.context.pool, evaluator.context.tables.nodes[start], "data")
+        const node_data = try graph.get(evaluator.context.pool, node_data_id)
+        if node_data.data != b"unit":
+            const evaluated_345 = try validate_expression(mut evaluator, start, depth + 1)
+            _ = evaluated_345
+        const end_id = try graph.field(evaluator.context.pool, payload, "end")
+        const end = try graph.number(evaluator.context.pool, end_id)
+        const evaluated_348 = try validate_expression(mut evaluator, end, depth + 1)
+        _ = evaluated_348
+        const step_id = try graph.field(evaluator.context.pool, payload, "step")
+        const step = try graph.get(evaluator.context.pool, step_id)
+        if step.kind != 0:
+            const evaluated_352 = try validate_expression(mut evaluator, step.integer, depth + 1)
+            _ = evaluated_352
+        const before = len(evaluator.frame.locals)
+        const name = try graph.field(evaluator.context.pool, payload, "name")
+        _ = bind(mut evaluator, name, None, True)
+        const body_id = try graph.field(evaluator.context.pool, payload, "body")
+        const body = try graph.number(evaluator.context.pool, body_id)
+        const evaluated_358 = try validate_statement(mut evaluator, body, depth + 1)
+        _ = evaluated_358
+        evaluator.frame.locals = evaluator.frame.locals[:before]
+        return True
+    const problem = try rejection(evaluator, span, "E_CONSTANT_EFFECT", "compile-time function bodies permit scalar locals, branches and loops; runtime memory and effects are excluded")
+    fail problem
+
+
+func evaluate_declaration(mut evaluator: Evaluator, index: int, depth: int) -> constant_value.Value fails syntax_value.Problem:
+    const before = len(evaluator.frame.locals)
+    const base = evaluator.frame.base
+    evaluator.frame.base = before
+    const function = evaluator.context.tables.functions[index]
+    const name = try graph.field(evaluator.context.pool, function, "name")
+    if depth >= 256:
+        const problem = try rejection(evaluator, name, "E_CONSTANT_LIMIT", "constant dependency nesting exceeds 256")
+        fail problem
+    const cached = evaluator.values[index]
+    if cached is not None:
+        evaluator.frame.base = base
+        return cached
+    if evaluator.visiting[index]:
+        const problem = try rejection(evaluator, name, "E_CONSTANT_CYCLE", "constant initializers must have acyclic dependencies")
+        fail problem
+    evaluator.visiting[index] = True
+    const signature = try graph.field(evaluator.context.pool, function, "signature")
+    const span = try graph.field(evaluator.context.pool, signature, "return_type")
+    const ty = try constant_context.annotation(mut evaluator.context, span, 0)
+    if not constant_value.integer(ty) and ty != 1 and ty != evaluator.context.types.floating:
+        const problem = try rejection(evaluator, span, "E_CONSTANT_TYPE", "constant types currently require builtin integers, bool or float")
+        fail problem
+    const initializer = try constant_context.initializer(evaluator.context, function)
+    const value = try expression(mut evaluator, initializer, ty, depth + 1)
+    if value.ty != ty:
+        const problem = try rejection(evaluator, span, "E_TYPE", "constant initializer type differs from its declared type")
+        fail problem
+    evaluator.values[index] = value
+    evaluator.visiting[index] = False
+    evaluator.frame.locals = evaluator.frame.locals[:before]
+    evaluator.frame.base = base
+    return value
+
+
+func adopts(evaluator: Evaluator, id: int) -> bool fails syntax_value.Problem:
+    mut node = evaluator.context.tables.nodes[id]
+    mut data_id = try graph.field(evaluator.context.pool, node, "data")
+    mut data = try graph.get(evaluator.context.pool, data_id)
+    mut payload = try graph.payload(evaluator.context.pool, data_id)
+    if data.data == b"unary":
+        const op_id = try graph.field(evaluator.context.pool, payload, "op")
+        const op = try graph.get(evaluator.context.pool, op_id)
+        if op.data == b"neg":
+            const operand_id = try graph.field(evaluator.context.pool, payload, "operand")
+            const operand = try graph.number(evaluator.context.pool, operand_id)
+            node = evaluator.context.tables.nodes[operand]
+            const evaluated_412 = try graph.field(evaluator.context.pool, node, "data")
+            data_id = evaluated_412
+            const evaluated_413 = try graph.get(evaluator.context.pool, data_id)
+            data = evaluated_413
+            const evaluated_414 = try graph.payload(evaluator.context.pool, data_id)
+            payload = evaluated_414
+    if data.data != b"integer":
+        return False
+    const spelling = try graph.spelling(evaluator.context.pool, evaluator.context.source, payload)
+    return not floating_literals.spelling(spelling) and integer_literals.unsuffixed(spelling)
+
+
+func sibling(value: constant_value.Value, inherited: int) -> int:
+    if constant_value.integer(value.ty):
+        return value.ty
+    return inherited
+
+
+func binary_values(evaluator: Evaluator, op: bytes, left: constant_value.Value, right: constant_value.Value, span: int) -> constant_value.Value fails syntax_value.Problem:
+    const site = try rejection(evaluator, span, "", "")
+    if op == b"python_div" or left.ty == evaluator.context.types.floating or right.ty == evaluator.context.types.floating:
+        return try constant_float.binary(op, left, right, evaluator.context.types.floating, site)
+    if left.ty != right.ty:
+        fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="constant binary operands must have the same type")
+    if left.ty == 1:
+        mut holds = False
+        if op == b"logical_and":
+            holds = left.bits != 0u64 and right.bits != 0u64
+        elif op == b"logical_or":
+            holds = left.bits != 0u64 or right.bits != 0u64
+        elif op == b"eq":
+            holds = left.bits == right.bits
+        elif op == b"ne":
+            holds = left.bits != right.bits
+        else:
+            fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="invalid constant boolean operation")
+        mut bits = 0u64
+        if holds:
+            bits = 1u64
+        return constant_value.Value(ty=1, bits=bits)
+    return try constant_integer.binary(op, left, right, site)
+
+
+func chain(mut evaluator: Evaluator, id: int, depth: int) -> Chain fails syntax_value.Problem:
+    const node = evaluator.context.tables.nodes[id]
+    const span = try graph.field(evaluator.context.pool, node, "span")
+    const data_id = try graph.field(evaluator.context.pool, node, "data")
+    const payload = try graph.payload(evaluator.context.pool, data_id)
+    const chained_id = try graph.field(evaluator.context.pool, payload, "chained")
+    const chained = try graph.get(evaluator.context.pool, chained_id)
+    const op_id = try graph.field(evaluator.context.pool, payload, "op")
+    const op = try graph.get(evaluator.context.pool, op_id)
+    const left_id = try graph.field(evaluator.context.pool, payload, "left")
+    const left_raw = try graph.number(evaluator.context.pool, left_id)
+    const right_id = try graph.field(evaluator.context.pool, payload, "right")
+    const right_raw = try graph.number(evaluator.context.pool, right_id)
+    mut left = constant_value.Value(ty=15, bits=0u64)
+    mut right = left
+    if chained.integer != 0:
+        const earlier = try chain(mut evaluator, left_raw, depth + 1)
+        if not earlier.holds:
+            return earlier
+        left = earlier.last
+        const evaluated_475 = try expression(mut evaluator, right_raw, sibling(left, -1), depth + 1)
+        right = evaluated_475
+    else:
+        const first = try adopts(evaluator, left_raw)
+        const last = try adopts(evaluator, right_raw)
+        if first and not last:
+            const evaluated_480 = try expression(mut evaluator, right_raw, -1, depth + 1)
+            right = evaluated_480
+            const evaluated_481 = try expression(mut evaluator, left_raw, sibling(right, -1), depth + 1)
+            left = evaluated_481
+        else:
+            const evaluated_483 = try expression(mut evaluator, left_raw, -1, depth + 1)
+            left = evaluated_483
+            const evaluated_484 = try expression(mut evaluator, right_raw, sibling(left, -1), depth + 1)
+            right = evaluated_484
+    const holds = try binary_values(evaluator, op.data, left, right, span)
+    return Chain(holds=holds.bits != 0u64, last=right)
+
+
+func builtin_call(mut evaluator: Evaluator, operation: bytes, call: int, span: int, depth: int) -> constant_value.Value fails syntax_value.Problem:
+    const evaluated_490 = try validate_builtin(mut evaluator, call, span, depth)
+    _ = evaluated_490
+    const arguments_id = try graph.field(evaluator.context.pool, call, "arguments")
+    const arguments = try graph.items(evaluator.context.pool, arguments_id)
+    const argument = try graph.number(evaluator.context.pool, arguments[0])
+    const value = try expression(mut evaluator, argument, -1, depth + 1)
+    const site = try rejection(evaluator, span, "", "")
+    if operation == b"float":
+        const number = try constant_float.numeric(value, evaluator.context.types.floating, site)
+        return try constant_float.encode(number, evaluator.context.types.floating, site)
+    if operation == b"int":
+        if value.ty == evaluator.context.types.floating:
+            return try constant_float.to_integer(value, 0, site)
+        if not constant_value.integer(value.ty):
+            fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="numeric conversion requires an integer or float")
+        return try constant_integer.cast(0, value, site)
+    if value.ty != evaluator.context.types.floating:
+        fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="this prelude operation requires a float argument")
+    return try constant_float.unary(b"f64_" + operation, value, evaluator.context.types.floating, site)
+
+
+func literal(evaluator: Evaluator, span: int, negative: bool, expected: int, arithmetic_span: int) -> constant_value.Value fails syntax_value.Problem:
+    const spelling = try graph.spelling(evaluator.context.pool, evaluator.context.source, span)
+    const site = try rejection(evaluator, span, "", "")
+    if floating_literals.spelling(spelling) or (expected >= 0 and expected == evaluator.context.types.floating):
+        const bits = try floating_literals.parse(spelling, site.start, site.end)
+        return constant_value.Value(ty=evaluator.context.types.floating, bits=constant_value.pack(bits))
+    const parsed = try integer_literals.parse(spelling, negative, expected, site.start, site.end)
+    mut bits = constant_value.pack(parsed.value)
+    if negative:
+        if parsed.minimum:
+            return constant_value.normalize(parsed.ty, bits)
+        const value = constant_value.Value(ty=parsed.ty, bits=bits)
+        const arithmetic_site = try rejection(evaluator, arithmetic_span, "", "")
+        const negated = try constant_integer.negate(value, arithmetic_site)
+        bits = negated.bits
+    return constant_value.Value(ty=parsed.ty, bits=bits)
+
+
+func expression(mut evaluator: Evaluator, id: int, expected: int, depth: int) -> constant_value.Value fails syntax_value.Problem:
+    const node = evaluator.context.tables.nodes[id]
+    const span = try graph.field(evaluator.context.pool, node, "span")
+    const evaluated_530 = try take(mut evaluator, span, depth)
+    _ = evaluated_530
+    const data_id = try graph.field(evaluator.context.pool, node, "data")
+    const data = try graph.get(evaluator.context.pool, data_id)
+    const payload = try graph.payload(evaluator.context.pool, data_id)
+    const site = try rejection(evaluator, span, "", "")
+    if data.data == b"integer":
+        return try literal(evaluator, payload, False, expected, span)
+    if data.data == b"boolean":
+        const value = try graph.get(evaluator.context.pool, payload)
+        return constant_value.Value(ty=1, bits=u64(value.integer))
+    if data.data == b"name":
+        const slot = try local(mut evaluator, payload)
+        if slot >= 0:
+            const value = evaluator.frame.locals[slot].value
+            if value is not None:
+                return value
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=site.start, end=site.end, message="constant local has no evaluated value")
+        evaluator.work = evaluator.work + len(evaluator.context.tables.functions)
+        const evaluated_548 = try take(mut evaluator, payload, depth)
+        _ = evaluated_548
+        const index = try constant_context.lookup(mut evaluator.context, payload)
+        if index < 0:
+            fail syntax_value.Problem(code="E_CONSTANT_NAME", start=site.start, end=site.end, message="constant initializers may refer only to other constants")
+        return try evaluate_declaration(mut evaluator, index, depth + 1)
+    if data.data == b"call":
+        const operation = try builtin(evaluator, payload)
+        if len(operation) != 0:
+            return try builtin_call(mut evaluator, operation, payload, span, depth + 1)
+        return try execute_call(mut evaluator, payload, span, depth + 1)
+    if data.data == b"cast":
+        const target = try graph.field(evaluator.context.pool, payload, "ty")
+        const ty = try constant_context.annotation(mut evaluator.context, target, 0)
+        const value_id = try graph.field(evaluator.context.pool, payload, "value")
+        const value_raw = try graph.number(evaluator.context.pool, value_id)
+        const value = try expression(mut evaluator, value_raw, -1, depth + 1)
+        if value.ty == evaluator.context.types.floating:
+            return try constant_float.to_integer(value, ty, site)
+        if not constant_value.integer(value.ty):
+            fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="constant cast requires an integer or float")
+        return try constant_integer.cast(ty, value, site)
+    if data.data == b"unary":
+        const op_id = try graph.field(evaluator.context.pool, payload, "op")
+        const op = try graph.get(evaluator.context.pool, op_id)
+        if op.data == b"is_none":
+            fail syntax_value.Problem(code="E_OPTION_TEST", start=site.start, end=site.end, message="is None requires an Option value")
+        const operand_id = try graph.field(evaluator.context.pool, payload, "operand")
+        const operand = try graph.number(evaluator.context.pool, operand_id)
+        const operand_data_id = try graph.field(evaluator.context.pool, evaluator.context.tables.nodes[operand], "data")
+        const operand_data = try graph.get(evaluator.context.pool, operand_data_id)
+        if op.data == b"neg" and operand_data.data == b"integer":
+            const operand_span = try graph.payload(evaluator.context.pool, operand_data_id)
+            const spelling = try graph.spelling(evaluator.context.pool, evaluator.context.source, operand_span)
+            if not floating_literals.spelling(spelling) and not (expected >= 0 and expected == evaluator.context.types.floating):
+                return try literal(evaluator, operand_span, True, expected, span)
+        mut inherited = -1
+        if op.data == b"neg":
+            inherited = expected
+        const value = try expression(mut evaluator, operand, inherited, depth + 1)
+        if value.ty == evaluator.context.types.floating and (op.data == b"neg" or op.data == b"f64_neg" or op.data == b"f64_abs" or op.data == b"f64_sqrt" or op.data == b"f64_floor" or op.data == b"f64_ceil" or op.data == b"f64_trunc" or op.data == b"f64_sin" or op.data == b"f64_cos"):
+            return try constant_float.unary(op.data, value, evaluator.context.types.floating, site)
+        if op.data != b"neg" and op.data != b"not":
+            if value.ty != 8:
+                fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="floating representation requires u64")
+            return try constant_float.representation(op.data, value, evaluator.context.types.floating, site)
+        if op.data == b"not" and value.ty == 1:
+            mut bits = 0u64
+            if value.bits == 0u64:
+                bits = 1u64
+            return constant_value.Value(ty=1, bits=bits)
+        if op.data == b"neg" and constant_value.integer(value.ty):
+            return try constant_integer.negate(value, site)
+        fail syntax_value.Problem(code="E_TYPE", start=site.start, end=site.end, message="invalid constant unary operand")
+    if data.data == b"binary":
+        const chained_id = try graph.field(evaluator.context.pool, payload, "chained")
+        const chained = try graph.get(evaluator.context.pool, chained_id)
+        if chained.integer != 0:
+            const result = try chain(mut evaluator, id, depth + 1)
+            mut bits = 0u64
+            if result.holds:
+                bits = 1u64
+            return constant_value.Value(ty=1, bits=bits)
+        const op_id = try graph.field(evaluator.context.pool, payload, "op")
+        const op = try graph.get(evaluator.context.pool, op_id)
+        mut inherited = expected
+        if op.data == b"eq" or op.data == b"ne" or op.data == b"lt" or op.data == b"le" or op.data == b"gt" or op.data == b"ge" or op.data == b"logical_and" or op.data == b"logical_or":
+            inherited = -1
+        const left_id = try graph.field(evaluator.context.pool, payload, "left")
+        const left_raw = try graph.number(evaluator.context.pool, left_id)
+        const right_id = try graph.field(evaluator.context.pool, payload, "right")
+        const right_raw = try graph.number(evaluator.context.pool, right_id)
+        const first = try adopts(evaluator, left_raw)
+        const last = try adopts(evaluator, right_raw)
+        mut left = constant_value.Value(ty=15, bits=0u64)
+        mut right = left
+        if first and not last:
+            const evaluated_624 = try expression(mut evaluator, right_raw, inherited, depth + 1)
+            right = evaluated_624
+            const evaluated_625 = try expression(mut evaluator, left_raw, sibling(right, inherited), depth + 1)
+            left = evaluated_625
+        else:
+            const evaluated_627 = try expression(mut evaluator, left_raw, inherited, depth + 1)
+            left = evaluated_627
+            if left.ty == 1:
+                if (op.data == b"logical_and" and left.bits == 0u64) or (op.data == b"logical_or" and left.bits != 0u64):
+                    return left
+            const evaluated_631 = try expression(mut evaluator, right_raw, sibling(left, inherited), depth + 1)
+            right = evaluated_631
+        return try binary_values(evaluator, op.data, left, right, span)
+    fail syntax_value.Problem(code="E_CONSTANT_EXPRESSION", start=site.start, end=site.end, message="constant evaluation permits scalar expressions and source functions; allocation and external effects are excluded")
+
+
+func execute_call(mut evaluator: Evaluator, call: int, span: int, depth: int) -> constant_value.Value fails syntax_value.Problem:
+    const index = try call_index(mut evaluator, call, span)
+    const function = evaluator.context.tables.functions[index]
+    const signature = try graph.field(evaluator.context.pool, function, "signature")
+    const invocation = try constant_call.bind(mut evaluator.context, call, signature)
+    mut arguments: constant_value.Value[] = []
+    for unused in invocation.arguments:
+        arguments.append(constant_value.Value(ty=15, bits=0u64))
+    for position in invocation.order:
+        const parameter = invocation.parameters[position]
+        const type_span = try graph.field(evaluator.context.pool, parameter, "ty")
+        const ty = try scalar(mut evaluator, type_span)
+        const value = try expression(mut evaluator, invocation.arguments[position], ty, depth + 1)
+        if value.ty != ty:
+            const problem = try rejection(evaluator, type_span, "E_TYPE", "compile-time argument type differs from parameter")
+            fail problem
+        arguments[position] = value
+    const before = len(evaluator.frame.locals)
+    const base = evaluator.frame.base
+    const outer_result = evaluator.frame.result
+    evaluator.frame.base = before
+    const result_span = try graph.field(evaluator.context.pool, signature, "return_type")
+    const evaluated_658 = try scalar(mut evaluator, result_span)
+    evaluator.frame.result = evaluated_658
+    for position in range(len(invocation.parameters)):
+        const name = try graph.field(evaluator.context.pool, invocation.parameters[position], "name")
+        _ = bind(mut evaluator, name, arguments[position], False)
+    const body_id = try graph.field(evaluator.context.pool, function, "body")
+    const body = try graph.number(evaluator.context.pool, body_id)
+    const flow = try execute_statement(mut evaluator, body, depth + 1)
+    if flow.tag != 1:
+        const problem = try rejection(evaluator, span, "E_CONSTANT_RETURN", "compile-time function must return a scalar value")
+        fail problem
+    const ty = try scalar(mut evaluator, result_span)
+    if flow.value.ty != ty:
+        const problem = try rejection(evaluator, result_span, "E_TYPE", "compile-time return type differs from signature")
+        fail problem
+    evaluator.frame.locals = evaluator.frame.locals[:before]
+    evaluator.frame.base = base
+    evaluator.frame.result = outer_result
+    return flow.value
+
+
+func evaluate_condition(mut evaluator: Evaluator, id: int, depth: int) -> bool fails syntax_value.Problem:
+    const value = try expression(mut evaluator, id, -1, depth + 1)
+    if value.ty != 1:
+        const span = try graph.field(evaluator.context.pool, evaluator.context.tables.nodes[id], "span")
+        const problem = try rejection(evaluator, span, "E_TYPE", "compile-time condition requires bool")
+        fail problem
+    return value.bits != 0u64
+
+
+func assign(mut evaluator: Evaluator, assignment: int, depth: int) -> bool fails syntax_value.Problem:
+    const name = try graph.field(evaluator.context.pool, assignment, "name")
+    const op_id = try graph.field(evaluator.context.pool, assignment, "op")
+    const op = try graph.get(evaluator.context.pool, op_id)
+    const raw_id = try graph.field(evaluator.context.pool, assignment, "value")
+    const raw = try graph.number(evaluator.context.pool, raw_id)
+    const slot = try local(mut evaluator, name)
+    if slot < 0 and op.data == b"set":
+        const value = try expression(mut evaluator, raw, -1, depth + 1)
+        return bind(mut evaluator, name, value, True)
+    if slot < 0:
+        const problem = try rejection(evaluator, name, "E_CONSTANT_NAME", "compile-time compound assignment requires an existing local")
+        fail problem
+    const previous = evaluator.frame.locals[slot].value
+    if previous is None:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="assignment has no previous constant value")
+    mut value = try expression(mut evaluator, raw, previous.ty, depth + 1)
+    const op_span = try graph.field(evaluator.context.pool, assignment, "op_span")
+    if value.ty != previous.ty:
+        const problem = try rejection(evaluator, op_span, "E_TYPE", "compile-time assignment types differ")
+        fail problem
+    if op.data != b"set":
+        if not constant_value.integer(value.ty):
+            const problem = try rejection(evaluator, op_span, "E_TYPE", "compound assignment requires integers")
+            fail problem
+        mut operation = b"sub"
+        if op.data == b"add":
+            operation = b"add"
+        const site = try rejection(evaluator, op_span, "", "")
+        const evaluated_716 = try constant_integer.binary(operation, previous, value, site)
+        value = evaluated_716
+    evaluator.frame.locals[slot].value = value
+    return True
+
+
+func range_next(start: constant_value.Value, step: constant_value.Value, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    const first = constant_value.magnitude(start)
+    const last = constant_value.magnitude(step)
+    mut negative = constant_value.negative(start)
+    mut magnitude = 0u64
+    if negative == constant_value.negative(step):
+        if last > 18446744073709551615u64 - first:
+            fail constant_integer.overflow(site)
+        magnitude = first + last
+    elif first >= last:
+        magnitude = first - last
+    else:
+        magnitude = last - first
+        negative = not negative
+    if negative and magnitude != 0u64:
+        if not constant_value.signed(start.ty) or magnitude > constant_value.sign_bit(start.ty):
+            fail constant_integer.overflow(site)
+        return constant_value.Value(ty=start.ty, bits=wrapping_sub(0u64, magnitude))
+    if magnitude > constant_value.maximum(start.ty).bits:
+        fail constant_integer.overflow(site)
+    return constant_value.Value(ty=start.ty, bits=magnitude)
+
+
+func range_loop(mut evaluator: Evaluator, range_data: int, depth: int) -> Flow fails syntax_value.Problem:
+    const start_id = try graph.field(evaluator.context.pool, range_data, "start")
+    const start_raw = try graph.number(evaluator.context.pool, start_id)
+    const node_data_id = try graph.field(evaluator.context.pool, evaluator.context.tables.nodes[start_raw], "data")
+    const node_data = try graph.get(evaluator.context.pool, node_data_id)
+    mut start = constant_value.Value(ty=0, bits=0u64)
+    if node_data.data != b"unit":
+        const evaluated_751 = try expression(mut evaluator, start_raw, -1, depth + 1)
+        start = evaluated_751
+    const end_id = try graph.field(evaluator.context.pool, range_data, "end")
+    const end_raw = try graph.number(evaluator.context.pool, end_id)
+    const end = try expression(mut evaluator, end_raw, -1, depth + 1)
+    const name = try graph.field(evaluator.context.pool, range_data, "name")
+    if not constant_value.integer(start.ty) or start.ty != end.ty:
+        const problem = try rejection(evaluator, name, "E_TYPE", "compile-time range requires matching integers")
+        fail problem
+    const step_id = try graph.field(evaluator.context.pool, range_data, "step")
+    const raw_step = try graph.get(evaluator.context.pool, step_id)
+    mut step = constant_value.Value(ty=0, bits=1u64)
+    if raw_step.kind != 0:
+        const evaluated_763 = try expression(mut evaluator, raw_step.integer, -1, depth + 1)
+        step = evaluated_763
+    if step.bits == 0u64:
+        const problem = try rejection(evaluator, name, "E_RANGE_STEP", "range() arg 3 must not be zero")
+        fail problem
+    const before = len(evaluator.frame.locals)
+    _ = bind(mut evaluator, name, start, True)
+    const body_id = try graph.field(evaluator.context.pool, range_data, "body")
+    const body = try graph.number(evaluator.context.pool, body_id)
+    const site = try rejection(evaluator, name, "", "")
+    mut comparison = b"lt"
+    if constant_value.negative(step):
+        comparison = b"gt"
+    while True:
+        const holds = try constant_integer.binary(comparison, start, end, site)
+        if holds.bits == 0u64:
+            break
+        evaluator.frame.locals[before].value = start
+        const flow = try execute_statement(mut evaluator, body, depth + 1)
+        if flow.tag == 1:
+            evaluator.frame.locals = evaluator.frame.locals[:before]
+            return flow
+        if flow.tag == 2:
+            break
+        match range_next(start, step, site):
+            case Ok(value):
+                start = value
+            case Err(problem):
+                break
+    evaluator.frame.locals = evaluator.frame.locals[:before]
+    return empty_flow(0)
+
+
+func execute_statement(mut evaluator: Evaluator, id: int, depth: int) -> Flow fails syntax_value.Problem:
+    const statement = evaluator.context.tables.statements[id]
+    const span = try graph.field(evaluator.context.pool, statement, "span")
+    const evaluated_798 = try take(mut evaluator, span, depth)
+    _ = evaluated_798
+    const data_id = try graph.field(evaluator.context.pool, statement, "data")
+    const data = try graph.get(evaluator.context.pool, data_id)
+    const payload = try graph.payload(evaluator.context.pool, data_id)
+    if data.data == b"ret" or data.data == b"discard":
+        const raw = try graph.number(evaluator.context.pool, payload)
+        mut expected = -1
+        if data.data == b"ret":
+            expected = evaluator.frame.result
+        const value = try expression(mut evaluator, raw, expected, depth + 1)
+        if data.data == b"ret":
+            return Flow(tag=1, value=value)
+    elif data.data == b"loop_exit":
+        const raw = try graph.get(evaluator.context.pool, payload)
+        if raw.integer != 0:
+            return empty_flow(3)
+        return empty_flow(2)
+    elif data.data == b"block":
+        const before = len(evaluator.frame.locals)
+        const children = try graph.items(evaluator.context.pool, payload)
+        for child in children:
+            const raw = try graph.number(evaluator.context.pool, child)
+            const flow = try execute_statement(mut evaluator, raw, depth + 1)
+            if flow.tag != 0:
+                evaluator.frame.locals = evaluator.frame.locals[:before]
+                return flow
+        evaluator.frame.locals = evaluator.frame.locals[:before]
+    elif data.data == b"binding":
+        const annotation = try graph.field(evaluator.context.pool, payload, "annotation")
+        const raw_type = try graph.get(evaluator.context.pool, annotation)
+        mut expected = -1
+        if raw_type.kind != 0:
+            const evaluated_830 = try scalar(mut evaluator, annotation)
+            expected = evaluated_830
+        const raw_id = try graph.field(evaluator.context.pool, payload, "value")
+        const raw = try graph.number(evaluator.context.pool, raw_id)
+        const value = try expression(mut evaluator, raw, expected, depth + 1)
+        if expected >= 0 and value.ty != expected:
+            const problem = try rejection(evaluator, annotation, "E_TYPE", "compile-time binding annotation differs from initializer")
+            fail problem
+        const name = try graph.field(evaluator.context.pool, payload, "name")
+        const mutable_id = try graph.field(evaluator.context.pool, payload, "mutable")
+        const mutable = try graph.get(evaluator.context.pool, mutable_id)
+        _ = bind(mut evaluator, name, value, mutable.integer != 0)
+    elif data.data == b"assignment":
+        const evaluated_842 = try assign(mut evaluator, payload, depth + 1)
+        _ = evaluated_842
+    elif data.data == b"branch" or data.data == b"loop":
+        const condition_id = try graph.field(evaluator.context.pool, payload, "condition")
+        const condition_raw = try graph.number(evaluator.context.pool, condition_id)
+        if data.data == b"branch":
+            const holds = try evaluate_condition(mut evaluator, condition_raw, depth + 1)
+            mut field = "else_body"
+            if holds:
+                field = "then_body"
+            const body_id = try graph.field(evaluator.context.pool, payload, field)
+            const body = try graph.get(evaluator.context.pool, body_id)
+            if body.kind != 0:
+                return try execute_statement(mut evaluator, body.integer, depth + 1)
+        else:
+            const body_id = try graph.field(evaluator.context.pool, payload, "body")
+            const body = try graph.number(evaluator.context.pool, body_id)
+            mut holds = try evaluate_condition(mut evaluator, condition_raw, depth + 1)
+            while holds:
+                const flow = try execute_statement(mut evaluator, body, depth + 1)
+                if flow.tag == 1:
+                    return flow
+                if flow.tag == 2:
+                    break
+                const evaluated_865 = try evaluate_condition(mut evaluator, condition_raw, depth + 1)
+                holds = evaluated_865
+    elif data.data == b"for_range":
+        return try range_loop(mut evaluator, payload, depth + 1)
+    else:
+        const problem = try rejection(evaluator, span, "E_CONSTANT_EFFECT", "unsupported compile-time statement")
+        fail problem
+    return empty_flow(0)
+
+
+public func evaluate(mut context: constant_context.Context, index: int) -> constant_value.Value fails syntax_value.Problem:
+    mut evaluator = make(context)
+    match validate_declaration(mut evaluator, index, 0):
+        case Ok(valid):
+            match evaluate_declaration(mut evaluator, index, 0):
+                case Ok(value):
+                    context = evaluator.context
+                    return value
+                case Err(problem):
+                    context = evaluator.context
+                    fail problem
+        case Err(problem):
+            context = evaluator.context
+            fail problem
+
+
+public func evaluate_name(mut context: constant_context.Context, name: int) -> constant_value.Value? fails syntax_value.Problem:
+    const index = try constant_context.lookup(mut context, name)
+    if index < 0:
+        return None
+    const value = try evaluate(mut context, index)
+    return value

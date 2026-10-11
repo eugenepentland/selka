@@ -1,0 +1,9 @@
+func f() -> int:
+    return f()
+
+
+const A: int = f()
+
+
+func main() -> int:
+    return 0

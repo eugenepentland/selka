@@ -1,0 +1,13 @@
+import syntax_value
+import syntax_problem
+import syntax_diagnostics
+import graph
+
+public func test_unicode_diagnostic_message_is_utf8_without_ascii_refusal() -> bool fails syntax_value.Problem:
+    const problem = syntax_value.Problem(code="E_TUPLE_ARITY", start=3, end=8, message="3 values — bind é or 🙂")
+    const pool = try syntax_diagnostics.report([syntax_problem.plain(problem)])
+    const items = try graph.field(pool, len(pool.values) - 1, "diagnostics")
+    const diagnostics = try graph.items(pool, items)
+    const message = try graph.field(pool, diagnostics[0], "message")
+    const value = try graph.get(pool, message)
+    return value.data == b"3 values \xe2\x80\x94 bind \xc3\xa9 or \xf0\x9f\x99\x82"

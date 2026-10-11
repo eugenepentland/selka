@@ -1,0 +1,76 @@
+import constant_context
+import graph
+import syntax_value
+import call_repairs
+
+public record Bound:
+    arguments: int[]
+    order: int[]
+    parameters: int[]
+
+
+public func bind(mut context: constant_context.Context, call: int, signature: int) -> Bound fails syntax_value.Problem:
+    const parameter_list = try graph.field(context.pool, signature, "parameters")
+    const parameters = try graph.items(context.pool, parameter_list)
+    const argument_list = try graph.field(context.pool, call, "arguments")
+    const arguments = try graph.items(context.pool, argument_list)
+    const name_list = try graph.field(context.pool, call, "argument_names")
+    const labels = try graph.items(context.pool, name_list)
+    const boundary_id = try graph.field(context.pool, signature, "keyword_only_from")
+    const boundary = try graph.get(context.pool, boundary_id)
+    const name = try graph.field(context.pool, call, "name")
+    if len(arguments) > len(parameters):
+        const rejection = try constant_context.problem(context, name, "E_ARITY", "too many arguments for this function: expected " + str(len(parameters)) + ", given " + str(len(arguments)))
+        fail rejection
+    mut values: int[] = []
+    mut order: int[] = []
+    for unused in parameters:
+        values.append(-1)
+    mut positional = 0
+    for source_index in range(len(arguments)):
+        mut position = positional
+        mut named = False
+        mut site = name
+        if len(labels) != 0:
+            if len(labels) != len(arguments):
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="constant argument name count mismatch")
+            const label = try graph.get(context.pool, labels[source_index])
+            if label.kind != 0:
+                named = True
+                site = labels[source_index]
+                const spelling = try graph.spelling(context.pool, context.source, site)
+                position = -1
+                for index in range(len(parameters)):
+                    const parameter_name = try graph.field(context.pool, parameters[index], "name")
+                    const candidate = try graph.spelling(context.pool, context.source, parameter_name)
+                    if spelling == candidate:
+                        position = index
+                        break
+                if position < 0:
+                    const rejection = try constant_context.problem(context, site, "E_CALL_ARGUMENT", "keyword names no parameter of this function")
+                    fail rejection
+        if not named and boundary.kind != 0 and position >= boundary.integer:
+            const diagnostic = try call_repairs.keyword_only(context.pool, context.source, context.tables.nodes, call, parameters, boundary.integer, source_index)
+            context.problems.append(diagnostic)
+            fail diagnostic.problem
+        if position < 0 or position >= len(values):
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid constant argument position")
+        if values[position] >= 0:
+            const rejection = try constant_context.problem(context, site, "E_CALL_ARGUMENT", "parameter receives more than one argument")
+            fail rejection
+        const argument = try graph.number(context.pool, arguments[source_index])
+        values[position] = argument
+        order.append(position)
+        if not named:
+            positional = positional + 1
+    for index in range(len(parameters)):
+        if values[index] < 0:
+            const default_id = try graph.field(context.pool, parameters[index], "default_value")
+            const default_value = try graph.get(context.pool, default_id)
+            if default_value.kind == 0:
+                const rejection = try constant_context.problem(context, name, "E_ARITY", "missing required argument: expected " + str(len(parameters)) + ", given " + str(len(arguments)))
+                fail rejection
+            const default_argument = try graph.number(context.pool, default_id)
+            values[index] = default_argument
+            order.append(index)
+    return Bound(arguments=values, order=order, parameters=parameters)

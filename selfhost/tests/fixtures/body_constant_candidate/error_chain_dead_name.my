@@ -1,0 +1,6 @@
+const VALUE: bool = 3 < 2 < missing
+
+
+func main() -> int:
+    assert not VALUE
+    return 7

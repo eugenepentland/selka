@@ -180,3 +180,11 @@ public func decimal(text: bytes, start: int, end: int) -> bytes fails syntax_val
     for position in range(len(reversed)):
         _ = buffer.append_byte(reversed[len(reversed) - 1 - position])
     return bytes(buffer)
+
+
+public func unsuffixed(text: bytes) -> bool:
+    match parts(text, 0, 0):
+        case Ok(found):
+            return len(found.suffix) == 0
+        case Err(problem):
+            return False

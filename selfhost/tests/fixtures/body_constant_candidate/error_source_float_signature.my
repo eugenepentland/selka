@@ -1,0 +1,9 @@
+func f(x: float) -> int:
+    return int(x)
+
+
+const A: int = f(7.0)
+
+
+func main() -> int:
+    return 0

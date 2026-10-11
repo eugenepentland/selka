@@ -1,0 +1,5 @@
+const A: float = sqrt(4)
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,6 @@
+func main() -> int:
+    const values = [4, 3]
+    mut total = 0
+    for value in reversed(values):
+        total += value
+    return total

@@ -1,0 +1,13 @@
+func f() -> int:
+    mut total = 0
+    for i in range(0i64, 6i64):
+        total += int(i)
+    return total
+
+
+const VALUE: int = f()
+
+
+func main() -> int:
+    assert VALUE == 15
+    return 7

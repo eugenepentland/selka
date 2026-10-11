@@ -1,0 +1,9 @@
+func f(items: int[]) -> int:
+    return len(items)
+
+
+const VALUE: int = f(1)
+
+
+func main() -> int:
+    return 7

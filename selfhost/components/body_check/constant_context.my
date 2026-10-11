@@ -1,0 +1,358 @@
+import syntax_value
+import syntax_problem
+import graph
+import names
+import scalars
+import record_types
+import record_names
+import list_types
+import tuple_types
+import array_types
+import variants
+import collection_types
+
+public record Tables:
+    nodes: int[]
+    statements: int[]
+    functions: int[]
+
+
+public record Types:
+    records: record_types.Catalog
+    floating: int
+    string: int
+    bytes_type: int
+    catalog: list_types.Catalog
+    applications: int[]
+
+
+public record Context:
+    pool: syntax_value.Pool
+    source: bytes
+    tables: Tables
+    modules: int[]
+    types: Types
+    problems: syntax_problem.Diagnostic[]
+    usage: bool[][]
+
+
+public func problem(context: Context, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(context.pool, span, "start")
+    const end_id = try graph.field(context.pool, span, "end")
+    const start = try graph.number(context.pool, start_id)
+    const end = try graph.number(context.pool, end_id)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+public func annotation(mut context: Context, span: int, depth: int) -> int fails syntax_value.Problem:
+    if depth >= 256:
+        const rejection = try problem(context, span, "P_BODY_PROFILE", "alias resolution depth exceeds the body profile")
+        fail rejection
+    const text = try graph.spelling(context.pool, context.source, span)
+    for array in context.types.catalog.types.arrays.sources:
+        const location = try graph.field(context.pool, array, "span")
+        const matches = try same_span(context.pool, location, span)
+        if matches:
+            const element_span = try graph.field(context.pool, array, "element")
+            const element = try annotation(mut context, element_span, depth + 1)
+            const index_id = try graph.field(context.pool, array, "index")
+            const index = try graph.get(context.pool, index_id)
+            const index_span = try graph.payload(context.pool, index_id)
+            mut key = -1
+            mut length = -1
+            if index.data == b"length":
+                length = try array_length(context, index_span)
+            elif index.data == b"enum_type":
+                key = try annotation(mut context, index_span, depth + 1)
+                const shape = try variants.shape(context.pool, context.types.records.rows, key)
+                length = len(shape.cases)
+            const ty = array_types.find(context.types.catalog.types.arrays, element, length, key)
+            if ty >= 0:
+                return ty
+            const rejection = try problem(context, span, "P_BODY_PROFILE", "annotated array type is absent from the common catalog")
+            fail rejection
+    for tuple in context.types.catalog.types.tuples.sources:
+        const location = try graph.field(context.pool, tuple, "span")
+        const matches = try same_span(context.pool, location, span)
+        if matches:
+            const elements_id = try graph.field(context.pool, tuple, "elements")
+            const elements = try graph.items(context.pool, elements_id)
+            mut types: int[] = []
+            for element in elements:
+                const ty = try annotation(mut context, element, depth + 1)
+                types.append(ty)
+            const ty = tuple_types.find(context.types.catalog.types.tuples, types)
+            if ty >= 0:
+                return ty
+            const rejection = try problem(context, span, "P_BODY_PROFILE", "annotated tuple type is absent from the common catalog")
+            fail rejection
+    for suffix in context.types.catalog.types.suffixes:
+        const location = try graph.field(context.pool, suffix, "span")
+        const matches = try same_span(context.pool, location, span)
+        if matches:
+            const kind_id = try graph.field(context.pool, suffix, "kind")
+            const kind = try graph.get(context.pool, kind_id)
+            const base = try graph.field(context.pool, suffix, "base")
+            const element = try annotation(mut context, base, depth + 1)
+            if kind.data == b"optional":
+                return try list_types.union_intern(mut context.types.catalog, mut context.pool, element, -1, span, False)
+            if kind.data == b"growable":
+                const ty = list_types.lookup(context.types.catalog, element)
+                if ty >= 0:
+                    return ty
+            const rejection = try problem(context, span, "P_BODY_PROFILE", "annotated list type is absent from the common catalog")
+            fail rejection
+    for application in context.types.applications:
+        const location = try graph.field(context.pool, application, "span")
+        const matches = try same_span(context.pool, location, span)
+        if matches:
+            const name_span = try graph.field(context.pool, application, "name")
+            const name = try graph.spelling(context.pool, context.source, name_span)
+            const arguments_id = try graph.field(context.pool, application, "arguments")
+            const arguments = try graph.items(context.pool, arguments_id)
+            if name == b"FixedArray" and len(arguments) == 2:
+                const element = try annotation(mut context, arguments[0], depth + 1)
+                const length = try array_length(context, arguments[1])
+                const ty = array_types.find(context.types.catalog.types.arrays, element, length, -1)
+                if ty >= 0:
+                    return ty
+                const rejection = try problem(context, span, "P_BODY_PROFILE", "annotated array type is absent from the common catalog")
+                fail rejection
+            if (name == b"Result" and len(arguments) == 2) or (name == b"Option" and len(arguments) == 1):
+                const first = try annotation(mut context, arguments[0], depth + 1)
+                mut second = -1
+                if len(arguments) == 2:
+                    second = try annotation(mut context, arguments[1], depth + 1)
+                return try list_types.union_intern(mut context.types.catalog, mut context.pool, first, second, span, name == b"Result")
+            if (name == b"dict" and len(arguments) == 2) or (name == b"set" and len(arguments) == 1):
+                const key = try annotation(mut context, arguments[0], depth + 1)
+                mut value = 15
+                mut kind = 1
+                if name == b"dict":
+                    value = try annotation(mut context, arguments[1], depth + 1)
+                    kind = 0
+                return try list_types.collection_intern(mut context.types.catalog, mut context.pool, collection_types.Schema(id=-1, kind=kind, key=key, value=value, owner=-1), span)
+            if name == b"list" and len(arguments) == 1:
+                const element = try annotation(mut context, arguments[0], depth + 1)
+                const ty = list_types.lookup(context.types.catalog, element)
+                if ty >= 0:
+                    return ty
+            const rejection = try problem(context, span, "P_BODY_PROFILE", "qualified or user generic type application is outside the body profile")
+            fail rejection
+    if text == b"float" and context.types.floating >= 0:
+        return context.types.floating
+    if text == b"Filesystem" or text == b"Stream":
+        const declared = try declared_symbol(context, span)
+        if not declared:
+            if text == b"Filesystem":
+                return 11
+            return 18
+    if text == b"byte_buffer":
+        return try list_types.buffer_intern(mut context.types.catalog, mut context.pool, span)
+    if text == b"str":
+        return context.types.string
+    if text == b"bytes":
+        return context.types.bytes_type
+    if text == b"int" or text == b"i64" or text == b"bool" or text == b"Unit" or len(text) == 0 or text == b"i8" or text == b"i16" or text == b"i32" or text == b"u8" or text == b"u16" or text == b"u32" or text == b"u64":
+        const site = try problem(context, span, "", "")
+        return try scalars.annotation(text, site.start, site.end)
+    const request = record_names.Request(span=span, owner=-1, name=span)
+    const resolution = try record_names.resolve(mut context.problems, context.pool, context.source, context.modules, request)
+    if resolution.from >= 0 and resolution.import_index >= 0:
+        context.usage[resolution.from][resolution.import_index] = True
+    const ty = try record_types.named(context.types.records, resolution.key)
+    if ty >= 0:
+        return ty
+    if ty < -1:
+        const index = -2 - ty
+        const aliases = context.types.records.bindings.aliases
+        if index >= len(aliases):
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid constant alias index")
+        const target = try graph.field(context.pool, aliases[index], "target")
+        return try annotation(mut context, target, depth + 1)
+    const rejection = try problem(context, span, "E_UNKNOWN_TYPE", "type is not declared")
+    fail rejection
+
+
+func array_length(context: Context, span: int) -> int fails syntax_value.Problem:
+    const spelling = try graph.spelling(context.pool, context.source, span)
+    if len(spelling) == 0 or spelling[0] < 48 or spelling[0] > 57:
+        const rejection = try problem(context, span, "P_BODY_PROFILE", "array length expression requires scalar constant evaluation")
+        fail rejection
+    const location = try problem(context, span, "", "")
+    return try scalars.integer(spelling, False, location.start, location.end)
+
+
+func declared_symbol(context: Context, span: int) -> bool fails syntax_value.Problem:
+    const name = try graph.spelling(context.pool, context.source, span)
+    if len(context.modules) == 0:
+        const ty = try record_types.named(context.types.records, name)
+        return ty != -1
+    const start_id = try graph.field(context.pool, span, "start")
+    const start = try graph.number(context.pool, start_id)
+    const module = try names.module_at(context.pool, context.modules, start)
+    if module < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="binding has no source module")
+    const symbols_id = try graph.field(context.pool, context.modules[module], "symbols")
+    const symbols = try graph.items(context.pool, symbols_id)
+    for symbol in symbols:
+        const name_id = try graph.field(context.pool, symbol, "name")
+        const candidate = try graph.get(context.pool, name_id)
+        if candidate.data == name:
+            return True
+    return False
+
+
+public func flag(context: Context, function: int) -> bool fails syntax_value.Problem:
+    const policy = try graph.field(context.pool, function, "policy")
+    const raw = try graph.field(context.pool, policy, "constant")
+    const value = try graph.get(context.pool, raw)
+    return value.integer != 0
+
+
+public func initializer(context: Context, function: int) -> int fails syntax_value.Problem:
+    const body_id = try graph.field(context.pool, function, "body")
+    const body = try graph.number(context.pool, body_id)
+    const data_id = try graph.field(context.pool, context.tables.statements[body], "data")
+    const data = try graph.get(context.pool, data_id)
+    if data.data != b"block":
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid constant getter body")
+    const children = try graph.items(context.pool, data.children[0])
+    if len(children) != 1:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid constant getter statements")
+    const returned = try graph.number(context.pool, children[0])
+    const return_id = try graph.field(context.pool, context.tables.statements[returned], "data")
+    const ret = try graph.get(context.pool, return_id)
+    if ret.data != b"ret":
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid constant getter return")
+    return try graph.number(context.pool, ret.children[0])
+
+
+public func lookup(mut context: Context, name: int) -> int fails syntax_value.Problem:
+    mut any_constants = False
+    for function in context.tables.functions:
+        const constant = try flag(context, function)
+        if constant:
+            any_constants = True
+            break
+    if not any_constants:
+        return -1
+    const visible = try top_level(context, name)
+    if not visible:
+        return -1
+    const absent = try syntax_value.absent(mut context.pool)
+    mut resolution = names.Resolution(key=b"", from=-1, import_index=-1)
+    match names.target(mut context.problems, context.pool, context.source, context.modules, name, absent, name):
+        case Ok(resolved):
+            resolution = resolved
+        case Err(rejection):
+            if rejection.code == "P_BODY_PROFILE" and rejection.message == "nonfunction construction is outside the B1 scalar profile":
+                const kind_error = try wrong_kind(mut context, name)
+                fail kind_error
+            fail rejection
+    if resolution.from >= 0 and resolution.import_index >= 0:
+        context.usage[resolution.from][resolution.import_index] = True
+    for index in range(len(context.tables.functions)):
+        const function = context.tables.functions[index]
+        const declaration = try graph.field(context.pool, function, "name")
+        const candidate = try names.qualified(context.pool, context.source, context.modules, declaration)
+        if candidate == resolution.key:
+            const constant = try flag(context, function)
+            if constant:
+                return index
+            return -1
+    return -1
+
+
+func same_span(pool: syntax_value.Pool, left: int, right: int) -> bool fails syntax_value.Problem:
+    const left_start = try graph.field(pool, left, "start")
+    const right_start = try graph.field(pool, right, "start")
+    const left_end = try graph.field(pool, left, "end")
+    const right_end = try graph.field(pool, right, "end")
+    const begin = try graph.number(pool, left_start)
+    const expected_begin = try graph.number(pool, right_start)
+    const end = try graph.number(pool, left_end)
+    const expected_end = try graph.number(pool, right_end)
+    return begin == expected_begin and end == expected_end
+
+
+func top_level(context: Context, name: int) -> bool fails syntax_value.Problem:
+    if len(context.modules) == 0:
+        return True
+    const spelling = try graph.spelling(context.pool, context.source, name)
+    mut prefix_end = len(spelling)
+    for position in range(len(spelling)):
+        if spelling[position] == 46:
+            return True
+        if spelling[position] == 58:
+            return True
+        if prefix_end == len(spelling) and (spelling[position] == 32 or spelling[position] == 9 or spelling[position] == 10 or spelling[position] == 13):
+            prefix_end = position
+    const start_id = try graph.field(context.pool, name, "start")
+    const start = try graph.number(context.pool, start_id)
+    const module = try names.module_at(context.pool, context.modules, start)
+    if module < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="constant name has no source module")
+    const symbols_id = try graph.field(context.pool, context.modules[module], "symbols")
+    const symbols = try graph.items(context.pool, symbols_id)
+    for symbol in symbols:
+        const name_id = try graph.field(context.pool, symbol, "name")
+        const declared = try graph.get(context.pool, name_id)
+        if declared.data == spelling:
+            return True
+    const imports_id = try graph.field(context.pool, context.modules[module], "imports")
+    const imports = try graph.items(context.pool, imports_id)
+    for imported in imports:
+        const alias_id = try graph.field(context.pool, imported, "alias")
+        const alias = try graph.get(context.pool, alias_id)
+        const import_name_id = try graph.field(context.pool, imported, "name")
+        const import_name = try graph.get(context.pool, import_name_id)
+        if alias.data == spelling[:prefix_end] or import_name.data == spelling[:prefix_end]:
+            return True
+    return False
+
+
+func wrong_kind(mut context: Context, name: int) -> syntax_value.Problem fails syntax_value.Problem:
+    const site = try problem(context, name, "E_SYMBOL_KIND", "declaration has the wrong kind for this reference")
+    mut spelling = try graph.spelling(context.pool, context.source, name)
+    const start_id = try graph.field(context.pool, name, "start")
+    const start = try graph.number(context.pool, start_id)
+    mut module = try names.module_at(context.pool, context.modules, start)
+    mut dot = -1
+    for position in range(len(spelling)):
+        if spelling[position] == 46:
+            dot = position
+    if dot >= 0:
+        mut alias_end = dot
+        while alias_end > 0 and (spelling[alias_end - 1] == 32 or spelling[alias_end - 1] == 9 or spelling[alias_end - 1] == 10 or spelling[alias_end - 1] == 13):
+            alias_end -= 1
+        const qualifier = spelling[:alias_end]
+        const imports_id = try graph.field(context.pool, context.modules[module], "imports")
+        const imports = try graph.items(context.pool, imports_id)
+        for imported in imports:
+            const alias_id = try graph.field(context.pool, imported, "alias")
+            const alias = try graph.get(context.pool, alias_id)
+            const import_name_id = try graph.field(context.pool, imported, "name")
+            const import_name = try graph.get(context.pool, import_name_id)
+            if alias.data == qualifier or import_name.data == qualifier:
+                const target_id = try graph.field(context.pool, imported, "target")
+                module = try graph.number(context.pool, target_id)
+                break
+        mut tail = dot + 1
+        while tail < len(spelling) and (spelling[tail] == 32 or spelling[tail] == 9 or spelling[tail] == 10 or spelling[tail] == 13):
+            tail += 1
+        spelling = spelling[tail:]
+    const symbols_id = try graph.field(context.pool, context.modules[module], "symbols")
+    const symbols = try graph.items(context.pool, symbols_id)
+    for symbol in symbols:
+        const name_id = try graph.field(context.pool, symbol, "name")
+        const declared = try graph.get(context.pool, name_id)
+        if declared.data == spelling:
+            const offset_id = try graph.field(context.pool, context.modules[module], "offset")
+            const offset = try graph.number(context.pool, offset_id)
+            const declaration = try graph.field(context.pool, symbol, "span")
+            const relative = try problem(context, declaration, "", "")
+            const related = syntax_problem.Related(start=offset + relative.start, end=offset + relative.end, message="declaration is here", role="related")
+            context.problems.append(syntax_problem.Diagnostic(problem=site, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+            return site
+    fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="resolved nonfunction has no module symbol")

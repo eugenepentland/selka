@@ -1,0 +1,8 @@
+func main() -> int:
+    mut values = FixedArray[int, 2]([3, 4])
+    mut carry = 0
+    mut total = 0
+    for value in values:
+        values, carry = (FixedArray[int, 2]([99, 99]), 0)
+        total += value
+    return total + carry

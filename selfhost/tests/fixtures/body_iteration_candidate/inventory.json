@@ -1,0 +1,41 @@
+{
+  "counts": {
+    "fixtures": 30,
+    "success": 23,
+    "diagnostic": 7,
+    "profiles": 0
+  },
+  "source_cases": [
+    "array_enumerate.my",
+    "array_pairs.my",
+    "array_plain.my",
+    "array_rebind.my",
+    "array_temporary.my",
+    "array_tuple_rebind.my",
+    "bad_pair.my",
+    "bad_reverse_array.my",
+    "bad_reverse_pair.my",
+    "bad_same_names.my",
+    "bad_table.my",
+    "bad_triple.my",
+    "bad_zip_bytes.my",
+    "buffer_enumerate.my",
+    "bytes_enumerate.my",
+    "list_dictionary_items.my",
+    "list_enumerate.my",
+    "list_growth.my",
+    "list_live_write.my",
+    "list_pairs.my",
+    "list_plain.my",
+    "list_tuple_rebind.my",
+    "pair_discards.my",
+    "reversed_list.my",
+    "reversed_live_write.my",
+    "reversed_text.my",
+    "zip_discards.my",
+    "zip_lists.my",
+    "zip_live_write.my",
+    "zip_text.my"
+  ],
+  "donors": {}
+}

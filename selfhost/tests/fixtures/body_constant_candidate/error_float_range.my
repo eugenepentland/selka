@@ -1,0 +1,5 @@
+const A: float = 1e400
+
+
+func main() -> int:
+    return 0

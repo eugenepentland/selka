@@ -1,0 +1,229 @@
+{
+  "array_enumerate.my": {
+    "status": 0,
+    "source_sha256": "86fef0d4a4a8b5c732502d64dcd0268a998b654cfd83ef6fc650913489dbb2c3",
+    "diagnostics": []
+  },
+  "array_pairs.my": {
+    "status": 0,
+    "source_sha256": "4c2ca05eb047ca9329a882d273cf59ba1983659cd9299c9df3287727687d19eb",
+    "diagnostics": []
+  },
+  "array_plain.my": {
+    "status": 0,
+    "source_sha256": "6973952bf978b66e5efc42811d42edd1ab4384eb35d119f6c0d900debe6750dc",
+    "diagnostics": []
+  },
+  "array_rebind.my": {
+    "status": 0,
+    "source_sha256": "569cf1084cbf1b57f8d7796e0645dd34281dafcbfa900021053bb9951926c226",
+    "diagnostics": []
+  },
+  "array_temporary.my": {
+    "status": 0,
+    "source_sha256": "04ff70d68a70ae56231cd9e9e3bf499bf52c0c7a42e58a27a994adb48413dd23",
+    "diagnostics": []
+  },
+  "array_tuple_rebind.my": {
+    "status": 0,
+    "source_sha256": "eab7da3aa5ab43d8efe69009cfe0097f189efb210b961be19d4b02e88e56c43a",
+    "diagnostics": []
+  },
+  "bad_pair.my": {
+    "status": 1,
+    "source_sha256": "a37e3404aa0da163c3da152aeb797e5a935c8ea87688aa4935cf6b831edc3efd",
+    "diagnostics": [
+      {
+        "code": "E_ITERATION",
+        "message": "two iteration names require dictionary items, enumerate, zip or a list of two-value tuples",
+        "bytes": {
+          "start": 24,
+          "end": 89
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_reverse_array.my": {
+    "status": 1,
+    "source_sha256": "b406d3d4c5bf4c463fd40ca5e9c4e11cd296eba89e56f3fc60373189a640b8b9",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "iteration requires a list or str",
+        "bytes": {
+          "start": 24,
+          "end": 92
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_reverse_pair.my": {
+    "status": 1,
+    "source_sha256": "b40df1b5c501a92d02bb88d0c621443bf91e20a0463207fc83076b398adc73fe",
+    "diagnostics": [
+      {
+        "code": "E_COLLECTION_METHOD",
+        "message": "zip binds two iteration names and reversed binds one",
+        "bytes": {
+          "start": 24,
+          "end": 99
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_same_names.my": {
+    "status": 1,
+    "source_sha256": "54c3521912ecc7a891ef1029e435492bcbe2b3a87bfa9076fb3cd1b8e36729e6",
+    "diagnostics": [
+      {
+        "code": "E_SHADOWING",
+        "message": "iteration binding shadows an active declaration",
+        "bytes": {
+          "start": 35,
+          "end": 40
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_table.my": {
+    "status": 1,
+    "source_sha256": "bc6a39c8c0768a344028f997ee2bc6700ad63f8192523d81daa860f9fa8f320d",
+    "diagnostics": [
+      {
+        "code": "E_COLLECTION_METHOD",
+        "message": "iteration requires a collection, fixed array or dictionary view",
+        "bytes": {
+          "start": 152,
+          "end": 190
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_triple.my": {
+    "status": 1,
+    "source_sha256": "28c093b9476af212df021cc5533b3d72be1f6ccdfcc378d326aa6b4d1c46d385",
+    "diagnostics": [
+      {
+        "code": "E_TUPLE_ARITY",
+        "message": "a two-name `for` destructures a two-value tuple; this one has 3 values \u2014 bind it with one name and destructure it in the body",
+        "bytes": {
+          "start": 24,
+          "end": 94
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_zip_bytes.my": {
+    "status": 1,
+    "source_sha256": "500d4ec497abaf8a86ba7fde305b764612fa5ef4dd2b7a905e63b76f1e3569ae",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "iteration requires a list or str",
+        "bytes": {
+          "start": 24,
+          "end": 101
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "buffer_enumerate.my": {
+    "status": 0,
+    "source_sha256": "711b7a76582b3ab296f37a730c98a4b1072b5bf99e39b1c544a2d13719a1294b",
+    "diagnostics": []
+  },
+  "bytes_enumerate.my": {
+    "status": 0,
+    "source_sha256": "fc4fd4302419335eb92e534f2c5e2515967a520f868665becab45c9da9b5f1e5",
+    "diagnostics": []
+  },
+  "list_dictionary_items.my": {
+    "status": 0,
+    "source_sha256": "31a9ba5295c13664ba4a065895f0cc6adfe2181296a2bacf0a13789d8b17e346",
+    "diagnostics": []
+  },
+  "list_enumerate.my": {
+    "status": 0,
+    "source_sha256": "2e9895806f206f449b534fcf008a5691fc4ff4b116dfc4168ac42db3faa18152",
+    "diagnostics": []
+  },
+  "list_growth.my": {
+    "status": 0,
+    "source_sha256": "50f5500224b41bb4ff4e0aae8bd310083ad8e1b0c31e8953f243bb60479f75e2",
+    "diagnostics": []
+  },
+  "list_live_write.my": {
+    "status": 0,
+    "source_sha256": "82e0cc4ee2217ee33aca2538a9fd8a21587e5bbfe6514078d6da39ed707cb932",
+    "diagnostics": []
+  },
+  "list_pairs.my": {
+    "status": 0,
+    "source_sha256": "e04a8d937e5db307266eeb2cc00169947ba269e432f3e9475ffa237ed5561e22",
+    "diagnostics": []
+  },
+  "list_plain.my": {
+    "status": 0,
+    "source_sha256": "a2252b0d9b8ea2ad5112ef3d64b54e5232ddba0d64b634e840264e82ba12bd5a",
+    "diagnostics": []
+  },
+  "list_tuple_rebind.my": {
+    "status": 0,
+    "source_sha256": "dd9a44418454cb3382634bbf247560cc1ce0b7555a4ac2e3424a3789ab777c8f",
+    "diagnostics": []
+  },
+  "pair_discards.my": {
+    "status": 0,
+    "source_sha256": "acbea7657e731292846eca34a4f6ee1ed8f1b02adade0d703e92b87e8472acb1",
+    "diagnostics": []
+  },
+  "reversed_list.my": {
+    "status": 0,
+    "source_sha256": "20dedc1f8194a4594c8b85f8d618d8d93e9206c18111d855ceb966a77fc6b523",
+    "diagnostics": []
+  },
+  "reversed_live_write.my": {
+    "status": 0,
+    "source_sha256": "716aa7dbed55a329ddc27243589c0c9422bbba5bffb036f1a978938a2d008123",
+    "diagnostics": []
+  },
+  "reversed_text.my": {
+    "status": 0,
+    "source_sha256": "9112d57aff1ab259f0b2d903d3f1d9e2b6892ba67e7ebccf509d3d53564afb0b",
+    "diagnostics": []
+  },
+  "zip_discards.my": {
+    "status": 0,
+    "source_sha256": "cce9ee5de16b2ede5e09ac78482280835f89511dcd6570d3c1f866b6ca07e64d",
+    "diagnostics": []
+  },
+  "zip_lists.my": {
+    "status": 0,
+    "source_sha256": "27e1e6b0d7d31e6a28e3d61e19b563ae842d563e4139be1655d5e2b0b5c0a677",
+    "diagnostics": []
+  },
+  "zip_live_write.my": {
+    "status": 0,
+    "source_sha256": "6ecd226ffbabdcfefe9791a06f7d581d292e92be2ef746bdc2bba98fb26c7ffc",
+    "diagnostics": []
+  },
+  "zip_text.my": {
+    "status": 0,
+    "source_sha256": "43aa892d2fbc3541d42960f4191a7b85b21aab9c0d7f0a327c5178ad793dbbcf",
+    "diagnostics": []
+  }
+}

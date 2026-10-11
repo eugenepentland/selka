@@ -1,0 +1,5 @@
+const VALUE: u16 = 65535 + 1
+
+
+func main() -> int:
+    return 0

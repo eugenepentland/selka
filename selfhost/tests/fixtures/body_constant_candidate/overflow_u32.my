@@ -1,0 +1,5 @@
+const VALUE: u32 = 4294967295 + 1
+
+
+func main() -> int:
+    return 0

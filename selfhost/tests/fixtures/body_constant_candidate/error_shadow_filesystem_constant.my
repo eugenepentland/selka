@@ -1,0 +1,9 @@
+record Filesystem:
+    value: int
+
+
+const VALUE: Filesystem = 1
+
+
+func main() -> int:
+    return 7

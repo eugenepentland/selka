@@ -1,0 +1,13 @@
+func f() -> int:
+    mut total = 0
+    for i in range(126i8, 127i8, 2i8):
+        total += int(i)
+    return total
+
+
+const VALUE: int = f()
+
+
+func main() -> int:
+    assert VALUE == 126
+    return 7

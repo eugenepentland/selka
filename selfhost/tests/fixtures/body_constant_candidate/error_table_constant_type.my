@@ -1,0 +1,10 @@
+enum Status:
+    ok
+    missing
+
+
+const VALUE: [Status]int = 1
+
+
+func main() -> int:
+    return 7

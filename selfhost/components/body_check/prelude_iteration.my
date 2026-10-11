@@ -1,0 +1,117 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+import list_iteration
+import buffer_lower
+
+public record Plan:
+    left: list_iteration.Plan
+    right: list_iteration.Plan
+    limit: int
+    paired: bool
+
+
+func block(mut batch: emission.Batch, context: list_lower.Context, statements: int[]) -> int fails syntax_value.Problem:
+    const payload = try emission.ids(mut batch, statements)
+    return try emission.statement(mut batch, context.input, context.span, False, b"block", payload)
+
+
+func source_length(mut batch: emission.Batch, context: list_lower.Context, plan: list_iteration.Plan) -> int fails syntax_value.Problem:
+    if plan.request.owner_type == batch.facts.string_type:
+        return try buffer_lower.length(mut batch, context, plan.owner)
+    return try list_lower.length(mut batch, context, plan.owner)
+
+
+func length(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, plans: Plan) -> int fails syntax_value.Problem:
+    const left = try list_lower.read(mut batch, context, plans.left.limit, 0)
+    const right = try list_lower.read(mut batch, context, plans.right.limit, 0)
+    const slot = try list_lower.temporary(mut scope, context, 0)
+    const smaller = try list_lower.store(mut batch, context, slot, left, False)
+    const initial = try list_lower.store(mut batch, context, slot, right, True)
+    const condition = try list_lower.binary(mut batch, context, b"lt", left, right, 1)
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const then_body = try syntax_value.integer(mut batch.pool, smaller)
+    const absent = try syntax_value.absent(mut batch.pool)
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [test, then_body, absent])
+    const branch = try emission.statement(mut batch, context.input, context.span, False, b"branch", payload)
+    const body = try block(mut batch, context, [initial, branch])
+    const value = try list_lower.read(mut batch, context, slot, 0)
+    const body_id = try syntax_value.integer(mut batch.pool, body)
+    const value_id = try syntax_value.integer(mut batch.pool, value)
+    const result = try syntax_value.object(mut batch.pool, ["body", "value"], [body_id, value_id])
+    return try emission.node(mut batch, context.input, context.span, 0, b"block_value", result)
+
+
+public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, plan: Plan, body: list_iteration.Finish) -> list_lower.Lowered fails syntax_value.Problem:
+    const walk = plan.left
+    const context = list_lower.Context(input=input, span=walk.request.span)
+    const i = try list_lower.read(mut batch, context, walk.index, 0)
+    mut count = -1
+    if not plan.paired:
+        count = try list_lower.read(mut batch, context, walk.limit, 0)
+    const raw = list_iteration.SourceBody(raw_statements=body.raw_statements, raw_nodes=body.raw_nodes, body_raw=body.body_raw, expressions=[])
+    const left = try list_iteration.source(mut batch, mut scope, input, walk, raw)
+    mut right = list_iteration.Walk(setup=[], refresh=[], growing=False)
+    if plan.paired:
+        right = try list_iteration.source(mut batch, mut scope, input, plan.right, raw)
+    mut checked = -1
+    if plan.paired:
+        const shorter = try length(mut batch, mut scope, context, plan)
+        const left_guard = try list_iteration.guard(mut batch, context, walk, left.refresh, left.growing)
+        const right_guard = try list_iteration.guard(mut batch, context, plan.right, right.refresh, right.growing)
+        const update = try list_lower.store(mut batch, context, plan.limit, shorter, False)
+        checked = try block(mut batch, context, [left_guard, right_guard, update])
+    else:
+        checked = try list_iteration.guard(mut batch, context, walk, left.refresh, False)
+    mut position = i
+    if not plan.paired:
+        const one = try list_lower.integer(mut batch, context, 1, 0)
+        const last = try list_lower.binary(mut batch, context, b"sub", count, one, 0)
+        position = try list_lower.binary(mut batch, context, b"sub", last, i, 0)
+    const first = try list_lower.operation(mut batch, context, list_lower.Operation(owner=walk.owner, kind=b"read", arguments=[position], ty=walk.request.element))
+    const first_store = try list_lower.store(mut batch, context, walk.binding, first, True)
+    mut statements = [checked, first_store]
+    if plan.paired:
+        const second = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.right.owner, kind=b"read", arguments=[i], ty=plan.right.request.element))
+        const second_store = try list_lower.store(mut batch, context, plan.right.binding, second, True)
+        statements.append(second_store)
+    statements.append(body.body)
+    const iteration = try block(mut batch, context, statements)
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", i, one, 0)
+    const advance = try list_lower.store(mut batch, context, walk.index, next, False)
+    const step = try block(mut batch, context, [checked, advance])
+    mut setup = left.setup
+    if plan.paired:
+        for statement in right.setup:
+            setup.append(statement)
+        const left_count = try source_length(mut batch, context, walk)
+        const left_limit = try list_lower.store(mut batch, context, walk.limit, left_count, True)
+        setup.append(left_limit)
+        const right_count = try source_length(mut batch, context, plan.right)
+        const right_limit = try list_lower.store(mut batch, context, plan.right.limit, right_count, True)
+        setup.append(right_limit)
+        const shorter = try length(mut batch, mut scope, context, plan)
+        const limit = try list_lower.store(mut batch, context, plan.limit, shorter, True)
+        setup.append(limit)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const initial = try list_lower.store(mut batch, context, walk.index, zero, True)
+    setup.append(initial)
+    if not plan.paired:
+        const size = try source_length(mut batch, context, walk)
+        const limit = try list_lower.store(mut batch, context, walk.limit, size, True)
+        setup.append(limit)
+    mut bound = count
+    if plan.paired:
+        bound = try list_lower.read(mut batch, context, plan.limit, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", i, bound, 1)
+    const loop_id = try syntax_value.integer(mut batch.pool, walk.request.loop_id)
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const iteration_id = try syntax_value.integer(mut batch.pool, iteration)
+    const step_id = try syntax_value.integer(mut batch.pool, step)
+    const payload = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [loop_id, test, iteration_id, step_id])
+    const loop = try emission.statement(mut batch, input, context.span, False, b"loop", payload)
+    setup.append(loop)
+    const result = try emission.ids(mut batch, setup)
+    return list_lower.Lowered(ty=15, tag=b"block", payload=result)

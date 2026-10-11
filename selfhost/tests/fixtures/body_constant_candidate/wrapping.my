@@ -1,0 +1,12 @@
+const A: u8 = wrapping_add(255u8, 8u8)
+
+
+const B: i8 = wrapping_sub(-128i8, 1i8)
+
+
+const C: u64 = wrapping_mul(18446744073709551615u64, 2u64)
+
+
+func main() -> int:
+    assert B == 127i8 and C == 18446744073709551614u64
+    return int(A)

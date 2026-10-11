@@ -1,0 +1,7 @@
+func main() -> int:
+    const values = FixedArray[int, 4]([1, 2, 3, 4])
+    mut total = 0
+    for index in range(0, len(values), 2):
+        total += values[index]
+    assert total == 4
+    return 7

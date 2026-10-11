@@ -1,0 +1,7 @@
+import modules.constant_support as support
+
+const VALUE: int = support.hidden_function
+
+
+func main() -> int:
+    return 7

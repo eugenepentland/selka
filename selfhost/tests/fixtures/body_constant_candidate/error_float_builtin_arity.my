@@ -1,0 +1,5 @@
+const A: float = float(1, 2)
+
+
+func main() -> int:
+    return 0

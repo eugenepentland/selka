@@ -62,7 +62,7 @@ func constant(batch: emission.Batch, id: int) -> Constant fails syntax_value.Pro
     return try literal(batch, data)
 
 
-func nonnegative(batch: emission.Batch, counters: int[], id: int, depth: int) -> bool fails syntax_value.Problem:
+public func nonnegative(batch: emission.Batch, counters: int[], id: int, depth: int) -> bool fails syntax_value.Problem:
     if depth == 8:
         return False
     const row = try node(batch, id)

@@ -1,0 +1,9 @@
+type Real = float
+
+
+const VALUE: Real = 7 / 2
+
+
+func main() -> int:
+    assert VALUE == 3.5
+    return 7

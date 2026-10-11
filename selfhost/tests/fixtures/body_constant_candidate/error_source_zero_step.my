@@ -1,0 +1,11 @@
+func f() -> int:
+    for i in range(0, 5, 0):
+        _ = i
+    return 7
+
+
+const A: int = f()
+
+
+func main() -> int:
+    return 0

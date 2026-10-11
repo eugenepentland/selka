@@ -1,0 +1,7 @@
+import modules.constant_support as support
+
+const VALUE: u8 = support.HIDDEN
+
+
+func main() -> int:
+    return 7

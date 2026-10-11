@@ -1,0 +1,5 @@
+const A: int = int(True)
+
+
+func main() -> int:
+    return 0

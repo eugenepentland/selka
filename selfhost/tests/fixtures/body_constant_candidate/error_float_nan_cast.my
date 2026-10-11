@@ -1,0 +1,5 @@
+const A: int = int(0.0 / 0.0)
+
+
+func main() -> int:
+    return 0

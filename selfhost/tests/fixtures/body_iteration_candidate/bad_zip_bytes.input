@@ -1,0 +1,5 @@
+func main() -> int:
+    for first, second in zip(b"ab", [1, 2]):
+        _ = first
+        _ = second
+    return 7

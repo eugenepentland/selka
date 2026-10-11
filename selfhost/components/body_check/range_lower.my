@@ -2,6 +2,9 @@ import syntax_value
 import graph
 import emission
 import locals
+import list_lower
+import range_stride
+import comprehension_lower
 
 public record Input:
     source: bytes
@@ -12,12 +15,19 @@ public record Input:
     loop_id: int
 
 
+public record Binding:
+    variable: int
+    index_node: int
+
+
 public record Plan:
     request: Input
     index: int
     limit: int
     condition: int
     next: int
+    stepping: range_stride.Plan
+    binding: Binding
 
 
 public func binary(mut batch: emission.Batch, input: syntax_value.Pool, span: int, operation: bytes, left: int, right: int) -> int fails syntax_value.Problem:
@@ -32,24 +42,49 @@ public func binary(mut batch: emission.Batch, input: syntax_value.Pool, span: in
     return try emission.node(mut batch, input, span, ty, b"binary", payload)
 
 
+public record TypedInput:
+    request: Input
+    ty: int
+    stepping: range_stride.Plan
+    rebound: bool
+
+
 public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, request: Input) -> Plan fails syntax_value.Problem:
+    return try prepare_typed(mut batch, mut scope, input, TypedInput(request=request, ty=0, stepping=range_stride.implicit(), rebound=False))
+
+
+public func prepare_typed(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, typed_input: TypedInput) -> Plan fails syntax_value.Problem:
+    const request = typed_input.request
+    const ty = typed_input.ty
     const name = try graph.spelling(input, request.source, request.name)
-    const index = try locals.add(mut scope, name, request.name, 0, False, b"local")
+    mut index_name = name
+    if typed_input.rebound:
+        index_name = b"<range-index>"
+    const index = try locals.add(mut scope, index_name, request.name, ty, False, b"local")
     scope.locals[index].usage.reads = 1
-    const limit = try locals.add(mut scope, b"<range-limit>", request.name, 0, False, b"local")
+    scope.locals[index].usage.temporary = typed_input.rebound
+    if typed_input.rebound:
+        scope.active = scope.active[:len(scope.active) - 1]
+    const limit = try locals.add(mut scope, b"<range-limit>", request.name, ty, False, b"local")
     scope.locals[limit].flags.initialized = False
     scope.locals[limit].usage.reads = 1
     scope.locals[limit].usage.temporary = True
     scope.active = scope.active[:len(scope.active) - 1]
-    const index_value = try syntax_value.integer(mut batch.pool, index)
-    const index_node = try emission.node(mut batch, input, request.name, 0, b"local", index_value)
-    const limit_value = try syntax_value.integer(mut batch.pool, limit)
-    const limit_node = try emission.node(mut batch, input, request.name, 0, b"local", limit_value)
-    const condition = try binary(mut batch, input, request.span, b"lt", index_node, limit_node)
-    const one_value = try syntax_value.integer(mut batch.pool, 1)
-    const one = try emission.node(mut batch, input, request.name, 0, b"integer", one_value)
-    const next = try binary(mut batch, input, request.name, b"add", index_node, one)
-    return Plan(request=request, index=index, limit=limit, condition=condition, next=next)
+    mut variable = index
+    if typed_input.rebound:
+        variable = try locals.add(mut scope, name, request.name, ty, False, b"iteration")
+        scope.locals[variable].usage.reads = 1
+    const context = list_lower.Context(input=input, span=request.name)
+    const index_node = try list_lower.read(mut batch, context, index, ty)
+    const limit_node = try list_lower.read(mut batch, context, limit, ty)
+    mut condition = -1
+    if typed_input.stepping.value >= 0:
+        condition = try range_stride.condition_node(mut batch, context, typed_input.stepping, index, limit)
+    else:
+        condition = try list_lower.binary(mut batch, list_lower.Context(input=input, span=request.span), b"lt", index_node, limit_node, 1)
+    const one = try list_lower.integer(mut batch, context, 1, ty)
+    const next = try list_lower.binary(mut batch, context, b"add", index_node, one, ty)
+    return Plan(request=request, index=index, limit=limit, condition=condition, next=next, stepping=typed_input.stepping, binding=Binding(variable=variable, index_node=index_node))
 
 
 public func finish(mut batch: emission.Batch, input: syntax_value.Pool, plan: Plan, body: int) -> int fails syntax_value.Problem:
@@ -62,6 +97,32 @@ public func finish(mut batch: emission.Batch, input: syntax_value.Pool, plan: Pl
     const loop_id = try syntax_value.integer(mut batch.pool, plan.request.loop_id)
     const condition = try syntax_value.integer(mut batch.pool, plan.condition)
     const body_id = try syntax_value.integer(mut batch.pool, body)
+    const step_id = try syntax_value.integer(mut batch.pool, step)
+    const loop = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [loop_id, condition, body_id, step_id])
+    const part = try syntax_value.object(mut batch.pool, ["binding", "start", "end", "setup", "loop"], [binding, start, end, setup, loop])
+    const parts = try syntax_value.sequence(mut batch.pool, [part])
+    return try syntax_value.object(mut batch.pool, ["parts"], [parts])
+
+
+public func finish_typed(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, plan: Plan, body: int) -> int fails syntax_value.Problem:
+    const context = list_lower.Context(input=input, span=plan.request.name)
+    mut step = -1
+    if plan.stepping.value >= 0:
+        step = try range_stride.advance(mut batch, mut scope, context, plan.stepping, plan.index, plan.limit)
+    else:
+        step = try list_lower.store(mut batch, context, plan.index, plan.next, False)
+    const initialization = try range_stride.setup(mut batch, context, plan.stepping)
+    mut iteration = body
+    if plan.binding.variable != plan.index:
+        const copy = try list_lower.store(mut batch, context, plan.binding.variable, plan.binding.index_node, True)
+        iteration = try comprehension_lower.block_statement(mut batch, context, [copy, body])
+    const binding = try graph.clone(mut batch.pool, input, plan.request.name, 0)
+    const start = try emission.store(mut batch, plan.index, plan.request.start)
+    const end = try emission.store(mut batch, plan.limit, plan.request.end)
+    const setup = try emission.ids(mut batch, initialization)
+    const loop_id = try syntax_value.integer(mut batch.pool, plan.request.loop_id)
+    const condition = try syntax_value.integer(mut batch.pool, plan.condition)
+    const body_id = try syntax_value.integer(mut batch.pool, iteration)
     const step_id = try syntax_value.integer(mut batch.pool, step)
     const loop = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [loop_id, condition, body_id, step_id])
     const part = try syntax_value.object(mut batch.pool, ["binding", "start", "end", "setup", "loop"], [binding, start, end, setup, loop])

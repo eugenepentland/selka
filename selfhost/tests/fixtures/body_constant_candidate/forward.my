@@ -1,0 +1,9 @@
+const FIRST: u64 = LATER + 1
+
+
+const LATER: u64 = 9223372036854775808u64
+
+
+func main() -> int:
+    assert FIRST == 9223372036854775809u64
+    return 7

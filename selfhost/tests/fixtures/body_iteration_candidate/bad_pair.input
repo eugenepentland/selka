@@ -1,0 +1,5 @@
+func main() -> int:
+    for first, second in [3, 4]:
+        _ = first
+        _ = second
+    return 7

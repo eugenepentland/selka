@@ -1,0 +1,9 @@
+const BROKEN: int = 1 // 0
+
+
+const VALUE: bool = 3 < 2 < BROKEN
+
+
+func main() -> int:
+    assert not VALUE
+    return 7

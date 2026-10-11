@@ -1,0 +1,79 @@
+import constant_float
+import constant_value
+import syntax_value
+
+func site() -> syntax_value.Problem:
+    return syntax_value.Problem(code="", start=3, end=8, message="")
+
+
+public func test_reconstruction_retains_zero_sign_and_subnormal_boundary_bits() -> bool fails syntax_value.Problem:
+    for bits in [0u64, 9223372036854775808u64, 1u64, 4503599627370495u64, 4503599627370496u64, 4607182418800017407u64, 4607182418800017408u64, 4607182418800017409u64, 9218868437227405311u64]:
+        const restored = try constant_float.encode(constant_float.decode(bits), 19, site())
+        if restored.bits != bits or restored.ty != 19:
+            return False
+    return True
+
+
+public func test_infinity_and_nan_results_use_native_canonical_bits() -> bool fails syntax_value.Problem:
+    const zero = constant_value.Value(ty=19, bits=0u64)
+    const one = constant_value.Value(ty=19, bits=4607182418800017408u64)
+    const nan = try constant_float.binary(b"python_div", zero, zero, 19, site())
+    const positive = try constant_float.binary(b"python_div", one, zero, 19, site())
+    const minus = try constant_float.unary(b"neg", one, 19, site())
+    const negative = try constant_float.binary(b"python_div", minus, zero, 19, site())
+    const unequal = try constant_float.binary(b"ne", nan, nan, 19, site())
+    const equal = try constant_float.binary(b"eq", nan, nan, 19, site())
+    return nan.bits == 9221120237041090560u64 and positive.bits == 9218868437227405312u64 and negative.bits == 18442240474082181120u64 and unequal.bits == 1u64 and equal.bits == 0u64
+
+
+public func test_float_operations_round_separately_and_floor_negative_remainders() -> bool fails syntax_value.Problem:
+    const first = try constant_float.encode(-7.0, 19, site())
+    const last = try constant_float.encode(3.0, 19, site())
+    const floor = try constant_float.binary(b"floor_div", first, last, 19, site())
+    const remainder = try constant_float.binary(b"floor_rem", first, last, 19, site())
+    const one = try constant_float.encode(1.0, 19, site())
+    const half = try constant_float.encode(1.1102230246251565e-16, 19, site())
+    const tie = try constant_float.binary(b"add", one, half, 19, site())
+    return constant_float.decode(floor.bits) == -3.0 and constant_float.decode(remainder.bits) == 2.0 and tie.bits == 4607182418800017408u64
+
+
+public func test_float_integer_conversion_truncates_and_preserves_unsigned_upper_values() -> bool fails syntax_value.Problem:
+    const first = try constant_float.encode(-127.99, 19, site())
+    const last = try constant_float.encode(9223372036854775808.0, 19, site())
+    const signed = try constant_float.to_integer(first, 2, site())
+    const unsigned = try constant_float.to_integer(last, 8, site())
+    return constant_value.wire(signed.bits) == -127 and signed.ty == 2 and unsigned.bits == 9223372036854775808u64 and unsigned.ty == 8
+
+
+public func test_float_integer_nonfinite_and_half_open_width_bounds_diagnose() -> bool fails syntax_value.Problem:
+    for number in [128.0, -129.0, 1.0 / 0.0, 0.0 / 0.0]:
+        const value = try constant_float.encode(number, 19, site())
+        match constant_float.to_integer(value, 2, site()):
+            case Ok(unused):
+                return False
+            case Err(problem):
+                if problem.code != "E_CONSTANT_ARITHMETIC" or problem.start != 3 or problem.end != 8:
+                    return False
+    return True
+
+
+public func test_mixed_unsigned_conversion_and_float_operator_diagnostic() -> bool fails syntax_value.Problem:
+    const upper = constant_value.Value(ty=8, bits=18446744073709551615u64)
+    const sum = try constant_float.binary(b"add", upper, constant_value.Value(ty=8, bits=1u64), 19, site())
+    if constant_float.decode(sum.bits) != 18446744073709551616.0:
+        return False
+    match constant_float.binary(b"bit_and", sum, sum, 19, site()):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_FLOAT_OPERATION" and problem.message == "float supports arithmetic and numeric comparison"
+
+
+public func test_representation_intrinsics_preserve_signed_bits_and_trigonometric_zero() -> bool fails syntax_value.Problem:
+    const minimum = constant_value.Value(ty=8, bits=9223372036854775808u64)
+    const floating = try constant_float.representation(b"f64_from_i64", minimum, 19, site())
+    const integer = try constant_float.representation(b"f64_to_i64", floating, 19, site())
+    const zero = constant_value.Value(ty=19, bits=0u64)
+    const sine = try constant_float.unary(b"f64_sin", zero, 19, site())
+    const cosine = try constant_float.unary(b"f64_cos", zero, 19, site())
+    return constant_float.decode(floating.bits) == -9223372036854775808.0 and integer.bits == minimum.bits and integer.ty == 8 and sine.bits == 0u64 and cosine.bits == 4607182418800017408u64

@@ -1,0 +1,8 @@
+type Pair = FixedArray[int, 2]
+
+
+const VALUE: Pair = 1
+
+
+func main() -> int:
+    return 7

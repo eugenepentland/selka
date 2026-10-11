@@ -1,4 +1,7 @@
 import syntax_value
+import constant_context
+import constant_eval
+import constant_value
 import graph
 import scalars
 import integer_literals
@@ -12,6 +15,7 @@ import syntax_problem
 import names
 import suggestions
 import range_lower
+import range_stride
 import locals_flow
 import call_repairs
 import mut_markers
@@ -25,6 +29,8 @@ import list_places
 import dictionary_places
 import dictionary_construct
 import list_iteration
+import sequence_iteration
+import prelude_iteration
 import comprehension_lower
 import collection_comprehension
 import list_slice
@@ -59,6 +65,7 @@ import gather_pair
 import tuple_types
 import array_types
 import array_index
+import array_places
 import tuple_lower
 import dictionary_view_contains
 
@@ -314,8 +321,10 @@ func constant_hint(state: State, name: int) -> int fails syntax_value.Problem:
     const target = try constant_target(mut scratch, owner, name, name)
     if target < 0:
         return -1
-    const ty = try constant_literal(mut scratch, scratch.syntax.functions[target])
-    if ty == 0:
+    const signature = try graph.field(scratch.syntax.pool, scratch.syntax.functions[target], "signature")
+    const annotation = try graph.field(scratch.syntax.pool, signature, "return_type")
+    const ty = try type_at(mut scratch, annotation)
+    if scalars.is_integer(ty):
         return ty
     return -1
 
@@ -514,6 +523,16 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const target_id = try graph.field(state.syntax.pool, payload, "target")
         const target_raw = try graph.number(state.syntax.pool, target_id)
         _ = try list_places.writable(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, target_raw)
+        const fixed_place = try array_place(state, target_raw, -1)
+        if fixed_place.root >= 0:
+            const assigned = try graph.field(state.syntax.pool, payload, "value")
+            const operator_id = try graph.field(state.syntax.pool, payload, "op")
+            const operator_value = try graph.get(state.syntax.pool, operator_id)
+            const assigned_raw = try graph.number(state.syntax.pool, assigned)
+            const result = try array_assignment(mut state, fixed_place, assigned_raw, operator_value.data, span)
+            state.batch.resolved[raw_id] = result.id
+            state.depth -= 1
+            return result
         const target_span = try graph.field(state.syntax.pool, state.syntax.nodes[target_raw], "span")
         const target_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[target_raw], "data")
         const target_data = try graph.get(state.syntax.pool, target_data_id)
@@ -589,6 +608,15 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             kind_name = kind.data
         const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
         const inputs = try graph.items(state.syntax.pool, arguments_id)
+        if data.data == b"list_operation" and kind_name == b"write" and len(inputs) == 2:
+            const trailing_raw = try graph.number(state.syntax.pool, inputs[0])
+            const fixed_place = try array_place(state, base_raw, trailing_raw)
+            if fixed_place.root >= 0:
+                const right_raw = try graph.number(state.syntax.pool, inputs[1])
+                const result = try array_assignment(mut state, fixed_place, right_raw, b"set", span)
+                state.batch.resolved[raw_id] = result.id
+                state.depth -= 1
+                return result
         if numeric_parse_name(kind_name):
             const base = try expression(mut state, base_raw)
             const result = try parse_numeric_access(mut state, span, base, -1, span, kind_name, inputs)
@@ -2529,12 +2557,11 @@ func checked_statement_value(mut state: State, raw_id: int, span: int, payload: 
         state.depth = state.depth - 1
         return result
     elif tag == b"for_each":
-        const name_span = try graph.field(state.syntax.pool, payload, "name")
-        const index_name_id = try graph.field(state.syntax.pool, payload, "index_name")
-        const index_name = try graph.get(state.syntax.pool, index_name_id)
-        const enumerated_id = try graph.field(state.syntax.pool, payload, "enumerated")
-        const enumerated = try graph.get(state.syntax.pool, enumerated_id)
-        const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const prelude = try prelude_iteration_payload(mut state, payload, span)
+        if prelude >= 0:
+            state.depth = state.depth - 1
+            const id = try emission.statement(mut state.batch, state.syntax.pool, span, False, b"block", prelude)
+            return Statement(id=id, terminates=False)
         const iterable_id = try graph.field(state.syntax.pool, payload, "iterable")
         const iterable_raw = try graph.number(state.syntax.pool, iterable_id)
         const iterable = try expression(mut state, iterable_raw)
@@ -2545,97 +2572,10 @@ func checked_statement_value(mut state: State, raw_id: int, span: int, payload: 
             state.depth = state.depth - 1
             const id = try emission.statement(mut state.batch, state.syntax.pool, span, False, tag, result_payload)
             return Statement(id=id, terminates=False)
-        if index_name.kind != 0 or enumerated.integer != 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "enumerated or unpacked iteration is outside the admitted list closure")
-            fail rejection
-        mut element = list_types.element_type(state.batch.facts.lists, iterable.ty)
-        if iterable.ty == state.batch.facts.string_type:
-            element = iterable.ty
-        elif iterable.ty == state.batch.facts.bytes_type:
-            element = 0
-        if element < 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "iteration receiver is outside the admitted list closure")
-            fail rejection
-        const top_level_name = try top_level(state, name_span)
-        if name != b"_" and (locals.find(state.scope, name) >= 0 or top_level_name):
-            const rejection = try problem(state, name_span, "E_SHADOWING", "iteration binding shadows an active declaration")
-            fail rejection
-        const loop_id = state.control.next
-        state.control.next = loop_id + 1
-        const plan = try list_iteration.prepare(mut state.batch, mut state.scope, state.syntax.pool, list_iteration.Input(source=state.syntax.source, name=name_span, span=span, iterable=iterable.id, owner_type=iterable.ty, element=element, loop_id=loop_id))
-        state.control.active.append(loop_id)
-        state.control.exited.append(False)
-        const body_id = try graph.field(state.syntax.pool, payload, "body")
-        const body_raw = try graph.number(state.syntax.pool, body_id)
-        const before = locals_flow.snapshot(state.scope)
-        const pending_before = try pending_flow.snapshot(state.scope, len(state.scope.locals))
-        const body = try statement(mut state, body_raw)
-        if not body.terminates:
-            const difference = try pending_flow.mismatch(state.scope, pending_before)
-            _ = try obligations.consistent(state.syntax.pool, state.scope, difference, span, True, mut state.problems)
-        try pending_flow.restore(mut state.scope, pending_before)
-        const lowered = try list_iteration.finish(mut state.batch, mut state.scope, state.syntax.pool, plan, list_iteration.Finish(raw_statements=state.syntax.statements, raw_nodes=state.syntax.nodes, body_raw=body_raw, body=body.id))
-        locals_flow.restore(mut state.scope, before)
-        state.scope.active = plan.before_active
-        const last = len(state.control.active) - 1
-        state.control.active = state.control.active[:last]
-        state.control.exited = state.control.exited[:last]
-        result_payload = lowered.payload
+        result_payload = try sequence_iteration_payload(mut state, payload, span, iterable)
         tag = b"block"
     elif tag == b"for_range":
-        const name_span = try graph.field(state.syntax.pool, payload, "name")
-        const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
-        const top_level_name = try top_level(state, name_span)
-        if name != b"_" and (locals.find(state.scope, name) >= 0 or top_level_name):
-            const rejection = try problem(state, name_span, "E_SHADOWING", "iteration binding shadows an active declaration")
-            fail rejection
-        const step_id = try graph.field(state.syntax.pool, payload, "step")
-        const step = try graph.get(state.syntax.pool, step_id)
-        if step.kind != 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "explicit range strides are outside the initial B1 scalar profile")
-            fail rejection
-        const start_id = try graph.field(state.syntax.pool, payload, "start")
-        const start_raw = try graph.number(state.syntax.pool, start_id)
-        const end_id = try graph.field(state.syntax.pool, payload, "end")
-        const end_raw = try graph.number(state.syntax.pool, end_id)
-        if start_raw < 0 or start_raw >= len(state.syntax.nodes):
-            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid range start")
-        const start_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[start_raw], "data")
-        const start_data = try graph.get(state.syntax.pool, start_data_id)
-        mut start = Expression(id=-1, ty=0)
-        if start_data.data == b"unit":
-            const zero = try syntax_value.integer(mut state.batch.pool, 0)
-            const zero_node = try emission.node(mut state.batch, state.syntax.pool, name_span, 0, b"integer", zero)
-            start = Expression(id=zero_node, ty=0)
-        else:
-            start = try expression(mut state, start_raw)
-        const end = try expression(mut state, end_raw)
-        if start.ty != 0:
-            const rejection = try problem(state, name_span, "E_TYPE", "operation requires an integer type")
-            fail rejection
-        const end_span = try graph.field(state.syntax.pool, state.syntax.nodes[end_raw], "span")
-        _ = try require(state, end.ty, start.ty, end_span)
-        const active = state.scope.active
-        const loop_id = state.control.next
-        state.control.next = loop_id + 1
-        const plan = try range_lower.prepare(mut state.batch, mut state.scope, state.syntax.pool, range_lower.Input(source=state.syntax.source, name=name_span, span=span, start=start.id, end=end.id, loop_id=loop_id))
-        state.control.active.append(loop_id)
-        state.control.exited.append(False)
-        const body_id = try graph.field(state.syntax.pool, payload, "body")
-        const body_raw = try graph.number(state.syntax.pool, body_id)
-        const before = locals_flow.snapshot(state.scope)
-        const pending_before = try pending_flow.snapshot(state.scope, len(state.scope.locals))
-        const body = try statement(mut state, body_raw)
-        if not body.terminates:
-            const difference = try pending_flow.mismatch(state.scope, pending_before)
-            _ = try obligations.consistent(state.syntax.pool, state.scope, difference, span, True, mut state.problems)
-        try pending_flow.restore(mut state.scope, pending_before)
-        locals_flow.restore(mut state.scope, before)
-        const last = len(state.control.active) - 1
-        state.control.active = state.control.active[:last]
-        state.control.exited = state.control.exited[:last]
-        state.scope.active = active
-        result_payload = try range_lower.finish(mut state.batch, state.syntax.pool, plan, body.id)
+        result_payload = try range_statement(mut state, payload, span)
         tag = b"range_loop"
     else:
         const rejection = try problem(state, span, "P_BODY_PROFILE", "statement is outside the B1 scalar profile")
@@ -3027,6 +2967,8 @@ public func record_field(state: State, ty: int, span: int) -> int fails syntax_v
 
 
 func record_initializers(mut state: State, ty: int, span: int, initializers: record_construct.Initializer[]) -> int fails syntax_value.Problem:
+    const table = array_types.schema(state.batch.facts.lists.types.arrays, ty)
+    const keyed = table.id >= 0 and table.key >= 0
     const row = record_types.schema(state.batch.facts.lists.types.records, ty)
     const fields_id = try graph.field(state.syntax.pool, row, "fields")
     const fields = try graph.items(state.syntax.pool, fields_id)
@@ -3054,7 +2996,8 @@ func record_initializers(mut state: State, ty: int, span: int, initializers: rec
         const value = values[position]
         position = position + 1
         if seen[index]:
-            const rejection = try problem(state, initializer.name, "E_DUPLICATE_FIELD", "named entry is initialized more than once")
+            const duplicate_code = if keyed then "E_DUPLICATE_KEY" else "E_DUPLICATE_FIELD"
+            const rejection = try problem(state, initializer.name, duplicate_code, "named entry is initialized more than once")
             fail rejection
         seen[index] = True
         const type_id = try graph.field(state.syntax.pool, fields[index], "ty")
@@ -3073,7 +3016,9 @@ func record_initializers(mut state: State, ty: int, span: int, initializers: rec
             const record_name = try graph.get(state.syntax.pool, record_name_id)
             const field_text = try suggestions.text(name.data)
             const record_text = try suggestions.text(record_name.data)
-            const rejection = try problem(state, span, "E_INCOMPLETE_CONSTRUCTION", "missing initializer for field `" + field_text + "` of `" + record_text + "`")
+            const missing_code = if keyed then "E_INCOMPLETE_TABLE" else "E_INCOMPLETE_CONSTRUCTION"
+            const entry_kind = if keyed then "key" else "field"
+            const rejection = try problem(state, span, missing_code, "missing initializer for " + entry_kind + " `" + field_text + "` of `" + record_text + "`")
             const declaration = try graph.field(state.syntax.pool, fields[index], "declaration")
             const site = try problem(state, declaration, "", "")
             const related = syntax_problem.Related(start=site.start, end=site.end, message="missing entry declared here", role="related")
@@ -3100,6 +3045,264 @@ func nominal_key(mut state: State, key: bytes, span: int) -> int fails syntax_va
     return resolved
 
 
+record ArrayStep:
+    value: int
+    member: bool
+
+
+record ArrayPlace:
+    root: int
+    steps: ArrayStep[]
+
+
+# Native arrayPlace reads declared types only. Failed probes leave ordinary
+# assignment checking responsible for diagnostics and do not evaluate operands.
+func array_place(state: State, target: int, trailing: int) -> ArrayPlace fails syntax_value.Problem:
+    mut chain: int[] = []
+    mut cursor = target
+    while True:
+        if cursor < 0 or cursor >= len(state.syntax.nodes) or len(chain) >= 256:
+            return ArrayPlace(root=-1, steps=[])
+        const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[cursor], "data")
+        const data = try graph.get(state.syntax.pool, data_id)
+        if data.data == b"name":
+            break
+        if data.data != b"field" and data.data != b"index":
+            return ArrayPlace(root=-1, steps=[])
+        chain.append(cursor)
+        const base_id = try graph.field(state.syntax.pool, data.children[0], "base")
+        cursor = try graph.number(state.syntax.pool, base_id)
+    const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[cursor], "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, data.children[0])
+    const slot = locals.find(state.scope, spelling)
+    if slot < 0:
+        return ArrayPlace(root=-1, steps=[])
+    mut reached = state.scope.locals[slot].ty
+    mut root = cursor
+    mut steps: ArrayStep[] = []
+    mut fixed_below = False
+    mut count = len(chain)
+    if trailing >= 0:
+        count += 1
+    for position in range(count):
+        mut raw = -1
+        if position < len(chain):
+            raw = chain[len(chain) - position - 1]
+        mut value = trailing
+        mut member = False
+        if raw >= 0:
+            const step_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+            const step = try graph.get(state.syntax.pool, step_id)
+            if step.data == b"field":
+                member = True
+                value = try graph.field(state.syntax.pool, step.children[0], "name")
+            else:
+                const key = try graph.field(state.syntax.pool, step.children[0], "index")
+                value = try graph.number(state.syntax.pool, key)
+        if reached < 19:
+            return ArrayPlace(root=-1, steps=[])
+        const fixed = array_types.schema(state.batch.facts.lists.types.arrays, reached)
+        if member:
+            const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, reached)
+            const variant = try variants.shape(state.syntax.pool, state.batch.facts.lists.types.records.rows, reached)
+            if fixed.id >= 0 or tuple.id >= 0 or variant.valid or managed(state, reached):
+                return ArrayPlace(root=-1, steps=[])
+            match record_field(state, reached, value):
+                case Err(error):
+                    return ArrayPlace(root=-1, steps=[])
+                case Ok(index):
+                    const row = record_types.schema(state.batch.facts.lists.types.records, reached)
+                    const fields_id = try graph.field(state.syntax.pool, row, "fields")
+                    const fields = try graph.items(state.syntax.pool, fields_id)
+                    const ty = try graph.field(state.syntax.pool, fields[index], "ty")
+                    reached = try graph.number(state.syntax.pool, ty)
+            steps.append(ArrayStep(value=value, member=True))
+        elif fixed.id >= 0:
+            fixed_below = True
+            reached = fixed.element
+            steps.append(ArrayStep(value=value, member=False))
+        else:
+            mut element = list_types.element_type(state.batch.facts.lists, reached)
+            const mapping = collection_types.schema(state.batch.facts.lists.types.collections, reached)
+            if mapping.id >= 0 and mapping.kind == 0:
+                element = mapping.value
+            if element < 0 or raw < 0:
+                return ArrayPlace(root=-1, steps=[])
+            root = raw
+            steps = []
+            fixed_below = False
+            reached = element
+    if not fixed_below:
+        return ArrayPlace(root=-1, steps=[])
+    return ArrayPlace(root=root, steps=steps)
+
+
+func array_transfers(state: State, ty: int) -> bool fails syntax_value.Problem:
+    if ty < 19 or ty - 19 >= len(state.batch.facts.lists.types.records.rows):
+        return ty == 16 or ty == 17
+    const row = state.batch.facts.lists.types.records.rows[ty - 19]
+    const contract = try graph.field(state.syntax.pool, row, "contract")
+    const owned = try graph.field(state.syntax.pool, contract, "move_only")
+    const pending = try graph.field(state.syntax.pool, contract, "requires_handling")
+    const owned_value = try graph.get(state.syntax.pool, owned)
+    const pending_value = try graph.get(state.syntax.pool, pending)
+    return owned_value.integer != 0 or pending_value.integer != 0
+
+
+func array_augmented(mut state: State, context: list_lower.Context, op: bytes, left: int, right: int, ty: int) -> int fails syntax_value.Problem:
+    mut operator = op
+    if operator == b"rem":
+        operator = b"floor_rem"
+    if operator == b"div":
+        operator = b"python_div"
+    if state.batch.facts.float_type >= 0 and ty == state.batch.facts.float_type:
+        const lowered = try numeric_lower.binary(mut state.batch, mut state.scope, context, operator, left, right)
+        return try list_lower.append(mut state.batch, context, lowered)
+    const mapping = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+    if mapping.id >= 0 and mapping.kind == 1:
+        const rejection = try problem(state, context.span, "E_SET_OPERATOR", "a set has no augmented assignment; write `s = s - t`, `s = s | t`, or call `s.update(t)`")
+        fail rejection
+    if managed(state, ty):
+        if op != b"add" or mapping.kind == 0:
+            const rejection = try problem(state, context.span, "E_TEXT_OPERATOR", "a managed collection augments with `+=` only, and str, bytes and list are the types that support it")
+            fail rejection
+    elif not scalars.is_integer(ty):
+        const rejection = try problem(state, context.span, "E_TYPE", "operation requires an integer type")
+        fail rejection
+    elif op == b"div":
+        const rejection = try problem(state, context.span, "E_TYPE", "augmented `/=` produces a float; declare the binding as float or use `//=`")
+        fail rejection
+    return try list_lower.binary(mut state.batch, context, operator, left, right, ty)
+
+
+func array_assignment(mut state: State, place: ArrayPlace, rhs_raw: int, op: bytes, span: int) -> Expression fails syntax_value.Problem:
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const inherited = len(state.control.values.temporaries)
+    const root_row = state.syntax.nodes[place.root]
+    const root_span = try graph.field(state.syntax.pool, root_row, "span")
+    const root_data_id = try graph.field(state.syntax.pool, root_row, "data")
+    const root_data = try graph.get(state.syntax.pool, root_data_id)
+    mut owner = -1
+    mut index = -1
+    mut current = -1
+    mut root_setup: int[] = []
+    if root_data.data == b"name":
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, root_data.children[0])
+        owner = locals.find(state.scope, name)
+        _ = try require_readable(mut state, owner, root_data.children[0])
+        if not state.scope.locals[owner].mutable:
+            const rejection = try problem(state, root_span, "E_IMMUTABLE", "element assignment requires a mutable binding")
+            fail rejection
+        const transfers = try array_transfers(state, state.scope.locals[owner].ty)
+        if transfers:
+            const rejection = try problem(state, root_span, "E_RESULT_OPERATION", "element assignment requires a copyable value without pending results")
+            fail rejection
+        current = try array_places.read_root(mut state.batch, mut state.scope, context, owner)
+    else:
+        const root_context = list_lower.Context(input=state.syntax.pool, span=root_span)
+        const base_id = try graph.field(state.syntax.pool, root_data.children[0], "base")
+        const base_raw = try graph.number(state.syntax.pool, base_id)
+        const base = try expression(mut state, base_raw)
+        state.control.values.temporaries = state.control.values.temporaries[:inherited]
+        const rooted = try list_places.receiver(mut state.batch, mut state.scope, root_context, base.id, base.ty)
+        const key_id = try graph.field(state.syntax.pool, root_data.children[0], "index")
+        const key_raw = try graph.number(state.syntax.pool, key_id)
+        const key = try expression(mut state, key_raw)
+        state.control.values.temporaries = state.control.values.temporaries[:inherited]
+        const mapping = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
+        mut prepared = rooted
+        if mapping.id >= 0 and mapping.kind == 0:
+            prepared = try dictionary_places.indexed(mut state.batch, mut state.scope, rooted, key.id, mapping.key, mapping.value)
+        else:
+            prepared = try list_places.indexed(mut state.batch, mut state.scope, rooted, key.id, list_types.element_type(state.batch.facts.lists, base.ty))
+        owner = prepared.owner
+        index = prepared.index
+        current = prepared.current
+        root_setup = prepared.setup
+    mut bases: int[] = []
+    mut steps: array_places.Step[] = []
+    mut key_setup: int[] = []
+    mut keys_inert = True
+    for step in place.steps:
+        bases.append(current)
+        const base_type_id = try graph.field(state.batch.pool, state.batch.nodes[current], "ty")
+        const base_type = try graph.number(state.batch.pool, base_type_id)
+        if step.member:
+            const transfers = try array_transfers(state, base_type)
+            if transfers:
+                const rejection = try problem(state, step.value, "E_RESULT_OPERATION", "field assignment requires a copyable record without pending results")
+                fail rejection
+            const member = try record_field(state, base_type, step.value)
+            const row = record_types.schema(state.batch.facts.lists.types.records, base_type)
+            const fields_id = try graph.field(state.syntax.pool, row, "fields")
+            const fields = try graph.items(state.syntax.pool, fields_id)
+            const ty_id = try graph.field(state.syntax.pool, fields[member], "ty")
+            const ty = try graph.number(state.syntax.pool, ty_id)
+            steps.append(array_places.Step(key=-1, from_end=False, member=member))
+            current = try record_places.field(mut state.batch, context, current, member, ty)
+        else:
+            const fixed = array_types.schema(state.batch.facts.lists.types.arrays, base_type)
+            const key_span = try graph.field(state.syntax.pool, state.syntax.nodes[step.value], "span")
+            const pending_element = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, fixed.element)
+            if pending_element:
+                const rejection = try problem(state, span, "E_RESULT_OPERATION", "replacement would drop an unhandled result-bearing element")
+                fail rejection
+            const key = try expression_expected(mut state, step.value, fixed.key)
+            state.control.values.temporaries = state.control.values.temporaries[:inherited]
+            if fixed.key >= 0:
+                _ = try require(state, key.ty, fixed.key, key_span)
+            elif not scalars.is_integer(key.ty):
+                const rejection = try problem(state, key_span, "E_TYPE", "operation requires an integer type")
+                fail rejection
+            const selected = try array_index.select(state.batch, state.control.values.counters, key.id, fixed.length, fixed.key >= 0)
+            mut normalized = selected.key
+            if selected.folded:
+                const typed_span = try graph.field(state.batch.pool, state.batch.nodes[key.id], "span")
+                const copied = try graph.clone(mut state.syntax.pool, state.batch.pool, typed_span, 0)
+                normalized = try list_lower.integer(mut state.batch, list_lower.Context(input=state.syntax.pool, span=copied), selected.value, 0)
+            const key_free = try array_places.effect_free_value(state.batch, normalized)
+            if not key_free:
+                const spilled = try array_places.spill_value(mut state.batch, mut state.scope, context, normalized)
+                normalized = spilled.value
+                key_setup.append(spilled.statement)
+            const key_inert = try array_places.inert_value(state.batch, normalized)
+            keys_inert = keys_inert and key_inert
+            steps.append(array_places.Step(key=normalized, from_end=selected.from_end, member=-1))
+            const base_id = try syntax_value.integer(mut state.batch.pool, current)
+            const key_id = try syntax_value.integer(mut state.batch.pool, normalized)
+            const from_end = try syntax_value.boolean(mut state.batch.pool, selected.from_end)
+            const payload = try syntax_value.object(mut state.batch.pool, ["base", "index", "from_end"], [base_id, key_id, from_end])
+            current = try emission.node(mut state.batch, state.syntax.pool, span, fixed.element, b"index", payload)
+    const leaf_id = try graph.field(state.batch.pool, state.batch.nodes[current], "ty")
+    const leaf = try graph.number(state.batch.pool, leaf_id)
+    const right = try expression_expected(mut state, rhs_raw, leaf)
+    state.control.values.temporaries = state.control.values.temporaries[:inherited]
+    _ = try require(state, right.ty, leaf, span)
+    mut setup: int[] = []
+    mut value = right.id
+    const right_inert = try array_places.inert_value(state.batch, right.id)
+    const right_free = try array_places.effect_free_value(state.batch, right.id)
+    if op == b"set":
+        if not right_inert and (index >= 0 or not keys_inert or not right_free):
+            const spilled = try array_places.spill_value(mut state.batch, mut state.scope, context, right.id)
+            value = spilled.value
+            setup.append(spilled.statement)
+        setup.extend(root_setup)
+        setup.extend(key_setup)
+    else:
+        setup.extend(root_setup)
+        setup.extend(key_setup)
+        value = try array_augmented(mut state, context, op, current, right.id, leaf)
+        if not right_free:
+            const spilled = try array_places.spill_value(mut state.batch, mut state.scope, context, value)
+            value = spilled.value
+            setup.append(spilled.statement)
+    const lowered = try array_places.finish(mut state.batch, context, array_places.Input(owner=owner, index=index, bases=bases, steps=steps, value=value, setup=setup))
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=15)
+
+
 func record_assignment(mut state: State, assignment: int, span: int) -> Expression fails syntax_value.Problem:
     const target_id = try graph.field(state.syntax.pool, assignment, "target")
     const target = try graph.number(state.syntax.pool, target_id)
@@ -3108,6 +3311,13 @@ func record_assignment(mut state: State, assignment: int, span: int) -> Expressi
     if target_data.data == b"tuple":
         return try tuple_assignment(mut state, assignment, target)
     _ = try list_places.writable(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, target)
+    const fixed_place = try array_place(state, target, -1)
+    if fixed_place.root >= 0:
+        const value_id = try graph.field(state.syntax.pool, assignment, "value")
+        const operator_id = try graph.field(state.syntax.pool, assignment, "op")
+        const operator_value = try graph.get(state.syntax.pool, operator_id)
+        const value_raw = try graph.number(state.syntax.pool, value_id)
+        return try array_assignment(mut state, fixed_place, value_raw, operator_value.data, span)
     mut path_names: int[] = []
     mut root = target
     while True:
@@ -4006,10 +4216,8 @@ public func constant_literal(mut state: State, raw: int) -> int fails syntax_val
     const signature = try graph.field(state.syntax.pool, raw, "signature")
     const return_span = try graph.field(state.syntax.pool, signature, "return_type")
     const ty = try type_at(mut state, return_span)
-    const declaration = try graph.field(state.syntax.pool, raw, "name")
-    if ty != state.batch.facts.string_type and ty != state.batch.facts.bytes_type and ty != 0 and ty != 1 and ty != 15:
-        const rejection = try problem(state, declaration, "P_BODY_PROFILE", "constant type is outside the literal profile")
-        fail rejection
+    if ty != state.batch.facts.string_type and ty != state.batch.facts.bytes_type:
+        return ty
     const body_id = try graph.field(state.syntax.pool, raw, "body")
     const body = try graph.number(state.syntax.pool, body_id)
     const body_data_id = try graph.field(state.syntax.pool, state.syntax.statements[body], "data")
@@ -4028,11 +4236,6 @@ public func constant_literal(mut state: State, raw: int) -> int fails syntax_val
     const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[initializer], "data")
     const data = try graph.get(state.syntax.pool, data_id)
     const span = try graph.field(state.syntax.pool, state.syntax.nodes[initializer], "span")
-    if ty == 0 or ty == 1 or ty == 15:
-        if (ty == 0 and data.data == b"integer") or (ty == 1 and data.data == b"boolean") or (ty == 15 and data.data == b"unit"):
-            return ty
-        const rejection = try problem(state, span, "P_BODY_PROFILE", "scalar constant expressions require the full constant evaluator")
-        fail rejection
     if data.data == b"call":
         const call = data.children[0]
         const owner_id = try graph.field(state.syntax.pool, call, "owner")
@@ -4158,35 +4361,56 @@ func constant_target(mut state: State, owner: int, name: int, span: int) -> int 
     fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="constant identity has no raw declaration")
 
 
-public func constant_scalar(mut state: State, raw: int, span: int) -> Expression fails syntax_value.Problem:
-    const ty = try constant_literal(mut state, raw)
-    const body_id = try graph.field(state.syntax.pool, raw, "body")
-    const body = try graph.number(state.syntax.pool, body_id)
-    const body_data_id = try graph.field(state.syntax.pool, state.syntax.statements[body], "data")
-    const body_data = try graph.get(state.syntax.pool, body_data_id)
-    const children = try graph.items(state.syntax.pool, body_data.children[0])
-    const ret = try graph.number(state.syntax.pool, children[0])
-    const ret_data_id = try graph.field(state.syntax.pool, state.syntax.statements[ret], "data")
-    const ret_data = try graph.get(state.syntax.pool, ret_data_id)
-    const initializer = try graph.number(state.syntax.pool, ret_data.children[0])
-    const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[initializer], "data")
-    const data = try graph.get(state.syntax.pool, data_id)
-    mut payload = try syntax_value.absent(mut state.batch.pool)
-    if data.data == b"integer":
-        const literal = data.children[0]
-        const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, literal)
-        const site = try problem(state, literal, "", "")
-        const number = try scalars.integer(spelling, False, site.start, site.end)
+public func constant_evaluate(mut state: State, raw: int) -> constant_value.Value fails syntax_value.Problem:
+    mut index = -1
+    for position in range(len(state.syntax.functions)):
+        if state.syntax.functions[position] == raw:
+            index = position
+            break
+    if index < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="constant has no raw function index")
+    const tables = constant_context.Tables(nodes=state.syntax.nodes, statements=state.syntax.statements, functions=state.syntax.functions)
+    const types = constant_context.Types(records=state.batch.facts.lists.types.records, floating=state.batch.facts.float_type, string=state.batch.facts.string_type, bytes_type=state.batch.facts.bytes_type, catalog=state.batch.facts.lists, applications=state.batch.facts.applications)
+    mut context = constant_context.Context(pool=state.syntax.pool, source=state.syntax.source, tables=tables, modules=state.syntax.modules, types=types, problems=state.problems, usage=state.syntax.usage)
+    match constant_eval.evaluate(mut context, index):
+        case Ok(value):
+            state.problems = context.problems
+            state.syntax.usage = context.usage
+            return value
+        case Err(rejection):
+            state.problems = context.problems
+            state.syntax.usage = context.usage
+            fail rejection
+
+
+public func constant_emit(mut state: State, value: constant_value.Value, span: int) -> Expression fails syntax_value.Problem:
+    const number = constant_value.wire(value.bits)
+    if value.ty == state.batch.facts.float_type:
+        const context = list_lower.Context(input=state.syntax.pool, span=span)
+        const lowered = try numeric_lower.literal(mut state.batch, context, number)
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        return Expression(id=id, ty=value.ty)
+    mut payload = -1
+    mut tag = b"integer"
+    if value.ty == 1:
+        payload = try syntax_value.boolean(mut state.batch.pool, value.bits != 0u64)
+        tag = b"boolean"
+    elif value.ty == 8 and number < 0:
+        payload = try syntax_value.upper_integer(mut state.batch.pool, number)
+    else:
         payload = try syntax_value.integer(mut state.batch.pool, number)
-    elif data.data == b"boolean":
-        payload = try graph.clone(mut state.batch.pool, state.syntax.pool, data.children[0], 0)
-    const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, data.data, payload)
-    return Expression(id=id, ty=ty)
+    const id = try emission.node(mut state.batch, state.syntax.pool, span, value.ty, tag, payload)
+    return Expression(id=id, ty=value.ty)
+
+
+public func constant_scalar(mut state: State, raw: int, span: int) -> Expression fails syntax_value.Problem:
+    const value = try constant_evaluate(mut state, raw)
+    return try constant_emit(mut state, value, span)
 
 
 func constant_read(mut state: State, target: int, span: int) -> Expression fails syntax_value.Problem:
     const ty = try constant_literal(mut state, state.syntax.functions[target])
-    if ty == 0 or ty == 1 or ty == 15:
+    if ty != state.batch.facts.string_type and ty != state.batch.facts.bytes_type:
         return try constant_scalar(mut state, state.syntax.functions[target], span)
     const order = try emission.ids(mut state.batch, [])
     const evaluation = try syntax_value.absent(mut state.batch.pool)
@@ -4630,6 +4854,14 @@ func table_literal(mut state: State, payload: int, span: int, table: array_types
     const entries = try graph.items(state.syntax.pool, payload)
     if len(entries) % 2 != 0:
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="table literal has an odd entry table")
+    # Native dictionary queuing retains checked keys before each checked value.
+    mut queued = 0
+    while queued < len(entries):
+        const key_raw = try graph.number(state.syntax.pool, entries[queued])
+        const value_raw = try graph.number(state.syntax.pool, entries[queued + 1])
+        _ = try expression(mut state, key_raw)
+        _ = try expression_expected(mut state, value_raw, table.element)
+        queued += 2
     mut initializers: record_construct.Initializer[] = []
     mut position = 0
     while position < len(entries):
@@ -4961,6 +5193,203 @@ func list_conversion(mut state: State, span: int, value: Expression) -> Expressi
         return Expression(id=id, ty=value.ty)
     const rejection = try problem(state, span, "E_PRELUDE_TYPE", "list requires a list, range, reversed source or dictionary view")
     fail rejection
+
+
+func prelude_iteration_payload(mut state: State, each: int, span: int) -> int fails syntax_value.Problem:
+    const iterable_id = try graph.field(state.syntax.pool, each, "iterable")
+    const raw = try graph.number(state.syntax.pool, iterable_id)
+    const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    if data.data != b"call":
+        return -1
+    const call = data.children[0]
+    const name_span = try graph.field(state.syntax.pool, call, "name")
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+    if name != b"reversed" and name != b"zip":
+        return -1
+    const owner_id = try graph.field(state.syntax.pool, call, "owner")
+    const owner = try graph.get(state.syntax.pool, owner_id)
+    if owner.kind != 0 or locals.find(state.scope, name) >= 0:
+        return -1
+    const qualified = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, name_span)
+    for function in state.syntax.functions:
+        const declaration = try graph.field(state.syntax.pool, function, "name")
+        const candidate = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, declaration)
+        if candidate == qualified:
+            return -1
+    _ = try io_arguments.positional(state.syntax.pool, call)
+    const arguments_id = try graph.field(state.syntax.pool, call, "arguments")
+    const arguments = try graph.items(state.syntax.pool, arguments_id)
+    const paired = name == b"zip"
+    const call_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+    if len(arguments) != (if paired then 2 else 1):
+        const rejection = try problem(state, call_span, "E_ARITY", "reversed takes one iterable and zip takes two")
+        fail rejection
+    const binding = try graph.field(state.syntax.pool, each, "name")
+    const index_name = try graph.field(state.syntax.pool, each, "index_name")
+    const index_value = try graph.get(state.syntax.pool, index_name)
+    if paired != (index_value.kind != 0):
+        const rejection = try problem(state, span, "E_COLLECTION_METHOD", "zip binds two iteration names and reversed binds one")
+        fail rejection
+    mut sources: Expression[] = []
+    for argument in arguments:
+        const argument_raw = try graph.number(state.syntax.pool, argument)
+        const argument_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "data")
+        const argument_data = try graph.get(state.syntax.pool, argument_data_id)
+        if argument_data.data == b"list_literal":
+            const children = try graph.items(state.syntax.pool, argument_data.children[0])
+            if len(children) == 0:
+                const hinted = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=0, span=call_span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+                state.batch.facts.expected[argument_raw] = hinted
+        const value = try expression(mut state, argument_raw)
+        sources.append(value)
+    mut visible_names = [binding]
+    if paired:
+        visible_names = [index_name, binding]
+    for visible in visible_names:
+        const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, visible)
+        const declared = try top_level(state, visible)
+        if spelling != b"_" and (locals.find(state.scope, spelling) >= 0 or declared):
+            const rejection = try problem(state, visible, "E_SHADOWING", "iteration binding shadows an active declaration")
+            fail rejection
+    if paired:
+        const first = try graph.spelling(state.syntax.pool, state.syntax.source, index_name)
+        const second = try graph.spelling(state.syntax.pool, state.syntax.source, binding)
+        if first != b"_" and first == second:
+            const rejection = try problem(state, binding, "E_SHADOWING", "iteration binding shadows an active declaration")
+            fail rejection
+    mut plans: list_iteration.Plan[] = []
+    const before_active = state.scope.active
+    for at in range(len(sources)):
+        const value = sources[at]
+        mut element = list_types.element_type(state.batch.facts.lists, value.ty)
+        if value.ty == state.batch.facts.string_type:
+            element = value.ty
+        if element < 0 or value.ty == state.batch.facts.bytes_type or value.ty == state.batch.facts.lists.types.buffer.id:
+            const rejection = try problem(state, span, "E_PRELUDE_TYPE", "iteration requires a list or str")
+            fail rejection
+        const loop_id = state.control.next
+        state.control.next += 1
+        const visible = if paired and at == 0 then index_name else binding
+        const plan = try list_iteration.prepare(mut state.batch, mut state.scope, state.syntax.pool, list_iteration.Input(source=state.syntax.source, name=visible, span=span, iterable=value.id, owner_type=value.ty, element=element, loop_id=loop_id))
+        if paired and at == 1:
+            const first = try graph.spelling(state.syntax.pool, state.syntax.source, index_name)
+            const second = try graph.spelling(state.syntax.pool, state.syntax.source, binding)
+            if first == b"_" and second == b"_":
+                state.scope.locals[plan.binding].name = b"<collection>"
+                state.scope.locals[plan.binding].declaration = span
+                state.scope.locals[plan.binding].mutable = True
+                state.scope.locals[plan.binding].origin = b"local"
+                state.scope.locals[plan.binding].flags.initialized = False
+                state.scope.active = state.scope.active[:len(state.scope.active) - 1]
+        plans.append(plan)
+    mut right = plans[0]
+    mut limit = plans[0].limit
+    if paired:
+        right = plans[1]
+        limit = try list_lower.temporary(mut state.scope, list_lower.Context(input=state.syntax.pool, span=span), 0)
+    state.control.active.append(plans[0].request.loop_id)
+    state.control.exited.append(False)
+    const body_id = try graph.field(state.syntax.pool, each, "body")
+    const body_raw = try graph.number(state.syntax.pool, body_id)
+    const before = locals_flow.snapshot(state.scope)
+    const pending_before = try pending_flow.snapshot(state.scope, len(state.scope.locals))
+    const body = try statement(mut state, body_raw)
+    if not body.terminates:
+        const difference = try pending_flow.mismatch(state.scope, pending_before)
+        _ = try obligations.consistent(state.syntax.pool, state.scope, difference, span, True, mut state.problems)
+    try pending_flow.restore(mut state.scope, pending_before)
+    const lowered = try prelude_iteration.finish(mut state.batch, mut state.scope, state.syntax.pool, prelude_iteration.Plan(left=plans[0], right=right, limit=limit, paired=paired), list_iteration.Finish(raw_statements=state.syntax.statements, raw_nodes=state.syntax.nodes, body_raw=body_raw, body=body.id))
+    locals_flow.restore(mut state.scope, before)
+    state.scope.active = before_active
+    const last = len(state.control.active) - 1
+    state.control.active = state.control.active[:last]
+    state.control.exited = state.control.exited[:last]
+    return lowered.payload
+
+
+func sequence_iteration_payload(mut state: State, each: int, span: int, iterable: Expression) -> int fails syntax_value.Problem:
+    const name_span = try graph.field(state.syntax.pool, each, "name")
+    const index_id = try graph.field(state.syntax.pool, each, "index_name")
+    const index_value = try graph.get(state.syntax.pool, index_id)
+    const enumerated_id = try graph.field(state.syntax.pool, each, "enumerated")
+    const enumerated_value = try graph.get(state.syntax.pool, enumerated_id)
+    const enumerated = enumerated_value.integer != 0
+    mut second_name = -1
+    if index_value.kind != 0:
+        second_name = index_id
+    const fixed = array_types.schema(state.batch.facts.lists.types.arrays, iterable.ty)
+    mut element = list_types.element_type(state.batch.facts.lists, iterable.ty)
+    if fixed.id >= 0 and fixed.key < 0:
+        element = fixed.element
+    elif iterable.ty == state.batch.facts.string_type:
+        element = iterable.ty
+    elif iterable.ty == state.batch.facts.bytes_type or iterable.ty == state.batch.facts.lists.types.buffer.id:
+        element = 0
+    if element < 0 or (fixed.id >= 0 and fixed.key >= 0):
+        const rejection = try problem(state, span, "E_COLLECTION_METHOD", "iteration requires a collection, fixed array or dictionary view")
+        fail rejection
+    const unpack = second_name >= 0 and not enumerated
+    mut elements: int[] = []
+    if unpack:
+        const item = collection_types.schema(state.batch.facts.lists.types.collections, element)
+        if item.kind == 2:
+            elements = [item.key, item.value]
+        else:
+            const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, element)
+            if tuple.id < 0:
+                const rejection = try problem(state, span, "E_ITERATION", "two iteration names require dictionary items, enumerate, zip or a list of two-value tuples")
+                fail rejection
+            if len(tuple.elements) != 2:
+                const message = "a two-name `for` destructures a two-value tuple; this one has " + str(len(tuple.elements)) + " values — bind it with one name and destructure it in the body"
+                const rejection = try problem(state, span, "E_TUPLE_ARITY", message)
+                fail rejection
+            elements = tuple.elements
+    mut names_to_check = [name_span]
+    if second_name >= 0:
+        names_to_check = if enumerated then [name_span, second_name] else [second_name, name_span]
+    for binding_span in names_to_check:
+        const binding_name = try graph.spelling(state.syntax.pool, state.syntax.source, binding_span)
+        const declared = try top_level(state, binding_span)
+        if binding_name != b"_" and (locals.find(state.scope, binding_name) >= 0 or declared):
+            const rejection = try problem(state, binding_span, "E_SHADOWING", "iteration binding shadows an active declaration")
+            fail rejection
+    if second_name >= 0:
+        const first = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const second = try graph.spelling(state.syntax.pool, state.syntax.source, second_name)
+        if second != b"_" and first == second:
+            const rejection = try problem(state, second_name, "E_SHADOWING", "iteration names must differ")
+            fail rejection
+    const body_id = try graph.field(state.syntax.pool, each, "body")
+    const body_raw = try graph.number(state.syntax.pool, body_id)
+    mut rebound = False
+    if enumerated:
+        const position_name = try graph.spelling(state.syntax.pool, state.syntax.source, second_name)
+        rebound = try loop_assigns.assigns(loop_assigns.Context(pool=state.syntax.pool, source=state.syntax.source, nodes=state.syntax.nodes, statements=state.syntax.statements), body_raw, position_name)
+    const loop_id = state.control.next
+    state.control.next += 1
+    const request = list_iteration.Input(source=state.syntax.source, name=name_span, span=span, iterable=iterable.id, owner_type=iterable.ty, element=element, loop_id=loop_id)
+    const plan = try sequence_iteration.prepare(mut state.batch, mut state.scope, state.syntax.pool, sequence_iteration.Input(iteration=request, elements=elements, fixed=fixed, second_name=second_name, position=sequence_iteration.Position(enumerated=enumerated, rebound=rebound)))
+    const counters_before = state.control.values.counters
+    if enumerated and not rebound:
+        state.control.values.counters.append(plan.walk.index)
+    state.control.active.append(loop_id)
+    state.control.exited.append(False)
+    const before = locals_flow.snapshot(state.scope)
+    const pending_before = try pending_flow.snapshot(state.scope, len(state.scope.locals))
+    const body = try statement(mut state, body_raw)
+    state.control.values.counters = counters_before
+    if not body.terminates:
+        const difference = try pending_flow.mismatch(state.scope, pending_before)
+        _ = try obligations.consistent(state.syntax.pool, state.scope, difference, span, True, mut state.problems)
+    try pending_flow.restore(mut state.scope, pending_before)
+    const lowered = try sequence_iteration.finish(mut state.batch, mut state.scope, state.syntax.pool, plan, list_iteration.Finish(raw_statements=state.syntax.statements, raw_nodes=state.syntax.nodes, body_raw=body_raw, body=body.id))
+    locals_flow.restore(mut state.scope, before)
+    state.scope.active = plan.walk.before_active
+    const last = len(state.control.active) - 1
+    state.control.active = state.control.active[:last]
+    state.control.exited = state.control.exited[:last]
+    return lowered.payload
 
 
 func dictionary_iteration_payload(mut state: State, each: int, span: int, iterable: Expression, schema: collection_types.Schema) -> int fails syntax_value.Problem:
@@ -5758,3 +6187,96 @@ func tuple_place(mut state: State, target: int, value: int) -> int fails syntax_
         fail rejection
     const discarded = try syntax_value.integer(mut state.batch.pool, result.id)
     return try emission.statement(mut state.batch, state.syntax.pool, span, False, b"discard", discarded)
+
+
+func range_stepping(mut state: State, name: int, step_id: int, element: int) -> range_stride.Plan fails syntax_value.Problem:
+    const raw_step = try graph.get(state.syntax.pool, step_id)
+    if raw_step.kind == 0:
+        return range_stride.implicit()
+    const raw = try graph.number(state.syntax.pool, step_id)
+    const value = try expression_expected(mut state, raw, element)
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+    _ = try require(state, value.ty, element, span)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[value.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    mut known = False
+    mut bits = 0
+    if data.data == b"integer":
+        const number = try graph.get(state.batch.pool, data.children[0])
+        known = True
+        bits = number.integer
+    elif data.data == b"unary":
+        const payload = try graph.payload(state.batch.pool, data_id)
+        const op_id = try graph.field(state.batch.pool, payload, "op")
+        const op = try graph.get(state.batch.pool, op_id)
+        const operand_id = try graph.field(state.batch.pool, payload, "operand")
+        const operand = try graph.number(state.batch.pool, operand_id)
+        const operand_data_id = try graph.field(state.batch.pool, state.batch.nodes[operand], "data")
+        const operand_data = try graph.get(state.batch.pool, operand_data_id)
+        if op.data == b"neg" and operand_data.data == b"integer":
+            const number = try graph.get(state.batch.pool, operand_data.children[0])
+            known = True
+            bits = constant_value.wire(wrapping_sub(0u64, constant_value.pack(number.integer)))
+    if known and bits == 0:
+        const rejection = try problem(state, span, "E_RANGE_STEP", "range() arg 3 must not be zero")
+        fail rejection
+    return try range_stride.make(mut state.scope, list_lower.Context(input=state.syntax.pool, span=span), element, value.id, known, bits)
+
+
+func range_statement(mut state: State, payload: int, span: int) -> int fails syntax_value.Problem:
+    const name_span = try graph.field(state.syntax.pool, payload, "name")
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+    const top_level_name = try top_level(state, name_span)
+    if name != b"_" and (locals.find(state.scope, name) >= 0 or top_level_name):
+        const rejection = try problem(state, name_span, "E_SHADOWING", "iteration binding shadows an active declaration")
+        fail rejection
+    const start_id = try graph.field(state.syntax.pool, payload, "start")
+    const start_raw = try graph.number(state.syntax.pool, start_id)
+    const end_id = try graph.field(state.syntax.pool, payload, "end")
+    const end_raw = try graph.number(state.syntax.pool, end_id)
+    if start_raw < 0 or start_raw >= len(state.syntax.nodes):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid range start")
+    const start_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[start_raw], "data")
+    const start_data = try graph.get(state.syntax.pool, start_data_id)
+    mut start = Expression(id=-1, ty=0)
+    if start_data.data == b"unit":
+        const zero = try syntax_value.integer(mut state.batch.pool, 0)
+        const zero_node = try emission.node(mut state.batch, state.syntax.pool, name_span, 0, b"integer", zero)
+        start = Expression(id=zero_node, ty=0)
+    else:
+        start = try expression(mut state, start_raw)
+    const end = try expression(mut state, end_raw)
+    if not scalars.is_integer(start.ty):
+        const rejection = try problem(state, name_span, "E_TYPE", "operation requires an integer type")
+        fail rejection
+    const end_span = try graph.field(state.syntax.pool, state.syntax.nodes[end_raw], "span")
+    _ = try require(state, end.ty, start.ty, end_span)
+    const step_id = try graph.field(state.syntax.pool, payload, "step")
+    const stepping = try range_stepping(mut state, name_span, step_id, start.ty)
+    const body_id = try graph.field(state.syntax.pool, payload, "body")
+    const body_raw = try graph.number(state.syntax.pool, body_id)
+    const rebound = try loop_assigns.assigns(loop_assigns.Context(pool=state.syntax.pool, source=state.syntax.source, nodes=state.syntax.nodes, statements=state.syntax.statements), body_raw, name)
+    const active = state.scope.active
+    const loop_id = state.control.next
+    state.control.next = loop_id + 1
+    const request = range_lower.Input(source=state.syntax.source, name=name_span, span=span, start=start.id, end=end.id, loop_id=loop_id)
+    const plan = try range_lower.prepare_typed(mut state.batch, mut state.scope, state.syntax.pool, range_lower.TypedInput(request=request, ty=start.ty, stepping=stepping, rebound=rebound))
+    if not rebound and range_stride.is_ascending(stepping):
+        const nonnegative = try array_index.nonnegative(state.batch, state.control.values.counters, start.id, 0)
+        if nonnegative:
+            state.control.values.counters.append(plan.index)
+    state.control.active.append(loop_id)
+    state.control.exited.append(False)
+    const before = locals_flow.snapshot(state.scope)
+    const pending_before = try pending_flow.snapshot(state.scope, len(state.scope.locals))
+    const body = try statement(mut state, body_raw)
+    if not body.terminates:
+        const difference = try pending_flow.mismatch(state.scope, pending_before)
+        _ = try obligations.consistent(state.syntax.pool, state.scope, difference, span, True, mut state.problems)
+    try pending_flow.restore(mut state.scope, pending_before)
+    locals_flow.restore(mut state.scope, before)
+    const last = len(state.control.active) - 1
+    state.control.active = state.control.active[:last]
+    state.control.exited = state.control.exited[:last]
+    state.scope.active = active
+    return try range_lower.finish_typed(mut state.batch, mut state.scope, state.syntax.pool, plan, body.id)

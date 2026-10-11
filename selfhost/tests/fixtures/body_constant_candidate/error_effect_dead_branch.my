@@ -1,0 +1,10 @@
+func f() -> int effects(output):
+    print("bad")
+    return 3
+
+
+const VALUE: int = if False then f() else 7
+
+
+func main() -> int:
+    return 7

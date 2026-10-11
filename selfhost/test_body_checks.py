@@ -54,8 +54,8 @@ def main():
     for release in (False,True):
         flags=['--release','--verify-facts'] if release else []
         for source,count in roots:
-            if source.name == 'profile_tests.my':
-                # Exercise the real two-million-row boundary in this test child.
+            if source.name in ('profile_tests.my', 'constant_eval_tests.my'):
+                # Exercise the real row and evaluator work boundaries in this child.
                 # Installed compiler requests retain their separate limits.
                 budget = ['--max-steps', '500000000', '--max-memory', '1G']
             else:

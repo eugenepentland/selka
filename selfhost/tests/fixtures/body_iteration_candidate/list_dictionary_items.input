@@ -1,0 +1,7 @@
+func main() -> int:
+    const mapping = {1: 2, 2: 2}
+    const pairs = list(mapping.items())
+    mut total = 0
+    for key, value in pairs:
+        total += key + value
+    return total

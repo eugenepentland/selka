@@ -1,0 +1,12 @@
+func f() -> int:
+    mut total = 0
+    for i in range(0u8, 6u8, 1i16):
+        total += int(i)
+    return total
+
+
+const VALUE: int = f()
+
+
+func main() -> int:
+    return 0

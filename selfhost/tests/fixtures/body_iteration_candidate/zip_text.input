@@ -1,0 +1,5 @@
+func main() -> int:
+    mut total = 0
+    for a, b in zip("ab", "cd"):
+        total += len(a) + len(b)
+    return total + 3

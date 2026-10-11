@@ -1,0 +1,13 @@
+func f(step: int) -> int:
+    mut total = 0
+    for i in range(0, 6, step):
+        total += int(i)
+    return total
+
+
+const VALUE: int = f(2)
+
+
+func main() -> int:
+    assert VALUE == 6
+    return 7

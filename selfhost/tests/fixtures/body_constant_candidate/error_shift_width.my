@@ -1,0 +1,5 @@
+const A: u8 = shift_left(1u8, 8u8)
+
+
+func main() -> int:
+    return 0

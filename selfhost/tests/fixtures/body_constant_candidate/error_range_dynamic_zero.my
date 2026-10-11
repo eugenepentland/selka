@@ -1,0 +1,12 @@
+func f(step: int) -> int:
+    mut total = 0
+    for i in range(0, 6, step):
+        total += int(i)
+    return total
+
+
+const VALUE: int = f(0)
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,9 @@
+const A: u64 = 18446744073709551615u64
+
+
+const B: int = int(7u8)
+
+
+func main() -> int:
+    assert A > 9223372036854775807u64
+    return B

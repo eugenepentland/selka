@@ -1,0 +1,6 @@
+const VALUE: float = 1.0000000000000002
+
+
+func main() -> int:
+    _ = VALUE
+    return 7

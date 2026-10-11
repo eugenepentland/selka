@@ -1,0 +1,18 @@
+func f(n: int) -> int:
+    mut i = 0
+    mut total = 0
+    while i < n:
+        i += 1
+        if i == 2:
+            continue
+        total += i
+        if total >= 7:
+            break
+    return total
+
+
+const A: int = f(10)
+
+
+func main() -> int:
+    return A

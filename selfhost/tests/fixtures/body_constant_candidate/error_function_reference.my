@@ -1,0 +1,9 @@
+func f() -> int:
+    return 3
+
+
+const VALUE: int = f
+
+
+func main() -> int:
+    return 7

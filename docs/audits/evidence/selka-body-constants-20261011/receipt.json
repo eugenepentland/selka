@@ -1,0 +1,133 @@
+{
+  "source_commit": "3a75ed2916e67d8c133848497c6d25f46571329c",
+  "foundation": "4069e037eda8ff101b90dfcd9af925b888bfbac1",
+  "thin_statement_fix": "f47c2d72f6105123fc3dcd1800bce12525071bb3",
+  "body_schema": 10,
+  "host_path": "/home/epentland/ai/canopy/.selka-agent-cache/body-structural-b10/4069-prefix/bin/mylang",
+  "host_sha256": "65b5c4b61ea02208b285376313f9ab868ccbe8771d9405ec9016e8d2e6eff7df",
+  "coordinator_sha256": "0f9d930c1fe57b4e3a5f33d1204b2fe52c5bb5b471198b0daec297f2d1319974",
+  "qualified_seed_path": "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang",
+  "qualified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "packages": {
+    "body-check": {
+      "artifact": "body-check-55fef067d3c1b4e35d5ac105feb496be675e8507abc894b1b95fdb9a421d65d6",
+      "component": "body-check",
+      "format": 1,
+      "key": "fdab24233e99a93f73210c0ec5ae84a6e28d03d309cb23e8c35486f0153dce01",
+      "protocol": 1,
+      "schema": 10,
+      "sha256": "55fef067d3c1b4e35d5ac105feb496be675e8507abc894b1b95fdb9a421d65d6"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "636922f37986e139ad7b03c4842bfa795bd9aac76484777de09c8106bae87a66",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "abd37cad83dfefdf977fc25f1d88debc7410047ad0def0c3186bb3660bf9aea1",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "f0cb6c124ae9541ef5ca389872a5d81b6fac1a4033912755a3e37f3a7eebae36",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-db6d58afbb6827003f690fa7ae2916fe018b9f0261b1c67dc77ee6b4deda9eff",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "077b2698e6fbe1b6ca4fb24175760806f5f03823950cfb0296760517e1f49b2b",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "db6d58afbb6827003f690fa7ae2916fe018b9f0261b1c67dc77ee6b4deda9eff"
+    },
+    "test-index": {
+      "artifact": "test-index-268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530",
+      "component": "test-index",
+      "format": 1,
+      "key": "9d1b1240f2a85a2e56a500485df15efe828a04caa6f1d5a9ce1b216f2cf06278",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530"
+    },
+    "type-interface": {
+      "artifact": "type-interface-b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717",
+      "component": "type-interface",
+      "format": 1,
+      "key": "4f1de862972c0bcfcfa79d0cd96f8b9914e7a803d8ada8fba68d901e7d1e6577",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717"
+    }
+  },
+  "selected_qualification": {
+    "fixtures": 136,
+    "success": 70,
+    "diagnostic": 66,
+    "normal_operations": 1236,
+    "release_operations": 1236,
+    "failed": 0,
+    "skipped": 0,
+    "profiles": 0
+  },
+  "pure_suite": {
+    "status": "queued",
+    "modules": 88,
+    "tests_per_mode": 532,
+    "session": 83126
+  },
+  "limitations": [
+    "Selected source functionality only; no entire compiler/bootstrap or performance completion claim.",
+    "Integrated array/capability annotations in rejected source signatures and valid chained-constant controls remain separate integration qualification work."
+  ],
+  "reports": {
+    "selected-normal.json.gz": "3f3fe025e0fabcd376b37f523fde5cd158729f33257e327e2f3ee8fa929c7671",
+    "selected-release.json.gz": "46096d480993b76998b527569eb36ff4d63ad70543cb25568f0ca243a4c44ed6",
+    "producer-source.json.gz": "179df488c52fbb654f2d0bdb05fbf242956b0b3d91f714842e9fa0f553229343",
+    "body-package-receipt.json.gz": "9384d9859190760d63c51f6b2693e7ff1b3beee3c19bd736ff5947106337bf0b",
+    "prior-first-full.json.gz": "15f633c23469bb686995f35f3cd31a4918dd82ca25b97771232d368e24b0d601",
+    "prior-range-first-full.json.gz": "411023194b06434c8d1331729cd7165c03677de97cb7615c2223da40c952c8b3",
+    "prior-final-normal.json.gz": "eda85f69de478d273be1d84d9e608c4b53c123f6c54f196532ea71c6b7243362",
+    "prior-final-release.json.gz": "f5129fd174a689c5af46e66c108acc85380705aae5858bebf58b05593f2df28d",
+    "prior-focused-final.log.gz": "58868fe5a1e579f415384a38a62574ae72dd8bd3010f8b141cfab25d8ce28910",
+    "prior-focused-catalog2.log.gz": "d9998aa987c03acba4cd26e9fdc4f1ce6935cd57ba21506c294d79d34ecddb85",
+    "prior-pure-final-cancel-reason.txt.gz": "90b82c385c593deed37c39073d90b8bb5645abfdf0e85ec37c3dd905f2908391",
+    "prior-install-lookup-final.log.gz": "70a7155ff617c9f04fab3244f0c814eef5383b1e30bf3ed5b4c1551334235393",
+    "prior-commit-source.log.gz": "bb985af514879bd42f48a40e923077f7668255a653ce4ff65f23350c80898550",
+    "prior-commit-lookup.log.gz": "431fb5a7a43994fcd247577105308b93805aabebd9fe32c3b58fdbd0ec8d1651",
+    "run_body_constant_admission.py.gz": "bc56a93b811a1c307f232ca5b7ac22c324a71db39d6ac4e76149955d468c0ff3",
+    "producer_suites_bounded.py.gz": "a3c46d95f427ea1d24224a1a08d3b6b5f8bdbcfca9c53227fe4791244d1fa29f",
+    "range_dynamic.my.selected-request.bin.gz": "3e239e54619378295a427192199ae70a65f800c9f13e12e541708d5bcea186db",
+    "range_dynamic.my.selected-reply.bin.gz": "977d223997cfd48afddda2c5974d88ac64ed574497ba233f6d15cfa65f88deaf",
+    "range_dynamic.my.prior-request.bin.gz": "bbf77225ebbc8df9805659d576dafbdb5bce9a9e3e5233bb44876101081dbdef",
+    "range_dynamic.my.prior-reply.bin.gz": "9cc5ebf44c61732c7f619b58cf2059fdcf16ebc414d02f0e1e80b6b448c1eeb5",
+    "range_dynamic.my.prior-native.bin.gz": "69db440aea30657e0200730d6e37cb1a018e5d34afbdba3b9a7d743a76ffa530",
+    "range_dynamic.my.prior-canonical-diff.json.gz": "d7f7b97bb48681aefe2a075f929beeaa6dfed617c008aadeb7ddb6c065a0640d",
+    "range_dynamic_descending.my.selected-request.bin.gz": "8a13b99192756805f9c55dad64d385c47678ae0702e6e7505b1c19f41a7dbe36",
+    "range_dynamic_descending.my.selected-reply.bin.gz": "25b01d5d299daed328d10b58552ca459e18bc5963d40d3f5be224df695320a40",
+    "range_dynamic_descending.my.prior-request.bin.gz": "52dc159b5e3015bb20317a00ac16cd22c67cc75f6e98e8cfae4d8e517314e031",
+    "range_dynamic_descending.my.prior-reply.bin.gz": "b001d77336fa3ff43c452172e28ccc926fbd0978832f7528369f26e37bebe680",
+    "range_dynamic_descending.my.prior-native.bin.gz": "3ea8891bdeaf7cdef523355e4438860bdc34ab586b2850e82d4c13aac453e9da",
+    "range_dynamic_descending.my.prior-canonical-diff.json.gz": "d7f7b97bb48681aefe2a075f929beeaa6dfed617c008aadeb7ddb6c065a0640d",
+    "range_unsigned_dynamic.my.selected-request.bin.gz": "b453e5724a108110eb44f847cb7db58c4329e10af7b70e844db67bd2e58788ed",
+    "range_unsigned_dynamic.my.selected-reply.bin.gz": "95f3e01c3bd399a82d7069dc87b3c6b130bd0f03a9469088778494115d41ec41",
+    "range_unsigned_dynamic.my.prior-request.bin.gz": "3b6c88a59c8d9011ca9ad61c3e63628e1803e1684aee900e3472f42b17b11ecd",
+    "range_unsigned_dynamic.my.prior-reply.bin.gz": "515ef6684a447bfca8629a0884e0452b58141c3b5727e0141961e550a7766d36",
+    "range_unsigned_dynamic.my.prior-native.bin.gz": "13216de3848c955ba61a89b91afc06a099e02b453469cbb83b622feb424dd946",
+    "range_unsigned_dynamic.my.prior-canonical-diff.json.gz": "e1798b77e736d0447a5abf9e00cccd1973f1fe29ba959f76239125bb9d7f1580",
+    "canonical-final.json.gz": "2fe16c4db90d30f65fec154f460dffa1a59bfd3875f9ab3a1d0310745b19d3f7"
+  }
+}

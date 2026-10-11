@@ -1,0 +1,7 @@
+func main() -> int:
+    mut values = [3, 4]
+    mut total = 0
+    for value in reversed(values):
+        values[0] = 3
+        total += value
+    return total

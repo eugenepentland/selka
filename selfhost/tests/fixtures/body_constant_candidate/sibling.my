@@ -1,0 +1,9 @@
+const FIRST: u8 = 1 + 6u8
+
+
+const SECOND: u8 = u8(-(-7i8))
+
+
+func main() -> int:
+    assert FIRST == SECOND
+    return int(FIRST)

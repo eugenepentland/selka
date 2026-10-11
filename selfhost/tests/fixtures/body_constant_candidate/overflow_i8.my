@@ -1,0 +1,5 @@
+const VALUE: i8 = 127 + 1
+
+
+func main() -> int:
+    return 0

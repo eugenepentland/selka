@@ -1,0 +1,9 @@
+func f(value: byte_buffer) -> int:
+    return len(value)
+
+
+const VALUE: int = f(0)
+
+
+func main() -> int:
+    return VALUE

@@ -1,0 +1,14 @@
+enum Status:
+    ok
+    missing
+
+
+func f(value: [Status]int) -> int:
+    return value[Status.ok]
+
+
+const VALUE: int = f(0)
+
+
+func main() -> int:
+    return VALUE

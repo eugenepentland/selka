@@ -1,0 +1,12 @@
+const A: u8 = saturating_add(255u8, 8u8)
+
+
+const B: i8 = saturating_sub(-128i8, 1i8)
+
+
+const C: u8 = saturating_mul(200u8, 2u8)
+
+
+func main() -> int:
+    assert A == 255u8 and B == -128i8 and C == 255u8
+    return 7

@@ -1,0 +1,5 @@
+const A: bool = False and UNKNOWN
+
+
+func main() -> int:
+    return 0

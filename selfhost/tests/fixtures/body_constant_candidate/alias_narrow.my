@@ -1,0 +1,9 @@
+type Small = u8
+
+
+const VALUE: Small = 1 + 2u8
+
+
+func main() -> int:
+    assert VALUE == 3u8
+    return 7

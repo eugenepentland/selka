@@ -1,0 +1,16 @@
+const HIDDEN: u8 = 2u8
+
+
+public const TOTAL: u8 = HIDDEN + 4u8
+
+
+public func twice(x: int) -> int:
+    return x * 2
+
+
+public record Shape:
+    value: int
+
+
+func hidden_function() -> int:
+    return 3

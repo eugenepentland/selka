@@ -1,0 +1,8 @@
+func main() -> int:
+    mut left = [1, 2]
+    const right = [2, 2]
+    mut total = 0
+    for first, second in zip(left, right):
+        left[1] = 2
+        total += first + second
+    return total

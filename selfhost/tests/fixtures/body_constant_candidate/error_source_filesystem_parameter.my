@@ -1,0 +1,9 @@
+func f(value: Filesystem) -> int:
+    return 7
+
+
+const VALUE: int = f(0)
+
+
+func main() -> int:
+    return VALUE

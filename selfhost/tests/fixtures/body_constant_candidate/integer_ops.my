@@ -1,0 +1,9 @@
+const A: int = -7 // 3
+
+
+const B: int = -7 % 3
+
+
+func main() -> int:
+    assert A == -3 and B == 2
+    return 7

@@ -1,0 +1,5 @@
+const VALUE: int = absent.MISSING
+
+
+func main() -> int:
+    return 7

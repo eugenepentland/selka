@@ -1,0 +1,12 @@
+func f(flag: bool, x: u8) -> bool:
+    if flag:
+        return x > 3u8
+    return False
+
+
+const VALUE: bool = f(True, 4u8)
+
+
+func main() -> int:
+    assert VALUE
+    return 7

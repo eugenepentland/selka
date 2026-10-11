@@ -4,6 +4,7 @@ import emission
 import locals
 import list_lower
 import buffer_lower
+import array_types
 
 public record Input:
     source: bytes
@@ -94,6 +95,24 @@ func rooted(scan: Scan, id: int) -> bool fails syntax_value.Problem:
         else:
             return False
     return True
+
+
+func assignment_effects(scan: Scan, target: int, depth: int) -> Effects fails syntax_value.Problem:
+    if depth >= 64:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="iteration assignment target exceeds the structural depth budget")
+    const data = try raw_data(scan, target, False)
+    const payload = data.children[0]
+    if data.data == b"tuple":
+        const parts = try graph.items(scan.input, payload)
+        mut result = Effects(rebinds=False, changes=False)
+        for part in parts:
+            const raw = try graph.number(scan.input, part)
+            const child = try assignment_effects(scan, raw, depth + 1)
+            result.rebinds = result.rebinds or child.rebinds
+            result.changes = result.changes or child.changes
+        return result
+    const changes = try rooted(scan, target)
+    return Effects(rebinds=changes and data.data == b"name", changes=changes)
 
 
 func append_number(mut work: int[], pool: syntax_value.Pool, value: int, name: str) -> Unit fails syntax_value.Problem:
@@ -252,9 +271,12 @@ func effects(scan: Scan) -> Effects fails syntax_value.Problem:
                 try append_ids(mut nodes, scan.input, extracted_23)
             elif tag == b"field_assignment" or tag == b"index_assignment":
                 const target = try field_number(scan.input, payload, "target")
-                const extracted_24 = try rooted(scan, target)
-                if extracted_24:
-                    result.changes = True
+                const changed = try assignment_effects(scan, target, 0)
+                result.changes = result.changes or changed.changes
+                const op_id = try graph.field(scan.input, payload, "op")
+                const op = try graph.get(scan.input, op_id)
+                if op.data == b"set":
+                    result.rebinds = result.rebinds or changed.rebinds
                 nodes.append(target)
                 try append_number(mut nodes, scan.input, payload, "value")
             elif tag == b"binary":
@@ -480,6 +502,18 @@ func rebuild(mut batch: emission.Batch, mut scope: locals.Scope, context: list_l
         const fields = try syntax_value.object(mut batch.pool, ["base", "index"], [first, second])
         const ty = try field_number(batch.pool, node, "ty")
         return try emission.node(mut batch, context.input, context.span, ty, b"field", fields)
+    if data.data == b"index":
+        const base = try field_number(batch.pool, payload, "base")
+        const rebuilt = try rebuild(mut batch, mut scope, context, mut path, base, depth + 1)
+        const index = try field_number(batch.pool, payload, "index")
+        const at = try spill(mut batch, mut scope, context, mut path, index)
+        const from_end_id = try graph.field(batch.pool, payload, "from_end")
+        const from_end = try graph.clone(mut batch.pool, batch.pool, from_end_id, 0)
+        const first = try syntax_value.integer(mut batch.pool, rebuilt)
+        const second = try syntax_value.integer(mut batch.pool, at)
+        const fields = try syntax_value.object(mut batch.pool, ["base", "index", "from_end"], [first, second, from_end])
+        const ty = try field_number(batch.pool, node, "ty")
+        return try emission.node(mut batch, context.input, context.span, ty, b"index", fields)
     if data.data == b"buffer_operation":
         const owner = try field_number(batch.pool, payload, "owner")
         const base = try initializer(batch, scope, owner)
@@ -552,19 +586,24 @@ public func source(mut batch: emission.Batch, mut scope: locals.Scope, input: sy
     mut growing = False
     mut path = Path(setup=[], refresh=[])
     const text_source = plan.request.owner_type == batch.facts.string_type or plan.request.owner_type == batch.facts.bytes_type
+    const fixed = array_types.schema(batch.facts.lists.types.arrays, plan.request.owner_type).id >= 0
+    mut refresh_source = False
     if root >= 0 and not text_source:
         const scan = Scan(input=input, source=plan.request.source, nodes=body.raw_nodes, statements=body.raw_statements, name=scope.locals[root].name, body=body.body_raw, expressions=body.expressions)
         const writes = try effects(scan)
-        if writes.rebinds:
+        if writes.rebinds and fixed:
+            scope.locals[plan.owner].origin = b"iteration"
+        elif writes.rebinds:
             const copy = try list_lower.access(mut batch, mut scope, context, list_lower.Access(base=source_value, owner_type=plan.request.owner_type, kind=b"copy", arguments=[], result_type=plan.request.owner_type, signed_length=False))
             const extracted_34 = try list_lower.append(mut batch, context, copy)
             source_value = extracted_34
         elif writes.changes:
             source_value = try rebuild(mut batch, mut scope, context, mut path, plan.request.iterable, 0)
             scope.locals[root].usage.reads = scope.locals[root].usage.reads + 1
-            growing = True
+            growing = not fixed
+            refresh_source = True
     const setup_owner = try list_lower.store(mut batch, context, plan.owner, source_value, True)
-    if growing:
+    if refresh_source:
         const extracted_36 = try list_lower.store(mut batch, context, plan.owner, source_value, False)
         path.refresh.append(extracted_36)
     path.setup.append(setup_owner)
@@ -618,3 +657,14 @@ public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: sy
     path.setup.append(loop_statement)
     const extracted_37 = try emission.ids(mut batch, path.setup)
     return list_lower.Lowered(ty=15, tag=b"block", payload=extracted_37)
+
+
+public func stable_array_local(batch: emission.Batch, scope: locals.Scope, input: syntax_value.Pool, plan: Plan, body: SourceBody) -> int fails syntax_value.Problem:
+    const data_id = try graph.field(batch.pool, batch.nodes[plan.request.iterable], "data")
+    const data = try graph.get(batch.pool, data_id)
+    if data.data != b"local":
+        return -1
+    const slot = try graph.number(batch.pool, data.children[0])
+    const scan = Scan(input=input, source=plan.request.source, nodes=body.raw_nodes, statements=body.raw_statements, name=scope.locals[slot].name, body=body.body_raw, expressions=body.expressions)
+    const writes = try effects(scan)
+    return if writes.rebinds then - 1 else slot

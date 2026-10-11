@@ -1,0 +1,46 @@
+import syntax_value
+import emission
+import locals
+import list_iteration
+import sequence_iteration
+import array_types
+
+record Fixture:
+    pool: syntax_value.Pool
+    span: int
+    first: int
+    second: int
+
+
+func fixture() -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 11)
+    const first = try syntax_value.span(mut pool, 0, 5)
+    const second = try syntax_value.span(mut pool, 6, 11)
+    return Fixture(pool=pool, span=span, first=first, second=second)
+
+
+func prepare(fixed: bool, enumerated: bool, rebound: bool) -> locals.Scope fails syntax_value.Problem:
+    const value = try fixture()
+    mut batch = emission.empty()
+    mut scope = locals.empty()
+    const array = array_types.Array(id=if fixed then 21 else -1, element=0, length=3, key=-1)
+    const input = list_iteration.Input(source=b"first other", name=value.second, span=value.span, iterable=0, owner_type=21, element=22, loop_id=3)
+    _ = try sequence_iteration.prepare(mut batch, mut scope, value.pool, sequence_iteration.Input(iteration=input, elements=[0, 1], fixed=array, second_name=value.first, position=sequence_iteration.Position(enumerated=enumerated, rebound=rebound)))
+    return scope
+
+
+public func test_managed_pair_allocates_owner_counter_limit_and_two_members() -> bool fails syntax_value.Problem:
+    const scope = try prepare(False, False, False)
+    return len(scope.locals) == 5 and scope.active == [3, 4] and scope.locals[3].name == b"first" and scope.locals[3].ty == 0 and scope.locals[4].name == b"other" and scope.locals[4].ty == 1 and not scope.locals[3].mutable and scope.locals[3].origin == b"iteration"
+
+
+public func test_fixed_pair_defers_owner_until_after_body() -> bool fails syntax_value.Problem:
+    const scope = try prepare(True, False, False)
+    return len(scope.locals) == 4 and scope.active == [2, 3] and scope.locals[0].ty == 0 and scope.locals[1].ty == 0 and scope.locals[2].name == b"first" and scope.locals[3].name == b"other"
+
+
+public func test_enumeration_reuses_readonly_counter_unless_body_assigns_it() -> bool fails syntax_value.Problem:
+    const stable = try prepare(False, True, False)
+    const rebound = try prepare(False, True, True)
+    return len(stable.locals) == 4 and stable.active == [3, 1] and stable.locals[1].name == b"first" and not stable.locals[1].mutable and len(rebound.locals) == 5 and rebound.active == [3, 4] and rebound.locals[4].name == b"first" and rebound.locals[1].name == b"<collection>"

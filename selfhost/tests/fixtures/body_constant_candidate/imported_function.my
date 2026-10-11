@@ -1,0 +1,8 @@
+import modules.constant_support as support
+
+const VALUE: int = support.twice(3)
+
+
+func main() -> int:
+    assert VALUE == 6
+    return 7

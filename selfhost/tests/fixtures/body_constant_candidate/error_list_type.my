@@ -1,0 +1,5 @@
+const VALUE: int[] = 1
+
+
+func main() -> int:
+    return 7

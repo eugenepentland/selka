@@ -1,0 +1,16 @@
+func f(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        if i == 3:
+            continue
+        if i == 5:
+            break
+        total += i
+    return total
+
+
+const A: int = f(10)
+
+
+func main() -> int:
+    return A

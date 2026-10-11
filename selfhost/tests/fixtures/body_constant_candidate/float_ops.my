@@ -1,0 +1,22 @@
+const A: float = 0.1 + 0.2
+
+
+const B: float = -7.5 // 2.0
+
+
+const C: float = -7.5 % 2.0
+
+
+const D: float = 1 / 2
+
+
+const E: float = 2
+
+
+const F: float = (A * E - D) / E
+
+
+func main() -> int:
+    assert A > 0.3 and B == -4.0 and C == 0.5 and D == 0.5
+    _ = F
+    return 7

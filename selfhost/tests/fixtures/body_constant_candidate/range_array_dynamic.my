@@ -1,0 +1,11 @@
+func sum(step: int) -> int:
+    const values = FixedArray[int, 4]([1, 2, 3, 4])
+    mut total = 0
+    for index in range(0, len(values), step):
+        total += values[index]
+    return total
+
+
+func main() -> int:
+    assert sum(2) == 4
+    return 7

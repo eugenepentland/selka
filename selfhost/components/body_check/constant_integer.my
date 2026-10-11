@@ -1,0 +1,165 @@
+import constant_value
+import syntax_value
+
+func reject(site: syntax_value.Problem, message: str) -> syntax_value.Problem:
+    return syntax_value.Problem(code="E_CONSTANT_ARITHMETIC", start=site.start, end=site.end, message=message)
+
+
+public func overflow(site: syntax_value.Problem) -> syntax_value.Problem:
+    return reject(site, "constant arithmetic overflows its integer type")
+
+
+public func cast(ty: int, value: constant_value.Value, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    if not constant_value.integer(ty):
+        fail reject(site, "constant operation requires matching scalar operand types")
+    const negative = constant_value.negative(value)
+    const magnitude = constant_value.magnitude(value)
+    if negative:
+        if not constant_value.signed(ty) or magnitude > constant_value.sign_bit(ty):
+            fail overflow(site)
+    elif magnitude > constant_value.maximum(ty).bits:
+        fail overflow(site)
+    return constant_value.Value(ty=ty, bits=value.bits)
+
+
+public func negate(value: constant_value.Value, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    const magnitude = constant_value.magnitude(value)
+    if not constant_value.negative(value):
+        if (not constant_value.signed(value.ty) and magnitude != 0u64) or (constant_value.signed(value.ty) and magnitude > constant_value.sign_bit(value.ty)):
+            fail overflow(site)
+    elif magnitude > constant_value.maximum(value.ty).bits:
+        fail overflow(site)
+    return constant_value.Value(ty=value.ty, bits=wrapping_sub(0u64, value.bits))
+
+
+func ordered(left: constant_value.Value, right: constant_value.Value) -> int:
+    const first = constant_value.negative(left)
+    const last = constant_value.negative(right)
+    if first != last:
+        if first:
+            return -1
+        return 1
+    if left.bits == right.bits:
+        return 0
+    if left.bits < right.bits:
+        return -1
+    return 1
+
+
+func add(left: constant_value.Value, right: constant_value.Value, subtract: bool, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    mut bits = wrapping_add(left.bits, right.bits)
+    if subtract:
+        bits = wrapping_sub(left.bits, right.bits)
+    if not constant_value.signed(left.ty):
+        if (subtract and left.bits < right.bits) or (not subtract and right.bits > constant_value.maximum(left.ty).bits - left.bits):
+            fail overflow(site)
+    else:
+        const first = constant_value.negative(left)
+        const last = constant_value.negative(right)
+        const result = bits >= 9223372036854775808u64
+        if (not subtract and first == last and first != result) or (subtract and first != last and first != result):
+            fail overflow(site)
+        const value = constant_value.Value(ty=0, bits=bits)
+        return try cast(left.ty, value, site)
+    return constant_value.Value(ty=left.ty, bits=bits)
+
+
+func multiply(left: constant_value.Value, right: constant_value.Value, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    const first = constant_value.magnitude(left)
+    const last = constant_value.magnitude(right)
+    const negative = constant_value.negative(left) != constant_value.negative(right)
+    mut limit = constant_value.maximum(left.ty).bits
+    if negative:
+        limit = constant_value.sign_bit(left.ty)
+    if first != 0u64 and last > limit // first:
+        fail overflow(site)
+    mut bits = first * last
+    if negative:
+        bits = wrapping_sub(0u64, bits)
+    return constant_value.Value(ty=left.ty, bits=bits)
+
+
+func divide(left: constant_value.Value, right: constant_value.Value, floor: bool, remainder: bool, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    const first = constant_value.magnitude(left)
+    const last = constant_value.magnitude(right)
+    if last == 0u64:
+        fail reject(site, "constant arithmetic divides by zero")
+    const different = constant_value.negative(left) != constant_value.negative(right)
+    const residual = first % last
+    mut magnitude = first // last
+    mut negative = different
+    if floor and different and residual != 0u64:
+        magnitude = magnitude + 1u64
+    if remainder:
+        magnitude = residual
+        negative = constant_value.negative(left)
+        if floor and different and residual != 0u64:
+            magnitude = last - residual
+            negative = constant_value.negative(right)
+    mut limit = constant_value.maximum(left.ty).bits
+    if negative:
+        limit = constant_value.sign_bit(left.ty)
+    if magnitude > limit:
+        fail overflow(site)
+    mut bits = magnitude
+    if negative:
+        bits = wrapping_sub(0u64, bits)
+    return constant_value.Value(ty=left.ty, bits=bits)
+
+
+public func binary(op: bytes, left: constant_value.Value, right: constant_value.Value, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    const order = ordered(left, right)
+    if op == b"eq" or op == b"ne" or op == b"lt" or op == b"le" or op == b"gt" or op == b"ge":
+        const holds = (op == b"eq" and order == 0) or (op == b"ne" and order != 0) or (op == b"lt" and order < 0) or (op == b"le" and order <= 0) or (op == b"gt" and order > 0) or (op == b"ge" and order >= 0)
+        mut bits = 0u64
+        if holds:
+            bits = 1u64
+        return constant_value.Value(ty=1, bits=bits)
+    if op == b"add" or op == b"sub":
+        return try add(left, right, op == b"sub", site)
+    if op == b"mul":
+        return try multiply(left, right, site)
+    if op == b"div" or op == b"rem" or op == b"floor_div" or op == b"floor_rem":
+        return try divide(left, right, op == b"floor_div" or op == b"floor_rem", op == b"rem" or op == b"floor_rem", site)
+    mut bits = 0u64
+    if op == b"bit_and":
+        bits = bit_and(left.bits, right.bits)
+    elif op == b"bit_or":
+        bits = bit_or(left.bits, right.bits)
+    elif op == b"bit_xor":
+        bits = bit_xor(left.bits, right.bits)
+    elif op == b"shift_left" or op == b"shift_right":
+        if constant_value.negative(right) or right.bits >= u64(constant_value.width(left.ty)):
+            fail reject(site, "constant shift count is outside its integer width")
+        if op == b"shift_left":
+            bits = shift_left(left.bits, right.bits)
+        elif constant_value.negative(left):
+            bits = constant_value.pack(shift_right(constant_value.wire(left.bits), int(right.bits)))
+        else:
+            bits = shift_right(left.bits, right.bits)
+    elif op == b"wrapping_add":
+        bits = wrapping_add(left.bits, right.bits)
+    elif op == b"wrapping_sub":
+        bits = wrapping_sub(left.bits, right.bits)
+    elif op == b"wrapping_mul":
+        bits = wrapping_mul(left.bits, right.bits)
+    elif op == b"saturating_add" or op == b"saturating_sub" or op == b"saturating_mul":
+        mut result = left
+        match saturate(op, left, right, site):
+            case Ok(value):
+                result = value
+            case Err(unused):
+                const negative = (op == b"saturating_mul" and constant_value.negative(left) != constant_value.negative(right)) or (op == b"saturating_add" and constant_value.negative(left)) or (op == b"saturating_sub" and order < 0)
+                result = constant_value.maximum(left.ty)
+                if negative:
+                    result = constant_value.minimum(left.ty)
+        return result
+    else:
+        fail reject(site, "constant operation requires matching scalar operand types")
+    return constant_value.normalize(left.ty, bits)
+
+
+func saturate(op: bytes, left: constant_value.Value, right: constant_value.Value, site: syntax_value.Problem) -> constant_value.Value fails syntax_value.Problem:
+    if op == b"saturating_mul":
+        return try multiply(left, right, site)
+    return try add(left, right, op == b"saturating_sub", site)

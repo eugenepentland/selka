@@ -1,0 +1,5 @@
+func main() -> int:
+    mut total = 0
+    for value in reversed("abcd"):
+        total += len(value)
+    return total + 3

@@ -1,0 +1,12 @@
+const LO: i8 = -128
+
+
+const HI: i8 = 127
+
+
+const VALUE: i8 = 3 * 2 + 1
+
+
+func main() -> int:
+    assert LO <= VALUE and VALUE <= HI
+    return int(VALUE)

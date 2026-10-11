@@ -1,0 +1,15 @@
+const A: u8 = bit_or(bit_and(255u8, 7u8), 0u8)
+
+
+const B: i8 = shift_right(-128i8, 7i8)
+
+
+const C: u8 = shift_left(127u8, 1u8)
+
+
+const D: u8 = bit_xor(255u8, 248u8)
+
+
+func main() -> int:
+    assert A == D and B == -1i8 and C == 254u8
+    return int(A)

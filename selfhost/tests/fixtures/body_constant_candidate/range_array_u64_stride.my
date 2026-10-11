@@ -1,0 +1,7 @@
+func main() -> int:
+    const values = FixedArray[int, 1]([7])
+    mut total = 0
+    for index in range(0u64, 1u64, 9223372036854775808u64):
+        total += values[index]
+    assert total == 7
+    return total

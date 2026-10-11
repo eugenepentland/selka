@@ -1,0 +1,12 @@
+type First = u16
+
+
+type Second = First
+
+
+const VALUE: Second = 300 + 2u16
+
+
+func main() -> int:
+    assert VALUE == 302u16
+    return 7
