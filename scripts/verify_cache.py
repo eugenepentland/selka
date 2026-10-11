@@ -39,6 +39,11 @@ from verification_process import BoundedProcessLogs, ProcessLimits, terminate_ow
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = 1
+INVENTORY_VERSION = 2
+# Explicit review of the complete CONFIG_INPUTS-only closure, without the
+# declarative list file. None keeps every action conservatively broad. Never
+# auto-update this qualification after consumer changes.
+DECLARATIVE_CONFIG_SHA256 = None
 RETRY = 75
 MAX_RECORD = 32 * 1024 * 1024
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
@@ -132,9 +137,27 @@ def save_receipt(path: Path, action_key: str) -> None:
 
 def inventory(path: Path) -> dict:
     value = read_record(path)
-    if (not value or type(value.get("version")) is not int or value["version"] != VERSION
+    if (not value or type(value.get("version")) is not int or value["version"] != INVENTORY_VERSION
             or value.get("required_targets") != ["test", "fmt-check"]):
         raise VerificationError("invalid or unsupported verification inventory")
+    if set(value) != {"version", "required_targets", "groups", "input_lists", "configuration", "coverage", "action_metadata"}:
+        raise VerificationError("unsupported inventory fields")
+    controls = value.get("configuration")
+    if (not isinstance(controls, dict) or set(controls) != {"filtered", "rerun", "optimize"}
+            or type(controls["filtered"]) is not bool or type(controls["rerun"]) is not bool
+            or not isinstance(controls["optimize"], str) or not controls["optimize"]):
+        raise VerificationError("invalid inventory configuration")
+    lists = value.get("input_lists")
+    if not isinstance(lists, list):
+        raise VerificationError("invalid inventory input lists")
+    list_names = set()
+    for item in lists:
+        if (not isinstance(item, dict) or set(item) != {"name", "inputs"}
+                or not isinstance(item.get("name"), str) or not item["name"]
+                or item["name"] in list_names or not isinstance(item.get("inputs"), list)
+                or not all(isinstance(recipe, str) and recipe for recipe in item["inputs"])):
+            raise VerificationError("invalid or duplicate inventory input list")
+        list_names.add(item["name"])
     groups = value.get("groups")
     if not isinstance(groups, list) or not groups:
         raise VerificationError("verification inventory has no required actions")
@@ -160,6 +183,8 @@ def inventory(path: Path) -> dict:
         ids.add(group["id"])
         targets.add(group["target"])
     coverage = value.get("coverage", {})
+    if not isinstance(coverage, dict):
+        raise VerificationError("invalid inventory coverage")
     required, registered = coverage.get("required_actions"), coverage.get("registered_actions")
     unknown = coverage.get("unknown_actions")
     if (type(required) is not int or type(registered) is not int or required < 1
@@ -172,7 +197,111 @@ def inventory(path: Path) -> dict:
         raise VerificationError("unclassified actions must always execute the original gate")
     if any(group["id"] == "coverage" and group["cacheable"] for group in groups):
         raise VerificationError("fixture membership coverage must always execute")
+    metadata = value.get("action_metadata")
+    if not isinstance(metadata, list) or len(metadata) != len(groups):
+        raise VerificationError("inventory action metadata is incomplete")
+    seen_ids, labels, members = set(), set(), 0
+    for action in metadata:
+        if (not isinstance(action, dict) or set(action) != {"id", "steps", "identity_scope"}
+                or not isinstance(action.get("id"), str) or action["id"] not in ids or action["id"] in seen_ids
+                or action.get("identity_scope") != "group-local-v1"
+                or not isinstance(action.get("steps"), list)
+                or (not action["steps"] and action["id"] != "unclassified")):
+            raise VerificationError("invalid action metadata")
+        seen_ids.add(action["id"])
+        for step in action["steps"]:
+            if (not isinstance(step, dict) or set(step) != {"label", "original_label", "kind"}
+                    or not all(isinstance(step.get(field), str) and step[field] for field in step)
+                    or not re.fullmatch(r"verification action " + re.escape(action["id"]) + r" member [0-9]+", step["label"])
+                    or step["label"] in labels):
+                raise VerificationError("invalid or ambiguous action member")
+            labels.add(step["label"])
+            members += 1
+    if members != registered:
+        raise VerificationError("inventory member coverage disagrees with original gate")
     return value
+
+
+def declared_input_lists(path: Path) -> dict | None:
+    """Recognize only data-only Zig arrays/references; unknown syntax stays broad."""
+    try:
+        with path.open("rb") as source:
+            raw = source.read(MAX_RECORD + 1)
+        if len(raw) > MAX_RECORD:
+            return None
+        text = raw.decode("utf-8")
+        scanner = re.compile(r'\s+|//[^\n]*|"(?:[^"\\]|\\.)*"|\+\+|[A-Za-z_][A-Za-z_0-9]*|[][{}=;,]')
+        tokens, end = [], 0
+        for match in scanner.finditer(text):
+            if match.start() != end:
+                return None
+            end = match.end()
+            token = match.group()
+            if not token.isspace() and not token.startswith('//'):
+                tokens.append(token)
+        if end != len(text):
+            return None
+        result, index = {}, 0
+        while index < len(tokens):
+            if tokens[index:index + 2] != ['pub', 'const'] or index + 4 > len(tokens):
+                return None
+            name = tokens[index + 2]
+            if not re.fullmatch('[A-Za-z_][A-Za-z_0-9]*', name) or name in result or tokens[index + 3] != '=':
+                return None
+            index += 4
+            recipes = []
+            while True:
+                if tokens[index:index + 8] == ['[', '_', ']', '[', ']', 'const', 'u8', '{']:
+                    index += 8
+                    while tokens[index] != '}':
+                        recipes.append(json.loads(tokens[index]))
+                        index += 1
+                        if tokens[index] == ',':
+                            index += 1
+                        elif tokens[index] != '}':
+                            return None
+                    index += 1
+                elif tokens[index] in result:
+                    recipes.extend(result[tokens[index]])
+                    index += 1
+                else:
+                    return None
+                if tokens[index] != '++':
+                    break
+                index += 1
+            if tokens[index] != ';' or not all(isinstance(recipe, str) and recipe for recipe in recipes):
+                return None
+            index += 1
+            result[name] = recipes
+        return result
+    except (OSError, ValueError, IndexError, TypeError):
+        return None
+
+
+def action_configuration(identity: dict, plan: dict, root: Path, configuration_identity: dict | None = None) -> dict:
+    """Exclude a proven declarative list file; retain all unfamiliar semantics."""
+    if DECLARATIVE_CONFIG_SHA256 is None or configuration_identity is None:
+        return identity
+    qualified = dict(configuration_identity, files=[item for item in configuration_identity.get('files', [])
+                                                   if item['path'] != 'build_test_inputs.zig'])
+    if key(qualified) != DECLARATIVE_CONFIG_SHA256:
+        return identity
+    lists = declared_input_lists(root / 'build_test_inputs.zig')
+    exported = plan.get('input_lists')
+    if lists is None or not isinstance(exported, list):
+        return identity
+    try:
+        expected = {entry['name']: entry['inputs'] for entry in exported}
+        if len(expected) != len(exported) or expected != lists:
+            return identity
+    except (KeyError, TypeError):
+        return identity
+    files = identity.get('files', [])
+    if not any(item['path'] == 'build_test_inputs.zig' and 'resolved' not in item for item in files):
+        return identity
+    # All snapshots still watch this file; only action reuse omits its data bytes.
+    return dict(identity, files=[item for item in files if item['path'] != 'build_test_inputs.zig'])
+
 
 
 def normalized_environment(root: Path) -> dict[str, str]:
@@ -364,6 +493,7 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
                             "logs": [] if logs is None else [
                                 {"path": str(path), "truncated": logs.truncated[index],
                                  "bytes_seen": logs.bytes_seen[index],
+                                 "capture_complete": logs.capture_complete,
                                  "capture_available": logs.capture_available[index],
                                  "observed_steps": verification_report.execution_timings(
                                      path, capture_available=logs.capture_available[index])}
@@ -443,7 +573,7 @@ def matches_recipe(path: str, recipe: str, root: Path) -> bool:
 
 
 def action_payload(group: dict, snapshot: Snapshot, common: dict, root: Path,
-                   providers: dict[str, list[dict]] | None = None) -> dict:
+                   providers: dict[str, list[dict]] | None = None, membership: dict | None = None) -> dict:
     files = [item for item in snapshot.identity["files"]
              if any(matches_recipe(item["path"], recipe, root) for recipe in group["inputs"])]
     selected = group.get("artifacts")
@@ -451,7 +581,10 @@ def action_payload(group: dict, snapshot: Snapshot, common: dict, root: Path,
         if providers is None or any(name not in providers for name in selected):
             raise VerificationError("action names an unavailable artifact provider: " + group["id"])
         common = dict(common, artifacts={name: providers[name] for name in selected})
-    return {"domain": "selka-verification-action-v2", "contract": group, "common": common, "files": files}
+    if membership is not None:
+        common = {name: value for name, value in common.items() if name != "inventory"}
+    return {"domain": "selka-verification-action-v3", "contract": group, "common": common,
+            "files": files, "membership": membership}
 
 
 def action_identity(group: dict, snapshot: Snapshot, common: dict, root: Path,
@@ -501,6 +634,8 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
             common: dict, snapshots: list[Snapshot], stack: ExitStack,
             timings: list[dict] | None = None, phases: dict | None = None,
             digest_session=None, limits: ProcessLimits | None = None) -> tuple[dict, Snapshot, float]:
+    configuration = stack.enter_context(Snapshot(root, CONFIG_INPUTS, digest_session=digest_session))
+    snapshots.append(configuration)
     config = stack.enter_context(Snapshot(root, CONFIG_INPUTS + COORDINATOR_INPUTS, digest_session=digest_session))
     snapshots.append(config)
     common["build_configuration"] = key(config.identity)
@@ -527,6 +662,8 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
                                     124 if status == 124 else 2)
         plan = inventory(plan_path)
         publish_checked(plan_receipt, {"key": config_key, "inventory": key(plan)}, snapshots)
+    common["build_configuration"] = key(action_configuration(config.identity, plan, root, configuration.identity))
+    common["action_controls"] = plan["configuration"]
     source_started = time.monotonic()
     sources = stack.enter_context(Snapshot(root, PREPARE_INPUTS, digest_session=digest_session))
     if phases is not None:
@@ -617,12 +754,13 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             # This is a local evidence store; deleting evidence only causes work.
             for path in (cache / "actions").glob("*.json"):
                 path.unlink(missing_ok=True)
+        metadata = {action["id"]: action for action in plan["action_metadata"]}
         results, selected, keys, summaries = [], [], {}, {}
         for group in groups:
-            payload = action_payload(group, inputs, common, root, providers)
+            payload = action_payload(group, inputs, common, root, providers, metadata[group["id"]])
             action_key = key(payload)
             keys[group["id"]] = action_key
-            summary = verification_report.dependency_summary(group, payload["files"], payload["common"])
+            summary = verification_report.dependency_summary(group, payload["files"], dict(payload["common"], membership=metadata[group["id"]]))
             summary_path = cache / "diagnostics" / (group["id"] + ".json")
             previous = verification_report.read_summary(summary_path)
             summaries[group["id"]] = (summary_path, summary)
@@ -640,7 +778,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             diagnostic = (verification_report.explain_miss(summary, previous) if reusable and not hit
                           else {"status": "policy", "reason": reason, "changes": [], "truncated": False})
             diagnostic["comparison_scope"] = "previous stable request; not necessarily the receipt-producing success"
-            results.append({"id": group["id"], "state": state, "reason": reason,
+            results.append({"id": group["id"], "action_key": action_key, "state": state, "reason": reason,
                             "invalidation": diagnostic})
             print("verification: %s %s (%s)" % (state, group["id"], reason), flush=True)
             if not hit:
@@ -708,6 +846,8 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                          "enforced": False}
         report = {"version": VERSION, "success": status == 0, "status": status,
                   "actions": results, "inputs_stable": stable,
+                  "action_metadata": plan["action_metadata"],
+                  "budget_context": key({name: value for name, value in common.items() if name != "inventory"}),
                   "build_admitted_seconds": build_seconds, "gate_admitted_seconds": gate_seconds,
                   "admissions": admissions, "timings": phases,
                   "loop_budget": budget_report,

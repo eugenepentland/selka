@@ -78,7 +78,7 @@ class VerificationCoordinator(unittest.TestCase):
         self.zig.chmod(0o755)
         (self.root / 'scripts').mkdir()
         shutil.copy2(REPOSITORY / 'scripts/build-slot.sh', self.root / 'scripts/build-slot.sh')
-        self.plan = {'version': 1, 'required_targets': ['test', 'fmt-check'],
+        self.plan = {'version': coordinator.INVENTORY_VERSION, 'required_targets': ['test', 'fmt-check'],
                      'groups': [group('unit', ['inputs/unit/']), group('docs', ['inputs/docs/'])],
                      'coverage': {'required_actions': 2, 'registered_actions': 2, 'unknown_actions': []}}
         self.save_plan()
@@ -88,11 +88,16 @@ class VerificationCoordinator(unittest.TestCase):
         self.admissions = []
         self.stack = contextlib.ExitStack()
         self.addCleanup(self.stack.close)
-        self.stack.enter_context(patch.object(coordinator, 'CONFIG_INPUTS', ['config.zig', 'gate-contract.json']))
+        self.stack.enter_context(patch.object(coordinator, 'CONFIG_INPUTS', ['config.zig', 'build_test_inputs.zig']))
         self.stack.enter_context(patch.object(coordinator, 'PREPARE_INPUTS', ['sources/']))
         self.stack.enter_context(patch.object(coordinator, 'COORDINATOR_INPUTS', ['scripts/build-slot.sh']))
         self.stack.enter_context(patch.object(coordinator, 'tool_contract', return_value=([], [self.zig, self.tool])))
         self.stack.enter_context(patch.object(coordinator, 'run_admitted', side_effect=self.admit))
+        with Snapshot(self.root, coordinator.CONFIG_INPUTS) as configuration:
+            self.qualified_configuration = copy.deepcopy(configuration.identity)
+        candidate = dict(self.qualified_configuration, files=[item for item in self.qualified_configuration['files']
+                                                              if item['path'] != 'build_test_inputs.zig'])
+        self.stack.enter_context(patch.object(coordinator, 'DECLARATIVE_CONFIG_SHA256', coordinator.key(candidate)))
 
     def write(self, relative, data):
         path = self.root / relative
@@ -101,6 +106,26 @@ class VerificationCoordinator(unittest.TestCase):
         return path
 
     def save_plan(self):
+        self.plan.setdefault('configuration', {'filtered': False, 'rerun': False, 'optimize': 'Debug'})
+        self.plan['configuration'].setdefault('rerun', False)
+        self.plan['configuration'].setdefault('optimize', 'Debug')
+        self.plan.setdefault('action_metadata', [])
+        known = {item['id']: item for item in self.plan['action_metadata']}
+        self.plan['action_metadata'] = [known.get(item['id'], {
+            'id': item['id'], 'identity_scope': 'group-local-v1',
+            'steps': [] if item['id'] == 'unclassified' else [{
+                'label': 'verification action ' + item['id'] + ' member 0',
+                'original_label': item['label'], 'kind': 'run'}]}) for item in self.plan['groups']]
+        self.plan['input_lists'] = [{'name': item['id'], 'inputs': item['inputs']} for item in self.plan['groups']]
+        self.write('build_test_inputs.zig', '\n'.join(
+            'pub const ' + item['name'].replace('-', '_') + ' = [_][]const u8{' +
+            ','.join(json.dumps(recipe) for recipe in item['inputs']) + '};'
+            for item in self.plan['input_lists']))
+        # This fake build contract is an out-of-band test fixture, not executable
+        # build code. Explicit regeneration models the watched declaration edit.
+        self.plan['input_lists'] = [{'name': item['name'].replace('-', '_'), 'inputs': item['inputs']}
+                                    for item in self.plan['input_lists']]
+        (self.cache / 'inventory.json').unlink(missing_ok=True)
         self.write('gate-contract.json', json.dumps(self.plan))
 
     def admit(self, root, kind, argv, env, unchanged, timings=None, **controls):
@@ -343,6 +368,110 @@ class VerificationCoordinator(unittest.TestCase):
             (self.root / '.hang-gate').unlink()
             self.assertEqual(self.execute(gate_timeout=.5), 0)
             self.assertEqual(len(self.receipts()), 2)
+
+    def test_unrelated_group_addition_removal_preserves_existing_successes(self):
+        self.assertEqual(self.execute(), 0)
+        before = {item['id']: item['action_key'] for item in coordinator.read_record(self.cache / 'last-run.json')['actions']}
+        self.plan['groups'].append(group('added', ['inputs/docs/']))
+        self.plan['coverage'].update(required_actions=3, registered_actions=3)
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused', 'added': 'execute'})
+        after = {item['id']: item['action_key'] for item in coordinator.read_record(self.cache / 'last-run.json')['actions']}
+        self.assertEqual({name: after[name] for name in before}, before)
+        self.plan['groups'].pop()
+        self.plan['coverage'].update(required_actions=2, registered_actions=2)
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+
+    def test_member_change_invalidates_only_its_group(self):
+        self.assertEqual(self.execute(), 0)
+        member = {'label': 'verification action unit member 1', 'original_label': 'new test', 'kind': 'run'}
+        self.plan['action_metadata'][0]['steps'].append(member)
+        self.plan['coverage'].update(required_actions=3, registered_actions=3)
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+
+    def test_changed_recipe_invalidates_only_its_group(self):
+        self.assertEqual(self.execute(), 0)
+        self.plan['groups'][0]['inputs'].append('inputs/docs/')
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+
+    def test_renamed_fixture_invalidates_only_its_group(self):
+        self.assertEqual(self.execute(), 0)
+        self.input.rename(self.input.with_name('renamed.txt'))
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+
+    def test_unfamiliar_declaration_syntax_keeps_broad_configuration(self):
+        self.assertEqual(self.execute(), 0)
+        path = self.root / 'build_test_inputs.zig'
+        path.write_text(path.read_text() + '\ncomptime { @compileError("unknown semantics"); }')
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+    def test_declarative_parser_requires_complete_known_data_syntax(self):
+        path = self.write('lists.zig', 'pub const one = [_][]const u8{"a//b", "c"};\n'
+                                     'pub const two = one ++ [_][]const u8{"d"}; // comment\n')
+        self.assertEqual(coordinator.declared_input_lists(path), {'one': ['a//b', 'c'], 'two': ['a//b', 'c', 'd']})
+        path.write_text('pub const one = @import("unknown.zig");')
+        self.assertIsNone(coordinator.declared_input_lists(path))
+        path.write_text('pub const one = [_][]const u8{"a"}; ignored')
+        self.assertIsNone(coordinator.declared_input_lists(path))
+        path.write_text('pub const one = [_][]const u8{"a"}; pub const one = [_][]const u8{"b"};')
+        self.assertIsNone(coordinator.declared_input_lists(path))
+
+    def test_declaration_export_mismatch_and_symlink_keep_full_configuration(self):
+        identity = {'files': [{'path': 'config.zig', 'sha256': 'config'},
+                              {'path': 'build_test_inputs.zig', 'sha256': 'lists'}]}
+        narrow = coordinator.action_configuration(identity, self.plan, self.root, self.qualified_configuration)
+        self.assertEqual(narrow['files'], identity['files'][:1])
+        mismatch = copy.deepcopy(self.plan)
+        mismatch['input_lists'][0]['inputs'] = ['unreviewed/']
+        self.assertEqual(coordinator.action_configuration(identity, mismatch, self.root, self.qualified_configuration), identity)
+        linked = copy.deepcopy(identity)
+        linked['files'][1]['resolved'] = 'elsewhere.zig'
+        self.assertEqual(coordinator.action_configuration(linked, self.plan, self.root, self.qualified_configuration), linked)
+
+    def test_consumer_qualification_is_explicit_and_complete(self):
+        identity = {'files': [{'path': 'build_test_inputs.zig', 'sha256': 'lists'}]}
+        changed = copy.deepcopy(self.qualified_configuration)
+        changed['files'].append({'path': 'new-consumer.zig', 'sha256': 'changed'})
+        self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed), identity)
+        with patch.object(coordinator, 'DECLARATIVE_CONFIG_SHA256', None):
+            self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, self.qualified_configuration), identity)
+        self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root), identity)
+
+    def test_configuration_controls_remain_identity_inputs(self):
+        self.assertEqual(self.execute(), 0)
+        self.plan['configuration']['optimize'] = 'ReleaseSafe'
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+    def test_metadata_rejects_duplicate_missing_or_changed_member_coverage(self):
+        cases = []
+        absent = copy.deepcopy(self.plan)
+        absent.pop('action_metadata')
+        cases.append(absent)
+        duplicate = copy.deepcopy(self.plan)
+        duplicate['action_metadata'][1] = copy.deepcopy(duplicate['action_metadata'][0])
+        cases.append(duplicate)
+        uncovered = copy.deepcopy(self.plan)
+        uncovered['action_metadata'][0]['steps'].append(copy.deepcopy(uncovered['action_metadata'][0]['steps'][0]))
+        cases.append(uncovered)
+        bad_count = copy.deepcopy(self.plan)
+        bad_count['coverage'].update(required_actions=3, registered_actions=3)
+        cases.append(bad_count)
+        for index, value in enumerate(cases):
+            with self.subTest(case=index):
+                path = self.write('metadata-invalid.json', json.dumps(value))
+                with self.assertRaises(coordinator.VerificationError):
+                    coordinator.inventory(path)
 
     def test_always_fresh_action_runs_on_warm_request_without_reusing_its_success(self):
         self.plan['groups'].append(group('fresh', ['inputs/unit/'], False))

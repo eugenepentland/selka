@@ -14,18 +14,21 @@ pub const Group = struct {
     cacheable: bool,
     reason: []const u8,
 };
-const Entry = struct { group: Group, steps: std.ArrayList(*std.Build.Step) = .empty };
+const Member = struct { label: []const u8, original_label: []const u8, kind: []const u8 };
+const ActionMetadata = struct { id: []const u8, steps: []const Member, identity_scope: []const u8 = "group-local-v1" };
+const Entry = struct { group: Group, steps: std.ArrayList(*std.Build.Step) = .empty, members: std.ArrayList(Member) = .empty };
 /// Configuration controls that forbid turning partial/rerun requests into reuse.
 pub const Controls = struct { filtered: bool = false, rerun: bool = false, optimize: []const u8 };
 const InputList = struct { name: []const u8, inputs: []const []const u8 };
 const Coverage = struct { required_actions: usize, registered_actions: usize, unknown_actions: []const []const u8 };
 const Inventory = struct {
-    version: u32 = 1,
+    version: u32 = 2,
     required_targets: []const []const u8 = &.{ "test", "fmt-check" },
     groups: []const Group,
     input_lists: []const InputList,
     configuration: Controls,
     coverage: Coverage,
+    action_metadata: []const ActionMetadata,
 };
 
 /// Build-local registry. Its allocations have the configure graph's lifetime.
@@ -37,17 +40,27 @@ pub const Registry = struct {
 
     /// Associate an original gate step with a named cohort and exact input recipes.
     pub fn register(self: *Registry, id: []const u8, step: *std.Build.Step, recipes: []const []const u8, cacheable: bool, reason: []const u8) void {
+        for (self.entries.items) |entry| {
+            for (entry.steps.items) |existing| if (existing == step) @panic("verification action registered more than once");
+        }
         for (self.entries.items) |*entry| if (std.mem.eql(u8, entry.group.id, id)) {
             if (!sameRecipes(entry.group.inputs, recipes)) @panic("verification cohort has inconsistent input recipes");
             entry.group.cacheable = entry.group.cacheable and cacheable;
             if (!cacheable) entry.group.reason = reason;
-            entry.steps.append(self.build.allocator, step) catch @panic("verification allocation");
+            self.addMember(entry, step);
             return;
         };
         const target = self.build.fmt("verification-{s}", .{id});
         var entry: Entry = .{ .group = .{ .id = id, .target = target, .label = step.name, .inputs = recipes, .cacheable = cacheable, .reason = reason } };
-        entry.steps.append(self.build.allocator, step) catch @panic("verification allocation");
+        self.addMember(&entry, step);
         self.entries.append(self.build.allocator, entry) catch @panic("verification allocation");
+    }
+
+    fn addMember(self: *Registry, entry: *Entry, step: *std.Build.Step) void {
+        const original = step.name;
+        const label = self.build.fmt("verification action {s} member {d}", .{ entry.group.id, entry.steps.items.len });
+        entry.steps.append(self.build.allocator, step) catch @panic("verification allocation");
+        entry.members.append(self.build.allocator, .{ .label = label, .original_label = original, .kind = @tagName(step.tag) }) catch @panic("verification allocation");
     }
 
     /// Register a previously declared cached test-input list as one cohort.
@@ -81,7 +94,19 @@ pub const Registry = struct {
         while (infrastructure.next()) |pointer| prepared.put(a, pointer.*, {}) catch @panic("verification allocation");
         var covered: std.AutoHashMapUnmanaged(*std.Build.Step, void) = .empty;
         var groups: std.ArrayList(Group) = .empty;
-        for (self.entries.items) |entry| self.exportGroup(entry, reachable, &covered, &groups);
+        var metadata: std.ArrayList(ActionMetadata) = .empty;
+        for (self.entries.items) |entry| {
+            self.exportGroup(entry, reachable, &covered, &groups);
+            var members: std.ArrayList(Member) = .empty;
+            for (entry.steps.items, entry.members.items) |step, registered_member| {
+                if (!reachable.contains(step)) continue;
+                var member = registered_member;
+                member.original_label = step.name;
+                step.name = member.label;
+                members.append(a, member) catch @panic("verification allocation");
+            }
+            if (members.items.len > 0) metadata.append(a, .{ .id = entry.group.id, .steps = members.items }) catch @panic("verification allocation");
+        }
         var unknown: std.ArrayList([]const u8) = .empty;
         var required: usize = 0;
         var steps = reachable.keyIterator();
@@ -103,8 +128,10 @@ pub const Registry = struct {
                 .reason = "unknown actions require original complete gate execution",
             }) catch @panic("verification allocation");
         }
+        if (unknown.items.len > 0) metadata.append(a, .{ .id = "unclassified", .steps = &.{} }) catch @panic("verification allocation");
         const inventory: Inventory = .{
             .groups = groups.items,
+            .action_metadata = metadata.items,
             .input_lists = inputLists(a),
             .configuration = self.controls,
             .coverage = .{ .required_actions = required, .registered_actions = required - unknown.items.len, .unknown_actions = unknown.items },
