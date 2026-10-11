@@ -188,12 +188,7 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
             const clause = try suggestions.clause(candidates, name)
             const rejection = try problem(state, payload, "E_UNKNOWN_NAME", "name is not defined in this scope" + clause)
             fail rejection
-        if not state.scope.locals[slot].initialized:
-            const rejection = try problem(state, payload, "E_UNBOUND", "name may be read before it is assigned; some control-flow path reaching here leaves it unbound")
-            const previous = try problem(state, state.scope.locals[slot].declaration, "", "")
-            const related = syntax_problem.Related(start=previous.start, end=previous.end, message="binding first assigned here", role="related")
-            state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
-            fail rejection
+        _ = try require_readable(mut state, slot, payload)
         state.scope.locals[slot].usage.reads = state.scope.locals[slot].usage.reads + 1
         ty = state.scope.locals[slot].ty
         result_payload = try syntax_value.integer(mut state.batch.pool, slot)
@@ -574,6 +569,7 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
         const value_raw = try graph.number(state.syntax.pool, value_id)
         mut value = try expression_expected(mut state, value_raw, state.scope.locals[slot].ty)
         if op.data != b"set":
+            _ = try require_readable(mut state, slot, name_span)
             const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
             _ = try require(state, value.ty, state.scope.locals[slot].ty, operator_span)
             if value.ty != 0:
@@ -718,3 +714,13 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
     const id = try emission.statement(mut state.batch, state.syntax.pool, span, terminates, tag, result_payload)
     state.depth = state.depth - 1
     return Statement(id=id, terminates=terminates, looping=looping)
+
+
+func require_readable(mut state: State, slot: int, span: int) -> bool fails syntax_value.Problem:
+    if not state.scope.locals[slot].initialized:
+        const rejection = try problem(state, span, "E_UNBOUND", "name may be read before it is assigned; some control-flow path reaching here leaves it unbound")
+        const previous = try problem(state, state.scope.locals[slot].declaration, "", "")
+        const related = syntax_problem.Related(start=previous.start, end=previous.end, message="binding first assigned here", role="related")
+        state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+        fail rejection
+    return True

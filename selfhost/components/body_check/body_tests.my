@@ -195,3 +195,21 @@ public func test_augmented_missing_name_is_unknown_name() -> bool fails syntax_v
             return False
         case Err(problem):
             return problem.code == "E_UNKNOWN_NAME" and problem.message == "name is not defined in this scope" and problem.start == 0 and problem.end == 1
+
+
+public func test_augmented_unbound_after_rhs_before_operator_with_related_site() -> bool fails syntax_value.Problem:
+    mut state = try assignment_state(b"div", True)
+    const declaration = try syntax_value.span(mut state.syntax.pool, 2, 3)
+    state.scope.locals[0].declaration = declaration
+    state.scope.locals[0].initialized = False
+    match engine.statement(mut state, 0):
+        case Ok(value):
+            _ = value
+            return False
+        case Err(problem):
+            if len(state.problems) != 1 or len(state.batch.nodes) != 1:
+                return False
+            const related = state.problems[0].notes.related
+            if len(related) != 1:
+                return False
+            return problem.code == "E_UNBOUND" and problem.start == 0 and problem.end == 1 and problem.message == "name may be read before it is assigned; some control-flow path reaching here leaves it unbound" and related[0].start == 2 and related[0].end == 3 and related[0].message == "binding first assigned here" and state.scope.locals[0].usage.reads == 0
