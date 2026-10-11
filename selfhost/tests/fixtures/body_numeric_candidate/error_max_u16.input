@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = 65536u16
+    return 7

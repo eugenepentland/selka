@@ -1,0 +1,9 @@
+func verify(a: float, b: float) -> bool:
+    return a + b == -4.0 and a - b == -10.0 and a * b == -21.0 and a // b == -3.0 and a % b == 2.0
+
+
+func main() -> int:
+    assert verify(-7.0, 3.0)
+    assert sqrt(9.0) == 3.0 and abs(-2.5) == 2.5
+    assert floor(-1.5) == -2.0 and ceil(-1.5) == -1.0 and round(-1.5) == -2.0
+    return 7

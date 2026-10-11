@@ -1,0 +1,8 @@
+func convert(value: int) -> bool:
+    return i8(value) == 42i8 and i16(value) == 42i16 and i32(value) == 42i32 and u8(value) == 42u8 and u16(value) == 42u16 and u32(value) == 42u32 and u64(value) == 42u64
+
+
+func main() -> int:
+    assert convert(42)
+    assert i64(255u8) == 255 and i64(4294967295u32) == 4294967295
+    return 7

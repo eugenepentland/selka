@@ -1,0 +1,10 @@
+func quotient(a: float, b: float) -> float:
+    return a / b
+
+
+func main() -> int:
+    mut nan = -quotient(0.0, 0.0)
+    assert nan != nan and not (nan == nan)
+    assert not (nan < 1.0) and not (nan >= 1.0)
+    assert sqrt(nan) != sqrt(nan)
+    return 7

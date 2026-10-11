@@ -1,0 +1,17 @@
+func main() -> int:
+    match parse_float("-2.5"):
+        case Some(value):
+            assert value == -2.5
+        case None:
+            return 1
+    match b"1.25".parse_float():
+        case Some(value):
+            assert value == 1.25
+        case None:
+            return 2
+    match "bad".parse_float():
+        case Some(_):
+            return 3
+        case None:
+            pass
+    return 7

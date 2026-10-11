@@ -1,0 +1,645 @@
+{
+  "error_bool_cast.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "operation requires an integer type",
+        "bytes": {
+          "start": 28,
+          "end": 36
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "2cff38855a62a724619bacc7b039499c9217f7d9b9747b12bf54d8ff4efe5ee9"
+  },
+  "error_float_bit.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_FLOAT_OPERATION",
+        "message": "float supports arithmetic and numeric comparison",
+        "bytes": {
+          "start": 28,
+          "end": 45
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "357e86ba185d0ed646b4952ad3a952d3ec8d3006baab9da285eadac111d895fa"
+  },
+  "error_float_range.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_FLOAT_RANGE",
+        "message": "floating-point literal overflows binary64",
+        "bytes": {
+          "start": 28,
+          "end": 33
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "5a9b5b6ca4b80e74597e907f298b82e7c71123f396b56480d8ea1f2b28ae000d"
+  },
+  "error_magnitude_u128.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal magnitude is too large",
+        "bytes": {
+          "start": 28,
+          "end": 67
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "3f22f89373c649fab978dde57dd7e5ba20478905d32c0ddb1ccd978391b52456"
+  },
+  "error_max_i16.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 28,
+          "end": 36
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "94e12571185b9d9758ae4041e9f9d00a395f0ccfa641721fe7e761767e259db9"
+  },
+  "error_max_i32.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 28,
+          "end": 41
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "08c95d03ca9fd0b68b02f6d5d6351eb0f36bf07855b7966249c2adb2b5bfeb6f"
+  },
+  "error_max_i64.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 28,
+          "end": 50
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "0c45930b6b086b19d07585992970762495f91b824a4f35bc7b601101a62b70ab"
+  },
+  "error_max_i8.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 28,
+          "end": 33
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "f503b579173b729bbf7029af7b65122e499a0ad47d79507a61c091ae436d7062"
+  },
+  "error_max_u16.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 28,
+          "end": 36
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "c23273571f450bc0aca2691e3bd7cf700b363173e87f52790f7a63f588eb30f4"
+  },
+  "error_max_u32.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 28,
+          "end": 41
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "4d51cfd91850ec7be2c3cd2f8f7fc714327a8c37afdb2863a3e3676de459f44e"
+  },
+  "error_max_u64.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 28,
+          "end": 51
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "4c4f7241af17ec5395b94475c55617794fec7dd7c02980ce5e5d29a4b0f9f9dd"
+  },
+  "error_max_u8.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 28,
+          "end": 33
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "697156c054d1dc2b9226fb06d7562bff4ae09d7056107464524ab53450fe7b73"
+  },
+  "error_min_i16.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 29,
+          "end": 37
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "57c5d182eba23b906fe3799c1a27c3c944091aa44e398276471b0c92a3fa2684"
+  },
+  "error_min_i32.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 29,
+          "end": 42
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "2bca5cb6c61aae2d5dc389697f2cf80022a875bcedd48e069efed82f771f70f2"
+  },
+  "error_min_i64.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 29,
+          "end": 51
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "1dd59f346287eced10d9d8a374861a7b61b322c3a43dba33f19e7067da18c0b4"
+  },
+  "error_min_i8.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_RANGE",
+        "message": "integer literal does not fit its type; signed minimum magnitudes must be directly negated",
+        "bytes": {
+          "start": 29,
+          "end": 34
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "874cb8be879503cb3b64bf7551c0d2af4ae3e2cb0d2206ab632413f3b4e05e37"
+  },
+  "error_mixed_width.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected u8, found u16",
+        "bytes": {
+          "start": 32,
+          "end": 33
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "e51421ca9f5b136b604e9e0342c37bb2217a67912e9e34c1c7c1080efc5640d3"
+  },
+  "error_suffix.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_INTEGER_SUFFIX",
+        "message": "unknown integer suffix; use i8/i16/i32/i64 or u8/u16/u32/u64",
+        "bytes": {
+          "start": 28,
+          "end": 31
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "source_sha256": "581053e881c2e3fbadc816a999e81dfc178dbdd62df771af75727d79fd6ba836"
+  },
+  "error_text_conversion.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_NUMERIC_PARSE",
+        "message": "parse text explicitly with parse_int or parse_float; int and float convert numbers",
+        "bytes": {
+          "start": 28,
+          "end": 33
+        },
+        "notes": [],
+        "edits": [
+          {
+            "bytes": {
+              "start": 28,
+              "end": 33
+            },
+            "text": "parse_float"
+          }
+        ]
+      }
+    ],
+    "source_sha256": "2893f8f0afd48e3b1f715b255b958d627bb477cb83588b9fa722dce629d290cb"
+  },
+  "float_arithmetic.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "45e1a1def327be44fe63e787339320b5ab12eb25bef83b1d8aa031dc59b21eba",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "float_casts.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "b0cb1c301ea9ccd34ac06daed689b2c56b4ee754ab36d859b0bb234f4299c8d4",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "float_literals.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "61d2695e5303e4ecb426779710ed70b1c5779f6428aacc0504071bc7924d4bb3",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "float_nan.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "a0cfdd69caa47c533c51d170d8f75c4ed6db9ed829716bd86a4d36f881d607d4",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "float_order.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "ae81c4cafa3accd8936d3dcfc669eac68325ffdc3b54df64734dd9d592b81308",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "float_parse.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "b219f7060b0c3cd8a0f7ebf4a6efea67d46399e0ae138be3ba79a2aa7cf44063",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "float_ranges.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "cd95878b924d560b769308973711fe773f7fd9eed927eb73bcbb9215a9c714f9",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "integer_casts.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "64b9d8a39910fb92023922fded8c67c89220007da46b1987d2abed7e395ec707",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "integer_floor.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "c8754510ebf5711f536e0a416b660625c55a41c05c8ac1e0ee409110913437a8",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "integer_order.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "e4797607340e445db78324bac59b4c64bfe6e8efc3e9d01e9d1764c3c82a9b8a",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "trap_checked_overflow.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "5764416a32067ba111619d442613afb31bb96a7333cf9233734e359d4e7c0f63",
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 18446744073709551615, right 1, width 64)",
+            "location": {
+              "path": "trap_checked_overflow.my",
+              "start": {
+                "line": 2,
+                "column": 14
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "add",
+                  "location": {
+                    "path": "trap_checked_overflow.my",
+                    "start": {
+                      "line": 2,
+                      "column": 14
+                    }
+                  }
+                },
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "trap_checked_overflow.my",
+                    "start": {
+                      "line": 6,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "unsigned": true,
+              "left": 18446744073709551615,
+              "right": 1,
+              "width": 64
+            }
+          }
+        }
+      ],
+      "trap": true
+    }
+  },
+  "trap_narrow_cast.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "d1c6f22bb22f5935dba5925c9cda3be2390d516596ea551b5dfd7043cbd32248",
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (cast: left 256, width 8)",
+            "location": {
+              "path": "trap_narrow_cast.my",
+              "start": {
+                "line": 2,
+                "column": 12
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "narrow",
+                  "location": {
+                    "path": "trap_narrow_cast.my",
+                    "start": {
+                      "line": 2,
+                      "column": 12
+                    }
+                  }
+                },
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "trap_narrow_cast.my",
+                    "start": {
+                      "line": 6,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "cast",
+              "left": 256,
+              "width": 8
+            }
+          }
+        }
+      ],
+      "trap": true
+    }
+  },
+  "u64_metadata.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "4918c3fd059f2233f7bbcb535be5f13b19513b3babe6298696ede598b860d34a",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "width_i16.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "b1e8931bf3bdb290e4985af5843d3428417e83887ade1eeda60c7fc08088cd77",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "width_i32.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "f6c31238d66a70a1f393d1f84e7ae59759b7f72c1635e017ff4b1c3c7307618c",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "width_i64.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "c8142902422e70e83b2cbfd620dab64cd37c56b437c02a1984cf784b659972de",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "width_i8.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "70b2516157d360e739626b979ef3936d61d4adab8e43303bbe2c6e384c8922f1",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "width_u16.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "de5da3af7a4d72a79f4abc1e5a72afde7da1210f1cc4e3a093408ad09789b78b",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "width_u32.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "a8c9d23269f2a50aefdded58e57631d22c212b1494e81275cbab4e781e07b779",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "width_u64.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "c859647332de7a4e5bd6ca87b4e15da31e9078fc09e3d4ff0fbb993f8a6bccf2",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  },
+  "width_u8.my": {
+    "status": 0,
+    "diagnostics": [],
+    "source_sha256": "088890e635dbeef60dda9f7514969b38b944aee14cf8938d899a9e832eea7d7d",
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "diagnostics": [],
+      "trap": false
+    }
+  }
+}
