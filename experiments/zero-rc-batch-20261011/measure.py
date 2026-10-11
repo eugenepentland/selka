@@ -101,11 +101,12 @@ def capture(a):
             if name not in result['controls']:
                 result['controls'][name] = q.lane(a, env, name, source, ['--release'], 'rc', 0, answer)
                 save_result(result_path, result)
-        name = 'record_explicit_copy'
-        if name not in result['controls']:
-            result['controls'][name] = q.lane(a, env, name, HERE / 'samples/record_before.my',
-                                             ['--experimental-zero-rc', '--release'], 'release', 0, '267560\n')
-            save_result(result_path, result)
+        for mode, flags in q.common.MODES.items():
+            name = 'record_explicit_copy' if mode == 'release' else 'record_explicit_copy_' + mode
+            if name not in result['controls']:
+                result['controls'][name] = q.lane(a, env, 'record_explicit_copy', HERE / 'samples/record_before.my',
+                                                 ['--experimental-zero-rc', *flags], mode, 0, '267560\n')
+                save_result(result_path, result)
     assert digest == q.common.digest(a.compiler)
     save_result(result_path, result)
 
@@ -183,6 +184,11 @@ def summarize(_):
     copied = memory(phases['after']['controls']['record_explicit_copy'])
     assert copied['allocs'] == result['whole_program']['record']['before']['allocs'], (copied, result['whole_program']['record'])
     result['explicit_record_copy_control'] = copied
+    for mode in q.common.MODES:
+        key = 'record_explicit_copy' if mode == 'release' else 'record_explicit_copy_' + mode
+        control = memory(phases['after']['controls'][key])
+        original = memory(phases['before']['cases']['record'][mode])
+        assert control['allocs'] == original['allocs'], (mode, control, original)
     result['whole_program']['json_fixture'] = {phase: memory(phases[phase]['anchors']['json_fixture']) for phase in ('before', 'after')}
     for kind in ('array', 'object'):
         hits = [result['lookup_delta'][f'{kind}_{size}_hit']['after'] for size in (1, 16, 128)]

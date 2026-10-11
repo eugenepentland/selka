@@ -1,0 +1,79 @@
+{
+  "coverage": {
+    "counted": 106,
+    "zero_rc": 101,
+    "ordinary_rc": 5
+  },
+  "all_managed_leak_free": true,
+  "all_zero_rc_audits_pass": true,
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-match/candidate-v2/bin/mylang",
+      "sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-20261011/.tmp/zero-rc-batch/candidate-v2/bin/mylang",
+      "sha256": "76ef3ab199bfed73ad6e5ffb1e0ef8c11eb65afd65ac7826307d83e713b8d2d3"
+    }
+  },
+  "qualification": {
+    "before": {
+      "matrix_lanes": 47,
+      "release_anchors": 1,
+      "controls": 0
+    },
+    "after": {
+      "matrix_lanes": 47,
+      "release_anchors": 1,
+      "controls": 10
+    }
+  },
+  "timing": {
+    "warmup_pairs": 2,
+    "measured_pairs": 9,
+    "workloads": 3,
+    "instrumented": false,
+    "cpu": 2,
+    "host": "shared",
+    "ranges_overlap_for_record": true
+  },
+  "notes": [
+    "Managed counters are not total process RSS.",
+    "The source migration removes two explicit .copy() calls only in the record after workload.",
+    "All five candidate explicit-copy controls preserve their baseline allocation counts.",
+    "Compiler/frontend and Guardian integration results are reported separately by the integration agent."
+  ],
+  "compiler_source_commit": "d57510b466ff798ec38b3719e44ee84b40f68e02",
+  "final_refresh": {
+    "allocation_summary_equals_first_candidate": true,
+    "first_candidate_archived_report": "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/first-candidate-report",
+    "reason": "Lowering-cache hash visits each owned match body once; final compiler rebuilt and all candidate qualification/timing refreshed."
+  },
+  "qualification_logs": {
+    "baseline.log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/baseline.log",
+      "sha256": "41c2abb46391474d4527d2328066898cec9b9f6689357a6294e0e7beb7ea0c46"
+    },
+    "baseline-anchor.log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/baseline-anchor.log",
+      "sha256": "3193bbd5915ae9a773e38037a2f0282255ba56c1d3021910273d384f48f83994"
+    },
+    "candidate-v2.log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/candidate-v2.log",
+      "sha256": "4841b7b7c6c0fa2228e0bc150660554379caa3796d30f48d355f001263f56a29"
+    },
+    "baseline-timing-build.log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/baseline-timing-build.log",
+      "sha256": "34664bdf1ee74ed0abe68513b24b62959820e00aeebe7580d436d120bee0ea27"
+    },
+    "candidate-v2-timing-build.log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/candidate-v2-timing-build.log",
+      "sha256": "a97342c8128b8b14bbc9eeff3a2315e9626d4fe9f691aecf16fd4be64f4f1368"
+    },
+    "timing-v2.log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/timing-v2.log",
+      "sha256": "d8a25b5758838711a415bd71f5fbd093d32c5eea3d1fd08c9fb4cea555a396e8"
+    }
+  },
+  "baseline_capture_harness_commit": "778623a8e"
+}

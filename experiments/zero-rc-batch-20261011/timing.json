@@ -1,0 +1,140 @@
+{
+  "method": "2 warmup pairs then 9 alternating pairs, CPU 2, uninstrumented process wall time on shared host",
+  "cases": {
+    "array": {
+      "before": [
+        93110896,
+        88298710,
+        92532692,
+        95136528,
+        92940550,
+        91029450,
+        98364469,
+        97299065,
+        94242468
+      ],
+      "after": [
+        3116483,
+        2764287,
+        4266722,
+        3296042,
+        4748441,
+        3719583,
+        4549393,
+        7697300,
+        5293231
+      ],
+      "median_ns": {
+        "before": 93110896,
+        "after": 4266722
+      },
+      "speedup": 21.82258323837363,
+      "builds": {
+        "before": {
+          "source_sha256": "4126cafaecc727a12cdaca2a96b05434d539a2f30d9f8d26e2c71fa48486e47c",
+          "binary_sha256": "c90e76a10355fc3373cdb9b345d77856728995d8a6c72722c251e28b4ebe3f2d",
+          "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+          "build_ns": 584688112,
+          "answer": "array 512000\n"
+        },
+        "after": {
+          "source_sha256": "4126cafaecc727a12cdaca2a96b05434d539a2f30d9f8d26e2c71fa48486e47c",
+          "binary_sha256": "a4bd0b00934dd8d058dcf3ed9dada64f37541e814050e891268a362dae1a7488",
+          "compiler_sha256": "76ef3ab199bfed73ad6e5ffb1e0ef8c11eb65afd65ac7826307d83e713b8d2d3",
+          "build_ns": 1009820798,
+          "answer": "array 512000\n"
+        }
+      }
+    },
+    "object": {
+      "before": [
+        120005400,
+        121135398,
+        125599704,
+        129688058,
+        126010999,
+        120939334,
+        124740509,
+        115798927,
+        109347495
+      ],
+      "after": [
+        7062262,
+        4045773,
+        3670596,
+        6158004,
+        4763723,
+        4492880,
+        3529571,
+        7079580,
+        2567529
+      ],
+      "median_ns": {
+        "before": 121135398,
+        "after": 4492880
+      },
+      "speedup": 26.96163663396307,
+      "builds": {
+        "before": {
+          "source_sha256": "6162b169a578e7f8f755a36910686a6a000ffd7d4d96432b0e34927cda3fe34d",
+          "binary_sha256": "7f320d2780144cfd3afa9fa83828a072f65342d467ec5eb2eaa7b240fbb62e52",
+          "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+          "build_ns": 590895041,
+          "answer": "object 512000\n"
+        },
+        "after": {
+          "source_sha256": "6162b169a578e7f8f755a36910686a6a000ffd7d4d96432b0e34927cda3fe34d",
+          "binary_sha256": "84806dae7e78dfd51f1b1ca4ae746fdcaab5e4a85ebc1b71c57a4a70e5a12cc5",
+          "compiler_sha256": "76ef3ab199bfed73ad6e5ffb1e0ef8c11eb65afd65ac7826307d83e713b8d2d3",
+          "build_ns": 975470356,
+          "answer": "object 512000\n"
+        }
+      }
+    },
+    "record": {
+      "before": [
+        13450901,
+        12920662,
+        12831827,
+        16451211,
+        19042236,
+        14059086,
+        25650183,
+        21891400,
+        19291517
+      ],
+      "after": [
+        10448426,
+        7460273,
+        43169070,
+        29122088,
+        11022262,
+        14008171,
+        11628582,
+        13038778,
+        12234777
+      ],
+      "median_ns": {
+        "before": 16451211,
+        "after": 12234777
+      },
+      "speedup": 1.3446269596903972,
+      "builds": {
+        "before": {
+          "source_sha256": "6edbf6f7c82beae444b9b0ee1efe10603c885f62d41cfb79044db5382ea898ca",
+          "binary_sha256": "e6ef2ac4c8f574ebf942685c9603860d801b06792d518417e2cda3f9a4b48385",
+          "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+          "build_ns": 141496177,
+          "answer": "5475560\n"
+        },
+        "after": {
+          "source_sha256": "ea0fd120406cecd5054df753719bbd8f493876003d75118c7e3edaa5152994f1",
+          "binary_sha256": "c7b827b1d7087e3e036c778a0632fa72e062b0ae5002d02f2c5728814fe29319",
+          "compiler_sha256": "76ef3ab199bfed73ad6e5ffb1e0ef8c11eb65afd65ac7826307d83e713b8d2d3",
+          "build_ns": 242928102,
+          "answer": "5475560\n"
+        }
+      }
+    }
+  }
+}
