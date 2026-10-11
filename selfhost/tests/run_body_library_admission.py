@@ -24,10 +24,22 @@ TESTS = (
 
 
 def require_manifest(manifest):
-    F.require(len(manifest) == 16 and sum(s['status'] == 0 for s in manifest.values()) == 10
-              and sum(s['status'] == 1 for s in manifest.values()) == 6,
+    F.require(len(manifest) == 24 and sum(s['status'] == 0 for s in manifest.values()) == 16
+              and sum(s['status'] == 1 for s in manifest.values()) == 8,
               'incomplete pure-library followup selection')
+    inventory = json.loads((FIXTURES / 'inventory.json').read_text())
+    F.require(set(manifest) == set(inventory['source_cases']), 'fixture inventory changed')
+    F.require({p.with_suffix('.my').name for p in FIXTURES.glob('*.input')} == set(manifest), 'unselected/missing fixture source')
     F.require(all(type(s['status']) is int and s['status'] in (0, 1) for s in manifest.values()), 'profile refusal is not library admission')
+
+
+def stage_donors(destination):
+    inventory = json.loads((FIXTURES / 'inventory.json').read_text())
+    F.require(set(inventory['donors']) == {p.name for p in FIXTURES.glob('*.my')}, 'unselected/missing imported donor')
+    for name, digest in inventory['donors'].items():
+        original = FIXTURES / name
+        F.require(F.digest(original) == digest, 'imported donor source changed: ' + name)
+        shutil.copyfile(original, destination / name)
 
 
 def test_selection(path):
@@ -72,6 +84,7 @@ def main():
         work = Path(temporary)
         source = work / 'sources'
         source.mkdir()
+        stage_donors(source)
         empty = work / 'empty-path'
         empty.mkdir()
         def execute(mode, command, phase):
@@ -121,15 +134,19 @@ def main():
                     for mode in modes:
                         verdict = require_tests(execute(mode, command, relative + ('-release' if release else '-normal')), expected)
                         records[-1]['tests'] = verdict
+    expected_fixture_runs = (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes)
+    F.require(len(records) == expected_fixture_runs + (0 if args.native_controls else 63), 'incomplete operation accounting')
     report = {'complete': True, 'scope': 'native fixture controls' if args.native_controls else 'nine libraries and six test roots; seven package entries not admitted',
               'selected_admission': 'pending' if args.native_controls else 'passed',
               'compiler_sha256': F.digest(args.compiler), 'packages': packages, 'qualified_seed_sha256': seed_sha256,
               'fixtures': len(manifest), 'library_roots': 9, 'test_roots': 6,
-              'helper_runs': 0 if args.native_controls else 63, 'records': records,
+              'helper_runs': 0 if args.native_controls else 63,
+              'fixture_runs': (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes),
+              'operations': len(records), 'records': records,
               'failed': 0, 'skipped': 0}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + '\n')
-    print(f'body library {report["selected_admission"]}: 16 fixtures; {report["helper_runs"]} helper runs; 0 failed, 0 skipped')
+    print(f'body library {report["selected_admission"]}: {report["fixtures"]} fixtures; {report["fixture_runs"]} fixture runs; {report["helper_runs"]} helper runs; 0 failed, 0 skipped')
 
 
 if __name__ == '__main__':

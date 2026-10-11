@@ -1,0 +1,8 @@
+func main() -> int:
+    const source = [1, 2, 4]
+    const clipped = source[-99:99]
+    const tail = source[-2:-1]
+    const empty = source[-99:-99]
+    if clipped == [1, 2, 4] and tail == [2] and empty == []:
+        return 7
+    return 0

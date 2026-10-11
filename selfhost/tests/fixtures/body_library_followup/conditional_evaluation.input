@@ -1,0 +1,11 @@
+func choose(mut count: int, value: int) -> int:
+    count += 1
+    return value
+func main() -> int:
+    mut count = 0
+    const value = if True then choose(mut count, 7) else choose(mut count, 99)
+    const text = if count == 1 then "é" else "unused"
+    const octets = if False then b"\x00\xff" else b"ok"
+    if count == 1 and value == 7 and text == "é" and octets == b"ok":
+        return 7
+    return 0

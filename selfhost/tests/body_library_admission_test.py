@@ -11,12 +11,32 @@ class LibraryAdmissionTests(unittest.TestCase):
     def test_corpus_pins_all_sources_and_ordered_native_errors(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         D.require_manifest(manifest)
-        self.assertEqual(len(manifest),16)
+        self.assertEqual(len(manifest),24)
         for name,spec in manifest.items():
             self.assertEqual(hashlib.sha256((D.FIXTURES/Path(name).with_suffix('.input')).read_bytes()).hexdigest(),spec['source_sha256'])
             self.assertEqual(bool(spec.get('diagnostics')),spec['status']==1)
+        self.assertEqual((sum(spec['status']==0 for spec in manifest.values()),sum(spec['status']==1 for spec in manifest.values())),(16,8))
+        self.assertEqual(manifest['constant_literal_type_error.my']['diagnostics'][0]['code'],'E_TYPE')
+        self.assertEqual(manifest['constant_private_import_error.my']['diagnostics'][0]['notes'][0]['role'],'related')
         self.assertEqual(manifest['iteration_shadow_error.my']['diagnostics'][0]['code'],'E_SHADOWING')
         self.assertEqual(manifest['comprehension_filter_error.my']['diagnostics'][0]['code'],'E_TYPE')
+
+    def test_imported_donor_inventory_cannot_reuse_or_omit_changed_source(self):
+        from unittest.mock import patch
+        import shutil
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary)
+            fixtures=root/'fixtures'
+            shutil.copytree(D.FIXTURES,fixtures)
+            destination=root/'sources'
+            destination.mkdir()
+            with patch.object(D,'FIXTURES',fixtures):
+                D.stage_donors(destination)
+                self.assertEqual((destination/'literal_constants.my').read_bytes(),(fixtures/'literal_constants.my').read_bytes())
+                with (fixtures/'literal_constants.my').open('a') as stream:stream.write('\n# changed\n')
+                with self.assertRaisesRegex(RuntimeError,'donor source changed'):D.stage_donors(destination)
+                (fixtures/'untracked.my').write_text('const TEXT: str = "unselected"\n')
+                with self.assertRaisesRegex(RuntimeError,'unselected/missing imported donor'):D.stage_donors(destination)
 
     def test_missing_profile_and_boolean_verdicts_cannot_count_as_admission(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
