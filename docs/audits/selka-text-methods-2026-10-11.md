@@ -1,0 +1,13 @@
+# Compiler text method qualification
+
+Producer commit `6e4814a1f5efd23215a1fd869b2ae56761b42b39` requires native admission commit `1c6f2d368543051d67e14567dd618c5b4576171e`. Schema 10 and the qualified seed remain unchanged. The receipt binds the entire body source snapshot, package key/artifact, host, logs and authentic frames.
+
+All 17 selected fixtures passed 117 native/shadow/component operations: 11 success cases and six exact diagnostic cases. The unchanged 36 comprehension fixtures passed 294 operations, and the unchanged 30 iteration fixtures passed 228. The exact `syntax_diagnostics.my` utf8 function passed nine additional check/typed/runtime operations under an isolated main wrapper. This is actual-function coverage, not proof of the complete joined parser entry. Five genuine successful request/reply captures cover encode, split, UTF-8 decode, buffer decode and ranged prefix/suffix; five genuine earlier failed captures remain separately archived.
+
+Every successful runtime command used `--release --verify-facts`, and the environment used `MYL_CORE_LEAKCHECK=1`. The inherited harness `--release` switch affects only its receipt label; false release_facts_leaks metadata in the original report does not alter these recorded commands. A duplicate label-only run was cancelled while queued (terminal 130, zero compiler operations), and is not counted.
+
+Focused helper tests passed three Debug and three release/facts/leak cases; the Python harness inventory tests passed four cases. Producer Guardian passed 88 checks. Native authentic graph/authority forgery tests passed 22 cases, with 24/24 build steps and 88 Guardian checks. Native ReleaseFast installation passed 14/14 steps. Forged owners, result types, needles, bounds, arity, Result template, handling contract and foreign nominal name refuse with exact ComponentProtocol.
+
+Retained failures include two initial helper declaration setup failures (zero tests), the nonexistent native test target (zero tests), the extra assertion-free test loop Guardian failure (22 tests passed, gate failed), a redundant queued standalone Guardian cancellation (zero checks), and the original old-host selected failure after 20 actual operations. That failure was native closed-operation admission; authentic replies contained success and no forward logical children. Successful corrected proof uses the unchanged producer artifact. No failed case was removed.
+
+Remaining work includes remaining text/bytes method closure, complete compiler entry/library/bootstrap gates, backend ownership and the requested performance bound. No full self-host or performance acceptance is claimed.
