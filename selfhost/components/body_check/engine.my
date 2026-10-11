@@ -3449,7 +3449,14 @@ func resource_call(mut state: State, raw_id: int, span: int, call: int, slot: in
     if name != b"open":
         const rejection = try problem(state, name_span, "P_BODY_PROFILE", "filesystem operation is outside the bounded open profile")
         fail rejection
-    _ = try resource_positional(state, call)
+    if slot < 0:
+        _ = try io_arguments.positional(state.syntax.pool, call)
+    mut checked: int[] = []
+    for argument in arguments:
+        const raw = try graph.number(state.syntax.pool, argument)
+        const value = try expression(mut state, raw)
+        checked.append(value.id)
+    _ = try io_arguments.positional(state.syntax.pool, call)
     mut expected = 2
     if slot < 0:
         expected = 3
@@ -3461,11 +3468,6 @@ func resource_call(mut state: State, raw_id: int, span: int, call: int, slot: in
             const related = syntax_problem.Related(start=location.start, end=location.end, message="a free file helper takes the Filesystem capability first: `open(fs, path, mode)` or `read_text(fs, path)`; `fs.open(path, mode)` is the method spelling", role="alternative")
             state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
         fail rejection
-    mut checked: int[] = []
-    for argument in arguments:
-        const raw = try graph.number(state.syntax.pool, argument)
-        const value = try expression(mut state, raw)
-        checked.append(value.id)
     if slot >= 0:
         const owner_span = try graph.field(state.syntax.pool, call, "owner")
         _ = try require_readable(mut state, slot, owner_span)

@@ -290,3 +290,62 @@ public func test_stream_write_arity_precedes_unknown_operands_and_receiver_read(
 public func test_stream_write_keyword_precedes_arity_and_uses_call_name() -> bool fails syntax_value.Problem:
     const problem = try stream_rejection(True)
     return problem.code == "E_CALL_ARGUMENT" and problem.start == 4 and problem.end == 9 and problem.message == "keyword arguments require a declared function or record constructor"
+
+
+func open_rejection(method: bool, keyword: bool, unknown_value: bool) -> syntax_value.Problem fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"fs open unknown path"
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const name = try syntax_value.span(mut state.syntax.pool, 3, 7)
+    const unknown = try syntax_value.span(mut state.syntax.pool, 8, 15)
+    const label = try syntax_value.span(mut state.syntax.pool, 16, 20)
+    mut operand = -1
+    if unknown_value:
+        operand = try node(mut state, b"name", unknown, 8, 15)
+    else:
+        const text = try syntax_value.octets(mut state.syntax.pool, b"blob.bin")
+        operand = try node(mut state, b"text", text, 8, 15)
+    mut operands: int[] = []
+    mut labels: int[] = []
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    mut receiver = owner
+    if not method:
+        receiver = absent
+        const fs = try node(mut state, b"name", owner, 0, 2)
+        const fs_id = try syntax_value.integer(mut state.syntax.pool, fs)
+        operands.append(fs_id)
+        if keyword:
+            labels.append(absent)
+    const id = try syntax_value.integer(mut state.syntax.pool, operand)
+    operands.append(id)
+    if keyword:
+        operands.append(id)
+        labels.append(label)
+        labels.append(absent)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, operands)
+    const argument_names = try syntax_value.sequence(mut state.syntax.pool, labels)
+    const types = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, receiver, arguments, argument_names, types])
+    const raw = try node(mut state, b"call", payload, 0, 20)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            fail syntax_value.Problem(code="P_TEST", start=0, end=0, message="open diagnostic was not emitted")
+        case Err(problem):
+            return problem
+
+
+public func test_free_and_method_open_operands_precede_arity() -> bool fails syntax_value.Problem:
+    const free = try open_rejection(False, False, True)
+    const method = try open_rejection(True, False, True)
+    return free.code == "E_UNKNOWN_NAME" and free.start == 8 and free.end == 15 and method.code == "E_UNKNOWN_NAME" and method.start == 8 and method.end == 15
+
+
+public func test_free_open_keywords_precede_operands_but_method_keywords_follow() -> bool fails syntax_value.Problem:
+    const free = try open_rejection(False, True, True)
+    const method = try open_rejection(True, True, True)
+    return free.code == "E_CALL_ARGUMENT" and free.start == 3 and free.end == 7 and method.code == "E_UNKNOWN_NAME" and method.start == 8 and method.end == 15
+
+
+public func test_method_open_known_operands_then_rejects_keyword_at_call_name() -> bool fails syntax_value.Problem:
+    const method = try open_rejection(True, True, False)
+    return method.code == "E_CALL_ARGUMENT" and method.start == 3 and method.end == 7 and method.message == "keyword arguments require a declared function or record constructor"
