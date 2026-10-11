@@ -1,0 +1,172 @@
+import syntax_value
+import syntax_problem
+import graph
+import generic_bindings
+import generic_instances
+import list_types
+import array_types
+import tuple_types
+
+public record Actual:
+    value: int
+    length: bool
+
+
+public record Shapes:
+    catalog: list_types.Catalog
+    applications: int[]
+
+
+public record Context:
+    pool: syntax_value.Pool
+    source: bytes
+    types: Shapes
+    parameters: generic_bindings.Parameter[]
+    site: int
+    values: Actual?[]
+    work: int
+
+
+public func make(pool: syntax_value.Pool, source: bytes, catalog: list_types.Catalog, parameters: generic_bindings.Parameter[], site: int) -> Context:
+    mut values: Actual?[] = []
+    for parameter in parameters:
+        values.append(None)
+    return Context(pool=pool, source=source, types=Shapes(catalog=catalog, applications=[]), parameters=parameters, site=site, values=values, work=0)
+
+
+func problem(context: Context, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start = try graph.field(context.pool, span, "start")
+    const end = try graph.field(context.pool, span, "end")
+    const first = try graph.number(context.pool, start)
+    const last = try graph.number(context.pool, end)
+    return syntax_value.Problem(code=code, start=first, end=last, message=message)
+
+
+func related(context: Context, parameter: int, message: str, note: str, mut problems: syntax_problem.Diagnostic[]) -> syntax_value.Problem fails syntax_value.Problem:
+    const rejected = try problem(context, context.site, "E_GENERIC_INFERENCE", message)
+    const location = try problem(context, parameter, "", "")
+    const detail = syntax_problem.Related(start=location.start, end=location.end, message=note, role="related")
+    problems.append(syntax_problem.Diagnostic(problem=rejected, severity="err", notes=syntax_problem.Notes(related=[detail], origin=[], requirement=[], edits=[])))
+    return rejected
+
+
+func same_span(pool: syntax_value.Pool, left: int, right: int) -> bool fails syntax_value.Problem:
+    for field in ["start", "end"]:
+        const first = try graph.field(pool, left, field)
+        const second = try graph.field(pool, right, field)
+        const first_value = try graph.number(pool, first)
+        const second_value = try graph.number(pool, second)
+        if first_value != second_value:
+            return False
+    return True
+
+
+func mismatch(context: Context) -> syntax_value.Problem fails syntax_value.Problem:
+    return try problem(context, context.site, "E_GENERIC_INFERENCE", "argument shape does not match the generic parameter type")
+
+
+public func match_type(mut context: Context, expected: int, actual: Actual, mut problems: syntax_problem.Diagnostic[], depth: int) -> Unit fails syntax_value.Problem:
+    if depth >= 256 or context.work >= 100000:
+        fail try problem(context, context.site, "E_GENERIC_LIMIT", "generic inference exceeds shape depth/work budget")
+    context.work += 1
+    const bindings = generic_bindings.Context(pool=context.pool, source=context.source)
+    const position = try generic_bindings.index(bindings, context.parameters, expected)
+    if position >= 0:
+        const previous = context.values[position]
+        if previous is not None:
+            if previous.value != actual.value or previous.length != actual.length:
+                fail try related(context, context.parameters[position].name, "call arguments and expected result infer conflicting generic types or lengths", "conflicting parameter declared here", mut problems)
+        else:
+            context.values[position] = actual
+        return
+    for array in context.types.catalog.types.arrays.sources:
+        const span = try graph.field(context.pool, array, "span")
+        const matches = try same_span(context.pool, span, expected)
+        if not matches:
+            continue
+        const shape = array_types.schema(context.types.catalog.types.arrays, actual.value)
+        if actual.length or shape.id < 0 or shape.key >= 0:
+            fail try mismatch(context)
+        const index_id = try graph.field(context.pool, array, "index")
+        const index = try graph.get(context.pool, index_id)
+        const length = try graph.payload(context.pool, index_id)
+        if index.data == b"length":
+            const parameter = try generic_bindings.index(bindings, context.parameters, length)
+            if parameter >= 0:
+                _ = try match_type(mut context, length, Actual(value=shape.length, length=True), mut problems, depth + 1)
+        const element = try graph.field(context.pool, array, "element")
+        _ = try match_type(mut context, element, Actual(value=shape.element, length=False), mut problems, depth + 1)
+        return
+    for tuple in context.types.catalog.types.tuples.sources:
+        const span = try graph.field(context.pool, tuple, "span")
+        const matches = try same_span(context.pool, span, expected)
+        if not matches:
+            continue
+        const elements_id = try graph.field(context.pool, tuple, "elements")
+        const elements = try graph.items(context.pool, elements_id)
+        const shape = tuple_types.schema(context.types.catalog.types.tuples, actual.value)
+        if actual.length or shape.id < 0 or len(shape.elements) != len(elements):
+            fail try mismatch(context)
+        for index in range(len(elements)):
+            _ = try match_type(mut context, elements[index], Actual(value=shape.elements[index], length=False), mut problems, depth + 1)
+        return
+    for suffix in context.types.catalog.types.suffixes:
+        const span = try graph.field(context.pool, suffix, "span")
+        const matches = try same_span(context.pool, span, expected)
+        if not matches:
+            continue
+        const kind_id = try graph.field(context.pool, suffix, "kind")
+        const kind = try graph.get(context.pool, kind_id)
+        if kind.data != b"growable":
+            fail try problem(context, expected, "P_BODY_PROFILE", "generic nominal inference is outside the concrete free-function profile")
+        const element = list_types.element_type(context.types.catalog, actual.value)
+        if actual.length or element < 0:
+            fail try mismatch(context)
+        const base = try graph.field(context.pool, suffix, "base")
+        _ = try match_type(mut context, base, Actual(value=element, length=False), mut problems, depth + 1)
+        return
+    for application in context.types.applications:
+        const span = try graph.field(context.pool, application, "span")
+        const matches = try same_span(context.pool, span, expected)
+        if not matches:
+            continue
+        const name_span = try graph.field(context.pool, application, "name")
+        const name = try graph.spelling(context.pool, context.source, name_span)
+        const arguments_id = try graph.field(context.pool, application, "arguments")
+        const arguments = try graph.items(context.pool, arguments_id)
+        if name == b"FixedArray" and len(arguments) == 2:
+            const shape = array_types.schema(context.types.catalog.types.arrays, actual.value)
+            if actual.length or shape.id < 0 or shape.key >= 0:
+                fail try mismatch(context)
+            _ = try match_type(mut context, arguments[0], Actual(value=shape.element, length=False), mut problems, depth + 1)
+            const parameter = try generic_bindings.index(bindings, context.parameters, arguments[1])
+            if parameter >= 0:
+                _ = try match_type(mut context, arguments[1], Actual(value=shape.length, length=True), mut problems, depth + 1)
+            return
+        fail try problem(context, expected, "P_BODY_PROFILE", "generic nominal inference is outside the concrete free-function profile")
+
+
+# Concrete leaves and fixed dimensions are checked after substitution.
+public func complete(context: Context) -> bool:
+    for value in context.values:
+        if value is None:
+            return False
+    return True
+
+
+public func finish(context: Context, declaration: int, mut problems: syntax_problem.Diagnostic[]) -> generic_instances.Key fails syntax_value.Problem:
+    mut arguments: int[] = []
+    mut lengths: int?[] = []
+    for index in range(len(context.parameters)):
+        const value = context.values[index]
+        if value is None:
+            fail try related(context, context.parameters[index].name, "cannot infer every generic argument from call arguments and expected result; supply explicit type arguments", "undetermined parameter declared here", mut problems)
+        if value.length != context.parameters[index].constant_length:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="inferred argument disagrees with generic parameter kind")
+        if value.length:
+            arguments.append(8)
+            lengths.append(value.value)
+        else:
+            arguments.append(value.value)
+            lengths.append(None)
+    return generic_instances.Key(declaration=declaration, arguments=arguments, lengths=lengths)

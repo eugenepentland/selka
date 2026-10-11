@@ -9,6 +9,7 @@ import list_types
 import variants
 import obligations
 import failure_lower
+import generic_instances
 
 public func type_at(mut state: engine.State, span: int) -> int fails syntax_value.Problem:
     return try engine.type_at(mut state, span)
@@ -18,6 +19,7 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
     const first_problem = len(state.problems)
     const first_node = len(state.batch.nodes)
     const first_statement = len(state.batch.statements)
+    state.batch.facts.execution.current = id
     state.scope = locals.empty()
     state.batch.resolved = []
     state.batch.facts.expected = []
@@ -49,13 +51,9 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
             const rejection = try engine.problem(state, declaration, "P_BODY_PROFILE", "function owner or host is outside the B1 scalar profile")
             fail rejection
     const signature_id = try graph.field(state.syntax.pool, raw, "signature")
-    const generics_id = try graph.field(state.syntax.pool, signature_id, "type_parameters")
-    const generics = try graph.items(state.syntax.pool, generics_id)
     const failure_id = try graph.field(state.syntax.pool, signature_id, "failure_type")
     const failure = try graph.get(state.syntax.pool, failure_id)
-    if len(generics) != 0:
-        const rejection = try engine.problem(state, declaration, "P_BODY_PROFILE", "generic functions are outside the body profile")
-        fail rejection
+    _ = try engine.generic_parameters(state, id)
     const return_span = try graph.field(state.syntax.pool, signature_id, "return_type")
     const return_type = try type_at(mut state, return_span)
     state.control.success_type = return_type
@@ -125,9 +123,9 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
         const children = try emission.ids(mut state.batch, [body.id, ret])
         const block = try emission.statement(mut state.batch, state.syntax.pool, declaration, True, b"block", children)
         body = engine.Statement(id=block, terminates=True)
-    if len(state.scope.locals) > 65536 - state.batch.facts.local_count:
+    if len(state.scope.locals) > 65536 - state.batch.facts.execution.local_count:
         fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="aggregate local limit exceeded")
-    state.batch.facts.local_count = state.batch.facts.local_count + len(state.scope.locals)
+    state.batch.facts.execution.local_count = state.batch.facts.execution.local_count + len(state.scope.locals)
     mut local_values: int[] = []
     for local in state.scope.locals:
         const encoded = try locals.encode(mut state.batch.pool, state.syntax.pool, local)
@@ -150,11 +148,20 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
     const inferred = try syntax_value.object(mut state.batch.pool, ["writes", "external"], [no, no])
     const declared_id = try graph.field(state.syntax.pool, signature_id, "mut_positions")
     const declared = try graph.clone(mut state.batch.pool, state.syntax.pool, declared_id, 0)
-    const signature = try syntax_value.object(mut state.batch.pool, ["constant_arguments", "return_type", "parameter_count", "mutates", "return_origin", "declared_mutates", "inferred"], [empty_list, result_type, parameter_count, empty_list, unknown, declared, inferred])
+    const instance = try generic_instances.get(state.batch.facts.execution.registry, id)
+    const type_arguments = try emission.ids(mut state.batch, instance.arguments)
+    mut length_values: int[] = []
+    for length in instance.lengths:
+        mut encoded = try syntax_value.absent(mut state.batch.pool)
+        if length is not None:
+            encoded = try syntax_value.integer(mut state.batch.pool, length)
+        length_values.append(encoded)
+    const constant_arguments = try syntax_value.sequence(mut state.batch.pool, length_values)
+    const signature = try syntax_value.object(mut state.batch.pool, ["constant_arguments", "return_type", "parameter_count", "mutates", "return_origin", "declared_mutates", "inferred"], [constant_arguments, result_type, parameter_count, empty_list, unknown, declared, inferred])
     const identity = try syntax_value.integer(mut state.batch.pool, id)
     const function_name = try syntax_value.octets(mut state.batch.pool, name)
     const location = try graph.clone(mut state.batch.pool, state.syntax.pool, declaration, 0)
-    const function = try syntax_value.object(mut state.batch.pool, ["policy", "type_arguments", "signature", "scope", "id", "name", "declaration"], [policy, empty_list, signature, scope, identity, function_name, location])
+    const function = try syntax_value.object(mut state.batch.pool, ["policy", "type_arguments", "signature", "scope", "id", "name", "declaration"], [policy, type_arguments, signature, scope, identity, function_name, location])
     state.batch.functions.append(function)
     const node_start = try syntax_value.integer(mut state.batch.pool, first_node)
     const node_end = try syntax_value.integer(mut state.batch.pool, len(state.batch.nodes))

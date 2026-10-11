@@ -5,6 +5,7 @@ import graph
 import engine
 import functions
 import emission
+import generic_instances
 import names
 import sequences
 import list_types
@@ -169,10 +170,21 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
             row.append(flag.integer != 0)
         state.syntax.usage.append(row)
     mut diagnostics: syntax_problem.Diagnostic[] = []
-    mut id = 0
+    mut parameter_counts: int[] = []
     for function in state.syntax.functions:
+        const signature = try graph.field(pool, function, "signature")
+        const rows = try graph.field(pool, signature, "type_parameters")
+        const parameters = try graph.items(pool, rows)
+        parameter_counts.append(len(parameters))
+    const registry = try generic_instances.make(parameter_counts)
+    state.batch.facts.execution.registry = registry
+    mut id = 0
+    while id < len(state.batch.facts.execution.registry.queue):
+        const instance = try generic_instances.get(state.batch.facts.execution.registry, id)
+        const function = state.syntax.functions[instance.declaration]
         const name_span = try graph.field(pool, function, "name")
-        const name = try names.qualified(pool, source.data, modules, name_span)
+        const base_name = try names.qualified(pool, source.data, modules, name_span)
+        const name = try engine.instance_name(state, instance, base_name)
         const first_diagnostic = len(state.problems)
         match functions.check(mut state, function, id, name):
             case Ok(value):

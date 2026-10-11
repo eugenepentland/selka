@@ -1,0 +1,168 @@
+import syntax_value
+import syntax_problem
+import graph
+import engine
+import functions
+import generic_instances
+import generic_bindings
+import generic_inference
+import list_types
+import array_types
+
+func fresh(explicit: bool, recursive: bool) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const empty = try syntax_value.sequence(mut pool, [])
+    const absent = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    const yes = try syntax_value.boolean(mut pool, True)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const two = try syntax_value.integer(mut pool, 2)
+    const three = try syntax_value.integer(mut pool, 3)
+    const name = try syntax_value.span(mut pool, 0, 1)
+    const generic = try syntax_value.span(mut pool, 2, 3)
+    const parameter_name = try syntax_value.span(mut pool, 4, 5)
+    const concrete = try syntax_value.span(mut pool, 6, 9)
+    const main_name = try syntax_value.span(mut pool, 10, 14)
+    const literal = try syntax_value.span(mut pool, 15, 16)
+    const parameter = try syntax_value.object(mut pool, ["name", "ty", "mut", "named", "default_value"], [parameter_name, generic, no, no, absent])
+    const parameters = try syntax_value.sequence(mut pool, [parameter])
+    const type_parameter = try syntax_value.object(mut pool, ["name", "default_copy", "constant_length", "requirements", "field_requirements", "operation_requirements", "named_requirements"], [generic, yes, no, empty, empty, empty, empty])
+    const type_parameters = try syntax_value.sequence(mut pool, [type_parameter])
+    const signature = try syntax_value.object(mut pool, ["parameters", "type_parameters", "return_type", "failure_type", "mut_positions", "keyword_only_from"], [parameters, type_parameters, generic, absent, empty, absent])
+    const ordinary_signature = try syntax_value.object(mut pool, ["parameters", "type_parameters", "return_type", "failure_type", "mut_positions", "keyword_only_from"], [empty, empty, concrete, absent, empty, absent])
+    const policy = try syntax_value.object(mut pool, ["constant", "c_abi", "restricted", "conversion", "host", "owner", "effect_bound"], [no, no, no, no, absent, absent, absent])
+    const read_data = try syntax_value.tagged(mut pool, b"name", parameter_name)
+    const read_node = try syntax_value.object(mut pool, ["span", "data"], [parameter_name, read_data])
+    const integer_data = try syntax_value.tagged(mut pool, b"integer", literal)
+    const integer_node = try syntax_value.object(mut pool, ["span", "data"], [literal, integer_data])
+    const arguments = try syntax_value.sequence(mut pool, [one])
+    mut types = empty
+    if explicit:
+        types = try syntax_value.sequence(mut pool, [concrete])
+    const call = try syntax_value.object(mut pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name, arguments, empty, types])
+    const call_data = try syntax_value.tagged(mut pool, b"call", call)
+    const call_node = try syntax_value.object(mut pool, ["span", "data"], [name, call_data])
+    const recursive_arguments = try syntax_value.sequence(mut pool, [zero])
+    const recursive_call = try syntax_value.object(mut pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name, recursive_arguments, empty, empty])
+    const recursive_data = try syntax_value.tagged(mut pool, b"call", recursive_call)
+    const recursive_node = try syntax_value.object(mut pool, ["span", "data"], [name, recursive_data])
+    const nodes = try syntax_value.sequence(mut pool, [read_node, integer_node, call_node, recursive_node])
+    mut generic_result = zero
+    if recursive:
+        generic_result = three
+    const ret = try syntax_value.tagged(mut pool, b"ret", generic_result)
+    const generic_statement = try syntax_value.object(mut pool, ["span", "data"], [parameter_name, ret])
+    const ordinary_ret = try syntax_value.tagged(mut pool, b"ret", two)
+    const ordinary_statement = try syntax_value.object(mut pool, ["span", "data"], [name, ordinary_ret])
+    const statements = try syntax_value.sequence(mut pool, [generic_statement, ordinary_statement])
+    const generic_function = try syntax_value.object(mut pool, ["name", "signature", "body", "policy"], [name, signature, zero, policy])
+    const ordinary_function = try syntax_value.object(mut pool, ["name", "signature", "body", "policy"], [main_name, ordinary_signature, one, policy])
+    const declarations = try syntax_value.sequence(mut pool, [generic_function, ordinary_function])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const tables = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, statements, declarations, tables])
+    return try engine.make(pool, b"g T x int main 7", program)
+
+
+func check_functions(mut state: engine.State) -> Unit fails syntax_value.Problem:
+    mut id = 0
+    while id < len(state.batch.facts.execution.registry.queue):
+        const key = try generic_instances.get(state.batch.facts.execution.registry, id)
+        const raw = state.syntax.functions[key.declaration]
+        const name_span = try graph.field(state.syntax.pool, raw, "name")
+        const base = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const name = try engine.instance_name(state, key, base)
+        _ = try functions.check(mut state, raw, id, name)
+        id += 1
+
+
+public func test_explicit_specialization_metadata_and_ordinary_id_mapping() -> bool fails syntax_value.Problem:
+    mut state = try fresh(True, False)
+    _ = try check_functions(mut state)
+    const registry = state.batch.facts.execution.registry
+    const instance = try generic_instances.get(registry, 1)
+    const function = state.batch.functions[1]
+    const name_id = try graph.field(state.batch.pool, function, "name")
+    const name = try graph.get(state.batch.pool, name_id)
+    const types_id = try graph.field(state.batch.pool, function, "type_arguments")
+    const types = try graph.items(state.batch.pool, types_id)
+    const signature = try graph.field(state.batch.pool, function, "signature")
+    const lengths_id = try graph.field(state.batch.pool, signature, "constant_arguments")
+    const lengths = try graph.items(state.batch.pool, lengths_id)
+    const null = try graph.get(state.batch.pool, lengths[0])
+    const call_data = try graph.field(state.batch.pool, state.batch.nodes[1], "data")
+    const call = try graph.payload(state.batch.pool, call_data)
+    const target_id = try graph.field(state.batch.pool, call, "function")
+    const target = try graph.number(state.batch.pool, target_id)
+    return registry.ordinary == [-1, 0] and instance.declaration == 0 and instance.arguments == [0] and len(state.batch.functions) == 2 and len(types) == 1 and null.kind == 0 and name.data == b"g[i64]" and target == 1 and len(state.batch.ranges) == 2
+
+
+public func test_inferred_operand_and_contextual_result_use_same_instance() -> bool fails syntax_value.Problem:
+    mut inferred = try fresh(False, False)
+    const expression = try engine.expression(mut inferred, 2)
+    const key = try generic_instances.get(inferred.batch.facts.execution.registry, 1)
+    mut contextual = try fresh(False, False)
+    _ = try check_functions(mut contextual)
+    return expression.ty == 0 and key.arguments == [0] and contextual.batch.facts.execution.registry.entries == inferred.batch.facts.execution.registry.entries and len(contextual.batch.functions) == 2
+
+
+public func test_recursive_instance_reuses_registered_key_and_restores_caller_binding() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, True)
+    _ = try check_functions(mut state)
+    const key = try generic_instances.get(state.batch.facts.execution.registry, 1)
+    const local = state.scope.locals[0]
+    return len(state.batch.facts.execution.registry.entries) == 1 and len(state.batch.functions) == 2 and state.batch.facts.execution.current == 1 and key.arguments == [0] and local.ty == 0 and local.usage.reads == 1
+
+
+public func test_inference_conflict_preserves_related_parameter_span() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const parameter = try syntax_value.span(mut pool, 0, 1)
+    const site = try syntax_value.span(mut pool, 2, 3)
+    const parameters = [generic_bindings.Parameter(name=parameter, constant_length=False, requirements=17)]
+    mut context = generic_inference.make(pool, b"T f", list_types.empty(), parameters, site)
+    # The public matcher records the native related-span diagnostic itself.
+    mut diagnostics: syntax_problem.Diagnostic[] = []
+    _ = try generic_inference.match_type(mut context, parameter, generic_inference.Actual(value=0, length=False), mut diagnostics, 0)
+    match generic_inference.match_type(mut context, parameter, generic_inference.Actual(value=1, length=False), mut diagnostics, 0):
+        case Ok(unexpected):
+            return False
+        case Err(rejected):
+            return rejected.code == "E_GENERIC_INFERENCE" and rejected.start == 2 and rejected.end == 3 and len(diagnostics) == 1 and diagnostics[0].notes.related[0].start == 0 and diagnostics[0].notes.related[0].message == "conflicting parameter declared here"
+
+
+public func test_fixed_array_inference_preserves_type_and_unsigned_length_slots() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const full = try syntax_value.span(mut pool, 0, 4)
+    const dimension = try syntax_value.span(mut pool, 1, 2)
+    const element = try syntax_value.span(mut pool, 3, 4)
+    const count_name = try syntax_value.span(mut pool, 5, 6)
+    const type_name = try syntax_value.span(mut pool, 7, 8)
+    const index = try syntax_value.tagged(mut pool, b"length", dimension)
+    const array = try syntax_value.object(mut pool, ["span", "index", "element"], [full, index, element])
+    mut catalog = list_types.empty()
+    _ = try array_types.add(mut catalog.types.arrays, array_types.Array(id=19, element=2, length=4, key=-1))
+    catalog.types.arrays.sources = [array]
+    const parameters = [generic_bindings.Parameter(name=count_name, constant_length=True, requirements=0), generic_bindings.Parameter(name=type_name, constant_length=False, requirements=17)]
+    mut context = generic_inference.make(pool, b"[N]T N T", catalog, parameters, full)
+    mut diagnostics: syntax_problem.Diagnostic[] = []
+    _ = try generic_inference.match_type(mut context, full, generic_inference.Actual(value=19, length=False), mut diagnostics, 0)
+    const key = try generic_inference.finish(context, 3, mut diagnostics)
+    const bindings = generic_bindings.Context(pool=pool, source=b"[N]T N T")
+    const count = try generic_bindings.length_value(bindings, parameters, key, dimension)
+    const ty = try generic_bindings.type_value(bindings, parameters, key, element)
+    return key.declaration == 3 and key.arguments == [8, 2] and key.lengths == [Some(4), None] and count == 4 and ty == 2 and len(diagnostics) == 0
+
+
+public func test_undetermined_inference_retains_requirement_and_site() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const name = try syntax_value.span(mut pool, 0, 1)
+    const site = try syntax_value.span(mut pool, 2, 3)
+    const parameters = [generic_bindings.Parameter(name=name, constant_length=False, requirements=17)]
+    const context = generic_inference.make(pool, b"T f", list_types.empty(), parameters, site)
+    mut diagnostics: syntax_problem.Diagnostic[] = []
+    match generic_inference.finish(context, 0, mut diagnostics):
+        case Ok(unexpected):
+            return False
+        case Err(rejected):
+            return rejected.code == "E_GENERIC_INFERENCE" and rejected.message == "cannot infer every generic argument from call arguments and expected result; supply explicit type arguments" and rejected.start == 2 and rejected.end == 3 and len(diagnostics) == 1 and diagnostics[0].notes.related[0].message == "undetermined parameter declared here"

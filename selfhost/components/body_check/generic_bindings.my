@@ -1,0 +1,85 @@
+import syntax_value
+import graph
+import generic_instances
+import generic_lengths
+
+public record Context:
+    pool: syntax_value.Pool
+    source: bytes
+
+
+public record Parameter:
+    name: int
+    constant_length: bool
+    requirements: int
+
+
+func problem(context: Context, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start = try graph.field(context.pool, span, "start")
+    const end = try graph.field(context.pool, span, "end")
+    const first = try graph.number(context.pool, start)
+    const last = try graph.number(context.pool, end)
+    return syntax_value.Problem(code=code, start=first, end=last, message=message)
+
+
+# Common checking still owns universal template validity. This projection only
+# selects the builtin promises supported by concrete free-function instances.
+public func prepare(context: Context, rows: int[]) -> Parameter[] fails syntax_value.Problem:
+    mut result: Parameter[] = []
+    for row in rows:
+        const name = try graph.field(context.pool, row, "name")
+        for field in ["field_requirements", "operation_requirements", "named_requirements"]:
+            const value = try graph.field(context.pool, row, field)
+            const members = try graph.items(context.pool, value)
+            if len(members) != 0:
+                fail try problem(context, name, "P_BODY_PROFILE", "structural and named generic requirements are outside the concrete free-function profile")
+        const length_id = try graph.field(context.pool, row, "constant_length")
+        const length = try graph.get(context.pool, length_id)
+        const copy_id = try graph.field(context.pool, row, "default_copy")
+        const copy = try graph.get(context.pool, copy_id)
+        mut bits = 0
+        if copy.integer != 0:
+            bits = 17
+        const requirements_id = try graph.field(context.pool, row, "requirements")
+        const requirements = try graph.items(context.pool, requirements_id)
+        for requirement in requirements:
+            const spelling = try graph.spelling(context.pool, context.source, requirement)
+            if spelling == b"copy":
+                bits = bits | 17
+            elif spelling == b"equality":
+                bits = bits | 19
+            elif spelling == b"integer":
+                bits = bits | 23
+            elif spelling == b"storable":
+                bits = bits | 16
+            else:
+                fail try problem(context, requirement, "P_BODY_PROFILE", "generic requirement is outside the concrete free-function profile")
+        result.append(Parameter(name=name, constant_length=length.integer != 0, requirements=bits))
+    return result
+
+
+public func index(context: Context, parameters: Parameter[], span: int) -> int fails syntax_value.Problem:
+    const spelling = try graph.spelling(context.pool, context.source, span)
+    for position in range(len(parameters)):
+        const candidate = try graph.spelling(context.pool, context.source, parameters[position].name)
+        if spelling == candidate:
+            return position
+    return -1
+
+
+public func type_value(context: Context, parameters: Parameter[], key: generic_instances.Key, span: int) -> int fails syntax_value.Problem:
+    const position = try index(context, parameters, span)
+    if position < 0:
+        return -1
+    if parameters[position].constant_length:
+        fail try problem(context, span, "E_GENERIC_LENGTH", "a const length parameter is a value, not a type")
+    if position >= len(key.arguments):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="type parameter lacks its specialization argument")
+    return key.arguments[position]
+
+
+public func length_value(context: Context, parameters: Parameter[], key: generic_instances.Key, span: int) -> int fails syntax_value.Problem:
+    mut names: generic_lengths.Parameter[] = []
+    for parameter in parameters:
+        names.append(generic_lengths.Parameter(name=parameter.name, constant_length=parameter.constant_length))
+    return try generic_lengths.resolve(generic_lengths.Context(pool=context.pool, source=context.source), span, names, key.lengths)

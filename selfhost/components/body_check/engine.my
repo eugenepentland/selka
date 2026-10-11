@@ -14,6 +14,9 @@ import prelude_order
 import sequences
 import text_methods
 import emission
+import generic_instances
+import generic_bindings
+import generic_inference
 import locals
 import syntax_problem
 import names
@@ -144,6 +147,14 @@ public func make(pool: syntax_value.Pool, source: bytes, program: int) -> State 
     const statements = try graph.items(pool, statement_list)
     const functions = try graph.items(pool, function_list)
     mut batch = emission.empty()
+    mut parameter_counts: int[] = []
+    for function in functions:
+        const signature = try graph.field(pool, function, "signature")
+        const rows = try graph.field(pool, signature, "type_parameters")
+        const parameters = try graph.items(pool, rows)
+        parameter_counts.append(len(parameters))
+    const registry = try generic_instances.make(parameter_counts)
+    batch.facts.execution.registry = registry
     for function in functions:
         const span = try graph.field(pool, function, "name")
         const name = try graph.spelling(pool, source, span)
@@ -210,6 +221,12 @@ public func declared_symbol(state: State, span: int) -> bool fails syntax_value.
 
 
 public func top_level(state: State, span: int) -> bool fails syntax_value.Problem:
+    const current = state.batch.facts.execution.current
+    if current >= 0:
+        const parameters = try generic_parameters(state, current)
+        const position = try generic_bindings.index(generic_bindings.Context(pool=state.syntax.pool, source=state.syntax.source), parameters, span)
+        if position >= 0 and parameters[position].constant_length:
+            return True
     const name = try graph.spelling(state.syntax.pool, state.syntax.source, span)
     if len(state.syntax.modules) == 0:
         for candidate in state.batch.facts.top_names:
@@ -878,6 +895,20 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             name = value.data
         else:
             name = try graph.spelling(state.syntax.pool, state.syntax.source, payload)
+        if data.data == b"name" and state.batch.facts.execution.current >= 0:
+            const current = state.batch.facts.execution.current
+            const parameters = try generic_parameters(state, current)
+            const position = try generic_bindings.index(generic_bindings.Context(pool=state.syntax.pool, source=state.syntax.source), parameters, payload)
+            if position >= 0 and parameters[position].constant_length:
+                const key = try generic_instances.get(state.batch.facts.execution.registry, current)
+                const length = key.lengths[position]
+                if length is None:
+                    fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="constant parameter lacks its specialization length")
+                const number = try syntax_value.integer(mut state.batch.pool, length)
+                const id = try emission.node(mut state.batch, state.syntax.pool, span, 8, b"integer", number)
+                state.batch.resolved[raw_id] = id
+                state.depth -= 1
+                return Expression(id=id, ty=8)
         const slot = locals.find(state.scope, name)
         if slot < 0 and data.data == b"name":
             const absent = try syntax_value.absent(mut state.syntax.pool)
@@ -1035,7 +1066,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                     state.depth = state.depth - 1
                     return result
         const type_arguments_id = try graph.field(state.syntax.pool, payload, "type_arguments")
-        const type_arguments = try graph.items(state.syntax.pool, type_arguments_id)
+        mut type_arguments = try graph.items(state.syntax.pool, type_arguments_id)
         mut explicit_count = len(type_arguments)
         for application in state.batch.facts.applications:
             const application_span = try graph.field(state.syntax.pool, application, "span")
@@ -1046,6 +1077,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 const arguments_id = try graph.field(state.syntax.pool, application, "arguments")
                 const application_arguments = try graph.items(state.syntax.pool, arguments_id)
                 explicit_count = len(application_arguments)
+                type_arguments = application_arguments
                 break
         const owner = try graph.field(state.syntax.pool, payload, "owner")
         const raw_callee = try graph.spelling(state.syntax.pool, state.syntax.source, call_name)
@@ -1594,9 +1626,41 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             const rejection = try problem(state, call_name, "E_UNKNOWN_FUNCTION", "no function has this qualified name" + clause)
             fail rejection
         const target_signature = try graph.field(state.syntax.pool, state.syntax.functions[target], "signature")
-        if explicit_count != 0:
+        const required = try declaration_parameters(state, target)
+        if explicit_count != 0 and explicit_count != len(required):
             const rejection = try problem(state, span, "E_GENERIC_ARITY", "explicit type argument count does not match generic parameters")
             fail rejection
+        mut instance = try generic_instances.ordinary_function(state.batch.facts.execution.registry, target)
+        mut inference = generic_inference.make(state.syntax.pool, state.syntax.source, state.batch.facts.lists, required, span)
+        inference.types.applications = state.batch.facts.applications
+        if instance < 0:
+            if explicit_count != 0:
+                mut values: int[] = []
+                mut lengths: int?[] = []
+                const caller = state.batch.facts.execution.current
+                for position in range(len(required)):
+                    if required[position].constant_length:
+                        const parameters = try generic_parameters_for_length(state, caller)
+                        mut key = generic_instances.Key(declaration=-1, arguments=[], lengths=[])
+                        if caller >= 0:
+                            key = try generic_instances.get(state.batch.facts.execution.registry, caller)
+                        const value = try generic_bindings.length_value(generic_bindings.Context(pool=state.syntax.pool, source=state.syntax.source), parameters, key, type_arguments[position])
+                        values.append(8)
+                        lengths.append(value)
+                    else:
+                        const value = try type_at(mut state, type_arguments[position])
+                        values.append(value)
+                        lengths.append(None)
+                const key = generic_instances.Key(declaration=target, arguments=values, lengths=lengths)
+                _ = try generic_requirements(mut state, required, key, type_arguments, span)
+                instance = try generic_instances.intern(mut state.batch.facts.execution.registry, state.syntax.pool, span, key)
+            elif state.batch.facts.expected[raw_id] >= 0:
+                const result_span = try graph.field(state.syntax.pool, target_signature, "return_type")
+                _ = try generic_inference.match_type(mut inference, result_span, generic_inference.Actual(value=state.batch.facts.expected[raw_id], length=False), mut state.problems, 0)
+                if generic_inference.complete(inference):
+                    const key = try generic_inference.finish(inference, target, mut state.problems)
+                    _ = try generic_requirements(mut state, required, key, [], span)
+                    instance = try generic_instances.intern(mut state.batch.facts.execution.registry, state.syntax.pool, span, key)
         const mutation_positions_id = try graph.field(state.syntax.pool, target_signature, "mut_positions")
         const mutation_positions = try graph.items(state.syntax.pool, mutation_positions_id)
         const keyword_boundary_id = try graph.field(state.syntax.pool, target_signature, "keyword_only_from")
@@ -1649,10 +1713,17 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 fail rejection
             const argument_raw = try graph.number(state.syntax.pool, argument)
             const type_span = try graph.field(state.syntax.pool, parameters[position], "ty")
-            const expected = try type_at(mut state, type_span)
+            mut expected = -1
+            if instance >= 0:
+                expected = try function_type_at(mut state, instance, type_span)
+            else:
+                const symbolic = try generic_annotation(state, required, type_span)
+                if not symbolic:
+                    expected = try type_at(mut state, type_span)
             const checked = try expression_expected(mut state, argument_raw, expected)
-            const argument_span = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "span")
-            _ = try require(state, checked.ty, expected, argument_span)
+            if instance >= 0:
+                const argument_span = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "span")
+                _ = try require(state, checked.ty, expected, argument_span)
             slots[position] = checked.id
             raw_slots[position] = argument_raw
             order.append(position)
@@ -1671,6 +1742,20 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 slots[position] = checked.id
                 raw_slots[position] = default_raw
                 order.append(position)
+        if instance < 0:
+            for position in range(len(parameters)):
+                const type_span = try graph.field(state.syntax.pool, parameters[position], "ty")
+                const actual = try typed_type(state, slots[position])
+                _ = try generic_inference.match_type(mut inference, type_span, generic_inference.Actual(value=actual, length=False), mut state.problems, 0)
+            const key = try generic_inference.finish(inference, target, mut state.problems)
+            _ = try generic_requirements(mut state, required, key, [], span)
+            instance = try generic_instances.intern(mut state.batch.facts.execution.registry, state.syntax.pool, span, key)
+        for position in range(len(parameters)):
+            const type_span = try graph.field(state.syntax.pool, parameters[position], "ty")
+            const expected = try function_type_at(mut state, instance, type_span)
+            const actual = try typed_type(state, slots[position])
+            const argument_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw_slots[position]], "span")
+            _ = try require(state, actual, expected, argument_span)
         mut mutation_indices: int[] = []
         for position_id in mutation_positions:
             const position = try graph.number(state.syntax.pool, position_id)
@@ -1695,17 +1780,17 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         if len(arguments) == len(parameters) and len(argument_names) == 0:
             order = []
         const result_span = try graph.field(state.syntax.pool, target_signature, "return_type")
-        ty = try type_at(mut state, result_span)
+        ty = try function_type_at(mut state, instance, result_span)
         const failure_span = try graph.field(state.syntax.pool, target_signature, "failure_type")
         const failure_value = try graph.get(state.syntax.pool, failure_span)
         if failure_value.kind != 0:
-            const failure_type = try type_at(mut state, failure_span)
+            const failure_type = try function_type_at(mut state, instance, failure_span)
             const declaration = try graph.field(state.syntax.pool, state.syntax.functions[target], "name")
             ty = try list_types.union_intern(mut state.batch.facts.lists, mut state.syntax.pool, ty, failure_type, declaration, True)
         const argument_values = try emission.ids(mut state.batch, slots)
         const evaluation_order = try emission.ids(mut state.batch, order)
         const evaluation = try syntax_value.absent(mut state.batch.pool)
-        const function = try syntax_value.integer(mut state.batch.pool, target)
+        const function = try syntax_value.integer(mut state.batch.pool, instance)
         result_payload = try syntax_value.object(mut state.batch.pool, ["evaluation_order", "evaluation", "function", "arguments"], [evaluation_order, evaluation, function, argument_values])
     elif data.data == b"variant":
         const type_span = try graph.field(state.syntax.pool, payload, "ty")
@@ -2680,7 +2765,141 @@ func type_name(state: State, ty: int) -> str:
     return scalars.name(ty)
 
 
+func typed_type(state: State, node: int) -> int fails syntax_value.Problem:
+    const value = try graph.field(state.batch.pool, state.batch.nodes[node], "ty")
+    return try graph.number(state.batch.pool, value)
+
+
+func identifier(byte: int) -> bool:
+    return (byte >= 65 and byte <= 90) or (byte >= 97 and byte <= 122) or (byte >= 48 and byte <= 57) or byte == 95
+
+
+func generic_annotation(state: State, parameters: generic_bindings.Parameter[], span: int) -> bool fails syntax_value.Problem:
+    const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    for parameter in parameters:
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, parameter.name)
+        for start in range(len(text)):
+            if start != 0 and identifier(text[start - 1]):
+                continue
+            const end = start + len(name)
+            if end > len(text) or (end < len(text) and identifier(text[end])):
+                continue
+            if text[start:end] == name:
+                return True
+    return False
+
+
+func generic_requirements(mut state: State, parameters: generic_bindings.Parameter[], key: generic_instances.Key, sites: int[], span: int) -> Unit fails syntax_value.Problem:
+    for index in range(len(parameters)):
+        const parameter = parameters[index]
+        if parameter.constant_length:
+            continue
+        const ty = key.arguments[index]
+        mut storable = ty == 0 or ty == 1 or ty == 15 or scalars.is_integer(ty)
+        mut move_only = False
+        mut pending = False
+        if ty >= 19:
+            if list_types.element_type(state.batch.facts.lists, ty) >= 0:
+                storable = True
+            elif ty - 19 < len(state.batch.facts.lists.types.records.rows):
+                const record = state.batch.facts.lists.types.records.rows[ty - 19]
+                const contract = try graph.field(state.syntax.pool, record, "contract")
+                const storage = try graph.field(state.syntax.pool, contract, "storable")
+                const moves = try graph.field(state.syntax.pool, contract, "move_only")
+                const handles = try graph.field(state.syntax.pool, contract, "requires_handling")
+                const storage_value = try graph.get(state.syntax.pool, storage)
+                const moves_value = try graph.get(state.syntax.pool, moves)
+                const handles_value = try graph.get(state.syntax.pool, handles)
+                storable = storage_value.integer != 0
+                move_only = moves_value.integer != 0
+                pending = handles_value.integer != 0
+        mut accepts = True
+        if (parameter.requirements & 16) != 0 and not storable:
+            accepts = False
+        if (parameter.requirements & 4) != 0 and not scalars.is_integer(ty):
+            accepts = False
+        if (parameter.requirements & 2) != 0:
+            const managed_types = [state.batch.facts.string_type, state.batch.facts.bytes_type, state.batch.facts.lists.types.buffer.id]
+            const supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, ty, managed_types, [])
+            if not supported:
+                accepts = False
+        if (parameter.requirements & 1) != 0 and (move_only or pending):
+            accepts = False
+        if not accepts:
+            mut at = span
+            if len(sites) != 0:
+                at = sites[index]
+            const rejection = try problem(state, at, "E_GENERIC_ARGUMENT", "type argument does not satisfy the callee's declared requirements")
+            const location = try problem(state, parameter.name, "", "")
+            const detail = syntax_problem.Related(start=location.start, end=location.end, message="required type parameter declared here", role="related")
+            state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[detail], origin=[], requirement=[], edits=[])))
+            fail rejection
+
+
+public func generic_parameters(state: State, function: int) -> generic_bindings.Parameter[] fails syntax_value.Problem:
+    if function < 0:
+        return []
+    const key = try generic_instances.get(state.batch.facts.execution.registry, function)
+    return try declaration_parameters(state, key.declaration)
+
+
+func generic_parameters_for_length(state: State, function: int) -> generic_bindings.Parameter[] fails syntax_value.Problem:
+    return try generic_parameters(state, function)
+
+
+func declaration_parameters(state: State, declaration: int) -> generic_bindings.Parameter[] fails syntax_value.Problem:
+    const signature = try graph.field(state.syntax.pool, state.syntax.functions[declaration], "signature")
+    const rows = try graph.field(state.syntax.pool, signature, "type_parameters")
+    const parameters = try graph.items(state.syntax.pool, rows)
+    return try generic_bindings.prepare(generic_bindings.Context(pool=state.syntax.pool, source=state.syntax.source), parameters)
+
+
+func instance_argument_name(state: State, ty: int, depth: int) -> bytes fails syntax_value.Problem:
+    if depth >= 256:
+        fail syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="generic argument name exceeds type depth limit")
+    if ty >= 19 and ty - 19 >= len(state.batch.facts.lists.types.records.rows):
+        const element = list_types.element_type(state.batch.facts.lists, ty)
+        if element >= 0:
+            const name = try instance_argument_name(state, element, depth + 1)
+            return b"list<" + name + b">"
+    return try variants.internal_name(state.syntax.pool, state.batch.facts.lists.types.records.rows, ty)
+
+
+public func instance_name(state: State, key: generic_instances.Key, base: bytes) -> bytes fails syntax_value.Problem:
+    if len(key.arguments) == 0:
+        return base
+    mut name = base + b"["
+    for position in range(len(key.arguments)):
+        if position != 0:
+            name = name + b","
+        const length = key.lengths[position]
+        if length is not None:
+            name = name + str(length).encode()
+        else:
+            const argument_name = try instance_argument_name(state, key.arguments[position], 0)
+            name = name + argument_name
+    return name + b"]"
+
+
+func function_type_at(mut state: State, function: int, span: int) -> int fails syntax_value.Problem:
+    const previous = state.batch.facts.execution.current
+    state.batch.facts.execution.current = function
+    match type_at(mut state, span):
+        case Ok(ty):
+            state.batch.facts.execution.current = previous
+            return ty
+        case Err(rejection):
+            state.batch.facts.execution.current = previous
+            fail rejection
+
+
 func array_length(state: State, span: int) -> int fails syntax_value.Problem:
+    const current = state.batch.facts.execution.current
+    if current >= 0:
+        const key = try generic_instances.get(state.batch.facts.execution.registry, current)
+        if len(key.arguments) != 0:
+            const parameters = try generic_parameters(state, current)
+            return try generic_bindings.length_value(generic_bindings.Context(pool=state.syntax.pool, source=state.syntax.source), parameters, key, span)
     const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, span)
     if len(spelling) == 0 or spelling[0] < 48 or spelling[0] > 57:
         const rejection = try problem(state, span, "P_BODY_PROFILE", "array length expression requires scalar constant evaluation")
@@ -2690,6 +2909,14 @@ func array_length(state: State, span: int) -> int fails syntax_value.Problem:
 
 
 public func type_at(mut state: State, span: int) -> int fails syntax_value.Problem:
+    const current = state.batch.facts.execution.current
+    if current >= 0:
+        const key = try generic_instances.get(state.batch.facts.execution.registry, current)
+        if len(key.arguments) != 0:
+            const parameters = try generic_parameters(state, current)
+            const bound = try generic_bindings.type_value(generic_bindings.Context(pool=state.syntax.pool, source=state.syntax.source), parameters, key, span)
+            if bound >= 0:
+                return bound
     const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
     if text == b"float" and state.batch.facts.float_type >= 0:
         return state.batch.facts.float_type
@@ -2711,6 +2938,10 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
                 const variant = try variants.shape(state.syntax.pool, state.batch.facts.lists.types.records.rows, key)
                 length = len(variant.cases)
             const ty = array_types.find(state.batch.facts.lists.types.arrays, element, length, key)
+            if ty < 0 and current >= 0:
+                const instance_key = try generic_instances.get(state.batch.facts.execution.registry, current)
+                if len(instance_key.arguments) != 0 and key == -1:
+                    return try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, element, length, span)
             if ty < 0:
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "annotated array type is absent from the common catalog")
                 fail rejection
@@ -2726,6 +2957,10 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
                 const ty = try type_at(mut state, element)
                 types.append(ty)
             const ty = tuple_types.find(state.batch.facts.lists.types.tuples, types)
+            if ty < 0 and current >= 0:
+                const instance_key = try generic_instances.get(state.batch.facts.execution.registry, current)
+                if len(instance_key.arguments) != 0:
+                    return try list_types.tuple_intern(mut state.batch.facts.lists, mut state.syntax.pool, types, span)
             if ty < 0:
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "annotated tuple type is absent from the common catalog")
                 fail rejection
@@ -2760,6 +2995,10 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
                 const element = try type_at(mut state, arguments[0])
                 const length = try array_length(state, arguments[1])
                 const ty = array_types.find(state.batch.facts.lists.types.arrays, element, length, -1)
+                if ty < 0 and current >= 0:
+                    const instance_key = try generic_instances.get(state.batch.facts.execution.registry, current)
+                    if len(instance_key.arguments) != 0:
+                        return try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, element, length, span)
                 if ty < 0:
                     const rejection = try problem(state, span, "P_BODY_PROFILE", "annotated array type is absent from the common catalog")
                     fail rejection
@@ -4539,7 +4778,8 @@ func constant_read(mut state: State, target: int, span: int) -> Expression fails
         return try constant_scalar(mut state, state.syntax.functions[target], span)
     const order = try emission.ids(mut state.batch, [])
     const evaluation = try syntax_value.absent(mut state.batch.pool)
-    const function = try syntax_value.integer(mut state.batch.pool, target)
+    const ordinary = try generic_instances.ordinary_function(state.batch.facts.execution.registry, target)
+    const function = try syntax_value.integer(mut state.batch.pool, ordinary)
     const arguments = try emission.ids(mut state.batch, [])
     const payload = try syntax_value.object(mut state.batch.pool, ["evaluation_order", "evaluation", "function", "arguments"], [order, evaluation, function, arguments])
     const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, b"call", payload)
