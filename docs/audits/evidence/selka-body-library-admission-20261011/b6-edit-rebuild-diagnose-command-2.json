@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/tools/selka-components",
+    "--root",
+    "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b6-edit-rebuild-diagnose/coordinator-source",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--install-dir",
+    "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b6-edit-rebuild-diagnose/coordinator-install"
+  ],
+  "status": 1,
+  "address_space_budget": 4294967296
+}
