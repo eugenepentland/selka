@@ -51,6 +51,9 @@ import hash_keys
 import set_lower
 import membership_lower
 import gather_lower
+import gather_pair
+import tuple_types
+import tuple_lower
 import dictionary_view_contains
 
 public record Syntax:
@@ -402,6 +405,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         return result
     elif data.data == b"membership":
         const result = try membership_value(mut state, payload, span)
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
+    elif data.data == b"tuple":
+        const result = try tuple_value(mut state, raw_id, payload, span)
         state.batch.resolved[raw_id] = result.id
         state.depth = state.depth - 1
         return result
@@ -2330,6 +2338,14 @@ public func managed(state: State, ty: int) -> bool:
 
 
 func type_name(state: State, ty: int) -> str:
+    const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, ty)
+    if tuple.id >= 0:
+        mut name = "tuple["
+        for position in range(len(tuple.elements)):
+            if position > 0:
+                name = name + ", "
+            name = name + type_name(state, tuple.elements[position])
+        return name + "]"
     const element = list_types.element_type(state.batch.facts.lists, ty)
     if element >= 0:
         return type_name(state, element) + "[]"
@@ -4890,8 +4906,7 @@ func gather_step(mut state: State, payload: int, span: int) -> list_lower.Lowere
     const expected = collection_types.schema(state.batch.facts.lists.types.collections, sink.expected)
     if sink.kind == b"dict":
         if key_value.kind == 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "dictionary generator pairs require tuple gather projection")
-            fail rejection
+            return try dictionary_pair_step(mut state, position, value_raw, span)
         const key_raw = try graph.number(state.syntax.pool, key_id)
         mut key_hint = -1
         if expected.id >= 0 and expected.kind == 0:
@@ -5046,3 +5061,70 @@ func set_value_access(mut state: State, span: int, base: Expression, method: byt
     const arity = if empty then 0 else 1
     _ = try set_arity(mut state, span, schema.id, schema.key, method, len(inputs), arity)
     return try set_checked(mut state, span, schema, base.id, method, values)
+
+
+func tuple_value(mut state: State, raw_id: int, payload: int, span: int) -> Expression fails syntax_value.Problem:
+    const inputs = try graph.items(state.syntax.pool, payload)
+    if len(inputs) < 2 or len(inputs) > 8:
+        const rejection = try problem(state, span, "E_TUPLE_ARITY", "a tuple has between 2 and 8 elements; declare a record for a larger group")
+        fail rejection
+    const expected = tuple_types.schema(state.batch.facts.lists.types.tuples, state.batch.facts.expected[raw_id])
+    if expected.id >= 0 and len(expected.elements) != len(inputs):
+        const message = "this tuple has " + str(len(inputs)) + " elements but " + type_name(state, expected.id) + " has " + str(len(expected.elements)) + "; write " + str(len(expected.elements)) + " elements"
+        const rejection = try problem(state, span, "E_TUPLE_ARITY", message)
+        fail rejection
+    mut values: int[] = []
+    mut elements: int[] = []
+    for position in range(len(inputs)):
+        const child = try graph.number(state.syntax.pool, inputs[position])
+        mut hint = -1
+        if expected.id >= 0:
+            hint = expected.elements[position]
+        const value = try expression_expected(mut state, child, hint)
+        if hint >= 0:
+            const child_span = try graph.field(state.syntax.pool, state.syntax.nodes[child], "span")
+            _ = try require(state, value.ty, hint, child_span)
+        values.append(value.id)
+        elements.append(if hint >= 0 then hint else value.ty)
+    mut ty = expected.id
+    if ty < 0:
+        const inferred = try list_types.tuple_intern(mut state.batch.facts.lists, mut state.syntax.pool, elements, span)
+        ty = inferred
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const id = try tuple_lower.literal(mut state.batch, context, ty, values)
+    return Expression(id=id, ty=ty)
+
+
+func dictionary_pair_step(mut state: State, position: int, raw: int, span: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const pair = try expression(mut state, raw)
+    const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, pair.ty)
+    if tuple.id < 0 or len(tuple.elements) != 2:
+        const rejection = try problem(state, span, "E_PRELUDE_TYPE", "dict() consumes a generator of (key, value) pairs")
+        state.problems.append(syntax_problem.alternative(rejection, "or write a dict comprehension: `{k: v for k, v in pairs}`"))
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const projected = try gather_pair.project(mut state.batch, mut state.scope, context, gather_pair.Input(value=pair.id, ty=pair.ty, key_type=tuple.elements[0], value_type=tuple.elements[1]))
+    const sink = state.control.values.gathers[position]
+    mut ty = sink.expected
+    const expected = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+    if expected.id < 0 or expected.kind != 0:
+        const inferred = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=0, key=tuple.elements[0], value=tuple.elements[1], owner=-1), span)
+        ty = inferred
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+    _ = try require_hash_key(mut state, tuple.elements[0], span, False)
+    _ = try require(state, tuple.elements[0], schema.key, span)
+    _ = try require(state, tuple.elements[1], schema.value, span)
+    try gather_storable(mut state, tuple.elements[1], span, True)
+    mut owner = sink.owner
+    if owner < 0:
+        const accumulator = try list_lower.temporary(mut state.scope, context, ty)
+        owner = accumulator
+        state.control.values.gathers[position].owner = owner
+    const lowered = try gather_lower.step(mut state.batch, mut state.scope, context, gather_lower.Step(owner=owner, key=projected.key, value=projected.value, kind=b"dict"))
+    const previous = try graph.items(state.batch.pool, lowered.payload)
+    mut statements: int[] = [projected.initialize]
+    for entry in previous:
+        const statement_id = try graph.number(state.batch.pool, entry)
+        statements.append(statement_id)
+    const payload = try emission.ids(mut state.batch, statements)
+    return list_lower.Lowered(ty=15, tag=b"block", payload=payload)
