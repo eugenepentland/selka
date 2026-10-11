@@ -4,7 +4,7 @@ B1 through B9 transfer body checking for every admitted ordinary function to a q
 
 ## Framing
 
-The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/9`, direction `0` request or `1` reply, payload byte length at offset20, nonce8 at24 and request payload SHA256 at32. A reply echoes bytes24..64 exactly. Both complete frames are at most64MiB. Payloads are named postorder logical tables under `SLKBKI01`/`SLKBKR01`, using the existing parser value kinds0null,1signedi64,2bool,3bytes,4enum-tag,5namedrecord,6list,7taggedunion. Payload header contains value count and final root ID. References must point backward; duplicate/unknown fields, malformed tags, trailing bytes and correlation mismatches are host protocol failures.
+The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/10`, direction `0` request or `1` reply, payload byte length at offset20, nonce8 at24 and request payload SHA256 at32. A reply echoes bytes24..64 exactly. Both complete frames are at most64MiB. Payloads are named postorder logical tables under `SLKBKI01`/`SLKBKR01`, using the existing parser value kinds0null,1signedi64,2bool,3bytes,4enum-tag,5namedrecord,6list,7taggedunion. Payload header contains value count and final root ID. References must point backward; duplicate/unknown fields, malformed tags, trailing bytes and correlation mismatches are host protocol failures.
 
 ## Request
 
@@ -101,3 +101,17 @@ Schema 9 keeps the Batch, Catalog and row layout unchanged. Body-only value kind
 Every fixed integer width is checked against its exact mathematical bounds. Integer casts, arithmetic, bitwise, shifts, wrapping/saturating operations and comparisons retain native operand/result types. Unicode scalar bounds apply separately to string-array constant elements; ordinary u32 values use the full unsigned32 range. The authenticated retained synthetic float domain has zero declaration, name `float` and u64 backing; arbitrary source domains remain outside admission. Binary64 literals and conversions preserve exact u64 bit patterns with native wrap/unwrap and closed f64 unary/binary opcodes, including native operand temporaries and floor-division/remainder lowering. Parsing operations require the exact canonical Option[int|float] identity, immutable canonical str/bytes receivers and exact arity; range operands are fixed integers. Source parsing, numeric promotion, name shadowing, diagnostics and fixes remain producer-owned. No numeric operation bypasses native Core traps.
 
 All earlier body frame schemas are refused; every existing source/catalog/table/row/edge/depth/wire/decode bound remains unchanged. Native catalog, effects, origins, entry checks and final postpasses remain retained; this wave does not admit user domains, generic bodies, callbacks or contracts. Packaging and producer qualification follow separately.
+
+
+## Schema10 structural recipes
+
+`CatalogRecipe.structural` is a tagged `tuple{id,elements:Type[]}` or numeric
+`array{id,element,length,span}`. Direct native tuples have no source span; their
+canonical declaration and positional-field spans are zero. Numeric arrays retain
+the actual specialization site. Retained enum tables carry their exact enum key,
+case order and field identities in the common catalog. All recipe families share
+contiguous first-demand IDs, duplicate rejection, prior dependencies and the
+existing depth/transport budgets. Native materialization independently compares
+the complete resulting schema. Every earlier body frame/package schema is
+rejected. This protocol preparation does not claim complete Selka structural
+source admission; the strict installed tuple/array/table corpus remains required.

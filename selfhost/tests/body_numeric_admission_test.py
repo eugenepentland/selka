@@ -111,7 +111,7 @@ class NumericAdmissionTests(unittest.TestCase):
                                native_controls=False, native_body_schema=None)
         with patch.object(N.F, 'digest', return_value='host'), patch.object(N.D, 'packages', return_value={'body-check': 'strict'}) as packages:
             expected = N.identity(args)
-            packages.assert_called_once_with(args.component_dir, body_schema=9)
+            packages.assert_called_once_with(args.component_dir, body_schema=10)
             args.native_controls = True
             args.native_body_schema = 5
             N.identity(args)

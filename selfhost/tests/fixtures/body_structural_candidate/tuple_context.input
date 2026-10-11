@@ -1,0 +1,6 @@
+func pair() -> tuple[i8, i16]:
+    return (3, 4)
+
+func main() -> int:
+    const left, right = pair()
+    return i64(left) + i64(right)

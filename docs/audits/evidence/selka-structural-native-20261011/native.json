@@ -1,0 +1,1494 @@
+{
+  "complete": true,
+  "selected_admission": "pending",
+  "body_schema": 10,
+  "scope": "B10 tuple/fixed-array/enum-table source fixtures; no compiler/bootstrap claim",
+  "release_facts_leaks": true,
+  "native_controls": true,
+  "native_body_schema": 8,
+  "modes": [
+    "reference"
+  ],
+  "expected_operations": 74,
+  "compiler_sha256": "b2351e1de5a0c927449abfc0857bb142e5183faaafb3b07bef977ec80ae4bbd7",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-b58ff5fa3e1655c58c34da556cc3af566dd85cbf729dce5e3d9b693f25df497a",
+      "component": "test-index",
+      "format": 1,
+      "key": "3e57916499ced27292510e65d38016249d57e35d52df04179d12c281fc3a5e89",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "b58ff5fa3e1655c58c34da556cc3af566dd85cbf729dce5e3d9b693f25df497a"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-adbee9a6367be495f0f3da386d3b18572094a31024c3662d1fc69ede090ea97b",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "52c899ab04006aac02dd3142c08e9c5746ce1ff531db3f5c7ed65f349566c430",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "adbee9a6367be495f0f3da386d3b18572094a31024c3662d1fc69ede090ea97b"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-9a182f62398e9c5d8c7a88b02b2ee64dfb81d6753dde69e8c0e6ce91dcba9989",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "f5a91e51e9898b5a30407cf3dd36a5f5febdba89dcdcbc3870cf8fd56f9dfc86",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "9a182f62398e9c5d8c7a88b02b2ee64dfb81d6753dde69e8c0e6ce91dcba9989"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-64fb253d58712630e13cfae568c5364011c4ca62b2b482aaa8fd1f79fa104340",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "d9641208239acb5af3ecddce8939d64a3d4d448d33c8136f1887a6084c541b71",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "64fb253d58712630e13cfae568c5364011c4ca62b2b482aaa8fd1f79fa104340"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-d4583081b5bd21e6aab87e9c745367815f93b840d71b632322abf7e2c1d73623",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "3804bc4ad68ddbee2d2621c60a9aeb02febaafcdd8d2ff0d383be0bf301d2a33",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "d4583081b5bd21e6aab87e9c745367815f93b840d71b632322abf7e2c1d73623"
+    },
+    "type-interface": {
+      "artifact": "type-interface-a93c7716331646ad6e4095d1792f01bc6aa6181d1dbfd88bd6202aef10375933",
+      "component": "type-interface",
+      "format": 1,
+      "key": "9cae85a533538aa89c9bce715371f44ad64f768efb8cdfaf0ad1e070ee440729",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "a93c7716331646ad6e4095d1792f01bc6aa6181d1dbfd88bd6202aef10375933"
+    },
+    "body-check": {
+      "artifact": "body-check-c371fe99fd4be2bb4db848e92c311786394167aff5d9ad67883bbe3e9bcb08f2",
+      "component": "body-check",
+      "format": 1,
+      "key": "ac75e76a76e5683ee48305dcf7fd0efe6fa13cb1f43f20862183614bf779723d",
+      "protocol": 1,
+      "schema": 8,
+      "sha256": "c371fe99fd4be2bb4db848e92c311786394167aff5d9ad67883bbe3e9bcb08f2"
+    }
+  },
+  "fixtures": 30,
+  "success": 22,
+  "diagnostic": 8,
+  "profiles": 0,
+  "donors": {},
+  "records": [
+    {
+      "name": "array_alias.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_alias.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "06f4ef1b25a4e0a2fc85951d5fd21027fbbe0eeee918eef4898bee51f88df9c5",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_alias.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_alias.my"
+      ],
+      "source_sha256": "06f4ef1b25a4e0a2fc85951d5fd21027fbbe0eeee918eef4898bee51f88df9c5",
+      "status": 0,
+      "stdout_hex": "666e2074616b6520233020706172616d733d31207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c75653a205b325d6936340a2020626c6f636b0a202020207265740a20202020202062696e617279203a20693634206164640a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a205b325d6936342025300a20202020202020202020696e7465676572203a2069363420300a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a205b325d6936342025300a20202020202020202020696e7465676572203a2069363420310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a206936342074616b650a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420340a",
+      "stderr_hex": "",
+      "stdout_sha256": "aa9de6a1fdeb00ee250783424649ad502dd24cf10cffb9d6908e6993f14da3df",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_alias.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_alias.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "06f4ef1b25a4e0a2fc85951d5fd21027fbbe0eeee918eef4898bee51f88df9c5",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_bytes.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_bytes.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "b1f709b131d43b4ff77304363d95a3a636c6c52faeb475d63da75ee4b2d9e984",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_bytes.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_bytes.my"
+      ],
+      "source_sha256": "b1f709b131d43b4ff77304363d95a3a636c6c52faeb475d63da75ee4b2d9e984",
+      "status": 0,
+      "stdout_hex": "666e2074616b6520233020706172616d733d31207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c75653a205b325d75380a2020626c6f636b0a202020207265740a20202020202062696e617279203a20693634207375620a202020202020202063617374203a206936340a20202020202020202020696e646578203a2075382066726f6d5f656e643d66616c73650a2020202020202020202020206c6f63616c203a205b325d75382025300a202020202020202020202020696e7465676572203a2069363420300a2020202020202020696e7465676572203a206936342039300a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a206936342074616b650a20202020202020206172726179203a205b325d75380a20202020202020202020696e7465676572203a2075382039370a20202020202020202020696e7465676572203a2075382039380a",
+      "stderr_hex": "",
+      "stdout_sha256": "4c021892e5144f5827839d8e42cfb4d566f5ea8b60f076ce14dae48a12c48f3f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_bytes.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_bytes.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "b1f709b131d43b4ff77304363d95a3a636c6c52faeb475d63da75ee4b2d9e984",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_copy.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_copy.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "62573ee347bdcd360f571b96a1d57a0fcc8f94bf08689a48b82c8619d495c36f",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_copy.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_copy.my"
+      ],
+      "source_sha256": "62573ee347bdcd360f571b96a1d57a0fcc8f94bf08689a48b82c8619d495c36f",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d693634206d75740a20206c6f63616c20253120736e617073686f743a205b325d6936340a2020626c6f636b0a20202020696e697469616c697a652025300a2020202020206172726179203a205b325d6936340a2020202020202020696e7465676572203a2069363420310a2020202020202020696e7465676572203a2069363420320a20202020696e697469616c697a652025310a2020202020206c6f63616c203a205b325d6936342025300a20202020646973636172640a202020202020626c6f636b5f76616c7565203a20756e69740a2020202020202020626c6f636b0a2020202020202020202061737369676e20253020656c656d656e740a2020202020202020202020207265706c616365203a205b325d6936342066726f6d5f656e643d66616c73650a20202020202020202020202020206c6f63616c203a205b325d6936342025300a2020202020202020202020202020696e7465676572203a2069363420300a2020202020202020202020202020696e7465676572203a2069363420350a2020202020202020756e6974203a20756e6974202e2e2e0a202020207265740a20202020202062696e617279203a20693634206164640a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a205b325d6936342025300a20202020202020202020696e7465676572203a2069363420300a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a205b325d6936342025310a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "939f6424eace5a34995109157fc1713f06b6698710b92a94e6951a5b46c41e2a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_copy.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_copy.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "62573ee347bdcd360f571b96a1d57a0fcc8f94bf08689a48b82c8619d495c36f",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_dynamic.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_dynamic.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "39b7f6508c39b682f989a785d19cfcceaeed1c4756fc0b1824a107b728227f4d",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_dynamic.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_dynamic.my"
+      ],
+      "source_sha256": "39b7f6508c39b682f989a785d19cfcceaeed1c4756fc0b1824a107b728227f4d",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a206936340a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d747275650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a206936342025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a2020202020202020696e7465676572203a20693634202d310a",
+      "stderr_hex": "",
+      "stdout_sha256": "336917023cfd4d8bbf14e588a89754e7b09550fe88a0d93018caa9ff976d7b41",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_dynamic.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_dynamic.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "39b7f6508c39b682f989a785d19cfcceaeed1c4756fc0b1824a107b728227f4d",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_empty.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_empty.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "c7993411e54ac542ba8a1f2a3d52261b99650efae865784d9ef40b0f00c8728e",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_empty.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_empty.my"
+      ],
+      "source_sha256": "c7993411e54ac542ba8a1f2a3d52261b99650efae865784d9ef40b0f00c8728e",
+      "status": 0,
+      "stdout_hex": "666e2074616b6520233020706172616d733d31207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c75653a205b305d626f6f6c0a2020626c6f636b0a202020207265740a20202020202063617374203a206936340a20202020202020206c656e677468203a206936340a202020202020202020206c6f63616c203a205b305d626f6f6c2025300a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202062696e617279203a20693634206164640a202020202020202063616c6c203a206936342074616b650a202020202020202020206172726179203a205b305d626f6f6c0a2020202020202020696e7465676572203a2069363420370a",
+      "stderr_hex": "",
+      "stdout_sha256": "9e9d13b0e3cc160ad589ff44ed7bdecdde56546be3062348a0e27c26064449e8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_empty.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_empty.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "c7993411e54ac542ba8a1f2a3d52261b99650efae865784d9ef40b0f00c8728e",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i16.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i16.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "7ea4beaad6c2ff2c7f77b6772633610ac5ab7248456aa2fda96da67131dacf18",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i16.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i16.my"
+      ],
+      "source_sha256": "7ea4beaad6c2ff2c7f77b6772633610ac5ab7248456aa2fda96da67131dacf18",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a206931360a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d747275650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a206931362025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a202020202020202063617374203a206931360a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "0ee80bbe951310a0df1f525cf9a57d2a0812eca952a421a83b191e53b62fc900",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i16.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i16.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "7ea4beaad6c2ff2c7f77b6772633610ac5ab7248456aa2fda96da67131dacf18",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i32.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i32.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "410ba5f9790cf47cd5110fadff24485c5f88fa20137899ec71efea48c521109f",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i32.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i32.my"
+      ],
+      "source_sha256": "410ba5f9790cf47cd5110fadff24485c5f88fa20137899ec71efea48c521109f",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a206933320a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d747275650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a206933322025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a202020202020202063617374203a206933320a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "564296faa34a75c9206776097c5046d91af4443a8d6d854401fbb65bca1b6e6e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i32.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i32.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "410ba5f9790cf47cd5110fadff24485c5f88fa20137899ec71efea48c521109f",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i64.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i64.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "198819f105069f21652d3f4225231581b56788fca795e86f255b8cac2d5ef023",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i64.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i64.my"
+      ],
+      "source_sha256": "198819f105069f21652d3f4225231581b56788fca795e86f255b8cac2d5ef023",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a206936340a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d747275650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a206936342025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a202020202020202063617374203a206936340a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "c51cccf7a6152425321e0c23de5119d8893d3c2943d4a5d6ca1e5f24cba57cf6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i64.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i64.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "198819f105069f21652d3f4225231581b56788fca795e86f255b8cac2d5ef023",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i8.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i8.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "a53c07c926efaf16e2eb7551f43df3ba4cafa51f40ad22a00477991b41b6fc67",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i8.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i8.my"
+      ],
+      "source_sha256": "a53c07c926efaf16e2eb7551f43df3ba4cafa51f40ad22a00477991b41b6fc67",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a2069380a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d747275650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a2069382025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a202020202020202063617374203a2069380a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "a35fb2f6e6cc0040d4c2a4735c877ea2eaf8a1c0cdf580e8f78e43d4b52467bc",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_i8.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_i8.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "a53c07c926efaf16e2eb7551f43df3ba4cafa51f40ad22a00477991b41b6fc67",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u16.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u16.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "8a26f996c3df6ab7cf1126314e6b573542cde2878096c8a459b5d5566707136e",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u16.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u16.my"
+      ],
+      "source_sha256": "8a26f996c3df6ab7cf1126314e6b573542cde2878096c8a459b5d5566707136e",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a207531360a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a207531362025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a202020202020202063617374203a207531360a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "149269112d72fb2f54853615735030bd11ee73291974672d5c1721c4300276c8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u16.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u16.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "8a26f996c3df6ab7cf1126314e6b573542cde2878096c8a459b5d5566707136e",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u32.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u32.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "29916244431e2654af9ceb1fab50ec2c6bda2197fdaa4003d976cbb00cebc92d",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u32.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u32.my"
+      ],
+      "source_sha256": "29916244431e2654af9ceb1fab50ec2c6bda2197fdaa4003d976cbb00cebc92d",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a207533320a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a207533322025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a202020202020202063617374203a207533320a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "009ba52173bb377acb637754acb016c7dc7fb19088447d7c4c5bc0e0e674b0eb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u32.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u32.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "29916244431e2654af9ceb1fab50ec2c6bda2197fdaa4003d976cbb00cebc92d",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u64.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u64.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "22a750d2d0a71b4f25a2432c211b54fdf501f581dba36cb6c0f6f8cfb6b70c89",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u64.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u64.my"
+      ],
+      "source_sha256": "22a750d2d0a71b4f25a2432c211b54fdf501f581dba36cb6c0f6f8cfb6b70c89",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a207536340a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a207536342025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a202020202020202063617374203a207536340a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "c1523f85f093597d4948bd288e687c92f8e545a2f6f11c2f2b28d551ad724b92",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u64.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u64.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "22a750d2d0a71b4f25a2432c211b54fdf501f581dba36cb6c0f6f8cfb6b70c89",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u8.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u8.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "48b046f15af7ba70fdeacf52b30d1340f3047a50ac056ec05dc025abe3654f58",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u8.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u8.my"
+      ],
+      "source_sha256": "48b046f15af7ba70fdeacf52b30d1340f3047a50ac056ec05dc025abe3654f58",
+      "status": 0,
+      "stdout_hex": "666e207265616420233020706172616d733d32207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a20206c6f63616c20253120696e6465783a2075380a2020626c6f636b0a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a20202020202020206c6f63616c203a205b325d6936342025300a20202020202020206c6f63616c203a2075382025310a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a20202020202063616c6c203a2069363420726561640a20202020202020206172726179203a205b325d6936340a20202020202020202020696e7465676572203a2069363420330a20202020202020202020696e7465676572203a2069363420370a202020202020202063617374203a2075380a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "c3c12291a0ad94be6f813dfcd02709f9b8069a025c1269be867a657b3c5b3136",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_index_u8.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_index_u8.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "48b046f15af7ba70fdeacf52b30d1340f3047a50ac056ec05dc025abe3654f58",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_negative.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_negative.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "d5c74e72569ea8df3a887dbed5d67caee22947f932f8b2b1c03e01376a9c1ed1",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_negative.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_negative.my"
+      ],
+      "source_sha256": "d5c74e72569ea8df3a887dbed5d67caee22947f932f8b2b1c03e01376a9c1ed1",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d6936340a2020626c6f636b0a20202020696e697469616c697a652025300a2020202020206172726179203a205b325d6936340a2020202020202020696e7465676572203a2069363420310a2020202020202020696e7465676572203a2069363420370a202020207265740a202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a20202020202020206c6f63616c203a205b325d6936342025300a2020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "3801aeacf3ee0e4692c30dde442ed4468eb31b543c0926f421b013ce063de7a8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_negative.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_negative.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "d5c74e72569ea8df3a887dbed5d67caee22947f932f8b2b1c03e01376a9c1ed1",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_replace.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_replace.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "f86c047fb50d12a91eb2a453f480e6eeb92eed4148e79471e43b9440c6c7cad1",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_replace.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_replace.my"
+      ],
+      "source_sha256": "f86c047fb50d12a91eb2a453f480e6eeb92eed4148e79471e43b9440c6c7cad1",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b325d693634206d75740a2020626c6f636b0a20202020696e697469616c697a652025300a2020202020206172726179203a205b325d6936340a2020202020202020696e7465676572203a2069363420310a2020202020202020696e7465676572203a2069363420320a2020202061737369676e2025300a2020202020206172726179203a205b325d6936340a2020202020202020696e7465676572203a2069363420330a2020202020202020696e7465676572203a2069363420340a202020207265740a20202020202062696e617279203a20693634206164640a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a205b325d6936342025300a20202020202020202020696e7465676572203a2069363420300a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a205b325d6936342025300a20202020202020202020696e7465676572203a2069363420310a",
+      "stderr_hex": "",
+      "stdout_sha256": "08db5d7ea39aed79e8188a5e6a3abb0407509285031760ce4d35cb57bd3ce65f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "array_replace.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/array_replace.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "f86c047fb50d12a91eb2a453f480e6eeb92eed4148e79471e43b9440c6c7cad1",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "dictionary_generator_pairs.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/dictionary_generator_pairs.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "9bfeb55f38522f71fc1a784e26ad55be7316df56dfd4a2797b192580ad484dd3",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "dictionary_generator_pairs.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/dictionary_generator_pairs.my"
+      ],
+      "source_sha256": "9bfeb55f38522f71fc1a784e26ad55be7316df56dfd4a2797b192580ad484dd3",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c202530203c636f6c6c656374696f6e3e3a204c6973743c6936343e206d75740a20206c6f63616c202531203c636f6c6c656374696f6e3e3a204c6973743c6936343e206d75740a20206c6f63616c202532203c636f6c6c656374696f6e3e3a20693634206d75740a20206c6f63616c202533203c636f6c6c656374696f6e3e3a20693634206d75740a20206c6f63616c20253420783a206936340a20206c6f63616c202535203c636f6c6c656374696f6e3e3a207475706c653c6936342c6936343e206d75740a20206c6f63616c202536203c636f6c6c656374696f6e3e3a20646963743c6936342c6936343e206d75740a20206c6f63616c202537203c636f6c6c656374696f6e3e3a20693634206d75740a20206c6f63616c202538203c636f6c6c656374696f6e3e3a20693634206d75740a20206c6f63616c2025392076616c7565733a20646963743c6936342c6936343e0a2020626c6f636b0a20202020696e697469616c697a652025390a202020202020626c6f636b5f76616c7565203a20646963743c6936342c6936343e0a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025360a2020202020202020202020206172726179203a20646963743c6936342c6936343e0a20202020202020202020626c6f636b0a202020202020202020202020696e697469616c697a652025310a2020202020202020202020202020626c6f636b5f76616c7565203a204c6973743c6936343e0a20202020202020202020202020202020626c6f636b0a202020202020202020202020202020202020696e697469616c697a652025300a2020202020202020202020202020202020202020616371756972655f627566666572203a204c6973743c6936343e0a20202020202020202020202020202020202020202020696e7465676572203a2069363420330a202020202020202020202020202020202020646973636172640a20202020202020202020202020202020202020206275666665725f6f7065726174696f6e203a20756e697420617070656e64206f776e65723d25300a20202020202020202020202020202020202020202020696e7465676572203a2069363420310a202020202020202020202020202020202020646973636172640a20202020202020202020202020202020202020206275666665725f6f7065726174696f6e203a20756e697420617070656e64206f776e65723d25300a20202020202020202020202020202020202020202020696e7465676572203a2069363420320a202020202020202020202020202020202020646973636172640a20202020202020202020202020202020202020206275666665725f6f7065726174696f6e203a20756e697420617070656e64206f776e65723d25300a20202020202020202020202020202020202020202020696e7465676572203a2069363420330a202020202020202020202020202020206c6f63616c203a204c6973743c6936343e2025300a202020202020202020202020696e697469616c697a652025320a2020202020202020202020202020696e7465676572203a2069363420300a202020202020202020202020696e697469616c697a652025330a202020202020202020202020202063617374203a206936340a202020202020202020202020202020206275666665725f6f7065726174696f6e203a20753634206c656e677468206f776e65723d25310a2020202020202020202020206c6f6f702069643d300a202020202020202020202020202062696e617279203a20626f6f6c206c740a202020202020202020202020202020206c6f63616c203a206936342025320a202020202020202020202020202020206c6f63616c203a206936342025330a2020202020202020202020202020626c6f636b0a20202020202020202020202020202020626c6f636b0a202020202020202020202020202020202020646973636172640a20202020202020202020202020202020202020206275666665725f6f7065726174696f6e203a20756e697420697465726174696f6e5f636865636b206f776e65723d25310a202020202020202020202020202020202020202020206c6f63616c203a206936342025330a20202020202020202020202020202020696e697469616c697a652025340a2020202020202020202020202020202020206275666665725f6f7065726174696f6e203a206936342072656164206f776e65723d25310a20202020202020202020202020202020202020206c6f63616c203a206936342025320a20202020202020202020202020202020626c6f636b0a202020202020202020202020202020202020696e697469616c697a652025350a20202020202020202020202020202020202020207265636f7264203a207475706c653c6936342c6936343e0a202020202020202020202020202020202020202020206669656c64202e300a2020202020202020202020202020202020202020202020206c6f63616c203a206936342025340a202020202020202020202020202020202020202020206669656c64202e310a20202020202020202020202020202020202020202020202062696e617279203a20693634206164640a20202020202020202020202020202020202020202020202020206c6f63616c203a206936342025340a2020202020202020202020202020202020202020202020202020696e7465676572203a2069363420310a202020202020202020202020202020202020696e697469616c697a652025370a20202020202020202020202020202020202020206669656c64203a20693634202e300a202020202020202020202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025350a202020202020202020202020202020202020696e697469616c697a652025380a20202020202020202020202020202020202020206669656c64203a20693634202e310a202020202020202020202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025350a202020202020202020202020202020202020646973636172640a20202020202020202020202020202020202020206275666665725f6f7065726174696f6e203a20756e6974207772697465206f776e65723d25360a202020202020202020202020202020202020202020206c6f63616c203a206936342025370a202020202020202020202020202020202020202020206c6f63616c203a206936342025380a2020202020202020202020202020737465703a0a20202020202020202020202020202020626c6f636b0a202020202020202020202020202020202020626c6f636b0a2020202020202020202020202020202020202020646973636172640a202020202020202020202020202020202020202020206275666665725f6f7065726174696f6e203a20756e697420697465726174696f6e5f636865636b206f776e65723d25310a2020202020202020202020202020202020202020202020206c6f63616c203a206936342025330a20202020202020202020202020202020202061737369676e2025320a202020202020202020202020202020202020202062696e617279203a20693634206164640a202020202020202020202020202020202020202020206c6f63616c203a206936342025320a20202020202020202020202020202020202020202020696e7465676572203a2069363420310a20202020202020206c6f63616c203a20646963743c6936342c6936343e2025360a20202020617373657274696f6e2076616c7565735b335d203d3d20340a20202020202062696e617279203a20626f6f6c2065710a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a20646963743c6936342c6936343e2025390a20202020202020202020696e7465676572203a2069363420330a2020202020202020696e7465676572203a2069363420340a202020207265740a202020202020696e7465676572203a2069363420370a",
+      "stderr_hex": "",
+      "stdout_sha256": "738f592e9d0d5d169265fc4ef3f9b5b488d5848f2ad7323038d81bd702b9d8ca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "dictionary_generator_pairs.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/dictionary_generator_pairs.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "9bfeb55f38522f71fc1a784e26ad55be7316df56dfd4a2797b192580ad484dd3",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "error_array_element.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/error_array_element.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "2c4fd84a48ccfd8fb4a0d30d93eb8ecee36447e72d7ea062874e9a1cc27e5c3f",
+      "status": 1,
+      "stdout_hex": "",
+      "stderr_hex": "7b2276657273696f6e223a22646961676e6f737469632d7631222c226b696e64223a22646961676e6f73746963222c22646961676e6f73746963223a7b22636f6465223a22455f54595045222c227365766572697479223a226572726f72222c226d657373616765223a22657870656374656420696e742c20666f756e6420626f6f6c222c226c6f636174696f6e223a7b2270617468223a226572726f725f61727261795f656c656d656e742e6d79222c227374617274223a7b226c696e65223a322c22636f6c756d6e223a36337d2c22656e64223a7b226c696e65223a322c22636f6c756d6e223a36377d2c226279746573223a7b227374617274223a38322c22656e64223a38367d7d2c226e6f746573223a5b5d2c22737461636b223a7b226672616d6573223a5b5d2c226f6d6974746564223a307d7d7d0a",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "da913e50ab3988ecc87686e67cea1cf78ee85bf0248b58958bedd5f4acb0b7da"
+    },
+    {
+      "name": "error_array_long.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/error_array_long.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "ac68377818bede2c03dae1c0029a91f290dbde7ff0d5b3f9ba4db6b7df2c4814",
+      "status": 1,
+      "stdout_hex": "",
+      "stderr_hex": "7b2276657273696f6e223a22646961676e6f737469632d7631222c226b696e64223a22646961676e6f73746963222c22646961676e6f73746963223a7b22636f6465223a22455f41525241595f4c454e475448222c227365766572697479223a226572726f72222c226d657373616765223a226c697374206c69746572616c20686173203220656c656d656e742873293b2074686520657870656374656420666978656420617272617920686f6c64732065786163746c792031222c226c6f636174696f6e223a7b2270617468223a226572726f725f61727261795f6c6f6e672e6d79222c227374617274223a7b226c696e65223a322c22636f6c756d6e223a34307d2c22656e64223a7b226c696e65223a322c22636f6c756d6e223a36367d2c226279746573223a7b227374617274223a35392c22656e64223a38357d7d2c226e6f746573223a5b5d2c22737461636b223a7b226672616d6573223a5b5d2c226f6d6974746564223a307d7d7d0a",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b3ba6dfe4faf31e88bd0de0f24b9f0e7bc3db75a5448b791d2ff0b37c23f6fe8"
+    },
+    {
+      "name": "error_array_short.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/error_array_short.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "b8adae63555844cda6651f4c4fac7004ce933eeadb05911eafcfc58beb049d4f",
+      "status": 1,
+      "stdout_hex": "",
+      "stderr_hex": "7b2276657273696f6e223a22646961676e6f737469632d7631222c226b696e64223a22646961676e6f73746963222c22646961676e6f73746963223a7b22636f6465223a22455f41525241595f4c454e475448222c227365766572697479223a226572726f72222c226d657373616765223a226c697374206c69746572616c20686173203120656c656d656e742873293b2074686520657870656374656420666978656420617272617920686f6c64732065786163746c792032222c226c6f636174696f6e223a7b2270617468223a226572726f725f61727261795f73686f72742e6d79222c227374617274223a7b226c696e65223a322c22636f6c756d6e223a34307d2c22656e64223a7b226c696e65223a322c22636f6c756d6e223a36337d2c226279746573223a7b227374617274223a35392c22656e64223a38327d7d2c226e6f746573223a5b5d2c22737461636b223a7b226672616d6573223a5b5d2c226f6d6974746564223a307d7d7d0a",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5c9bfc780567380ad8815300f56a9d01f73ff726d52d35b34087fd75230f69ee"
+    },
+    {
+      "name": "error_table_duplicate.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/error_table_duplicate.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "34bf00c7d459b4215fdb334ab8ed74ea8151e7dedc67088890007636ebb23769",
+      "status": 1,
+      "stdout_hex": "",
+      "stderr_hex": "7b2276657273696f6e223a22646961676e6f737469632d7631222c226b696e64223a22646961676e6f73746963222c22646961676e6f73746963223a7b22636f6465223a22455f4455504c49434154455f4b4559222c227365766572697479223a226572726f72222c226d657373616765223a226e616d656420656e74727920697320696e697469616c697a6564206d6f7265207468616e206f6e6365222c226c6f636174696f6e223a7b2270617468223a226572726f725f7461626c655f6475706c69636174652e6d79222c227374617274223a7b226c696e65223a372c22636f6c756d6e223a35357d2c22656e64223a7b226c696e65223a372c22636f6c756d6e223a35377d2c226279746573223a7b227374617274223a3131382c22656e64223a3132307d7d2c226e6f746573223a5b5d2c22737461636b223a7b226672616d6573223a5b5d2c226f6d6974746564223a307d7d7d0a",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "3789bcaa8a6c953ef13119b5bf3c25b84104b6c29b7127561b0790986bcdcedd"
+    },
+    {
+      "name": "error_table_key.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/error_table_key.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "18548eb330b01273b2a1181c4e19d359e0998b1a4d8559983c4b17024ab08821",
+      "status": 1,
+      "stdout_hex": "",
+      "stderr_hex": "7b2276657273696f6e223a22646961676e6f737469632d7631222c226b696e64223a22646961676e6f73746963222c22646961676e6f73746963223a7b22636f6465223a22455f5441424c455f4b4559222c227365766572697479223a226572726f72222c226d657373616765223a227461626c6520656e747279206b657973206e616d6520612063617365206f6620746865207461626c652773206b657920656e756d2c207375636820617320604b696e642e666972737460222c226c6f636174696f6e223a7b2270617468223a226572726f725f7461626c655f6b65792e6d79222c227374617274223a7b226c696e65223a372c22636f6c756d6e223a33347d2c22656e64223a7b226c696e65223a372c22636f6c756d6e223a33357d2c226279746573223a7b227374617274223a39372c22656e64223a39387d7d2c226e6f746573223a5b5d2c22737461636b223a7b226672616d6573223a5b5d2c226f6d6974746564223a307d7d7d0a",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "8d06131f13c54168bf1b54e0bd29b2581eb099c2b3f4854d7bb04109b00a3354"
+    },
+    {
+      "name": "error_table_missing.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/error_table_missing.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "0de55508695e3c26435bdb2fb4093f79c33184294be004e5509da8e2b7c2b69e",
+      "status": 1,
+      "stdout_hex": "",
+      "stderr_hex": "7b2276657273696f6e223a22646961676e6f737469632d7631222c226b696e64223a22646961676e6f73746963222c22646961676e6f73746963223a7b22636f6465223a22455f494e434f4d504c4554455f5441424c45222c227365766572697479223a226572726f72222c226d657373616765223a226d697373696e6720696e697469616c697a657220666f72206b657920606661696c656460206f6620605b6572726f725f7461626c655f6d697373696e673a3a5374617475735d69363460222c226c6f636174696f6e223a7b2270617468223a226572726f725f7461626c655f6d697373696e672e6d79222c227374617274223a7b226c696e65223a372c22636f6c756d6e223a33337d2c22656e64223a7b226c696e65223a372c22636f6c756d6e223a36367d2c226279746573223a7b227374617274223a39362c22656e64223a3132397d7d2c226e6f746573223a5b7b22726f6c65223a2272656c61746564222c226d657373616765223a226d697373696e6720656e747279206465636c617265642068657265222c226c6f636174696f6e223a7b2270617468223a226572726f725f7461626c655f6d697373696e672e6d79222c227374617274223a7b226c696e65223a342c22636f6c756d6e223a357d2c22656e64223a7b226c696e65223a342c22636f6c756d6e223a31317d2c226279746573223a7b227374617274223a33362c22656e64223a34327d7d7d5d2c22737461636b223a7b226672616d6573223a5b5d2c226f6d6974746564223a307d7d7d0a",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "8eeabbf3e22c2b612397abbdcdcdb7a99e49e3bae9a1e138bd04616ae4239526"
+    },
+    {
+      "name": "error_tuple_arity.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/error_tuple_arity.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "8dfe5a21991648dcd0281800de0116fb8f5b93196c63681fdb049087c0f276ef",
+      "status": 1,
+      "stdout_hex": "",
+      "stderr_hex": "7b2276657273696f6e223a22646961676e6f737469632d7631222c226b696e64223a22646961676e6f73746963222c22646961676e6f73746963223a7b22636f6465223a22455f5455504c455f4152495459222c227365766572697479223a226572726f72222c226d657373616765223a2274686973207475706c6520686173203320656c656d656e747320627574207475706c655b696e742c20696e745d2068617320323b207772697465203220656c656d656e7473222c226c6f636174696f6e223a7b2270617468223a226572726f725f7475706c655f61726974792e6d79222c227374617274223a7b226c696e65223a322c22636f6c756d6e223a33367d2c22656e64223a7b226c696e65223a322c22636f6c756d6e223a34357d2c226279746573223a7b227374617274223a35352c22656e64223a36347d7d2c226e6f746573223a5b5d2c22737461636b223a7b226672616d6573223a5b5d2c226f6d6974746564223a307d7d7d0a",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "3ab16ae9abafff11b9937971d43779044d292937240cf408ea43c00c52ec13d8"
+    },
+    {
+      "name": "error_tuple_element.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/error_tuple_element.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "be9ed7b62f7f2f473f4e70219916a3e7c5d520d81be65525fc72596f32865132",
+      "status": 1,
+      "stdout_hex": "",
+      "stderr_hex": "7b2276657273696f6e223a22646961676e6f737469632d7631222c226b696e64223a22646961676e6f73746963222c22646961676e6f73746963223a7b22636f6465223a22455f54595045222c227365766572697479223a226572726f72222c226d657373616765223a22657870656374656420626f6f6c2c20666f756e6420696e74222c226c6f636174696f6e223a7b2270617468223a226572726f725f7475706c655f656c656d656e742e6d79222c227374617274223a7b226c696e65223a322c22636f6c756d6e223a34317d2c22656e64223a7b226c696e65223a322c22636f6c756d6e223a34327d2c226279746573223a7b227374617274223a36302c22656e64223a36317d7d2c226e6f746573223a5b5d2c22737461636b223a7b226672616d6573223a5b5d2c226f6d6974746564223a307d7d7d0a",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b9a3d400f77566ce064cf3338a994365fdeb845ea2503bc455f2dd6719cc71af"
+    },
+    {
+      "name": "table_copy.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/table_copy.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "1e24434b683067d6d3bf22db2db978ee367cfe5d3bc86df5f8679e9bf5985749",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "table_copy.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/table_copy.my"
+      ],
+      "source_sha256": "1e24434b683067d6d3bf22db2db978ee367cfe5d3bc86df5f8679e9bf5985749",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c7565733a205b5374617475735d693634206d75740a20206c6f63616c20253120736e617073686f743a205b5374617475735d6936340a20206c6f63616c202532203c636f6c6c656374696f6e3e3a20537461747573206d75740a2020626c6f636b0a20202020696e697469616c697a652025300a2020202020207265636f7264203a205b5374617475735d6936340a20202020202020206669656c64202e320a20202020202020202020696e7465676572203a2069363420330a20202020202020206669656c64202e300a20202020202020202020696e7465676572203a2069363420310a20202020202020206669656c64202e310a20202020202020202020696e7465676572203a2069363420320a20202020696e697469616c697a652025310a2020202020206c6f63616c203a205b5374617475735d6936342025300a20202020646973636172640a202020202020626c6f636b5f76616c7565203a20756e69740a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025320a20202020202020202020202076617269616e74203a20537461747573207461673d300a2020202020202020202061737369676e20253020656c656d656e740a2020202020202020202020207265706c616365203a205b5374617475735d6936342066726f6d5f656e643d66616c73650a20202020202020202020202020206c6f63616c203a205b5374617475735d6936342025300a20202020202020202020202020206c6f63616c203a205374617475732025320a2020202020202020202020202020696e7465676572203a2069363420350a2020202020202020756e6974203a20756e6974202e2e2e0a202020207265740a20202020202062696e617279203a20693634206164640a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a205b5374617475735d6936342025300a2020202020202020202076617269616e74203a20537461747573207461673d300a2020202020202020696e646578203a206936342066726f6d5f656e643d66616c73650a202020202020202020206c6f63616c203a205b5374617475735d6936342025310a2020202020202020202076617269616e74203a20537461747573207461673d310a",
+      "stderr_hex": "",
+      "stdout_sha256": "2daee3b8788683aeec4d8e43930b5e35e3cea15f214ef4f0515eb8bfccbb388c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "table_copy.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/table_copy.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "1e24434b683067d6d3bf22db2db978ee367cfe5d3bc86df5f8679e9bf5985749",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_context.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_context.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "45c530d28b1e9470d47791ca9821ae1a6bc1a3da7fff6627526c11df8eb03c93",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_context.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_context.my"
+      ],
+      "source_sha256": "45c530d28b1e9470d47791ca9821ae1a6bc1a3da7fff6627526c11df8eb03c93",
+      "status": 0,
+      "stdout_hex": "666e207061697220233020706172616d733d30207265743d7475706c653c69382c6931363e20636162693d66616c736520686f73743d66616c73650a2020626c6f636b0a202020207265740a2020202020207265636f7264203a207475706c653c69382c6931363e0a20202020202020206669656c64202e300a20202020202020202020696e7465676572203a20693820330a20202020202020206669656c64202e310a20202020202020202020696e7465676572203a2069313620340a666e206d61696e20233120706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c202530203c636f6c6c656374696f6e3e3a207475706c653c69382c6931363e206d75740a20206c6f63616c202531206c6566743a2069380a20206c6f63616c2025322072696768743a206931360a2020626c6f636b0a20202020646973636172640a202020202020626c6f636b5f76616c7565203a20756e69740a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025300a20202020202020202020202063616c6c203a207475706c653c69382c6931363e20706169720a20202020202020202020696e697469616c697a652025310a2020202020202020202020206669656c64203a206938202e300a20202020202020202020202020206c6f63616c203a207475706c653c69382c6931363e2025300a20202020202020202020696e697469616c697a652025320a2020202020202020202020206669656c64203a20693136202e310a20202020202020202020202020206c6f63616c203a207475706c653c69382c6931363e2025300a2020202020202020756e6974203a20756e6974202e2e2e0a202020207265740a20202020202062696e617279203a20693634206164640a202020202020202063617374203a206936340a202020202020202020206c6f63616c203a2069382025310a202020202020202063617374203a206936340a202020202020202020206c6f63616c203a206931362025320a",
+      "stderr_hex": "",
+      "stdout_sha256": "5789089da0b3be3229c75b35e6dbaa971a189fb574c6cf829e7e5778ceeb6b97",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_context.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_context.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "45c530d28b1e9470d47791ca9821ae1a6bc1a3da7fff6627526c11df8eb03c93",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_list.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_list.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "6496adfbdedbd3ea23c4f6e33c4b74697679ce0018bcb5aa1dbcdf7d90fa6013",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_list.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_list.my"
+      ],
+      "source_sha256": "6496adfbdedbd3ea23c4f6e33c4b74697679ce0018bcb5aa1dbcdf7d90fa6013",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c202530203c636f6c6c656374696f6e3e3a204c6973743c7475706c653c6936342c6936343e3e206d75740a20206c6f63616c2025312070616972733a204c6973743c7475706c653c6936342c6936343e3e0a20206c6f63616c202532203c636f6c6c656374696f6e3e3a204c6973743c7475706c653c6936342c6936343e3e206d75740a20206c6f63616c202533203c636f6c6c656374696f6e3e3a20693634206d75740a20206c6f63616c202534203c636f6c6c656374696f6e3e3a207475706c653c6936342c6936343e206d75740a20206c6f63616c202535206c6566743a206936340a20206c6f63616c2025362072696768743a206936340a2020626c6f636b0a20202020696e697469616c697a652025310a202020202020626c6f636b5f76616c7565203a204c6973743c7475706c653c6936342c6936343e3e0a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025300a202020202020202020202020616371756972655f627566666572203a204c6973743c7475706c653c6936342c6936343e3e0a2020202020202020202020202020696e7465676572203a2069363420310a20202020202020202020646973636172640a2020202020202020202020206275666665725f6f7065726174696f6e203a20756e697420617070656e64206f776e65723d25300a20202020202020202020202020207265636f7264203a207475706c653c6936342c6936343e0a202020202020202020202020202020206669656c64202e300a202020202020202020202020202020202020696e7465676572203a2069363420330a202020202020202020202020202020206669656c64202e310a202020202020202020202020202020202020696e7465676572203a2069363420340a20202020202020206c6f63616c203a204c6973743c7475706c653c6936342c6936343e3e2025300a20202020646973636172640a202020202020626c6f636b5f76616c7565203a20756e69740a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025340a202020202020202020202020626c6f636b5f76616c7565203a207475706c653c6936342c6936343e0a2020202020202020202020202020626c6f636b0a20202020202020202020202020202020696e697469616c697a652025320a2020202020202020202020202020202020206c6f63616c203a204c6973743c7475706c653c6936342c6936343e3e2025310a20202020202020202020202020206275666665725f6f7065726174696f6e203a207475706c653c6936342c6936343e2072656164206f776e65723d25320a20202020202020202020202020202020626c6f636b5f76616c7565203a206936340a202020202020202020202020202020202020626c6f636b0a2020202020202020202020202020202020202020696e697469616c697a652025330a20202020202020202020202020202020202020202020696e7465676572203a2069363420300a20202020202020202020202020202020202020206272616e63680a2020202020202020202020202020202020202020202062696e617279203a20626f6f6c206c740a2020202020202020202020202020202020202020202020206c6f63616c203a206936342025330a202020202020202020202020202020202020202020202020696e7465676572203a2069363420300a2020202020202020202020202020202020202020202061737369676e2025330a20202020202020202020202020202020202020202020202062696e617279203a20693634206164640a202020202020202020202020202020202020202020202020202063617374203a206936340a202020202020202020202020202020202020202020202020202020206275666665725f6f7065726174696f6e203a20753634206c656e677468206f776e65723d25320a20202020202020202020202020202020202020202020202020206c6f63616c203a206936342025330a2020202020202020202020202020202020206c6f63616c203a206936342025330a20202020202020202020696e697469616c697a652025350a2020202020202020202020206669656c64203a20693634202e300a20202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025340a20202020202020202020696e697469616c697a652025360a2020202020202020202020206669656c64203a20693634202e310a20202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025340a2020202020202020756e6974203a20756e6974202e2e2e0a202020207265740a20202020202062696e617279203a20693634206164640a20202020202020206c6f63616c203a206936342025350a20202020202020206c6f63616c203a206936342025360a",
+      "stderr_hex": "",
+      "stdout_sha256": "6e2f22517cdcbad0f0b184e3b2d7f7c7ed877959101b408068b8bd18d9404863",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_list.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_list.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "6496adfbdedbd3ea23c4f6e33c4b74697679ce0018bcb5aa1dbcdf7d90fa6013",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_literal.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_literal.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "c6afde25beef65497bc993bedd9e7ba034d508635aea8887abb874ad3e46e095",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_literal.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_literal.my"
+      ],
+      "source_sha256": "c6afde25beef65497bc993bedd9e7ba034d508635aea8887abb874ad3e46e095",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c202530203c636f6c6c656374696f6e3e3a207475706c653c6936342c6936343e206d75740a20206c6f63616c202531206c6566743a206936340a20206c6f63616c2025322072696768743a206936340a2020626c6f636b0a20202020646973636172640a202020202020626c6f636b5f76616c7565203a20756e69740a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025300a2020202020202020202020207265636f7264203a207475706c653c6936342c6936343e0a20202020202020202020202020206669656c64202e300a20202020202020202020202020202020696e7465676572203a2069363420330a20202020202020202020202020206669656c64202e310a20202020202020202020202020202020696e7465676572203a2069363420340a20202020202020202020696e697469616c697a652025310a2020202020202020202020206669656c64203a20693634202e300a20202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025300a20202020202020202020696e697469616c697a652025320a2020202020202020202020206669656c64203a20693634202e310a20202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025300a2020202020202020756e6974203a20756e6974202e2e2e0a202020207265740a20202020202062696e617279203a20693634206164640a20202020202020206c6f63616c203a206936342025310a20202020202020206c6f63616c203a206936342025320a",
+      "stderr_hex": "",
+      "stdout_sha256": "13a5cd6e32b015b6b46654d4440340d93efca540db6c6ee22ec1c4c8abac5684",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_literal.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_literal.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "c6afde25beef65497bc993bedd9e7ba034d508635aea8887abb874ad3e46e095",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_nested.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_nested.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "55d89bbed6473baa617a15b7f52a11f8d3485b05e3b82f4572de9eba7d4c700f",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_nested.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_nested.my"
+      ],
+      "source_sha256": "55d89bbed6473baa617a15b7f52a11f8d3485b05e3b82f4572de9eba7d4c700f",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c2025302076616c75653a207475706c653c6936342c7475706c653c6936342c6936343e3e0a20206c6f63616c202531203c636f6c6c656374696f6e3e3a207475706c653c6936342c7475706c653c6936342c6936343e3e206d75740a20206c6f63616c20253220706169723a207475706c653c6936342c6936343e0a20206c6f63616c202533203c636f6c6c656374696f6e3e3a207475706c653c6936342c6936343e206d75740a20206c6f63616c202534206c6566743a206936340a20206c6f63616c2025352072696768743a206936340a2020626c6f636b0a20202020696e697469616c697a652025300a2020202020207265636f7264203a207475706c653c6936342c7475706c653c6936342c6936343e3e0a20202020202020206669656c64202e300a20202020202020202020696e7465676572203a2069363420310a20202020202020206669656c64202e310a202020202020202020207265636f7264203a207475706c653c6936342c6936343e0a2020202020202020202020206669656c64202e300a2020202020202020202020202020696e7465676572203a2069363420330a2020202020202020202020206669656c64202e310a2020202020202020202020202020696e7465676572203a2069363420340a20202020646973636172640a202020202020626c6f636b5f76616c7565203a20756e69740a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025310a2020202020202020202020206c6f63616c203a207475706c653c6936342c7475706c653c6936342c6936343e3e2025300a20202020202020202020696e697469616c697a652025320a2020202020202020202020206669656c64203a207475706c653c6936342c6936343e202e310a20202020202020202020202020206c6f63616c203a207475706c653c6936342c7475706c653c6936342c6936343e3e2025310a2020202020202020756e6974203a20756e6974202e2e2e0a20202020646973636172640a202020202020626c6f636b5f76616c7565203a20756e69740a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025330a2020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025320a20202020202020202020696e697469616c697a652025340a2020202020202020202020206669656c64203a20693634202e300a20202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025330a20202020202020202020696e697469616c697a652025350a2020202020202020202020206669656c64203a20693634202e310a20202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025330a2020202020202020756e6974203a20756e6974202e2e2e0a202020207265740a20202020202062696e617279203a20693634206164640a20202020202020206c6f63616c203a206936342025340a20202020202020206c6f63616c203a206936342025350a",
+      "stderr_hex": "",
+      "stdout_sha256": "d5bd96abd01f9c0aaf3376384432843dfac580ca2f2b8b91c5c6ccd15589c7e7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_nested.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_nested.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "55d89bbed6473baa617a15b7f52a11f8d3485b05e3b82f4572de9eba7d4c700f",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_swap.my",
+      "mode": "reference",
+      "phase": "check",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "check-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_swap.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "source_sha256": "6834e4de98045906a3501455e9a2285d544a0ac852b4b9f095599662296c4a3e",
+      "status": 0,
+      "stdout_hex": "",
+      "stderr_hex": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_swap.my",
+      "mode": "reference",
+      "phase": "typed",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_swap.my"
+      ],
+      "source_sha256": "6834e4de98045906a3501455e9a2285d544a0ac852b4b9f095599662296c4a3e",
+      "status": 0,
+      "stdout_hex": "666e206d61696e20233020706172616d733d30207265743d69363420636162693d66616c736520686f73743d66616c73650a20206c6f63616c202530206c6566743a20693634206d75740a20206c6f63616c2025312072696768743a20693634206d75740a20206c6f63616c202532203c636f6c6c656374696f6e3e3a207475706c653c6936342c6936343e206d75740a2020626c6f636b0a20202020696e697469616c697a652025300a202020202020696e7465676572203a2069363420330a20202020696e697469616c697a652025310a202020202020696e7465676572203a2069363420340a20202020646973636172640a202020202020626c6f636b5f76616c7565203a20756e69740a2020202020202020626c6f636b0a20202020202020202020696e697469616c697a652025320a2020202020202020202020207265636f7264203a207475706c653c6936342c6936343e0a20202020202020202020202020206669656c64202e300a202020202020202020202020202020206c6f63616c203a206936342025310a20202020202020202020202020206669656c64202e310a202020202020202020202020202020206c6f63616c203a206936342025300a2020202020202020202061737369676e2025300a2020202020202020202020206669656c64203a20693634202e300a20202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025320a2020202020202020202061737369676e2025310a2020202020202020202020206669656c64203a20693634202e310a20202020202020202020202020206c6f63616c203a207475706c653c6936342c6936343e2025320a2020202020202020756e6974203a20756e6974202e2e2e0a202020207265740a20202020202062696e617279203a20693634206164640a20202020202020206c6f63616c203a206936342025300a20202020202020206c6f63616c203a206936342025310a",
+      "stderr_hex": "",
+      "stdout_sha256": "182d0f8618b505e8f876890072ba1b628b692ae53654fa230f5f19e0067ecf7a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tuple_swap.my",
+      "mode": "reference",
+      "phase": "runtime",
+      "command": [
+        "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/coherent-cf2-prefix/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/sources/tuple_swap.my",
+        "--no-cache",
+        "--release",
+        "--verify-facts",
+        "--print-result",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/.selka-agent-cache/structural-probes/tmp/body-structural-admission-ppcifkv4/guest-cache",
+        "--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "source_sha256": "6834e4de98045906a3501455e9a2285d544a0ac852b4b9f095599662296c4a3e",
+      "status": 7,
+      "stdout_hex": "370a",
+      "stderr_hex": "",
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "runtime_flags": [
+    "--release",
+    "--verify-facts",
+    "MYL_CORE_LEAKCHECK=1"
+  ],
+  "typed_oracle": "full canonical batch/catalog shadow comparison; dump-typed supplements",
+  "qualified_seed_sha256": null,
+  "operations": 74,
+  "failed": 0,
+  "skipped": 0
+}

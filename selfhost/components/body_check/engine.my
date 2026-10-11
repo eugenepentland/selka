@@ -54,6 +54,9 @@ import hash_keys
 import set_lower
 import membership_lower
 import gather_lower
+import gather_pair
+import tuple_types
+import tuple_lower
 import dictionary_view_contains
 
 public record Syntax:
@@ -431,6 +434,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         state.batch.resolved[raw_id] = result.id
         state.depth = state.depth - 1
         return result
+    elif data.data == b"tuple":
+        const result = try tuple_value(mut state, raw_id, payload, span)
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
     elif data.data == b"list_literal":
         const inputs = try graph.items(state.syntax.pool, payload)
         mut element = list_types.element_type(state.batch.facts.lists, state.batch.facts.expected[raw_id])
@@ -602,6 +610,10 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
     elif data.data == b"length":
         const input = try graph.number(state.syntax.pool, payload)
         const base = try expression(mut state, input)
+        const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, base.ty)
+        if tuple.id >= 0:
+            const rejection = try problem(state, span, "E_TYPE", "a tuple has no length; take it apart with `head, rest = value`")
+            fail rejection
         if list_types.element_type(state.batch.facts.lists, base.ty) >= 0:
             const context = list_lower.Context(input=state.syntax.pool, span=span)
             const lowered = try list_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=b"length", arguments=[], result_type=0, signed_length=True))
@@ -676,6 +688,10 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const index_raw = try graph.number(state.syntax.pool, index_id)
         const base = try expression(mut state, base_raw)
         const index = try expression(mut state, index_raw)
+        const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, base.ty)
+        if tuple.id >= 0:
+            const rejection = try problem(state, span, "E_TUPLE_INDEX", "a tuple has no elements to index; bind its values with `head, rest = ...`")
+            fail rejection
         const collection = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
         if collection.kind == 1:
             const rejection = try problem(state, span, "E_SET_INDEX", "a set is not indexable; test membership with `x in s` or iterate it with `for x in s`")
@@ -902,6 +918,10 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             const owner_name = try graph.spelling(state.syntax.pool, state.syntax.source, owner)
             const owner_slot = locals.find(state.scope, owner_name)
             if owner_slot >= 0:
+                const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, state.scope.locals[owner_slot].ty)
+                if tuple.id >= 0:
+                    const rejection = try problem(state, call_name, "E_TYPE", "a tuple has no methods; take it apart with `head, rest = value`")
+                    fail rejection
                 const option = try variants.option_shape(state.syntax.pool, state.batch.facts.lists.types.records.rows, state.scope.locals[owner_slot].ty)
                 if option.valid and (raw_callee == b"unwrap_or" or raw_callee == b"is_none" or raw_callee == b"is_some" or not option_flow.has(state.control.options, owner_slot)):
                     _ = try io_arguments.positional(state.syntax.pool, payload)
@@ -2411,6 +2431,14 @@ public func managed(state: State, ty: int) -> bool:
 func type_name(state: State, ty: int) -> str:
     if ty >= 0 and ty == state.batch.facts.float_type:
         return "float"
+    const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, ty)
+    if tuple.id >= 0:
+        mut name = "tuple["
+        for position in range(len(tuple.elements)):
+            if position > 0:
+                name = name + ", "
+            name = name + type_name(state, tuple.elements[position])
+        return name + "]"
     const element = list_types.element_type(state.batch.facts.lists, ty)
     if element >= 0:
         return type_name(state, element) + "[]"
@@ -2452,6 +2480,21 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
     const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
     if text == b"float" and state.batch.facts.float_type >= 0:
         return state.batch.facts.float_type
+    for tuple in state.batch.facts.lists.types.tuples.sources:
+        const tuple_span = try graph.field(state.syntax.pool, tuple, "span")
+        const matches = try same_span(state.syntax.pool, tuple_span, span)
+        if matches:
+            const elements_id = try graph.field(state.syntax.pool, tuple, "elements")
+            const elements = try graph.items(state.syntax.pool, elements_id)
+            mut types: int[] = []
+            for element in elements:
+                const ty = try type_at(mut state, element)
+                types.append(ty)
+            const ty = tuple_types.find(state.batch.facts.lists.types.tuples, types)
+            if ty < 0:
+                const rejection = try problem(state, span, "P_BODY_PROFILE", "annotated tuple type is absent from the common catalog")
+                fail rejection
+            return ty
     for suffix in state.batch.facts.lists.types.suffixes:
         const suffix_span = try graph.field(state.syntax.pool, suffix, "span")
         const matches = try same_span(state.syntax.pool, suffix_span, span)
@@ -2671,6 +2714,10 @@ func list_arity(kind: bytes) -> int:
 
 
 public func record_field(state: State, ty: int, span: int) -> int fails syntax_value.Problem:
+    const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, ty)
+    if tuple.id >= 0:
+        const rejection = try problem(state, span, "E_TYPE", "a tuple has no fields; take it apart with `head, rest = value`")
+        fail rejection
     const row = record_types.schema(state.batch.facts.lists.types.records, ty)
     if row < 0:
         const rejection = try problem(state, span, "E_TYPE", "operation requires a record value")
@@ -2779,6 +2826,10 @@ func nominal_key(mut state: State, key: bytes, span: int) -> int fails syntax_va
 func record_assignment(mut state: State, assignment: int, span: int) -> Expression fails syntax_value.Problem:
     const target_id = try graph.field(state.syntax.pool, assignment, "target")
     const target = try graph.number(state.syntax.pool, target_id)
+    const target_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[target], "data")
+    const target_data = try graph.get(state.syntax.pool, target_data_id)
+    if target_data.data == b"tuple":
+        return try tuple_assignment(mut state, assignment, target)
     _ = try list_places.writable(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, target)
     mut path_names: int[] = []
     mut root = target
@@ -4985,8 +5036,7 @@ func gather_step(mut state: State, payload: int, span: int) -> list_lower.Lowere
     const expected = collection_types.schema(state.batch.facts.lists.types.collections, sink.expected)
     if sink.kind == b"dict":
         if key_value.kind == 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "dictionary generator pairs require tuple gather projection")
-            fail rejection
+            return try dictionary_pair_step(mut state, position, value_raw, span)
         const key_raw = try graph.number(state.syntax.pool, key_id)
         mut key_hint = -1
         if expected.id >= 0 and expected.kind == 0:
@@ -5141,3 +5191,224 @@ func set_value_access(mut state: State, span: int, base: Expression, method: byt
     const arity = if empty then 0 else 1
     _ = try set_arity(mut state, span, schema.id, schema.key, method, len(inputs), arity)
     return try set_checked(mut state, span, schema, base.id, method, values)
+
+
+func tuple_value(mut state: State, raw_id: int, payload: int, span: int) -> Expression fails syntax_value.Problem:
+    const inputs = try graph.items(state.syntax.pool, payload)
+    if len(inputs) < 2 or len(inputs) > 8:
+        const rejection = try problem(state, span, "E_TUPLE_ARITY", "a tuple has between 2 and 8 elements; declare a record for a larger group")
+        fail rejection
+    const expected = tuple_types.schema(state.batch.facts.lists.types.tuples, state.batch.facts.expected[raw_id])
+    if expected.id >= 0 and len(expected.elements) != len(inputs):
+        const message = "this tuple has " + str(len(inputs)) + " elements but " + type_name(state, expected.id) + " has " + str(len(expected.elements)) + "; write " + str(len(expected.elements)) + " elements"
+        const rejection = try problem(state, span, "E_TUPLE_ARITY", message)
+        fail rejection
+    mut values: int[] = []
+    mut elements: int[] = []
+    for position in range(len(inputs)):
+        const child = try graph.number(state.syntax.pool, inputs[position])
+        mut hint = -1
+        if expected.id >= 0:
+            hint = expected.elements[position]
+        const value = try expression_expected(mut state, child, hint)
+        if hint >= 0:
+            const child_span = try graph.field(state.syntax.pool, state.syntax.nodes[child], "span")
+            _ = try require(state, value.ty, hint, child_span)
+        values.append(value.id)
+        elements.append(if hint >= 0 then hint else value.ty)
+    mut ty = expected.id
+    if ty < 0:
+        const inferred = try list_types.tuple_intern(mut state.batch.facts.lists, mut state.syntax.pool, elements, span)
+        ty = inferred
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const id = try tuple_lower.literal(mut state.batch, context, ty, values)
+    return Expression(id=id, ty=ty)
+
+
+func dictionary_pair_step(mut state: State, position: int, raw: int, span: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const pair = try expression(mut state, raw)
+    const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, pair.ty)
+    if tuple.id < 0 or len(tuple.elements) != 2:
+        const rejection = try problem(state, span, "E_PRELUDE_TYPE", "dict() consumes a generator of (key, value) pairs")
+        state.problems.append(syntax_problem.alternative(rejection, "or write a dict comprehension: `{k: v for k, v in pairs}`"))
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const projected = try gather_pair.project(mut state.batch, mut state.scope, context, gather_pair.Input(value=pair.id, ty=pair.ty, key_type=tuple.elements[0], value_type=tuple.elements[1]))
+    const sink = state.control.values.gathers[position]
+    mut ty = sink.expected
+    const expected = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+    if expected.id < 0 or expected.kind != 0:
+        const inferred = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=0, key=tuple.elements[0], value=tuple.elements[1], owner=-1), span)
+        ty = inferred
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+    _ = try require_hash_key(mut state, tuple.elements[0], span, False)
+    _ = try require(state, tuple.elements[0], schema.key, span)
+    _ = try require(state, tuple.elements[1], schema.value, span)
+    try gather_storable(mut state, tuple.elements[1], span, True)
+    mut owner = sink.owner
+    if owner < 0:
+        const accumulator = try list_lower.temporary(mut state.scope, context, ty)
+        owner = accumulator
+        state.control.values.gathers[position].owner = owner
+    const lowered = try gather_lower.step(mut state.batch, mut state.scope, context, gather_lower.Step(owner=owner, key=projected.key, value=projected.value, kind=b"dict"))
+    const previous = try graph.items(state.batch.pool, lowered.payload)
+    mut statements: int[] = [projected.initialize]
+    for entry in previous:
+        const statement_id = try graph.number(state.batch.pool, entry)
+        statements.append(statement_id)
+    const payload = try emission.ids(mut state.batch, statements)
+    return list_lower.Lowered(ty=15, tag=b"block", payload=payload)
+
+
+func tuple_assignment(mut state: State, assignment: int, target: int) -> Expression fails syntax_value.Problem:
+    const target_row = state.syntax.nodes[target]
+    const span = try graph.field(state.syntax.pool, target_row, "span")
+    const target_data = try graph.field(state.syntax.pool, target_row, "data")
+    const target_payload = try graph.payload(state.syntax.pool, target_data)
+    const targets = try graph.items(state.syntax.pool, target_payload)
+    const declaration_id = try graph.field(state.syntax.pool, assignment, "declaration")
+    const declaration = try graph.get(state.syntax.pool, declaration_id)
+    mut unknown = -1
+    mut all_unknown = True
+    for entry in targets:
+        const raw = try graph.number(state.syntax.pool, entry)
+        const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+        const data = try graph.get(state.syntax.pool, data_id)
+        if data.data != b"name":
+            if declaration.kind != 0:
+                const target_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+                const rejection = try problem(state, target_span, "E_ASSIGNMENT_TARGET", "a destructuring declaration requires binding names")
+                fail rejection
+            all_unknown = False
+            continue
+        const name_span = try graph.payload(state.syntax.pool, data_id)
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        if name == b"_" or declaration.kind != 0:
+            continue
+        const visible = try top_level(state, name_span)
+        if locals.find(state.scope, name) >= 0 or visible:
+            all_unknown = False
+        else:
+            unknown = name_span
+    if unknown >= 0:
+        const rejection = try problem(state, unknown, "E_BINDING_DECLARATION", "destructuring assignment requires declared bindings; declare the targets with const or mut")
+        if all_unknown:
+            const location = try problem(state, span, "", "")
+            state.problems.append(syntax_problem.repaired(rejection, [syntax_problem.Edit(start=location.start, end=location.start, text=b"mut ")]))
+        fail rejection
+    const rhs_id = try graph.field(state.syntax.pool, assignment, "value")
+    const rhs_raw = try graph.number(state.syntax.pool, rhs_id)
+    const rhs = try expression(mut state, rhs_raw)
+    const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, rhs.ty)
+    if tuple.id < 0:
+        const checked_span = try graph.field(state.batch.pool, state.batch.nodes[rhs.id], "span")
+        const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, checked_span, 0)
+        const rejection = try problem(state, copied_span, "E_TYPE", "a destructuring assignment binds the values of a tuple; `" + type_name(state, rhs.ty) + "` is not one — bind it with one name instead")
+        fail rejection
+    if len(tuple.elements) != len(targets):
+        mut origin = "the value has " + str(len(tuple.elements)) + " values"
+        const rhs_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[rhs_raw], "data")
+        const rhs_data = try graph.get(state.syntax.pool, rhs_data_id)
+        if rhs_data.data == b"call":
+            const call = try graph.payload(state.syntax.pool, rhs_data_id)
+            const owner_id = try graph.field(state.syntax.pool, call, "owner")
+            const owner = try graph.get(state.syntax.pool, owner_id)
+            if owner.kind == 0:
+                const name_id = try graph.field(state.syntax.pool, call, "name")
+                const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, name_id)
+                const name = try suggestions.text(spelling)
+                origin = "`" + name + "` returns " + str(len(tuple.elements)) + " values"
+        const rejection = try problem(state, span, "E_TUPLE_ARITY", origin + "; bind " + str(len(tuple.elements)) + " names, or `_` for one you do not need")
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const snapshot = try tuple_lower.prepare(mut state.batch, mut state.scope, context, tuple_lower.Input(value=rhs.id, ty=rhs.ty))
+    mut statements: int[] = [snapshot.initialize]
+    for position in range(len(targets)):
+        const raw = try graph.number(state.syntax.pool, targets[position])
+        const value = try tuple_lower.project(mut state.batch, context, snapshot.owner, rhs.ty, position, tuple.elements[position])
+        const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+        const data = try graph.get(state.syntax.pool, data_id)
+        if data.data == b"name":
+            const name_span = try graph.payload(state.syntax.pool, data_id)
+            const written = try tuple_bind(mut state, name_span, Expression(id=value, ty=tuple.elements[position]), declaration_id)
+            if written >= 0:
+                statements.append(written)
+        else:
+            const written = try tuple_place(mut state, raw, value)
+            statements.append(written)
+    const lowered = try tuple_lower.finish(mut state.batch, context, statements)
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=15)
+
+
+func tuple_bind(mut state: State, name_span: int, value: Expression, declaration_id: int) -> int fails syntax_value.Problem:
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+    if name == b"_":
+        return -1
+    const declaration = try graph.get(state.syntax.pool, declaration_id)
+    const slot = locals.find(state.scope, name)
+    const visible = try top_level(state, name_span)
+    if declaration.kind != 0 and (slot >= 0 or visible):
+        const rejection = try problem(state, name_span, "E_SHADOWING", "binding shadows an active declaration")
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=name_span)
+    if slot >= 0:
+        _ = try require(state, value.ty, state.scope.locals[slot].ty, name_span)
+        if not state.scope.locals[slot].mutable:
+            const rejection = try problem(state, name_span, "E_IMMUTABLE", "this binding cannot be assigned")
+            fail rejection
+        const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, value.ty)
+        if pending:
+            if state.scope.locals[slot].usage.transfer_available:
+                const rejection = try problem(state, name_span, "E_RESULT_OVERWRITE", "assignment would overwrite an unhandled result-bearing value")
+                fail rejection
+            state.scope.locals[slot].usage.transfer_available = True
+            state.scope.locals[slot].usage.transfer_span = -1
+        state.scope.locals[slot].usage.writes += 1
+        state.scope.locals[slot].flags.initialized = True
+        option_flow.forget(mut state.control.options, slot)
+        return try list_lower.store(mut state.batch, context, slot, value.id, False)
+    if visible:
+        const rejection = try problem(state, name_span, "E_SHADOWING", "binding shadows an active local or top-level function")
+        fail rejection
+    if declaration.kind == 0:
+        const rejection = try problem(state, name_span, "E_BINDING_DECLARATION", "destructuring assignment requires declared bindings")
+        fail rejection
+    const created = try locals.add(mut state.scope, name, name_span, value.ty, declaration.integer != 0, b"local")
+    const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, value.ty)
+    state.scope.locals[created].usage.transfer_available = pending
+    return try list_lower.store(mut state.batch, context, created, value.id, True)
+
+
+func tuple_place(mut state: State, target: int, value: int) -> int fails syntax_value.Problem:
+    while len(state.batch.resolved) < len(state.syntax.nodes):
+        state.batch.resolved.append(-1)
+    state.batch.resolved[target] = value
+    const row = state.syntax.nodes[target]
+    const span = try graph.field(state.syntax.pool, row, "span")
+    const data_id = try graph.field(state.syntax.pool, row, "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    const payload = try graph.payload(state.syntax.pool, data_id)
+    const target_id = try syntax_value.integer(mut state.syntax.pool, target)
+    mut result = Expression(id=-1, ty=15)
+    if data.data == b"field":
+        const op = try syntax_value.enumeration(mut state.syntax.pool, b"set")
+        const absent = try syntax_value.absent(mut state.syntax.pool)
+        const assignment = try syntax_value.object(mut state.syntax.pool, ["target", "value", "op", "declaration"], [target_id, target_id, op, absent])
+        result = try record_assignment(mut state, assignment, span)
+    elif data.data == b"index":
+        const base = try graph.field(state.syntax.pool, payload, "base")
+        const index = try graph.field(state.syntax.pool, payload, "index")
+        const inputs = try syntax_value.sequence(mut state.syntax.pool, [index, target_id])
+        const kind = try syntax_value.enumeration(mut state.syntax.pool, b"write")
+        const operation = try syntax_value.object(mut state.syntax.pool, ["base", "kind", "arguments"], [base, kind, inputs])
+        const tagged = try syntax_value.tagged(mut state.syntax.pool, b"list_operation", operation)
+        const synthetic = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, tagged])
+        const raw = len(state.syntax.nodes)
+        state.syntax.nodes.append(synthetic)
+        result = try expression(mut state, raw)
+    else:
+        const rejection = try problem(state, span, "E_ASSIGNMENT_TARGET", "assignment requires a field or indexed collection place")
+        fail rejection
+    const discarded = try syntax_value.integer(mut state.batch.pool, result.id)
+    return try emission.statement(mut state.batch, state.syntax.pool, span, False, b"discard", discarded)

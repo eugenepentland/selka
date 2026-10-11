@@ -1,4 +1,4 @@
-"""B7 fail-closed accounting; no installed schema-7 support is asserted here."""
+"""B7 fail-closed accounting; no installed schema-10 support is asserted here."""
 import hashlib
 import json
 from pathlib import Path
@@ -55,9 +55,9 @@ class BodyEntryTests(unittest.TestCase):
             inventory['packages']['body-check']=dict(spec);(root/'requests.json').write_text(json.dumps(inventory));request.write_bytes(b'changed')
             with self.assertRaisesRegex(RuntimeError,'changed/empty'):Q.request_inventory(root)
 
-    def test_capture_requires_real_correlated_schema7_body_exchange(self):
+    def test_capture_requires_real_correlated_schema10_body_exchange(self):
         payload=b'SLKBKI01'+struct.pack('<II',1,0)
-        request=b'SLKBCK01'+struct.pack('<IIII',1,7,0,len(payload))+b'nonce123'+hashlib.sha256(payload).digest()+payload
+        request=b'SLKBCK01'+struct.pack('<IIII',1,10,0,len(payload))+b'nonce123'+hashlib.sha256(payload).digest()+payload
         outcome=b'SLKBKR01'+struct.pack('<II',1,0)
         reply=request[:16]+struct.pack('<II',1,len(outcome))+request[24:64]+outcome
         self.assertEqual(Q.bound_capture(request,reply)['request_values'],1)

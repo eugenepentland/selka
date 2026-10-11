@@ -1,0 +1,4 @@
+func main() -> int:
+    const values = dict((x, x + 1) for x in [1, 2, 3])
+    assert values[3] == 4
+    return 7

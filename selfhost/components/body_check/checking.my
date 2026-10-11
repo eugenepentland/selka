@@ -133,6 +133,11 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const buffer_basis = try buffer_types.prepare(pool, catalog)
     const managed_types = [string_type, bytes_type, buffer_basis.id]
     mut lists = try list_types.prepare_records(pool, catalog, suffixes, managed_types, records)
+    const source_types = try graph.get(pool, expressions)
+    for position in range(len(source_types.names)):
+        if source_types.names[position] == "tuples":
+            const tuples = try graph.items(pool, source_types.children[position])
+            lists.types.tuples.sources = tuples
     records = lists.types.records
     match record_types.closure(mut records, pool, lists.elements, managed_types, floating):
         case Ok(admitted):

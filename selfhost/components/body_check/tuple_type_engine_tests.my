@@ -1,0 +1,100 @@
+import syntax_value
+import graph
+import engine
+import tuple_types
+import list_types
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh(kind: bytes) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 2)
+    const first = try syntax_value.span(mut pool, 0, 1)
+    const second = try syntax_value.span(mut pool, 1, 2)
+    const key_node = try node(mut pool, first, b"integer", first)
+    const value_node = try node(mut pool, second, b"integer", second)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const absent = try syntax_value.absent(mut pool)
+    const key = if kind == b"dict" then zero else absent
+    const step_data = try syntax_value.object(mut pool, ["value", "key"], [one, key])
+    const step = try node(mut pool, span, b"gather_step", step_data)
+    const steps = try syntax_value.sequence(mut pool, [zero])
+    const loop = try node(mut pool, span, b"block", steps)
+    const shape = try syntax_value.enumeration(mut pool, kind)
+    const gather_data = try syntax_value.object(mut pool, ["shape", "loop", "open"], [shape, one, first])
+    const gather = try node(mut pool, span, b"gather", gather_data)
+    const tuple_data = try syntax_value.sequence(mut pool, [zero, one])
+    const tuple_node = try node(mut pool, span, b"tuple", tuple_data)
+    const nodes = try syntax_value.sequence(mut pool, [key_node, value_node, gather, tuple_node])
+    const statements = try syntax_value.sequence(mut pool, [step, loop])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, statements, empty, types])
+    mut state = try engine.make(pool, b"07", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    state.batch.facts.lists.available = True
+    for unused in range(19):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+public func test_tuple_annotation_reuses_retained_element_identity() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    state.syntax.source = b"intbool"
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 7)
+    const integer = try syntax_value.span(mut state.syntax.pool, 0, 3)
+    const boolean = try syntax_value.span(mut state.syntax.pool, 3, 7)
+    const elements = try syntax_value.sequence(mut state.syntax.pool, [integer, boolean])
+    const tuple = try syntax_value.object(mut state.syntax.pool, ["span", "elements"], [span, elements])
+    const retained = try list_types.tuple_intern(mut state.batch.facts.lists, mut state.syntax.pool, [0, 1], span)
+    state.batch.facts.lists.types.tuples.sources = [tuple]
+    const resolved = try engine.type_at(mut state, span)
+    return resolved == retained and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_tuple_index_reports_native_destructuring_message_after_operands() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[3], "span")
+    const base = try syntax_value.integer(mut state.syntax.pool, 3)
+    const index = try syntax_value.integer(mut state.syntax.pool, 0)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [base, index])
+    const indexed = try node(mut state.syntax.pool, span, b"index", payload)
+    state.syntax.nodes.append(indexed)
+    const result = engine.expression(mut state, 4)
+    match result:
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TUPLE_INDEX" and problem.message == "a tuple has no elements to index; bind its values with `head, rest = ...`" and len(state.batch.nodes) == 3
+
+
+public func test_tuple_length_reports_native_type_error() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[3], "span")
+    const base = try syntax_value.integer(mut state.syntax.pool, 3)
+    const length = try node(mut state.syntax.pool, span, b"length", base)
+    state.syntax.nodes.append(length)
+    const result = engine.expression(mut state, 4)
+    match result:
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "a tuple has no length; take it apart with `head, rest = value`"
+
+
+public func test_tuple_fields_report_native_type_error() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    const value = try engine.expression(mut state, 3)
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[3], "span")
+    const result = engine.record_field(state, value.ty, span)
+    match result:
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "a tuple has no fields; take it apart with `head, rest = value`"

@@ -959,7 +959,7 @@ pub fn build(b: *std.Build) void {
     body_entries_step.dependOn(&body_entries_checks.step);
     b.step("test-selfhost-body-entries-self", "Check B7 source admission accounting independently").dependOn(&body_entries_checks.step);
     test_step.dependOn(body_entries_step);
-    const dictionaries_step = b.step("test-selfhost-body-dictionaries", "Require schema8 dictionary/set/Option source and hostile admission");
+    const dictionaries_step = b.step("test-selfhost-body-dictionaries", "Require schema10 dictionary/set/Option source and hostile admission");
     const dictionaries_run = driver(b, "B8 normal/release: 246 workflows and 27 hostile refusals each", rss.component_driver, "body_dictionary_admission");
     dictionaries_run.has_side_effects = true;
     dictionaries_run.addArgs(&.{ "python3", "selfhost/test_body_dictionaries.py", "--zig", b.graph.zig_exe, "--builder" });

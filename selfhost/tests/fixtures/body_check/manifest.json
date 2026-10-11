@@ -142,10 +142,11 @@
     "library": false
   },
   "profile_division.my": {
-    "status": 2,
-    "boundary": "profile",
-    "typed": false,
-    "library": false
+    "status": 0,
+    "boundary": "numeric-collection-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "profile_chained_comparison.my": {
     "status": 2,
@@ -279,10 +280,11 @@
     "library": false
   },
   "profile_integer_suffix.my": {
-    "status": 2,
-    "boundary": "profile",
-    "typed": false,
-    "library": false
+    "status": 0,
+    "boundary": "numeric-collection-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "readonly_range_write.my": {
     "status": 1,
@@ -1039,12 +1041,18 @@
     ]
   },
   "optional_narrowing_profile.my": {
-    "status": 2,
-    "boundary": "explicit-profile-refusal"
+    "status": 0,
+    "boundary": "numeric-collection-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "optional_methods_profile.my": {
-    "status": 2,
-    "boundary": "explicit-profile-refusal"
+    "status": 0,
+    "boundary": "numeric-collection-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "optional_parse_int_demand.my": {
     "status": 0,

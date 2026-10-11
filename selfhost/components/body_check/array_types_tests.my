@@ -1,0 +1,169 @@
+import syntax_value
+import graph
+import array_types
+import variants
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, name)
+    return try graph.number(pool, value)
+
+
+func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_value.Problem:
+    const value = try graph.field(pool, row, name)
+    const data = try graph.get(pool, value)
+    return data.kind == 2 and data.integer != 0
+
+
+public func test_index_preserves_numeric_and_enum_key_identity_through_growth() -> bool fails syntax_value.Problem:
+    mut catalog = array_types.empty()
+    for index in range(80):
+        _ = try array_types.add(mut catalog, array_types.Array(id=19 + index, element=index % 19, length=index // 19, key=-1))
+    _ = try array_types.add(mut catalog, array_types.Array(id=99, element=0, length=0, key=40))
+    for index in range(80):
+        if array_types.find(catalog, index % 19, index // 19, -1) != 19 + index:
+            return False
+    const repeated = try array_types.add(mut catalog, array_types.Array(id=20, element=1, length=0, key=-1))
+    const table = array_types.schema(catalog, 99)
+    return not repeated and table.key == 40 and array_types.find(catalog, 0, 0, 40) == 99 and array_types.find(catalog, 0, 0, -1) == 19 and len(catalog.slots) == 256
+
+
+public func test_numeric_schema_has_exact_name_demand_span_and_empty_fields() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 31, 48)
+    const row = try array_types.materialize(mut pool, [], array_types.Recipe(id=19, element=0, length=2, span=span))
+    const name_id = try graph.field(pool, row, "name")
+    const name = try graph.get(pool, name_id)
+    const declaration = try graph.field(pool, row, "declaration")
+    const start = try number(pool, declaration, "start")
+    const end = try number(pool, declaration, "end")
+    const fields_id = try graph.field(pool, row, "fields")
+    const fields = try graph.items(pool, fields_id)
+    const catalog = try array_types.prepare(pool, [row])
+    const schema = array_types.schema(catalog, 19)
+    return name.data == b"[2]i64" and start == 31 and end == 48 and len(fields) == 0 and schema.element == 0 and schema.length == 2 and schema.key == -1
+
+
+public func test_empty_pending_array_suppresses_handling_and_move_obligations() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    const template = variants.Template(id=0, declaration=span, raw=-1, cases=[variants.TemplateCase(name=b"ok", declaration=span, parameter=0), variants.TemplateCase(name=b"err", declaration=span, parameter=1)])
+    const result = try variants.materialize(mut pool, [], template, 19, 0, 1, True)
+    const nonempty = try array_types.materialize(mut pool, [result], array_types.Recipe(id=20, element=19, length=1, span=span))
+    const empty = try array_types.materialize(mut pool, [result, nonempty], array_types.Recipe(id=21, element=19, length=0, span=span))
+    const full_contract = try graph.field(pool, nonempty, "contract")
+    const empty_contract = try graph.field(pool, empty, "contract")
+    const full_pending = try flag(pool, full_contract, "requires_handling")
+    const full_storable = try flag(pool, full_contract, "storable")
+    const empty_pending = try flag(pool, empty_contract, "requires_handling")
+    const empty_storable = try flag(pool, empty_contract, "storable")
+    const empty_move = try flag(pool, empty_contract, "move_only")
+    return full_pending and not full_storable and not empty_pending and empty_storable and not empty_move
+
+
+public func test_wire_array_recipe_keeps_structural_wrapper_and_actual_span() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 7, 19)
+    const encoded = try array_types.encode(mut pool, array_types.Recipe(id=19, element=5, length=4, span=span))
+    const outer = try graph.get(pool, encoded)
+    const inner_id = try graph.payload(pool, encoded)
+    const inner = try graph.get(pool, inner_id)
+    const row = try graph.payload(pool, inner_id)
+    const value = try graph.get(pool, row)
+    const declaration = try graph.field(pool, row, "span")
+    return outer.data == b"structural" and inner.data == b"array" and value.names == ["id", "element", "length", "span"] and declaration == span
+
+
+public func test_forward_element_is_rejected_before_pool_mutation() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 1)
+    const before = len(pool.values)
+    match array_types.materialize(mut pool, [], array_types.Recipe(id=19, element=19, length=1, span=span)):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(pool.values) == before
+
+
+func replace_field(mut pool: syntax_value.Pool, row: int, name: str, value: int) -> Unit fails syntax_value.Problem:
+    mut object = try graph.get(pool, row)
+    for position in range(len(object.names)):
+        if object.names[position] == name:
+            object.children[position] = value
+            pool.values[row] = object
+            return
+    fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="missing synthetic test field")
+
+
+func enum_case(mut pool: syntax_value.Pool, name: bytes, span: int) -> int fails syntax_value.Problem:
+    const label = try syntax_value.octets(mut pool, name)
+    const absent = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    return try syntax_value.object(mut pool, ["name", "declaration", "payload", "fielded", "boxed"], [label, span, absent, no, no])
+
+
+func table_field(mut pool: syntax_value.Pool, name: bytes, span: int) -> int fails syntax_value.Problem:
+    const label = try syntax_value.octets(mut pool, name)
+    const ty = try syntax_value.integer(mut pool, 0)
+    const absent = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    return try syntax_value.object(mut pool, ["name", "declaration", "ty", "default_value", "boxed"], [label, span, ty, absent, no])
+
+
+public func test_retained_enum_table_reuses_key_and_preserves_declared_case_order() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 3, 7)
+    const enumeration = try array_types.materialize(mut pool, [], array_types.Recipe(id=19, element=0, length=0, span=span))
+    const shape = try graph.field(pool, enumeration, "shape")
+    const absent = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    const first_case = try enum_case(mut pool, b"first", span)
+    const last_case = try enum_case(mut pool, b"last", span)
+    const cases = try syntax_value.sequence(mut pool, [first_case, last_case])
+    const variant_shape = try syntax_value.object(mut pool, ["fallible", "is_union", "cases"], [no, no, cases])
+    try replace_field(mut pool, shape, "array", absent)
+    try replace_field(mut pool, shape, "variants", variant_shape)
+    const table = try array_types.materialize(mut pool, [enumeration], array_types.Recipe(id=20, element=0, length=2, span=span))
+    const table_shape = try graph.field(pool, table, "shape")
+    const array = try graph.field(pool, table_shape, "array")
+    const key = try syntax_value.integer(mut pool, 19)
+    try replace_field(mut pool, array, "key", key)
+    const first_field = try table_field(mut pool, b"first", span)
+    const last_field = try table_field(mut pool, b"last", span)
+    const fields = try syntax_value.sequence(mut pool, [first_field, last_field])
+    try replace_field(mut pool, table, "fields", fields)
+    const catalog = try array_types.prepare(pool, [enumeration, table])
+    if array_types.find(catalog, 0, 2, 19) != 20 or array_types.find(catalog, 0, 2, -1) != -1:
+        return False
+    const reversed = try syntax_value.sequence(mut pool, [last_field, first_field])
+    try replace_field(mut pool, table, "fields", reversed)
+    match array_types.prepare(pool, [enumeration, table]):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_array_contract_propagates_move_only_only_when_nonempty() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    const element = try array_types.materialize(mut pool, [], array_types.Recipe(id=19, element=0, length=1, span=span))
+    const contract = try graph.field(pool, element, "contract")
+    const yes = try syntax_value.boolean(mut pool, True)
+    try replace_field(mut pool, contract, "move_only", yes)
+    const full = try array_types.materialize(mut pool, [element], array_types.Recipe(id=20, element=19, length=1, span=span))
+    const empty = try array_types.materialize(mut pool, [element, full], array_types.Recipe(id=21, element=19, length=0, span=span))
+    const full_contract = try graph.field(pool, full, "contract")
+    const empty_contract = try graph.field(pool, empty, "contract")
+    const full_move = try flag(pool, full_contract, "move_only")
+    const empty_move = try flag(pool, empty_contract, "move_only")
+    return full_move and not empty_move
+
+
+public func test_duplicate_shape_cannot_claim_second_type_identity() -> bool fails syntax_value.Problem:
+    mut catalog = array_types.empty()
+    _ = try array_types.add(mut catalog, array_types.Array(id=19, element=0, length=2, key=-1))
+    match array_types.add(mut catalog, array_types.Array(id=20, element=0, length=2, key=-1)):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(catalog.arrays) == 1

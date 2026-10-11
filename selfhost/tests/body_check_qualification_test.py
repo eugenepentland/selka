@@ -95,14 +95,14 @@ class BodyQualificationTests(unittest.TestCase):
     def test_frame_binds_whole_request(self):
         payload=b'raw body\x00'+ 'éλ'.encode();frame=D.frame(payload)
         self.assertEqual(frame[:8],b'SLKBCK01')
-        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,7,0,len(payload)))
+        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,10,0,len(payload)))
         self.assertEqual(frame[32:64],D.F.hashlib.sha256(payload).digest())
         self.assertEqual(frame[64:],payload)
 
     def test_package_authentication_requires_all_seven(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);artifact=root/'artifact';artifact.write_bytes(b'fixture')
-            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,7)]:
+            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,10)]:
                 (root/(name+'.json')).write_text(json.dumps(dict(format=1,component=name,protocol=protocol,schema=schema,artifact='artifact',sha256=D.F.digest(artifact))))
             self.assertEqual(len(D.packages(root)),7)
             manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=6;manifest.write_text(json.dumps(value))
@@ -133,7 +133,7 @@ class BodyQualificationTests(unittest.TestCase):
         import run_declaration_qualification as C
         import run_type_interface_qualification as T
         self.assertEqual(D.BODY_VALUE_LIMIT,2097152)
-        self.assertEqual((D.SCHEMA,D.MALFORMED_CHECKS,D.FORGED_CHECKS),(7,22,92))
+        self.assertEqual((D.SCHEMA,D.MALFORMED_CHECKS,D.FORGED_CHECKS),(10,22,92))
         for count,root in ((1048577,0),(2097152,2097151)):
             # Admitted body header; the deliberately absent rows fail next.
             with self.assertRaisesRegex(RuntimeError,'truncated captured kind'):
@@ -355,7 +355,8 @@ class BodyQualificationTests(unittest.TestCase):
         self.assertEqual(len(names),40)
         self.assertEqual(names-set(manifest),donors)
         self.assertTrue(all((D.FIXTURES/Path(name).with_suffix('.input')).is_file() for name in names))
-        self.assertEqual(inventory['counts'],{'success':21,'diagnostic':14,'profile':4})
+        self.assertEqual(inventory['historical_counts'],{'success':21,'diagnostic':14,'profile':4})
+        self.assertEqual(inventory['counts'],{'success':23,'diagnostic':14,'profile':2})
         demand = (D.FIXTURES/'optional_parse_int_demand.input').read_text()
         self.assertNotIn('?', demand)
         self.assertNotIn('Option', demand)
@@ -364,8 +365,9 @@ class BodyQualificationTests(unittest.TestCase):
         self.assertEqual(manifest['variant_recursive_lists.my']['result'],7)
         self.assertEqual(manifest['variant_boxed_recursive_profile.my']['status'],2)
         self.assertEqual(manifest['variant_generic_profile.my']['status'],2)
-        self.assertEqual(sum(manifest[name]['status']==0 for name in names&set(manifest)),21)
+        self.assertEqual(sum(manifest[name]['status']==0 for name in names&set(manifest)),23)
         self.assertEqual(sum(manifest[name]['status']==1 for name in names&set(manifest)),14)
+        self.assertEqual(sum(manifest[name]['status']==2 for name in names&set(manifest)),2)
 
     def test_b6_inventory_preserves_history_and_pins_native_diagnostics(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
@@ -381,7 +383,7 @@ class BodyQualificationTests(unittest.TestCase):
         self.assertEqual(manifest['bytes_buffer_arity_precedence_error.my']['diagnostics'][0]['code'],'E_ARITY')
         self.assertEqual(manifest['bytes_buffer_argument_precedence_error.my']['diagnostics'][0]['code'],'E_IMMUTABLE')
         self.assertEqual(manifest['bytes_buffer_function_shadow.my']['library_check_status'],0)
-        self.assertEqual(D.SCHEMA,7)
+        self.assertEqual(D.SCHEMA,10)
 
     def test_buffer_forgeries_require_real_recipe_and_preserve_named_graph(self):
         rows=[]
@@ -433,7 +435,7 @@ class BodyQualificationTests(unittest.TestCase):
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         refusals=[n for n,v in manifest.items() if v['status']==2]
-        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my','optional_methods_profile.my','optional_narrowing_profile.my','bytes_encode_profile.my','bytes_decode_profile.my'})
+        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_chained_comparison.my','profile_range_stride.my','profile_text_method.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my','bytes_encode_profile.my','bytes_decode_profile.my'})
         self.assertEqual(manifest['profile_managed.my']['result'], 1)
         self.assertEqual(manifest['profile_text_repeat.my'], {'status': 0, 'boundary': 'text-repetition-body', 'typed': True, 'library': False, 'result': 7})
         self.assertTrue(all((D.FIXTURES/Path(n).with_suffix('.input')).is_file() for n in manifest))

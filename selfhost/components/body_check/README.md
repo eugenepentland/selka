@@ -48,7 +48,7 @@ body batch, diagnostics, and import usage. Component mode adopts the validated
 batch at the body-checking seam. Reference mode remains available.
 
 `main.my` accepts `--exchange FILE` or unframed `--request FILE`. The normative
-wire contract is [WIRE.md](WIRE.md): protocol 1, schema 9, correlated `SLKBCK01`
+wire contract is [WIRE.md](WIRE.md): protocol 1, schema 10, correlated `SLKBCK01`
 envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Older body schemas and packages are refused. The request contains raw ASTs, sources, declaration facts,
 and the retained catalog descriptors. Batch fields remain
 `nodes`, `statements`, `functions`, and `ranges`.
@@ -254,3 +254,19 @@ See [the numeric audit](../../../docs/audits/selka-body-numeric-producer-2026-10
 for exact package receipts, scope and outstanding whole-language/bootstrap work.
 These counts require genuine installed native/component/shadow qualification;
 helpers and preparatory native controls alone do not establish source admission.
+
+
+## B10 structural integration
+
+Schema10 adds globally ordered anonymous tuple recipes, tuple literals, pair
+gathers and destructuring. The native boundary validates tuple fields, fixed
+arrays, enum tables and array element replacement. The standalone fixed-array
+catalog helper is present; complete array/table producer routing and the strict
+30-fixture installed admission remain in progress. Focused helper tests do not
+establish installed component parity or a whole compiler bootstrap.
+
+The numeric/collection regression keeps every earlier input. Four historical
+profile cases now require full success: floating division, integer suffixes,
+Option narrowing and Option methods. Their immutable inputs passed all 36
+native/shadow/component check, typed and generated-runtime operations under the
+qualified combined schema9 deployment before their expected outcomes changed.

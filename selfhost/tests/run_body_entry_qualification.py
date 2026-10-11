@@ -13,7 +13,7 @@ import tempfile
 import run_body_check_qualification as D
 
 F = D.F
-SCHEMA = 7
+SCHEMA = 10
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_entry_candidate'
 ENTRIES = {
     'test-index': 'test_index/main.my', 'cache-plan': 'cache_plan/main.my',

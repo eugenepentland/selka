@@ -1,0 +1,92 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import tuple_lower
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 3, 9)
+    return Fixture(batch=emission.empty(), scope=locals.Scope(locals=[], active=[]), context=list_lower.Context(input=pool, span=span))
+
+
+func integer(mut fixture: Fixture, number: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut fixture.batch.pool, number)
+    return try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 0, b"integer", payload)
+
+
+public func test_literal_keeps_written_order_and_exact_positional_initializers() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try integer(mut fixture, 7)
+    const right = try integer(mut fixture, 2)
+    const result = try tuple_lower.literal(mut fixture.batch, fixture.context, 23, [right, left])
+    const data_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[result], "data")
+    const data = try graph.get(fixture.batch.pool, data_id)
+    const payload = try graph.payload(fixture.batch.pool, data_id)
+    const fields = try graph.items(fixture.batch.pool, payload)
+    const first_id = try graph.field(fixture.batch.pool, fields[0], "value")
+    const first = try graph.number(fixture.batch.pool, first_id)
+    const second_id = try graph.field(fixture.batch.pool, fields[1], "index")
+    const second = try graph.number(fixture.batch.pool, second_id)
+    return result == 2 and data.data == b"record" and len(fields) == 2 and first == right and second == 1 and len(fixture.scope.locals) == 0 and len(fixture.batch.statements) == 0
+
+
+public func test_destructure_snapshot_is_hidden_and_projects_with_fresh_owner_reads() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try integer(mut fixture, 7)
+    const right = try integer(mut fixture, 2)
+    const value = try tuple_lower.literal(mut fixture.batch, fixture.context, 23, [left, right])
+    const snapshot = try tuple_lower.prepare(mut fixture.batch, mut fixture.scope, fixture.context, tuple_lower.Input(value=value, ty=23))
+    const first = try tuple_lower.project(mut fixture.batch, fixture.context, snapshot.owner, 23, 0, 0)
+    const second = try tuple_lower.project(mut fixture.batch, fixture.context, snapshot.owner, 23, 1, 1)
+    const data_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[second], "data")
+    const payload = try graph.payload(fixture.batch.pool, data_id)
+    const base_id = try graph.field(fixture.batch.pool, payload, "base")
+    const base = try graph.number(fixture.batch.pool, base_id)
+    const owner = fixture.scope.locals[0]
+    return snapshot.owner == 0 and snapshot.initialize == 0 and first == 4 and second == 6 and base == 5 and owner.ty == 23 and owner.mutable and not owner.flags.initialized and owner.usage.reads == 1 and owner.usage.temporary and len(fixture.scope.active) == 0
+
+
+public func test_finish_preserves_statement_order_and_unit_result_span() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try integer(mut fixture, 7)
+    const right = try integer(mut fixture, 2)
+    const value = try tuple_lower.literal(mut fixture.batch, fixture.context, 23, [left, right])
+    const snapshot = try tuple_lower.prepare(mut fixture.batch, mut fixture.scope, fixture.context, tuple_lower.Input(value=value, ty=23))
+    const lowered = try tuple_lower.finish(mut fixture.batch, fixture.context, [snapshot.initialize])
+    const result = try list_lower.append(mut fixture.batch, fixture.context, lowered)
+    const data_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[result], "data")
+    const payload = try graph.payload(fixture.batch.pool, data_id)
+    const body_id = try graph.field(fixture.batch.pool, payload, "body")
+    const body = try graph.number(fixture.batch.pool, body_id)
+    const value_id = try graph.field(fixture.batch.pool, payload, "value")
+    const final_value = try graph.number(fixture.batch.pool, value_id)
+    const unit_data_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[final_value], "data")
+    const unit = try graph.get(fixture.batch.pool, unit_data_id)
+    return result == 4 and body == 1 and final_value == 3 and unit.data == b"unit" and len(fixture.batch.statements) == 2 and lowered.ty == 15
+
+
+public func test_literal_rejects_invalid_arity_before_operand_access() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    match tuple_lower.literal(mut fixture.batch, fixture.context, 23, [-1]):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(fixture.batch.nodes) == 0
+
+
+public func test_snapshot_rejects_wrong_checked_type_without_allocating_local() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const value = try integer(mut fixture, 7)
+    match tuple_lower.prepare(mut fixture.batch, mut fixture.scope, fixture.context, tuple_lower.Input(value=value, ty=23)):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(fixture.scope.locals) == 0 and len(fixture.batch.statements) == 0

@@ -56,13 +56,13 @@ def main():
     args.report = args.report.resolve()
     args.report.parent.mkdir(parents=True, exist_ok=True)
     before = {'compiler_sha256': D.F.digest(args.compiler),
-              'packages': D.packages(args.component_dir, body_schema=9)}
+              'packages': D.packages(args.component_dir, body_schema=10)}
     cases = [(f'float_{i:02}.my',f'func value() -> float:\n    return {literal}\n\n\nfunc main() -> int:\n    _ = value()\n    return 0\n',0) for i,literal in enumerate(SUCCESS)]
     cases += [(f'error_{i:02}.my',f'func value() -> float:\n    return {literal}\n\n\nfunc main() -> int:\n    _ = value()\n    return 0\n',1) for i,literal in enumerate(ERRORS)]
     cases += [('parse_arity.my','func main() -> int:\n    _ = b"42".parse_int(1)\n    return 0\n',1),('float_parse_arity.my','func main() -> int:\n    _ = "42".parse_float(1)\n    return 0\n',1),('range_arity.my','func main() -> int:\n    _ = b"42".parse_int_range(1)\n    return 0\n',1)]
 
     report = dict(scope='supplemental B9 binary64 source boundaries and numeric method diagnostics',
-                  complete=False, records=[], body_schema=9, **before)
+                  complete=False, records=[], body_schema=10, **before)
     def save():
         args.report.write_text(json.dumps(report, indent=2) + '\n')
     save()
@@ -91,7 +91,7 @@ def main():
                     D.F.require(bool(outputs[0][1]) and not outputs[0][2], 'missing native typed boundary: ' + name)
                 D.F.require(outputs[0] == outputs[1] == outputs[2], 'numeric boundary differs: ' + name)
         D.F.require(before == {'compiler_sha256': D.F.digest(args.compiler),
-                              'packages': D.packages(args.component_dir, body_schema=9)},
+                              'packages': D.packages(args.component_dir, body_schema=10)},
                     'boundary compiler/package deployment changed')
     report.update(complete=True, cases=len(cases), operations=len(report['records']), failed=0, skipped=0)
     save()

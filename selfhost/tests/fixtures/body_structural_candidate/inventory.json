@@ -1,0 +1,41 @@
+{
+  "counts": {
+    "fixtures": 30,
+    "success": 22,
+    "diagnostic": 8,
+    "profiles": 0
+  },
+  "source_cases": [
+    "array_alias.my",
+    "array_bytes.my",
+    "array_copy.my",
+    "array_dynamic.my",
+    "array_empty.my",
+    "array_index_i16.my",
+    "array_index_i32.my",
+    "array_index_i64.my",
+    "array_index_i8.my",
+    "array_index_u16.my",
+    "array_index_u32.my",
+    "array_index_u64.my",
+    "array_index_u8.my",
+    "array_negative.my",
+    "array_replace.my",
+    "dictionary_generator_pairs.my",
+    "error_array_element.my",
+    "error_array_long.my",
+    "error_array_short.my",
+    "error_table_duplicate.my",
+    "error_table_key.my",
+    "error_table_missing.my",
+    "error_tuple_arity.my",
+    "error_tuple_element.my",
+    "table_copy.my",
+    "tuple_context.my",
+    "tuple_list.my",
+    "tuple_literal.my",
+    "tuple_nested.my",
+    "tuple_swap.my"
+  ],
+  "donors": {}
+}

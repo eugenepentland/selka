@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Authentic schema8 collection/Option reply mutations; installed proof only."""
+"""Authentic schema10 collection/Option reply mutations; installed proof only."""
 import argparse
 from contextlib import contextmanager
 import hashlib
@@ -12,7 +12,7 @@ import run_body_check_qualification as D
 import run_body_library_join as J
 
 F = D.F
-SCHEMA = 8
+SCHEMA = 10
 BASE_PACKAGES = D.packages
 SOURCE = Path(__file__).with_name('fixtures') / 'body_dictionary_hostile/main.input'
 NAMES = ('recipe_gap', 'recipe_duplicate', 'recipe_reorder', 'recipe_unhashable_key',
@@ -52,15 +52,15 @@ def capture_boundary():
 
 
 def bound_capture(request, reply):
-    F.require(len(request) >= 64 and len(reply) >= 64, 'truncated schema8 capture')
-    F.require(request[:8] == reply[:8] == b'SLKBCK01', 'wrong schema8 capture magic')
+    F.require(len(request) >= 64 and len(reply) >= 64, 'truncated schema10 capture')
+    F.require(request[:8] == reply[:8] == b'SLKBCK01', 'wrong schema10 capture magic')
     F.require(struct.unpack_from('<IIII', request, 8) == (1, SCHEMA, 0, len(request) - 64)
               and struct.unpack_from('<IIII', reply, 8) == (1, SCHEMA, 1, len(reply) - 64),
-              'wrong schema8 capture framing')
+              'wrong schema10 capture framing')
     F.require(request[64:72] == b'SLKBKI01' and reply[64:72] == b'SLKBKR01'
               and request[24:64] == reply[24:64]
               and request[32:64] == hashlib.sha256(request[64:]).digest(),
-              'schema8 capture is not request-bound')
+              'schema10 capture is not request-bound')
     return {'request_sha256': hashlib.sha256(request).hexdigest(),
             'reply_sha256': hashlib.sha256(reply).hexdigest(),
             'request_bytes': len(request), 'reply_bytes': len(reply)}
@@ -312,7 +312,7 @@ def run(args, work, empty, checkpoint):
                         'stdout_hex': result[1].hex(), 'stderr_hex': result[2].hex()})
         checkpoint(records, capture)
         J.require_rejection(result)
-    F.require(len(records) == len(NAMES), 'incomplete schema8 hostile verdicts')
+    F.require(len(records) == len(NAMES), 'incomplete schema10 hostile verdicts')
     F.require(before == {'host': F.digest(args.compiler), 'packages': packages(args.component_dir)},
               'collection hostile deployment changed')
     return records, capture

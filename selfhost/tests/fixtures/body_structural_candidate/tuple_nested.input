@@ -1,0 +1,5 @@
+func main() -> int:
+    const value: tuple[int, tuple[int, int]] = (1, (3, 4))
+    const _, pair = value
+    const left, right = pair
+    return left + right

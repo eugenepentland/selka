@@ -110,11 +110,11 @@ class DictionaryAdmissionTests(unittest.TestCase):
             finally:
                 os.chdir(old)
 
-    def test_body_schema8_is_strict_and_deployment_drift_fails(self):
+    def test_body_schema10_is_strict_and_deployment_drift_fails(self):
         args = SimpleNamespace(compiler=Path('/host'), component_dir=Path('/packages'), native_controls=False)
-        with patch.object(B.F, 'digest', return_value='host'), patch.object(B.D, 'packages', return_value={'body-check': 'schema8'}) as packages:
+        with patch.object(B.F, 'digest', return_value='host'), patch.object(B.D, 'packages', return_value={'body-check': 'schema10'}) as packages:
             expected = B.identity(args)
-            packages.assert_called_once_with(args.component_dir, body_schema=8)
+            packages.assert_called_once_with(args.component_dir, body_schema=10)
             B.require_identity(args, expected)
             packages.return_value = {'body-check': 'changed'}
             with self.assertRaises(RuntimeError):

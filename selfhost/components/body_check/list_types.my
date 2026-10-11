@@ -6,6 +6,7 @@ import variants
 import recipe_index
 import buffer_types
 import collection_types
+import tuple_types
 
 public record Schema:
     id: int
@@ -19,6 +20,7 @@ public record Recipe:
     kind: str = "list"
     failure: int = -1
     depth: int = 2
+    members: int = -1
 
 
 public record TypeTables:
@@ -27,6 +29,7 @@ public record TypeTables:
     variants: variants.Catalog
     buffer: buffer_types.Basis
     collections: collection_types.Catalog
+    tuples: tuple_types.Catalog
 
 
 public record Catalog:
@@ -40,7 +43,7 @@ public record Catalog:
 
 
 public func empty() -> Catalog:
-    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty(), buffer=buffer_types.empty(), collections=collection_types.empty()), by_element=[], elements=[])
+    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty(), buffer=buffer_types.empty(), collections=collection_types.empty(), tuples=tuple_types.empty()), by_element=[], elements=[])
 
 
 func bad() -> syntax_value.Problem:
@@ -63,6 +66,11 @@ public func prepare_records(pool: syntax_value.Pool, id: int, suffixes: int[], m
     catalog.available = available.integer != 0
     catalog.types.suffixes = suffixes
     catalog.types.records = records
+    const tuples = try tuple_types.prepare(pool, records.rows)
+    catalog.types.tuples = tuples
+    for tuple in catalog.types.tuples.tuples:
+        catalog.types.records.admitted[tuple.id] = True
+        catalog.types.records.by_type[tuple.id] = -4
     const collections = try collection_types.prepare(pool, id, records.rows)
     catalog.types.collections = collections
     for schema in collections.schemas:
@@ -219,6 +227,15 @@ public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recip
 public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, recipes: Recipe[]) -> int fails syntax_value.Problem:
     mut values: int[] = []
     for recipe in recipes:
+        if recipe.kind == "tuple":
+            const members = try graph.items(input, recipe.members)
+            mut elements: int[] = []
+            for member in members:
+                const element = try graph.number(input, member)
+                elements.append(element)
+            const tuple = try tuple_types.encode(mut pool, tuple_types.Recipe(id=recipe.id, elements=elements))
+            values.append(tuple)
+            continue
         const id = try syntax_value.integer(mut pool, recipe.id)
         const element = try syntax_value.integer(mut pool, recipe.element)
         const span = try graph.clone(mut pool, input, recipe.span, 0)
@@ -422,4 +439,55 @@ public func collection_intern(mut catalog: Catalog, mut pool: syntax_value.Pool,
     catalog.by_element.append(-1)
     catalog.elements.append(-1)
     _ = try collection_types.add(mut catalog.types.collections, schema)
+    return id
+
+
+# Tuple demand shares the global catalog append order; no source site is invented.
+public func tuple_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, elements: int[], span: int) -> int fails syntax_value.Problem:
+    const existing = tuple_types.find(catalog.types.tuples, elements)
+    if existing >= 0:
+        return existing
+    const id = 19 + catalog.base_count + len(catalog.recipes)
+    if id >= 65555 or len(elements) < 2 or len(elements) > 8:
+        fail bad()
+    mut depth = 1
+    for element in elements:
+        if element < 0 or element >= id:
+            fail bad()
+        const child_depth = try recipe_depth(catalog, element)
+        if child_depth + 1 > depth:
+            depth = child_depth + 1
+    if depth > 256:
+        const rejection = try refusal(pool, span, "catalog recipe depth limit exceeded")
+        fail rejection
+    while len(catalog.types.records.rows) < id - 19:
+        const missing = 19 + len(catalog.types.records.rows)
+        const ordinal = missing - 19 - catalog.base_count
+        if ordinal < 0 or ordinal >= len(catalog.recipes):
+            fail bad()
+        const previous = catalog.recipes[ordinal]
+        mut row = -1
+        if previous.kind == "list":
+            row = try variants.list_semantic(mut pool, catalog.types.records.rows, missing, previous.element, previous.span)
+        elif previous.kind == "byte_buffer":
+            row = try variants.buffer_semantic(mut pool, missing, previous.span)
+        else:
+            fail bad()
+        catalog.types.records.rows.append(row)
+    const row = try tuple_types.materialize(mut pool, catalog.types.records.rows, tuple_types.Recipe(id=id, elements=elements))
+    mut members: int[] = []
+    for element in elements:
+        const member = try syntax_value.integer(mut pool, element)
+        members.append(member)
+    const encoded = try syntax_value.sequence(mut pool, members)
+    catalog.types.records.rows.append(row)
+    while len(catalog.types.records.by_type) < id:
+        catalog.types.records.by_type.append(-1)
+        catalog.types.records.admitted.append(False)
+    catalog.types.records.by_type.append(-4)
+    catalog.types.records.admitted.append(True)
+    catalog.recipes.append(Recipe(id=id, element=-1, span=span, kind="tuple", depth=depth, members=encoded))
+    catalog.by_element.append(-1)
+    catalog.elements.append(-1)
+    _ = try tuple_types.add(mut catalog.types.tuples, tuple_types.Tuple(id=id, elements=elements))
     return id

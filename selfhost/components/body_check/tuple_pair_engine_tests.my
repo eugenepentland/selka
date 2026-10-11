@@ -1,0 +1,58 @@
+import syntax_value
+import graph
+import engine
+import tuple_types
+import list_types
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh(kind: bytes) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 2)
+    const first = try syntax_value.span(mut pool, 0, 1)
+    const second = try syntax_value.span(mut pool, 1, 2)
+    const key_node = try node(mut pool, first, b"integer", first)
+    const value_node = try node(mut pool, second, b"integer", second)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const absent = try syntax_value.absent(mut pool)
+    const key = if kind == b"dict" then zero else absent
+    const step_data = try syntax_value.object(mut pool, ["value", "key"], [one, key])
+    const step = try node(mut pool, span, b"gather_step", step_data)
+    const steps = try syntax_value.sequence(mut pool, [zero])
+    const loop = try node(mut pool, span, b"block", steps)
+    const shape = try syntax_value.enumeration(mut pool, kind)
+    const gather_data = try syntax_value.object(mut pool, ["shape", "loop", "open"], [shape, one, first])
+    const gather = try node(mut pool, span, b"gather", gather_data)
+    const tuple_data = try syntax_value.sequence(mut pool, [zero, one])
+    const tuple_node = try node(mut pool, span, b"tuple", tuple_data)
+    const nodes = try syntax_value.sequence(mut pool, [key_node, value_node, gather, tuple_node])
+    const statements = try syntax_value.sequence(mut pool, [step, loop])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, statements, empty, types])
+    mut state = try engine.make(pool, b"07", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    state.batch.facts.lists.available = True
+    for unused in range(19):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+public func test_dictionary_generator_pair_snapshot_precedes_accumulator_and_keeps_tuple_recipe() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[3], "span")
+    const pair_id = try syntax_value.integer(mut state.syntax.pool, 3)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const step = try syntax_value.object(mut state.syntax.pool, ["value", "key"], [pair_id, absent])
+    const statement_row = try node(mut state.syntax.pool, span, b"gather_step", step)
+    state.syntax.statements[0] = statement_row
+    const result = try engine.expression(mut state, 2)
+    if result.ty != 20 or len(state.scope.locals) != 4 or len(state.batch.facts.lists.recipes) != 2:
+        return False
+    return state.scope.locals[0].ty == 19 and state.scope.locals[1].ty == 20 and state.scope.locals[2].ty == 0 and state.scope.locals[3].ty == 0 and state.batch.facts.lists.recipes[0].kind == "tuple" and state.batch.facts.lists.recipes[1].kind == "dict"

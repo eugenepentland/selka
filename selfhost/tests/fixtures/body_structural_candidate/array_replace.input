@@ -1,0 +1,4 @@
+func main() -> int:
+    mut values = FixedArray[int, 2]([1, 2])
+    values = FixedArray[int, 2]([3, 4])
+    return values[0] + values[1]

@@ -44,6 +44,11 @@
     "variant_import_dep.my"
   ],
   "counts": {
+    "success": 23,
+    "diagnostic": 14,
+    "profile": 2
+  },
+  "historical_counts": {
     "success": 21,
     "diagnostic": 14,
     "profile": 4

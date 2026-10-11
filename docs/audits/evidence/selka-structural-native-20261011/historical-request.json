@@ -1,0 +1,39 @@
+{
+  "schema": 8,
+  "status": 2,
+  "failure": "ComponentProfile",
+  "request_sha256": "527601ce271fb8813df93223ec867718e25098cd142dbf59e454cfe749f4e8ff",
+  "base_count": 4,
+  "records": [
+    {
+      "id": 19,
+      "name": "str"
+    },
+    {
+      "id": 20,
+      "name": "bytes"
+    },
+    {
+      "id": 21,
+      "name": "float"
+    },
+    {
+      "id": 22,
+      "name": "[2]i64",
+      "array": {
+        "element": {
+          "kind": 1,
+          "integer": 0
+        },
+        "length": {
+          "kind": 1,
+          "integer": 2
+        },
+        "key": {
+          "kind": 0,
+          "integer": 0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+func main() -> int:
+    const left, right = (3, 4)
+    return left + right

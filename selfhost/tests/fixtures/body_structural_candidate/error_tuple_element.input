@@ -1,0 +1,3 @@
+func main() -> int:
+    const value: tuple[int, bool] = (7, 1)
+    return 7

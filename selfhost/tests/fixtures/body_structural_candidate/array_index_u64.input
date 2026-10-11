@@ -1,0 +1,5 @@
+func read(values: FixedArray[int, 2], index: u64) -> int:
+    return values[index]
+
+func main() -> int:
+    return read(FixedArray[int, 2]([3, 7]), u64(1))

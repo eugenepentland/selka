@@ -1,0 +1,70 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+
+public record Input:
+    value: int
+    ty: int
+
+
+public record Snapshot:
+    owner: int
+    initialize: int
+
+
+func invalid() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid tuple lowering operand")
+
+
+func checked(batch: emission.Batch, value: int) -> int fails syntax_value.Problem:
+    if value < 0 or value >= len(batch.nodes):
+        fail invalid()
+    const id = try graph.field(batch.pool, batch.nodes[value], "ty")
+    return try graph.number(batch.pool, id)
+
+
+# The engine selects the tuple identity after checking elements in written order.
+# This helper owns only the native positional record initializer emission.
+public func literal(mut batch: emission.Batch, context: list_lower.Context, ty: int, values: int[]) -> int fails syntax_value.Problem:
+    if ty < 19 or len(values) < 2 or len(values) > 8:
+        fail invalid()
+    mut initializers: int[] = []
+    for index in range(len(values)):
+        _ = try checked(batch, values[index])
+        const position = try syntax_value.integer(mut batch.pool, index)
+        const value = try syntax_value.integer(mut batch.pool, values[index])
+        const row = try syntax_value.object(mut batch.pool, ["index", "value"], [position, value])
+        initializers.append(row)
+    const payload = try syntax_value.sequence(mut batch.pool, initializers)
+    return try emission.node(mut batch, context.input, context.span, ty, b"record", payload)
+
+
+public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Input) -> Snapshot fails syntax_value.Problem:
+    const actual = try checked(batch, request.value)
+    if request.ty < 19 or actual != request.ty:
+        fail invalid()
+    const owner = try list_lower.temporary(mut scope, context, request.ty)
+    const initialize = try list_lower.store(mut batch, context, owner, request.value, True)
+    return Snapshot(owner=owner, initialize=initialize)
+
+
+# Call once per target, interleaving each projection with its binding/write.
+public func project(mut batch: emission.Batch, context: list_lower.Context, owner: int, owner_type: int, index: int, element: int) -> int fails syntax_value.Problem:
+    if owner < 0 or owner_type < 19 or index < 0 or index >= 8 or element < 0:
+        fail invalid()
+    const read = try list_lower.read(mut batch, context, owner, owner_type)
+    const base = try syntax_value.integer(mut batch.pool, read)
+    const position = try syntax_value.integer(mut batch.pool, index)
+    const payload = try syntax_value.object(mut batch.pool, ["base", "index"], [base, position])
+    return try emission.node(mut batch, context.input, context.span, element, b"field", payload)
+
+
+public func finish(mut batch: emission.Batch, context: list_lower.Context, statements: int[]) -> list_lower.Lowered fails syntax_value.Problem:
+    for statement in statements:
+        if statement < 0 or statement >= len(batch.statements):
+            fail invalid()
+    const absent = try syntax_value.absent(mut batch.pool)
+    const value = try emission.node(mut batch, context.input, context.span, 15, b"unit", absent)
+    return try list_lower.block(mut batch, context, statements, value, 15)

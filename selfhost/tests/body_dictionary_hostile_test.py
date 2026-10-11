@@ -1,4 +1,4 @@
-"""Negative mutation construction tests, not installed schema8 qualification."""
+"""Negative mutation construction tests, not installed schema10 qualification."""
 import hashlib
 import json
 from pathlib import Path
@@ -69,8 +69,8 @@ def frames(payload):
     raw = b'SLKBKI01test-input'
     digest = hashlib.sha256(raw).digest()
     identity = b'bodytest' + digest
-    request = b'SLKBCK01' + struct.pack('<IIII', 1, 8, 0, len(raw)) + identity + raw
-    reply = b'SLKBCK01' + struct.pack('<IIII', 1, 8, 1, len(payload)) + identity + payload
+    request = b'SLKBCK01' + struct.pack('<IIII', 1, 10, 0, len(raw)) + identity + raw
+    reply = b'SLKBCK01' + struct.pack('<IIII', 1, 10, 1, len(payload)) + identity + payload
     return request, reply
 
 
@@ -160,7 +160,7 @@ class DictionaryHostileTests(unittest.TestCase):
                        (2, b'', protocol.replace(b'frame malformed', b'artifact missing'))):
             with self.assertRaises(RuntimeError): H.J.require_rejection(result)
 
-    def test_schema8_package_hook_restores_even_after_capture_failure(self):
+    def test_schema10_package_hook_restores_even_after_capture_failure(self):
         original = H.D.packages
         with self.assertRaisesRegex(RuntimeError, 'stop'):
             with H.capture_boundary():
@@ -174,7 +174,7 @@ class DictionaryHostileTests(unittest.TestCase):
         checkpoints = []
         with tempfile.TemporaryDirectory() as temporary:
             work = Path(temporary) / 'evidence'
-            with patch.object(H, 'require_inventory'), patch.object(H, 'packages', return_value={'body-check': 'schema8'}), \
+            with patch.object(H, 'require_inventory'), patch.object(H, 'packages', return_value={'body-check': 'schema10'}), \
                  patch.object(H.F, 'digest', return_value='identity'), \
                  patch.object(H.D, 'private_fixture', return_value=(Path('/private'), Path('/real'))), \
                  patch.object(H.D, 'capture_exchange', return_value=((0, b'', b''), request, reply)), \

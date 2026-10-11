@@ -1,0 +1,249 @@
+{
+  "array_alias.my": {
+    "status": 0,
+    "source_sha256": "06f4ef1b25a4e0a2fc85951d5fd21027fbbe0eeee918eef4898bee51f88df9c5",
+    "diagnostics": []
+  },
+  "array_bytes.my": {
+    "status": 0,
+    "source_sha256": "b1f709b131d43b4ff77304363d95a3a636c6c52faeb475d63da75ee4b2d9e984",
+    "diagnostics": []
+  },
+  "array_copy.my": {
+    "status": 0,
+    "source_sha256": "62573ee347bdcd360f571b96a1d57a0fcc8f94bf08689a48b82c8619d495c36f",
+    "diagnostics": []
+  },
+  "array_dynamic.my": {
+    "status": 0,
+    "source_sha256": "39b7f6508c39b682f989a785d19cfcceaeed1c4756fc0b1824a107b728227f4d",
+    "diagnostics": []
+  },
+  "array_empty.my": {
+    "status": 0,
+    "source_sha256": "c7993411e54ac542ba8a1f2a3d52261b99650efae865784d9ef40b0f00c8728e",
+    "diagnostics": []
+  },
+  "array_index_i16.my": {
+    "status": 0,
+    "source_sha256": "7ea4beaad6c2ff2c7f77b6772633610ac5ab7248456aa2fda96da67131dacf18",
+    "diagnostics": []
+  },
+  "array_index_i32.my": {
+    "status": 0,
+    "source_sha256": "410ba5f9790cf47cd5110fadff24485c5f88fa20137899ec71efea48c521109f",
+    "diagnostics": []
+  },
+  "array_index_i64.my": {
+    "status": 0,
+    "source_sha256": "198819f105069f21652d3f4225231581b56788fca795e86f255b8cac2d5ef023",
+    "diagnostics": []
+  },
+  "array_index_i8.my": {
+    "status": 0,
+    "source_sha256": "a53c07c926efaf16e2eb7551f43df3ba4cafa51f40ad22a00477991b41b6fc67",
+    "diagnostics": []
+  },
+  "array_index_u16.my": {
+    "status": 0,
+    "source_sha256": "8a26f996c3df6ab7cf1126314e6b573542cde2878096c8a459b5d5566707136e",
+    "diagnostics": []
+  },
+  "array_index_u32.my": {
+    "status": 0,
+    "source_sha256": "29916244431e2654af9ceb1fab50ec2c6bda2197fdaa4003d976cbb00cebc92d",
+    "diagnostics": []
+  },
+  "array_index_u64.my": {
+    "status": 0,
+    "source_sha256": "22a750d2d0a71b4f25a2432c211b54fdf501f581dba36cb6c0f6f8cfb6b70c89",
+    "diagnostics": []
+  },
+  "array_index_u8.my": {
+    "status": 0,
+    "source_sha256": "48b046f15af7ba70fdeacf52b30d1340f3047a50ac056ec05dc025abe3654f58",
+    "diagnostics": []
+  },
+  "array_negative.my": {
+    "status": 0,
+    "source_sha256": "d5c74e72569ea8df3a887dbed5d67caee22947f932f8b2b1c03e01376a9c1ed1",
+    "diagnostics": []
+  },
+  "array_replace.my": {
+    "status": 0,
+    "source_sha256": "f86c047fb50d12a91eb2a453f480e6eeb92eed4148e79471e43b9440c6c7cad1",
+    "diagnostics": []
+  },
+  "dictionary_generator_pairs.my": {
+    "status": 0,
+    "source_sha256": "9bfeb55f38522f71fc1a784e26ad55be7316df56dfd4a2797b192580ad484dd3",
+    "diagnostics": []
+  },
+  "error_array_element.my": {
+    "status": 1,
+    "source_sha256": "2c4fd84a48ccfd8fb4a0d30d93eb8ecee36447e72d7ea062874e9a1cc27e5c3f",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected int, found bool",
+        "bytes": {
+          "start": 82,
+          "end": 86
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_array_long.my": {
+    "status": 1,
+    "source_sha256": "ac68377818bede2c03dae1c0029a91f290dbde7ff0d5b3f9ba4db6b7df2c4814",
+    "diagnostics": [
+      {
+        "code": "E_ARRAY_LENGTH",
+        "message": "list literal has 2 element(s); the expected fixed array holds exactly 1",
+        "bytes": {
+          "start": 59,
+          "end": 85
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_array_short.my": {
+    "status": 1,
+    "source_sha256": "b8adae63555844cda6651f4c4fac7004ce933eeadb05911eafcfc58beb049d4f",
+    "diagnostics": [
+      {
+        "code": "E_ARRAY_LENGTH",
+        "message": "list literal has 1 element(s); the expected fixed array holds exactly 2",
+        "bytes": {
+          "start": 59,
+          "end": 82
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_table_duplicate.my": {
+    "status": 1,
+    "source_sha256": "34bf00c7d459b4215fdb334ab8ed74ea8151e7dedc67088890007636ebb23769",
+    "diagnostics": [
+      {
+        "code": "E_DUPLICATE_KEY",
+        "message": "named entry is initialized more than once",
+        "bytes": {
+          "start": 118,
+          "end": 120
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_table_key.my": {
+    "status": 1,
+    "source_sha256": "18548eb330b01273b2a1181c4e19d359e0998b1a4d8559983c4b17024ab08821",
+    "diagnostics": [
+      {
+        "code": "E_TABLE_KEY",
+        "message": "table entry keys name a case of the table's key enum, such as `Kind.first`",
+        "bytes": {
+          "start": 97,
+          "end": 98
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_table_missing.my": {
+    "status": 1,
+    "source_sha256": "0de55508695e3c26435bdb2fb4093f79c33184294be004e5509da8e2b7c2b69e",
+    "diagnostics": [
+      {
+        "code": "E_INCOMPLETE_TABLE",
+        "message": "missing initializer for key `failed` of `[error_table_missing::Status]i64`",
+        "bytes": {
+          "start": 96,
+          "end": 129
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "missing entry declared here",
+            "bytes": {
+              "start": 36,
+              "end": 42
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "error_tuple_arity.my": {
+    "status": 1,
+    "source_sha256": "8dfe5a21991648dcd0281800de0116fb8f5b93196c63681fdb049087c0f276ef",
+    "diagnostics": [
+      {
+        "code": "E_TUPLE_ARITY",
+        "message": "this tuple has 3 elements but tuple[int, int] has 2; write 2 elements",
+        "bytes": {
+          "start": 55,
+          "end": 64
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_tuple_element.my": {
+    "status": 1,
+    "source_sha256": "be9ed7b62f7f2f473f4e70219916a3e7c5d520d81be65525fc72596f32865132",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected bool, found int",
+        "bytes": {
+          "start": 60,
+          "end": 61
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "table_copy.my": {
+    "status": 0,
+    "source_sha256": "1e24434b683067d6d3bf22db2db978ee367cfe5d3bc86df5f8679e9bf5985749",
+    "diagnostics": []
+  },
+  "tuple_context.my": {
+    "status": 0,
+    "source_sha256": "45c530d28b1e9470d47791ca9821ae1a6bc1a3da7fff6627526c11df8eb03c93",
+    "diagnostics": []
+  },
+  "tuple_list.my": {
+    "status": 0,
+    "source_sha256": "6496adfbdedbd3ea23c4f6e33c4b74697679ce0018bcb5aa1dbcdf7d90fa6013",
+    "diagnostics": []
+  },
+  "tuple_literal.my": {
+    "status": 0,
+    "source_sha256": "c6afde25beef65497bc993bedd9e7ba034d508635aea8887abb874ad3e46e095",
+    "diagnostics": []
+  },
+  "tuple_nested.my": {
+    "status": 0,
+    "source_sha256": "55d89bbed6473baa617a15b7f52a11f8d3485b05e3b82f4572de9eba7d4c700f",
+    "diagnostics": []
+  },
+  "tuple_swap.my": {
+    "status": 0,
+    "source_sha256": "6834e4de98045906a3501455e9a2285d544a0ac852b4b9f095599662296c4a3e",
+    "diagnostics": []
+  }
+}

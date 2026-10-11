@@ -1,0 +1,19 @@
+{
+  "schema": 10,
+  "source_sha256": "54261a269217559e34bb25a736a8b7192d5230dbc9ba91acf4b90fa19ed97c09",
+  "hostile_names": [
+    "tuple_recipe_gap",
+    "tuple_recipe_forward",
+    "tuple_field_index",
+    "tuple_field_value",
+    "tuple_field_arity",
+    "array_literal_length",
+    "array_literal_element",
+    "array_index_result",
+    "array_index_type",
+    "array_write_value",
+    "array_write_readonly",
+    "array_replace_result",
+    "foreign_operand"
+  ]
+}

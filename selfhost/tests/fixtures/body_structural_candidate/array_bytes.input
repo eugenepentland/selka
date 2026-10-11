@@ -1,0 +1,5 @@
+func take(value: FixedArray[u8, 2]) -> int:
+    return i64(value[0]) - 90
+
+func main() -> int:
+    return take(b"ab")

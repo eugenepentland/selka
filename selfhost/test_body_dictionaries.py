@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mandatory schema8 normal/release source and authentic hostile admission."""
+"""Mandatory schema10 normal/release source and authentic hostile admission."""
 import argparse
 import json
 from pathlib import Path
@@ -15,7 +15,7 @@ import run_body_dictionary_hostile as H
 def require_complete(source, hostile):
     A.F.require(source.get('complete') is True and source.get('selected_admission') == 'passed',
                 'B8 source admission incomplete')
-    A.F.require(source.get('body_schema') == 8 and source.get('modes') == list(A.MODES),
+    A.F.require(source.get('body_schema') == A.SCHEMA and source.get('modes') == list(A.MODES),
                 'B8 wrong schema or modes')
     A.F.require(source.get('operations') == source.get('expected_operations') == 246,
                 'B8 incomplete source operations')
@@ -26,7 +26,7 @@ def require_complete(source, hostile):
     A.F.require(len(actual) == len(set(actual)) == 246 and set(actual) == expected,
                 'B8 absent or duplicate source work')
     A.F.require(hostile.get('complete') is True and hostile.get('selected_admission') == 'passed'
-                and hostile.get('schema') == 8 and hostile.get('hostile') == 27,
+                and hostile.get('schema') == H.SCHEMA and hostile.get('hostile') == 27,
                 'B8 hostile admission incomplete')
     records = hostile.get('records', [])
     A.F.require([r['name'] for r in records] == list(H.NAMES), 'B8 absent or duplicate hostile work')
