@@ -1,0 +1,3 @@
+func main() -> int:
+    const unused = 1
+    return 7

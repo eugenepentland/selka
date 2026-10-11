@@ -1,0 +1,3 @@
+# éλ byte offsets remain source based
+func main() -> int:
+    return missing

@@ -1,0 +1,3 @@
+# Imported scalar body with UTF-8 comment: éλ.
+public func value() -> int effects():
+    return 7

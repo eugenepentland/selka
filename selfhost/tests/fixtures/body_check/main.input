@@ -1,0 +1,15 @@
+import helper
+
+public func test_scalar() -> bool:
+    return helper.value() == 7
+
+public func test_branch() -> bool:
+    return choose(True) == 7
+
+func choose(value: bool) -> int:
+    if value:
+        return 7
+    return 0
+
+func main() -> int:
+    return helper.value()

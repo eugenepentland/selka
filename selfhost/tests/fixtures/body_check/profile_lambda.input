@@ -1,0 +1,5 @@
+func apply(operation: func(int) -> int effects(), value: int) -> int:
+    return operation(value)
+
+func main() -> int:
+    return apply(lambda value: value + 1, 6)

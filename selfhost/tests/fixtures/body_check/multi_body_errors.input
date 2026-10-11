@@ -1,0 +1,8 @@
+func first() -> int:
+    return missing_first
+
+func second() -> int:
+    return missing_second
+
+func main() -> int:
+    return first() + second()

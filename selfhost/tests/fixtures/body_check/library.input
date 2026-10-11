@@ -1,0 +1,2 @@
+public func compute(value: int) -> int:
+    return value + 7

@@ -1,0 +1,5 @@
+func main() -> int:
+    mut total: int = 0
+    for item in range(4):
+        total = total + item
+    return total + 1

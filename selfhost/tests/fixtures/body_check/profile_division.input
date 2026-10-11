@@ -1,0 +1,4 @@
+func main() -> int:
+    const value = 4 / 2
+    _ = value
+    return 7

@@ -1,0 +1,6 @@
+func verify(value: bool) -> Unit:
+    assert value
+
+func main() -> int:
+    verify(True)
+    return 7

@@ -1,0 +1,3 @@
+func main() -> int:
+    const value: int = -15
+    return (-value // 3) + 2

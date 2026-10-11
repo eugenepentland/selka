@@ -1,0 +1,5 @@
+func main() -> int:
+    const ready = not False and (True or False)
+    if ready and 2 < 3 and 4 == 4:
+        return 7
+    return 0

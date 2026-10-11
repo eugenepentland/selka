@@ -1,0 +1,5 @@
+func twice(value: int) -> int:
+    return value * 2
+
+func main() -> int:
+    return twice(3) + 1

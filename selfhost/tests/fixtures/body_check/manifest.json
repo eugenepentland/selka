@@ -1,0 +1,134 @@
+{
+  "scalar_calls.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false
+  },
+  "branches.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false
+  },
+  "while_loop.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false
+  },
+  "range_loop.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false
+  },
+  "unit_assert.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false
+  },
+  "bool_ops.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false
+  },
+  "signed_math.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false
+  },
+  "library.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": true
+  },
+  "unknown_name.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "multi_body_errors.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "wrong_return.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "wrong_argument.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "wrong_arity.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "wrong_condition.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "readonly_write.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "warning.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "utf8_comment.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "profile_managed.my": {
+    "status": 2,
+    "boundary": "profile",
+    "typed": false,
+    "library": false
+  },
+  "profile_generic.my": {
+    "status": 2,
+    "boundary": "profile",
+    "typed": false,
+    "library": false
+  },
+  "profile_lambda.my": {
+    "status": 2,
+    "boundary": "profile",
+    "typed": false,
+    "library": false
+  },
+  "profile_division.my": {
+    "status": 2,
+    "boundary": "profile",
+    "typed": false,
+    "library": false
+  },
+  "profile_chained_comparison.my": {
+    "status": 2,
+    "boundary": "profile",
+    "typed": false,
+    "library": false
+  }
+}

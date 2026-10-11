@@ -1,0 +1,4 @@
+func main() -> int:
+    if 1:
+        return 7
+    return 0

@@ -1,0 +1,4 @@
+func main() -> int:
+    const value = 1
+    value = 7
+    return value

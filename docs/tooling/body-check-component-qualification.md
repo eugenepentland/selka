@@ -1,0 +1,17 @@
+# Scalar body component qualification
+
+The B1 `body-check` package owns checking and producing complete typed bodies for ordinary nongeneric functions using `int` (i64), `bool`, and `Unit`. Native catalog construction, entry policy, effect/origin analysis, and warnings remain separate. Managed values, generics, callbacks/lambdas, and resource syntax exceed this first profile and must produce a host failure in selected modes. They must never silently fall back to native body checking. Native reference remains the default.
+
+`MYLANG_BODY_CHECK_MODE=reference|shadow|component` selects this boundary. Shadow compares the entire canonical typed batch, ordered diagnostics, and import usage. The `dump-typed` and `dump-ir` comparisons in the installed harness supplement that full comparison; their textual output is not a complete typed metadata oracle.
+
+The installed driver is `selfhost/tests/run_body_check_qualification.py`. It authenticates all seven packages, verifies the frozen seed through the native coordinator, and runs with an empty PATH. Python is developer orchestration only. The installed host and authenticated producer execute without Python.
+
+The fixture manifest accounts separately for scalar success, source diagnostics, and explicit profile refusals. It covers scalar calls/operators/control flow, imported body edits, executable and library checking, build/run/test behavior, ordered independent body errors, native warning publication, and Unicode byte locations. Five explicit refusal fixtures cover managed values, generics, lambdas, float division, and chained comparisons. Three mixed workflows select all five frontend boundaries together. No compiler-component entry source is claimed to fit B1.
+
+Same-path deployment checks prime the private deployment before mutation, preserving its path and environment across replay. Live sessions check twice before removing or corrupting the selected body artifact. Separate cache-enabled test receipt checks disable fact/leak instrumentation; ordinary release qualification retains facts and leak checks. The expected warm and live totals are 30 and 4.
+
+A bounded pinned-Zig native C fixture captures an authentic projected request and authentic reply. The raw protocol suite replays the captured scalar request and rejects truncated, trailing, wrong-version/direction/magic, and excessive named-table inputs. Authenticated forged replies mutate typed source spans, statement identities, or return node identities and literal types. Cross-publication cases capture an authentic body source diagnostic, remove a different selected lexer manifest after the child completes, and require host status 2 before publication. Neither a source status 1 nor a retained verdict is acceptable.
+
+The normal gate repeats the matrix after a private body-only coordinator rebuild and verifies the host and other six package identities remain unchanged. Release repeats the installed matrix with fact/leak validation. Strict selftests reject empty, incomplete, duplicated, and skipped verdicts. Raw JSON retains identities, per-workflow hashes, protocol counts, cache receipts, and publication evidence.
+
+The outer frame is `SLKBCK01`, protocol/schema 1/1, with the complete request digest and nonce. Named input/outcome graphs use `SLKBKI01` / `SLKBKR01`. Wire limits remain independent of the B1 semantic profile. Qualification is pending the installed producer and native boundary; no performance or adoption claim is made before those runs pass.
