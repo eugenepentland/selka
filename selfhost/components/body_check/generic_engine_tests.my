@@ -77,6 +77,37 @@ func check_functions(mut state: engine.State) -> Unit fails syntax_value.Problem
         id += 1
 
 
+public func test_integer_parameter_constructor_retains_checked_operand_then_cast() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, False)
+    const declaration = try graph.field(state.syntax.pool, state.syntax.functions[0], "name")
+    const current = try generic_instances.intern(mut state.batch.facts.execution.registry, state.syntax.pool, declaration, generic_instances.Key(declaration=0, arguments=[2], lengths=[None]))
+    state.batch.facts.execution.current = current
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const input = try syntax_value.integer(mut state.syntax.pool, 1)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [input])
+    const name = try syntax_value.span(mut state.syntax.pool, 2, 3)
+    const call = try syntax_value.object(mut state.syntax.pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name, arguments, empty, empty])
+    const data = try syntax_value.tagged(mut state.syntax.pool, b"call", call)
+    const call_node = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [name, data])
+    state.syntax.nodes[2] = call_node
+    const checked = try engine.expression(mut state, 2)
+    const node = state.batch.nodes[checked.id]
+    const ty_id = try graph.field(state.batch.pool, node, "ty")
+    const ty = try graph.number(state.batch.pool, ty_id)
+    const data_id = try graph.field(state.batch.pool, node, "data")
+    const cast = try graph.get(state.batch.pool, data_id)
+    const span_id = try graph.field(state.batch.pool, node, "span")
+    const start_id = try graph.field(state.batch.pool, span_id, "start")
+    const start = try graph.number(state.batch.pool, start_id)
+    const end_id = try graph.field(state.batch.pool, span_id, "end")
+    const end = try graph.number(state.batch.pool, end_id)
+    const operand = try graph.number(state.batch.pool, cast.children[0])
+    const child_data = try graph.field(state.batch.pool, state.batch.nodes[operand], "data")
+    const child = try graph.get(state.batch.pool, child_data)
+    return checked.id == 1 and ty == 2 and cast.data == b"cast" and operand == 0 and child.data == b"integer" and start == 2 and end == 3
+
+
 public func test_explicit_specialization_metadata_and_ordinary_id_mapping() -> bool fails syntax_value.Problem:
     mut state = try fresh(True, False)
     _ = try check_functions(mut state)

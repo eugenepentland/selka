@@ -1598,6 +1598,36 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                     return Expression(id=id, ty=lowered.ty)
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "prelude call is outside the B1 ordinary-call profile")
                 fail rejection
+        if owner_value.kind == 0 and state.batch.facts.execution.current >= 0 and locals.find(state.scope, raw_callee) < 0:
+            const current = state.batch.facts.execution.current
+            const parameters = try generic_parameters(state, current)
+            const inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
+            const inputs = try graph.items(state.syntax.pool, inputs_id)
+            const labels_id = try graph.field(state.syntax.pool, payload, "argument_names")
+            const labels = try graph.items(state.syntax.pool, labels_id)
+            const binder = try generic_bindings.index(generic_bindings.Context(pool=state.syntax.pool, source=state.syntax.source), parameters, call_name)
+            if binder >= 0 and len(inputs) == 1 and len(labels) == 0:
+                const requested = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, call_name)
+                mut function_shadow = False
+                for declaration in state.syntax.functions:
+                    const declared_name = try graph.field(state.syntax.pool, declaration, "name")
+                    const declared_key = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, declared_name)
+                    if requested == declared_key:
+                        function_shadow = True
+                        break
+                if not function_shadow:
+                    const key = try generic_instances.get(state.batch.facts.execution.registry, current)
+                    const bound = try generic_bindings.type_value(generic_bindings.Context(pool=state.syntax.pool, source=state.syntax.source), parameters, key, call_name)
+                    if scalars.is_integer(bound):
+                        const operand_raw = try graph.number(state.syntax.pool, inputs[0])
+                        const operand = try expression(mut state, operand_raw)
+                        if not scalars.is_integer(operand.ty):
+                            const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
+                            fail rejection
+                        const result = try buffer_lower.cast(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), operand.id, bound)
+                        state.batch.resolved[raw_id] = result
+                        state.depth = state.depth - 1
+                        return Expression(id=result, ty=bound)
         const resolution = try names.target(mut state.problems, state.syntax.pool, state.syntax.source, state.syntax.modules, span, owner, call_name)
         const spelling = resolution.key
         if resolution.from >= 0 and resolution.import_index >= 0:
