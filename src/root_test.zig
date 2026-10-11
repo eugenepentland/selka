@@ -238,6 +238,7 @@ comptime {
 
 comptime {
     _ = @import("body_check_dictionary_test.zig");
+    _ = @import("body_check_generic_identity_test.zig");
 }
 
 comptime {

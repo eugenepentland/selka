@@ -1688,6 +1688,7 @@ fn adoptBodies(step: InstanceStep, names: ?*Names, input: body_value.Input, outc
         .success => |output| {
             try body_materialize.apply(step.allocator, &step.checker.catalog, input, output.recipes);
             const batch = try body_value.cloneBatch(step.allocator, output.batch);
+            try @import("body_check_generic_adopt.zig").restore(Checker, step.checker, input, batch);
             if (step.checker.nodes.items.len != 0 or step.checker.statements.items.len != 0) return error.ComponentProtocol;
             try step.checker.nodes.appendSlice(step.allocator, batch.nodes);
             try step.checker.statements.appendSlice(step.allocator, batch.statements);

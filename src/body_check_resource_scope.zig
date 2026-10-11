@@ -2,6 +2,7 @@
 const std = @import("std");
 const typed = @import("typed.zig");
 const value = @import("body_check_value.zig");
+const source = @import("source.zig");
 const Range = @import("semantic_copy.zig").Range;
 /// Allocation failure or a handle outside its unique lexical scope.
 pub const Error = error{ ComponentProtocol, OutOfMemory };
@@ -61,8 +62,8 @@ fn common(parents: []const usize, left: usize, right: usize) usize {
     while (!ancestor(parents, result, right)) result = parents[result];
     return result;
 }
-const Binding = struct { statement: @import("ast.zig").Statement, owner: usize };
-const Bindings = std.AutoHashMapUnmanaged(@import("source.zig").Span, Binding);
+const Binding = struct { statement: @import("ast.zig").Statement, owner: source.Span };
+const Bindings = std.AutoHashMapUnmanaged(source.Span, Binding);
 /// Every file method must be dominated on every graph path by its binding's with body.
 pub fn batch(a: std.mem.Allocator, input: value.Input, tables: value.Batch) Error!void {
     var bindings = try rawBindings(a, input);
@@ -100,7 +101,7 @@ fn function(a: std.mem.Allocator, input: value.Input, tables: value.Batch, id: u
             try build.fields(typed.Statement, statement);
             continue;
         }
-        try binding(input, tables, locals, statement, bindings, id);
+        try binding(input, tables, locals, statement, bindings, tables.functions[id].declaration);
         const scope = statement.data.with_scope;
         const slot = @backingInt(scope.slot);
         if (state.owners[slot] != absent) return error.ComponentProtocol;
@@ -119,7 +120,7 @@ fn function(a: std.mem.Allocator, input: value.Input, tables: value.Batch, id: u
     }
     try walk(storage, tables, owned, build);
 }
-fn binding(input: value.Input, tables: value.Batch, locals: []const typed.Local, statement: typed.Statement, bindings: Bindings, owner: usize) Error!void {
+fn binding(input: value.Input, tables: value.Batch, locals: []const typed.Local, statement: typed.Statement, bindings: Bindings, owner: source.Span) Error!void {
     const scope = statement.data.with_scope;
     const slot = @backingInt(scope.slot);
     if (slot >= locals.len) return error.ComponentProtocol;
@@ -131,7 +132,7 @@ fn binding(input: value.Input, tables: value.Batch, locals: []const typed.Local,
     if (local.origin != .local or local.usage.reads == 0 or local.usage.temporary) return error.ComponentProtocol;
     if (statement.terminates != tables.statements[@backingInt(scope.body)].terminates) return error.ComponentProtocol;
     const joined = bindings.get(statement.span) orelse return error.ComponentProtocol;
-    if (joined.owner != owner) return error.ComponentProtocol;
+    if (!std.meta.eql(joined.owner, owner)) return error.ComponentProtocol;
     const raw = joined.statement;
     const name = raw.data.with_scope.name orelse return error.ComponentProtocol;
     if (!std.meta.eql(local.declaration, name)) return error.ComponentProtocol;
@@ -206,7 +207,7 @@ fn rawBindings(a: std.mem.Allocator, input: value.Input) Error!Bindings {
             if (statement.data == .with_scope) {
                 const entry = try bindings.getOrPut(a, statement.span);
                 if (entry.found_existing) return error.ComponentProtocol;
-                entry.value_ptr.* = .{ .statement = statement, .owner = id };
+                entry.value_ptr.* = .{ .statement = statement, .owner = raw.name };
             }
             try ast.appendNested(a, &pending, statement);
             if (pending.items.len > 4194304 - visits) return error.ComponentProtocol;

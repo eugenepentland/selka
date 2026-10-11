@@ -159,7 +159,6 @@ const Builder = struct {
 /// Full raw authority is checked once; neither unsupported declarations nor contract lowering may disappear.
 pub fn success(a: std.mem.Allocator, request: value.Input) Error!void {
     if (request.program.lambdas.len != 0) return error.ComponentProtocol;
-    for (request.program.functions) |function| if (function.signature.type_parameters.len != 0) return error.ComponentProtocol;
     for (request.program.attributes) |entry| for (entry.attributes) |attribute| {
         if (attribute.kind.contract()) return error.ComponentProtocol;
     };

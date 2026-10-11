@@ -148,7 +148,10 @@ const Graph = struct {
 };
 fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch, integer_option: ?typed.Type, float_option: ?typed.Type) Error!void {
     if (tables.nodes.len > table_limit or tables.statements.len > table_limit) return error.ComponentProtocol;
-    if (tables.functions.len != request.program.functions.len or tables.ranges.len != tables.functions.len) return error.ComponentProtocol;
+    if (tables.ranges.len != tables.functions.len) return error.ComponentProtocol;
+    const generic_plan = try @import("body_check_generic_validate.zig").plan(a, request, tables);
+    defer a.free(generic_plan.keys);
+    defer a.free(generic_plan.ordinary);
     try ranges(tables);
     const node_owners = try a.alloc(usize, tables.nodes.len);
     defer a.free(node_owners);
@@ -172,14 +175,13 @@ fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch, intege
     };
     defer graph.pending.deinit(a);
     var locals: usize = 0;
-    for (tables.functions, request.program.functions, 0..) |function, raw, id| {
+    for (tables.functions, generic_plan.keys, 0..) |function, key, id| {
+        const raw = request.program.functions[@backingInt(key.declaration)];
         if (@backingInt(function.id) != id or !std.meta.eql(function.declaration, raw.name)) return error.ComponentProtocol;
         if (function.scope.locals.len > local_limit - locals) return error.ComponentProtocol;
         locals += function.scope.locals.len;
         if (function.signature.parameter_count > function.scope.locals.len) return error.ComponentProtocol;
-        if (function.type_arguments.len != 0 or function.signature.constant_arguments.len != 0) return error.ComponentProtocol;
         try functionMetadata(request, function, raw);
-        try functionName(request, function);
         graph.locals = function.scope.locals.len;
         graph.function = id;
         const owned = tables.ranges[id];
