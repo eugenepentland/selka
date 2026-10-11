@@ -192,3 +192,23 @@ test "body check rejects authenticated loop exits without a declaring loop" {
     bad.batch.statements = statements;
     try rejects(std.testing.allocator, f.input, bad);
 }
+
+fn allocationRoundtrip(a: std.mem.Allocator) !void {
+    var arena = std.heap.ArenaAllocator.init(a);
+    defer arena.deinit();
+    const f = try fixture(arena.allocator());
+    const request = try protocol.request(a, f.input, @splat(7));
+    defer a.free(request.bytes);
+    const bytes = try protocol.response(a, .{ .success = f.output }, request.identity);
+    defer a.free(bytes);
+    var decoded = try protocol.reply(a, bytes, request.identity, f.input);
+    defer decoded.deinit();
+    const cloned = try value.cloneBatch(arena.allocator(), decoded.outcome.success.batch);
+    try std.testing.expectEqual(@as(i128, 1), cloned.nodes[0].data.integer);
+}
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check allocation failures release partial framing decoded graphs and adopted tables" {
+    var stable = std.testing.FailingAllocator.init(std.testing.allocator, .{ .resize_fail_index = 0 });
+    try std.testing.checkAllAllocationFailures(stable.allocator(), allocationRoundtrip, .{});
+    try std.testing.expect(true);
+}
