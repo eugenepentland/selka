@@ -1,0 +1,121 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import comprehension_lower
+import numeric_lower
+
+public record Sink:
+    kind: bytes
+    owner: int
+    seen: int
+    ty: int
+    target: int
+
+
+public func accepts(kind: bytes) -> bool:
+    return kind == b"sum" or kind == b"min" or kind == b"max" or kind == b"any" or kind == b"all"
+
+
+func boolean(mut batch: emission.Batch, context: list_lower.Context, value: bool) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.boolean(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, 1, b"boolean", payload)
+
+
+func negate(mut batch: emission.Batch, context: list_lower.Context, value: int) -> int fails syntax_value.Problem:
+    const op = try syntax_value.enumeration(mut batch.pool, b"not")
+    const operand = try syntax_value.integer(mut batch.pool, value)
+    const span = try graph.clone(mut batch.pool, context.input, context.span, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["op", "operand", "op_span"], [op, operand, span])
+    return try emission.node(mut batch, context.input, context.span, 1, b"unary", payload)
+
+
+func binary(mut batch: emission.Batch, context: list_lower.Context, op: bytes, left: int, right: int, ty: int) -> int fails syntax_value.Problem:
+    if ty == batch.facts.float_type:
+        const lowered = try numeric_lower.binary_value(mut batch, context, op, left, right)
+        return try list_lower.append(mut batch, context, lowered)
+    return try list_lower.binary(mut batch, context, op, left, right, if op == b"lt" then 1 else ty)
+
+
+public func step(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, sink: Sink, value: int) -> list_lower.Lowered fails syntax_value.Problem:
+    if sink.kind == b"sum":
+        const current = try list_lower.read(mut batch, context, sink.owner, sink.ty)
+        const added = try binary(mut batch, context, b"add", current, value, sink.ty)
+        const payload = try emission.store(mut batch, sink.owner, added)
+        return list_lower.Lowered(ty=15, tag=b"assign", payload=payload)
+    if sink.kind == b"any" or sink.kind == b"all":
+        mut decided = value
+        if sink.kind == b"all":
+            decided = try negate(mut batch, context, value)
+        const answer = try boolean(mut batch, context, sink.kind == b"any")
+        const settle = try list_lower.store(mut batch, context, sink.owner, answer, False)
+        const target = try syntax_value.integer(mut batch.pool, sink.target)
+        const continuing = try syntax_value.boolean(mut batch.pool, False)
+        const exit = try syntax_value.object(mut batch.pool, ["target", "continuing"], [target, continuing])
+        const leave = try emission.statement(mut batch, context.input, context.span, True, b"loop_exit", exit)
+        const children = try emission.ids(mut batch, [settle, leave])
+        const body = try emission.statement(mut batch, context.input, context.span, True, b"block", children)
+        const condition = try syntax_value.integer(mut batch.pool, decided)
+        const then_body = try syntax_value.integer(mut batch.pool, body)
+        const absent = try syntax_value.absent(mut batch.pool)
+        const branch = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [condition, then_body, absent])
+        return list_lower.Lowered(ty=15, tag=b"branch", payload=branch)
+    const candidate = try list_lower.temporary(mut scope, context, sink.ty)
+    const bind = try list_lower.store(mut batch, context, candidate, value, True)
+    mut left = -1
+    mut right = -1
+    if sink.kind == b"min":
+        left = try list_lower.read(mut batch, context, candidate, sink.ty)
+        right = try list_lower.read(mut batch, context, sink.owner, sink.ty)
+    else:
+        left = try list_lower.read(mut batch, context, sink.owner, sink.ty)
+        right = try list_lower.read(mut batch, context, candidate, sink.ty)
+    const better = try binary(mut batch, context, b"lt", left, right, sink.ty)
+    const selected = try list_lower.read(mut batch, context, candidate, sink.ty)
+    const take = try list_lower.store(mut batch, context, sink.owner, selected, False)
+    const yes = try boolean(mut batch, context, True)
+    const mark = try list_lower.store(mut batch, context, sink.seen, yes, False)
+    const first = try comprehension_lower.block_statement(mut batch, context, [take, mark])
+    const seen = try list_lower.read(mut batch, context, sink.seen, 1)
+    const unseen = try negate(mut batch, context, seen)
+    const replacement = try comprehension_lower.branch_statement(mut batch, context, better, take)
+    const condition = try syntax_value.integer(mut batch.pool, unseen)
+    const then_body = try syntax_value.integer(mut batch.pool, first)
+    const else_body = try syntax_value.integer(mut batch.pool, replacement)
+    const branch = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [condition, then_body, else_body])
+    const choose = try emission.statement(mut batch, context.input, context.span, False, b"branch", branch)
+    const children = try emission.ids(mut batch, [bind, choose])
+    return list_lower.Lowered(ty=15, tag=b"block", payload=children)
+
+
+public func finish(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, sink: Sink, loop: int) -> list_lower.Lowered fails syntax_value.Problem:
+    mut fresh = -1
+    if sink.ty == 1:
+        fresh = try boolean(mut batch, context, sink.kind == b"all")
+    elif sink.ty == batch.facts.float_type:
+        const lowered = try numeric_lower.literal(mut batch, context, 0)
+        fresh = try list_lower.append(mut batch, context, lowered)
+    elif sink.ty >= 0 and sink.ty <= 8:
+        fresh = try list_lower.integer(mut batch, context, 0, sink.ty)
+    else:
+        const empty = try emission.ids(mut batch, [])
+        fresh = try emission.node(mut batch, context.input, context.span, sink.ty, b"array", empty)
+    const initialize = try list_lower.store(mut batch, context, sink.owner, fresh, True)
+    mut statements = [initialize]
+    if sink.seen >= 0:
+        const no = try boolean(mut batch, context, False)
+        const unseen = try list_lower.store(mut batch, context, sink.seen, no, True)
+        statements.append(unseen)
+    statements.append(loop)
+    if sink.seen >= 0:
+        const seen = try list_lower.read(mut batch, context, sink.seen, 1)
+        const condition = try syntax_value.integer(mut batch.pool, seen)
+        const message = try syntax_value.octets(mut batch.pool, if sink.kind == b"min" then b"min() arg is an empty sequence" else b"max() arg is an empty sequence")
+        const absent = try syntax_value.absent(mut batch.pool)
+        const kind = try syntax_value.enumeration(mut batch.pool, b"statement")
+        const payload = try syntax_value.object(mut batch.pool, ["condition", "message", "message_value", "kind"], [condition, message, absent, kind])
+        const assertion = try emission.statement(mut batch, context.input, context.span, False, b"assertion", payload)
+        statements.append(assertion)
+    const value = try list_lower.read(mut batch, context, sink.owner, sink.ty)
+    return try list_lower.block(mut batch, context, statements, value, sink.ty)

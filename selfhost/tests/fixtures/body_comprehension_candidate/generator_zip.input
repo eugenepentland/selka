@@ -1,0 +1,3 @@
+func main() -> int:
+    const values = {left: right for left, right in zip([1, 2], [3, 4])}
+    return values[1] + values[2]

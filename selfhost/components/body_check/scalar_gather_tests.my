@@ -1,0 +1,68 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import scalar_gather
+import numeric_lower
+
+public func test_float_fold_does_not_allocate_operand_spill_locals() -> bool fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 0, 4)
+    const context = list_lower.Context(input=input, span=span)
+    mut batch = emission.empty()
+    batch.facts.float_type = 21
+    mut scope = locals.empty()
+    const owner = try locals.add(mut scope, b"", span, 21, True, b"local")
+    const literal = try numeric_lower.literal(mut batch, context, 0)
+    const value = try list_lower.append(mut batch, context, literal)
+    const lowered = try scalar_gather.step(mut batch, mut scope, context, scalar_gather.Sink(kind=b"sum", owner=owner, seen=-1, ty=21, target=-1), value)
+    const result_id = try graph.field(batch.pool, lowered.payload, "value")
+    const result = try graph.number(batch.pool, result_id)
+    const data_id = try graph.field(batch.pool, batch.nodes[result], "data")
+    const data = try graph.get(batch.pool, data_id)
+    return len(scope.locals) == 1 and lowered.tag == b"assign" and data.data == b"wrap"
+
+
+public func test_any_exits_outer_generator_loop_and_marks_terminating_path() -> bool fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 2, 7)
+    const context = list_lower.Context(input=input, span=span)
+    mut batch = emission.empty()
+    mut scope = locals.empty()
+    const payload = try syntax_value.boolean(mut batch.pool, True)
+    const value = try emission.node(mut batch, input, span, 1, b"boolean", payload)
+    const lowered = try scalar_gather.step(mut batch, mut scope, context, scalar_gather.Sink(kind=b"any", owner=3, seen=-1, ty=1, target=17), value)
+    const leave_row = batch.statements[1]
+    const data_id = try graph.field(batch.pool, leave_row, "data")
+    const data = try graph.get(batch.pool, data_id)
+    const target_id = try graph.field(batch.pool, data.children[0], "target")
+    const target = try graph.number(batch.pool, target_id)
+    const end_id = try graph.field(batch.pool, batch.statements[2], "terminates")
+    const end = try graph.get(batch.pool, end_id)
+    return lowered.tag == b"branch" and data.data == b"loop_exit" and target == 17 and end.integer != 0 and len(batch.statements) == 3
+
+
+public func test_min_finish_checks_seen_after_loop_and_initializes_typed_zero() -> bool fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 0, 9)
+    const context = list_lower.Context(input=input, span=span)
+    mut batch = emission.empty()
+    mut scope = locals.empty()
+    const owner = try locals.add(mut scope, b"", span, 5, True, b"local")
+    const seen = try locals.add(mut scope, b"", span, 1, True, b"local")
+    const lowered = try scalar_gather.finish(mut batch, mut scope, context, scalar_gather.Sink(kind=b"min", owner=owner, seen=seen, ty=5, target=-1), 27)
+    const body_id = try graph.field(batch.pool, lowered.payload, "body")
+    const body = try graph.number(batch.pool, body_id)
+    const block_data_id = try graph.field(batch.pool, batch.statements[body], "data")
+    const block_data = try graph.get(batch.pool, block_data_id)
+    const statements = try graph.items(batch.pool, block_data.children[0])
+    const loop = try graph.number(batch.pool, statements[2])
+    const assertion_id = try graph.number(batch.pool, statements[3])
+    const data_id = try graph.field(batch.pool, batch.statements[assertion_id], "data")
+    const data = try graph.get(batch.pool, data_id)
+    const message_id = try graph.field(batch.pool, data.children[0], "message")
+    const message = try graph.get(batch.pool, message_id)
+    const ty_id = try graph.field(batch.pool, batch.nodes[0], "ty")
+    const ty = try graph.number(batch.pool, ty_id)
+    return loop == 27 and len(statements) == 4 and data.data == b"assertion" and message.data == b"min() arg is an empty sequence" and ty == 5

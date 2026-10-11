@@ -183,6 +183,9 @@ func effects(scan: Scan) -> Effects fails syntax_value.Problem:
                         if op.data == b"set":
                             result.rebinds = True
                 try append_number(mut nodes, scan.input, payload, "value")
+            elif tag == b"gather_step":
+                try append_number(mut nodes, scan.input, payload, "value")
+                try append_optional(mut nodes, scan.input, payload, "key")
             elif tag == b"match":
                 try append_number(mut nodes, scan.input, payload, "value")
                 const arms_id = try graph.field(scan.input, payload, "arms")
@@ -292,6 +295,8 @@ func effects(scan: Scan) -> Effects fails syntax_value.Problem:
                 try append_optional(mut nodes, scan.input, payload, "start")
                 try append_optional(mut nodes, scan.input, payload, "end")
                 try append_optional(mut nodes, scan.input, payload, "step")
+            elif tag == b"gather":
+                try append_number(mut statements, scan.input, payload, "loop")
             elif tag == b"comprehension":
                 try append_number(mut nodes, scan.input, payload, "output")
                 try append_optional(mut nodes, scan.input, payload, "filter")

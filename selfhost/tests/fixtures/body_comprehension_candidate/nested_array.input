@@ -1,0 +1,4 @@
+func main() -> int:
+    const source = FixedArray[int, 2]([3, 4])
+    const values = [for value in source yield [for inner in source if inner == value yield inner]]
+    return values[0][0] + values[1][0]

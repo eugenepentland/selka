@@ -1,0 +1,4 @@
+func main() -> int:
+    const source = FixedArray[str, 2](["abc", "wxyz"])
+    const values = [for value in source yield len(value)]
+    return values[0] + values[1]

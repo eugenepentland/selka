@@ -1,0 +1,9 @@
+enum Status:
+    first
+    second
+
+
+func main() -> int:
+    const source: [Status]int = {Status.first: 3, Status.second: 4}
+    const values = [for value in source yield value]
+    return len(values)

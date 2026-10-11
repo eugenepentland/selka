@@ -1,0 +1,3 @@
+func main() -> int:
+    const values = [for value in [3, 4] yield value]
+    return values[0] + values[1]

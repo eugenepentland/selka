@@ -1,0 +1,5 @@
+func main() -> int:
+    const source = FixedArray[float, 2]([3.0, 4.0])
+    if sum(value for value in source) == 7.0 and min(value for value in source) == 3.0 and max(value for value in source) == 4.0:
+        return 7
+    return 1

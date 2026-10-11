@@ -62,6 +62,7 @@ import hash_keys
 import set_lower
 import membership_lower
 import gather_lower
+import scalar_gather
 import gather_pair
 import tuple_types
 import array_types
@@ -99,6 +100,9 @@ public record GatherSink:
     kind: bytes
     expected: int
     owner: int
+    seen: int = -1
+    span: int = -1
+    depth: int = 0
 
 
 public record Values:
@@ -1238,7 +1242,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             if len(state.syntax.modules) != 0 and (raw_callee == b"bytes" or raw_callee == b"byte_buffer"):
                 declared = False
             if not declared:
-                if raw_callee == b"list" or raw_callee == b"set" or raw_callee == b"dict":
+                if raw_callee == b"list" or raw_callee == b"set" or raw_callee == b"dict" or scalar_gather.accepts(raw_callee):
                     _ = try io_arguments.positional(state.syntax.pool, payload)
                     const generator_inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
                     const generator_inputs = try graph.items(state.syntax.pool, generator_inputs_id)
@@ -3939,7 +3943,10 @@ func sequence_method(mut state: State, span: int, name: int, owner_span: int, ow
     mut signature = "(start: int, end: int) -> " + type_name(state, base.ty)
     mut mutates = False
     mut result_type = base.ty
-    if spelling == b"reserve":
+    if spelling == b"join":
+        arity = 1
+        signature = "(values: " + type_name(state, base.ty) + "[]) -> " + type_name(state, base.ty)
+    elif spelling == b"reserve":
         kind = b"buffer_reserve"
         arity = 1
         signature = "(extra: int) -> bool"
@@ -3976,7 +3983,27 @@ func sequence_method(mut state: State, span: int, name: int, owner_span: int, ow
     mut types: int[] = []
     for input in inputs:
         const raw_id = try graph.number(state.syntax.pool, input)
-        const value = try expression(mut state, raw_id)
+        mut value = Expression(id=-1, ty=-1)
+        if spelling == b"join":
+            const expected = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=base.ty, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+            const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw_id], "data")
+            const data = try graph.get(state.syntax.pool, data_id)
+            mut generator = -1
+            if data.data == b"gather":
+                const payload = try graph.payload(state.syntax.pool, data_id)
+                const shape_id = try graph.field(state.syntax.pool, payload, "shape")
+                const shape = try graph.get(state.syntax.pool, shape_id)
+                if shape.data == b"generator":
+                    generator = payload
+            if generator >= 0:
+                const generator_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw_id], "span")
+                value = try gather_value_as(mut state, generator, generator_span, expected, b"list")
+                state.batch.resolved[raw_id] = value.id
+            else:
+                value = try expression_expected(mut state, raw_id, expected)
+            _ = try require(state, value.ty, expected, span)
+        else:
+            value = try expression(mut state, raw_id)
         arguments.append(value.id)
         types.append(value.ty)
     if owner >= 0:
@@ -3993,7 +4020,9 @@ func sequence_method(mut state: State, span: int, name: int, owner_span: int, ow
         const rejection = try problem(state, owner_span, "E_COLLECTION_METHOD", "in-place buffer methods require a byte_buffer receiver")
         fail rejection
     for position in range(len(arguments)):
-        if spelling == b"append_range" and position == 0:
+        if spelling == b"join":
+            continue
+        elif spelling == b"append_range" and position == 0:
             if types[position] != state.batch.facts.bytes_type and types[position] != state.batch.facts.lists.types.buffer.id:
                 const rejection = try problem(state, owner_span, "E_COLLECTION_METHOD", "append_range requires a bytes or byte_buffer source")
                 fail rejection
@@ -4071,9 +4100,13 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
         iterable = checked
         mut element = list_types.element_type(state.batch.facts.lists, iterable.ty)
         const schema = collection_types.schema(state.batch.facts.lists.types.collections, iterable.ty)
+        const fixed = array_types.schema(state.batch.facts.lists.types.arrays, iterable.ty)
         mut owner_type = iterable.ty
         mut item_schema = -1
-        if iterable.ty == state.batch.facts.string_type:
+        if fixed.id >= 0 and fixed.key < 0:
+            element = fixed.element
+            source_kind = b"fixed"
+        elif iterable.ty == state.batch.facts.string_type:
             element = iterable.ty
             source_kind = b"text"
         elif iterable.ty == state.batch.facts.bytes_type or iterable.ty == state.batch.facts.lists.types.buffer.id:
@@ -4098,7 +4131,7 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
             iterable = Expression(id=mapping, ty=owner_type)
         projection = dictionary_view_lower.Shape(mapping=owner_type, key=schema.key, value=schema.value, item=item_schema, list=-1, kind=source_kind)
         if element < 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "comprehension receiver is outside the admitted collection closure")
+            const rejection = try problem(state, span, "E_COLLECTION_METHOD", "iteration requires a list, str, fixed array or dictionary")
             fail rejection
         const receiver = try list_lower.temporary(mut state.scope, context, iterable.ty)
         owner = receiver
@@ -4140,10 +4173,7 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
     raw_children = analyzed_children
     if set_output:
         _ = try require_hash_key(mut state, produced.ty, span, True)
-    const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, produced.ty)
-    if pending:
-        const rejection = try problem(state, span, "E_LIST_TYPE", "list elements require copyable storable values without pending results")
-        fail rejection
+    try gather_storable(mut state, produced.ty, span, False)
     mut result_type = -1
     if set_output:
         const ty = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=1, key=produced.ty, value=15, owner=-1), span)
@@ -5715,7 +5745,7 @@ func gather_value(mut state: State, payload: int, span: int, expected: int) -> E
 func gather_value_as(mut state: State, payload: int, span: int, expected: int, kind: bytes) -> Expression fails syntax_value.Problem:
     const loop_id = try graph.field(state.syntax.pool, payload, "loop")
     const raw_loop = try graph.number(state.syntax.pool, loop_id)
-    state.control.values.gathers.append(GatherSink(kind=kind, expected=expected, owner=-1))
+    state.control.values.gathers.append(GatherSink(kind=kind, expected=expected, owner=-1, span=span, depth=len(state.control.active)))
     mut loop = Statement(id=-1, terminates=False)
     match statement(mut state, raw_loop):
         case Ok(checked):
@@ -5729,7 +5759,11 @@ func gather_value_as(mut state: State, payload: int, span: int, expected: int, k
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="gather has no accumulator step")
     const ty = state.scope.locals[sink.owner].ty
     const context = list_lower.Context(input=state.syntax.pool, span=span)
-    const lowered = try gather_lower.finish(mut state.batch, state.scope, context, sink.owner, loop.id, sink.kind)
+    mut lowered = list_lower.Lowered(ty=ty, tag=b"", payload=-1)
+    if scalar_gather.accepts(sink.kind):
+        lowered = try scalar_gather.finish(mut state.batch, mut state.scope, context, scalar_gather.Sink(kind=sink.kind, owner=sink.owner, seen=sink.seen, ty=ty, target=-1), loop.id)
+    else:
+        lowered = try gather_lower.finish(mut state.batch, state.scope, context, sink.owner, loop.id, sink.kind)
     const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=ty)
 
@@ -5739,8 +5773,9 @@ func gather_storable(mut state: State, ty: int, span: int, dictionary: bool) -> 
     if ty >= 19:
         if list_types.element_type(state.batch.facts.lists, ty) >= 0:
             valid = True
-        const row = record_types.schema(state.batch.facts.lists.types.records, ty)
-        if row >= 0:
+        const rows = state.batch.facts.lists.types.records.rows
+        if ty - 19 < len(rows):
+            const row = rows[ty - 19]
             const contract = try graph.field(state.syntax.pool, row, "contract")
             const storable_id = try graph.field(state.syntax.pool, contract, "storable")
             const move_id = try graph.field(state.syntax.pool, contract, "move_only")
@@ -5759,6 +5794,45 @@ func gather_storable(mut state: State, ty: int, span: int, dictionary: bool) -> 
         fail rejection
 
 
+func scalar_gather_step(mut state: State, position: int, raw: int, span: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const sink = state.control.values.gathers[position]
+    mut hint = -1
+    if sink.kind == b"any" or sink.kind == b"all":
+        hint = 1
+    const value = try expression_expected(mut state, raw, hint)
+    const value_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+    const integer = value.ty == 0 or (value.ty >= 2 and value.ty <= 8)
+    const floating = value.ty == state.batch.facts.float_type
+    const text = value.ty == state.batch.facts.string_type
+    if sink.kind == b"any" or sink.kind == b"all":
+        if value.ty != 1:
+            const rejection = try problem(state, value_span, "E_PRELUDE_TYPE", if sink.kind == b"any" then "any requires bool values" else "all requires bool values")
+            fail rejection
+    elif sink.kind == b"sum":
+        if not integer and not floating:
+            const rejection = try problem(state, value_span, "E_PRELUDE_TYPE", "sum requires int or float values")
+            state.problems.append(syntax_problem.alternative(rejection, "count matches with `sum(1 for x in xs if p)`"))
+            fail rejection
+    elif not integer and not floating and not text:
+        const rejection = try problem(state, value_span, "E_PRELUDE_TYPE", "min and max require int, float or str values")
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    mut owner = sink.owner
+    if owner < 0:
+        owner = try list_lower.temporary(mut state.scope, context, value.ty)
+        state.control.values.gathers[position].owner = owner
+    mut seen = sink.seen
+    if (sink.kind == b"min" or sink.kind == b"max") and seen < 0:
+        seen = try list_lower.temporary(mut state.scope, context, 1)
+        state.control.values.gathers[position].seen = seen
+    mut target = -1
+    if sink.kind == b"any" or sink.kind == b"all":
+        if sink.depth >= len(state.control.active):
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="generator fold has no active loop")
+        target = state.control.active[sink.depth]
+    return try scalar_gather.step(mut state.batch, mut state.scope, context, scalar_gather.Sink(kind=sink.kind, owner=owner, seen=seen, ty=value.ty, target=target), value.id)
+
+
 func gather_step(mut state: State, payload: int, span: int) -> list_lower.Lowered fails syntax_value.Problem:
     const position = len(state.control.values.gathers) - 1
     if position < 0:
@@ -5766,6 +5840,8 @@ func gather_step(mut state: State, payload: int, span: int) -> list_lower.Lowere
     const sink = state.control.values.gathers[position]
     const value_id = try graph.field(state.syntax.pool, payload, "value")
     const value_raw = try graph.number(state.syntax.pool, value_id)
+    if scalar_gather.accepts(sink.kind):
+        return try scalar_gather_step(mut state, position, value_raw, span)
     const key_id = try graph.field(state.syntax.pool, payload, "key")
     const key_value = try graph.get(state.syntax.pool, key_id)
     mut key = Expression(id=-1, ty=-1)

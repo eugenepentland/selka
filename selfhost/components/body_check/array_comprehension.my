@@ -1,0 +1,21 @@
+import syntax_value
+import emission
+import list_lower
+import comprehension_lower
+import array_types
+
+public func element(mut batch: emission.Batch, context: list_lower.Context, owner: int, index: int, shape: array_types.Array) -> int fails syntax_value.Problem:
+    const base = try list_lower.read(mut batch, context, owner, shape.id)
+    const base_id = try syntax_value.integer(mut batch.pool, base)
+    const index_id = try syntax_value.integer(mut batch.pool, index)
+    const from_end = try syntax_value.boolean(mut batch.pool, False)
+    const payload = try syntax_value.object(mut batch.pool, ["base", "index", "from_end"], [base_id, index_id, from_end])
+    return try emission.node(mut batch, context.input, context.span, shape.element, b"index", payload)
+
+
+public func guard(mut batch: emission.Batch, context: list_lower.Context, refresh: int[]) -> int fails syntax_value.Problem:
+    return try comprehension_lower.block_statement(mut batch, context, refresh)
+
+
+public func length(mut batch: emission.Batch, context: list_lower.Context, shape: array_types.Array) -> int fails syntax_value.Problem:
+    return try list_lower.integer(mut batch, context, shape.length, 0)

@@ -1,0 +1,3 @@
+func main() -> int:
+    const source = FixedArray[u64, 2]([3u64, 4u64])
+    return int(sum(value for value in source))

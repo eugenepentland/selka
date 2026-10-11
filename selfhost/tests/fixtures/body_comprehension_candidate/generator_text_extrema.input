@@ -1,0 +1,3 @@
+func main() -> int:
+    const source = FixedArray[str, 2](["abc", "wxyz"])
+    return len(min(value for value in source)) + len(max(value for value in source))

@@ -1,0 +1,4 @@
+func main() -> int:
+    const source = FixedArray[tuple[int, int], 2]([(1, 2), (3, 4)])
+    const values = {left: right for left, right in source}
+    return values[1] + values[3] + 1

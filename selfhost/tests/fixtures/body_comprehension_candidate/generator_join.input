@@ -1,0 +1,3 @@
+func main() -> int:
+    const source = FixedArray[str, 2](["abc", "wxyz"])
+    return len("".join(value for value in source))

@@ -1,0 +1,3 @@
+func main() -> int:
+    const source = FixedArray[int, 2]([3, 4])
+    return min(value for value in source) + max(value for value in source)

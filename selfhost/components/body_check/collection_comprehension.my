@@ -6,6 +6,8 @@ import buffer_lower
 import list_iteration
 import dictionary_view_lower
 import comprehension_lower
+import array_types
+import array_comprehension
 
 public record Output:
     slot: int
@@ -25,6 +27,9 @@ public record Input:
 
 func element(mut batch: emission.Batch, context: list_lower.Context, request: Input, index: int) -> int fails syntax_value.Problem:
     const plan = request.plan
+    if request.kind == b"fixed":
+        const shape = array_types.schema(batch.facts.lists.types.arrays, plan.request.owner_type)
+        return try array_comprehension.element(mut batch, context, plan.owner, index, shape)
     if request.kind == b"keys" or request.kind == b"values" or request.kind == b"items":
         return try dictionary_view_lower.at(mut batch, context, plan.owner, index, request.projection)
     if request.kind == b"dict" or request.kind == b"set":
@@ -41,7 +46,7 @@ func element(mut batch: emission.Batch, context: list_lower.Context, request: In
 # The caller projects a view's mapping before allocating the plan's locals and
 # checks the binding, filter and output before this native-order loop assembly.
 public func collect(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Input) -> list_lower.Lowered fails syntax_value.Problem:
-    if request.kind != b"list" and request.kind != b"text" and request.kind != b"bytes" and request.kind != b"dict" and request.kind != b"set" and request.kind != b"keys" and request.kind != b"values" and request.kind != b"items":
+    if request.kind != b"fixed" and request.kind != b"list" and request.kind != b"text" and request.kind != b"bytes" and request.kind != b"dict" and request.kind != b"set" and request.kind != b"keys" and request.kind != b"values" and request.kind != b"items":
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid comprehension source kind")
     const plan = request.plan
     const output = request.output
@@ -54,7 +59,11 @@ public func collect(mut batch: emission.Batch, mut scope: locals.Scope, context:
     const advance = try list_lower.store(mut batch, context, plan.index, next, False)
     # A changed mapping refreshes its root, but never accepts list-style growth.
     const growing = (request.kind == b"list" or request.kind == b"bytes") and prepared.growing
-    const guard = try list_iteration.guard(mut batch, context, plan, prepared.refresh, growing)
+    mut guard = -1
+    if request.kind == b"fixed":
+        guard = try array_comprehension.guard(mut batch, context, prepared.refresh)
+    else:
+        guard = try list_iteration.guard(mut batch, context, plan, prepared.refresh, growing)
     const body = try comprehension_lower.block_statement(mut batch, context, [guard, initialize, output.body])
     const step = try comprehension_lower.block_statement(mut batch, context, [guard, advance])
     mut capacity = -1
@@ -78,7 +87,10 @@ public func collect(mut batch: emission.Batch, mut scope: locals.Scope, context:
     const zero = try list_lower.integer(mut batch, context, 0, 0)
     const setup_index = try list_lower.store(mut batch, context, plan.index, zero, True)
     mut length = -1
-    if request.kind == b"list":
+    if request.kind == b"fixed":
+        const shape = array_types.schema(batch.facts.lists.types.arrays, plan.request.owner_type)
+        length = try array_comprehension.length(mut batch, context, shape)
+    elif request.kind == b"list":
         const count = try list_lower.length(mut batch, context, plan.owner)
         length = count
     else:

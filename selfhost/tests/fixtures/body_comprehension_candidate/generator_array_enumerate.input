@@ -1,0 +1,4 @@
+func main() -> int:
+    const source = FixedArray[int, 2]([3, 4])
+    const values = {index: value for index, value in enumerate(source)}
+    return values[0] + values[1]

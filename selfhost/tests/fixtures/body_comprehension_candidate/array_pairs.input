@@ -1,0 +1,9 @@
+func pair_sum(pair: tuple[int, int]) -> int:
+    const left, right = pair
+    return left + right
+
+
+func main() -> int:
+    const source = FixedArray[tuple[int, int], 2]([(1, 2), (3, 4)])
+    const values = [for value in source yield pair_sum(value)]
+    return values[1]

@@ -1,0 +1,5 @@
+func main() -> int:
+    const source = FixedArray[int, 2]([3, 4])
+    const values = list(value for value in source)
+    const unique = set(value for value in source)
+    return values[0] + len(unique) + 2

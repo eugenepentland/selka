@@ -1,0 +1,15 @@
+func noted(mut seen: int[], value: int) -> bool:
+    seen.append(value)
+    return value == 4
+
+
+func main() -> int:
+    const source = FixedArray[int, 3]([3, 4, 5])
+    const inner = FixedArray[int, 1]([1])
+    mut seen: int[] = []
+    mut checked: int[] = []
+    const found = any(noted(mut seen, value * factor) for value in source for factor in inner)
+    const every = all(not noted(mut checked, value * factor) for value in source for factor in inner)
+    if found and not every and len(seen) == 2 and len(checked) == 2:
+        return seen[0] + seen[1]
+    return 1

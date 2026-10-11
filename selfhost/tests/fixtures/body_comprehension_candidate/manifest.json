@@ -1,0 +1,246 @@
+{
+  "array_empty.my": {
+    "status": 0,
+    "source_sha256": "559a5b9919734b8683b46dbfedfcc9720ec39c1ec4b7b1f82a87c9a40b6813a6",
+    "diagnostics": []
+  },
+  "array_filtered.my": {
+    "status": 0,
+    "source_sha256": "b1be063f6bc5abf9dd85d4e05289fbc3c3810982cbee440a596bebeff762c3eb",
+    "diagnostics": []
+  },
+  "array_pairs.my": {
+    "status": 0,
+    "source_sha256": "c7f59f31eb11be3cfde9b154b133226a87577758f1a2db970dae0381d0fde3b1",
+    "diagnostics": []
+  },
+  "array_plain.my": {
+    "status": 0,
+    "source_sha256": "f683226d1d03b064c9a79f229f5bc174e9434f3c0cfe534b8751d253e3d96336",
+    "diagnostics": []
+  },
+  "array_set.my": {
+    "status": 0,
+    "source_sha256": "a0113eaf01a87f798cd7bf4bba4cada05816221d96fd8f3de13914765bc8b5c2",
+    "diagnostics": []
+  },
+  "array_strings.my": {
+    "status": 0,
+    "source_sha256": "09a152c5e690edc798c41be47124fbde98f1d52f1c052dc4df5200c5d929c5a3",
+    "diagnostics": []
+  },
+  "bad_shadow.my": {
+    "status": 1,
+    "source_sha256": "bcaba681d610ce8274e2b4d597d7bfeb24baa688b763ea97c8d425eb89e23304",
+    "diagnostics": [
+      {
+        "code": "E_SHADOWING",
+        "message": "comprehension binding shadows an active declaration",
+        "bytes": {
+          "start": 110,
+          "end": 115
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_table.my": {
+    "status": 1,
+    "source_sha256": "06276a2f57e297419e2a1fba1edb7f081a29d6445fe1baaf069aaaf6ae20d902",
+    "diagnostics": [
+      {
+        "code": "E_COLLECTION_METHOD",
+        "message": "iteration requires a list, str, fixed array or dictionary",
+        "bytes": {
+          "start": 143,
+          "end": 176
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "generator_any_all.my": {
+    "status": 0,
+    "source_sha256": "ce38dd3f7c583b3e5564621efb7d18a1c03c538240bdca0c1d1c7ae503aa88cc",
+    "diagnostics": []
+  },
+  "generator_array_enumerate.my": {
+    "status": 0,
+    "source_sha256": "c4cd884dcb79c4a0fb013091f544cf12506747e43a9b2e2c3cec03bf309fa448",
+    "diagnostics": []
+  },
+  "generator_array_pairs.my": {
+    "status": 0,
+    "source_sha256": "a786ea7752acf48099eb9e9b4c5bb331db0afeb2b63747ce12f56a32bbdad9f4",
+    "diagnostics": []
+  },
+  "generator_join.my": {
+    "status": 0,
+    "source_sha256": "fa17bd8107b2532754af1a7892d3df20adfafd04c9a1eb97fd9e9d2eb1158c54",
+    "diagnostics": []
+  },
+  "generator_list_set.my": {
+    "status": 0,
+    "source_sha256": "f29d58d650925c8720566463897e68e8c86851db79dd20ea0dc4dc8efe36cda8",
+    "diagnostics": []
+  },
+  "generator_min_max.my": {
+    "status": 0,
+    "source_sha256": "11756e0f39e9cdc8e6c9e1f7180099365e7c3509252f084bc4304100b07c9c0c",
+    "diagnostics": []
+  },
+  "generator_nested.my": {
+    "status": 0,
+    "source_sha256": "8894be79af730f728a3d6922b52b52be4b79c5c25bbcb1937cfecf57cf8a8777",
+    "diagnostics": []
+  },
+  "generator_reversed.my": {
+    "status": 0,
+    "source_sha256": "d0cf87ffdac180c8c938aef26b8b569a2d878179797026456a88782d1b07d3dd",
+    "diagnostics": []
+  },
+  "generator_sum.my": {
+    "status": 0,
+    "source_sha256": "a907942906d783c09c85c19c9b9832a363823cbc9829572aba624567dc80dad5",
+    "diagnostics": []
+  },
+  "generator_zip.my": {
+    "status": 0,
+    "source_sha256": "fd66bcf3dd436cc57bc593f0b618edcf37d29fc5fa8abb2c600936f553ec39d7",
+    "diagnostics": []
+  },
+  "list_control.my": {
+    "status": 0,
+    "source_sha256": "b6676f8a613f4cd23b297133be6e0fef0d2bb7eb6baef4a837f1599c950c4072",
+    "diagnostics": []
+  },
+  "nested_array.my": {
+    "status": 0,
+    "source_sha256": "178baa2563cf40d60e48fdc92bd871be1686c138a8e55296d915e4f914d58677",
+    "diagnostics": []
+  },
+  "bad_generator_any.my": {
+    "status": 1,
+    "source_sha256": "ca3c48a3ba31f9933e285d7745e8167b40d8ee7dc9733bb531d9298b99f6a2f7",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "any requires bool values",
+        "bytes": {
+          "start": 78,
+          "end": 83
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_generator_min.my": {
+    "status": 1,
+    "source_sha256": "71cfd1ed3a099ddfbc7a803a3a510e5e938662aa48e22446d9eb55ec556e39f5",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "min and max require int, float or str values",
+        "bytes": {
+          "start": 86,
+          "end": 91
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bad_generator_sum.my": {
+    "status": 1,
+    "source_sha256": "51cb4c2f5bb0645d562d0cc59590a2e94d43cd786173def9da1bf471939e1d10",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "sum requires int or float values",
+        "bytes": {
+          "start": 87,
+          "end": 92
+        },
+        "notes": [
+          {
+            "role": "alternative",
+            "message": "count matches with `sum(1 for x in xs if p)`",
+            "bytes": {
+              "start": 87,
+              "end": 92
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "generator_float.my": {
+    "status": 0,
+    "source_sha256": "f177381f1625008286d5f0569b70f161b2e65366bff1debf57c73558c861221c",
+    "diagnostics": []
+  },
+  "generator_short_circuit.my": {
+    "status": 0,
+    "source_sha256": "f65f04785ae137c8513732fa9bc4243b410f9671bde20c804a5f822da9fb1e23",
+    "diagnostics": []
+  },
+  "generator_text_extrema.my": {
+    "status": 0,
+    "source_sha256": "b5c6027ee2b40fb067d68939f83afcdcc47917652d8a05ee36ddd1402b1ec36e",
+    "diagnostics": []
+  },
+  "generator_width_i16.my": {
+    "status": 0,
+    "source_sha256": "6b8e4a6c75aa24bdd96b37002d11cda39483bb2af7fc1692b01bff65e4212d87",
+    "diagnostics": []
+  },
+  "generator_width_i32.my": {
+    "status": 0,
+    "source_sha256": "503210ca50711a8c37ee6b3b70fee5c5018fbc3e20059d8d6548ea11cd5d7e16",
+    "diagnostics": []
+  },
+  "generator_width_i64.my": {
+    "status": 0,
+    "source_sha256": "1a8472f15644548984461562d25a22758da2d5ec7363c856607f7a2fb4c19fc9",
+    "diagnostics": []
+  },
+  "generator_width_i8.my": {
+    "status": 0,
+    "source_sha256": "02f139c26ae8c56793a9b77ffefe267c5f36b9ee30ab930005b7f9d452278a19",
+    "diagnostics": []
+  },
+  "generator_width_u16.my": {
+    "status": 0,
+    "source_sha256": "d6cb38180761e7413b71f0744014d5386c12a291a63fd25cc6add6994ba89959",
+    "diagnostics": []
+  },
+  "generator_width_u32.my": {
+    "status": 0,
+    "source_sha256": "54905e0d995fa7b3d9008a2d1825137e663160a522e7935f24f19b1850fb478d",
+    "diagnostics": []
+  },
+  "generator_width_u64.my": {
+    "status": 0,
+    "source_sha256": "3e7f8095b407a2a48992d57661ed9edb0a5655df567587200ae24bdeb2ba2549",
+    "diagnostics": []
+  },
+  "generator_width_u8.my": {
+    "status": 0,
+    "source_sha256": "00788e2d434a72e95099ca2535e588542ecc961cfc32e13fb1a042582c3c8cd7",
+    "diagnostics": []
+  },
+  "generator_mutation.my": {
+    "status": 0,
+    "source_sha256": "226cdd3d8444a7d6276e181d7cccba6bf875bce3f177a7c8a621b0d5dd3b3740",
+    "diagnostics": []
+  },
+  "generator_short_circuit_exact.my": {
+    "status": 0,
+    "source_sha256": "3a0d0891be424d4c56fc03a31fb857d75f13c2ac6daa9e5e4198e8bb190fba00",
+    "diagnostics": []
+  }
+}

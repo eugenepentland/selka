@@ -1,0 +1,8 @@
+func kept(mut source: int[], value: int) -> int:
+    source[1] = 4
+    return value
+
+
+func main() -> int:
+    mut source = [3, 1]
+    return sum(kept(mut source, value) for value in source)

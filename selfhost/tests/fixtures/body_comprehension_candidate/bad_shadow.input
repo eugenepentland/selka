@@ -1,0 +1,5 @@
+func main() -> int:
+    const value = 7
+    const source = FixedArray[int, 2]([3, 4])
+    const values = [for value in source yield value]
+    return len(values)

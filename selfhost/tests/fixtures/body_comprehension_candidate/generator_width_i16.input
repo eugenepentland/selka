@@ -1,0 +1,3 @@
+func main() -> int:
+    const source = FixedArray[i16, 2]([3i16, 4i16])
+    return int(sum(value for value in source))

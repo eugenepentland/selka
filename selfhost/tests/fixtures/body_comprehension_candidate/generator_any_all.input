@@ -1,0 +1,5 @@
+func main() -> int:
+    const source = FixedArray[int, 2]([3, 4])
+    if any(value == 4 for value in source) and all(value > 2 for value in source):
+        return 7
+    return 1

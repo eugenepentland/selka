@@ -1,0 +1,4 @@
+func main() -> int:
+    const source = FixedArray[bool, 2]([True, False])
+    _ = min(value for value in source)
+    return 7

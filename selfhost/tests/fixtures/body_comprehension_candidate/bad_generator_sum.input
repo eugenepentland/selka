@@ -1,0 +1,4 @@
+func main() -> int:
+    const source = FixedArray[str, 2](["abc", "wxyz"])
+    _ = sum(value for value in source)
+    return 7

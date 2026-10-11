@@ -1,0 +1,42 @@
+import syntax_value
+import graph
+import emission
+import list_lower
+import array_types
+import array_comprehension
+
+public func test_fixed_read_preserves_array_owner_element_and_positive_index() -> bool fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 3, 11)
+    const context = list_lower.Context(input=input, span=span)
+    mut batch = emission.empty()
+    const index = try list_lower.integer(mut batch, context, 1, 0)
+    const shape = array_types.Array(id=21, element=5, length=3, key=-1)
+    const value = try array_comprehension.element(mut batch, context, 4, index, shape)
+    const row = batch.nodes[value]
+    const ty_id = try graph.field(batch.pool, row, "ty")
+    const ty = try graph.number(batch.pool, ty_id)
+    const data_id = try graph.field(batch.pool, row, "data")
+    const data = try graph.get(batch.pool, data_id)
+    const payload = data.children[0]
+    const key_id = try graph.field(batch.pool, payload, "index")
+    const key = try graph.number(batch.pool, key_id)
+    const from_end_id = try graph.field(batch.pool, payload, "from_end")
+    const from_end = try graph.get(batch.pool, from_end_id)
+    return ty == 5 and data.data == b"index" and key == index and from_end.integer == 0 and len(batch.nodes) == 3
+
+
+public func test_empty_array_has_static_zero_bound_and_empty_refresh_guard() -> bool fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 0, 1)
+    const context = list_lower.Context(input=input, span=span)
+    mut batch = emission.empty()
+    const length = try array_comprehension.length(mut batch, context, array_types.Array(id=21, element=0, length=0, key=-1))
+    const bound_data_id = try graph.field(batch.pool, batch.nodes[length], "data")
+    const bound = try graph.get(batch.pool, bound_data_id)
+    const value = try graph.number(batch.pool, bound.children[0])
+    const guard = try array_comprehension.guard(mut batch, context, [])
+    const data_id = try graph.field(batch.pool, batch.statements[guard], "data")
+    const data = try graph.get(batch.pool, data_id)
+    const children = try graph.get(batch.pool, data.children[0])
+    return value == 0 and bound.data == b"integer" and data.data == b"block" and len(children.children) == 0
