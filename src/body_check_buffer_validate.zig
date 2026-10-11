@@ -3,6 +3,7 @@ const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
 const numeric = @import("body_check_numeric_validate.zig");
 const operations = @import("buffer_operations.zig");
+const std = @import("std");
 pub const Error = error{ComponentProtocol};
 /// Validate a grouped authority independently of per-use source decisions.
 pub fn basis(catalog: value.Catalog) Error!void {
@@ -66,7 +67,24 @@ pub fn operation(catalog: value.Catalog, owner: typed.Type, result: typed.Type, 
     const text = if (catalog.string) |entry| entry.id == owner else false;
     if (!text and !byteFamily(catalog, owner)) return error.ComponentProtocol;
     if (arguments.len != kind.arity()) return error.ComponentProtocol;
+    if (operations.search(kind)) |mode| if (mode == .prefix or mode == .suffix) {
+        if (result != .bool or arguments[0] != owner) return error.ComponentProtocol;
+        try integers(arguments[1..]);
+        return;
+    };
     switch (kind) {
+        .encode => {
+            const bytes = catalog.bytes orelse return error.ComponentProtocol;
+            if (!text or result != bytes.id) return error.ComponentProtocol;
+        },
+        .decode => {
+            const string = catalog.string orelse return error.ComponentProtocol;
+            if (text or !resultOf(catalog, result, string.id, string.id)) return error.ComponentProtocol;
+        },
+        .split, .split_whitespace => {
+            if (listElement(catalog, result) != owner) return error.ComponentProtocol;
+            if (kind == .split and arguments[0] != owner) return error.ComponentProtocol;
+        },
         .length => if (result != .i64) return error.ComponentProtocol,
         .iteration_check => {
             if (result != .unit or arguments[0] != .i64) return error.ComponentProtocol;
@@ -100,6 +118,16 @@ pub fn operation(catalog: value.Catalog, owner: typed.Type, result: typed.Type, 
         },
         else => return error.ComponentProtocol,
     }
+}
+
+/// Expanded recipes have anonymous rows; retained specializations have canonical names.
+fn resultOf(catalog: value.Catalog, ty: typed.Type, success: typed.Type, failure: typed.Type) bool {
+    if (catalog.templates.result == null or !ty.isAggregate() or ty.recordIndex() >= catalog.records.len) return false;
+    const record = catalog.records[ty.recordIndex()];
+    if (record.name.len != 0 and !std.mem.startsWith(u8, record.name, "Result<")) return false;
+    if (!record.contract.requires_handling) return false;
+    const shape = typed.resultShape(ty, catalog.records) orelse return false;
+    return shape.ok_type == success and shape.error_type == failure;
 }
 
 fn integers(arguments: []const typed.Type) Error!void {

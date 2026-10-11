@@ -154,6 +154,92 @@ fn graphSite(input: value.Input, record: typed.Record) !source.Span {
     return error.ComponentProtocol;
 }
 const graph_text = "func value(mut buffer: byte_buffer) -> int:\n    _ = buffer.append_byte(7)\n    _ = buffer.reserve(9)\n    _ = buffer.append_range(b\"abc\", 0, 2)\n    const snapshot = bytes(buffer)\n    return len(snapshot[0:2])\n";
+const text_graph =
+    \\func methods(text: str, raw: bytes, mut buffer: byte_buffer, parts: str[], raw_parts: bytes[], buffer_parts: byte_buffer[]) -> Result[str, str]:
+    \\    _ = len(parts) + len(raw_parts) + len(buffer_parts)
+    \\    _ = buffer.append_byte(65)
+    \\    _ = text.encode()
+    \\    _ = text.split(",")
+    \\    _ = text.split()
+    \\    _ = raw.split(b",")
+    \\    _ = buffer.split(b",")
+    \\    _ = text.startswith("a", 0, 2)
+    \\    _ = raw.endswith(b"b", 0)
+    \\    return buffer.decode()
+    \\
+;
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body buffers accept native text conversion split and ranged prefix suffix graphs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try graphFixture(a, text_graph);
+    try std.testing.expectEqual(@as(usize, 0), f.output.recipes.len);
+    const wire = @import("body_check_protocol.zig");
+    const request = try wire.request(a, f.input, @splat(7));
+    const bytes = try wire.response(a, .{ .success = f.output }, request.identity);
+    var decoded = try wire.reply(a, bytes, request.identity, f.input);
+    defer decoded.deinit();
+    try std.testing.expectEqual(f.output.batch.nodes.len, decoded.outcome.success.batch.nodes.len);
+}
+
+fn retainedList(c: value.Catalog, element: typed.Type) !typed.Type {
+    var found: ?typed.Type = null;
+    for (c.lists) |entry| {
+        if (entry.element == element) found = entry.id;
+    }
+    return found orelse error.TestUnexpectedResult;
+}
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body buffers authenticate exact text method results operands and Result template" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, text_graph);
+    const c = f.input.catalog;
+    const text = c.string.?.id;
+    const bytes = c.bytes.?.id;
+    const buffer = c.templates.byte_buffer.identity.?.id;
+    var found: ?typed.Type = null;
+    for (c.records) |record| {
+        const shape = typed.resultShape(record.id, c.records) orelse continue;
+        if (shape.ok_type != text or shape.error_type != text) continue;
+        try std.testing.expect(found == null);
+        found = record.id;
+    }
+    const result = found orelse return error.TestUnexpectedResult;
+    const parts = try retainedList(c, text);
+    try buffers.operation(c, text, bytes, .encode, &.{}, false);
+    try buffers.operation(c, bytes, result, .decode, &.{}, false);
+    try buffers.operation(c, buffer, result, .decode, &.{}, false);
+    try buffers.operation(c, text, .bool, .starts_with_range, &.{ text, .u8, .i64 }, false);
+    try buffers.operation(c, buffer, .bool, .ends_with, &.{buffer}, false);
+    try buffers.operation(c, text, parts, .split, &.{text}, false);
+    try buffers.operation(c, text, parts, .split_whitespace, &.{}, false);
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, bytes, bytes, .encode, &.{}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, text, .encode, &.{}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, result, .decode, &.{}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, bytes, text, .decode, &.{}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .i64, .starts_with, &.{text}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .bool, .starts_with, &.{bytes}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .bool, .ends_with_start, &.{ text, .bool }, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, bytes, .split, &.{text}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, parts, .split, &.{bytes}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, parts, .split_whitespace, &.{text}, false));
+    var forged = c;
+    forged.templates.result = null;
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(forged, bytes, result, .decode, &.{}, false));
+    const records = try a.dupe(typed.Record, c.records);
+    forged = c;
+    forged.records = records;
+    records[result.recordIndex()].contract.requires_handling = false;
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(forged, bytes, result, .decode, &.{}, false));
+    records[result.recordIndex()] = c.records[result.recordIndex()];
+    records[result.recordIndex()].name = "ForeignResult";
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(forged, bytes, result, .decode, &.{}, false));
+}
 // spec-case: SELFHOST-BODY-BUFFERS-1
 test "body buffers accept full native snapshot slice and mutable parameter graphs" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
