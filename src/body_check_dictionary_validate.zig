@@ -37,6 +37,8 @@ pub fn bases(catalog: value.Catalog) Error!void {
         if (basis(catalog, kind)) |item| {
             if (item.id >= 1048576 or item.declaration.start != 0 or item.declaration.end != 0) return error.ComponentProtocol;
             for (identities[0..count]) |id| if (id == item.id) return error.ComponentProtocol;
+            if (catalog.templates.result) |other| if (other.id == item.id) return error.ComponentProtocol;
+            if (catalog.templates.option) |other| if (other.id == item.id) return error.ComponentProtocol;
             identities[count] = item.id;
             count += 1;
         }
@@ -64,6 +66,7 @@ pub fn identify(catalog: value.Catalog, ty: typed.Type) ?Descriptor {
         return .{ .kind = kind, .key = key, .value = element };
     }
     if (matches(catalog, record, .dict_item) and plainShape(record) and record.fields.len == 2) {
+        if (record.shape.builtin != .none) return null;
         if (!std.mem.eql(u8, record.fields[0].name, "key") or !std.mem.eql(u8, record.fields[1].name, "value")) return null;
         return .{ .kind = .dict_item, .key = record.fields[0].ty, .value = record.fields[1].ty };
     }

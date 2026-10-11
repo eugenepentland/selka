@@ -89,6 +89,9 @@ test "body dictionaries reject conflicting recipes forward keys and forged templ
     input.catalog.templates.collections.set = input.catalog.templates.collections.dict;
     try std.testing.expectError(error.ComponentProtocol, validate.input(a, input));
     input = f.input;
+    input.catalog.templates.collections.dict = input.catalog.templates.result;
+    try std.testing.expectError(error.ComponentProtocol, validate.input(a, input));
+    input = f.input;
     input.catalog.templates.collections.dict.?.declaration = first.collection.dict.span;
     try std.testing.expectError(error.ComponentProtocol, validate.input(a, input));
 }
@@ -171,6 +174,9 @@ test "body dictionaries reject incompatible collection item and live view schema
     fields[0].ty = delta[2].collection.dict_item.id;
     try std.testing.expect(dictionaries.identify(catalog, rows[view].id) == null);
     const item = delta[2].collection.dict_item.id.recordIndex();
+    rows[item].shape.builtin = .cell;
+    try std.testing.expect(dictionaries.identify(catalog, rows[item].id) == null);
+    rows[item].shape.builtin = .none;
     rows[item].shape.resource = .filesystem;
     try std.testing.expect(dictionaries.identify(catalog, rows[item].id) == null);
 }
