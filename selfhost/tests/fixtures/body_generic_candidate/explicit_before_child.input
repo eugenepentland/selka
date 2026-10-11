@@ -1,0 +1,6 @@
+func child[T](value: T) -> T:
+    return value
+func outer[T](value: T) -> T:
+    return value
+func main() -> int:
+    return outer[int](child[int](7))

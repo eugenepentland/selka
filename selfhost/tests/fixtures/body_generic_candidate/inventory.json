@@ -1,0 +1,31 @@
+{
+  "counts": {
+    "fixtures": 18,
+    "success": 11,
+    "diagnostic": 7,
+    "profiles": 0
+  },
+  "source_cases": [
+    "composite_tuple_identity.my",
+    "composite_tuple_signature.my",
+    "composite_tuple_value.my",
+    "constant_type_role.my",
+    "contextual_integer_default.my",
+    "explicit_before_child.my",
+    "first_demand_order.my",
+    "forwarded_array_length.my",
+    "identity_explicit.my",
+    "identity_inference.my",
+    "inference_conflict.my",
+    "integer_binder_conversion.my",
+    "integer_binder_function_shadow.my",
+    "managed_value_identity.my",
+    "recursive_reuse.my",
+    "imported_generic.my",
+    "private_generic_error.my",
+    "unused_template_error.my"
+  ],
+  "donors": {
+    "generic_donor.my": "cbbccb11c1a1354e913b9c8ec4838ac94f522ce4db5cc4522d5a0886f20842b3"
+  }
+}

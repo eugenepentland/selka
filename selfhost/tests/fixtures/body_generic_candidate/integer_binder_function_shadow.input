@@ -1,0 +1,6 @@
+func T(value: int) -> int:
+    return value + 1
+func convert[T: integer](value: int) -> T:
+    return T(value)
+func main() -> int:
+    return convert[int](7)

@@ -1,0 +1,11 @@
+func identity[T](value: T) -> T:
+    return value
+func first[T: copy + storable, const N: u64](values: [N]T) -> T:
+    return values[0]
+func main() -> int:
+    const values = FixedArray[int, 2]([7, 9])
+    const result = first(values)
+    const flag = identity[bool](True)
+    if flag:
+        return identity[int](result)
+    return 0

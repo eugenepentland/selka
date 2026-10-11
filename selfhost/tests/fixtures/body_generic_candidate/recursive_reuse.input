@@ -1,0 +1,6 @@
+func countdown[T: integer](value: T, count: int) -> T:
+    if count == 0:
+        return value
+    return countdown[T](value, count - 1)
+func main() -> int:
+    return countdown[int](7, 3)

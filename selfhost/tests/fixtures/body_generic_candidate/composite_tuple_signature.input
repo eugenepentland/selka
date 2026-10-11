@@ -1,0 +1,7 @@
+func first[T](pair: tuple[T, bool], fallback: T) -> T:
+    const value, flag = pair
+    if flag:
+        return value
+    return fallback
+func main() -> int:
+    return first((7, True), 0)

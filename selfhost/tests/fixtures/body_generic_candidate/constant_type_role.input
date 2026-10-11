@@ -1,0 +1,4 @@
+func size[const N: u64]() -> u64:
+    return N
+func main() -> int:
+    return int(size[int]())

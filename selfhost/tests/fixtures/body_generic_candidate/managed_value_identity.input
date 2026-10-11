@@ -1,0 +1,5 @@
+func identity[T](value: T) -> T:
+    return value
+func main() -> int:
+    const values = identity([7])
+    return values[0]

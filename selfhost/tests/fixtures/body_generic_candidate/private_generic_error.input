@@ -1,0 +1,3 @@
+import generic_donor as donor
+func main() -> int:
+    return donor.hidden[int](7)

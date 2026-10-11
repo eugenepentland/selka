@@ -1,0 +1,13 @@
+{
+  "schema": 11,
+  "source_sha256": "d4cf73ec6091ab1dd6f2ac55b0fc56c85a208877d1dc55d8ce689b668095a7a7",
+  "hostile_names": [
+    "duplicate_instance",
+    "foreign_declaration",
+    "wrong_argument",
+    "excess_constant_length",
+    "wrong_parameter_signature",
+    "wrong_return_signature",
+    "raw_declaration_call"
+  ]
+}

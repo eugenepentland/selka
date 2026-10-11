@@ -1,0 +1,5 @@
+func identity[T](value: T) -> T:
+    return value
+func main() -> int:
+    const pair = identity((7, True))
+    return pair[0]

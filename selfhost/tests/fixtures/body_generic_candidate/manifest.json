@@ -1,0 +1,187 @@
+{
+  "composite_tuple_identity.my": {
+    "status": 1,
+    "source_sha256": "6837ec15971de747d6bd0c4012ca478eabdf83dcbec29261add896087b03d77f",
+    "diagnostics": [
+      {
+        "code": "E_TUPLE_INDEX",
+        "message": "a tuple has no elements to index; bind its values with `head, rest = ...`",
+        "bytes": {
+          "start": 118,
+          "end": 125
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "composite_tuple_signature.my": {
+    "status": 0,
+    "source_sha256": "4c8097e5c65fbccc051766de22228f58d26bbfbdb8e6185a15570821ea244819",
+    "diagnostics": []
+  },
+  "composite_tuple_value.my": {
+    "status": 0,
+    "source_sha256": "a48de68a6c0ccd9128deba3549f90a6e7994559fe40c151ac3b55124783ce926",
+    "diagnostics": []
+  },
+  "constant_type_role.my": {
+    "status": 1,
+    "source_sha256": "de7a6b0530defdb4da38e0a33ef238a2b28a63e0534851dd84d620e2b48ccefc",
+    "diagnostics": [
+      {
+        "code": "E_GENERIC_LENGTH",
+        "message": "expected an integer literal",
+        "bytes": {
+          "start": 87,
+          "end": 90
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "contextual_integer_default.my": {
+    "status": 1,
+    "source_sha256": "f061bc45338e464695e3c318d455a36c9bfe5fd82c16042cc37898cac529d6fe",
+    "diagnostics": [
+      {
+        "code": "E_GENERIC_TYPE",
+        "message": "types differ; distinct type parameters remain distinct even with identical requirements",
+        "bytes": {
+          "start": 29,
+          "end": 30
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "explicit_before_child.my": {
+    "status": 0,
+    "source_sha256": "f10547f836e151ed8ff503672954e08d068b29176c5b7a8312b09d961a3731da",
+    "diagnostics": []
+  },
+  "first_demand_order.my": {
+    "status": 0,
+    "source_sha256": "88fd275f4b1610d4baf04e9f67ceb272d2d3f223dabd962bd8dd9c23f6435308",
+    "diagnostics": []
+  },
+  "forwarded_array_length.my": {
+    "status": 0,
+    "source_sha256": "f1e99c1316a43cefa1efc62d21163c12a19f3ad94aa1288b939352dff45effd4",
+    "diagnostics": []
+  },
+  "identity_explicit.my": {
+    "status": 0,
+    "source_sha256": "a738bbe3f3adb6bab5cc27f5247224528d10173ad8402f42d4e4663f5697ba0a",
+    "diagnostics": []
+  },
+  "identity_inference.my": {
+    "status": 0,
+    "source_sha256": "8060843f4156f385920bc85b9acaa36d4a68f625d41a556c3963fb09cf185641",
+    "diagnostics": []
+  },
+  "inference_conflict.my": {
+    "status": 1,
+    "source_sha256": "c43eceddea8a6aa5698dcfbaddc87590f4174cbe12ebe654973385bffcc51eb5",
+    "diagnostics": [
+      {
+        "code": "E_GENERIC_INFERENCE",
+        "message": "call arguments and expected result infer conflicting generic types or lengths",
+        "bytes": {
+          "start": 85,
+          "end": 98
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "conflicting parameter declared here",
+            "bytes": {
+              "start": 10,
+              "end": 11
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "integer_binder_conversion.my": {
+    "status": 0,
+    "source_sha256": "d2c69d5312c2432f786cafd542b0193d1889ab300e3bbdde2a01d1fa3f2945cc",
+    "diagnostics": []
+  },
+  "integer_binder_function_shadow.my": {
+    "status": 1,
+    "source_sha256": "0ad384dd19c64f9eafc5648f0c2a6a7f71b731853a787da1f59a865abef8c6e7",
+    "diagnostics": [
+      {
+        "code": "E_SHADOWING",
+        "message": "type parameter shadows a top-level declaration or import",
+        "bytes": {
+          "start": 61,
+          "end": 62
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "managed_value_identity.my": {
+    "status": 0,
+    "source_sha256": "bd644ceeae9ff574bee2fc302d2f7f4fe126e3a28675fb9f80eba587a6ef7247",
+    "diagnostics": []
+  },
+  "recursive_reuse.my": {
+    "status": 0,
+    "source_sha256": "000b9a4efe2c2628091b46913fbb045badf6e2655db11813f780b9fbf7ccdff9",
+    "diagnostics": []
+  },
+  "imported_generic.my": {
+    "status": 0,
+    "source_sha256": "198e3fba7dd4c4c5a8f95707635cc80fe1a7006ce16f0ef4a83bb21a577ec90f",
+    "diagnostics": []
+  },
+  "private_generic_error.my": {
+    "status": 1,
+    "source_sha256": "c249ab78dc9f32d9a34c4e11fb58131b51a4411161e866332db3f325623ae508",
+    "diagnostics": [
+      {
+        "code": "E_PRIVATE_SYMBOL",
+        "message": "declaration is private to its module",
+        "bytes": {
+          "start": 61,
+          "end": 73
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "declaration is here",
+            "bytes": {
+              "start": 62,
+              "end": 68
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "unused_template_error.my": {
+    "status": 1,
+    "source_sha256": "7d6dc72a1c3d3f3f932cc0b560ba7e7fb4f27c8326a915ba6dd5ab702f774452",
+    "diagnostics": [
+      {
+        "code": "E_GENERIC_OPERATION",
+        "message": "operation requires declared integer support",
+        "bytes": {
+          "start": 53,
+          "end": 54
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  }
+}

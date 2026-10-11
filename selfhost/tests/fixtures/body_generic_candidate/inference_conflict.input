@@ -1,0 +1,4 @@
+func same[T](left: T, right: T) -> T:
+    return left
+func main() -> int:
+    return same(7, True)

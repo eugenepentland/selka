@@ -1,0 +1,4 @@
+func add[T](left: T, right: T) -> T:
+    return left + right
+func main() -> int:
+    return 7

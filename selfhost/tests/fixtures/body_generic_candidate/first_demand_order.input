@@ -1,0 +1,10 @@
+func second[T](value: T) -> T:
+    return value
+func first[T](value: T) -> T:
+    return second[T](value)
+func main() -> int:
+    const number = first[int](7)
+    const flag = second[bool](True)
+    if flag:
+        return number
+    return 0

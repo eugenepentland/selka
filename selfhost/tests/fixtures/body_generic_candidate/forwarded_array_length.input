@@ -1,0 +1,7 @@
+func first[T: copy + storable, const N: u64](values: [N]T) -> T:
+    return values[0]
+func forward[U: copy + storable, const M: u64](values: [M]U) -> U:
+    return first[U, M](values)
+func main() -> int:
+    const values = FixedArray[int, 2]([7, 9])
+    return forward(values)

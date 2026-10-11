@@ -1,0 +1,4 @@
+func narrow[T: integer](value: int) -> T:
+    return T(value)
+func main() -> int:
+    return int(narrow[i8](7))
