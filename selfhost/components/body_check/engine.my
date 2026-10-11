@@ -1751,7 +1751,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 if not symbolic:
                     expected = try type_at(mut state, type_span)
             const checked = try expression_expected(mut state, argument_raw, expected)
-            if instance >= 0:
+            if instance >= 0 and (explicit_count != 0 or len(required) == 0):
                 const argument_span = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "span")
                 _ = try require(state, checked.ty, expected, argument_span)
             slots[position] = checked.id
@@ -1772,7 +1772,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 slots[position] = checked.id
                 raw_slots[position] = default_raw
                 order.append(position)
-        if instance < 0:
+        if len(required) != 0 and explicit_count == 0:
             for position in range(len(parameters)):
                 const type_span = try graph.field(state.syntax.pool, parameters[position], "ty")
                 const actual = try typed_type(state, slots[position])

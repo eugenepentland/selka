@@ -77,6 +77,22 @@ func check_functions(mut state: engine.State) -> Unit fails syntax_value.Problem
         id += 1
 
 
+public func test_contextual_inference_rechecks_checked_operands_before_type_error() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, False)
+    match engine.expression_expected(mut state, 2, 1):
+        case Ok(unused):
+            return False
+        case Err(rejection):
+            if rejection.code != "E_GENERIC_INFERENCE" or rejection.start != 0 or rejection.end != 1:
+                return False
+            if rejection.message != "call arguments and expected result infer conflicting generic types or lengths":
+                return False
+            if len(state.problems) != 1 or len(state.problems[0].notes.related) != 1:
+                return False
+            const related = state.problems[0].notes.related[0]
+            return related.start == 2 and related.end == 3 and related.message == "conflicting parameter declared here"
+
+
 public func test_integer_parameter_constructor_retains_checked_operand_then_cast() -> bool fails syntax_value.Problem:
     mut state = try fresh(False, False)
     const declaration = try graph.field(state.syntax.pool, state.syntax.functions[0], "name")
