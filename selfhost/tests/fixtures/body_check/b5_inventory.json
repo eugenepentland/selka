@@ -1,0 +1,36 @@
+{
+  "cases": [
+    "checked_consumed_error.my",
+    "checked_error_patterns.my",
+    "checked_failure_list_payload.my",
+    "checked_loop_consumption.my",
+    "checked_managed_result.my",
+    "checked_record_failure.my",
+    "checked_try_context_error.my",
+    "checked_try_fail.my",
+    "checked_unhandled_error.my",
+    "checked_wrong_failure_error.my",
+    "optional_try.my",
+    "variant_boxed_recursive_profile.my",
+    "variant_duplicate_pattern_error.my",
+    "variant_generic_profile.my",
+    "variant_import_alias.my",
+    "variant_incomplete_error.my",
+    "variant_loop_branch.my",
+    "variant_match_expression.my",
+    "variant_named_order.my",
+    "variant_payload_defaults.my",
+    "variant_payload_type_error.my",
+    "variant_record_list_snapshot.my",
+    "variant_recursive_lists.my",
+    "variant_unknown_case_error.my"
+  ],
+  "donors": [
+    "variant_import_dep.my"
+  ],
+  "counts": {
+    "success": 14,
+    "diagnostic": 8,
+    "profile": 2
+  }
+}
