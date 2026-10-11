@@ -134,7 +134,7 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const managed_types = [string_type, bytes_type, buffer_basis.id]
     mut lists = try list_types.prepare_records(pool, catalog, suffixes, managed_types, records)
     records = lists.types.records
-    match record_types.closure(mut records, pool, lists.elements, managed_types):
+    match record_types.closure(mut records, pool, lists.elements, managed_types, floating):
         case Ok(admitted):
             _ = admitted
         case Err(problem):

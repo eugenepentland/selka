@@ -1,5 +1,4 @@
 import syntax_value
-import floating_types
 import graph
 import record_index
 import record_name_index
@@ -149,9 +148,8 @@ public func schema(catalog: Catalog, ty: int) -> int:
 
 # Greatest fixed point: value records may recur through managed lists.
 # Reverse edges propagate an unsupported leaf once, without recursive scans.
-public func closure(mut catalog: Catalog, pool: syntax_value.Pool, elements: int[], managed: int[]) -> bool fails syntax_value.Problem:
+public func closure(mut catalog: Catalog, pool: syntax_value.Pool, elements: int[], managed: int[], floating: int = -1) -> bool fails syntax_value.Problem:
     const count = len(catalog.by_type)
-    const floating = try floating_types.identity(pool, catalog.rows)
     if len(elements) != count:
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="record and list catalog counts differ")
     mut allowed: bool[] = []

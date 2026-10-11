@@ -21,6 +21,8 @@ import resource_lower
 import io_arguments
 import list_repeat
 import list_places
+import dictionary_places
+import dictionary_construct
 import list_iteration
 import comprehension_lower
 import collection_comprehension
@@ -50,6 +52,9 @@ import mapping_lower
 import loop_assigns
 import hash_keys
 import set_lower
+import membership_lower
+import gather_lower
+import dictionary_view_contains
 
 public record Syntax:
     pool: syntax_value.Pool
@@ -76,11 +81,18 @@ public record Expression:
     ty: int
 
 
+public record GatherSink:
+    kind: bytes
+    expected: int
+    owner: int
+
+
 public record Values:
     yield_type: int
     yield_slot: int
     depth: int
     temporaries: int[]
+    gathers: GatherSink[]
     trapping_open: int = -1
 
 
@@ -414,6 +426,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         state.batch.resolved[raw_id] = result.id
         state.depth = state.depth - 1
         return result
+    elif data.data == b"membership":
+        const result = try membership_value(mut state, payload, span)
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
     elif data.data == b"list_literal":
         const inputs = try graph.items(state.syntax.pool, payload)
         mut element = list_types.element_type(state.batch.facts.lists, state.batch.facts.expected[raw_id])
@@ -454,6 +471,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         state.batch.resolved[raw_id] = result.id
         state.depth = state.depth - 1
         return result
+    elif data.data == b"gather":
+        const result = try gather_value(mut state, payload, span, state.batch.facts.expected[raw_id])
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
     elif data.data == b"comprehension":
         const result = try comprehension(mut state, payload, span)
         state.batch.resolved[raw_id] = result.id
@@ -482,12 +504,21 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const base = try expression(mut state, base_raw)
         const rooted = try list_places.receiver(mut state.batch, mut state.scope, list_lower.Context(input=state.syntax.pool, span=target_span), base.id, base.ty)
         const index = try expression(mut state, index_raw)
-        const element = list_types.element_type(state.batch.facts.lists, base.ty)
+        const mapping = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
+        mut element = list_types.element_type(state.batch.facts.lists, base.ty)
+        mut key_type = 0
+        if mapping.id >= 0 and mapping.kind == 0:
+            element = mapping.value
+            key_type = mapping.key
         if element < 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "augmented destination requires an admitted list")
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "augmented destination requires an admitted list or dictionary")
             fail rejection
-        _ = try require(state, index.ty, 0, target_span)
-        const plan = try list_places.indexed(mut state.batch, mut state.scope, rooted, index.id, element)
+        _ = try require(state, index.ty, key_type, target_span)
+        mut plan = rooted
+        if mapping.id >= 0 and mapping.kind == 0:
+            plan = try dictionary_places.indexed(mut state.batch, mut state.scope, rooted, index.id, key_type, element)
+        else:
+            plan = try list_places.indexed(mut state.batch, mut state.scope, rooted, index.id, element)
         const value_id = try graph.field(state.syntax.pool, payload, "value")
         const value_raw = try graph.number(state.syntax.pool, value_id)
         const value = try expression_expected(mut state, value_raw, element)
@@ -555,15 +586,15 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 state.batch.resolved[raw_id] = result.id
                 state.depth = state.depth - 1
                 return result
-        if kind_name == b"pop" and len(inputs) == 1:
-            kind_name = b"pop_at"
         mut base = Expression(id=-1, ty=15)
         if data.data == b"method_call":
             base = try expression(mut state, base_raw)
-        if kind_name == b"write" or kind_name == b"append" or kind_name == b"extend" or kind_name == b"insert" or kind_name == b"pop" or kind_name == b"pop_at" or kind_name == b"remove" or kind_name == b"reverse" or kind_name == b"sort" or kind_name == b"clear":
+        if kind_name == b"write" or kind_name == b"append" or kind_name == b"extend" or kind_name == b"insert" or kind_name == b"pop" or kind_name == b"pop_at" or kind_name == b"remove" or kind_name == b"reverse" or kind_name == b"sort" or kind_name == b"clear" or kind_name == b"add" or kind_name == b"discard" or kind_name == b"update" or kind_name == b"setdefault":
             _ = try list_places.writable(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, base_raw)
         if base.id < 0:
             base = try expression(mut state, base_raw)
+        if kind_name == b"pop" and len(inputs) == 1 and list_types.element_type(state.batch.facts.lists, base.ty) >= 0:
+            kind_name = b"pop_at"
         const result = try list_value_access(mut state, span, base, kind_name, inputs)
         state.batch.resolved[raw_id] = result.id
         state.depth = state.depth - 1
@@ -883,6 +914,19 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                     return result
             if owner_slot >= 0 and option_flow.has(state.control.options, owner_slot):
                 const shape = try variants.option_shape(state.syntax.pool, state.batch.facts.lists.types.records.rows, state.scope.locals[owner_slot].ty)
+                const collection = collection_types.schema(state.batch.facts.lists.types.collections, shape.element)
+                if shape.valid and collection.id >= 0 and collection.kind <= 1:
+                    _ = try io_arguments.positional(state.syntax.pool, payload)
+                    if explicit_count != 0:
+                        const rejection = try problem(state, span, "E_ARITY", "collection methods do not take explicit type arguments")
+                        fail rejection
+                    const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const inputs = try graph.items(state.syntax.pool, arguments_id)
+                    const base = try option_local(mut state, owner_slot, owner)
+                    const result = try list_value_access(mut state, span, base, raw_callee, inputs)
+                    state.batch.resolved[raw_id] = result.id
+                    state.depth = state.depth - 1
+                    return result
                 if shape.valid and list_types.element_type(state.batch.facts.lists, shape.element) >= 0:
                     _ = try io_arguments.positional(state.syntax.pool, payload)
                     if explicit_count != 0:
@@ -1059,6 +1103,45 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             if len(state.syntax.modules) != 0 and (raw_callee == b"bytes" or raw_callee == b"byte_buffer"):
                 declared = False
             if not declared:
+                if raw_callee == b"list" or raw_callee == b"set" or raw_callee == b"dict":
+                    _ = try io_arguments.positional(state.syntax.pool, payload)
+                    const generator_inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const generator_inputs = try graph.items(state.syntax.pool, generator_inputs_id)
+                    if len(generator_inputs) == 1:
+                        const generator_raw = try graph.number(state.syntax.pool, generator_inputs[0])
+                        const generator_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[generator_raw], "data")
+                        const generator_data = try graph.get(state.syntax.pool, generator_data_id)
+                        if generator_data.data == b"gather":
+                            const generator_payload = try graph.payload(state.syntax.pool, generator_data_id)
+                            const generator_shape_id = try graph.field(state.syntax.pool, generator_payload, "shape")
+                            const generator_shape = try graph.get(state.syntax.pool, generator_shape_id)
+                            if generator_shape.data == b"generator":
+                                const generator_span = try graph.field(state.syntax.pool, state.syntax.nodes[generator_raw], "span")
+                                const gathered = try gather_value_as(mut state, generator_payload, generator_span, state.batch.facts.expected[generator_raw], raw_callee)
+                                state.batch.resolved[generator_raw] = gathered.id
+                                const gathered_data_id = try graph.field(state.batch.pool, state.batch.nodes[gathered.id], "data")
+                                const gathered_data = try graph.get(state.batch.pool, gathered_data_id)
+                                const gathered_payload = try graph.payload(state.batch.pool, gathered_data_id)
+                                const id = try emission.node(mut state.batch, state.syntax.pool, span, gathered.ty, gathered_data.data, gathered_payload)
+                                state.batch.resolved[raw_id] = id
+                                state.depth = state.depth - 1
+                                return Expression(id=id, ty=gathered.ty)
+                if raw_callee == b"dict":
+                    const constructor_inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const constructor_inputs = try graph.items(state.syntax.pool, constructor_inputs_id)
+                    mut checked_arguments: int[] = []
+                    for input in constructor_inputs:
+                        const argument_raw = try graph.number(state.syntax.pool, input)
+                        const checked = try expression(mut state, argument_raw)
+                        checked_arguments.append(checked.id)
+                    const context = list_lower.Context(input=state.syntax.pool, span=span)
+                    const lowered = try dictionary_construct.build(mut state.batch, mut state.scope, context, dictionary_construct.Input(arguments=checked_arguments, expected=state.batch.facts.expected[raw_id]), mut state.problems)
+                    const id = try list_lower.append(mut state.batch, context, lowered)
+                    const ty_id = try graph.field(state.batch.pool, state.batch.nodes[id], "ty")
+                    const constructed_type = try graph.number(state.batch.pool, ty_id)
+                    state.batch.resolved[raw_id] = id
+                    state.depth = state.depth - 1
+                    return Expression(id=id, ty=constructed_type)
                 if raw_callee == b"list":
                     const inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
                     const inputs = try graph.items(state.syntax.pool, inputs_id)
@@ -1513,7 +1596,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         state.scope.locals[slot].flags.initialized = False
         state.scope.locals[slot].usage.temporary = True
         state.scope.locals[slot].usage.reads = 1
-        state.control.values = Values(yield_type=expected, yield_slot=slot, depth=0, temporaries=[])
+        state.control.values = Values(yield_type=expected, yield_slot=slot, depth=0, temporaries=[], gathers=saved.gathers)
         const body = try match_payload(mut state, payload, span)
         const result_type = state.control.values.yield_type
         if result_type < 0:
@@ -1805,7 +1888,11 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
     mut looping = False
     mut result_payload = -1
     mut tag = data.data
-    if tag == b"block":
+    if tag == b"gather_step":
+        const lowered = try gather_step(mut state, payload, span)
+        tag = lowered.tag
+        result_payload = lowered.payload
+    elif tag == b"block":
         const first_local = len(state.scope.locals)
         const active = state.scope.active
         const children = try graph.items(state.syntax.pool, payload)
@@ -3190,7 +3277,7 @@ func error_case(state: State, expected: int, actual: int) -> int fails syntax_va
 
 
 public func fresh_control() -> Control:
-    return Control(next=0, active=[], exited=[], values=Values(yield_type=-1, yield_slot=-1, depth=0, temporaries=[]), options=option_flow.State(present=[]))
+    return Control(next=0, active=[], exited=[], values=Values(yield_type=-1, yield_slot=-1, depth=0, temporaries=[], gathers=[]), options=option_flow.State(present=[]))
 
 
 func yields_every_path(state: State, raw_id: int, depth: int) -> bool fails syntax_value.Problem:
@@ -4126,6 +4213,10 @@ func list_value_access(mut state: State, span: int, base: Expression, kind_name:
         const lowered = try mapping_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=b"write", arguments=[key.id, value.id], result_type=15, signed_length=False))
         const id = try list_lower.append(mut state.batch, context, lowered)
         return Expression(id=id, ty=15)
+    if mapping.id >= 0 and mapping.kind == 0:
+        return try dictionary_value_access(mut state, span, base, kind_name, inputs)
+    if mapping.id >= 0 and mapping.kind == 1:
+        return try set_value_access(mut state, span, base, kind_name, inputs)
     const element = list_types.element_type(state.batch.facts.lists, base.ty)
     if element < 0 and sequence_type(state, base.ty) and kind_name == b"write":
         const rejection = try problem(state, span, "E_COLLECTION_METHOD", "str and bytes are immutable")
@@ -4705,6 +4796,15 @@ func set_method(mut state: State, call: int, span: int, slot: int) -> Expression
     const context = list_lower.Context(input=state.syntax.pool, span=span)
     const base = try list_lower.read(mut state.batch, context, slot, ty)
     _ = try set_arity(mut state, span, ty, schema.key, method, len(inputs), arity)
+    return try set_checked(mut state, span, schema, base, method, values)
+
+
+func set_checked(mut state: State, span: int, schema: collection_types.Schema, base: int, method: bytes, values: Expression[]) -> Expression fails syntax_value.Problem:
+    const ty = schema.id
+    const combined = method == b"union" or method == b"intersection" or method == b"difference" or method == b"symmetric_difference"
+    const relation = method == b"issubset" or method == b"issuperset" or method == b"isdisjoint"
+    const iterable = combined or relation or method == b"update"
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
     mut ids: int[] = []
     for checked in values:
         mut value = checked
@@ -4755,3 +4855,289 @@ func set_method(mut state: State, call: int, span: int, slot: int) -> Expression
     const lowered = try mapping_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base, owner_type=ty, kind=operation, arguments=ids, result_type=result_type, signed_length=False))
     const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=result_type)
+
+
+func membership_value(mut state: State, payload: int, span: int) -> Expression fails syntax_value.Problem:
+    const needle_id = try graph.field(state.syntax.pool, payload, "needle")
+    const container_id = try graph.field(state.syntax.pool, payload, "container")
+    const negate_id = try graph.field(state.syntax.pool, payload, "negate")
+    const negate_value = try graph.get(state.syntax.pool, negate_id)
+    const needle_raw = try graph.number(state.syntax.pool, needle_id)
+    const container_raw = try graph.number(state.syntax.pool, container_id)
+    mut needle = try expression(mut state, needle_raw)
+    const container = try expression(mut state, container_raw)
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, container.ty)
+    if schema.id >= 0 and schema.kind >= 3:
+        mut kind = b"keys"
+        mut expected = schema.key
+        mut item = -1
+        if schema.kind == 4:
+            kind = b"values"
+            expected = schema.value
+        elif schema.kind == 5:
+            kind = b"items"
+            const item_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=2, key=schema.key, value=schema.value, owner=-1), span)
+            item = item_type
+            expected = item_type
+        const shape = dictionary_view_lower.Shape(mapping=schema.owner, key=schema.key, value=schema.value, item=item, list=-1, kind=kind)
+        const mapping = try dictionary_view_lower.owner(mut state.batch, context, container.id, schema.owner)
+        _ = try require(state, needle.ty, expected, span)
+        const lowered = try dictionary_view_contains.contains(mut state.batch, mut state.scope, context, dictionary_view_contains.Membership(needle=needle.id, needle_type=needle.ty, mapping=mapping, shape=shape, negate=negate_value.integer != 0, loop_id=state.control.next))
+        state.control.next = lowered.next_loop
+        const id = try list_lower.append(mut state.batch, context, lowered.value)
+        return Expression(id=id, ty=1)
+    mut expected = list_types.element_type(state.batch.facts.lists, container.ty)
+    if schema.id >= 0 and schema.kind <= 1:
+        expected = schema.key
+    elif container.ty == state.batch.facts.string_type:
+        expected = container.ty
+    elif container.ty == state.batch.facts.bytes_type or container.ty == state.batch.facts.lists.types.buffer.id:
+        if needle.ty >= 0 and needle.ty <= 8 and needle.ty != 1:
+            expected = 0
+            if needle.ty != 0:
+                const cast = try buffer_lower.cast(mut state.batch, context, needle.id, 0)
+                needle = Expression(id=cast, ty=0)
+        else:
+            expected = container.ty
+    if expected < 0:
+        const rejection = try problem(state, span, "E_MEMBERSHIP", "membership requires a list, dictionary, or str")
+        fail rejection
+    const mixed_bytes = (container.ty == state.batch.facts.bytes_type or container.ty == state.batch.facts.lists.types.buffer.id) and (needle.ty == state.batch.facts.bytes_type or needle.ty == state.batch.facts.lists.types.buffer.id)
+    if not mixed_bytes:
+        _ = try require(state, needle.ty, expected, span)
+    const lowered = try membership_lower.contains(mut state.batch, mut state.scope, context, membership_lower.Input(needle=needle.id, needle_type=needle.ty, container=container.id, container_type=container.ty, negate=negate_value.integer != 0))
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=1)
+
+
+func gather_value(mut state: State, payload: int, span: int, expected: int) -> Expression fails syntax_value.Problem:
+    const shape_id = try graph.field(state.syntax.pool, payload, "shape")
+    const shape = try graph.get(state.syntax.pool, shape_id)
+    if shape.data == b"generator":
+        const rejection = try problem(state, span, "E_GENERATOR", "a generator expression is accepted only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join")
+        state.problems.append(syntax_problem.alternative(rejection, "build a list with a comprehension instead: `values = [x * x for x in xs]`"))
+        fail rejection
+    if shape.data != b"dict" and shape.data != b"set" and shape.data != b"list":
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "gather shape is outside the collection body profile")
+        fail rejection
+    return try gather_value_as(mut state, payload, span, expected, shape.data)
+
+
+func gather_value_as(mut state: State, payload: int, span: int, expected: int, kind: bytes) -> Expression fails syntax_value.Problem:
+    const loop_id = try graph.field(state.syntax.pool, payload, "loop")
+    const raw_loop = try graph.number(state.syntax.pool, loop_id)
+    state.control.values.gathers.append(GatherSink(kind=kind, expected=expected, owner=-1))
+    mut loop = Statement(id=-1, terminates=False)
+    match statement(mut state, raw_loop):
+        case Ok(checked):
+            loop = checked
+        case Err(failure):
+            _ = state.control.values.gathers.pop()
+            fail failure
+    const sink = state.control.values.gathers[len(state.control.values.gathers) - 1]
+    _ = state.control.values.gathers.pop()
+    if sink.owner < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="gather has no accumulator step")
+    const ty = state.scope.locals[sink.owner].ty
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const lowered = try gather_lower.finish(mut state.batch, state.scope, context, sink.owner, loop.id, sink.kind)
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=ty)
+
+
+func gather_storable(mut state: State, ty: int, span: int, dictionary: bool) -> Unit fails syntax_value.Problem:
+    mut valid = (ty >= 0 and ty <= 8) or ty == 15
+    if ty >= 19:
+        if list_types.element_type(state.batch.facts.lists, ty) >= 0:
+            valid = True
+        const row = record_types.schema(state.batch.facts.lists.types.records, ty)
+        if row >= 0:
+            const contract = try graph.field(state.syntax.pool, row, "contract")
+            const storable_id = try graph.field(state.syntax.pool, contract, "storable")
+            const move_id = try graph.field(state.syntax.pool, contract, "move_only")
+            const pending_id = try graph.field(state.syntax.pool, contract, "requires_handling")
+            const storable = try graph.get(state.syntax.pool, storable_id)
+            const move = try graph.get(state.syntax.pool, move_id)
+            const pending = try graph.get(state.syntax.pool, pending_id)
+            valid = storable.integer != 0 and move.integer == 0 and pending.integer == 0
+    if not valid:
+        mut code = "E_LIST_TYPE"
+        mut message = "list elements require copyable storable values without pending results"
+        if dictionary:
+            code = "E_DICT_TYPE"
+            message = "dictionary values require copyable storable values without pending results"
+        const rejection = try problem(state, span, code, message)
+        fail rejection
+
+
+func gather_step(mut state: State, payload: int, span: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const position = len(state.control.values.gathers) - 1
+    if position < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="gather step has no active sink")
+    const sink = state.control.values.gathers[position]
+    const value_id = try graph.field(state.syntax.pool, payload, "value")
+    const value_raw = try graph.number(state.syntax.pool, value_id)
+    const key_id = try graph.field(state.syntax.pool, payload, "key")
+    const key_value = try graph.get(state.syntax.pool, key_id)
+    mut key = Expression(id=-1, ty=-1)
+    mut element_hint = -1
+    const expected = collection_types.schema(state.batch.facts.lists.types.collections, sink.expected)
+    if sink.kind == b"dict":
+        if key_value.kind == 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "dictionary generator pairs require tuple gather projection")
+            fail rejection
+        const key_raw = try graph.number(state.syntax.pool, key_id)
+        mut key_hint = -1
+        if expected.id >= 0 and expected.kind == 0:
+            key_hint = expected.key
+            element_hint = expected.value
+        key = try expression_expected(mut state, key_raw, key_hint)
+    elif sink.kind == b"set":
+        if expected.id >= 0 and expected.kind == 1:
+            element_hint = expected.key
+    else:
+        element_hint = list_types.element_type(state.batch.facts.lists, sink.expected)
+    const value = try expression_expected(mut state, value_raw, element_hint)
+    mut ty = sink.expected
+    if sink.kind == b"dict":
+        if expected.id < 0 or expected.kind != 0:
+            const inferred = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=0, key=key.ty, value=value.ty, owner=-1), span)
+            ty = inferred
+        const schema = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+        _ = try require_hash_key(mut state, key.ty, span, False)
+        _ = try require(state, key.ty, schema.key, span)
+        _ = try require(state, value.ty, schema.value, span)
+        try gather_storable(mut state, value.ty, span, True)
+    elif sink.kind == b"set":
+        _ = try require_set_element(mut state, value.ty, span)
+        if element_hint < 0:
+            const inferred = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=1, key=value.ty, value=15, owner=-1), span)
+            ty = inferred
+        const schema = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+        const value_span = try graph.field(state.syntax.pool, state.syntax.nodes[value_raw], "span")
+        _ = try require(state, value.ty, schema.key, value_span)
+    else:
+        try gather_storable(mut state, value.ty, span, False)
+        if element_hint < 0:
+            const inferred = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=value.ty, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+            ty = inferred
+        const element = list_types.element_type(state.batch.facts.lists, ty)
+        const value_span = try graph.field(state.syntax.pool, state.syntax.nodes[value_raw], "span")
+        _ = try require(state, value.ty, element, value_span)
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    mut owner = sink.owner
+    if owner < 0:
+        const accumulator = try list_lower.temporary(mut state.scope, context, ty)
+        owner = accumulator
+        state.control.values.gathers[position].owner = owner
+    return try gather_lower.step(mut state.batch, mut state.scope, context, gather_lower.Step(owner=owner, key=key.id, value=value.id, kind=sink.kind))
+
+
+func dictionary_value_access(mut state: State, span: int, base: Expression, method: bytes, inputs: int[]) -> Expression fails syntax_value.Problem:
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    if method == b"keys" or method == b"values" or method == b"items":
+        if len(inputs) != 0:
+            const rejection = try problem(state, span, "E_ARITY", "dictionary views take no arguments")
+            fail rejection
+        mut kind = 3
+        if method == b"values":
+            kind = 4
+        elif method == b"items":
+            kind = 5
+        const view = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=kind, key=schema.key, value=schema.value, owner=schema.id), span)
+        const lowered = try dictionary_view_lower.construct(mut state.batch, context, view, base.id)
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        return Expression(id=id, ty=view)
+    mut kind = method
+    mut arity = 0
+    mut result_type = 15
+    if method == b"get" or method == b"setdefault":
+        arity = 2
+        result_type = schema.value
+    elif method == b"pop":
+        kind = if len(inputs) == 2 then b"pop_default" else b"pop_key"
+        arity = if len(inputs) == 2 then 2 else 1
+        result_type = schema.value
+    elif method == b"update":
+        arity = 1
+    elif method == b"copy":
+        result_type = schema.id
+    elif method == b"read":
+        arity = 1
+        result_type = schema.value
+    elif method == b"contains":
+        arity = 1
+        result_type = 1
+    elif method == b"length":
+        result_type = 0
+    elif method != b"clear":
+        const rejection = try problem(state, span, "E_COLLECTION_METHOD", "operation is not supported by this collection")
+        fail rejection
+    if len(inputs) != arity:
+        _ = try dictionary_arity(mut state, schema, kind, span, span, len(inputs), arity)
+    mut values: int[] = []
+    for position in range(len(inputs)):
+        const raw = try graph.number(state.syntax.pool, inputs[position])
+        mut expected = schema.key
+        if kind == b"update":
+            expected = schema.id
+        elif position == 1:
+            expected = schema.value
+        const value = try expression_expected(mut state, raw, expected)
+        match require(state, value.ty, expected, span):
+            case Ok(unused):
+                pass
+            case Err(rejection):
+                const signature = try dictionary_signature(state, schema, kind)
+                state.problems.append(syntax_problem.alternative(rejection, signature))
+                fail rejection
+        values.append(value.id)
+    const lowered = try mapping_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=kind, arguments=values, result_type=result_type, signed_length=kind == b"length"))
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=result_type)
+
+
+func set_value_access(mut state: State, span: int, base: Expression, method: bytes, inputs: int[]) -> Expression fails syntax_value.Problem:
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
+    const elemental = method == b"add" or method == b"discard" or method == b"remove"
+    const combined = method == b"union" or method == b"intersection" or method == b"difference" or method == b"symmetric_difference"
+    const relation = method == b"issubset" or method == b"issuperset" or method == b"isdisjoint"
+    const iterable = combined or relation or method == b"update"
+    const empty = method == b"pop" or method == b"copy" or method == b"clear"
+    if not elemental and not iterable and not empty:
+        const rejection = try problem(state, span, "E_COLLECTION_METHOD", "unknown method for a " + type_name(state, base.ty) + " receiver; accepted methods: add, clear, copy, difference, discard, intersection, isdisjoint, issubset, issuperset, pop, remove, symmetric_difference, union, update")
+        fail rejection
+    mut values: Expression[] = []
+    for input in inputs:
+        const raw = try graph.number(state.syntax.pool, input)
+        mut hint = schema.key
+        if iterable:
+            hint = schema.id
+            const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+            const data = try graph.get(state.syntax.pool, data_id)
+            mut list_hint = data.data == b"list_literal"
+            if data.data == b"comprehension":
+                const payload = try graph.payload(state.syntax.pool, data_id)
+                const set_id = try graph.field(state.syntax.pool, payload, "set")
+                const is_set = try graph.get(state.syntax.pool, set_id)
+                list_hint = is_set.integer == 0
+            elif data.data == b"gather":
+                const payload = try graph.payload(state.syntax.pool, data_id)
+                const shape_id = try graph.field(state.syntax.pool, payload, "shape")
+                const shape = try graph.get(state.syntax.pool, shape_id)
+                list_hint = shape.data == b"list"
+                if shape.data == b"dict" or shape.data == b"generator":
+                    hint = -1
+            elif data.data == b"dictionary_literal":
+                hint = -1
+            if list_hint:
+                const input_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+                const ty = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=schema.key, span=input_span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+                hint = ty
+        const value = try expression_expected(mut state, raw, hint)
+        values.append(value)
+    const arity = if empty then 0 else 1
+    _ = try set_arity(mut state, span, schema.id, schema.key, method, len(inputs), arity)
+    return try set_checked(mut state, span, schema, base.id, method, values)

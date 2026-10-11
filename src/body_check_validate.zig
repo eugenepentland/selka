@@ -456,6 +456,12 @@ fn binaryNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
     if (!numeric.binary(operation.op, node.ty, left)) return error.ComponentProtocol;
 }
 
+/// A set snapshot preserves its canonical key identity in an existing list schema.
+pub fn setKeySnapshot(catalog: value.Catalog, item: dictionaries.Descriptor, result: typed.Type, arguments: []const typed.NodeId) Error!void {
+    if (item.kind != .set or arguments.len != 0) return error.ComponentProtocol;
+    const element = list_validate.listElement(catalog, result) orelse return error.ComponentProtocol;
+    if (element != item.key) return error.ComponentProtocol;
+}
 fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation")) Error!void {
     if (@backingInt(operation.owner) >= graph.locals) return error.ComponentProtocol;
     const owner = graph.tables.functions[graph.function].scope.locals[@backingInt(operation.owner)].ty;
@@ -473,6 +479,7 @@ fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
         return;
     }
     if (dictionaries.identify(graph.context.catalog, owner)) |entry| {
+        if (operation.kind == .keys) return setKeySnapshot(graph.context.catalog, entry, node.ty, operation.arguments);
         var storage: [2]typed.Type = undefined;
         if (operation.arguments.len > storage.len) return error.ComponentProtocol;
         const arguments = storage[0..operation.arguments.len];

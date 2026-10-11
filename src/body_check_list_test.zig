@@ -100,14 +100,16 @@ test "body lists validate existing forward dependencies independently of IDs" {
     catalog.lists = &.{ .{ .id = outer, .element = inner }, .{ .id = inner, .element = outer } };
     try std.testing.expectError(error.ComponentProtocol, validate.catalog(a, catalog));
 }
-// spec-case: SELFHOST-BODY-LISTS-1
-test "body lists preserve native unsupported descriptor profile admission" {
+// spec-case: SELFHOST-BODY-NUMERIC-1
+test "body lists retain canonical unsigned32 numeric descriptors" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const f = try fixture(arena.allocator(), "func keep(items: u32[]) -> int:\n    return 0\n");
     try std.testing.expect(f.input.catalog.list_available);
-    try std.testing.expectEqual(@as(usize, 0), f.input.catalog.lists.len);
+    try std.testing.expectEqual(@as(usize, 1), f.input.catalog.lists.len);
+    try std.testing.expectEqual(typed.Type.u32, f.input.catalog.lists[0].element);
     try std.testing.expect(f.input.catalog.base_count > 0);
+    try validate.catalog(arena.allocator(), f.input.catalog);
 }
 
 // spec-case: SELFHOST-BODY-LISTS-1

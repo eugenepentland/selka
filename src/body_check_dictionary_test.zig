@@ -132,6 +132,29 @@ fn nativeOutput(a: std.mem.Allocator, f: Fixture) !value.Output {
     return .{ .batch = .{ .nodes = try a.dupe(typed.Node, program.nodes), .statements = program.statements, .functions = program.functions, .ranges = ranges }, .import_used = &.{}, .diagnostics = &.{} };
 }
 // spec-case: SELFHOST-BODY-DICTIONARIES-1
+test "body dictionaries accept native set key snapshots and reject foreign result and operands" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "func value() -> int:\n    const members: set[int] = {7}\n    const snapshot: int[] = list(members)\n    return snapshot[0]\n");
+    const output = try nativeOutput(a, f);
+    try validate.outcome(a, f.input, .{ .success = output });
+    var found = false;
+    for (@constCast(output.batch.nodes)) |*node| {
+        if (node.data != .buffer_operation or node.data.buffer_operation.kind != .keys) continue;
+        found = true;
+        const saved = node.ty;
+        node.ty = .bool;
+        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = output }));
+        node.ty = saved;
+        const extra = [_]typed.NodeId{@fromBackingInt(0)};
+        node.data.buffer_operation.arguments = &extra;
+        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = output }));
+        node.data.buffer_operation.arguments = &.{};
+    }
+    try std.testing.expect(found);
+}
+// spec-case: SELFHOST-BODY-DICTIONARIES-1
 test "body dictionaries accept native structural optional flow without builtin name authority" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -289,4 +312,17 @@ test "body dictionaries reject unsupported capacities and length operands" {
         try std.testing.expectError(error.ComponentProtocol, dictionaries.operation(descriptor, owner, .u64, .capacity, &.{}, false));
         try std.testing.expectError(error.ComponentProtocol, dictionaries.operation(descriptor, owner, .i64, .length, &.{.i64}, false));
     }
+}
+
+// spec-case: SELFHOST-BODY-DICTIONARIES-1
+test "body dictionaries bind set snapshots to canonical matching key list identities" {
+    const int_list: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const bool_list: typed.Type = @fromBackingInt(typed.Type.record_base + 1);
+    const catalog: value.Catalog = .{ .lists = &.{ .{ .id = int_list, .element = .i64 }, .{ .id = bool_list, .element = .bool } } };
+    const item: dictionaries.Descriptor = .{ .kind = .set, .key = .i64, .value = .unit };
+    try validate.setKeySnapshot(catalog, item, int_list, &.{});
+    try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, item, bool_list, &.{}));
+    try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, item, .i64, &.{}));
+    const mapping: dictionaries.Descriptor = .{ .kind = .dict, .key = .i64, .value = .bool };
+    try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, mapping, int_list, &.{}));
 }

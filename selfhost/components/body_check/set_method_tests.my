@@ -5,6 +5,7 @@ import collection_types
 import list_types
 import record_types
 import locals
+import variants
 
 func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
     const data = try syntax_value.tagged(mut pool, tag, payload)
@@ -101,3 +102,45 @@ public func test_set_mutation_through_readonly_binding_preserves_owner_diagnosti
             return False
         case Err(problem):
             return problem.code == "E_IMMUTABLE" and problem.start == 0 and problem.end == 1 and problem.message == "collection update requires a writable binding"
+
+
+public func test_expression_set_union_uses_checked_receiver_without_named_read() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const slot = try prepare(mut state, b"union", [4], False)
+    const raw = state.syntax.nodes[len(state.syntax.nodes) - 1]
+    const span = try graph.field(state.syntax.pool, raw, "span")
+    const data_id = try graph.field(state.syntax.pool, raw, "data")
+    const call = try graph.payload(state.syntax.pool, data_id)
+    const name = try graph.field(state.syntax.pool, call, "name")
+    const arguments = try graph.field(state.syntax.pool, call, "arguments")
+    const labels = try graph.field(state.syntax.pool, call, "argument_names")
+    const base = try syntax_value.integer(mut state.syntax.pool, 4)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["base", "name", "arguments", "argument_names"], [base, name, arguments, labels])
+    const expression_call = try node(mut state.syntax.pool, span, b"method_call", payload)
+    state.syntax.nodes.append(expression_call)
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    return result.ty == state.scope.locals[slot].ty and state.scope.locals[slot].usage.reads == 0 and state.scope.locals[slot].usage.writes == 0 and state.control.next == 0 and len(state.scope.locals) == 5
+
+
+public func test_narrowed_option_set_add_projects_payload_without_repacking() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const slot = try prepare(mut state, b"add", [0], True)
+    const element = state.scope.locals[slot].ty
+    const declaration = try syntax_value.span(mut state.syntax.pool, 0, 0)
+    const template = variants.Template(id=0, declaration=declaration, raw=-1, cases=[variants.TemplateCase(name=b"none", declaration=declaration, parameter=-1), variants.TemplateCase(name=b"some", declaration=declaration, parameter=0)])
+    const optional = try variants.materialize(mut state.syntax.pool, state.batch.facts.lists.types.records.rows, template, 20, element, -1, False)
+    state.batch.facts.lists.types.records.rows.append(optional)
+    state.scope.locals[slot].ty = 20
+    state.control.options.present = [slot]
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    mut writes = 0
+    for row in state.batch.nodes:
+        const data_id = try graph.field(state.batch.pool, row, "data")
+        const data = try graph.get(state.batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(state.batch.pool, data_id)
+            const kind_id = try graph.field(state.batch.pool, operation, "kind")
+            const kind = try graph.get(state.batch.pool, kind_id)
+            if kind.data == b"write":
+                writes += 1
+    return result.ty == 15 and state.scope.locals[slot].usage.reads == 1 and state.scope.locals[slot].usage.writes == 0 and state.control.options.present == [slot] and writes == 3

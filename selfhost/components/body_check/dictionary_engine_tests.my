@@ -155,3 +155,162 @@ public func test_plain_dictionary_write_preserves_key_and_snapshots_value_before
     const inputs = try graph.items(state.batch.pool, inputs_id)
     const actual_key = try graph.number(state.batch.pool, inputs[0])
     return result.ty == 15 and actual_key == 0 and state.scope.locals[0].usage.writes == 1 and state.scope.locals[0].usage.reads == 1 and len(state.scope.locals) == 3
+
+
+func membership(mut state: engine.State, needle: int, negate: bool) -> int fails syntax_value.Problem:
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const needle_id = try syntax_value.integer(mut state.syntax.pool, needle)
+    const container = try syntax_value.integer(mut state.syntax.pool, 4)
+    const inverse = try syntax_value.boolean(mut state.syntax.pool, negate)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["needle", "container", "negate"], [needle_id, container, inverse])
+    const raw = try node(mut state.syntax.pool, span, b"membership", payload)
+    const index = len(state.syntax.nodes)
+    state.syntax.nodes.append(raw)
+    return index
+
+
+public func test_dictionary_membership_dispatch_roots_written_operands_once() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const raw = try membership(mut state, 0, False)
+    const result = try engine.expression(mut state, raw)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 1 and result.id == 7 and data.data == b"block_value" and len(state.scope.locals) == 2 and state.scope.locals[0].name == b"<membership>" and state.scope.locals[0].ty == 1 and state.scope.locals[1].ty == 19 and not state.scope.locals[0].flags.initialized and len(state.scope.active) == 0
+
+
+public func test_dictionary_membership_wrong_key_reports_full_membership_site() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const raw = try membership(mut state, 1, True)
+    match engine.expression(mut state, raw):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "expected bool, found int" and problem.start == 0 and problem.end == 11 and len(state.scope.locals) == 0
+
+
+public func test_dictionary_augmented_destination_keeps_boolean_key_and_owner_order() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const dictionary = try engine.expression(mut state, 4)
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 4)
+    _ = try locals.add(mut state.scope, b"True", name, dictionary.ty, True, b"local")
+    const base = try node(mut state.syntax.pool, name, b"name", name)
+    state.syntax.nodes.append(base)
+    const base_id = try syntax_value.integer(mut state.syntax.pool, 5)
+    const key = try syntax_value.integer(mut state.syntax.pool, 0)
+    const indexed = try syntax_value.object(mut state.syntax.pool, ["base", "index", "from_end"], [base_id, key, key])
+    const target = try node(mut state.syntax.pool, span, b"index", indexed)
+    state.syntax.nodes.append(target)
+    const target_id = try syntax_value.integer(mut state.syntax.pool, 6)
+    const value = try syntax_value.integer(mut state.syntax.pool, 1)
+    const op = try syntax_value.enumeration(mut state.syntax.pool, b"add")
+    const payload = try syntax_value.object(mut state.syntax.pool, ["target", "op", "value"], [target_id, op, value])
+    const assignment = try node(mut state.syntax.pool, span, b"index_assignment", payload)
+    state.syntax.nodes.append(assignment)
+    const result = try engine.expression(mut state, 7)
+    const key_type = try graph.field(state.batch.pool, state.batch.nodes[6], "ty")
+    const actual_type = try graph.number(state.batch.pool, key_type)
+    const read_data = try graph.field(state.batch.pool, state.batch.nodes[7], "data")
+    const read_tag = try graph.get(state.batch.pool, read_data)
+    return result.ty == 15 and actual_type == 1 and read_tag.data == b"buffer_operation" and len(state.scope.locals) == 5 and state.scope.locals[1].ty == dictionary.ty and state.scope.locals[2].ty == 1 and state.scope.locals[3].ty == 0 and state.scope.locals[0].usage.writes == 1
+
+
+public func test_expression_dictionary_get_roots_receiver_after_checked_operands() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = state.syntax.source + b"get"
+    const name = try syntax_value.span(mut state.syntax.pool, 11, 14)
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 14)
+    const base = try syntax_value.integer(mut state.syntax.pool, 4)
+    const key = try syntax_value.integer(mut state.syntax.pool, 0)
+    const fallback = try syntax_value.integer(mut state.syntax.pool, 1)
+    const inputs = try syntax_value.sequence(mut state.syntax.pool, [key, fallback])
+    const labels = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["base", "name", "arguments", "argument_names"], [base, name, inputs, labels])
+    const call = try node(mut state.syntax.pool, span, b"method_call", payload)
+    state.syntax.nodes.append(call)
+    const result = try engine.expression(mut state, 5)
+    const operation_data = try graph.field(state.batch.pool, state.batch.nodes[5], "data")
+    const operation = try graph.payload(state.batch.pool, operation_data)
+    const kind_id = try graph.field(state.batch.pool, operation, "kind")
+    const kind = try graph.get(state.batch.pool, kind_id)
+    return result.ty == 0 and result.id == 6 and kind.data == b"get" and len(state.scope.locals) == 1 and state.scope.locals[0].ty == 19 and len(state.scope.active) == 0
+
+
+public func test_expression_dictionary_view_preserves_checked_mapping_without_owner_local() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = state.syntax.source + b"keys"
+    const name = try syntax_value.span(mut state.syntax.pool, 11, 15)
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 15)
+    const base = try syntax_value.integer(mut state.syntax.pool, 4)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["base", "name", "arguments", "argument_names"], [base, name, empty, empty])
+    const call = try node(mut state.syntax.pool, span, b"method_call", payload)
+    state.syntax.nodes.append(call)
+    const result = try engine.expression(mut state, 5)
+    return result.ty == 20 and result.id == 6 and len(state.scope.locals) == 0 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[1].kind == "dict_keys"
+
+
+func constructor_call(mut state: engine.State, arguments: int[]) -> int fails syntax_value.Problem:
+    state.syntax.source = b"True7False8dict"
+    const name = try syntax_value.span(mut state.syntax.pool, 11, 15)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    mut references: int[] = []
+    for argument in arguments:
+        const reference = try syntax_value.integer(mut state.syntax.pool, argument)
+        references.append(reference)
+    const values = try syntax_value.sequence(mut state.syntax.pool, references)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const call = try syntax_value.object(mut state.syntax.pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name, values, empty, empty])
+    const raw = try node(mut state.syntax.pool, name, b"call", call)
+    const id = len(state.syntax.nodes)
+    state.syntax.nodes.append(raw)
+    state.batch.resolved.append(-1)
+    state.batch.facts.expected.append(-1)
+    return id
+
+
+public func test_dictionary_constructor_copy_preserves_mapping_type_and_native_owner() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const raw = try constructor_call(mut state, [4])
+    const result = try engine.expression(mut state, raw)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 19 and data.data == b"block_value" and len(state.scope.locals) == 1 and state.scope.locals[0].ty == 19 and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_empty_dictionary_constructor_uses_context_without_new_recipe() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const mapping = try engine.expression(mut state, 4)
+    const raw = try constructor_call(mut state, [])
+    state.batch.facts.expected[raw] = mapping.ty
+    const before = len(state.batch.nodes)
+    const result = try engine.expression(mut state, raw)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[before], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == mapping.ty and result.id == before + 1 and data.data == b"array" and len(state.scope.locals) == 0 and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_dictionary_constructor_checks_unknown_operand_before_extra_arity() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"True7False8missing"
+    const name = try syntax_value.span(mut state.syntax.pool, 11, 18)
+    const raw_name = try node(mut state.syntax.pool, name, b"name", name)
+    state.syntax.nodes.append(raw_name)
+    state.batch.resolved.append(-1)
+    state.batch.facts.expected.append(-1)
+    const raw = try constructor_call(mut state, [4, 5])
+    state.syntax.source = b"True7False8missingdict"
+    const call_name = try syntax_value.span(mut state.syntax.pool, 18, 22)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const first = try syntax_value.integer(mut state.syntax.pool, 4)
+    const second = try syntax_value.integer(mut state.syntax.pool, 5)
+    const values = try syntax_value.sequence(mut state.syntax.pool, [first, second])
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const call = try syntax_value.object(mut state.syntax.pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, call_name, values, empty, empty])
+    const call_node = try node(mut state.syntax.pool, call_name, b"call", call)
+    state.syntax.nodes[raw] = call_node
+    match engine.expression(mut state, raw):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_UNKNOWN_NAME" and problem.start == 11 and problem.end == 18

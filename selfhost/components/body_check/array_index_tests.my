@@ -1,0 +1,130 @@
+import syntax_value
+import graph
+import emission
+import list_lower
+import buffer_lower
+import array_index
+
+record Fixture:
+    batch: emission.Batch
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 4, 12)
+    return Fixture(batch=emission.empty(), context=list_lower.Context(input=pool, span=span))
+
+
+func unary(mut fixture: Fixture, operand: int) -> int fails syntax_value.Problem:
+    const op = try syntax_value.enumeration(mut fixture.batch.pool, b"neg")
+    const value = try syntax_value.integer(mut fixture.batch.pool, operand)
+    const span = try graph.clone(mut fixture.batch.pool, fixture.context.input, fixture.context.span, 0)
+    const payload = try syntax_value.object(mut fixture.batch.pool, ["op", "operand", "op_span"], [op, value, span])
+    return try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 0, b"unary", payload)
+
+
+public func test_negative_constants_fold_only_within_the_fixed_length() -> bool fails syntax_value.Problem:
+    for length in [0, 1, 4, 4096]:
+        for value in [-4097, -4, -1, 0, 4, 4096]:
+            mut fixture = try fresh()
+            const key = try list_lower.integer(mut fixture.batch, fixture.context, value, 0)
+            const before = fixture.batch
+            const plan = try array_index.select(fixture.batch, [], key, length, False)
+            const folded = value < 0 and value >= -length
+            if plan.key != key or plan.folded != folded or plan.from_end != (value < -length) or fixture.batch != before:
+                return False
+            if folded and plan.value != value + length:
+                return False
+    return True
+
+
+public func test_minimum_i64_and_upper_u64_do_not_overflow_host_int_analysis() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const minimum = try list_lower.integer(mut fixture.batch, fixture.context, -9223372036854775808, 0)
+    const negative = try array_index.select(fixture.batch, [], minimum, 4096, False)
+    if negative.folded or not negative.from_end:
+        return False
+    for bits in [-9223372036854775808, -1]:
+        const payload = try syntax_value.integer(mut fixture.batch.pool, bits)
+        fixture.batch.pool.values[payload].kind = 8
+        const maximum = try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 8, b"integer", payload)
+        const positive = try array_index.select(fixture.batch, [], maximum, 4096, False)
+        if positive.folded or positive.from_end or positive.key != maximum:
+            return False
+    return True
+
+
+public func test_unary_constant_and_enum_keys_keep_native_normalization_rules() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const two = try list_lower.integer(mut fixture.batch, fixture.context, 2, 0)
+    const negated = try unary(mut fixture, two)
+    const folded = try array_index.select(fixture.batch, [], negated, 4, False)
+    const table = try array_index.select(fixture.batch, [], negated, 4, True)
+    const minus_two = try list_lower.integer(mut fixture.batch, fixture.context, -2, 0)
+    const positive = try unary(mut fixture, minus_two)
+    const unchanged = try array_index.select(fixture.batch, [], positive, 4, False)
+    const widened = try buffer_lower.cast(mut fixture.batch, fixture.context, minus_two, 0)
+    const unknown = try array_index.select(fixture.batch, [], widened, 4, False)
+    return folded.folded and folded.value == 2 and not folded.from_end and not table.folded and not table.from_end and table.key == negated and not unchanged.folded and not unchanged.from_end and not unknown.folded and unknown.from_end
+
+
+public func test_unsigned_keys_and_only_recorded_loop_counters_are_nonnegative() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    for ty in [0, 2, 3, 4, 5, 6, 7, 8]:
+        const key = try list_lower.read(mut fixture.batch, fixture.context, 7, ty)
+        const ordinary = try array_index.select(fixture.batch, [], key, 4, False)
+        const other_counter = try array_index.select(fixture.batch, [2], key, 4, False)
+        const counter = try array_index.select(fixture.batch, [7], key, 4, False)
+        if ordinary.from_end != (ty < 5) or other_counter != ordinary or counter.from_end or counter.folded:
+            return False
+    return True
+
+
+public func test_length_blocks_and_native_depth_budget_preserve_nonnegative_facts() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const length = try list_lower.operation(mut fixture.batch, fixture.context, list_lower.Operation(owner=0, kind=b"length", arguments=[], ty=0))
+    const block = try list_lower.block(mut fixture.batch, fixture.context, [], length, 0)
+    const wrapped = try list_lower.append(mut fixture.batch, fixture.context, block)
+    const plan = try array_index.select(fixture.batch, [], wrapped, 4, False)
+    if plan.from_end or plan.folded:
+        return False
+    const two = try list_lower.integer(mut fixture.batch, fixture.context, 2, 0)
+    mut value = two
+    for depth in range(8):
+        const cast = try buffer_lower.cast(mut fixture.batch, fixture.context, value, 0)
+        value = cast
+        const result = try array_index.select(fixture.batch, [], value, 4, False)
+        if result.from_end != (depth == 7) or result.folded:
+            return False
+    return True
+
+
+public func test_checked_operators_keep_only_native_nonnegative_proofs() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const positive = try list_lower.integer(mut fixture.batch, fixture.context, 3, 0)
+    const unknown = try list_lower.read(mut fixture.batch, fixture.context, 1, 0)
+    const negative = try list_lower.integer(mut fixture.batch, fixture.context, -1, 0)
+    const zero = try list_lower.integer(mut fixture.batch, fixture.context, 0, 0)
+    for op in [b"add", b"mul", b"div", b"floor_div", b"rem"]:
+        const proven = try list_lower.binary(mut fixture.batch, fixture.context, op, positive, positive, 0)
+        const uncertain = try list_lower.binary(mut fixture.batch, fixture.context, op, unknown, positive, 0)
+        const good = try array_index.select(fixture.batch, [], proven, 4, False)
+        const bad = try array_index.select(fixture.batch, [], uncertain, 4, False)
+        if good.from_end or not bad.from_end or good.folded:
+            return False
+    const subtract = try list_lower.binary(mut fixture.batch, fixture.context, b"sub", positive, positive, 0)
+    const masked = try list_lower.binary(mut fixture.batch, fixture.context, b"bit_and", unknown, positive, 0)
+    const shifted = try list_lower.binary(mut fixture.batch, fixture.context, b"shift_right", positive, unknown, 0)
+    const python_mod = try list_lower.binary(mut fixture.batch, fixture.context, b"floor_rem", negative, positive, 0)
+    const zero_mod = try list_lower.binary(mut fixture.batch, fixture.context, b"floor_rem", positive, zero, 0)
+    const negative_mod = try list_lower.binary(mut fixture.batch, fixture.context, b"floor_rem", positive, negative, 0)
+    for id in [masked, shifted, python_mod]:
+        const result = try array_index.select(fixture.batch, [], id, 4, False)
+        if result.from_end or result.folded:
+            return False
+    for id in [subtract, zero_mod, negative_mod]:
+        const result = try array_index.select(fixture.batch, [], id, 4, False)
+        if not result.from_end or result.folded:
+            return False
+    return True

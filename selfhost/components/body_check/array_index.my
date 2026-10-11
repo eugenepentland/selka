@@ -1,0 +1,135 @@
+import syntax_value
+import graph
+import emission
+
+public record Plan:
+    key: int
+    folded: bool
+    value: int
+    from_end: bool
+
+
+record Constant:
+    known: bool
+    negative: bool
+    large: bool
+    magnitude: int
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, row, name)
+    return try graph.number(pool, field)
+
+
+func node(batch: emission.Batch, id: int) -> int fails syntax_value.Problem:
+    if id < 0 or id >= len(batch.nodes):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid fixed array key node")
+    return batch.nodes[id]
+
+
+func literal(batch: emission.Batch, data: syntax_value.Value) -> Constant fails syntax_value.Problem:
+    if data.data != b"integer":
+        return Constant(known=False, negative=False, large=False, magnitude=0)
+    const value = try graph.get(batch.pool, data.children[0])
+    # Body schema 9 stores the upper u64 half as canonical kind 8 bit patterns.
+    if value.kind == 8 and value.integer < 0:
+        return Constant(known=True, negative=False, large=True, magnitude=value.integer - -9223372036854775808)
+    if value.kind != 1:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid fixed array integer constant")
+    if value.integer == -9223372036854775808:
+        return Constant(known=True, negative=True, large=True, magnitude=0)
+    if value.integer < 0:
+        return Constant(known=True, negative=True, large=False, magnitude=-value.integer)
+    return Constant(known=True, negative=False, large=False, magnitude=value.integer)
+
+
+func constant(batch: emission.Batch, id: int) -> Constant fails syntax_value.Problem:
+    const row = try node(batch, id)
+    const data_id = try graph.field(batch.pool, row, "data")
+    const data = try graph.get(batch.pool, data_id)
+    if data.data == b"unary":
+        const op_id = try graph.field(batch.pool, data.children[0], "op")
+        const op = try graph.get(batch.pool, op_id)
+        if op.data == b"neg":
+            const operand = try number(batch.pool, data.children[0], "operand")
+            const child = try node(batch, operand)
+            const child_data_id = try graph.field(batch.pool, child, "data")
+            const child_data = try graph.get(batch.pool, child_data_id)
+            mut value = try literal(batch, child_data)
+            if value.known and (value.large or value.magnitude != 0):
+                value.negative = not value.negative
+            return value
+    return try literal(batch, data)
+
+
+func nonnegative(batch: emission.Batch, counters: int[], id: int, depth: int) -> bool fails syntax_value.Problem:
+    if depth == 8:
+        return False
+    const row = try node(batch, id)
+    const ty = try number(batch.pool, row, "ty")
+    if ty >= 5 and ty <= 8:
+        return True
+    const data_id = try graph.field(batch.pool, row, "data")
+    const data = try graph.get(batch.pool, data_id)
+    if data.data == b"integer":
+        const value = try literal(batch, data)
+        return not value.negative
+    if data.data == b"length":
+        return True
+    if data.data == b"buffer_operation":
+        const kind_id = try graph.field(batch.pool, data.children[0], "kind")
+        const kind = try graph.get(batch.pool, kind_id)
+        return kind.data == b"length"
+    if data.data == b"local":
+        const slot = try graph.number(batch.pool, data.children[0])
+        for counter in counters:
+            if counter == slot:
+                return True
+        return False
+    if data.data == b"block_value":
+        const value = try number(batch.pool, data.children[0], "value")
+        return try nonnegative(batch, counters, value, depth + 1)
+    if data.data == b"cast":
+        const value = try graph.number(batch.pool, data.children[0])
+        return try nonnegative(batch, counters, value, depth + 1)
+    if data.data == b"binary":
+        const op_id = try graph.field(batch.pool, data.children[0], "op")
+        const op = try graph.get(batch.pool, op_id)
+        const left = try number(batch.pool, data.children[0], "left")
+        const right = try number(batch.pool, data.children[0], "right")
+        if op.data == b"floor_rem":
+            const divisor = try constant(batch, right)
+            if divisor.known:
+                return not divisor.negative and (divisor.large or divisor.magnitude != 0)
+        if op.data == b"shift_right":
+            return try nonnegative(batch, counters, left, depth + 1)
+        if op.data == b"bit_and":
+            const first = try nonnegative(batch, counters, left, depth + 1)
+            if first:
+                return True
+            return try nonnegative(batch, counters, right, depth + 1)
+        if op.data == b"add" or op.data == b"mul" or op.data == b"div" or op.data == b"floor_div" or op.data == b"rem" or op.data == b"floor_rem":
+            const first = try nonnegative(batch, counters, left, depth + 1)
+            if not first:
+                return False
+            return try nonnegative(batch, counters, right, depth + 1)
+    return False
+
+
+# Mirrors sema_places.arrayKey. The checker validates the array/key types first.
+# A folded result is emitted as i64 at the original checked key's span; all
+# other plans retain the original key node and let the backend check bounds.
+public func select(batch: emission.Batch, counters: int[], key: int, length: int, table: bool) -> Plan fails syntax_value.Problem:
+    if length < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid fixed array length")
+    if table:
+        return Plan(key=key, folded=False, value=0, from_end=False)
+    const value = try constant(batch, key)
+    if value.known:
+        if not value.negative:
+            return Plan(key=key, folded=False, value=0, from_end=False)
+        if value.large or value.magnitude > length:
+            return Plan(key=key, folded=False, value=0, from_end=True)
+        return Plan(key=key, folded=True, value=length - value.magnitude, from_end=False)
+    const proven = try nonnegative(batch, counters, key, 0)
+    return Plan(key=key, folded=False, value=0, from_end=not proven)
