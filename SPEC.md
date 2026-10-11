@@ -1631,6 +1631,8 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 
 - [SELFHOST-BODY-ENTRY-1] Body schema 7 admits only authenticated Filesystem/Stream primitives, canonical file open/read/output operations and lexical file with scopes. Scoped handles require all-path typed graph dominance, exact cleanup/local metadata and cannot escape; canonical List[str] precedes Result[file,str] demand. Foreign operand/shape/owner identities and old schema replies fail closed. Native entry/effects/Core cleanup remain retained.
 
+- [SELFHOST-BODY-PRINT-1] Selected body print nodes use the native rendering contract for every authenticated scalar and aggregate type. Capabilities, files, callbacks, owned resources, Cells and values containing Cells remain nonrenderable; print results, stream identities, separators, terminators and debug flags retain their exact protocol checks. Extending native admission alone does not qualify the Selka producer.
+
 - [SELFHOST-ARTIFACT-SESSION-1] Invocation-local artifact sessions retain at most seven entries and 64 MiB authenticated bytes, revalidate live manifest and exact executable contents at every authority barrier, reuse sealed descriptors, and fall back to full authentication without narrowing artifact admission. Reference performs no deployment I/O.
 
 - [SELFHOST-BODY-OWNED-COPY-1] Body adoption copies validated typed batches directly into caller-owned storage, preserving canonical values, codec row/edge/wire/depth/visit/allocation bounds and cleanup on allocation failure; no semantic validation is bypassed.

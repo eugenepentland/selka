@@ -1,0 +1,48 @@
+{
+  "format": 1,
+  "scope": "Native rendering contract admission only; selected Selka producer qualification remains pending",
+  "base_commit": "77b425e74b6eee39e0dde699111fda94c32c5e0a",
+  "body_schema": 10,
+  "focused": {
+    "status": 0,
+    "tests": 21,
+    "command": [
+      "zig",
+      "build",
+      "test-units",
+      "-Dtest-filter=body resources",
+      "-j1",
+      "--maxrss",
+      "8589934592",
+      "--summary",
+      "all"
+    ]
+  },
+  "guardian": {
+    "status": 0,
+    "checks": 88,
+    "full": true
+  },
+  "source_sha256": {
+    "SPEC.md": "ea9894b3921b5c6949269df509e59e2e8c869498b43240794e919844f4179e93",
+    "src/body_check_resource_validate.zig": "3c4699af2ea3f7c39a245d9f03b4055a685c50fd73412ef2dd5f6298cd942f1a",
+    "src/body_check_resource_test.zig": "c2e843d881872ee5b5da9164adb894c960cb6e3127e16183a72148142298afa3"
+  },
+  "evidence": [
+    {
+      "name": "output-native-focused.log",
+      "sha256": "d81dbf686a5ac09a8a64b83782148722182854841e7e09101068b86445cbd413",
+      "bytes": 8198,
+      "compressed": "output-native-focused.log.gz",
+      "compressed_sha256": "de36c038deaae26c1d1ad266f57b2be2e869e38ac957c8a4df97f301015c15b4"
+    },
+    {
+      "name": "output-native-guardian.log",
+      "sha256": "101e2b2af9ecb763431b63889f4aee7b2b399ed3088f1cf0bf80936f8d6ffe0f",
+      "bytes": 574,
+      "compressed": "output-native-guardian.log.gz",
+      "compressed_sha256": "806afc5eda427be6f22a822f3fd6c5bba462030c98c147d009aca3bf70000b1d"
+    }
+  ],
+  "full_gate": "pending on final integration; focused checks do not replace repository gate"
+}

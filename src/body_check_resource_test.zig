@@ -289,3 +289,64 @@ test "body resources refuse authentic text and writable open graphs outside bina
         try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = f.output }));
     }
 }
+
+fn printIndex(nodes: []const typed.Node) !usize {
+    for (nodes, 0..) |node, index| if (node.data == .print) return index;
+    return error.TestUnexpectedResult;
+}
+
+fn changedPrintContract(a: std.mem.Allocator, f: Fixture, schema: typed.Record) !void {
+    const item = f.output.batch.nodes[try printIndex(f.output.batch.nodes)];
+    const records = try a.dupe(typed.Record, f.input.catalog.records);
+    records[schema.id.recordIndex()] = schema;
+    var catalog = f.input.catalog;
+    catalog.records = records;
+    try @import("body_check_resource_validate.zig").node(catalog, f.output.batch.nodes, f.output.batch.functions[0].scope.locals, item);
+}
+
+// spec: SELFHOST-BODY-PRINT-1
+test "body resources accept native aggregate print graphs without changing renderer authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const collections = try fixture(a, "func value(out: Stream, items: int[], mapping: dict[int, str], keys: set[int]) -> Unit:\n" ++
+        "    out.print(items, mapping, keys)\n");
+    const structural = try fixture(a, "func value(out: Stream, fixed: FixedArray[int, 2], pair: tuple[int, str]) -> Unit:\n" ++
+        "    out.print(fixed, pair)\n");
+    const nominal = try fixture(a, "record Item:\n    count: int\n    values: int[]\n\n" ++
+        "func value(out: Stream, item: Item, maybe: int?, number: float) -> Unit:\n" ++
+        "    out.print(item, maybe, number)\n");
+    try validate.outcome(a, collections.input, .{ .success = collections.output });
+    try validate.outcome(a, structural.input, .{ .success = structural.output });
+    try validate.outcome(a, nominal.input, .{ .success = nominal.output });
+    try std.testing.expectEqual(@as(usize, 3), collections.output.batch.nodes[try printIndex(collections.output.batch.nodes)].data.print.arguments.len);
+    try std.testing.expectEqual(@as(usize, 2), structural.output.batch.nodes[try printIndex(structural.output.batch.nodes)].data.print.arguments.len);
+    try std.testing.expectEqual(@as(usize, 3), nominal.output.batch.nodes[try printIndex(nominal.output.batch.nodes)].data.print.arguments.len);
+}
+
+// spec-case: SELFHOST-BODY-PRINT-1
+test "body resources refuse nonrenderable aggregate print contracts" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "record Item:\n    count: int\n\nfunc value(out: Stream, item: Item) -> Unit:\n    out.print(item)\n");
+    const item = f.output.batch.nodes[try printIndex(f.output.batch.nodes)];
+    const ty = f.output.batch.nodes[@backingInt(item.data.print.arguments[0])].ty;
+    const original = f.input.catalog.records[ty.recordIndex()];
+    var schema = original;
+    schema.contract.move_only = true;
+    try std.testing.expectError(error.ComponentProtocol, changedPrintContract(a, f, schema));
+    schema = original;
+    schema.shape.resource = .filesystem;
+    try std.testing.expectError(error.ComponentProtocol, changedPrintContract(a, f, schema));
+    schema = original;
+    schema.contract.callback = .{ .parameters = &.{}, .return_type = .unit, .effects = 0 };
+    try std.testing.expectError(error.ComponentProtocol, changedPrintContract(a, f, schema));
+    schema = original;
+    schema.managed = true;
+    schema.shape.builtin = .cell;
+    try std.testing.expectError(error.ComponentProtocol, changedPrintContract(a, f, schema));
+    schema = original;
+    schema.collection.contains_cell = true;
+    try std.testing.expectError(error.ComponentProtocol, changedPrintContract(a, f, schema));
+}

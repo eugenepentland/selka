@@ -47,7 +47,7 @@ pub fn node(catalog: value.Catalog, nodes: []const typed.Node, locals: []const t
             if (item.ty != .unit or print.debug or print.sink != .stdout) return error.ComponentProtocol;
             const stream = print.stream orelse return error.ComponentProtocol;
             if (try nodeType(nodes, stream) != .stream_cap) return error.ComponentProtocol;
-            for (print.arguments) |argument| if (!printable(catalog, try nodeType(nodes, argument))) return error.ComponentProtocol;
+            for (print.arguments) |argument| if (!@import("io_render.zig").printable(try nodeType(nodes, argument), catalog.records)) return error.ComponentProtocol;
             const text = catalog.string orelse return error.ComponentProtocol;
             if (print.separator) |id| if (try nodeType(nodes, id) != text.id) return error.ComponentProtocol;
             if (print.terminator) |id| if (try nodeType(nodes, id) != text.id) return error.ComponentProtocol;
@@ -61,11 +61,6 @@ fn octets(catalog: value.Catalog, ty: typed.Type) bool {
     if (catalog.templates.byte_buffer.identity) |entry| if (entry.id == ty) return true;
     return false;
 }
-fn printable(catalog: value.Catalog, ty: typed.Type) bool {
-    if (octets(catalog, ty)) return true;
-    return @import("body_check_numeric_validate.zig").scalar(ty) or @import("body_check_numeric_validate.zig").floating(catalog, ty);
-}
-
 fn mode(nodes: []const typed.Node, access: typed.FileAccess) Error!void {
     const argument = nodes[@backingInt(access.arguments[2])];
     if (argument.data != .array) return error.ComponentProtocol;
