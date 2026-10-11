@@ -46,6 +46,27 @@ const choice =
     \\
 ;
 
+const identity_comparison =
+    \\func compare(left: func(int) -> int effects(), right: func(int) -> int effects()) -> bool effects():
+    \\    return same_function(left, right)
+    \\
+    \\func first(value: int) -> int effects():
+    \\    return value + 1
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(compare(first, first))
+    \\    return 0
+;
+
+// spec-case: FUNCTION-IDENTITY-1
+test "same_function lowers to a pointer comparison without making addresses insignificant" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const text = try support.llvmText(arena.allocator(), identity_comparison);
+    try std.testing.expect(std.mem.indexOf(u8, text, "icmp eq ptr") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text, ") unnamed_addr") == null);
+}
+
 // spec-case: NEW-CORE-S2-IR-1
 test "two constant callback targets become direct branches and unswitch the inner loop" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

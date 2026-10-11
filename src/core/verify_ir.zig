@@ -518,7 +518,7 @@ const Verifier = struct {
             .neg => isInteger(inst.ty) and s.a == inst.ty,
             .bit_and, .bit_or, .bit_xor => (isInteger(inst.ty) or inst.ty == .bool) and s.a == inst.ty and s.b == inst.ty,
             .not => inst.ty == .bool and s.a == .bool,
-            .cmp => inst.ty == .bool and s.a == s.b and (isInteger(s.a) or s.a == .bool) and inst.data < 6,
+            .cmp => self.comparisonSignature(s),
             .fadd, .fsub, .fmul, .fdiv => inst.ty == .f64 and s.a == .f64 and s.b == .f64,
             .fneg => inst.ty == .f64 and s.a == .f64,
             .fcmp => inst.ty == .bool and s.a == .f64 and s.b == .f64 and inst.data < 6,
@@ -529,6 +529,13 @@ const Verifier = struct {
             .str_parse_int => (s.a == .str or s.a == .str_view) and self.compoundOf(inst.ty, .@"union") != null,
             else => null,
         };
+    }
+
+    fn comparisonSignature(self: *Verifier, s: Shape) bool {
+        if (s.inst.ty != .bool or s.a != s.b) return false;
+        if (self.compoundOf(s.a, .@"fn") != null)
+            return s.inst.data == @backingInt(ir.Predicate.eq) or s.inst.data == @backingInt(ir.Predicate.ne);
+        return (isInteger(s.a) or s.a == .bool) and s.inst.data < 6;
     }
 
     /// Lists, records, unions, boxes and counting; null for any other operation.

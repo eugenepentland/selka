@@ -842,6 +842,16 @@
       "summary": "`json` parses and renders ordinary JSON documents as a bounded managed tree.",
       "doc": "docs/standard-library.md#json"
     },
+    "standard-memo": {
+      "kind": "language",
+      "summary": "The Selka memo module retains a bounded FIFO of pure callback results for exact tagged integer, text and byte arguments, with process-local callable identity and independent value snapshots. Zero capacity disables retention; persistence and durable recovery are separate capabilities.",
+      "doc": "docs/standard-library.md#memo"
+    },
+    "function-identity": {
+      "kind": "language",
+      "summary": "same_function compares compatible callable values within the running program without invoking them or exposing a persistent identity.",
+      "doc": "docs/functions.md#function-identity"
+    },
     "standard-pool": {
       "kind": "language",
       "summary": "`pool` provides generation-checked handles into a reusable slot table.",
@@ -1088,7 +1098,7 @@
     "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
     "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no suspended generator functions or stored generator values; yield belongs to source-first array comprehensions and match-expression arms",
     "native_tests": "one native process per test; exported test_ functions returning bool or Result[bool, E]; positive deterministic receipts keyed by the test program's Core IR, settings, toolchain and outcome-relevant environment; a run with --link or --verify-facts never reuses a receipt; directory runs share one worker budget (--jobs, MYLANG_JOBS or CPUs)",
-    "standard_library": "fourteen embedded modules using the canonical frontend: math, strings, sort, path, hex, base64, json, pool, random, time, byte_builder, filesystem, network, environment",
+    "standard_library": "fifteen embedded modules using the canonical frontend: math, strings, sort, path, hex, base64, json, pool, memo, random, time, byte_builder, filesystem, network, environment",
     "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is removed; its diagnostic carries a migration fix"
   },
   "removed": {

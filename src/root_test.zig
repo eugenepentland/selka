@@ -55,6 +55,7 @@ test {
     _ = @import("stdlib_codecs_test.zig");
     _ = @import("stdlib_json_test.zig");
     _ = @import("stdlib_pool_test.zig");
+    _ = @import("stdlib_memo_test.zig");
     _ = @import("const_lengths_test.zig");
     _ = @import("callbacks_test.zig");
     _ = @import("typed_holes_test.zig");

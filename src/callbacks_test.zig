@@ -4,6 +4,7 @@ const print = std.debug.print;
 const t = std.testing;
 const language = @import("compiler.zig");
 const native = @import("native_execute.zig");
+const function_identity_code = @import("function_same.zig").code;
 fn run(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "callback.my", source);
     defer c.deinit();
@@ -12,6 +13,75 @@ fn run(source: []const u8, expected: i64) !void {
         return err;
     };
     try t.expectEqual(expected, outcome.value);
+}
+
+const identity_source =
+    \\record Stored[T: storable]:
+    \\    compute: func(int) -> T effects(managed_allocation)
+    \\
+    \\func first(value: int) -> int effects():
+    \\    return value + 1
+    \\
+    \\func twin(value: int) -> int effects():
+    \\    return value + 1
+    \\
+    \\func select(flag: bool) -> func(int) -> int effects():
+    \\    return if (flag) then (first) else (twin)
+    \\
+    \\func matches[T: storable](entry: Stored[T], current: func(int) -> T effects(managed_allocation)) -> bool effects():
+    \\    return same_function(entry.compute, current)
+    \\
+    \\func compare(left: func(int) -> int effects(), right: func(int) -> int effects()) -> bool effects():
+    \\    return same_function(left, right)
+    \\
+    \\func main(args: str[]) -> int:
+    \\    mut selected = select(len(args) > 0)
+    \\    mut saved = Stored[int](compute=selected)
+    \\    if not same_function(first, first) or same_function(first, twin):
+    \\        return 1
+    \\    if not compare(selected, twin) or compare(selected, first):
+    \\        return 2
+    \\    if not matches[int](saved, twin) or matches[int](saved, first):
+    \\        return 3
+    \\    if not same_function(selected, saved.compute):
+    \\        return 4
+    \\    return 42
+;
+
+fn runIdentity(release: bool) !void {
+    var compilation = try language.Compilation.init(t.allocator, "function-identity.my", identity_source);
+    defer compilation.deinit();
+    const outcome = native.runWithOptions(&compilation, .{ .arguments = if (release) &.{"--release"} else &.{} }) catch |err| {
+        for (compilation.diagnostics.items) |d| print("{s}: {s}\n", .{ d.code, d.message });
+        return err;
+    };
+    try t.expectEqual(@as(i64, 42), outcome.value);
+    try t.expect(!outcome.trapped());
+}
+
+// spec: FUNCTION-IDENTITY-1
+test "same_function identifies returned stored and generic callbacks in debug" {
+    try runIdentity(false);
+}
+
+// spec-case: FUNCTION-IDENTITY-1
+test "same_function preserves distinct identical-body declarations in release" {
+    try runIdentity(true);
+}
+
+// spec-case: FUNCTION-IDENTITY-1
+test "same_function rejects noncallable operands arity and incompatible signatures" {
+    try reject("func main() -> int:\n    _ = same_function(1, 1)\n    return 0\n", function_identity_code);
+    try reject("func main() -> int:\n    _ = same_function(main)\n    return 0\n", "E_ARITY");
+    try reject("func first(value: int) -> int effects():\n    return value\nfunc other(value: bool) -> int effects():\n    return 1\nfunc main() -> int:\n    _ = same_function(first, other)\n    return 0\n", function_identity_code);
+    try reject("func compare[T](left: func(T) -> int effects(), right: func(bool) -> int effects()) -> bool:\n    return same_function(left, right)\n", function_identity_code);
+    try reject("func compare[T](left: func(mut value: T) -> int effects(mutation), right: func(T) -> int effects()) -> bool:\n    return same_function(left, right)\n", function_identity_code);
+    try reject("func main() -> int:\n    _ = main == main\n    return 0\n", "E_TYPE");
+}
+
+// spec-case: FUNCTION-IDENTITY-1
+test "same_function remains shadowable by an ordinary declaration" {
+    try run("func same_function(left: int, right: int) -> int effects():\n    return left + right\nfunc main() -> int:\n    return same_function(20, 22)\n", 42);
 }
 // spec: PY-LAMBDA-2
 test "lambdas reject missing context wrong results effects and local captures" {

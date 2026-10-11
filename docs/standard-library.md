@@ -1,6 +1,6 @@
 # Standard library
 
-Fourteen modules ship inside the compiler. They are ordinary guest source
+Fifteen modules ship inside the compiler. They are ordinary guest source
 built on the managed types described in the [language guide](python-syntax.md),
 [managed memory](managed-memory.md) and [managed byte strings](bytes.md): growable arrays (`T[]`),
 `dict`, `str`, `bytes`, value records, optional values (`T?`) and checked results. There is no
@@ -19,6 +19,7 @@ Import a module by name; projects do not copy these files.
 | [`byte_builder`](#byte_builder) | incremental binary and UTF-8 output assembly |
 | [`json`](#json) | strict RFC 8259 parsing, rendering and typed access |
 | [`pool`](#pool) | generational handles into a reusable slot store |
+| [`memo`](#memo) | bounded, process-local reuse of pure computations |
 | [`network`](#network) | capability-based connections and byte I/O, and a denied stand-in `Network` |
 | [`random`](#random) | seeded SplitMix64 streams, entropy-seeded generators and a seeded stand-in `Entropy` |
 | [`time`](#time) | wall-clock instants, checked durations and a simulated `Clock` |
@@ -570,8 +571,87 @@ func live(store: pool.Pool[int], handle: pool.Handle[int]) -> int:
             return 0
 ```
 
-Creation takes a list rather than an explicit type argument, because a call cannot
-yet spell `create[int]()`. Pass an empty annotated list for an empty pool.
+Creation takes a seed list, which also supplies the element type. Pass an empty
+annotated list for an empty pool.
+
+## memo
+
+```text
+# doc: not-mylang
+Key.Number(value: int) | Key.Text(value: str) | Key.Data(value: bytes)
+Error.InvalidCapacity(value: str)
+message(error: Error) -> str
+Cache[V: equality + storable]
+Entry[V: equality + storable]
+Lookup[V: equality + storable] { value: V, reused: bool }
+create(max_entries: int, compute: func(Key) -> V effects(managed_allocation)) -> Result[Cache[V], Error]
+call(mut cache: Cache[V], key: Key) -> Lookup[V]
+clear(mut cache: Cache[V]) -> Unit
+count(cache: Cache[V]) -> int
+capacity(cache: Cache[V]) -> int
+```
+
+`memo` reuses completed results within one running application. `create` binds
+the computation and accepts an entry limit from zero through 65,536. An invalid
+limit returns `Error.InvalidCapacity`; `message` supplies its explanatory text.
+Zero disables retention, so every `call` computes and returns `reused=False`.
+For positive limits, a hit returns the stored snapshot and `reused=True`.
+Misses fill the cache, then replace entries in insertion order. Hits do not
+refresh that order. `count` reports retained entries, `capacity` reports the
+configured limit, and `clear` releases the cache's entries and resets its order.
+
+The callback takes the complete `Key` argument and permits only managed
+allocation. External I/O, host calls, clock, randomness, environment access,
+caller mutation and captured local state are ineligible. `noio` alone is not
+a purity contract. Tagged keys compare exactly: integer `1`, text `"1"` and
+bytes `b"1"` are separate arguments. Arbitrary floating-point and collection
+keys are not accepted. Each `Entry` also records the actual callable; replacing
+`cache.compute` cannot serve an earlier callback's result for the same key.
+
+Results are copyable, storable values with equality support. Lists and records
+containing lists are permitted: results, keys and copied caches keep independent
+value snapshots when callers later mutate their copies. Capabilities, owned
+resources and function values are excluded from results. A trap propagates
+normally; insertion happens only after the computation returns. This library
+does not recover a trapped process.
+
+```mylang
+# doc: expect 42
+import memo
+
+func square(key: memo.Key) -> int:
+    match key:
+        case memo.Key.Number(value=value):
+            return value * value
+        case memo.Key.Text(value=value):
+            return len(value)
+        case memo.Key.Data(value=value):
+            return len(value)
+
+func main() -> int:
+    match memo.create(2, square):
+        case Ok(created):
+            mut cache = created
+            const first = memo.call(mut cache, memo.Key.Number(value=6))
+            const second = memo.call(mut cache, memo.Key.Number(value=6))
+            if first.reused or not second.reused or second.value != 36:
+                return 1
+            if memo.count(cache) != 1 or memo.capacity(cache) != 2:
+                return 2
+            memo.clear(mut cache)
+            return second.value + 6
+        case Err(error):
+            return len(memo.message(error))
+```
+
+Retention is bounded by entry count. Lookup scans at most that many entries;
+arbitrary key/result payload sizes remain subject to the application's runtime
+memory limit. The cache is intended for small, explicit working sets. Use the
+constructor and operations to maintain its representation; `Entry` and the
+storage fields are implementation details, not a format for serialization.
+There is no filesystem access, expiration policy or cross-process reuse.
+Persistent memoization and recoverable application steps require additional
+implementation identities and a qualified durable provider.
 
 ## network
 

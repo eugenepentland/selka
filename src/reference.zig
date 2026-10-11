@@ -49,12 +49,12 @@ pub const entry_path = "reference.my";
 ///
 /// `src/standard_library.zig` exposes only `source(path)`, so the path list is
 /// repeated here; `reference_test.zig` asserts this list equals the checkout's
-/// `src/stdlib/*.my` set, which turns a fifteenth standard module into a
+/// `src/stdlib/*.my` set, which turns an unlisted standard module into a
 /// failing test rather than a silent omission.
 pub const standard_modules = [_][]const u8{
     "base64.my", "byte_builder.my", "environment.my", "filesystem.my", "hex.my",
-    "json.my",   "math.my",         "network.my",     "path.my",       "pool.my",
-    "random.my", "sort.my",         "strings.my",     "time.my",
+    "json.my",   "math.my",         "memo.my",        "network.my",    "path.my",
+    "pool.my",   "random.my",       "sort.my",        "strings.my",    "time.my",
 };
 
 /// Read the synthesized entry module and refuse every other path.
@@ -373,7 +373,18 @@ const ListingFacts = struct { declarations: []const Declaration, modules: usize,
 /// emitted only when that table accepts it; a seed the table rejects produces
 /// no fact at all.
 const prelude_seeds = [_][]const u8{
-    "sum", "min", "max", "sorted", "abs", "round", "any", "all", "reversed", "list", "zip",
+    "same_function",
+    "sum",
+    "min",
+    "max",
+    "sorted",
+    "abs",
+    "round",
+    "any",
+    "all",
+    "reversed",
+    "list",
+    "zip",
 };
 /// The compile-time file embedding builtins (`EMBED-1`), each answered by `embed.kindOf`.
 const embed_seeds = [_][]const u8{ "embed_bytes", "embed_str" };
@@ -507,6 +518,7 @@ fn namesClause(arena: std.mem.Allocator, line: []const u8, keyword: []const u8) 
 /// `mutates(...)`, `ceiling(...)`, `tests(N)`, then an optional `# docstring`.
 fn parseFunctionLine(arena: std.mem.Allocator, module: []const u8, line: []const u8) Error!?Listed {
     const prefix = "  export function ";
+    if (!std.mem.startsWith(u8, line, prefix)) return null;
     const rest = line[prefix.len..];
     const effects_at = std.mem.lastIndexOf(u8, rest, " effects(") orelse return null;
     const head = rest[0..effects_at];

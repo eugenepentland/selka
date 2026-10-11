@@ -1796,7 +1796,8 @@ const FnBuilder = struct {
                 return all;
             },
             .dict => return build_dict.equal(@TypeOf(self), self, a, b, span),
-            .box, .@"fn" => return self.mb.refuse(refuse_equality, span),
+            .@"fn" => return self.emit(.{ .op = .cmp, .ty = .bool, .a = a, .b = b, .data = @backingInt(ir.Predicate.eq), .span = span }),
+            .box => return self.mb.refuse(refuse_equality, span),
         }
     }
 

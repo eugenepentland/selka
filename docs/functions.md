@@ -206,6 +206,35 @@ func main() -> int:
     return apply(op, 18) + op(3)
 ```
 
+## Function identity
+
+`same_function(left, right)` compares two compatible function values without
+calling them. It returns `True` for the same callable and `False` for different
+callables. Passing values with different call signatures, or a non-function,
+is a type error. The comparison itself contributes no effects.
+
+This identity lasts only within the running program. It is useful for separating
+entries in an application memo cache. It supplies no persistent code digest:
+after recompilation or process restart, persistent reuse needs validated
+implementation, dependency, argument and result-schema identities.
+
+```mylang
+# doc: expect 42
+func increment(value: int) -> int effects():
+    return value + 1
+
+func decrement(value: int) -> int effects():
+    return value - 1
+
+func main() -> int:
+    const chosen = increment
+    if not same_function(chosen, increment):
+        return 1
+    if same_function(chosen, decrement):
+        return 2
+    return 42
+```
+
 ## Bounded callbacks
 
 A parameter that accepts a function value declares the destination signature
@@ -371,4 +400,3 @@ func area(width: int, height: int) -> int effects():
 func main() -> int effects():
     return area(2, 7)
 ```
-

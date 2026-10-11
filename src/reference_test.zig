@@ -321,6 +321,31 @@ test "the embed builtins are discoverable through the reference" {
     try t.expectEqualStrings("embed.kindOf", stringAt(builtin, "source"));
 }
 
+// spec-case: FUNCTION-IDENTITY-1
+test "same_function is discoverable through the reference" {
+    const bytes = try json("same_function");
+    defer t.allocator.free(bytes);
+    var parsed = try envelope(t.allocator, bytes);
+    defer parsed.deinit();
+    const builtin = find(section(parsed.value, "builtins"), "name", "same_function") orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings("prelude_builtins.reserved", stringAt(builtin, "source"));
+}
+
+// spec: REFERENCE-13
+test "the reference handles short nominal exports beside generic memo functions" {
+    const bytes = try json("memo");
+    defer t.allocator.free(bytes);
+    var parsed = try envelope(t.allocator, bytes);
+    defer parsed.deinit();
+    const declarations = section(parsed.value, "declarations");
+    const key = find(declarations, "name", "memo::Key") orelse return error.TestUnexpectedResult;
+    const call = find(declarations, "name", "memo::call") orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings("type", stringAt(key, "kind"));
+    try t.expectEqualStrings("declared", stringAt(key, "analysis"));
+    try t.expectEqualStrings("function", stringAt(call, "kind"));
+    try t.expectEqualStrings("template", stringAt(call, "analysis"));
+}
+
 // spec: REFERENCE-6
 test "unsupported and removed names answer as exclusions, never as features" {
     const unsupported_bytes = try json("capturing-closures");
@@ -394,8 +419,8 @@ test "the embedded project reads exactly one in-memory path and no checkout file
     defer t.allocator.free(served);
     try t.expectEqualStrings("", served);
     try t.expect(try standardModulesMatchCheckout(&reference.standard_modules));
-    // The stand-in modules are part of the reference project too (TEST-CAPS-1).
-    try t.expectEqual(@as(usize, 14), reference.standard_modules.len);
+    // Stand-ins and application memoization are part of the reference project.
+    try t.expectEqual(@as(usize, 15), reference.standard_modules.len);
 }
 
 // spec: REFERENCE-10

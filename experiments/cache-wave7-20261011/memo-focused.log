@@ -1,0 +1,31 @@
+build-slot: FIFO ticket 1057, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1057 after 10s
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test-units
++- run test
+   +- compile test debug native 1 errors
+src/stdlib_memo_test.zig:9:45: error: embed of file outside package path: '../tests/lang/memo.my'
+    try fixture.run(t.allocator, @embedFile("../tests/lang/memo.my"), 42);
+                                            ^~~~~~~~~~~~~~~~~~~~~~~
+referenced by:
+    test_0: src/root_test.zig:58:17
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ferror-tracing -ODebug --dep build_identity --dep memory_budget --dep compiler_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep native_test_options -Mroot=src/root_test.zig -ODebug -Mbuild_identity=.zig-cache/o/cc7291285727078ce1ccea7ccf210f1f/build_identity/identity.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -Mnative_test_options=.zig-cache/o/d2752cf6121a34b911ad252d8cbdccca/options.zig --test-filter "standard memo" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/.cache/zig --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 9/12 steps succeeded (1 failed)
+test-units transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+   |  +- run exe build-identity (build_identity) cached
+   |  |  +- compile exe build-identity debug native cached 4ms MaxRSS:39M
+   |  +- options success
+   |     +- compile exe mylang debug native success 3s MaxRSS:545M
+   |        +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |        +- WriteFile cached
+   |        +- compile obj juice_bytes_hash fast native cached 5ms MaxRSS:39M
+   |        +- compile obj juice_bytes_hash fast native (reused)
+   |        +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:41M
+   +- run exe selka-components success 389ms
+      +- compile exe selka-components safe native cached 5ms MaxRSS:41M
+

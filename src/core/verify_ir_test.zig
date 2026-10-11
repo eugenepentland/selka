@@ -7,6 +7,28 @@ const support = @import("test_support.zig");
 
 const Hand = support.Hand;
 
+fn callbackComparison(a: std.mem.Allocator, module: *ir.Module, predicate: ir.Predicate) !void {
+    const callback = try module.intern(a, .{ .@"fn" = .{ .params = &.{.i64}, .ret = .i64 } });
+    const parameters = try a.dupe(ir.Type, &.{ callback, callback });
+    var hand = try Hand.init(a, module, "compare", .{ .params = parameters, .ret = .bool });
+    const result = try hand.emit(.{ .op = .cmp, .ty = .bool, .a = try hand.param(0), .b = try hand.param(1), .data = @backingInt(predicate) });
+    _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = result });
+    _ = try hand.finish();
+}
+
+// spec-case: FUNCTION-IDENTITY-1
+test "same_function verifier admits callable equality and rejects pointer ordering" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var good: ir.Module = .{};
+    var bad: ir.Module = .{};
+    var failure: verify_ir.Failure = .{};
+    try callbackComparison(arena.allocator(), &good, .eq);
+    try support.verified(arena.allocator(), &good, &.{});
+    try callbackComparison(arena.allocator(), &bad, .lt);
+    try std.testing.expectError(error.InvalidIr, verify(arena.allocator(), &bad, &failure));
+}
+
 /// `f(c: bool) -> i64`: `if c: x = 1 + 2` then a join that returns `x` or 0 through a phi.
 /// With `broken`, the join reads `x` directly, which the else edge never defined.
 fn diamond(arena: std.mem.Allocator, module: *ir.Module, broken: bool) !void {

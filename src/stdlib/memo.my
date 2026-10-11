@@ -1,0 +1,87 @@
+# Exact tagged arguments for an in-process pure computation. Text and Data
+# remain distinct even when they contain the same encoded bytes.
+public enum Key:
+    Number(value: int)
+    Text(value: str)
+    Data(value: bytes)
+
+
+# A rejected entry limit, carrying a human-readable explanation.
+public enum Error:
+    InvalidCapacity(value: str)
+
+
+# The human-readable reason a cache could not be created.
+public func message(error: Error) -> str effects():
+    match error:
+        case Error.InvalidCapacity(value=detail):
+            return detail
+
+
+# A completed value and the actual callable that produced it. Function identity
+# is process-local; these entries are not persistent execution evidence.
+public record Entry[V: equality + storable]:
+    compute: func(Key) -> V effects(managed_allocation)
+    key: Key
+    value: V
+
+
+# A value-semantic FIFO cache. The limit bounds retained entries, not the bytes
+# inside arbitrary results; the runtime memory budget still applies.
+public record Cache[V: equality + storable]:
+    compute: func(Key) -> V effects(managed_allocation)
+    entries: Entry[V][]
+    max_entries: int
+    next: int
+
+
+# A computation result, with whether its completed value was retained already.
+public record Lookup[V: equality + storable]:
+    value: V
+    reused: bool
+
+
+# Create an empty cache. Zero disables retention; larger limits are rejected
+# before allocating any entry storage.
+public func create[V: equality + storable](max_entries: int, compute: func(Key) -> V effects(managed_allocation)) -> Result[Cache[V], Error]:
+    if max_entries < 0 or max_entries > 65536:
+        return Err(Error.InvalidCapacity(value="memo capacity must be between 0 and 65536"))
+    mut entries: Entry[V][] = []
+    return Ok(Cache[V](compute=compute, entries=entries, max_entries=max_entries, next=0))
+
+
+# Reuse only an exact tagged argument produced by the same pure callable.
+# Hits do not change FIFO order. A trapping computation never inserts
+# an entry, because computation completes before any cache mutation.
+public func call[V: equality + storable](mut cache: Cache[V], key: Key) -> Lookup[V]:
+    const compute = cache.compute
+    for entry in cache.entries:
+        if entry.key == key and same_function(entry.compute, compute):
+            return Lookup[V](value=entry.value, reused=True)
+    const value = compute(key)
+    if cache.max_entries == 0:
+        return Lookup[V](value=value, reused=False)
+    const completed = Entry[V](compute=compute, key=key, value=value)
+    if len(cache.entries) < cache.max_entries:
+        cache.entries.append(completed)
+    else:
+        cache.entries[cache.next] = completed
+        cache.next = (cache.next + 1) % cache.max_entries
+    return Lookup[V](value=value, reused=False)
+
+
+# Release this cache's entries and reset its FIFO position. Copies keep their
+# independent snapshots; clearing one cache cannot clear another.
+public func clear[V: equality + storable](mut cache: Cache[V]) -> Unit:
+    cache.entries = []
+    cache.next = 0
+
+
+# The number of completed entries retained in this cache.
+public func count[V: equality + storable](cache: Cache[V]) -> int effects():
+    return len(cache.entries)
+
+
+# The entry limit selected when this cache was created.
+public func capacity[V: equality + storable](cache: Cache[V]) -> int effects():
+    return cache.max_entries

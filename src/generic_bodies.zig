@@ -57,6 +57,7 @@ const provider_shapes = @import("symbolic_providers.zig");
 const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
+const function_same = @import("function_same.zig");
 const unknown_method = "unknown collection method";
 /// Whether a call on a named receiver is a list's `sort` with operands, the
 /// Python keyword form whose operands are named rather than positional.
@@ -1634,6 +1635,7 @@ const Checker = struct {
         return result;
     }
     fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (try self.sameFunctionCall(input_call, span)) |value| return value;
         if (try self.viewSnapshot(input_call, span)) |value| return value;
         if (try self.capabilityMethodCall(input_call, span)) |value| return value;
         if (try self.reprCall(input_call, span)) |value| return value;
@@ -1660,6 +1662,18 @@ const Checker = struct {
         }
         if (try self.operationCall(input_call)) |result| return result;
         return null;
+    }
+
+    fn sameFunctionCall(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        if (invocation.owner != null or !std.mem.eql(u8, self.src.text(invocation.name), function_same.name)) return null;
+        if (self.active.contains(function_same.name) or try self.topLevel(invocation.name)) return null;
+        if (invocation.arguments.len != 2 or invocation.type_arguments.len != 0)
+            return self.sink.fail("E_ARITY", span, "same_function requires two arguments and no type arguments");
+        const left = try self.expression(invocation.arguments[0]);
+        const right = try self.expression(invocation.arguments[1]);
+        if (!function_same.symbolicCompatible(left, right, self.catalog))
+            return self.sink.fail(function_same.code, span, function_same.message);
+        return .{ .concrete = .bool };
     }
     /// One binding's snapshot entry, spelled from its abstract type.
     fn holeCandidate(self: *Checker, binding: Local) Error!diagnostic.Candidate {

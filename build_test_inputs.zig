@@ -42,6 +42,7 @@ pub const unit = [_][]const u8{
     "tests/lang/rc_dictionary_keys.my",
     "tests/lang/rc_dictionary_loops.my",
     "tests/lang/rc_dictionary_text_loops.my",
+    "tests/lang/memo_cache.my",
     "test/fixtures/",
     "test/core/c_environment_context.my",
     "test/core/c_environment_context_provider.c",

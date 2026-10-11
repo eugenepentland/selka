@@ -863,6 +863,17 @@ of an arbitrary mutable filesystem after process restart.
 
 ### Wave 7 — Application caching, durable steps and further self-hosting
 
+Implementation is staged into three library milestones. **7a** is the bounded,
+process-local Selka `memo` library, exact tagged keys and checked callable identity.
+**7b** adds compiler-issued implementation/dependency identities and canonical
+persistent values. **7c** adds capability-checked durable storage and the crash-
+injected CSV pipeline qualification below. The process-local callable comparison
+in 7a must never stand in for 7b's persistent identity, and Wave 6 retention pins
+must never stand in for 7c's durable journal commits. The 7a library is implemented
+from `cf3578c67`; its scope and qualification are recorded in
+[`cache-wave7-20261011/PLAN.md`](../../experiments/cache-wave7-20261011/PLAN.md) and
+[`REPORT.md`](../../experiments/cache-wave7-20261011/REPORT.md).
+
 Expose a small `incr`/memo library once the internal graph contract is proven.
 Start with explicit bounded caches for pure functions and stable immutable
 values. Persistent keys include reachable implementation, canonical argument

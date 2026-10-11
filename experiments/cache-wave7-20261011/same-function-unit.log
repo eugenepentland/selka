@@ -1,0 +1,32 @@
+build-slot: FIFO ticket 1063, position 6; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1063 after 40s
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test-units
++- run test w
+guardian/test: 12 test(s) selected by filter: "same_function" — 5 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.47s; slowest over 50ms:
+guardian/test:   0.14s  callbacks_test.test.same_function identifies returned stored and generic callbacks in debug
+guardian/test:   0.13s  callbacks_test.test.same_function preserves distinct identical-body declarations in release
+guardian/test:   0.11s  callbacks_test.test.same_function remains shadowable by an ordinary declaration
+guardian/test:   0.07s  reference_test.test.same_function is discoverable through the reference
+guardian/test: PASS — 12 passed
+guardian/test: RESULT {"passed":12,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components ./.zig-cache/o/04cc37883803ef5c616d17a122f5f201/test --guardian-filter=same_function --cache-dir=./.zig-cache --seed=0xabe0a792 --listen=-
+
+Build Summary: 12/12 steps succeeded; 12/12 tests passed
+test-units success
++- run test 12 pass (12 total) 501ms MaxRSS:59M
+   +- compile test debug native success 1s MaxRSS:311M
+   |  +- run exe build-identity (build_identity) cached
+   |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:38M
+   |  +- options cached
+   |     +- compile exe mylang debug native cached 5ms MaxRSS:41M
+   |        +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |        +- WriteFile cached
+   |        +- compile obj juice_bytes_hash fast native cached 7ms MaxRSS:38M
+   |        +- compile obj juice_bytes_hash fast native (reused)
+   |        +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 4ms MaxRSS:42M
+   +- run exe selka-components success 8s
+      +- compile exe selka-components safe native cached 4ms MaxRSS:42M
+

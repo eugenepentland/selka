@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 1064, position 5; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 1064 after 35s
+  docs/functions.md: 12 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+Doc examples: 1 files scanned, 12 blocks found, 12 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed

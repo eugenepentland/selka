@@ -1,0 +1,65 @@
+{
+  "schema": "memo-qualification-v1",
+  "scope": "bounded process-local cache correctness; no performance or persistence claim",
+  "compiler": {
+    "path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+    "sha256": "ac5fe52d1afb96a6643d4705a9921a8bc69f310e950dea69bf8e56b6af392b92"
+  },
+  "guest_source": {
+    "path": "tests/lang/memo_cache.my",
+    "sha256": "cc7ef2d30fef881024350b29ee1690e216e161e6107398a70a8db522bdc9ea34"
+  },
+  "focused": {
+    "filter": "standard memo",
+    "log": "experiments/cache-wave7-20261011/memo-focused-green.log",
+    "passed": 14,
+    "new_named_tests": 7,
+    "unnamed_root_blocks": 7,
+    "negative_snippets": 12,
+    "trap_assertions": 1
+  },
+  "guest": {
+    "debug": {
+      "report": "experiments/cache-wave7-20261011/memo-debug-final.json",
+      "report_sha256": "ed53275aba92fce393721fe19ee579048f13c03b169a44a70269139daffdf072",
+      "counts": {
+        "passed": 10,
+        "failed": 0,
+        "cached": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "flags": [
+        "--json",
+        "--force"
+      ],
+      "leakcheck": false
+    },
+    "release": {
+      "report": "experiments/cache-wave7-20261011/memo-release.json",
+      "report_sha256": "9b0598fe513464351c5b57d4afea28a295c31f1981890c5e35a0bfd95f941058",
+      "counts": {
+        "passed": 10,
+        "failed": 0,
+        "cached": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "flags": [
+        "--json",
+        "--force",
+        "--release",
+        "--verify-facts"
+      ],
+      "leakcheck": true
+    }
+  },
+  "debug_release_status_agreement": true,
+  "source_changes_during_runs": false,
+  "setup_corrections": [
+    "read declared guest source rather than embed outside src package",
+    "contextually type capturing lambda to test E_LAMBDA_CAPTURE",
+    "match exact E_GENERIC_INFERENCE for incompatible two-argument Host callback",
+    "use memo_cache.my entry name to avoid reserved memo standard module collision"
+  ]
+}

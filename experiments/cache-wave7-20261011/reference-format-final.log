@@ -1,0 +1,502 @@
+build-slot: build slot 1, FIFO ticket 1113 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 40/644 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 3 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1484 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 40 file(s) in scope
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+fmt-check
++- verify .my formatting gate w
+......
+----------------------------------------------------------------------
+Ran 6 tests in 1.192s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_my_format.py --compiler ./zig-out/bin/mylang
+
+fmt-check
++- check live .my corpus formatting w
+.my format: 830 checked, 204 deliberate exclusions, 0 failures; experiments/ is historical and outside the live roots
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/check_my_format.py --compiler ./zig-out/bin/mylang
+
+test-units
++- run test 10 pass, 11 crash (21 total)
+guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.00s
+guardian/test: PASS — 0 passed
+guardian/test: RESULT {"passed":0,"failed":0,"skipped":0}
+error: 'reference_test.test.an implemented feature answers with its manifest record and a live doc anchor' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2856256 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:58:25: 0x20e95fd in json (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .json });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:223:27: 0x20f8542 in test.an implemented feature answers with its manifest record and a live doc anchor (root_test.zig)
+           const bytes = try json("standard-sort");
+                                 ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.a standard-library declaration answers with its checked signature and status' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2856983 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:58:25: 0x20e95fd in json (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .json });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:236:27: 0x20f69c2 in test.a standard-library declaration answers with its checked signature and status (root_test.zig)
+           const bytes = try json("sort_ints");
+                                 ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.declaration-only analysis publishes the declared ceiling and no inferred effect' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857132 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:68:25: 0x20f4e7d in uncheckedJson (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .json, .check_bodies = false });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:257:36: 0x20f56b2 in test.declaration-only analysis publishes the declared ceiling and no inferred effect (root_test.zig)
+           const bytes = try uncheckedJson("sort_ints");
+                                          ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.a generic declaration without an instantiation publishes no inferred effect' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857144 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:58:25: 0x20e95fd in json (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .json });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:274:27: 0x20f4262 in test.a generic declaration without an instantiation publishes no inferred effect (root_test.zig)
+           const bytes = try json("sort_by_key");
+                                 ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.builtin and collection-method facts answer from the checker's own tables' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857154 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:58:25: 0x20e95fd in json (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .json });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:287:35: 0x20f1062 in test.builtin and collection-method facts answer from the checker's own tables (root_test.zig)
+           const builtin_bytes = try json("print");
+                                         ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.the embed builtins are discoverable through the reference' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857164 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:58:25: 0x20e95fd in json (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .json });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:315:27: 0x20f07e2 in test.the embed builtins are discoverable through the reference (root_test.zig)
+           const bytes = try json("embed_bytes");
+                                 ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.same_function is discoverable through the reference' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857205 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:58:25: 0x20e95fd in json (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .json });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:326:27: 0x20f0182 in test.same_function is discoverable through the reference (root_test.zig)
+           const bytes = try json("same_function");
+                                 ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.unsupported and removed names answer as exclusions, never as features' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857223 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:58:25: 0x20e95fd in json (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .json });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:336:39: 0x20ee482 in test.unsupported and removed names answer as exclusions, never as features (root_test.zig)
+           const unsupported_bytes = try json("capturing-closures");
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.the same query renders byte-identical answers and a dated envelope' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857243 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:63:25: 0x20e952d in text (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .text });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:357:27: 0x20ebdc2 in test.the same query renders byte-identical answers and a dated envelope (root_test.zig)
+           const first = try text("sort");
+                                 ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.an unmatched query is a normal answer and a malformed one is a usage error' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857276 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:63:25: 0x20e952d in text (root_test.zig)
+           return reference.run(language, t.allocator, .{ .query = query, .format = .text });
+                               ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:385:27: 0x20e9712 in test.an unmatched query is a normal answer and a malformed one is a usage error (root_test.zig)
+           const bytes = try text("zzz-no-such-fact");
+                                 ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'reference_test.test.the command reports usage on a malformed request and answers a well-formed one' terminated with signal ABRT with stderr:
+       guardian/test: 21 test(s) selected by filter: "reference_test." — 14 match by name, 7 unnamed test block(s) run regardless
+       thread 2857307 panic: start index 18 is larger than end index 17
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:521:22: 0x154e97b in parseFunctionLine (root_test.zig)
+           const rest = line[prefix.len..];
+                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:578:45: 0x149fe3b in gatherDeclarations__anon_48856 (root_test.zig)
+               const listed = try parseFunctionLine(arena, module, line) orelse
+                                                   ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:738:42: 0x149f191 in gatherLibrary__anon_44477 (root_test.zig)
+           const listed = try gatherDeclarations(language, arena, &index, listing, checked);
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:974:38: 0x13c3ad8 in gather__anon_42858 (root_test.zig)
+           const library = try gatherLibrary(language, arena, check_bodies);
+                                            ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference.zig:95:30: 0x13aaf37 in run__anon_42787 (root_test.zig)
+           const answer = try gather(language, scratch.allocator(), query, request.check_bodies);
+                                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_command.zig:90:31: 0x13aaabe in answer__anon_42482 (root_test.zig)
+           const text = reference.run(language, allocator, .{
+                                     ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/reference_test.zig:441:40: 0x13a9e23 in test.the command reports usage on a malformed request and answers a well-formed one (root_test.zig)
+           const answered = try command.answer(language, t.allocator, &.{ "--query", "standard-sort", "--format=json" });
+                                              ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:685:39: 0x1343073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:610:42: 0x13438c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/guardian-zig/src/test_runner.zig:306:39: 0x1343f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13407ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13401d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components ./.zig-cache/o/9acb3cd77dbc7a57216ce8397be06880/test --guardian-filter=reference_test. --cache-dir=./.zig-cache --seed=0xbbec31e --listen=-
+
+Build Summary: 22/24 steps succeeded (1 failed); 10/21 tests passed (11 crashed)
+fmt-check success
++- zig fmt --check success
++- check live .my corpus formatting success 1s
+|  +- install success
+|  |  +- install mylang cached
+|  |  |  +- compile exe mylang debug native cached 7ms MaxRSS:41M
+|  |  |  |  +- run exe build-identity (build_identity) cached
+|  |  |  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:41M
+|  |  |  |  +- WriteFile cached
+|  |  |  |  +- compile obj juice_bytes_hash fast native cached 5ms MaxRSS:42M
+|  |  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:42M
+|  |  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|  |  +- install generated to selka-components cached
+|  |  |  +- compile exe selka-components safe native cached 6ms MaxRSS:42M
+|  |  +- run exe selka-components success 356ms
+|  |  |  +- compile exe selka-components safe native (reused)
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+|  +- hash declared test inputs success 414ms
+|  +- record the test environment success 4ms
+|  +- run exe selka-components (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verify .my formatting gate success 1s
+   +- install (+4 more reused dependencies)
+   +- hash declared test inputs (reused)
+   +- record the test environment (reused)
+   +- run exe selka-components (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+test-units transitive failure
++- run test 10 pass, 11 crash (21 total)
+   +- compile test debug native success 1s MaxRSS:314M
+   |  +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |  +- options success
+   |     +- compile exe mylang debug native (+5 more reused dependencies)
+   +- run exe selka-components (+1 more reused dependencies)
+

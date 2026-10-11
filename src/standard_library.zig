@@ -9,6 +9,7 @@ const modules = [_]Module{
     .{ .path = "hex.my", .text = @embedFile("stdlib/hex.my") },
     .{ .path = "json.my", .text = @embedFile("stdlib/json.my") },
     .{ .path = "math.my", .text = @embedFile("stdlib/math.my") },
+    .{ .path = "memo.my", .text = @embedFile("stdlib/memo.my") },
     .{ .path = "network.my", .text = @embedFile("stdlib/network.my") },
     .{ .path = "path.my", .text = @embedFile("stdlib/path.my") },
     .{ .path = "pool.my", .text = @embedFile("stdlib/pool.my") },

@@ -12,6 +12,7 @@ const buffer_operations = @import("buffer_operations.zig");
 const collections = @import("collection_lower.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const callables = @import("callables.zig");
+const function_same = @import("function_same.zig");
 const record_layouts = @import("record_layouts.zig");
 const range_step = @import("range_step.zig");
 const iteration_place = @import("iteration_place.zig");
@@ -30,7 +31,7 @@ const chr_builtin = "chr";
 
 /// Prelude names answered without an import when no binding or declaration shadows them.
 pub fn reserved(name: []const u8) bool {
-    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "set", "dict", "zip", "repr", ord_builtin, chr_builtin }) |builtin| {
+    inline for (.{ "sum", "min", "max", "sorted", "abs", "round", "any", "all", reversed_builtin, "list", "set", "dict", "zip", "repr", ord_builtin, chr_builtin, function_same.name }) |builtin| {
         if (std.mem.eql(u8, name, builtin)) return true;
     }
     return false;
@@ -162,6 +163,7 @@ const eArity = "E_ARITY";
 
 /// Build one prelude builtin call, or null when a later recognizer owns this call.
 fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name: []const u8, arguments: []const typed.NodeId) Error!?typed.Node {
+    if (std.mem.eql(u8, name, function_same.name)) return @as(?typed.Node, try sameFunction(Checker, checker, span, arguments));
     // `abs` stays a float operation unless the argument is an integer.
     if (std.mem.eql(u8, name, "abs")) {
         if (arguments.len != 1) return checker.sink.fail(eArity, span, "abs requires one argument");
@@ -198,6 +200,13 @@ fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name:
         null;
     if (built) |value| return value;
     return checker.sink.fail(unsupported, span, "this prelude builtin is not available in this position");
+}
+
+fn sameFunction(comptime Checker: type, checker: *Checker, span: source.Span, arguments: []const typed.NodeId) Error!typed.Node {
+    if (arguments.len != 2) return checker.sink.fail(eArity, span, "same_function requires two arguments");
+    if (!function_same.compatible(nodeType(Checker, checker, arguments[0]), nodeType(Checker, checker, arguments[1]), checker.catalog.records))
+        return checker.sink.fail(function_same.code, span, function_same.message);
+    return .{ .span = span, .ty = .bool, .data = .{ .binary = .{ .op = .eq, .left = arguments[0], .right = arguments[1], .op_span = span } } };
 }
 /// `ord(text)`: the one Unicode scalar value of a text argument. A one-scalar
 /// text *literal* folds here to its `int`, so `b == ord("m")` is an immediate
