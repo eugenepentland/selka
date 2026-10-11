@@ -15,13 +15,21 @@ pub const Module = struct { context: declaration.Context, offset: usize, imports
 /// Complete raw syntax and namespace inputs for one scalar body batch.
 pub const Input = struct { context: Context, program: ast.Program, modules: []const Module, catalog: Catalog = .{} };
 /// Native retained prelude identities; absent entries are unavailable, never inferred.
-pub const Catalog = struct { string: ?Sequence = null, bytes: ?Sequence = null };
+pub const Catalog = struct {
+    string: ?Sequence = null,
+    bytes: ?Sequence = null,
+    base_count: usize = 0,
+    lists: []const Sequence = &.{},
+    list_available: bool = false,
+};
 /// The exact managed identity and its internal scalar element representation.
 pub const Sequence = struct { id: typed.Type, element: typed.Type };
 /// Complete typed tables before entry adaptation and native postpasses.
 pub const Batch = struct { nodes: []const typed.Node, statements: []const typed.Statement, functions: []const typed.Function, ranges: []const @import("semantic_copy.zig").Range };
 /// Typed bodies and all ordered checker observations.
-pub const Output = struct { batch: Batch, import_used: []const []const bool, diagnostics: []const Diagnostic };
+pub const Output = struct { batch: Batch, import_used: []const []const bool, diagnostics: []const Diagnostic, lists: []const ListRecipe = &.{} };
+/// One producer-selected canonical list identity, in native append order.
+pub const ListRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
 /// Located unsupported profile refusal; it never requests native fallback.
 pub const Profile = struct { code: []const u8, span: source.Span, message: []const u8 };
 /// Checked scalar bodies, source diagnostics, or explicit admission refusal.

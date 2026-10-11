@@ -328,7 +328,7 @@ fn managedFixture(a: std.mem.Allocator, text_source: []const u8) !Fixture {
     var p: parser.Parser = .{ .src = src, .tokens = tokens, .storage = a, .sink = &sink };
     const syntax = try p.parse();
     const program = try @import("sema.zig").checkLibraryProgram(a, src, syntax, &sink, null);
-    var catalog: value.Catalog = .{};
+    var catalog: value.Catalog = .{ .base_count = program.records.len };
     for (program.records) |record| {
         if (!record.isCollection()) continue;
         const entry: value.Sequence = .{ .id = record.id, .element = record.shape.buffer.? };
@@ -376,6 +376,7 @@ test "body check rejects forged managed catalog identities and elements" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var f = try fixture(arena.allocator());
+    f.input.catalog.base_count = 65536;
     f.input.catalog.string = .{ .id = .i64, .element = .u32 };
     try std.testing.expectError(error.ComponentProtocol, validate.input(std.testing.allocator, f.input));
     f.input.catalog.string = .{ .id = @fromBackingInt(typed.Type.record_base), .element = .u8 };
@@ -411,14 +412,14 @@ test "body check rejects surrogate and out of range managed text codepoints" {
     try corruptCodepoint(a, f, 0x110000);
 }
 // spec-case: SELFHOST-BODY-CHECK-1
-test "body check refuses schema one replies and unavailable sequence identities" {
+test "body check refuses old schema replies and unavailable sequence identities" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
     const f = try managedFixture(a, "func text() -> str:\n    return \"x\"\n");
     const request = try protocol.request(a, f.input, @splat(5));
     const response = try protocol.response(a, .{ .success = f.output }, request.identity);
-    std.mem.writeInt(u32, response[12..16], 1, .little);
+    std.mem.writeInt(u32, response[12..16], 2, .little);
     try std.testing.expectError(error.ComponentProtocol, protocol.reply(a, response, request.identity, f.input));
     var absent = f.input;
     absent.catalog = .{};
