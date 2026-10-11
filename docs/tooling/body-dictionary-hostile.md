@@ -6,6 +6,8 @@ The native-controlled source demands both dictionary key families, a set, all th
 
 Attacks cover global append IDs, order and duplicate role/arguments; hash-key and source-site authority; missing/forward view mapping dependencies; dictionary/set distinction; odd dictionary operands; exact key/value/result types and arity; readonly owner mutation and a same-type foreign-function operand; view mapping and DictItem initializer identity; and missing, unexpected or wrong-type Option payloads. The duplicate recipe uses the correct next global ID so it tests semantic duplication rather than merely repeating an old ID. Option uses native variant/match lowering; domain `unwrap` is not an Option operation.
 
+The dictionary read-result attack selects the native typed `index` by its base dictionary type and function ownership. A list read or another index cannot substitute for it. The length-result attack changes the native signed `i64` result to `u64`; retaining `i64` would leave the captured reply unchanged.
+
 The native C fixture is authenticated in a private deployment. Each hostile request uses `--no-cache`, preserving the captured request nonce and digest in the response header. The genuine capture must match the reference check before mutations. Compiler/all seven package identities must remain unchanged. Every raw payload and verdict is retained before assertion. Status2 alone is insufficient: stdout must be empty and the diagnostic-v1 message must be the exact established ComponentProtocol renderer (whose historical label is test-index).
 
 ```sh

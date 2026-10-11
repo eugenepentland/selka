@@ -31,10 +31,11 @@ def sample_graph():
     operation(15, b'write', 0, [2, 3])
     operation(15, b'write', 2, [3, 3])
     operation(15, b'write', 3, [3, 4])
-    operation(0, b'read', 0, [2])
+    nodes.append(node(0, b'index', obj(base=integer(2), index=integer(3), from_end=flag(0))))
+    nodes.append(node(0, b'index', obj(base=integer(5), index=integer(2), from_end=flag(0))))
     operation(0, b'get', 0, [2, 3])
     operation(1, b'contains', 0, [2])
-    operation(8, b'length', 0, [])
+    operation(0, b'length', 0, [])
     nodes.append(node(44, b'record', seq([obj(index=integer(0), value=integer(5))])))
     nodes.append(node(43, b'record', seq([obj(index=integer(0), value=integer(2)), obj(index=integer(1), value=integer(3))])))
     nodes.append(node(30, b'variant', obj(tag=integer(1), value=integer(3))))
@@ -116,6 +117,29 @@ class DictionaryHostileTests(unittest.TestCase):
         payload = sample_graph().replace(b'dict_keys', b'fake_keys')
         with self.assertRaisesRegex(RuntimeError, 'all six collection'):
             H.mutations(payload)
+
+    def test_read_and_length_mutations_follow_native_dictionary_shapes(self):
+        original = sample_graph()
+        graph = H.D.CapturedGraph(original)
+        attacks = H.mutations(original)
+        for name, expected_tag, expected_type in (("read_result", b'index', 1),
+                                                   ("length_result", b'buffer_operation', 8)):
+            changed = H.D.CapturedGraph(attacks[name])
+            altered = [node for node in graph.nodes
+                       if graph.rows[graph.field(node, b'ty')]['integer']
+                       != changed.rows[changed.field(node, b'ty')]['integer']]
+            self.assertEqual(len(altered), 1)
+            node = altered[0]
+            self.assertEqual(graph.rows[graph.field(node, b'ty')]['integer'], 0)
+            self.assertEqual(changed.rows[changed.field(node, b'ty')]['integer'], expected_type)
+            data = graph.rows[graph.field(node, b'data')]
+            self.assertEqual(data['data'], expected_tag)
+            operation = data['children'][0]
+            if name == 'read_result':
+                base = graph.rows[graph.field(operation, b'base')]['integer']
+                self.assertEqual(graph.rows[graph.field(graph.nodes[base], b'ty')]['integer'], 40)
+            else:
+                self.assertEqual(graph.rows[graph.field(operation, b'kind')]['data'], b'length')
 
     def test_frame_correlation_rejects_old_schema_nonce_digest_and_trailing_bytes(self):
         request, reply = frames(sample_graph())

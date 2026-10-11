@@ -169,6 +169,18 @@ def mutations(payload):
             if ty(node) == type_id and data['data'] == tag:
                 return node, data['children'][0]
         raise RuntimeError('capture missing canonical node ' + repr(tag))
+    def indexed_owner(owner_type):
+        for node in g.nodes:
+            data = g.rows[g.field(node, b'data')]
+            if data['data'] != b'index':
+                continue
+            base = number(data['children'][0], b'base')
+            F.require(0 <= base < len(g.nodes), 'capture index base outside node graph')
+            if ty(g.nodes[base]) == owner_type:
+                F.require(owner_function(node) == owner_function(g.nodes[base]),
+                          'capture index base belongs to another function')
+                return node
+        raise RuntimeError('capture missing canonical dictionary index')
     dict_array, array = tagged_of_type(b'array', dict_type)
     numeric_array, _ = tagged_of_type(b'array', numeric_type)
     array_items = g.items(array)
@@ -181,10 +193,12 @@ def mutations(payload):
     write_node, write = operation(b'write', dict_type)
     numeric_write_node, numeric_write = operation(b'write', numeric_type)
     _, set_write = operation(b'write', set_type)
-    read_node, _ = operation(b'read', dict_type)
+    read_node = indexed_owner(dict_type)
     _, get = operation(b'get', dict_type)
     contains_node, _ = operation(b'contains', dict_type)
     length_node, _ = operation(b'length', dict_type)
+    F.require(ty(read_node) == number(mapping, b'value') and ty(length_node) == 0,
+              'capture dictionary read/length types are not canonical')
     write_args = g.items(g.field(write, b'arguments'))
     set_args = g.items(g.field(set_write, b'arguments'))
     get_args_id = g.field(get, b'arguments'); get_args = g.items(get_args_id)
@@ -245,7 +259,7 @@ def mutations(payload):
     scalar('get_fallback_type', get_args[1], boolean_id)
     edges('get_arity', get_args_id, get_args[:-1])
     scalar('contains_result', g.field(contains_node, b'ty'), 0)
-    scalar('length_result', g.field(length_node, b'ty'), 0)
+    scalar('length_result', g.field(length_node, b'ty'), 8)
     scalar('write_key_type', write_args[0], integer_id)
     scalar('write_value_type', write_args[1], boolean_id)
     scalar('write_readonly_owner', g.field(write, b'owner'), readonly)
