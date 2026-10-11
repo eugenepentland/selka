@@ -36,6 +36,24 @@ class LibraryAdmissionTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):D.require_tests(result(good),['test_one','test_other'])
         with self.assertRaises(RuntimeError):D.require_tests((2,b'',b'ComponentProfile'),['test_one','test_two'])
 
+    def test_failed_selected_operation_retains_incomplete_raw_evidence(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as temporary:
+            report=Path(temporary)/'report.json'
+            args=SimpleNamespace(compiler=Path('/fake'),zig=Path('/zig'),builder=None,
+                                 source_root=D.D.ROOT,component_dir=Path('/components'),
+                                 native_controls=True,report=report)
+            with patch.object(D.argparse.ArgumentParser,'parse_args',return_value=args), \
+                 patch.object(D.F,'execute',return_value=(2,b'',b'ComponentProfile')):
+                with self.assertRaisesRegex(RuntimeError,'native fixture status changed'):D.main()
+            evidence=json.loads(report.read_text())
+            self.assertFalse(evidence['complete'])
+            self.assertEqual(evidence['selected_admission'],'pending')
+            self.assertEqual(evidence['records'][0]['stderr'],'ComponentProfile')
+            self.assertEqual(evidence['records'][0]['status'],2)
+            self.assertNotIn('failed',evidence)
+
     def test_actual_test_root_inventory_is_nonempty_and_duplicate_safe(self):
         self.assertEqual((len(D.LIBRARIES),len(D.TESTS)),(9,6))
         self.assertTrue(all((D.D.ROOT/'selfhost/components'/name).is_file() for name in D.LIBRARIES+D.TESTS))

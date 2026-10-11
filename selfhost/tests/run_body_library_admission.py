@@ -79,8 +79,11 @@ def main():
             result = F.execute([args.compiler, *command], env, work, 600)
             records.append({'mode': mode, 'phase': phase, 'command': list(map(str, [args.compiler, *command])),
                             'source_sha256': F.digest(Path(command[1])),
-                            'status': result[0], 'stdout_sha256': hashlib.sha256(result[1]).hexdigest(),
+                            'status': result[0], 'stdout': result[1].decode('utf-8', 'replace'), 'stdout_sha256': hashlib.sha256(result[1]).hexdigest(),
                             'stderr': result[2].decode('utf-8', 'replace')})
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(json.dumps({'complete': False, 'selected_admission': 'pending',
+                                               'records': records}, indent=2) + '\n')
             return result
         for name, spec in manifest.items():
             entry = source / name
@@ -118,7 +121,7 @@ def main():
                     for mode in modes:
                         verdict = require_tests(execute(mode, command, relative + ('-release' if release else '-normal')), expected)
                         records[-1]['tests'] = verdict
-    report = {'scope': 'native fixture controls' if args.native_controls else 'nine libraries and six test roots; seven package entries not admitted',
+    report = {'complete': True, 'scope': 'native fixture controls' if args.native_controls else 'nine libraries and six test roots; seven package entries not admitted',
               'selected_admission': 'pending' if args.native_controls else 'passed',
               'compiler_sha256': F.digest(args.compiler), 'packages': packages, 'qualified_seed_sha256': seed_sha256,
               'fixtures': len(manifest), 'library_roots': 9, 'test_roots': 6,
