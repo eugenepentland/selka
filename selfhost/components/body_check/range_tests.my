@@ -45,7 +45,7 @@ public func test_range_hidden_limit_metadata() -> bool fails syntax_value.Proble
     const fixture = try make()
     const index = fixture.scope.locals[fixture.plan.index]
     const limit = fixture.scope.locals[fixture.plan.limit]
-    return index.name == b"x" and index.initialized and index.origin == b"local" and index.usage.reads == 1 and not index.usage.temporary and limit.name == b"<range-limit>" and not limit.initialized and limit.usage.temporary and limit.usage.reads == 1 and fixture.scope.active == [fixture.plan.index]
+    return index.name == b"x" and index.flags.initialized and index.origin == b"local" and index.usage.reads == 1 and not index.usage.temporary and limit.name == b"<range-limit>" and not limit.flags.initialized and limit.usage.temporary and limit.usage.reads == 1 and fixture.scope.active == [fixture.plan.index]
 
 
 public func test_range_postbody_step_and_exact_one_plan() -> bool fails syntax_value.Problem:

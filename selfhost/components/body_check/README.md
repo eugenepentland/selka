@@ -1,4 +1,4 @@
-# B6 scalar, sequence, buffer, record, variant, and checked-failure body checking
+# B7 scalar, managed value, checked-failure, and scoped file body checking
 
 This producer owns typing and lowering of ordinary nongeneric function bodies
 from raw ASTs. It emits complete native typed nodes, statements, functions, local
@@ -47,7 +47,7 @@ body batch, diagnostics, and import usage. Component mode adopts the validated
 batch at the body-checking seam. Reference mode remains available.
 
 `main.my` accepts `--exchange FILE` or unframed `--request FILE`. The normative
-wire contract is [WIRE.md](WIRE.md): protocol 1, schema 6, correlated `SLKBCK01`
+wire contract is [WIRE.md](WIRE.md): protocol 1, schema 7, correlated `SLKBCK01`
 envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Older body schemas and packages are refused. The request contains raw ASTs, sources, declaration facts,
 and the retained catalog descriptors. Batch fields remain
 `nodes`, `statements`, `functions`, and `ranges`.
@@ -187,3 +187,33 @@ Pure tests and authenticated developer replays are distinct from installed
 source admission. The integration lane records admission of the nine selected
 actual libraries and six actual test roots, together with full qualification.
 The frozen B6 byte profile and its evidence remain a separate baseline.
+
+
+## B7 scoped file and explicit output closure
+
+The producer resolves `Filesystem` and `Stream` primitive signatures while
+preserving declaration, alias, and import authority. Binary `open(..., "rb")`
+selects canonical `str`, `bytes`, and `str[]` shapes before selecting the
+canonical `Result[file, str]` recipe. A direct open at a `with` head uses a
+file handle; ordinary calls keep the checked Result and its handling obligation.
+`with try fs.open(...) as file` and matched handles bound by `with` both emit
+real typed `with_scope` statements. File reads accept an absent count or an
+`int` count. Scoped handles cannot escape through value reads, storage, calls,
+or returns; methods outside lexical file ownership are explicit profile refusals.
+
+`Stream.write` accepts admitted text, byte values, and byte buffers and returns
+`int`. `Stream.print` admits `int`, `bool`, `Unit`, canonical text/bytes and byte buffers.
+It retains written value order, `sep=` and `end=` checks,
+explicit receiver identity, and exact source diagnostics. Ambient print is a
+source error. Native scope cleanup, entry adaptation, effect inference, origins,
+and other retained postpasses remain separate; the producer does not replace
+resource cleanup with ordinary blocks.
+
+Text/writable file modes, other file methods, native-renderable aggregate output,
+arbitrary owned resources,
+provider capabilities, and receiver forms outside this closure remain explicit
+profile refusals. Schema 7 changes the admitted semantic profile without adding
+request fields or widening the body graph, byte, edge, depth, or allocation limits.
+Development replies from rewritten schema-6 captures are not schema-7
+qualification evidence. Whole-source shadow and runtime qualification is required
+before declaring the new entrypoint closure qualified.

@@ -11,13 +11,18 @@ public record Usage:
     transfer_span: int = -1
 
 
+public record Flags:
+    initialized: bool
+    scoped_file: bool = False
+
+
 public record Local:
     name: bytes
     declaration: int
     ty: int
     mutable: bool
     origin: bytes
-    initialized: bool
+    flags: Flags
     usage: Usage
 
 
@@ -44,20 +49,20 @@ public func add(mut scope: Scope, name: bytes, declaration: int, ty: int, mutabl
     if len(scope.locals) >= 65536:
         fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="local limit exceeded")
     const slot = len(scope.locals)
-    scope.locals.append(Local(name=name, declaration=declaration, ty=ty, mutable=mutable, origin=origin, initialized=True, usage=Usage(reads=0, writes=0, dead_write_reads=0, dead_write_span=-1)))
+    scope.locals.append(Local(name=name, declaration=declaration, ty=ty, mutable=mutable, origin=origin, flags=Flags(initialized=True), usage=Usage(reads=0, writes=0, dead_write_reads=0, dead_write_span=-1)))
     scope.active.append(slot)
     return slot
 
 
 public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, local: Local) -> int fails syntax_value.Problem:
-    const no = try syntax_value.boolean(mut pool, False)
-    const initialized = try syntax_value.boolean(mut pool, local.initialized)
+    const scoped = try syntax_value.boolean(mut pool, local.flags.scoped_file)
+    const initialized = try syntax_value.boolean(mut pool, local.flags.initialized)
     const absent = try syntax_value.absent(mut pool)
     const available = try syntax_value.boolean(mut pool, local.usage.transfer_available)
     mut transfer_span = absent
     if local.usage.transfer_span >= 0:
         transfer_span = try graph.clone(mut pool, input, local.usage.transfer_span, 0)
-    const ownership = try syntax_value.object(mut pool, ["scoped_file", "transfer_span", "initialized", "transfer_available"], [no, transfer_span, initialized, available])
+    const ownership = try syntax_value.object(mut pool, ["scoped_file", "transfer_span", "initialized", "transfer_available"], [scoped, transfer_span, initialized, available])
     const reads = try syntax_value.integer(mut pool, local.usage.reads)
     const writes = try syntax_value.integer(mut pool, local.usage.writes)
     const dead_reads = try syntax_value.integer(mut pool, local.usage.dead_write_reads)

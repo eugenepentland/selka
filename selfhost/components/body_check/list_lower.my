@@ -45,7 +45,7 @@ public func temporary(mut scope: locals.Scope, context: Context, ty: int) -> int
     const active = scope.active
     const slot = try locals.add(mut scope, b"<collection>", context.span, ty, True, b"local")
     scope.active = active
-    scope.locals[slot].initialized = False
+    scope.locals[slot].flags.initialized = False
     scope.locals[slot].usage.reads = 1
     scope.locals[slot].usage.temporary = True
     return slot

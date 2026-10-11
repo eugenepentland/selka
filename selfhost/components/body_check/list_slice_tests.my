@@ -172,7 +172,7 @@ public func test_omitted_slice_fresh_capacity_and_copy_loop_reference_order() ->
         return False
     for slot in range(1, 5):
         const hidden = fixture.scope.locals[slot]
-        if hidden.name != b"<collection>" or not hidden.mutable or hidden.initialized or not hidden.usage.temporary or hidden.usage.reads != 1 or hidden.origin != b"local":
+        if hidden.name != b"<collection>" or not hidden.mutable or hidden.flags.initialized or not hidden.usage.temporary or hidden.usage.reads != 1 or hidden.origin != b"local":
             return False
     return len(fixture.scope.locals) == 5 and fixture.scope.active == [0]
 

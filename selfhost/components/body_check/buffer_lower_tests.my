@@ -43,7 +43,7 @@ public func test_omitted_text_end_exact_tail_and_signed_length_order() -> bool f
     const checked_12 = try operation_kind(fixture.batch, 2)
     const checked_13 = try node_tag(fixture.batch, 3)
     const checked_14 = try operation_kind(fixture.batch, 4)
-    return appended == 5 and len(fixture.batch.statements) == 2 and len(fixture.scope.active) == 0 and local.usage.temporary and local.usage.reads == 1 and not local.initialized and checked_11 == b"integer" and checked_12 == b"length" and checked_3 == 0 and checked_13 == b"cast" and checked_14 == b"text_tail"
+    return appended == 5 and len(fixture.batch.statements) == 2 and len(fixture.scope.active) == 0 and local.usage.temporary and local.usage.reads == 1 and not local.flags.initialized and checked_11 == b"integer" and checked_12 == b"length" and checked_3 == 0 and checked_13 == b"cast" and checked_14 == b"text_tail"
 
 
 public func test_explicit_end_preserves_nodes_without_normalization() -> bool fails syntax_value.Problem:

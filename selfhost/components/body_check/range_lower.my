@@ -37,7 +37,7 @@ public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, input: s
     const index = try locals.add(mut scope, name, request.name, 0, False, b"local")
     scope.locals[index].usage.reads = 1
     const limit = try locals.add(mut scope, b"<range-limit>", request.name, 0, False, b"local")
-    scope.locals[limit].initialized = False
+    scope.locals[limit].flags.initialized = False
     scope.locals[limit].usage.reads = 1
     scope.locals[limit].usage.temporary = True
     scope.active = scope.active[:len(scope.active) - 1]

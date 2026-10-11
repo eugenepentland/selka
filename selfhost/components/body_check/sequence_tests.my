@@ -204,7 +204,7 @@ public func test_managed_augmented_assignment_preserves_full_local_metadata() ->
     const ownership_id = try graph.field(state.batch.pool, encoded, "ownership")
     const transfer_id = try graph.field(state.batch.pool, ownership_id, "transfer_available")
     const transfer = try graph.get(state.batch.pool, transfer_id)
-    return local.ty == 83 and local.mutable and local.initialized and local.origin == b"parameter" and local.usage.reads == 1 and local.usage.writes == 1 and not local.usage.temporary and transfer.integer == 0
+    return local.ty == 83 and local.mutable and local.flags.initialized and local.origin == b"parameter" and local.usage.reads == 1 and local.usage.writes == 1 and not local.usage.temporary and transfer.integer == 0
 
 
 public func test_managed_nonadd_augmentation_exact_error() -> bool fails syntax_value.Problem:
