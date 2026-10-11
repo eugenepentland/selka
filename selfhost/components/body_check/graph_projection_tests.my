@@ -8,6 +8,7 @@ func refused(pool: syntax_value.Pool, id: int, name: str, message: str) -> bool:
         case Err(problem):
             return problem.code == "P_BODY_TRANSPORT" and problem.start == 0 and problem.end == 0 and problem.message == message
 
+
 public func test_projection_names_and_snapshot() -> bool fails syntax_value.Problem:
     mut pool = syntax_value.empty()
     const value = try syntax_value.integer(mut pool, 7)
@@ -19,19 +20,23 @@ public func test_projection_names_and_snapshot() -> bool fails syntax_value.Prob
     const changed = try graph.field(pool, row, "changed")
     return first == value and last == value and changed == value and refused(pool, row, "first", "missing record field")
 
+
 public func test_projection_invalid_ids() -> bool:
     const pool = syntax_value.empty()
     return refused(pool, -1, "field", "invalid value reference") and refused(pool, 0, "field", "invalid value reference")
+
 
 public func test_projection_wrong_kind() -> bool fails syntax_value.Problem:
     mut pool = syntax_value.empty()
     const value = try syntax_value.integer(mut pool, 7)
     return refused(pool, value, "field", "expected named record")
 
+
 public func test_projection_duplicate_and_missing() -> bool:
     const row = syntax_value.Value(kind=5, integer=0, data=b"unused", names=["same", "same"], children=[0, 0])
     const pool = syntax_value.Pool(values=[row], bytes_used=0, edges_used=0)
     return refused(pool, 0, "same", "duplicate record field") and refused(pool, 0, "absent", "missing record field")
+
 
 public func test_projection_malformed_lengths() -> bool:
     const row = syntax_value.Value(kind=5, integer=0, data=b"unused", names=["field"], children=[])
