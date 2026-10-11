@@ -15,14 +15,16 @@ class BodyEntryTests(unittest.TestCase):
     def test_frozen_resource_inventory_preserves_all_native_contracts(self):
         value=Q.manifest()
         self.assertEqual(len(value['cases']),24)
-        self.assertEqual([sum(s['class']==k for s in value['cases'].values()) for k in ('success','diagnostic','profile')],[14,8,2])
+        self.assertEqual([sum(s['class']==k for s in value['cases'].values()) for k in ('success','diagnostic','profile')],[16,8,0])
         limited=[s for s in value['cases'].values() if s.get('descriptor_limit')==32]
         self.assertEqual(len(limited),6)
         self.assertTrue(all(s['class']=='success' and s['runtime_status']==7 for s in limited))
         proposal=json.loads((Q.FIXTURES/'proposal.json').read_text())
+        promoted={'entry_text_profile','entry_write_profile'}
+        self.assertEqual({s['name'] for s in proposal['cases'] if s['class']=='profile'},promoted)
         for native in proposal['cases']:
             spec=value['cases'][native['name']+'.my']
-            self.assertEqual(spec['class'],native['class'])
+            self.assertEqual(spec['class'],'success' if native['name'] in promoted else native['class'])
             self.assertEqual(spec['source_sha256'],native['sha256'])
             self.assertEqual(spec.get('diagnostics'),native.get('diagnostics'))
             self.assertEqual(spec.get('runtime_stdout_hex'),native.get('runtime_stdout_hex'))
@@ -112,12 +114,12 @@ class BodyEntryTests(unittest.TestCase):
     def test_accounting_keeps_every_entry_generation_and_raw_failure(self):
         # Derive totals from required actions, not a subset that reports green.
         checks=24*3
-        fixture_builds_and_runtime=(14*3+2)*2
+        fixture_builds_and_runtime=16*3*2
         entry_checks=7*3
         entry_builds=7*3+7
         entry_probes=(7+entry_builds)*4
         self.assertEqual(checks+fixture_builds_and_runtime+entry_checks+entry_builds+entry_probes,Q.EXPECTED_OPERATIONS)
-        self.assertEqual(Q.EXPECTED_OPERATIONS,349)
+        self.assertEqual(Q.EXPECTED_OPERATIONS,357)
         self.assertEqual(7*2+7*2+7,35)
         with tempfile.TemporaryDirectory() as temporary:
             q=object.__new__(Q.Qualification)

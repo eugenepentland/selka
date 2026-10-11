@@ -1,6 +1,6 @@
 {
   "schema": 10,
-  "scope": "strict B7 installed preparation; qualification pending",
+  "scope": "strict B7 installed source and generation qualification",
   "cases": {
     "entry_binary_try.my": {
       "source": "entry_binary_try.input",
@@ -344,9 +344,9 @@
     "entry_write_profile.my": {
       "source": "entry_write_profile.input",
       "source_sha256": "c8cb1bc4e6144938e555a55cfb251ed4ff85d67fd2b1717df869e7fa7b13955c",
-      "class": "profile",
+      "class": "success",
       "native_status": 0,
-      "selected_status": 2,
+      "selected_status": 0,
       "runtime_status": 7,
       "runtime_stdout_hex": "",
       "runtime_stderr_hex": "",
@@ -355,9 +355,9 @@
     "entry_text_profile.my": {
       "source": "entry_text_profile.input",
       "source_sha256": "40ba90b7f64339f41ecef9b998c2068a68f356e683d5f8b42fb458040601bd63",
-      "class": "profile",
+      "class": "success",
       "native_status": 0,
-      "selected_status": 2,
+      "selected_status": 0,
       "runtime_status": 7,
       "runtime_stdout_hex": "",
       "runtime_stderr_hex": "",

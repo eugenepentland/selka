@@ -21,7 +21,7 @@ ENTRIES = {
     'declaration-index': 'declaration_index/main.my', 'type-interface': 'type_interface/main.my',
     'body-check': 'body_check/main.my',
 }
-EXPECTED_OPERATIONS = 349
+EXPECTED_OPERATIONS = 357
 BUILD_ADDRESS_SPACE_BUDGET = 4 << 30
 BUILD_FILE_SIZE_BUDGET = 128 << 20
 
@@ -35,7 +35,7 @@ def manifest():
     cases = value['cases']
     require(value['schema'] == SCHEMA and len(cases) == 24, 'incomplete B7 fixture selection')
     require({name for name in cases} == {p.with_suffix('.my').name for p in FIXTURES.glob('*.input')}, 'unselected/missing B7 fixture')
-    require([sum(s['class'] == kind for s in cases.values()) for kind in ('success', 'diagnostic', 'profile')] == [14, 8, 2], 'B7 classes changed')
+    require([sum(s['class'] == kind for s in cases.values()) for kind in ('success', 'diagnostic', 'profile')] == [16, 8, 0], 'B7 classes changed')
     for name, spec in cases.items():
         require(spec['source'] == str(Path(name).with_suffix('.input')), 'B7 source/name association changed')
         require(type(spec['native_status']) is int and type(spec['selected_status']) is int, 'noninteger verdict')
@@ -179,7 +179,7 @@ class Qualification:
                   'compiler_build_limits': {'address_space': BUILD_ADDRESS_SPACE_BUDGET, 'file_size': BUILD_FILE_SIZE_BUDGET},
                   'other_execute_limits': {'address_space': F.ADDRESS_SPACE_BUDGET, 'file_size': F.OUTPUT_LIMIT},
                   'captured_output_limit': F.OUTPUT_LIMIT,
-                  'cases': 24, 'success': 14, 'diagnostics': 8, 'profile': 2,
+                  'cases': 24, 'success': 16, 'diagnostics': 8, 'profile': 0,
                   'operations': len(self.records), 'expected_operations': EXPECTED_OPERATIONS,
                   'records': self.records, 'captures': self.captures, 'generations': self.generations,
                   'resource_forged': self.resource_hostile, 'resource_forged_capture': self.resource_capture}
@@ -321,7 +321,7 @@ class Qualification:
         require(request_inventory(self.args.requests_dir) == self.requests, 'authentic replay inventory changed')
         self.checkpoint(True)
         print('body entry resource forgeries: ' + str(len(self.resource_hostile)) + ' rejected; 0 failed, 0 skipped')
-        print('body entry qualification: 24 fixtures, 7 actual entries, 2 generations, 349 operations; 0 failed, 0 skipped')
+        print('body entry qualification: 24 fixtures, 7 actual entries, 2 generations, 357 operations; 0 failed, 0 skipped')
 
 
 def main():

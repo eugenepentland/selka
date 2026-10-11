@@ -1,0 +1,65 @@
+{
+  "format": 1,
+  "source_base": "98e09f26f761de18dacdc2229a133eaecd38f3c4",
+  "promoted": [
+    "entry_text_profile.my",
+    "entry_write_profile.my"
+  ],
+  "source_operations": 24,
+  "python_tests": 17,
+  "guardian": 88,
+  "entry_workflows_before": 349,
+  "entry_workflows_after": 357,
+  "entry_cases": 24,
+  "current_classes": {
+    "success": 16,
+    "diagnostic": 8,
+    "profile": 0
+  },
+  "implementation_evidence": "../selka-filesystem-producer-20261011/receipt.json",
+  "source_sha256": {
+    "selfhost/tests/fixtures/body_entry_candidate/manifest.json": "6215ee8f2c7ac6a7c1e1e2b6dd76321e176f5c7ee8683348235f7c828bc454e3",
+    "selfhost/tests/run_body_entry_qualification.py": "e20872c35293879093bca1d07cd06b5d58797b0758770d45975ad1fdbf8f0058",
+    "selfhost/tests/body_entry_qualification_test.py": "430782f3d98eabb41586176a5dfcfc6eeda9e1664bfaf7874b317d1be60237dc",
+    "selfhost/tests/body_entry_hostile_test.py": "138b6e315b3fb20f915f41767b066a3e434fae6867b6b4934c92d6614f1949ac",
+    "selfhost/test_body_entries.py": "2fc5f0432f6a50e96ff31f2a53bd4c7e73f7d756b75f5cc6d01baa37293e0dd5"
+  },
+  "scope": "Original source admission proven; full joined B7 generation gate pending",
+  "artifacts": [
+    {
+      "name": "filesystem-original-promotion-check.json.gz",
+      "sha256": "76cfa96923acd7b0c5c503578649cf406ff2b3312abc695db8042414600afac1",
+      "archive_sha256": "78234b9f1936a3017361ab3abbf2b5b978adff4c6176e746ef4082dc63a87f50",
+      "bytes": 595,
+      "archive_bytes": 248
+    },
+    {
+      "name": "filesystem-original-promotion-check.log.gz",
+      "sha256": "50d5f7bde2b9ebcfb59220d0a9a70112eb159c0e7654c1a32a78b257e23e094a",
+      "archive_sha256": "66e5cd1244c1246131d24c343fc5194fc5333dc91531521e88711688d2842055",
+      "bytes": 795,
+      "archive_bytes": 375
+    },
+    {
+      "name": "filesystem-original-promotion-stale-class.json.gz",
+      "sha256": "f18e16091ac85af57bba19084e2d9b57c56bf2d7773ba6bc29da224be7e3db26",
+      "archive_sha256": "780d66e778f058437e498179d4d9d7d0d8c72360552c241dbca1119dbcdd6f8d",
+      "bytes": 258,
+      "archive_bytes": 156
+    },
+    {
+      "name": "filesystem-original-promotion-stale-class.log.gz",
+      "sha256": "bad8ba0c46fc7bced284e03a10bba7375cc7ef00639c392c81d7615fdf53114b",
+      "archive_sha256": "d81f1c7a357842ecc6b9efffb4c7d725a7cbae8b63ba58de73d587e9cf8cad7d",
+      "bytes": 988,
+      "archive_bytes": 433
+    },
+    {
+      "name": "filesystem-original-promotion-commit.py.gz",
+      "sha256": "f3cb05d30fbcfc395a39e6ce8ff3616a2aa44426f601bd0aa46db33e492dabff",
+      "archive_sha256": "2fa71830de8fd5997fe857ffdf783f48decf0d25fbb28bc7633dc52e5b8da7a3",
+      "bytes": 5427,
+      "archive_bytes": 2129
+    }
+  ]
+}

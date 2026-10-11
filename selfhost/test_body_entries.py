@@ -16,7 +16,7 @@ def require_complete(report):
     E.require(report.get('complete') is True and report.get('selected_admission') == 'passed',
               'B7 source admission did not complete')
     E.require((report.get('operations'), report.get('expected_operations'), report.get('cases')) ==
-              (349, 349, 24), 'incomplete B7 source-operation selection')
+              (357, 357, 24), 'incomplete B7 source-operation selection')
     E.require(len(report.get('generations', [])) == 2, 'missing second source generation')
     E.require_capture_inventory(report.get('captures', []))
     records = report.get('resource_forged', [])
@@ -47,7 +47,7 @@ def main():
         args.report = args.report_dir/(label+'.json')
         E.Qualification(args).run()
         require_complete(json.loads(args.report.read_text()))
-    print('body entry gate: normal and release 349 operations/35 captures/15 resource attacks each; 0 failed, 0 skipped')
+    print('body entry gate: normal and release 357 operations/35 captures/15 resource attacks each; 0 failed, 0 skipped')
 
 
 if __name__ == '__main__':

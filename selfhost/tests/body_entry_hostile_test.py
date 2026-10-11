@@ -38,8 +38,8 @@ class HostileTest(unittest.TestCase):
                                          ('-generation2', ('component',))) for mode in modes]
         message = json.dumps({'version': 'diagnostic-v1', 'kind': 'message', 'message':
             'mylang: test-index component frame malformed, oversized, stale, or contains invalid IDs\n'}).encode().hex()
-        report = {'complete': True, 'selected_admission': 'passed', 'operations': 349,
-                  'expected_operations': 349, 'cases': 24, 'generations': [{}, {}],
+        report = {'complete': True, 'selected_admission': 'passed', 'operations': 357,
+                  'expected_operations': 357, 'cases': 24, 'generations': [{}, {}],
                   'captures': captures, 'resource_forged': [{'name': name, 'status': 2,
                   'stdout_hex': '', 'stderr_hex': message} for name in H.NAMES], 'failed': 0, 'skipped': 0}
         gate.require_complete(report)
