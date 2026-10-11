@@ -86,6 +86,40 @@ class Reports(unittest.TestCase):
             self.assertIsNone(result['cpu_seconds'])
             self.assertIsNone(result['aggregate_peak_rss_bytes'])
 
+    def test_archived_slow_test_rows(self):
+        # Exact rows from cache-wave11/session-verification.log:6734,6741,6821,7151.
+        archived = ('+- run test 7 pass (7 total) 16ms MaxRSS:7M\n'
+                    '+- run test 137 pass, 1427 skip (1564 total) 30s MaxRSS:141M\n'
+                    '+- run test 129 pass, 1435 skip (1564 total) 1m MaxRSS:66M\n'
+                    '|  +- run test 112 pass, 783 skip (895 total) 59s MaxRSS:574M\n')
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'log'
+            path.write_text(archived)
+            result = report.execution_timings(path)
+            self.assertEqual([x['elapsed_seconds'] for x in result['observations']], [.016, 30, 60, 59])
+            self.assertEqual([x['kind'] for x in result['observations']], ['test'] * 4)
+            self.assertEqual(result['observations'][1]['test_counts'], {'pass': 137, 'skip': 1427, 'total': 1564})
+            self.assertIn('137 pass', result['observations'][1]['raw_label'])
+            self.assertFalse(result['additive'])
+
+    def test_test_verdicts_durations_and_exclusions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'log'
+            path.write_text('+- run test 3 pass, 1 fail, 2 skip (6 total) 1.5m MaxRSS:12M\n'
+                            '+- run test 3 pass (3 total) 1h\n'
+                            '+- run test cached\n'
+                            '+- run test (reused)\n'
+                            '+- run test 3 pass (3 total) cached 1m\n'
+                            '+- run test 3 pass (9 total) 1m\n'
+                            '+- run test 3 pass, 3 pass (6 total) 1m\n'
+                            '+- run test bad pass (3 total) 1m\n'
+                            '+- run test 3 pass (3 total) -1s\n')
+            result = report.execution_timings(path)
+            self.assertEqual(len(result['observations']), 2)
+            self.assertEqual(result['observations'][0]['state'], 'failure')
+            self.assertEqual(result['observations'][0]['elapsed_seconds'], 90)
+            self.assertEqual(result['observations'][1]['elapsed_seconds'], 3600)
+
     def test_log_bounds_and_missing(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'log'

@@ -149,7 +149,8 @@ def explain_miss(current, previous, reason='dependency identity changed'):
     return result
 
 
-_DURATION = re.compile(r'^(?P<prefix>[| +\\`├─└│-]*)(?P<name>.+?) (?P<state>success|cached|failure) (?P<value>[0-9]+(?:\.[0-9]+)?)(?P<unit>ns|us|µs|ms|s)(?: MaxRSS:(?P<rss>[0-9.]+[KMGT]?))?$')
+_DURATION = re.compile(r'^(?P<prefix>[| +\\`├─└│-]*)(?P<name>.+?) (?P<state>success|cached|failure) (?P<value>[0-9]+(?:\.[0-9]+)?)(?P<unit>ns|us|µs|ms|s|m|h)(?: MaxRSS:(?P<rss>[0-9.]+[KMGT]?))?$')
+_TEST_DURATION = re.compile(r'^(?P<prefix>[| +\\`├─└│-]*)(?P<name>run test) (?P<counts>[0-9]{1,12} (?:pass|fail|skip)(?:, [0-9]{1,12} (?:pass|fail|skip))*) \((?P<total>[0-9]{1,12}) total\) (?P<value>[0-9]+(?:\.[0-9]+)?)(?P<unit>ns|us|µs|ms|s|m|h)(?: MaxRSS:(?P<rss>[0-9]+(?:\.[0-9]+)?[KMGT]?))?$')
 _ANSI = re.compile(r'\x1b\[[0-9;]*m')
 
 
@@ -175,18 +176,35 @@ CPU time and aggregate concurrent RSS are unavailable from this format.
         if len(line) > MAX_LINE:
             result['truncated'] = True
             continue
-        match = _DURATION.fullmatch(_ANSI.sub('', line.decode('utf-8', errors='replace')))
+        label = _ANSI.sub('', line.decode('utf-8', errors='replace'))
+        test_match = _TEST_DURATION.fullmatch(label)
+        counts = None
+        if test_match:
+            counts = {}
+            for pair in test_match['counts'].split(', '):
+                count, verdict = pair.split(' ')
+                if verdict in counts:
+                    counts = None
+                    break
+                counts[verdict] = int(count)
+            if counts is None or sum(counts.values()) != int(test_match['total']):
+                continue
+            counts['total'] = int(test_match['total'])
+        match = test_match or _DURATION.fullmatch(label)
         if not match:
+            continue
+        if not test_match and match['name'].startswith('run test') and (match['name'] != 'run test' or match['state'] == 'cached'):
             continue
         if len(result['observations']) >= MAX_OBSERVATIONS:
             result['truncated'] = True
             break
-        seconds = float(match['value']) * {'ns': 1e-9, 'us': 1e-6, 'µs': 1e-6, 'ms': 1e-3, 's': 1}[match['unit']]
+        seconds = float(match['value']) * {'ns': 1e-9, 'us': 1e-6, 'µs': 1e-6, 'ms': 1e-3, 's': 1, 'm': 60, 'h': 3600}[match['unit']]
         if not math.isfinite(seconds):
             continue
-        result['observations'].append(dict(node=match['name'][:512], raw_label=match['name'][:512],
-                                           kind='build' if match['name'].startswith('compile ') else 'unknown',
-                                           state=match['state'],
+        result['observations'].append(dict(node=match['name'][:512], raw_label=label[:512],
+                                           kind='test' if test_match else 'build' if match['name'].startswith('compile ') else 'unknown',
+                                           state=('failure' if counts.get('fail', 0) else 'success') if test_match else match['state'],
+                                           test_counts=counts,
                                            elapsed_seconds=seconds, tree_prefix=match['prefix'],
                                            peak_rss=match['rss'], source='zig-summary'))
     if result['observations']:
