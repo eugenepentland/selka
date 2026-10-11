@@ -1,0 +1,11 @@
+{
+  "SPEC.md": "f2db1d674fa7062a50fcf8ca5d2e966d6951eb6329be5a98b5ffd8bffc71020a",
+  "docs/managed-memory.md": "e124762693b4b3083df9df9bb1a8cdacf42ed279ee93e6fb21c6a28e5c019bed",
+  "src/core/build.zig": "857dd8aad7938a5466cf6922f8977cb0d4a5af8b6e25c3a855099fce53260a5d",
+  "src/core/single_owner.zig": "e757e29e2c907d5c030c6b2662bfd381e1c81268bbd76e7dbfb3bd80fcf63087",
+  "src/core/zero_rc_test.zig": "d88bc9012433b503101a1a2d9b30c64ee8dcf6445965c72e285118bbad1fe3aa",
+  "src/core/count_test.zig": "809ce46e4d964d7dd0847996a7cebdc084bdd47569e937b54b216130a6fe2661",
+  "src/stdlib/json.my": "b2d5d3577ff58acc13a563543b11b57dfa7c365627ac28c2d1f4470ea34e929e",
+  "test/core/zero_rc_match_box.my": "fd3aee097587c1090305e5bfa7290804274e796dc3c4a3dedca955d6e4c86a4d",
+  "src/stdlib/strings.my": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e"
+}

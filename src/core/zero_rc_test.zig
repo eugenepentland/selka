@@ -1017,3 +1017,224 @@ test "zero RC payload transfer handles wide option values phis and discarded own
         \\    return 0
     , "none\nempty\na-1 e-1\n7\na-2 e-2\n7\na-4 e-4\n7\n");
 }
+
+// spec: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match transfers success errors callbacks and popped payloads" {
+    try executes(std.testing.allocator,
+        \\func make(mut count: int, fail: bool) -> Result[str[], str]:
+        \\    count += 1
+        \\    if fail:
+        \\        return Err("error-" + str(count))
+        \\    return Ok(["item-" + str(count)])
+        \\func forward(mut count: int, fail: bool) -> Result[str[], str]:
+        \\    match make(mut count, fail):
+        \\        case Ok(items):
+        \\            return Ok(items)
+        \\        case Err(message):
+        \\            return Err(message)
+        \\func text(n: int) -> str?:
+        \\    if n == 0:
+        \\        return None
+        \\    return Some("text-" + str(n))
+        \\func invoke(f: func(int) -> str?, n: int) -> str:
+        \\    match f(n):
+        \\        case Some(value):
+        \\            return value
+        \\        case None:
+        \\            return "none"
+        \\func main(out: Stream) -> int:
+        \\    mut count = 0
+        \\    mut saved: str[] = []
+        \\    for i in range(3):
+        \\        match forward(mut count, i == 1):
+        \\            case Ok(items):
+        \\                saved = items
+        \\            case Err(message):
+        \\                saved.append(message)
+        \\        out.print(saved[0], len(saved))
+        \\    mut values: str?[] = [text(7)]
+        \\    match values.pop():
+        \\        case Some(value):
+        \\            saved.append(value)
+        \\        case None:
+        \\            assert False
+        \\    out.print(saved[0], saved[1], invoke(text, 0), invoke(text, 8), count)
+        \\    return 0
+    , "item-1 1\nitem-1 2\nitem-3 1\nitem-3 text-7 none text-8 3\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match rejects repeated moves and keeps named matches borrowed" {
+    try refuses(std.testing.allocator,
+        \\func make() -> str?:
+        \\    return Some("item-" + str(1))
+        \\func main() -> int:
+        \\    match make():
+        \\        case Some(value):
+        \\            const saved = value
+        \\            return len(saved) + len(value)
+        \\        case None:
+        \\            return 0
+    , "E_SINGLE_OWNER_MOVED");
+    try refuses(std.testing.allocator,
+        \\func extract(value: str?) -> str:
+        \\    match value:
+        \\        case Some(text):
+        \\            return text
+        \\        case None:
+        \\            return "none"
+        \\func main() -> int:
+        \\    return len(extract(Some("value")))
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    const saved: str? = Some("item-" + str(1))
+        \\    match saved:
+        \\        case Some(value):
+        \\            const moved = value
+        \\            return len(moved)
+        \\        case None:
+        \\            return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match still borrows projected unions" {
+    try refuses(std.testing.allocator,
+        \\record Holder:
+        \\    value: str?
+        \\func make() -> Holder:
+        \\    return Holder(value=Some("item-" + str(1)))
+        \\func main() -> int:
+        \\    match make().value:
+        \\        case Some(value):
+        \\            const moved = value
+        \\            return len(moved)
+        \\        case None:
+        \\            return 0
+    , "E_SINGLE_OWNER_BORROW");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    const values: str?[] = [Some("item-" + str(1))]
+        \\    match values[0]:
+        \\        case Some(value):
+        \\            const moved = value
+        \\            return len(moved)
+        \\        case None:
+        \\            return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match moves explicit copies independently and discards unused cases" {
+    try executes(std.testing.allocator,
+        \\func make(n: int) -> str[]?:
+        \\    return Some(["item-" + str(n)])
+        \\func main(out: Stream) -> int:
+        \\    mut original = make(1)
+        \\    mut saved: str[] = []
+        \\    match original.copy():
+        \\        case Some(value):
+        \\            saved = value
+        \\        case None:
+        \\            assert False
+        \\    original = make(2)
+        \\    match make(3):
+        \\        case Some(_):
+        \\            out.print(saved[0], len(saved))
+        \\        case None:
+        \\            assert False
+        \\    match make(4):
+        \\        case Some(unused):
+        \\            out.print(saved[0], len(saved))
+        \\        case None:
+        \\            assert False
+        \\    match original:
+        \\        case Some(value):
+        \\            out.print(value[0])
+        \\        case None:
+        \\            assert False
+        \\    return 0
+    , "item-1 1\nitem-1 1\nitem-2\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match transfers constructed unions through loop exits" {
+    try executes(std.testing.allocator,
+        \\enum Item:
+        \\    text(value: str[])
+        \\func forward(n: int) -> Result[str[], str]:
+        \\    if n == 0:
+        \\        return Ok([])
+        \\    if n == 1:
+        \\        return Err("error-" + str(n))
+        \\    return Ok(["item-" + str(n)])
+        \\func main(out: Stream) -> int:
+        \\    mut saved: str[] = []
+        \\    for i in range(4):
+        \\        match forward(i):
+        \\            case Ok(items):
+        \\                if len(items) == 0:
+        \\                    continue
+        \\                saved = items
+        \\                break
+        \\            case Err(message):
+        \\                out.print(message)
+        \\    match Item.text(value=["extra-" + str(7)]):
+        \\        case Item.text(value=items):
+        \\            out.print(saved[0], items[0])
+        \\    return 0
+    , "error-1\nitem-2 extra-7\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match transfers decoded text bytes and validation errors" {
+    try executes(std.testing.allocator,
+        \\func decode(data: bytes) -> str:
+        \\    match data.decode():
+        \\        case Ok(text):
+        \\            return text
+        \\        case Err(message):
+        \\            return message
+        \\func hex(text: str) -> Result[bytes, str]:
+        \\    match bytes.fromhex(text):
+        \\        case Ok(data):
+        \\            return Ok(data)
+        \\        case Err(message):
+        \\            return Err(message)
+        \\func count(data: bytes) -> str:
+        \\    match data.scalar_count():
+        \\        case Ok(size):
+        \\            return str(size)
+        \\        case Err(message):
+        \\            return message
+        \\func main(out: Stream) -> int:
+        \\    out.print(decode(bytes([97, 98])), decode(bytes([255])))
+        \\    out.print(count(bytes([97, 98])), count(bytes([255])))
+        \\    match hex("6162"):
+        \\        case Ok(data):
+        \\            out.print(decode(data))
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match hex("z"):
+        \\        case Ok(data):
+        \\            out.print(decode(data))
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    return 0
+    , "ab invalid UTF-8 in byte string\n2 invalid UTF-8 in byte string\nab\nhexadecimal text requires an even number of hex digits\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match JSON decoding and rendering return owned strings" {
+    try executes(std.testing.allocator,
+        \\import json
+        \\func main(out: Stream) -> int:
+        \\    match json.loads("\"item\""):
+        \\        case Ok(value):
+        \\            out.print(json.dumps(value))
+        \\        case Err(_):
+        \\            assert False
+        \\    return 0
+    , "\"item\"\n");
+}

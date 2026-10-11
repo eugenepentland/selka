@@ -972,6 +972,7 @@ const FnBuilder = struct {
     }
 
     fn matchStatement(self: *FnBuilder, value_node: typed.NodeId, arms: []const typed.MatchArm, span: u32) Error!void {
+        const owned = self.module().zero_rc and @import("single_owner.zig").matchOwnsTemporary(self.mb.input.program.nodes, value_node);
         var value_place: ?Place = null;
         const value = try self.expressionPlace(value_node, &value_place);
         if (self.current == null) return;
@@ -989,14 +990,14 @@ const FnBuilder = struct {
                 try self.seal(arm_block);
                 const resume_at = next;
                 self.current = arm_block;
-                try self.armBody(arm, value, value_place, span);
+                try self.armBody(arm, value, value_place, owned, span);
                 try self.jump(join);
                 self.current = resume_at;
             } else {
                 try self.jump(arm_block);
                 try self.seal(arm_block);
                 self.current = arm_block;
-                try self.armBody(arm, value, value_place, span);
+                try self.armBody(arm, value, value_place, owned, span);
                 try self.jump(join);
             }
         }
@@ -1004,9 +1005,9 @@ const FnBuilder = struct {
         self.enter(join);
     }
 
-    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, value_place: ?Place, span: u32) Error!void {
+    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, value_place: ?Place, owned: bool, span: u32) Error!void {
         if (arm.slot) |slot| {
-            const payload = try self.payloadOf(value, arm.tag, span);
+            const payload = if (owned) try self.propagatedPayload(value, arm.tag, span) else try self.payloadOf(value, arm.tag, span);
             try self.write(self.local(slot), self.current.?, payload);
             // A checker-hidden binding (the narrowing of `x is None`) names the payload in place:
             // a write through it must rebuild the union it came from.
@@ -1613,7 +1614,7 @@ const FnBuilder = struct {
         return self.propagatedPayload(input, 1 - none_tag, span);
     }
 
-    // The source contract consumes a propagated Result/Option. Preserve that
+    // The source contract consumes a propagated or freshly matched union. Preserve that
     // transfer in IR, including the ownership of a recursive boxed payload.
     fn propagatedPayload(self: *FnBuilder, input: ir.Ref, tag: usize, span: u32) Error!ir.Ref {
         if (!self.module().zero_rc) return self.payloadOf(input, tag, span);

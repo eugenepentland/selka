@@ -77,9 +77,16 @@ while a view is still used is rejected. Files and dependent capabilities use
 `with` scopes. Sharing and `.snapshot()` are refused in this mode.
 
 `try` transfers the active payload of an owned `Result` or `Option` directly.
-It does not make a deep copy. Pattern bindings from an ordinary `match` still
-borrow their matched value; `.copy()` explicitly requests an independent owner.
-See the [owned-payload experiment](../experiments/owned-payload-20261011/README.md).
+It does not make a deep copy. `match` on a fresh call result also transfers its
+payload, so `match load(): case Ok(value): return value` needs no copy. Matching
+a named value (`match saved`) or a field/index continues to borrow, even at its
+last use. A fresh constructor, `.copy()` or `.pop()` result follows the
+same transfer rule as a call, as do fresh results from text/byte decoding,
+validation and numeric parsing. Destructured record fields still borrow; this
+prototype does not move individual fields out of records. `.copy()` explicitly
+requests an independent owner.
+See the [owned-payload](../experiments/owned-payload-20261011/README.md) and
+[fresh-match](../experiments/owned-match-20261011/README.md) experiments.
 
 The zero-RC runtime has no reference-count field, retain/release functions, or
 count-based uniqueness checks. Heap allocation and ordinary destruction still

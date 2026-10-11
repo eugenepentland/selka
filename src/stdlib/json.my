@@ -324,7 +324,7 @@ func append_code_point(mut out: byte_buffer, code: int):
 func decoded(values: byte_buffer) -> Result[str, str]:
     match bytes(values).decode():
         case Ok(rendered):
-            return Ok(rendered.copy())
+            return Ok(rendered)
         case Err(_):
             return Err("JSON string is not valid UTF-8")
 
@@ -706,7 +706,7 @@ public func dumps(value: Json) -> str:
     write_value(mut out, value)
     match bytes(out).decode():
         case Ok(rendered):
-            return rendered.copy()
+            return rendered
         case Err(_):
             # Every fragment above is ASCII or the encoding of a valid str.
             assert False

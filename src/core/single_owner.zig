@@ -15,6 +15,32 @@ const view_escape = "E_ZERO_RC_VIEW_ESCAPE";
 const view_unsupported = "E_ZERO_RC_VIEW_UNSUPPORTED";
 const overlap_error = "E_SINGLE_OWNER_OVERLAP";
 
+/// Match may consume a freshly produced union, never a local or a projection.
+/// Shared by checking and lowering so the source rule does not depend on SSA use counts.
+pub fn matchOwnsTemporary(nodes: []const typed.Node, id: typed.NodeId) bool {
+    return switch (nodes[@backingInt(id)].data) {
+        .call, .invoke, .variant => true,
+        .block_value => |block| matchOwnsTemporary(nodes, block.value),
+        .buffer_operation => |operation| switch (operation.kind) {
+            .copy,
+            .pop,
+            .pop_key,
+            .pop_default,
+            .decode,
+            .from_hex,
+            .scalar_count,
+            .scalar_count_range,
+            .parse_int,
+            .parse_float,
+            .parse_int_range,
+            .parse_float_range,
+            => true,
+            else => false,
+        },
+        else => false,
+    };
+}
+
 /// A located refusal from the experimental language contract.
 pub const Failure = struct {
     code: []const u8 = unsupported,
@@ -568,7 +594,8 @@ const Checker = struct {
     }
 
     fn matchArms(c: *Checker, value: typed.NodeId, arms: []const typed.MatchArm) Error!bool {
-        try c.expression(value, .read);
+        const owned = c.zero_rc and matchOwnsTemporary(c.program.nodes, value);
+        try c.expression(value, if (owned) .move else .read);
         const before = try c.a.dupe(State, c.state);
         const saved = c.loans.items.len;
         defer c.loans.shrinkRetainingCapacity(saved);
@@ -577,7 +604,7 @@ const Checker = struct {
         var joined: ?[]State = null;
         for (arms) |arm| {
             @memcpy(c.state, before);
-            if (arm.slot) |slot| c.state[@backingInt(slot)] = .{ .available = true, .borrowed = true, .root = source orelse none };
+            if (arm.slot) |slot| c.state[@backingInt(slot)] = .{ .available = true, .borrowed = !owned, .root = if (owned) none else source orelse none };
             if (!try c.checkStatement(arm.body)) continue;
             if (joined) |previous| c.merge(previous, c.state);
             if (joined == null) joined = try c.a.alloc(State, c.state.len);
