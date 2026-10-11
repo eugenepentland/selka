@@ -1,0 +1,3 @@
+func main() -> int:
+    const values = []
+    return len(values)

@@ -54,7 +54,7 @@ pub fn verify(a: std.mem.Allocator, runtime: ?Runtime) HostError!Verified {
     const body_check_id = try body_check_boundary.identity(a, capabilities);
     if (allReference(capabilities)) return .{};
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("frontend-boundary-v5/target-profile/module-and-trust-v1/type-interface-v1/body-check-v2");
+    hash.update("frontend-boundary-v6/target-profile/module-and-trust-v1/type-interface-v1/body-check-v3");
     hash.update(&lex_id);
     hash.update(&parse_id);
     hash.update(&declaration_id);

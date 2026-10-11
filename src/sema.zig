@@ -120,6 +120,7 @@ const FrontendError = frontend_runtime.Error;
 const body_check = @import("body_check_component.zig");
 const body_value = @import("body_check_value.zig");
 const body_projection = @import("body_check_projection.zig");
+const body_materialize = @import("body_check_materialize.zig");
 const instances = @import("generic_instances.zig");
 const semantic_cache = @import("semantic_cache.zig");
 const sema_summaries = @import("sema_summaries.zig");
@@ -1622,11 +1623,22 @@ const BodySelection = struct {
     mode: body_check.Mode,
     outcome: ?body_value.Outcome,
     names: ?*Names,
+    input: ?body_value.Input,
 };
+
+fn bodySelection(mode: body_check.Mode, names: ?*Names, opened: ?OpenedBody) BodySelection {
+    return .{
+        .mode = mode,
+        .outcome = if (opened) |body| body.reply.outcome else null,
+        .names = names,
+        .input = if (opened) |body| body.input else null,
+    };
+}
 
 fn selectedBodies(step: InstanceStep, contracts_failed: bool, prior_failure: bool, selection: BodySelection) FrontendError![]typed.Function {
     if (selection.mode == .reference) return checkBodies(step, contracts_failed, prior_failure) catch |err| return retryOr(step.plan, err);
     var actual = selection.outcome orelse return error.ComponentProtocol;
+    const input = selection.input orelse return error.ComponentProtocol;
     // Capture common catalog/entry observations before the shadow oracle can
     // add body observations. Merging after checkBodies would hide omissions.
     if (actual == .success) {
@@ -1635,7 +1647,7 @@ fn selectedBodies(step: InstanceStep, contracts_failed: bool, prior_failure: boo
     }
     if (selection.mode == .component) {
         if (contracts_failed or prior_failure) return error.SourceError;
-        return adoptBodies(step, selection.names, actual);
+        return adoptBodies(step, selection.names, input, actual);
     }
     const first = step.checker.sink.items.items.len;
     var failed = false;
@@ -1649,13 +1661,24 @@ fn selectedBodies(step: InstanceStep, contracts_failed: bool, prior_failure: boo
         .batch = .{ .nodes = step.checker.nodes.items, .statements = step.checker.statements.items, .functions = functions, .ranges = step.checker.spec_ranges.items },
         .import_used = try body_projection.importUsage(step.allocator, selection.names),
         .diagnostics = diagnostics,
+        .lists = try body_materialize.added(step.allocator, step.checker.catalog, input.catalog.base_count),
     } };
     try body_check.compare(step.allocator, actual, expected);
     if (failed) return error.SourceError;
+    try compareBodyCatalog(step, selection, actual.success.lists);
     return functions;
 }
 
-fn adoptBodies(step: InstanceStep, names: ?*Names, outcome: body_value.Outcome) FrontendError![]typed.Function {
+fn compareBodyCatalog(step: InstanceStep, selection: BodySelection, recipes: []const body_value.ListRecipe) FrontendError!void {
+    // Reconstruct the common catalog independently. Applying producer recipes
+    // before native checking would conceal a wrong interning order in shadow.
+    var sink: diagnostic.Sink = .{ .allocator = step.allocator };
+    var catalog = try records.collectWithNames(step.allocator, step.checker.src, step.checker.syntax, &sink, selection.names);
+    try body_materialize.apply(step.allocator, &catalog, selection.input.?, recipes);
+    if (!try body_materialize.equalCatalog(step.allocator, catalog.records, step.checker.catalog.records)) return error.ComponentShadowMismatch;
+}
+
+fn adoptBodies(step: InstanceStep, names: ?*Names, input: body_value.Input, outcome: body_value.Outcome) FrontendError![]typed.Function {
     switch (outcome) {
         .profile => return error.ComponentProfile,
         .failure => |diagnostics| {
@@ -1663,6 +1686,7 @@ fn adoptBodies(step: InstanceStep, names: ?*Names, outcome: body_value.Outcome) 
             return error.SourceError;
         },
         .success => |output| {
+            try body_materialize.apply(step.allocator, &step.checker.catalog, input, output.lists);
             const batch = try body_value.cloneBatch(step.allocator, output.batch);
             if (step.checker.nodes.items.len != 0 or step.checker.statements.items.len != 0) return error.ComponentProtocol;
             try step.checker.nodes.appendSlice(step.allocator, batch.nodes);
@@ -1826,7 +1850,9 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
 // The retained catalog supplies managed prelude identities. Refuse unsupported
 // profiles before native symbolic bodies; defer body source diagnostics until
 // common declaration and entry validation have succeeded.
-fn openBody(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, options: CheckOptions, catalog: records.Catalog) FrontendError!?body_value.Decoded {
+const OpenedBody = struct { reply: body_value.Decoded, input: body_value.Input };
+
+fn openBody(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, options: CheckOptions, catalog: records.Catalog) FrontendError!?OpenedBody {
     if (try body_check.mode(options.runtime) == .reference) return null;
     const input = try body_projection.input(allocator, src, program, options.names, options.entry_required, catalog);
     var reply = try body_check.execute(allocator, input, options.runtime.?);
@@ -1834,7 +1860,7 @@ fn openBody(allocator: std.mem.Allocator, src: source.Source, program: ast.Progr
         reply.deinit();
         return error.ComponentProfile;
     }
-    return reply;
+    return .{ .reply = reply, .input = input };
 }
 
 fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) FrontendError!typed.Program {
@@ -1846,7 +1872,7 @@ fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.P
     const timing = activeTiming(cache);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
     var body_reply = try openBody(allocator, src, program, options, catalog);
-    defer if (body_reply) |*reply| reply.deinit();
+    defer if (body_reply) |*opened| opened.reply.deinit();
     var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
     var symbolic = try openSymbolicSession(cache, &session, src, module_names != null);
     defer deinitSymbolic(&symbolic);
@@ -1939,7 +1965,7 @@ fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.P
         .plan = &plan,
         .allocator = allocator,
         .index = 0,
-    }, contracts_failed, failed, .{ .mode = selected, .outcome = if (body_reply) |reply| reply.outcome else null, .names = module_names });
+    }, contracts_failed, failed, bodySelection(selected, module_names, body_reply));
     const pass_start = sink.items.items.len;
     try @import("c_abi.zig").validateImports(allocator, functions, sink);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;

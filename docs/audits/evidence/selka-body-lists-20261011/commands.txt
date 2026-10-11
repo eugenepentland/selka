@@ -1,0 +1,32 @@
+Integration cwd: /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang
+Branch: codex/selka-bootstrap-20261011
+Pinned Zig: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+TMPDIR=/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots
+ZIG_LOCAL_CACHE_DIR=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+
+Passing commands (ZIG denotes the exact pinned path above):
+scripts/build-slot.sh build ZIG build --summary all -j2 --maxrss 6442450944
+scripts/build-slot.sh gate ZIG build test --summary all -j2 --maxrss 6442450944
+scripts/build-slot.sh build ZIG build fmt-check --summary all -j2 --maxrss 6442450944
+scripts/build-slot.sh build ../guardian-zig/zig-out/bin/guardian-check all . --full
+scripts/build-slot.sh build ZIG build -Doptimize=ReleaseFast --prefix $TMPDIR/body-list-release --summary all -j2 --maxrss 6442450944
+scripts/build-slot.sh gate python3 selfhost/tests/run_body_check_qualification.py --compiler $TMPDIR/body-list-release/bin/mylang --builder $TMPDIR/body-list-release/tools/selka-components --component-dir $TMPDIR/body-list-release/libexec/mylang/components --zig ZIG --release --report $TMPDIR/b3-release-host-qualification.json
+python3 -m unittest selfhost/tests/body_check_qualification_test.py selfhost/tests/performance_ratio_test.py
+
+Original full-gate frozen source precedes only the developer list timing fixture,
+its scope text, and final audit/documentation changes. Compiler/producer bytes in
+artifacts.json are unchanged. Final accounting and formatting were repeated.
+The full gate includes the same accounting tests under admission. The final
+standalone accounting repeat above was not wrapped; it ran after timing ended.
+
+Strict timing command (exit 1: completed measurements fail budget):
+scripts/build-slot.sh gate python3 $TMPDIR/performance-ratio/isolated.py taskset -c 2,3,10,11 python3 $TMPDIR/performance-ratio/sweep.py
+Both launchers, each exact child argv, identities, raw samples and admission
+receipts are retained beside this file. Both full 18-row reports exist.
+
+Earlier red developer logs are retained as b3-debug-install*.log.gz and
+b3-early-parity*.log.gz. They are superseded by the full gate and installed
+receipts, not removed from the qualification history. Temporary paths in JSON
+are original execution paths; successful temporary-work directories are removed
+by their harnesses. Binary artifacts remain outside this source evidence tree.

@@ -1,0 +1,12 @@
+func main() -> int:
+    mut values = [1, 3]
+    values.insert(1, 2)
+    values.extend([4, 5])
+    assert values.pop() == 5
+    assert values.pop(0) == 1
+    values.remove(3)
+    values.reverse()
+    const saved = values.copy()
+    values.clear()
+    assert len(values) == 0
+    return saved[0] + saved[1] + 1

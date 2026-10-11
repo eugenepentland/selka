@@ -1,0 +1,8 @@
+func main() -> int:
+    mut values = [3, 4]
+    mut total = 0
+    for value in values:
+        values = [9]
+        total += value
+    assert values == [9]
+    return total

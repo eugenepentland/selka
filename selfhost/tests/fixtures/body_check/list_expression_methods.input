@@ -1,0 +1,6 @@
+func main() -> int:
+    mut rows = [[3, 1], [9]]
+    const copied = rows[0].copy()
+    rows[0].append(4)
+    assert copied == [3, 1]
+    return len(rows[0]) + copied[0] + copied[1]

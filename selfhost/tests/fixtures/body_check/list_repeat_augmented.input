@@ -1,0 +1,7 @@
+func main() -> int:
+    mut values = [1, 2]
+    const saved = values
+    values *= 2
+    assert saved == [1, 2]
+    assert values == [1, 2, 1, 2]
+    return len(values) + saved[0] + saved[1]

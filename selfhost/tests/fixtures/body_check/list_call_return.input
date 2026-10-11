@@ -1,0 +1,13 @@
+func choose(use_empty: bool) -> int[]:
+    if use_empty:
+        return []
+    return [3, 4]
+
+
+func total(values: int[]) -> int:
+    return values[0] + values[1]
+
+
+func main() -> int:
+    assert len(choose(True)) == 0
+    return total(choose(False))

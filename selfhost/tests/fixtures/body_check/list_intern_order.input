@@ -1,0 +1,14 @@
+func first() -> int:
+    const flags = [True]
+    const nested = [[3, 4]]
+    assert flags[0]
+    return nested[0][0] + nested[0][1]
+
+
+func later(values: int[]) -> int:
+    return len(values)
+
+
+func main() -> int:
+    assert later([]) == 0
+    return first()

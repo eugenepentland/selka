@@ -1,0 +1,7 @@
+func main() -> int:
+    mut rows = [[1, 2], [3, 4]]
+    const saved = rows
+    rows[0][0] = 9
+    assert saved[0][0] == 1
+    assert rows[0][0] == 9
+    return rows[1][0] + rows[1][1]

@@ -893,7 +893,7 @@ pub fn build(b: *std.Build) void {
     _ = body_checks_run.addOutputDirectoryArg("body-check-qualification");
     body_checks_step.dependOn(&body_checks_run.step);
     const body_checks_checks = driver(b, "body check qualification verdict accounting", rss.script, "body_check_qualification_self");
-    body_checks_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/body_check_qualification_test.py" });
+    body_checks_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/body_check_qualification_test.py", "selfhost/tests/performance_ratio_test.py" });
     body_checks_step.dependOn(&body_checks_checks.step);
     test_step.dependOn(body_checks_step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");

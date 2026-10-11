@@ -1,0 +1,8 @@
+func change(mut values: int[]) -> Unit:
+    values.append(7)
+
+
+func main() -> int:
+    mut values: int[] = []
+    change(values)
+    return len(values)

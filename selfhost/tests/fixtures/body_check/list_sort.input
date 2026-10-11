@@ -1,0 +1,11 @@
+func main() -> int:
+    mut values = [4, 1, 2]
+    values.sort()
+    mut words = ["z", "a"]
+    words.sort()
+    mut buffers = [b"z", b"a"]
+    buffers.sort()
+    assert values == [1, 2, 4]
+    assert words[0] == "a"
+    assert buffers[0] == b"a"
+    return values[0] + values[1] + values[2]

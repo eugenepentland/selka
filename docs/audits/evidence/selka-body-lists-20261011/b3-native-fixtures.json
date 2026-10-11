@@ -1,0 +1,129 @@
+{
+  "list_append_error.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected int, found bool\",\"location\":{\"path\":\"list_append_error.my\",\"start\":{\"line\":3,\"column\":19},\"end\":{\"line\":3,\"column\":23},\"bytes\":{\"start\":62,\"end\":66}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+  },
+  "list_augmented.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_call_return.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_REMOVED_SPELLING\",\"severity\":\"error\",\"message\":\"`List[T]` was removed; use `list[T]`\",\"location\":{\"path\":\"list_call_return.my\",\"start\":{\"line\":7,\"column\":20},\"end\":{\"line\":7,\"column\":24},\"bytes\":{\"start\":114,\"end\":118}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0},\"fix\":{\"edits\":[{\"path\":\"list_call_return.my\",\"bytes\":{\"start\":114,\"end\":118},\"text\":\"list\"}]}}}\n"
+  },
+  "list_constant_63.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_constant_64.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_elements.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_empty_annotations.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_index_error.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"collection index requires an integer\",\"location\":{\"path\":\"list_index_error.my\",\"start\":{\"line\":3,\"column\":12},\"end\":{\"line\":3,\"column\":25},\"bytes\":{\"start\":57,\"end\":70}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+  },
+  "list_inference_error.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_LIST_INFERENCE\",\"severity\":\"error\",\"message\":\"empty list requires an expected List type\",\"location\":{\"path\":\"list_inference_error.my\",\"start\":{\"line\":2,\"column\":20},\"end\":{\"line\":2,\"column\":22},\"bytes\":{\"start\":39,\"end\":41}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+  },
+  "list_intern_order.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_iteration.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_iteration_mutation.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_iteration_readonly_error.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_IMMUTABLE\",\"severity\":\"error\",\"message\":\"this binding cannot be assigned\",\"location\":{\"path\":\"list_iteration_readonly_error.my\",\"start\":{\"line\":3,\"column\":9},\"end\":{\"line\":3,\"column\":14},\"bytes\":{\"start\":53,\"end\":58}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+  },
+  "list_iteration_rebind.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_methods.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_mixed_error.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected int, found bool\",\"location\":{\"path\":\"list_mixed_error.my\",\"start\":{\"line\":2,\"column\":24},\"end\":{\"line\":2,\"column\":28},\"bytes\":{\"start\":43,\"end\":47}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+  },
+  "list_mut_calls.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_mut_marker_error.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_MUTATION_MARKER\",\"severity\":\"error\",\"message\":\"`change` writes `values`; write `(mut values)`\",\"location\":{\"path\":\"list_mut_marker_error.my\",\"start\":{\"line\":7,\"column\":12},\"end\":{\"line\":7,\"column\":18},\"bytes\":{\"start\":121,\"end\":127}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0},\"fix\":{\"edits\":[{\"path\":\"list_mut_marker_error.my\",\"bytes\":{\"start\":121,\"end\":121},\"text\":\"mut \"}]}}}\n"
+  },
+  "list_nested_snapshots.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_plus_error.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TEXT_OPERATOR\",\"severity\":\"error\",\"message\":\"managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`\",\"location\":{\"path\":\"list_plus_error.my\",\"start\":{\"line\":2,\"column\":24},\"end\":{\"line\":2,\"column\":25},\"bytes\":{\"start\":43,\"end\":44}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+  },
+  "list_readonly_error.my": {
+    "status": 1,
+    "diagnostics": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_IMMUTABLE\",\"severity\":\"error\",\"message\":\"this binding and its nested data are read-only; declare it with `mut` to update it\",\"location\":{\"path\":\"list_readonly_error.my\",\"start\":{\"line\":3,\"column\":5},\"end\":{\"line\":3,\"column\":11},\"bytes\":{\"start\":50,\"end\":56}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+  },
+  "list_repeat.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  }
+}

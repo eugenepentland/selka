@@ -1,0 +1,4 @@
+func main() -> int:
+    const text = "a,b"
+    const words = text.split(",")
+    return len(words) + 5

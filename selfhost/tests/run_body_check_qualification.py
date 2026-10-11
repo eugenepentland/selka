@@ -18,7 +18,7 @@ COMPONENT = 'body-check'
 
 def frame(payload):
     identity = b'bodytest' + F.hashlib.sha256(payload).digest()
-    return b'SLKBCK01' + struct.pack('<IIII', 1, 2, 0, len(payload)) + identity + payload
+    return b'SLKBCK01' + struct.pack('<IIII', 1, 3, 0, len(payload)) + identity + payload
 
 
 def blob(value):
@@ -36,9 +36,9 @@ def transport(binary, work, env, valid):
     request.write_bytes(valid)
     status, stdout, stderr = F.execute([binary, '--exchange', request], env, work, 30)
     F.require(status == 0 and not stderr and stdout[:8] == b'SLKBCK01' and stdout[24:64] == valid[24:64], 'valid body exchange failed')
-    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, 2, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
+    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, 3, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
     malformed = [b'', valid[:63], valid[:-1], valid+b'X', b'BADMAGIC'+valid[8:]]
-    for offset,value in ((8,2),(12,1),(16,1),(20,67108864)):
+    for offset,value in ((8,2),(12,1),(12,2),(16,1),(20,67108864)):
         changed=bytearray(valid);struct.pack_into('<I',changed,offset,value);malformed.append(bytes(changed))
     payload=valid[64:]
     malformed.extend([frame(b'BADMAGIC'+payload[8:]), frame(payload[:-1])])
@@ -128,7 +128,31 @@ def environment(mode, components, empty):
     return env
 
 
-def packages(directory, body_schema=2):
+def mutate_lists(payload):
+    rows, root = graph_rows(payload)
+    F.require(rows[root]['kind'] == 7 and rows[root]['data'] == b'success', 'list capture is not success')
+    def field(node, name):
+        row = rows[node]
+        F.require(row['kind'] == 5 and name in row['names'], 'missing list recipe field')
+        return row['children'][row['names'].index(name)]
+    output = rows[root]['children'][0]
+    recipes = rows[field(output, b'lists')]['children']
+    F.require(len(recipes) == 1, 'capture must contain one inferred list recipe')
+    recipe = recipes[0]
+    identity, element = field(recipe, b'id'), field(recipe, b'element')
+    targets = [(identity, rows[identity]['integer'] + 1),
+               (element, rows[identity]['integer']), (element, 7),
+               (field(field(recipe, b'span'), b'end'), 2147483647)]
+    variants = []
+    for target, value in targets:
+        F.require(rows[target]['kind'] == 1, 'list recipe field is not integer')
+        changed = bytearray(payload)
+        struct.pack_into('<q', changed, rows[target]['integer_at'], value)
+        variants.append(bytes(changed))
+    return variants
+
+
+def packages(directory, body_schema=3):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
                 'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), 'type-interface': (1, 1), COMPONENT: (1, body_schema)}
@@ -320,13 +344,15 @@ def capture_exchange(args,q,private,real,source,mode='component',mutate=False):
     return result,request.read_bytes(),reply.read_bytes()
 
 
-def forged_replies(args,q,private,success):
+def forged_replies(args,q,private,success,list_success):
     checked=0
-    for case,payload in enumerate(mutate_success(success[64:])):
+    cases = [('main.my', payload) for payload in mutate_success(success[64:])]
+    cases.extend(('profile_managed.my', payload) for payload in mutate_lists(list_success[64:]))
+    for case,(source,payload) in enumerate(cases):
         path=q.work/f'forged-body-{case}.bin';path.write_bytes(payload)
         for mode in q.modes:
             env=environment(mode,private,q.empty_path);env['BODY_REPLY']=str(path)
-            result=F.execute([q.compiler,'check-project',q.source/'main.my'],env,q.work)
+            result=F.execute([q.compiler,'check-project',q.source/source],env,q.work)
             F.require(result[0]==2 and not result[1] and result[2],f'{mode}: forged typed body {case} escaped rejection: {result!r}')
             checked+=1
     return checked
@@ -375,7 +401,9 @@ def main():
         F.require(captured==(0,b'',b''),'authentic body capture failed')
         protocol = transport(args.component_dir / manifests[COMPONENT]['artifact'], q.work,
                              environment('component', args.component_dir, q.empty_path),request)
-        forged = forged_replies(args, q,private,reply)
+        list_captured, _, list_reply = capture_exchange(args, q, private, real, 'profile_managed.my')
+        F.require(list_captured == (0, b'', b''), 'authentic inferred list capture failed')
+        forged = forged_replies(args, q,private,reply,list_reply)
         publication = publication_checks(args, q)
         edit = coordinator_edit(args, q) if args.edit_check else None
         report = {'host_sha256': host, 'packages': manifests, 'workflows': workflows,

@@ -203,7 +203,7 @@ const components = [_]Component{
     .{ .source = "parser_pilot", .name = "parser-pilot", .entry = "full_adapter.my", .schema = 2 },
     .{ .source = "declaration_index", .name = "declaration-index" },
     .{ .source = "type_interface", .name = "type-interface" },
-    .{ .source = "body_check", .name = "body-check", .schema = 2 },
+    .{ .source = "body_check", .name = "body-check", .schema = 3 },
 };
 
 fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {

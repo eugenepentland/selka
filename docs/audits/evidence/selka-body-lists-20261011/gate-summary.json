@@ -1,0 +1,11 @@
+{
+  "build_steps": 131,
+  "test_passed": 2726,
+  "test_slots": 27675,
+  "other_shard_slots": 24949,
+  "guardian_verdicts": 29,
+  "guardian_passed": 2724,
+  "failed": 0,
+  "selected_skipped": 0,
+  "additional_verification_cache_tests": 2
+}

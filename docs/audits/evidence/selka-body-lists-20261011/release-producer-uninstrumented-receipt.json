@@ -1,0 +1,35 @@
+{
+  "status": "full_installed_release_qualification_passed_not_timed",
+  "seed": "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang",
+  "seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "build_flags": [
+    "--release"
+  ],
+  "leakcheck_build": "0",
+  "original_manifest": {
+    "artifact": "body-check-efab777c4a1920c6cad02898d8036ee21ff47affacefaba17402315531a32586",
+    "component": "body-check",
+    "format": 1,
+    "key": "cbbbf94cc772e1447d69c3b97e9900a6e9bfe612dee0762175ed31307911f80f",
+    "protocol": 1,
+    "schema": 3,
+    "sha256": "efab777c4a1920c6cad02898d8036ee21ff47affacefaba17402315531a32586"
+  },
+  "experimental_manifest": {
+    "artifact": "body-check-289030f7b035e99548af76afc155aeaab88c732a57f12ea5a5098549f58c7af3",
+    "component": "body-check",
+    "format": 1,
+    "key": "14d990c58e41113198294f6eeed4ccc45f39a3d8eb73947fc3d9655c6dbe7f26",
+    "protocol": 1,
+    "schema": 3,
+    "sha256": "289030f7b035e99548af76afc155aeaab88c732a57f12ea5a5098549f58c7af3"
+  },
+  "original_bytes": 4643320,
+  "optimized_bytes": 2185984,
+  "host_sha256": "a4b0323080cf6e247560df9e0b182baf32eb5c2dfe91873362ea424b752b83c1",
+  "builder_sha256": "0da987dd7e67aa54d5840f74a6d84074c62f56a5638fbd1ae5abed7c38d73d51",
+  "six_other_manifests_identical": true,
+  "qualification_exit": 0,
+  "qualification_report_sha256": "8099a4a4350069f5435e02485fa1890995ce3f13a7ca292a51eb4ae251b6adfc",
+  "qualification_log_sha256": "bc553e405b68ac560dadfc211a810044474932f7849ca0583c808bafce17ea99"
+}

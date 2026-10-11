@@ -1,0 +1,9 @@
+func main() -> int:
+    mut values = [1, 2]
+    const saved = values
+    mut total = 0
+    for value in values:
+        total += value
+        values[1] = 6
+    assert saved == [1, 2]
+    return total

@@ -1,0 +1,346 @@
+{
+  "standard": {
+    "command": [
+      "/usr/bin/python3",
+      "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_performance_ratio.py",
+      "--isolated",
+      "--baseline-prefix",
+      "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-managed-release",
+      "--candidate-prefix",
+      "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-list-release",
+      "--candidate-mode",
+      "BODY_CHECK=component",
+      "--candidate-body-schema",
+      "3",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--output",
+      "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/performance-ratio/b3-standard.json"
+    ],
+    "exit_status": 1,
+    "report": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/performance-ratio/b3-standard.json",
+    "sha256": "196264ebac8afb07f2ab113148a6c258714869347bf1898373bc64d5152cf882",
+    "verdict": {
+      "budget": 1.5,
+      "rows": [
+        {
+          "workflow": "lists/compile-fresh-application-cache",
+          "ratios": {
+            "median_ns": 6.192159377494474,
+            "p95_ns": 5.983588930868949
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/check",
+          "ratios": {
+            "median_ns": 6.374955356550711,
+            "p95_ns": 5.981809991838316
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/compile-warm",
+          "ratios": {
+            "median_ns": 6.996669111876898,
+            "p95_ns": 7.054473048320513
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/test-cold",
+          "ratios": {
+            "median_ns": 6.031964627698117,
+            "p95_ns": 5.850546296220782
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/test-warm",
+          "ratios": {
+            "median_ns": 9.76840690250943,
+            "p95_ns": 9.183184752665557
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/runtime",
+          "ratios": {
+            "median_ns": 1.0541417458646067,
+            "p95_ns": 1.0831602949429133
+          },
+          "passed": true
+        },
+        {
+          "workflow": "managed/compile-fresh-application-cache",
+          "ratios": {
+            "median_ns": 6.391415280846378,
+            "p95_ns": 6.319335715955274
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/check",
+          "ratios": {
+            "median_ns": 6.201527492492991,
+            "p95_ns": 6.266720007653272
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/compile-warm",
+          "ratios": {
+            "median_ns": 6.706360889038261,
+            "p95_ns": 6.474643236200112
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/test-cold",
+          "ratios": {
+            "median_ns": 6.075967530944657,
+            "p95_ns": 5.837887373444397
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/test-warm",
+          "ratios": {
+            "median_ns": 9.657058333853499,
+            "p95_ns": 9.259227842284876
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/runtime",
+          "ratios": {
+            "median_ns": 1.0577821558348464,
+            "p95_ns": 1.0675926922938874
+          },
+          "passed": true
+        },
+        {
+          "workflow": "scalar/compile-fresh-application-cache",
+          "ratios": {
+            "median_ns": 6.413287560015043,
+            "p95_ns": 6.331962607858303
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/check",
+          "ratios": {
+            "median_ns": 6.058520477983365,
+            "p95_ns": 5.545039112923947
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/compile-warm",
+          "ratios": {
+            "median_ns": 6.721669836432421,
+            "p95_ns": 6.634170916162713
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/test-cold",
+          "ratios": {
+            "median_ns": 6.168055640966081,
+            "p95_ns": 5.988863874306416
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/test-warm",
+          "ratios": {
+            "median_ns": 9.612202670230202,
+            "p95_ns": 9.232660102881052
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/runtime",
+          "ratios": {
+            "median_ns": 1.033527121114571,
+            "p95_ns": 1.081301203490487
+          },
+          "passed": true
+        }
+      ],
+      "passed": false
+    }
+  },
+  "release-producer": {
+    "command": [
+      "/usr/bin/python3",
+      "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_performance_ratio.py",
+      "--isolated",
+      "--baseline-prefix",
+      "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-managed-release",
+      "--candidate-prefix",
+      "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/candidate-release",
+      "--candidate-mode",
+      "BODY_CHECK=component",
+      "--candidate-body-schema",
+      "3",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--output",
+      "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/performance-ratio/b3-release-producer.json"
+    ],
+    "exit_status": 1,
+    "report": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/performance-ratio/b3-release-producer.json",
+    "sha256": "f0c991801743f2e065d7772a97e6fcfb44f97e7171cc508b474036c9290e8cef",
+    "verdict": {
+      "budget": 1.5,
+      "rows": [
+        {
+          "workflow": "lists/compile-fresh-application-cache",
+          "ratios": {
+            "median_ns": 3.4906526516676024,
+            "p95_ns": 3.4456399298463927
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/check",
+          "ratios": {
+            "median_ns": 3.6492274384708314,
+            "p95_ns": 3.6355924420775274
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/compile-warm",
+          "ratios": {
+            "median_ns": 3.9274282568609737,
+            "p95_ns": 3.808296710504289
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/test-cold",
+          "ratios": {
+            "median_ns": 3.390348498392085,
+            "p95_ns": 3.2274757433393355
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/test-warm",
+          "ratios": {
+            "median_ns": 5.128616186448182,
+            "p95_ns": 4.825324964080255
+          },
+          "passed": false
+        },
+        {
+          "workflow": "lists/runtime",
+          "ratios": {
+            "median_ns": 1.0334523072707835,
+            "p95_ns": 1.087651509734575
+          },
+          "passed": true
+        },
+        {
+          "workflow": "managed/compile-fresh-application-cache",
+          "ratios": {
+            "median_ns": 3.5948163239639315,
+            "p95_ns": 3.502856402847398
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/check",
+          "ratios": {
+            "median_ns": 3.43480595680713,
+            "p95_ns": 3.1446229203780804
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/compile-warm",
+          "ratios": {
+            "median_ns": 3.8340517560994583,
+            "p95_ns": 3.581320030865204
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/test-cold",
+          "ratios": {
+            "median_ns": 3.419917908836833,
+            "p95_ns": 3.4275216264808197
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/test-warm",
+          "ratios": {
+            "median_ns": 5.0768589935260096,
+            "p95_ns": 4.7738171315230575
+          },
+          "passed": false
+        },
+        {
+          "workflow": "managed/runtime",
+          "ratios": {
+            "median_ns": 0.9781367947629797,
+            "p95_ns": 0.9892896082742322
+          },
+          "passed": true
+        },
+        {
+          "workflow": "scalar/compile-fresh-application-cache",
+          "ratios": {
+            "median_ns": 3.6716595510827936,
+            "p95_ns": 3.552418089232575
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/check",
+          "ratios": {
+            "median_ns": 3.5243472707898147,
+            "p95_ns": 3.3854558774909718
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/compile-warm",
+          "ratios": {
+            "median_ns": 3.787247558413668,
+            "p95_ns": 3.501032345143215
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/test-cold",
+          "ratios": {
+            "median_ns": 3.465106374367394,
+            "p95_ns": 3.4735667260037864
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/test-warm",
+          "ratios": {
+            "median_ns": 5.131528822533009,
+            "p95_ns": 4.745165580861299
+          },
+          "passed": false
+        },
+        {
+          "workflow": "scalar/runtime",
+          "ratios": {
+            "median_ns": 1.0610965185082433,
+            "p95_ns": 1.073990692736062
+          },
+          "passed": true
+        }
+      ],
+      "passed": false
+    }
+  }
+}

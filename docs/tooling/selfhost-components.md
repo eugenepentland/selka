@@ -9,8 +9,9 @@ unaffected test keys. Canonical fact extraction, storage and execution remain in
 Zig. The lexer and parser pilots supply opt-in frontend comparison and component
 modes across compiler commands. The declaration index adds opt-in Selka-owned
 module tables, exports and declaration diagnostics. Type/interface analysis adds
-Selka-owned signature validation and interface name resolution. All six components can be rebuilt without
-rebuilding the compiler host.
+Selka-owned signature validation and interface name resolution. Body checking
+adds scalar, text/byte and list bodies with explicit refusal outside its qualified
+profile. All seven components can be rebuilt without rebuilding the compiler host.
 
 ## Build and install
 
@@ -23,7 +24,7 @@ zig build
 ```
 
 Installation contains `tools/selka-components`, `bin/mylang` and
-`libexec/mylang/components/{test-index,cache-plan,lexer-pilot,parser-pilot,declaration-index,type-interface}.json`
+`libexec/mylang/components/{test-index,cache-plan,lexer-pilot,parser-pilot,declaration-index,type-interface,body-check}.json`
 with their content-named executables.
 Keep those directories together when relocating the installation. `--prefix`
 selects another installation root. A copied host executable alone is incomplete
@@ -41,10 +42,15 @@ hardware hashing. ReleaseSafe with Zig's native backend still exhibits the
 slowdown, so a custom Zig without LLVM cannot build the coordinator. This setting
 is independent of the host's optimization mode and the seed/component recipes;
 it does not change the Zig pin or the progressive self-hosting boundary.
+The current component recipe uses the seed's default guest build policy,
+independently of host optimization. That policy already optimizes each module;
+guest `--release` combines the program into one LLVM unit and changes debug
+metadata. A ReleaseFast host therefore does not imply a release-built producer.
 
 Host artifact verification uses a narrow LLVM ReleaseSafe SHA-256 object, while
-other host code retains its selected backend and optimization mode. Three private
-functions initialize, update and finish opaque fixed hash storage. They use the
+other host code retains its selected backend and optimization mode. Private
+functions initialize, update and finish opaque fixed hash storage, plus a
+one-shot function for an already contiguous buffer. They use the
 pinned standard SHA-256 implementation; differential tests cover empty input,
 padding and block boundaries, and independent stream chunk sizes. On x86 hosts
 with AVX, each private entry clears upper lanes before SHA work, so native callers

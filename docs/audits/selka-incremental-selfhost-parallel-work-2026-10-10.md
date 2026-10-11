@@ -237,3 +237,51 @@ Before production adoption, component identities must participate in syntax,
 semantic and test-result validity. The unchanged Zig host digest alone cannot
 identify a compiler whose lexer or parser component changed. Coordinate that
 integration with the cache work after its current wave is qualified.
+
+## Continuation through complete bootstrap — 11 October 2026
+
+The later user instruction extends this initial parallel pilot plan through a
+complete Selka compiler and requires compile time, test time and generated
+runtime to stay within 1.5 times the Zig implementation. This is an acceptance
+requirement for the completed compiler, not a claim about the current pilots.
+
+The last qualified boundary is B3, recorded in
+[the list body audit](selka-body-lists-2026-10-11.md). Seven packages build with
+the unchanged qualified seed; ordinary scalar, string, byte and supported list
+bodies use Selka checking without native body fallback. Ordered list recipes
+and complete final catalog schemas match native checking. B4 record/member
+checking is in progress in separate implementation lanes. The compiler still
+cannot check its own source, and neither a complete compiler nor a bootstrap
+fixed point is proven.
+
+| Remaining stage | Completion evidence |
+| --- | --- |
+| B4 ordinary records and members | Constructors/defaults, nominal resolution, field reads and mixed record/list mutation paths match complete native typed tables and metadata, including recursive records through lists, snapshots and exact diagnostics. |
+| Remaining body language | Unions and patterns, other collections, generic specialization, checked failures, resources and all remaining forms cover the current language and the compiler's own source. Unsupported profile refusals cannot count as success. |
+| Remaining semantic ownership | Selka owns declaration/catalog construction, entry handling, effects/origins, contracts, codecs and warnings, with diagnostics and accepted/rejected programs matching the native reference. |
+| Core and LLVM backend | Selka lowers checked programs, performs required Core transformations and emits LLVM; generated programs pass the complete behavior, ownership, fact and leak suites. |
+| Compiler driver | Selka owns source/module loading and build/test/cache orchestration, invokes the external toolchain, and performs supported installed commands without a native compiler fallback or Python dependency. |
+| Staged bootstrap | The pinned Zig seed builds stage 1; stage 1 builds stage 2; stage 2 builds stage 3. Retained source/toolchain/artifact identities and explained reproducibility comparisons establish the fixed point, and the resulting compiler passes the full language and tooling gates. |
+| Performance acceptance | Isolated matched native/Selka measurements cover representative compiler sources and projects, compile/check/edit workflows, cold and warm tests, and generated release runtime. Every required workload stays within 1.5 times native; averaging away a failed row is not acceptance. |
+
+The C runtime and pinned external Zig/LLVM tools may remain dependencies. Full
+self-hosting requires Selka ownership of the compiler, not rewriting those
+dependencies. The native implementation remains an independent qualification
+oracle during migration; selected production paths must not silently fall back.
+
+The B2 measurements already show an unmet performance requirement: selected body
+checking took 4.93 ms versus 1.06 ms native, warm replay 9.07 ms versus 1.80 ms,
+and edit/link 71.28 ms versus 15.29 ms on a small two-module workload. These are
+component measurements with warm shared native units, not whole-compiler or
+cold-toolchain benchmarks. Performance work therefore runs alongside feature
+coverage, with exact mode/cache provenance and behavior checks. Intermediate
+subset benchmarks cannot establish full-language acceptance.
+
+The B3 strict measurements also fail: only the three generated-runtime rows pass
+out of 18 workflows. Compile/check/test medians are about 6–10 times native with
+the standard producer and 3.4–5.1 times native with a separately qualified
+whole-unit release producer. Both require further work; the release experiment
+is a substantial improvement, not performance acceptance. The list audit retains
+all median/p95 verdicts, exact receipts and isolation records. Transitioning to a
+fused compiler removes intermediate process/transport boundaries, but remaining
+Selka algorithm, allocation and generated-runtime costs must still be measured.

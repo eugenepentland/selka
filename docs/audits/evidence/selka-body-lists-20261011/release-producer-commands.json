@@ -1,0 +1,47 @@
+{
+  "cwd": "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang",
+  "qualification_build": [
+    "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang",
+    "build",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/source/main.my",
+    "-o",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/body-check-release",
+    "--release",
+    "--verify-facts",
+    "--cache-dir",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/cache"
+  ],
+  "uninstrumented_build": [
+    "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang",
+    "build",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/source/main.my",
+    "-o",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/body-check-release-uninstrumented",
+    "--release",
+    "--cache-dir",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/cache"
+  ],
+  "environment": {
+    "MYLANG_ZIG": "/home/epentland/.local/bin/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/zig-global",
+    "MYLANG_CORE_RUNTIME_CACHE": "",
+    "MYL_CORE_LEAKCHECK": "1 for qualification build / 0 for uninstrumented build",
+    "TMPDIR": "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment"
+  },
+  "admission": "scripts/build-slot.sh build for builds; gate for installed full qualification",
+  "installed_qualification": [
+    "python3",
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_check_qualification.py",
+    "--compiler",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/candidate-release/bin/mylang",
+    "--builder",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/candidate-release/tools/selka-components",
+    "--component-dir",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/candidate-release/libexec/mylang/components",
+    "--zig",
+    "/home/epentland/.local/bin/zig",
+    "--release",
+    "--report",
+    "/home/epentland/.codex/worktrees/selka-compiler-probes/mylang/.tmp/b3-release-experiment/full-qualification.json"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "list_call_return.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_expression_methods.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_index_augmented.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_sort.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "profile_text_method.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "profile_text_repeat.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  "list_repeat_augmented.my": {
+    "status": 0,
+    "diagnostics": "",
+    "result": 7,
+    "stdout": "7\n",
+    "stderr": ""
+  }
+}

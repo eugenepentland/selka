@@ -110,12 +110,25 @@
     "code": "E_UNKNOWN_NAME"
   },
   "profile_managed.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 1
+  },
+  "profile_generic.my": {
     "status": 2,
     "boundary": "profile",
     "typed": false,
     "library": false
   },
-  "profile_generic.my": {
+  "profile_text_method.my": {
+    "status": 2,
+    "boundary": "profile",
+    "typed": false,
+    "library": false
+  },
+  "profile_text_repeat.my": {
     "status": 2,
     "boundary": "profile",
     "typed": false,
@@ -395,5 +408,187 @@
     "typed": false,
     "library": false,
     "code": "E_TYPE"
+  },
+  "list_empty_annotations.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_call_return.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_nested_snapshots.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_mut_calls.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_methods.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_augmented.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_elements.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_iteration.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_iteration_mutation.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_iteration_rebind.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_intern_order.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_repeat.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_constant_63.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_constant_64.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_inference_error.my": {
+    "status": 1,
+    "boundary": "list-body",
+    "typed": false,
+    "library": false,
+    "code": "E_LIST_INFERENCE"
+  },
+  "list_mixed_error.my": {
+    "status": 1,
+    "boundary": "list-body",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "list_readonly_error.my": {
+    "status": 1,
+    "boundary": "list-body",
+    "typed": false,
+    "library": false,
+    "code": "E_IMMUTABLE"
+  },
+  "list_mut_marker_error.my": {
+    "status": 1,
+    "boundary": "list-body",
+    "typed": false,
+    "library": false,
+    "code": "E_MUTATION_MARKER"
+  },
+  "list_index_error.my": {
+    "status": 1,
+    "boundary": "list-body",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "list_append_error.my": {
+    "status": 1,
+    "boundary": "list-body",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "list_iteration_readonly_error.my": {
+    "status": 1,
+    "boundary": "list-body",
+    "typed": false,
+    "library": false,
+    "code": "E_IMMUTABLE"
+  },
+  "list_plus_error.my": {
+    "status": 1,
+    "boundary": "list-body",
+    "typed": false,
+    "library": false,
+    "code": "E_TEXT_OPERATOR"
+  },
+  "list_expression_methods.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_sort.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_index_augmented.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "list_repeat_augmented.my": {
+    "status": 0,
+    "boundary": "list-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   }
 }

@@ -1,0 +1,4 @@
+func main() -> int:
+    for value in [1, 2]:
+        value = 3
+    return 0

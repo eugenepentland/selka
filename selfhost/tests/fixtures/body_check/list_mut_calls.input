@@ -1,0 +1,12 @@
+func change(mut values: int[]) -> Unit:
+    values[0] = 5
+    values.append(2)
+
+
+func main() -> int:
+    mut values = [1]
+    const saved = values
+    change(mut values)
+    assert len(saved) == 1
+    assert saved[0] == 1
+    return values[0] + values[1]

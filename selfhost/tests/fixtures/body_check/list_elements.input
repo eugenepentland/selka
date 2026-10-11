@@ -1,0 +1,6 @@
+func main() -> int:
+    const words = ["é", "😀"]
+    const buffers = [b"xy", b"z"]
+    const flags = [True, False]
+    assert flags[0] and not flags[1]
+    return len(words[0]) + len(words[1]) + len(buffers[0]) + len(buffers[1]) + 2
