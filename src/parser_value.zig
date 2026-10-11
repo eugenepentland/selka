@@ -417,10 +417,10 @@ test "parser values enforce aggregate edge budget across otherwise valid rows" {
     bytes[0] = 6;
     std.mem.writeInt(u32, bytes[13..17], 1, .little);
     var budget: Budget = .{ .edges = 1 };
-    var first: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget };
+    var first: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget, .profile = .syntax };
     const admitted = try first.value(1);
     try std.testing.expectEqual(@as(usize, 1), admitted.children.len);
     try std.testing.expectEqual(@as(usize, 0), budget.edges);
-    var excess: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget };
+    var excess: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget, .profile = .syntax };
     try std.testing.expectError(error.ComponentProtocol, excess.value(1));
 }
