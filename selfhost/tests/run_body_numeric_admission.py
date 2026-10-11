@@ -150,7 +150,8 @@ def main():
     before = identity(args)
     report = {'complete': False, 'selected_admission': 'pending', 'body_schema': SCHEMA,
               'scope': 'B9 fixed-width integer/binary64 source fixtures; no compiler/bootstrap claim',
-              'release_facts_leaks': args.release, 'native_controls': args.native_controls, 'native_body_schema': args.native_body_schema, 'modes': list(modes),
+              'release_facts_leaks': True, 'qualification_lane': 'release' if args.release else 'normal',
+              'native_controls': args.native_controls, 'native_body_schema': args.native_body_schema, 'modes': list(modes),
               'expected_operations': expected_operations(manifest, modes),
               **before, **COUNTS, 'donors': inventory['donors'], 'records': [],
               'runtime_flags': ['--release', '--verify-facts', 'MYL_CORE_LEAKCHECK=1'],
