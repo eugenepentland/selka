@@ -97,7 +97,7 @@ public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: sy
     const context = list_lower.Context(input=input, span=request.span)
     const source = try list_iteration.source(mut batch, mut scope, input, walk, list_iteration.SourceBody(raw_statements=body.raw_statements, raw_nodes=body.raw_nodes, body_raw=body.body_raw, expressions=[]))
     const index = try list_lower.read(mut batch, context, walk.index, 0)
-    const checked = try list_iteration.guard(mut batch, context, walk, source.refresh, source.growing)
+    const checked = try list_iteration.guard(mut batch, context, walk, source.refresh, False)
     mut value = -1
     if plan.request.kind == b"dict" or plan.request.kind == b"set":
         const extracted_5 = try list_lower.operation(mut batch, context, list_lower.Operation(owner=walk.owner, kind=b"key_at", arguments=[index], ty=request.element))

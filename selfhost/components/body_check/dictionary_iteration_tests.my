@@ -138,7 +138,7 @@ public func test_live_view_mutation_refreshes_underlying_mapping_root() -> bool 
     mut fixture = try fresh(b"values", 1)
     const plan = try lower(mut fixture)
     const kinds = try operation_names(fixture.batch)
-    return kinds == [b"iteration_check", b"length", b"key_at", b"value_at", b"length"] and fixture.scope.locals[0].usage.reads == 2 and len(fixture.scope.locals) == 5 and plan.walk.request.iterable > fixture.request.iteration.iterable
+    return kinds == [b"iteration_check", b"key_at", b"value_at", b"length"] and fixture.scope.locals[0].usage.reads == 2 and len(fixture.scope.locals) == 5 and plan.walk.request.iterable > fixture.request.iteration.iterable
 
 
 public func test_live_view_rebinding_takes_entry_snapshot() -> bool fails syntax_value.Problem:
@@ -203,3 +203,18 @@ func lengths_are_signed(batch: emission.Batch) -> bool fails syntax_value.Proble
                 if ty != 0:
                     return False
     return found
+
+
+public func test_mutated_mapping_and_set_refresh_with_unconditional_iteration_guard() -> bool fails syntax_value.Problem:
+    for kind in [b"dict", b"set"]:
+        mut fixture = try fresh(kind, 1)
+        _ = try lower(mut fixture)
+        const operations = try operation_names(fixture.batch)
+        if operations != [b"iteration_check", b"key_at", b"length"] or fixture.scope.locals[0].usage.reads != 2:
+            return False
+        for statement in fixture.batch.statements:
+            const data_id = try graph.field(fixture.batch.pool, statement, "data")
+            const data = try graph.get(fixture.batch.pool, data_id)
+            if data.data == b"branch":
+                return False
+    return True
