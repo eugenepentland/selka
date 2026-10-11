@@ -91,7 +91,7 @@ class BodyEntryTests(unittest.TestCase):
             q=object.__new__(Q.Qualification)
             q.args=SimpleNamespace(compiler=Path('/installed-host'),report=work/'report.json')
             q.work=work;q.empty=work;q.wrapper=work/'wrapper';q.wrapper.write_bytes(b'fixture')
-            q.identity={};q.records=[];q.captures=[];q.generations=[]
+            q.identity={};q.records=[];q.captures=[];q.generations=[];q.resource_hostile=[];q.resource_capture={}
             with patch.object(Q,'private_deployment'),patch.object(Q.D,'packages',return_value={'body-check':{'artifact':'real'}}),patch.object(Q.F,'execute',return_value=(0,b'',b'')):
                 # Success without an exchange is not selected source admission.
                 with self.assertRaisesRegex(RuntimeError,'did not execute'):
@@ -122,7 +122,7 @@ class BodyEntryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             q=object.__new__(Q.Qualification)
             q.args=SimpleNamespace(report=Path(temporary)/'report.json')
-            q.identity={};q.records=[];q.captures=[];q.generations=[]
+            q.identity={};q.records=[];q.captures=[];q.generations=[];q.resource_hostile=[];q.resource_capture={}
             q.record('source-check','component',['host','check','entry','--no-cache'],(2,b'',b'ComponentProfile'))
             report=json.loads(q.args.report.read_text())
             self.assertFalse(report['complete'])
@@ -153,6 +153,16 @@ class BodyEntryTests(unittest.TestCase):
             self.assertEqual(probes.call_count,35)
             self.assertEqual(deploy.call_count,2)
             self.assertTrue(all(c[2]==Path(temporary)/'generation1' for c in commands[-7:]))
+
+    def test_malformed_contract_never_adopts_a_successful_transport(self):
+        Q.malformed_contract('lexer-pilot', (0, b'error E_TOKEN 1 1 0 1\n', b''))
+        Q.malformed_contract('body-check', (2, b'', b'P_BODY_TRANSPORT malformed body-check request\n'))
+        with self.assertRaisesRegex(RuntimeError, 'exact refusal'):
+            Q.malformed_contract('body-check', (0, b'accepted', b''))
+        with self.assertRaisesRegex(RuntimeError, 'exact refusal'):
+            Q.malformed_contract('lexer-pilot', (0, b'', b''))
+        with self.assertRaisesRegex(RuntimeError, 'exact refusal'):
+            Q.malformed_contract('body-check', (2, b'', b'ComponentMissing'))
 
 
 if __name__=='__main__':unittest.main()

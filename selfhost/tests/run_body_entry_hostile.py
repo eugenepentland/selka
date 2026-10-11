@@ -48,6 +48,7 @@ def mutations(payload):
 
 
 def run(args, work, empty, checkpoint):
+    identity = {'host': F.digest(args.compiler), 'packages': D.packages(args.component_dir)}
     work.mkdir(parents=True, exist_ok=False)
     source = work/'main.my'; shutil.copyfile(SOURCE, source)
     (work/'blob.bin').write_bytes(b'\x00\xff')
@@ -58,7 +59,8 @@ def run(args, work, empty, checkpoint):
     F.require(native == (0, b'', b''), 'native resource attack source failed')
     result, request, reply = D.capture_exchange(args, q, private, real, source.name)
     capture = {'source_sha256': F.digest(SOURCE), **E.bound_capture(request, reply),
-               'status': result[0], 'stdout_hex': result[1].hex(), 'stderr_hex': result[2].hex()}
+               'identity': identity, 'request_path': str(work/'capture-request-component.bin'),
+               'reply_path': str(work/'capture-reply-component.bin'), 'status': result[0], 'stdout_hex': result[1].hex(), 'stderr_hex': result[2].hex()}
     checkpoint([], capture)
     F.require(result == native, 'authentic selected resource capture failed')
     cases = mutations(reply[64:])
@@ -74,4 +76,6 @@ def run(args, work, empty, checkpoint):
         checkpoint(records, capture)
         J.require_rejection(result)
     F.require(len(records) == len(NAMES), 'incomplete resource forged checks')
+    F.require(identity == {'host': F.digest(args.compiler), 'packages': D.packages(args.component_dir)},
+              'resource attack deployment changed')
     return records, capture

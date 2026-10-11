@@ -65,6 +65,21 @@ def request_inventory(directory):
     return inventory
 
 
+def malformed_contract(package, result):
+    # Lexer --request consumes raw source, so this is a lexical diagnostic,
+    # whereas the other six --request APIs reject a malformed transport.
+    errors = {
+        'test-index': b'test-index: invalid request frame size\n',
+        'cache-plan': b'cache-plan: invalid request frame size\n',
+        'parser-pilot': b'P_TRANSPORT 0 0 malformed parser request\n',
+        'declaration-index': b'P_TRANSPORT malformed declaration frame\n',
+        'type-interface': b'P_TRANSPORT malformed type interface projection\n',
+        'body-check': b'P_BODY_TRANSPORT malformed body-check request\n',
+    }
+    expected = (0, b'error E_TOKEN 1 1 0 1\n', b'') if package == 'lexer-pilot' else (2, b'', errors[package])
+    require(result == expected, 'malformed entry request escaped exact refusal: ' + package)
+
+
 def bound_capture(request, reply):
     for data, direction, magic in ((request, 0, b'SLKBKI01'), (reply, 1, b'SLKBKR01')):
         require(80 <= len(data) <= 67108864 and data[:8] == b'SLKBCK01', 'missing/bounded body exchange')
@@ -141,6 +156,9 @@ class Qualification:
         self.requests = request_inventory(args.requests_dir)
         self.identity = {'host': F.digest(args.compiler), 'packages': D.packages(args.component_dir, body_schema=SCHEMA),
                          'sources': source_identity(args.source_root)}
+        require(self.requests.get('identity') == {'host_sha256': self.identity['host'],
+                'zig_sha256': F.digest(args.zig), 'packages': self.identity['packages'],
+                'sources': self.identity['sources']}, 'runtime capture inventory is from a different deployment/source')
         self.work = args.work_dir
         self.work.mkdir(parents=True, exist_ok=False)
         self.empty = self.work / 'empty-path'; self.empty.mkdir()
@@ -233,6 +251,7 @@ class Qualification:
                    for arguments in ([], ['--request', missing], ['--request', invalid], spec['arguments'] + [request])]
         require(results[0][0] == 2 and not results[0][1] and results[0][2], 'entry usage refusal missing')
         require(results[1][0] == 2 and not results[1][1] and results[1][2], 'entry missing-file refusal missing')
+        malformed_contract(package, results[2])
         require(results[3][0] == 0 and results[3][1] and not results[3][2], 'authentic successful entry exchange missing')
         return results
 
