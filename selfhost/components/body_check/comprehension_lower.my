@@ -44,7 +44,7 @@ public func iterable(mut batch: emission.Batch, mut scope: locals.Scope, context
     if plan.request.owner_type == batch.facts.bytes_type:
         read_type = 5
     mut value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"read", arguments=[index], ty=read_type))
-    if read_type == 5:
+    if plan.request.owner_type == batch.facts.bytes_type:
         const widened = try buffer_lower.cast(mut batch, context, value, 0)
         value = widened
     const initialize = try list_lower.store(mut batch, context, plan.binding, value, True)

@@ -270,3 +270,28 @@ public func test_invalid_source_kind_is_rejected_before_emission() -> bool fails
             return False
         case Err(problem):
             return problem.code == "P_BODY_TRANSPORT" and problem.message == "invalid comprehension source kind" and len(fixture.batch.nodes) == nodes and len(fixture.batch.statements) == statements and len(fixture.scope.locals) == slots
+
+
+public func test_list_u8_comprehension_keeps_element_width_without_bytes_cast() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"list", False, 0)
+    fixture.request.plan.request.element = 5
+    fixture.scope.locals[fixture.request.plan.binding].ty = 5
+    const output = fixture.request.output
+    const legacy = comprehension_lower.Iterable(plan=fixture.request.plan, source=fixture.request.source, output=output.slot, body=output.body, reserve=output.reserve, result_type=output.ty)
+    _ = try comprehension_lower.iterable(mut fixture.batch, mut fixture.scope, fixture.context, legacy)
+    mut read = -1
+    for index in range(len(fixture.batch.nodes)):
+        const value = try data(fixture.batch, fixture.batch.nodes[index])
+        if value.data == b"buffer_operation":
+            const kind_id = try graph.field(fixture.batch.pool, value.children[0], "kind")
+            const kind = try graph.get(fixture.batch.pool, kind_id)
+            if kind.data == b"read":
+                read = index
+                const ty = try number(fixture.batch.pool, fixture.batch.nodes[index], "ty")
+                if ty != 5:
+                    return False
+        elif value.data == b"cast":
+            const operand = try graph.number(fixture.batch.pool, value.children[0])
+            if operand == read and read >= 0:
+                return False
+    return read >= 0
