@@ -9,8 +9,9 @@ var verification_core_binary: ?*std.Build.Step.Compile = null;
 /// One mebibyte, the unit the resident-memory ceilings below are written in.
 const mib: u64 = 1 << 20;
 /// Resident-memory ceilings declared on the steps this build runs. The build
-/// runner schedules concurrent steps against `--maxrss` using them and fails a
-/// step whose measured peak exceeds its declaration. Only Zig compilations and
+/// runner schedules concurrent steps against `--maxrss` using them and reports a
+/// step whose measured peak exceeds its declaration. The pinned runner currently
+/// diagnoses that excess without failing the final build. Only Zig compilations and
 /// Zig test binaries report a peak back, so only those can trip a ceiling; for
 /// a driver process it is purely a concurrency budget, and it covers the
 /// children one driver runs at once rather than the largest single process
@@ -35,16 +36,20 @@ const rss = struct {
     /// peaked at 2.18G running alone (2,281,596 kB, 2026-10-05, 218 tests), so
     /// 2.5G keeps a measured ceiling with headroom.
     const shard_unit: u64 = 2560 * mib;
-    /// One shard of the CLI root, which builds far fewer guests. Observed on a
-    /// clean cache: 103M-141M for the test process, up to 1.22G for a moment
-    /// across its tree; the ceiling is a concurrency budget.
-    const shard_cli: u64 = 768 * mib;
+    /// One shard of the CLI root, including uncached component bootstrap.
+    /// The B4 release body component rebuild reported a 1,538,023,424-byte
+    /// peak (2026-10-11); reserve 2 GiB for that shard with measured headroom.
+    const shard_cli: u64 = 2048 * mib;
     /// The directory run of `tests/guest`. Observed on a clean cache
     /// (2026-09-23): `tests/guest` 1.33G.
     const guest_suite: u64 = 1536 * mib;
     /// Drivers that run the compiler a few programs at a time. Observed on a
     /// clean cache: the idiom probes 0.69G, parser hints 0.47G.
     const driver: u64 = 1024 * mib;
+    /// Qualification drivers that rebuild the optimized body component. A body
+    /// test's seed plus clang tree was sampled at 1,304,895,488 bytes (2026-10-11),
+    /// before clang's peak. Reserve 2.5 GiB across both live processes.
+    const component_driver: u64 = 2560 * mib;
     /// Drivers that compile and link many native programs at once: the parity
     /// benchmark. Observed (the retired boundary matrix): 1.29G-1.45G.
     const parity: u64 = 2048 * mib;
@@ -832,7 +837,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(pilots_step);
     const frontend_step = b.step("test-selfhost-frontend", "Qualify installed frontend consumers, warm reuse and coordinator edits");
     for ([_]bool{ false, true }) |release| {
-        const frontend_run = driver(b, if (release) "frontend workflows release/facts/leaks" else "frontend workflows and coordinator edit", rss.driver, "frontend_qualification");
+        const frontend_run = driver(b, if (release) "frontend workflows release/facts/leaks" else "frontend workflows and coordinator edit", rss.component_driver, "frontend_qualification");
         frontend_run.has_side_effects = true;
         frontend_run.addArgs(&.{ "python3", "selfhost/tests/run_frontend_qualification.py", "--component", "--zig", b.graph.zig_exe, "--compiler" });
         frontend_run.addArtifactArg(exe);
@@ -881,7 +886,7 @@ pub fn build(b: *std.Build) void {
     type_interfaces_step.dependOn(&type_interfaces_checks.step);
     test_step.dependOn(type_interfaces_step);
     const body_checks_step = b.step("test-selfhost-body-checks", "Qualify scalar and managed body checking with the verified seed and installed compiler");
-    const body_checks_run = driver(b, "scalar and managed body checking pure and installed qualification", rss.driver, "body_check_qualification");
+    const body_checks_run = driver(b, "scalar and managed body checking pure and installed qualification", rss.component_driver, "body_check_qualification");
     body_checks_run.has_side_effects = true;
     body_checks_run.addArgs(&.{ "python3", "selfhost/test_body_checks.py", "--zig", b.graph.zig_exe, "--builder" });
     body_checks_run.addArtifactArg(component_tool);

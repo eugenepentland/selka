@@ -15,3 +15,10 @@ The [B3 list audit](../audits/selka-body-lists-2026-10-11.md) retains two strict
 three short generated-runtime rows. A qualified whole-unit release producer
 roughly halves the compiler/test medians but remains above budget. This result
 must not be used as full-language or bootstrap acceptance.
+
+The [B4 record audit](../audits/selka-body-records-2026-10-11.md) uses the same
+qualified B4 ReleaseFast host for native reference and selected body checking.
+Its 24-row sweep passes only the four short runtime rows; all 20 compiler/test
+rows fail (roughly 4.4–7.2 times native median). Complete raw samples, cache
+receipts and isolated admission records are retained. Correctness qualification
+does not waive these performance failures.

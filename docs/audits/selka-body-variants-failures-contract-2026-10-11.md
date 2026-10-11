@@ -1,6 +1,6 @@
 # Proposed B5 union, pattern and checked-failure boundary
 
-Status: read-only proposal, not an implemented or qualified schema. B4 continues to use protocol 1/schema 4. This wave advances the full language selfhost goal; it does not establish bootstrap completion or the <=1.5x performance target.
+Status: implementation in progress in separate Sol lanes; not yet an installed or qualified schema. B4 continues to use protocol 1/schema 4. This wave advances the full language selfhost goal; it does not establish bootstrap completion or the <=1.5x performance target.
 
 ## Scope and retained authority
 
@@ -16,7 +16,7 @@ Full typed Batch stays `{nodes,statements,functions,ranges}`. The list-only appe
 
 Replace the list-only output delta with bounded ordered tagged catalog recipes: list, result, option. Each carries its next canonical ID, one or two already admitted type arguments and the original intern source span. Require contiguous global append order, no duplicate recipe kind/argument tuple, prior dependency identities, valid exact source sites, and bounded totals. Keep the current 65536 catalog/table limits, 64 MiB wire limit, 256 graph-depth limit and aggregate edge/string budgets unless separate qualification justifies changes.
 
-Project only Result/Option template availability from retained common `templates.store.index.names` authority; the producer makes all new type choices. The host materializes a validated recipe using the existing collection/result/nominal instantiation routines and checks the predicted ID and full generated schema. No generic host lookup process per expression.
+Project Result/Option template authority from retained common `templates.store.index.names` as the seventh catalog field `templates: Templates{result: ?TemplateBasis, option: ?TemplateBasis}`, where `TemplateBasis{id,declaration}` carries the opaque native template index and exact declaration span. Zero span identifies a synthesized builtin; a nonempty span joins the ordered raw declaration, including reordered standard-library cases. The producer makes all new type choices. A raw fielded Option basis that requires additional synthesized payload records remains an explicit profile until recipes represent that append sequence; migration-parser-only raw Option tests do not establish modern installed source coverage. The host materializes a validated recipe using the existing collection/result/nominal instantiation routines and checks the predicted ID and full generated schema. No generic host lookup process per expression.
 
 Compare recipes against the untouched native oracle, then independently recollect the common catalog and materialize producer recipes for full `typed.Record` equality. Preserve retained prefix authentication and schema-4 refusal. Audit the common generic/entry phase for any catalog append before bodies; freeze the input frontier and preserve first-demand order rather than silently attributing common work to the producer.
 

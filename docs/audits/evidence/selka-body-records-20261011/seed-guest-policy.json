@@ -1,0 +1,18 @@
+{
+  "seed_binary_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "default_mode": "debug",
+  "default_optimization": "-O0",
+  "release_optimization": "-O3 request; pinned Zig maps to Clang -O2",
+  "evidence": {
+    "src/core/pipeline.zig:24": "Options.mode = .debug",
+    "src/core/cli_args.zig:56": "parse initializes default pipeline.Options",
+    "src/core/cli_args.zig:331": "test expects plain run .debug",
+    "src/core/build_mode.zig:14": "debug maps to -O0"
+  },
+  "source_sha256": {
+    "src/core/pipeline.zig": "aae8f414f777ca56e2f1ab3339f85ed5b6b3622619cd1ec640f9078bf36688ae",
+    "src/core/cli_args.zig": "73b0e2beb828ace11aab592c6727cedd852ba37609ae905f791466783cf2bd3b",
+    "src/core/build_mode.zig": "980ce270d3dbcfb135bfa5d5a50ceee730350e757849aa71fa26452938bd7fd5",
+    "src/core/driver.zig": "b8a78ffadf785cc40c48078ae96f2e05703f8263233b1e684ca7d9b99e9f118c"
+  }
+}

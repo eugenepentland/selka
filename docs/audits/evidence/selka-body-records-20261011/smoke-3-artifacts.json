@@ -1,0 +1,18 @@
+{
+  "producer_commits": [
+    "c4b5baba118454c14907d3a6dcb6ba660a30333c",
+    "73daa2bae4a42f9dd298823df674245fe5147016",
+    "8f62182c5",
+    "fd6aa9dc317e6d7f883024f12b377b80879f87c4"
+  ],
+  "compiler_sha256": "6cae4f621f4a2b2b6990d438774c1ba334f53dbaecef461c79aeae0f907ee67e",
+  "body_manifest": {
+    "artifact": "body-check-2c524516bcd7411b1f582085f6bb8ad4218ea6088a0a7d2d7e19f7846cb960d4",
+    "component": "body-check",
+    "format": 1,
+    "key": "b11ec0f4780de3927c96ad938aedf1ebc502f777fed332b81bdf92bc63131a8e",
+    "protocol": 1,
+    "schema": 4,
+    "sha256": "2c524516bcd7411b1f582085f6bb8ad4218ea6088a0a7d2d7e19f7846cb960d4"
+  }
+}

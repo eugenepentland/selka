@@ -1,0 +1,13 @@
+{
+  "producer_commit": "c4b5baba118454c14907d3a6dcb6ba660a30333c",
+  "compiler_sha256": "43ffc82673421a6b617d8bac6e7f7f2c749c5d468b9e44623f5604037341282b",
+  "body_manifest": {
+    "artifact": "body-check-3f883a1e9586617e8bb646f436cb2599f0aaa4f9e770327fa687f3090ba5f13b",
+    "component": "body-check",
+    "format": 1,
+    "key": "e546f05b0eeec3b6e32feb168852c00b585ca5f9c1aa42acf1223a6c1fa6859c",
+    "protocol": 1,
+    "schema": 4,
+    "sha256": "3f883a1e9586617e8bb646f436cb2599f0aaa4f9e770327fa687f3090ba5f13b"
+  }
+}

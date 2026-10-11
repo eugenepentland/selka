@@ -245,18 +245,20 @@ complete Selka compiler and requires compile time, test time and generated
 runtime to stay within 1.5 times the Zig implementation. This is an acceptance
 requirement for the completed compiler, not a claim about the current pilots.
 
-The last qualified boundary is B3, recorded in
-[the list body audit](selka-body-lists-2026-10-11.md). Seven packages build with
-the unchanged qualified seed; ordinary scalar, string, byte and supported list
-bodies use Selka checking without native body fallback. Ordered list recipes
-and complete final catalog schemas match native checking. B4 record/member
-checking is in progress in separate implementation lanes. The compiler still
-cannot check its own source, and neither a complete compiler nor a bootstrap
-fixed point is proven.
+The last qualified boundary is B4, recorded in
+[the record body audit](selka-body-records-2026-10-11.md). Seven packages build
+with the unchanged qualified seed; ordinary scalar, text, byte, list and
+nongeneric record bodies use Selka checking without native body fallback.
+Complete typed metadata, ordered list recipes and final catalog schemas match
+native checking. Constructors/defaults, field access and mixed record/list
+mutation include finite recursion through lists and snapshots. B5 variants,
+patterns and checked failures are in progress in separate Sol lanes. The
+compiler still cannot check its own source, and neither a complete compiler
+nor a bootstrap fixed point is proven.
 
 | Remaining stage | Completion evidence |
 | --- | --- |
-| B4 ordinary records and members | Constructors/defaults, nominal resolution, field reads and mixed record/list mutation paths match complete native typed tables and metadata, including recursive records through lists, snapshots and exact diagnostics. |
+| B5 variants, patterns and checked failures | Nongeneric variants, exhaustive/nested matches, Result/Option construction, fail/try and result consumption match complete native typed tables, catalogs and diagnostics. |
 | Remaining body language | Unions and patterns, other collections, generic specialization, checked failures, resources and all remaining forms cover the current language and the compiler's own source. Unsupported profile refusals cannot count as success. |
 | Remaining semantic ownership | Selka owns declaration/catalog construction, entry handling, effects/origins, contracts, codecs and warnings, with diagnostics and accepted/rejected programs matching the native reference. |
 | Core and LLVM backend | Selka lowers checked programs, performs required Core transformations and emits LLVM; generated programs pass the complete behavior, ownership, fact and leak suites. |
@@ -285,3 +287,10 @@ is a substantial improvement, not performance acceptance. The list audit retains
 all median/p95 verdicts, exact receipts and isolation records. Transitioning to a
 fused compiler removes intermediate process/transport boundaries, but remaining
 Selka algorithm, allocation and generated-runtime costs must still be measured.
+
+The B4 matched-host sweep fails all 20 compile/check/test rows across four
+workloads, with medians around 4.4–7.2 times native. Only the four short
+runtime rows pass. The record audit retains all 24 median/p95 verdicts,
+20 samples per row, exact package provenance and FIFO isolation receipts.
+Both sides use the same B4 ReleaseFast host, unlike B3's older B2 baseline;
+no full-language performance or bootstrap acceptance is claimed.
