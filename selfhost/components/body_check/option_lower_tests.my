@@ -113,3 +113,26 @@ public func test_narrowed_payload_binds_some_and_retains_defensive_none_assertio
     const absent = try graph.get(fixture.batch.pool, absent_id)
     assert absent.kind == 0
     return True
+
+
+public func test_every_option_match_includes_required_owned_dispatch_metadata() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const value = try receiver(mut fixture)
+    const fallback = try list_lower.integer(mut fixture.batch, fixture.context, 9, 0)
+    _ = try option_lower.presence_value(mut fixture.batch, mut fixture.scope, fixture.context, value, fixture.shape)
+    _ = try option_lower.payload_value(mut fixture.batch, mut fixture.scope, fixture.context, value, fixture.shape)
+    _ = try option_lower.default_value(mut fixture.batch, mut fixture.scope, fixture.context, value, fixture.shape, fallback)
+    mut matches = 0
+    for statement in fixture.batch.statements:
+        const data_id = try graph.field(fixture.batch.pool, statement, "data")
+        const data = try graph.get(fixture.batch.pool, data_id)
+        if data.data == b"match":
+            const record = try graph.get(fixture.batch.pool, data.children[0])
+            if record.names != ["value", "arms", "borrowed"]:
+                return False
+            const borrowed_id = try graph.field(fixture.batch.pool, data.children[0], "borrowed")
+            const borrowed = try graph.get(fixture.batch.pool, borrowed_id)
+            if borrowed.kind != 2 or borrowed.integer != 0:
+                return False
+            matches += 1
+    return matches == 3

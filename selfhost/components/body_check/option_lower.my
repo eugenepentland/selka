@@ -22,7 +22,8 @@ func arm(mut batch: emission.Batch, tag: int, slot: int, body: int) -> int fails
 func select(mut batch: emission.Batch, context: list_lower.Context, value: int, arms: int[]) -> int fails syntax_value.Problem:
     const expression = try syntax_value.integer(mut batch.pool, value)
     const cases = try syntax_value.sequence(mut batch.pool, arms)
-    const payload = try syntax_value.object(mut batch.pool, ["value", "arms"], [expression, cases])
+    const borrowed = try syntax_value.boolean(mut batch.pool, False)
+    const payload = try syntax_value.object(mut batch.pool, ["value", "arms", "borrowed"], [expression, cases, borrowed])
     return try emission.statement(mut batch, context.input, context.span, False, b"match", payload)
 
 
