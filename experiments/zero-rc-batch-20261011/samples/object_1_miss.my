@@ -1,0 +1,34 @@
+import json
+
+func score(value: json.Json) -> int:
+    match value:
+        case json.Json.array(value=items):
+            mut total = 0
+            for item in items:
+                match item:
+                    case json.Json.text(value=text):
+                        total += len(text)
+                    case _:
+                        assert False
+            return total
+        case _:
+            assert False
+            return 0
+
+func run(document: json.Json) -> int:
+    mut total = 0
+    for i in range(32):
+        match json.get(document, "missing"):
+            case Some(_):
+                assert False
+            case None:
+                total += 1
+    return total
+
+func main(out: Stream) -> int:
+    match json.loads("{\"target\":[\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"],\"other-0\":[\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}"):
+        case Ok(document):
+            out.print(json.type_name(document), run(document))
+        case Err(_):
+            assert False
+    return 0
