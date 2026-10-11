@@ -1,0 +1,6 @@
+func value() -> int:
+    return 7
+
+func main() -> int:
+    value()
+    return 7

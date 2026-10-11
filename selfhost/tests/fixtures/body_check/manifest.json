@@ -865,5 +865,69 @@
     "boundary": "variant-failure-body",
     "typed": false,
     "library": false
+  },
+  "checked_multi_argument_temporaries.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_nested_default_constructors.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_short_circuit_success.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_short_circuit_path_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_explicit_pending_discard.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_implicit_scalar_discard_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_implicit_pending_discard_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_pending_list_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_pending_list_annotated_error.my": {
+    "status": 1,
+    "boundary": "retained-generic-bound",
+    "typed": false,
+    "library": false
+  },
+  "checked_try_live_result_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
   }
 }

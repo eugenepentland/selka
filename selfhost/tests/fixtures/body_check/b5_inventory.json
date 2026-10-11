@@ -2,12 +2,21 @@
   "cases": [
     "checked_consumed_error.my",
     "checked_error_patterns.my",
+    "checked_explicit_pending_discard.my",
     "checked_failure_list_payload.my",
+    "checked_implicit_pending_discard_error.my",
+    "checked_implicit_scalar_discard_error.my",
     "checked_loop_consumption.my",
     "checked_managed_result.my",
+    "checked_multi_argument_temporaries.my",
+    "checked_pending_list_annotated_error.my",
+    "checked_pending_list_error.my",
     "checked_record_failure.my",
+    "checked_short_circuit_path_error.my",
+    "checked_short_circuit_success.my",
     "checked_try_context_error.my",
     "checked_try_fail.my",
+    "checked_try_live_result_error.my",
     "checked_unhandled_error.my",
     "checked_wrong_failure_error.my",
     "optional_try.my",
@@ -19,6 +28,7 @@
     "variant_loop_branch.my",
     "variant_match_expression.my",
     "variant_named_order.my",
+    "variant_nested_default_constructors.my",
     "variant_payload_defaults.my",
     "variant_payload_type_error.my",
     "variant_record_list_snapshot.my",
@@ -29,8 +39,8 @@
     "variant_import_dep.my"
   ],
   "counts": {
-    "success": 14,
-    "diagnostic": 8,
+    "success": 18,
+    "diagnostic": 14,
     "profile": 2
   }
 }
