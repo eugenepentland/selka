@@ -13,35 +13,44 @@ pub fn module(allocator: std.mem.Allocator, m: *const ir.Module) std.mem.Allocat
     return out.toOwnedSlice(allocator);
 }
 
-/// The spelling of a type.
+/// The spelling of a type; recursive edges use the stable compound type index.
 pub fn typeName(allocator: std.mem.Allocator, m: *const ir.Module, ty: ir.Type) std.mem.Allocator.Error![]const u8 {
+    var active: std.ArrayList(ir.Type) = .empty;
+    defer active.deinit(allocator);
+    return typeNameActive(allocator, m, ty, &active);
+}
+
+fn typeNameActive(allocator: std.mem.Allocator, m: *const ir.Module, ty: ir.Type, active: *std.ArrayList(ir.Type)) std.mem.Allocator.Error![]const u8 {
     if (!ty.isCompound()) return @tagName(ty);
+    if (std.mem.indexOfScalar(ir.Type, active.items, ty) != null) return std.fmt.allocPrint(allocator, "#{d}", .{@backingInt(ty)});
+    try active.append(allocator, ty);
+    defer _ = active.pop();
     return switch (m.compound(ty)) {
-        .list => |element| std.fmt.allocPrint(allocator, "list[{s}]", .{try typeName(allocator, m, element)}),
-        .dict => |dict| std.fmt.allocPrint(allocator, "dict[{s}, {s}]", .{ try typeName(allocator, m, dict.key), try typeName(allocator, m, dict.value) }),
-        .array => |array| std.fmt.allocPrint(allocator, "[{d}]{s}", .{ array.n, try typeName(allocator, m, array.elem) }),
-        .@"fn" => |signature| std.fmt.allocPrint(allocator, "{s} -> {s}", .{ try typeList(allocator, m, "fn", signature.params), try typeName(allocator, m, signature.ret) }),
+        .list => |element| std.fmt.allocPrint(allocator, "list[{s}]", .{try typeNameActive(allocator, m, element, active)}),
+        .dict => |dict| std.fmt.allocPrint(allocator, "dict[{s}, {s}]", .{ try typeNameActive(allocator, m, dict.key, active), try typeNameActive(allocator, m, dict.value, active) }),
+        .array => |array| std.fmt.allocPrint(allocator, "[{d}]{s}", .{ array.n, try typeNameActive(allocator, m, array.elem, active) }),
+        .@"fn" => |signature| std.fmt.allocPrint(allocator, "{s} -> {s}", .{ try typeList(allocator, m, "fn", signature.params, active), try typeNameActive(allocator, m, signature.ret, active) }),
         // A box may close a recursive type, so a record or union inside one is named by index.
         .box => |inner| if (m.kind(inner)) |k|
             switch (k) {
                 .record, .@"union" => std.fmt.allocPrint(allocator, "box[#{d}]", .{@backingInt(inner)}),
-                else => std.fmt.allocPrint(allocator, "box[{s}]", .{try typeName(allocator, m, inner)}),
+                else => std.fmt.allocPrint(allocator, "box[{s}]", .{try typeNameActive(allocator, m, inner, active)}),
             }
         else
-            std.fmt.allocPrint(allocator, "box[{s}]", .{try typeName(allocator, m, inner)}),
-        .record => |fields| typeList(allocator, m, "record", fields),
+            std.fmt.allocPrint(allocator, "box[{s}]", .{try typeNameActive(allocator, m, inner, active)}),
+        .record => |fields| typeList(allocator, m, "record", fields, active),
         .@"union" => |cases| if (cases.len == 2 and cases[0] == .void and cases[1] != .void)
-            std.fmt.allocPrint(allocator, "option[{s}]", .{try typeName(allocator, m, cases[1])})
+            std.fmt.allocPrint(allocator, "option[{s}]", .{try typeNameActive(allocator, m, cases[1], active)})
         else
-            typeList(allocator, m, "union", cases),
+            typeList(allocator, m, "union", cases, active),
     };
 }
 
 /// `name{T, U, ...}`: a record's fields or a union's case payloads.
-fn typeList(allocator: std.mem.Allocator, m: *const ir.Module, name: []const u8, types: []const ir.Type) std.mem.Allocator.Error![]const u8 {
+fn typeList(allocator: std.mem.Allocator, m: *const ir.Module, name: []const u8, types: []const ir.Type, active: *std.ArrayList(ir.Type)) std.mem.Allocator.Error![]const u8 {
     var out: std.ArrayList(u8) = .empty;
     try out.print(allocator, "{s}{{", .{name});
-    for (types, 0..) |ty, i| try out.print(allocator, "{s}{s}", .{ if (i == 0) "" else ", ", try typeName(allocator, m, ty) });
+    for (types, 0..) |ty, i| try out.print(allocator, "{s}{s}", .{ if (i == 0) "" else ", ", try typeNameActive(allocator, m, ty, active) });
     try out.appendSlice(allocator, "}");
     return out.toOwnedSlice(allocator);
 }

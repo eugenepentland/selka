@@ -1,0 +1,364 @@
+import syntax_value
+import syntax_problem
+import graph
+import locals
+import suggestions
+import mutation_places
+
+record Span:
+    start: int
+    end: int
+
+
+record Receiver:
+    place: mutation_places.Place
+    span: Span
+    statement: int
+    expression: int
+
+
+func location(context: mutation_places.Context, id: int) -> int fails syntax_value.Problem:
+    return try graph.field(context.pool, context.nodes[id], "span")
+
+
+func bounds(pool: syntax_value.Pool, span: int) -> Span fails syntax_value.Problem:
+    const begin_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, begin_id)
+    const end = try graph.number(pool, end_id)
+    return Span(start=start, end=end)
+
+
+func data(context: mutation_places.Context, id: int) -> syntax_value.Value fails syntax_value.Problem:
+    const value = try graph.field(context.pool, context.nodes[id], "data")
+    return try graph.get(context.pool, value)
+
+
+func append_field(mut work: int[], pool: syntax_value.Pool, payload: int, name: str) -> bool fails syntax_value.Problem:
+    const id = try graph.field(pool, payload, name)
+    const value = try graph.get(pool, id)
+    if value.kind == 0:
+        return False
+    if value.kind == 1:
+        work.append(value.integer)
+    elif value.kind == 6:
+        for child in value.children:
+            const number = try graph.number(pool, child)
+            work.append(number)
+    return True
+
+
+func children(mut work: int[], pool: syntax_value.Pool, value: syntax_value.Value, statement: bool) -> bool fails syntax_value.Problem:
+    const tag = value.data
+    const payload = value.children[0]
+    if statement:
+        if tag == b"binding" or tag == b"assignment":
+            _ = try append_field(mut work, pool, payload, "value")
+        elif tag == b"assertion":
+            _ = try append_field(mut work, pool, payload, "condition")
+            _ = try append_field(mut work, pool, payload, "value")
+        elif tag == b"branch" or tag == b"loop":
+            _ = try append_field(mut work, pool, payload, "condition")
+        elif tag == b"for_each":
+            _ = try append_field(mut work, pool, payload, "iterable")
+        elif tag == b"for_range":
+            for name in ["start", "end", "step"]:
+                _ = try append_field(mut work, pool, payload, name)
+        elif tag == b"with_scope":
+            _ = try append_field(mut work, pool, payload, "resource")
+        elif tag == b"ret" or tag == b"discard" or tag == b"fail" or tag == b"yield_value":
+            const number = try graph.number(pool, payload)
+            work.append(number)
+        elif tag == b"match":
+            _ = try append_field(mut work, pool, payload, "value")
+        return True
+    if tag == b"list_literal" or tag == b"tuple" or tag == b"format":
+        const rows = try graph.items(pool, payload)
+        for row in rows:
+            const number = try graph.number(pool, row)
+            work.append(number)
+    elif tag == b"mut_argument" or tag == b"length" or tag == b"unwrap" or tag == b"propagate":
+        const number = try graph.number(pool, payload)
+        work.append(number)
+    elif tag == b"field":
+        _ = try append_field(mut work, pool, payload, "base")
+    elif tag == b"index" or tag == b"replace":
+        _ = try append_field(mut work, pool, payload, "base")
+        _ = try append_field(mut work, pool, payload, "index")
+        if tag == b"replace":
+            _ = try append_field(mut work, pool, payload, "value")
+    elif tag == b"slice":
+        for name in ["base", "start", "end", "step"]:
+            _ = try append_field(mut work, pool, payload, name)
+    elif tag == b"membership":
+        _ = try append_field(mut work, pool, payload, "needle")
+        _ = try append_field(mut work, pool, payload, "container")
+    elif tag == b"binary":
+        _ = try append_field(mut work, pool, payload, "left")
+        _ = try append_field(mut work, pool, payload, "right")
+    elif tag == b"unary":
+        _ = try append_field(mut work, pool, payload, "operand")
+    elif tag == b"cast" or tag == b"wrap" or tag == b"format_field":
+        _ = try append_field(mut work, pool, payload, "value")
+    elif tag == b"conditional":
+        for name in ["condition", "then_value", "else_value"]:
+            _ = try append_field(mut work, pool, payload, name)
+    elif tag == b"field_assignment" or tag == b"index_assignment":
+        _ = try append_field(mut work, pool, payload, "target")
+        _ = try append_field(mut work, pool, payload, "value")
+    elif tag == b"call" or tag == b"buffer_operation":
+        _ = try append_field(mut work, pool, payload, "arguments")
+    elif tag == b"method_call" or tag == b"list_operation":
+        _ = try append_field(mut work, pool, payload, "base")
+        _ = try append_field(mut work, pool, payload, "arguments")
+    elif tag == b"record":
+        const field_id = try graph.field(pool, payload, "fields")
+        const fields = try graph.items(pool, field_id)
+        for field in fields:
+            _ = try append_field(mut work, pool, field, "value")
+    return True
+
+
+func mutating(name: bytes) -> bool:
+    return name == b"write" or name == b"append" or name == b"resize" or name == b"reserve" or name == b"take" or name == b"truncate" or name == b"extend" or name == b"insert" or name == b"pop" or name == b"pop_at" or name == b"remove" or name == b"reverse" or name == b"sort" or name == b"sort_keyed" or name == b"clear" or name == b"update" or name == b"setdefault" or name == b"pop_key" or name == b"pop_default" or name == b"set_add" or name == b"set_discard" or name == b"buffer_reserve" or name == b"buffer_append_byte" or name == b"buffer_append_range" or name == b"buffer_append_utf8" or name == b"buffer_append_int" or name == b"buffer_append_float"
+
+
+func overlaps(a: mutation_places.Place, b: mutation_places.Place) -> bool:
+    if not a.valid or not b.valid or a.root != b.root:
+        return False
+    mut shared = len(a.steps)
+    if len(b.steps) < shared:
+        shared = len(b.steps)
+    for position in range(shared):
+        const left = a.steps[position]
+        const right = b.steps[position]
+        if not left.indexed and not right.indexed and left.field != right.field:
+            return False
+        if left.indexed and right.indexed and left.known and right.known:
+            if left.key != right.key and (left.key < 0) == (right.key < 0):
+                return False
+    return True
+
+
+func receiver(context: mutation_places.Context, scope: locals.Scope, id: int, statement: int, root: int) -> Receiver fails syntax_value.Problem:
+    const value = try data(context, id)
+    const payload = value.children[0]
+    mut target = -1
+    mut span = Span(start=-1, end=-1)
+    mut place = mutation_places.Place(argument=id, root=b"", root_node=id, steps=[], valid=False)
+    if value.data == b"field_assignment" or value.data == b"index_assignment":
+        const target_id = try graph.field(context.pool, payload, "target")
+        const selected = try graph.number(context.pool, target_id)
+        target = selected
+    elif value.data == b"method_call" or value.data == b"list_operation":
+        mut name = b""
+        if value.data == b"method_call":
+            const name_id = try graph.field(context.pool, payload, "name")
+            const spelling = try graph.spelling(context.pool, context.source, name_id)
+            name = spelling
+        else:
+            const kind_id = try graph.field(context.pool, payload, "kind")
+            const kind = try graph.get(context.pool, kind_id)
+            name = kind.data
+        if mutating(name):
+            const target_id = try graph.field(context.pool, payload, "base")
+            const selected = try graph.number(context.pool, target_id)
+            target = selected
+    elif value.data == b"call" or value.data == b"buffer_operation":
+        const owner_id = try graph.field(context.pool, payload, "owner")
+        const owner = try graph.get(context.pool, owner_id)
+        if owner.kind != 0:
+            const spelling = try graph.spelling(context.pool, context.source, owner_id)
+            mut name = b""
+            if value.data == b"call":
+                const name_id = try graph.field(context.pool, payload, "name")
+                const method_name = try graph.spelling(context.pool, context.source, name_id)
+                name = method_name
+            else:
+                const kind_id = try graph.field(context.pool, payload, "kind")
+                const kind = try graph.get(context.pool, kind_id)
+                name = kind.data
+            if mutating(name) and locals.find(scope, spelling) >= 0:
+                place = mutation_places.Place(argument=id, root=spelling, root_node=id, steps=[], valid=True)
+                const owner_bounds = try bounds(context.pool, owner_id)
+                span = owner_bounds
+    if target >= 0:
+        const analyzed = try mutation_places.analyze(context, target)
+        place = analyzed
+        const target_span = try location(context, target)
+        const target_bounds = try bounds(context.pool, target_span)
+        span = target_bounds
+    if place.valid and (value.data == b"list_operation" or value.data == b"buffer_operation"):
+        const kind_id = try graph.field(context.pool, payload, "kind")
+        const kind = try graph.get(context.pool, kind_id)
+        if kind.data == b"write":
+            const arguments_id = try graph.field(context.pool, payload, "arguments")
+            const arguments = try graph.items(context.pool, arguments_id)
+            if len(arguments) > 0:
+                const index = try graph.number(context.pool, arguments[0])
+                const step = try mutation_places.index_step(context, id, index)
+                place.steps.append(step)
+                const index_span = try location(context, index)
+                const index_bounds = try bounds(context.pool, index_span)
+                const node_span = try location(context, id)
+                const node_bounds = try bounds(context.pool, node_span)
+                span.end = index_bounds.end
+                while span.end < node_bounds.end and context.source[span.end] != 93:
+                    span.end = span.end + 1
+                if span.end < node_bounds.end:
+                    span.end = span.end + 1
+    return Receiver(place=place, span=span, statement=statement, expression=root)
+
+
+func simple(context: mutation_places.Context, scope: locals.Scope, root: int, call: int) -> bool fails syntax_value.Problem:
+    mut work = [root]
+    mut position = 0
+    while position < len(work):
+        const id = work[position]
+        position = position + 1
+        if id == call:
+            continue
+        const value = try data(context, id)
+        const tag = value.data
+        if tag == b"name" or tag == b"integer" or tag == b"boolean" or tag == b"text" or tag == b"bytes" or tag == b"unit":
+            continue
+        if tag != b"field" and tag != b"index" and tag != b"field_assignment" and tag != b"index_assignment" and tag != b"buffer_operation" and tag != b"list_operation" and tag != b"method_call" and tag != b"call":
+            return False
+        if tag == b"buffer_operation" or tag == b"list_operation" or tag == b"method_call" or tag == b"call":
+            const found = try receiver(context, scope, id, -1, root)
+            if not found.place.valid:
+                return False
+        _ = try children(mut work, context.pool, value, False)
+    return True
+
+
+func decimal(value: int) -> bytes:
+    mut remaining = value
+    mut reversed = b""
+    while remaining > 0:
+        reversed = reversed + b"0123456789"[remaining % 10:remaining % 10 + 1]
+        remaining = remaining // 10
+    if len(reversed) == 0:
+        return b"0"
+    mut result = b""
+    mut position = len(reversed)
+    while position > 0:
+        position = position - 1
+        result = result + reversed[position:position + 1]
+    return result
+
+
+func contains(source: bytes, needle: bytes) -> bool:
+    for position in range(len(source) - len(needle) + 1):
+        if source[position:position + len(needle)] == needle:
+            return True
+    return False
+
+
+func fixes(context: mutation_places.Context, scope: locals.Scope, owner: Receiver, call: int) -> syntax_problem.Edit[] fails syntax_value.Problem:
+    const allowed = try simple(context, scope, owner.expression, call)
+    if not allowed or call >= len(context.resolved) or context.resolved[call] < 0:
+        return []
+    const checked = context.typed_nodes[context.resolved[call]]
+    const ty_id = try graph.field(context.typed_pool, checked, "ty")
+    const ty = try graph.number(context.typed_pool, ty_id)
+    if ty == 15:
+        return []
+    const span = try location(context, call)
+    const raw = try graph.spelling(context.pool, context.source, span)
+    if contains(raw, b"\n"):
+        return []
+    const begin_id = try graph.field(context.pool, span, "start")
+    mut serial = try graph.number(context.pool, begin_id)
+    mut name = b"mutation_result_" + decimal(serial)
+    while locals.find(scope, name) >= 0 or contains(context.source, name):
+        serial = serial + 1
+        name = b"mutation_result_" + decimal(serial)
+    const statement_begin = try graph.field(context.pool, owner.statement, "start")
+    mut start = try graph.number(context.pool, statement_begin)
+    while start > 0 and context.source[start - 1] != 10:
+        start = start - 1
+    mut indent = start
+    while indent < len(context.source) and (context.source[indent] == 32 or context.source[indent] == 9):
+        indent = indent + 1
+    const end_id = try graph.field(context.pool, span, "end")
+    const end = try graph.number(context.pool, end_id)
+    const begin = try graph.number(context.pool, begin_id)
+    return [syntax_problem.Edit(start=start, end=start, text=context.source[start:indent] + name + b" = " + raw + b"\n"), syntax_problem.Edit(start=begin, end=end, text=name)]
+
+
+func report(context: mutation_places.Context, scope: locals.Scope, owner: Receiver, call: int, argument: int) -> syntax_problem.Diagnostic fails syntax_value.Problem:
+    const marker_span = try location(context, argument)
+    const call_span = try location(context, call)
+    const receiver_raw = context.source[owner.span.start:owner.span.end]
+    const marker_raw = try graph.spelling(context.pool, context.source, marker_span)
+    const call_raw = try graph.spelling(context.pool, context.source, call_span)
+    const receiver_text = try suggestions.text(receiver_raw)
+    const marker_text = try suggestions.text(marker_raw)
+    const call_text = try suggestions.text(call_raw)
+    const message = "receiver `" + receiver_text + "` overlaps `" + marker_text + "` evaluated in this statement; make the call `" + call_text + "` in its own statement first, save its result in a local, then update the receiver using that local"
+    const begin_id = try graph.field(context.pool, marker_span, "start")
+    const end_id = try graph.field(context.pool, marker_span, "end")
+    const start = try graph.number(context.pool, begin_id)
+    const end = try graph.number(context.pool, end_id)
+    mut result = syntax_problem.plain(syntax_value.Problem(code="E_MUTATION_OVERLAP", start=start, end=end, message=message))
+    const related_start = owner.span.start
+    const related_end = owner.span.end
+    result.notes.related.append(syntax_problem.Related(start=related_start, end=related_end, message="the assignment or update receiver names an overlapping place", role="related"))
+    const edits = try fixes(context, scope, owner, call)
+    result.notes.edits = edits
+    return result
+
+
+func calls(context: mutation_places.Context, scope: locals.Scope, owner: Receiver, nodes: int[]) -> syntax_problem.Diagnostic[] fails syntax_value.Problem:
+    if not owner.place.valid:
+        return []
+    for id in nodes:
+        const value = try data(context, id)
+        if value.data != b"call" and value.data != b"method_call":
+            continue
+        const arguments_id = try graph.field(context.pool, value.children[0], "arguments")
+        const arguments = try graph.items(context.pool, arguments_id)
+        for argument_id in arguments:
+            const argument = try graph.number(context.pool, argument_id)
+            const marker = try data(context, argument)
+            if marker.data != b"mut_argument":
+                continue
+            const place = try mutation_places.analyze(context, argument)
+            if overlaps(owner.place, place):
+                const problem = try report(context, scope, owner, id, argument)
+                return [problem]
+    return []
+
+
+public func check(context: mutation_places.Context, statement: int, scope: locals.Scope) -> syntax_problem.Diagnostic[] fails syntax_value.Problem:
+    const data_id = try graph.field(context.pool, statement, "data")
+    const value = try graph.get(context.pool, data_id)
+    const span = try graph.field(context.pool, statement, "span")
+    mut nodes: int[] = []
+    _ = try children(mut nodes, context.pool, value, True)
+    if len(nodes) == 0:
+        return []
+    const root = nodes[0]
+    mut position = 0
+    while position < len(nodes):
+        const child = try data(context, nodes[position])
+        _ = try children(mut nodes, context.pool, child, False)
+        position = position + 1
+        if len(nodes) > 1048576:
+            fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="receiver expression traversal limit exceeded")
+    if value.data == b"assignment":
+        const name = try graph.field(context.pool, value.children[0], "name")
+        const raw = try graph.spelling(context.pool, context.source, name)
+        const place = mutation_places.Place(argument=root, root=raw, root_node=root, steps=[], valid=True)
+        const name_bounds = try bounds(context.pool, name)
+        const owner = Receiver(place=place, span=name_bounds, statement=span, expression=root)
+        const problems = try calls(context, scope, owner, nodes)
+        if len(problems) > 0:
+            return problems
+    for id in nodes:
+        const owner = try receiver(context, scope, id, span, root)
+        const problems = try calls(context, scope, owner, nodes)
+        if len(problems) > 0:
+            return problems
+    return []

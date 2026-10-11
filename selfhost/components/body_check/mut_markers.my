@@ -3,6 +3,8 @@ import syntax_problem
 import graph
 import locals
 import suggestions
+import list_places
+import mutation_places
 
 public record Request:
     call_name: int
@@ -53,8 +55,15 @@ func call_text(pool: syntax_value.Pool, source: bytes, nodes: int[], arguments: 
 
 
 public func check(pool: syntax_value.Pool, source: bytes, nodes: int[], mut scope: locals.Scope, request: Request) -> syntax_problem.Diagnostic[] fails syntax_value.Problem:
+    const context = mutation_places.Context(pool=pool, source=source, nodes=nodes, typed_pool=syntax_value.empty(), typed_nodes=[], resolved=[])
+    return try check_places(context, mut scope, request)
+
+
+public func check_places(context: mutation_places.Context, mut scope: locals.Scope, request: Request) -> syntax_problem.Diagnostic[] fails syntax_value.Problem:
+    const pool = context.pool
+    const source = context.source
+    const nodes = context.nodes
     mut result: syntax_problem.Diagnostic[] = []
-    mut roots: int[] = []
     mut markers: int[] = []
     const raw_callee = try graph.spelling(pool, source, request.call_name)
     const callee = try suggestions.text(raw_callee)
@@ -91,50 +100,10 @@ public func check(pool: syntax_value.Pool, source: bytes, nodes: int[], mut scop
         const operand = try target(pool, nodes, argument)
         const data = try graph.field(pool, nodes[operand], "data")
         const value = try graph.get(pool, data)
-        if value.data == b"field" or value.data == b"index":
-            fail try problem(pool, location, "P_BODY_PROFILE", "managed mutation places are outside the scalar body profile")
-        if value.data != b"name":
+        if value.data != b"name" and value.data != b"field" and value.data != b"index":
             fail try problem(pool, location, "E_MUTATION_MARKER", "`mut` requires an assignable argument (a variable, field or list slot); assign it to a local first")
-        const name_span = try graph.payload(pool, data)
-        const name = try graph.spelling(pool, source, name_span)
-        const slot = locals.find(scope, name)
-        if slot < 0:
-            fail try problem(pool, name_span, "E_UNKNOWN_NAME", "name is not defined in this scope")
-        if not scope.locals[slot].mutable:
-            const operand_span = try span(pool, nodes, operand)
-            fail try problem(pool, operand_span, "E_IMMUTABLE", "this binding and its nested data are read-only; declare it with `mut` to update it")
-        scope.locals[slot].usage.writes = scope.locals[slot].usage.writes + 1
-        roots.append(slot)
+        _ = try list_places.writable(pool, source, nodes, mut scope, operand)
         markers.append(argument)
     if len(result) > 0:
         return result
-    for first in range(len(roots)):
-        for second in range(first + 1, len(roots)):
-            if roots[first] != roots[second]:
-                continue
-            mut early = markers[first]
-            mut late = markers[second]
-            const early_span = try span(pool, nodes, early)
-            const late_span = try span(pool, nodes, late)
-            const early_start = try graph.field(pool, early_span, "start")
-            const late_start = try graph.field(pool, late_span, "start")
-            const early_offset = try graph.number(pool, early_start)
-            const late_offset = try graph.number(pool, late_start)
-            if early_offset > late_offset:
-                early = markers[second]
-                late = markers[first]
-            const a = try span(pool, nodes, early)
-            const b = try span(pool, nodes, late)
-            const a_raw = try graph.spelling(pool, source, a)
-            const a_text = try suggestions.text(a_raw)
-            const b_raw = try graph.spelling(pool, source, b)
-            const b_text = try suggestions.text(b_raw)
-            const root = try suggestions.text(scope.locals[roots[first]].name)
-            const message = "`" + callee + "` receives overlapping `mut` arguments `" + a_text + "` and `" + b_text + "`: both name `" + root + "`, and two `mut` arguments of one call must name disjoint places. Copy one into a local, pass `mut` that local and store it back (`copy = " + root + "`, pass `mut copy`, then `" + root + " = copy`), or pass the enclosing value `mut " + root + "` once"
-            const rejection = try problem(pool, b, "E_MUTATION_OVERLAP", message)
-            const previous = try problem(pool, a, "", "")
-            const related = syntax_problem.Related(start=previous.start, end=previous.end, message="the other `mut` argument naming an overlapping place", role="related")
-            mut diagnostic = syntax_problem.plain(rejection)
-            diagnostic.notes.related.append(related)
-            return [diagnostic]
-    return result
+    return try mutation_places.check(context, request.call_name, markers)

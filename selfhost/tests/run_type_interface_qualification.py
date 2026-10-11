@@ -82,7 +82,7 @@ def environment(mode, components, empty):
 def packages(directory, include_body=True):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
-                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), COMPONENT: (1, 1), 'body-check': (1, 3)}
+                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), COMPONENT: (1, 1), 'body-check': (1, 4)}
     for name, (protocol, schema) in versions.items():
         if name == 'body-check' and not include_body:
             continue  # Frozen pre-body measurement profile.

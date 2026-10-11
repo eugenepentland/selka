@@ -8,6 +8,7 @@ import emission
 import names
 import sequences
 import list_types
+import record_types
 
 func ascii(text: str) -> bytes fails syntax_value.Problem:
     const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -45,13 +46,27 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const source_id = try graph.field(pool, context_id, "source")
     const source = try graph.get(pool, source_id)
     const program_id = try graph.field(pool, root, "program")
-    for field_name in ["lambdas", "attributes"]:
-        const values_id = try graph.field(pool, program_id, field_name)
-        const values = try graph.items(pool, values_id)
-        if len(values) != 0:
-            return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="lambdas and contracts are outside the B1 scalar profile"))
+    const lambdas_id = try graph.field(pool, program_id, "lambdas")
+    const lambdas = try graph.items(pool, lambdas_id)
+    if len(lambdas) != 0:
+        return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="lambdas are outside the body profile"))
+    const attributes_id = try graph.field(pool, program_id, "attributes")
+    const attributes = try graph.items(pool, attributes_id)
+    for declaration in attributes:
+        const clauses_id = try graph.field(pool, declaration, "attributes")
+        const clauses = try graph.items(pool, clauses_id)
+        for clause in clauses:
+            const kind_id = try graph.field(pool, clause, "kind")
+            const kind = try graph.get(pool, kind_id)
+            if kind.data == b"invariant" or kind.data == b"requires" or kind.data == b"ensures":
+                const span = try graph.field(pool, clause, "span")
+                const start_id = try graph.field(pool, span, "start")
+                const end_id = try graph.field(pool, span, "end")
+                const start = try graph.number(pool, start_id)
+                const end = try graph.number(pool, end_id)
+                return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message="contracts require additional checked bodies outside the record profile"))
     const type_tables = try graph.field(pool, program_id, "types")
-    for field_name in ["records", "domains", "resources", "variants"]:
+    for field_name in ["domains", "resources", "variants"]:
         const values_id = try graph.field(pool, type_tables, field_name)
         const values = try graph.items(pool, values_id)
         if len(values) != 0:
@@ -71,7 +86,29 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const expressions = try graph.field(pool, type_tables, "expressions")
     const suffixes_id = try graph.field(pool, expressions, "suffixes")
     const suffixes = try graph.items(pool, suffixes_id)
-    const lists = try list_types.prepare(pool, catalog, suffixes, [string_type, bytes_type])
+    const retained_id = try graph.field(pool, catalog, "records")
+    const retained = try graph.items(pool, retained_id)
+    const raw_records_id = try graph.field(pool, type_tables, "records")
+    const raw_records = try graph.items(pool, raw_records_id)
+    mut records = record_types.empty()
+    match record_types.prepare(pool, retained, raw_records):
+        case Ok(prepared):
+            records = prepared
+        case Err(problem):
+            if problem.code == "P_BODY_PROFILE":
+                return try profile(problem)
+            fail problem
+    const aliases_id = try graph.field(pool, expressions, "aliases")
+    const aliases = try graph.items(pool, aliases_id)
+    _ = try record_types.bind_names(mut records, pool, source.data, modules, aliases)
+    const lists = try list_types.prepare_records(pool, catalog, suffixes, [string_type, bytes_type], records)
+    match record_types.closure(mut records, pool, lists.elements, [string_type, bytes_type]):
+        case Ok(admitted):
+            _ = admitted
+        case Err(problem):
+            if problem.code == "P_BODY_PROFILE":
+                return try profile(problem)
+            fail problem
     state.batch.facts.lists = lists
     if len(state.syntax.functions) > 65536:
         return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="function limit exceeded"))

@@ -205,3 +205,8 @@ public func check(context: Context, call_name: int, arguments: int[]) -> syntax_
             const result = try diagnostic(context, call_name, a, b, depth)
             return [result]
     return []
+
+
+public func index_step(context: Context, node: int, operand: int) -> Step fails syntax_value.Problem:
+    const key = try checked_key(context, operand)
+    return Step(node=node, field=b"", indexed=True, known=key.known, key=key.value)

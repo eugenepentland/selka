@@ -1,14 +1,13 @@
-# B3 scalar, string, byte, and list body checking
+# B4 scalar, sequence, and ordinary record body checking
 
 This producer owns typing and lowering of ordinary nongeneric function bodies
 from raw ASTs. It emits complete native typed nodes, statements, functions, local
 metadata, and per-function table ranges. It does not consume a native semantic
-worklist or native checked bodies. B3 extends the qualified scalar and immutable
-text/byte closure with growable lists. Selka chooses inferred list types and emits bounded catalog recipes; native
+worklist or native checked bodies. The producer extends scalar and sequence checking with ordinary nongeneric value records. Selka chooses inferred list types and emits bounded catalog recipes; native
 code materializes those recipes without choosing body types.
 
 Admitted types are `int`/`i64`, `bool`, `Unit`, `str`, `bytes`, and recursively
-nested lists of those admitted types. Operations include
+nested lists and ordinary records whose fields use those admitted types. Recursive record storage through a list is admitted; direct by-value layout cycles are rejected. Operations include
 literals, scalar unary and binary operations, UTF-8 text and arbitrary byte
 literals, managed length and indexing (including negative indices), concatenation,
 equality and ordering, explicit `int`/`i64` conversion of admitted integer values,
@@ -33,12 +32,10 @@ by an `int` cast. These internal narrow types are not exposed as new source-leve
 integer types. Full typed tables retain native intermediate nodes and exact spans.
 
 Other collections, generic functions, checked failure signatures,
-lambdas, resources, contracts, nominal declarations, non-i64 scalar suffixes,
+lambdas, resources, invariant/contracts, generic or boxed records, variants, domains, non-i64 scalar suffixes,
 floating division, chained comparisons, dynamic assertion messages, explicit
 range strides, keyed/callback sorting, enumerated/unpacked iteration, non-list
-methods and slicing are outside this profile. Scalar alias
-names remain in the catalog for shadow checking, but alias annotations are not
-resolved by this producer. Unsupported forms produce `P_BODY_PROFILE`; component
+methods and slicing are outside this profile. Transparent aliases are resolved from raw declarations with module privacy and canonical re-export identities. Unsupported forms produce `P_BODY_PROFILE`; component
 mode refuses without native body fallback. Malformed graph transport fails the
 exchange rather than becoming a source diagnostic. Source diagnostics preserve
 native messages, related sites, and edits within the admitted closure.
@@ -51,9 +48,8 @@ body batch, diagnostics, and import usage. Component mode adopts the validated
 batch at the body-checking seam. Reference mode remains available.
 
 `main.my` accepts `--exchange FILE` or unframed `--request FILE`. The normative
-wire contract is [WIRE.md](WIRE.md): protocol 1, schema 3, correlated `SLKBCK01`
-envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Schema-1 and schema-2
-packages and requests are refused. The request contains raw ASTs, sources, declaration facts,
+wire contract is [WIRE.md](WIRE.md): protocol 1, schema 4, correlated `SLKBCK01`
+envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Older body schemas and packages are refused. The request contains raw ASTs, sources, declaration facts,
 and the retained catalog descriptors. Batch fields remain
 `nodes`, `statements`, `functions`, and `ranges`.
 
@@ -65,7 +61,7 @@ these same typed-node and graph limits. Existing parser value helpers are
 immutable symlinks copied into coordinator snapshots. Seed and component-v1
 language admission remain unchanged.
 
-Pure tests are the twelve `*_tests.my` modules. Run each with the
+Pure tests are the `*_tests.my` modules in this directory. Run each with the
 coordinator-verified seed under `scripts/build-slot.sh build`, normally and with
 `--release --verify-facts`, `MYL_CORE_LEAKCHECK=1`, private disk `TMPDIR`, and a
 worktree-local Zig cache. Installed workflow tests compare complete
@@ -89,3 +85,8 @@ copy and clear; and single-binding iteration. List `+` remains the native source
 error. Unkeyed sorting admits int, str and bytes elements. The producer preserves
 hidden collection roots, managed cleanup, constant packing at 64 inert elements,
 full intermediate rows, and source-growth/rebinding behavior during iteration.
+
+
+Schema 4 adds the complete retained `records` prefix to the catalog. Exact declaration spans join raw ordinary record declarations to authoritative retained type IDs through a stable indexed lookup. Selka resolves constructor names, visibility, aliases, arguments and defaults; it preserves source evaluation order and native field diagnostics. Field reads, nested record/list writes, receiver refresh after RHS evaluation, mut-record parameters, call snapshots, list elements and iteration preserve full typed metadata. The native materializer only applies Selka-owned new list recipes.
+
+Record admission rejects unsupported field policies and raw invariants globally, including unused and imported declarations. A bounded reverse-edge fixed point admits recursive record/list closure; a separate graph check rejects by-value record cycles. Private name indexes admit at most 1,048,576 entries and 64 MiB of generated key bytes, with early budget checks before key allocation. Record declaration span lookups and nominal name lookups use sorted indexes rather than full catalog scans per use.

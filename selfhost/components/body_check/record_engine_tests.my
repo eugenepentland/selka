@@ -1,0 +1,135 @@
+import syntax_value
+import graph
+import engine
+import emission
+import locals
+import record_types
+
+record Fixture:
+    state: engine.State
+    name: int
+    left: int
+    right: int
+
+
+func node(mut state: engine.State, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut state.syntax.pool, tag, payload)
+    const raw = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, data])
+    const id = len(state.syntax.nodes)
+    state.syntax.nodes.append(raw)
+    return id
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut state = engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"Pair left right 1 2", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=emission.empty(), scope=locals.empty(), return_type=15, depth=0, control=engine.Control(next=0, active=[], exited=[]), problems=[])
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 4)
+    const left = try syntax_value.span(mut state.syntax.pool, 5, 9)
+    const right = try syntax_value.span(mut state.syntax.pool, 10, 15)
+    const first = try syntax_value.span(mut state.syntax.pool, 16, 17)
+    const second = try syntax_value.span(mut state.syntax.pool, 18, 19)
+    _ = try node(mut state, first, b"integer", first)
+    _ = try node(mut state, second, b"integer", second)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const raw_left = try syntax_value.object(mut state.syntax.pool, ["name", "default_value"], [left, absent])
+    const raw_right = try syntax_value.object(mut state.syntax.pool, ["name", "default_value"], [right, absent])
+    const raw_fields = try syntax_value.sequence(mut state.syntax.pool, [raw_left, raw_right])
+    const declaration = try syntax_value.object(mut state.syntax.pool, ["name", "fields"], [name, raw_fields])
+    const zero = try syntax_value.integer(mut state.syntax.pool, 0)
+    const left_name = try syntax_value.octets(mut state.syntax.pool, b"left")
+    const right_name = try syntax_value.octets(mut state.syntax.pool, b"right")
+    const typed_left = try syntax_value.object(mut state.syntax.pool, ["name", "declaration", "ty"], [left_name, left, zero])
+    const typed_right = try syntax_value.object(mut state.syntax.pool, ["name", "declaration", "ty"], [right_name, right, zero])
+    const typed_fields = try syntax_value.sequence(mut state.syntax.pool, [typed_left, typed_right])
+    const name_bytes = try syntax_value.octets(mut state.syntax.pool, b"Pair")
+    const schema = try syntax_value.object(mut state.syntax.pool, ["name", "fields"], [name_bytes, typed_fields])
+    mut records = record_types.empty()
+    records.rows = [schema]
+    records.declarations = [declaration]
+    records.ids = [19]
+    for unused in range(19):
+        records.by_type.append(-1)
+        records.admitted.append(False)
+    records.by_type.append(0)
+    records.admitted.append(True)
+    _ = try record_types.bind_names(mut records, state.syntax.pool, state.syntax.source, [], [])
+    state.batch.facts.lists.types.records = records
+    return Fixture(state=state, name=name, left=left, right=right)
+
+
+func call(mut fixture: Fixture, arguments: int[], labels: int[]) -> int fails syntax_value.Problem:
+    const absent = try syntax_value.absent(mut fixture.state.syntax.pool)
+    const empty = try syntax_value.sequence(mut fixture.state.syntax.pool, [])
+    mut ids: int[] = []
+    for argument in arguments:
+        const id = try syntax_value.integer(mut fixture.state.syntax.pool, argument)
+        ids.append(id)
+    const inputs = try syntax_value.sequence(mut fixture.state.syntax.pool, ids)
+    const names = try syntax_value.sequence(mut fixture.state.syntax.pool, labels)
+    const payload = try syntax_value.object(mut fixture.state.syntax.pool, ["name", "owner", "type_arguments", "arguments", "argument_names"], [fixture.name, absent, empty, inputs, names])
+    const whole = try syntax_value.span(mut fixture.state.syntax.pool, 0, 19)
+    return try node(mut fixture.state, whole, b"call", payload)
+
+
+public func test_constructor_preserves_written_field_and_node_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const raw = try call(mut fixture, [1, 0], [fixture.right, fixture.left])
+    const value = try engine.expression(mut fixture.state, raw)
+    const data = try graph.field(fixture.state.batch.pool, fixture.state.batch.nodes[value.id], "data")
+    const initializers_id = try graph.payload(fixture.state.batch.pool, data)
+    const initializers = try graph.items(fixture.state.batch.pool, initializers_id)
+    const first_index = try graph.field(fixture.state.batch.pool, initializers[0], "index")
+    const second_index = try graph.field(fixture.state.batch.pool, initializers[1], "index")
+    const first = try graph.number(fixture.state.batch.pool, first_index)
+    const second = try graph.number(fixture.state.batch.pool, second_index)
+    const checked_span = try graph.field(fixture.state.batch.pool, fixture.state.batch.nodes[value.id], "span")
+    const checked_end = try graph.field(fixture.state.batch.pool, checked_span, "end")
+    const end = try graph.number(fixture.state.batch.pool, checked_end)
+    return end == 19 and value.ty == 19 and value.id == 2 and first == 1 and second == 0 and len(fixture.state.batch.nodes) == 3
+
+
+public func test_constructor_missing_field_has_native_related_site() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const raw = try call(mut fixture, [0], [fixture.left])
+    match engine.expression(mut fixture.state, raw):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "E_INCOMPLETE_CONSTRUCTION" or problem.message != "missing initializer for field `right` of `Pair`":
+                return False
+            return problem.start == 0 and problem.end == 19 and len(fixture.state.problems) == 1 and fixture.state.problems[0].notes.related[0].start == 10 and fixture.state.problems[0].notes.related[0].end == 15
+
+
+public func test_field_read_retains_record_and_field_types() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const raw = try call(mut fixture, [0, 1], [fixture.left, fixture.right])
+    const base = try syntax_value.integer(mut fixture.state.syntax.pool, raw)
+    const payload = try syntax_value.object(mut fixture.state.syntax.pool, ["base", "name"], [base, fixture.left])
+    const field = try node(mut fixture.state, fixture.left, b"field", payload)
+    const value = try engine.expression(mut fixture.state, field)
+    const data = try graph.field(fixture.state.batch.pool, fixture.state.batch.nodes[value.id], "data")
+    const fields = try graph.payload(fixture.state.batch.pool, data)
+    const index_id = try graph.field(fixture.state.batch.pool, fields, "index")
+    const index = try graph.number(fixture.state.batch.pool, index_id)
+    return value.ty == 0 and value.id == 3 and index == 0
+
+
+public func test_child_error_precedes_duplicate_field_after_all_hints() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const missing = try node(mut fixture.state, fixture.right, b"name", fixture.right)
+    const raw = try call(mut fixture, [0, missing], [fixture.left, fixture.left])
+    match engine.expression(mut fixture.state, raw):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_UNKNOWN_NAME" and problem.start == 10 and problem.end == 15
+
+
+public func test_unknown_field_hint_precedes_any_child_expression() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const missing = try node(mut fixture.state, fixture.right, b"name", fixture.right)
+    const raw = try call(mut fixture, [missing, 1], [fixture.left, fixture.name])
+    match engine.expression(mut fixture.state, raw):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_UNKNOWN_FIELD" and problem.message == "field does not exist on this record type; declared fields: left, right"

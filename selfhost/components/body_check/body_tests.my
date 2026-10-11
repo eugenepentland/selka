@@ -33,7 +33,8 @@ func input(value_tag: bytes, return_text: bytes) -> syntax_value.Pool fails synt
     mut source_text = b"f " + return_text + b" 42"
     const source = try syntax_value.octets(mut pool, source_text)
     const context = try syntax_value.object(mut pool, ["path", "source"], [path, source])
-    const catalog = try syntax_value.object(mut pool, ["string", "bytes", "base_count", "lists", "list_available"], [absent, absent, zero, empty, no])
+    const record_count = try syntax_value.integer(mut pool, 0)
+    const catalog = try syntax_value.object(mut pool, ["string", "bytes", "base_count", "lists", "list_available", "records"], [absent, absent, record_count, empty, no, empty])
     _ = try syntax_value.object(mut pool, ["context", "program", "modules", "catalog"], [context, program, empty, catalog])
     return pool
 

@@ -1,6 +1,16 @@
 import syntax_value
 import graph
 import record_index
+import record_name_index
+import names
+import suggestions
+
+public record Bindings:
+    table: record_name_index.Index
+    types: int[]
+    aliases: int[]
+    display: str[]
+
 
 public record Catalog:
     rows: int[]
@@ -9,10 +19,11 @@ public record Catalog:
     by_type: int[]
     admitted: bool[]
     ids: int[]
+    bindings: Bindings
 
 
 public func empty() -> Catalog:
-    return Catalog(rows=[], declarations=[], index=record_index.empty(), by_type=[], admitted=[], ids=[])
+    return Catalog(rows=[], declarations=[], index=record_index.empty(), by_type=[], admitted=[], ids=[], bindings=Bindings(table=record_name_index.Index(names=[], order=[], comparisons=0, octets=0, writes=0), types=[], aliases=[], display=[]))
 
 
 func refusal(pool: syntax_value.Pool, span: int, message: str) -> syntax_value.Problem fails syntax_value.Problem:
@@ -45,7 +56,7 @@ public func prepare(pool: syntax_value.Pool, rows: int[], declarations: int[]) -
             fail problem
         spans.append(span)
     const index = try record_index.make(pool, spans)
-    mut catalog = Catalog(rows=rows, declarations=declarations, index=index, by_type=[], admitted=[], ids=[])
+    mut catalog = Catalog(rows=rows, declarations=declarations, index=index, by_type=[], admitted=[], ids=[], bindings=Bindings(table=record_name_index.Index(names=[], order=[], comparisons=0, octets=0, writes=0), types=[], aliases=[], display=[]))
     for unused in declarations:
         catalog.ids.append(-1)
     for unused in range(19):
@@ -127,3 +138,188 @@ public func schema(catalog: Catalog, ty: int) -> int:
     if ty < 19 or ty >= len(catalog.by_type) or catalog.by_type[ty] < 0:
         return -1
     return catalog.rows[ty - 19]
+
+
+# Greatest fixed point: value records may recur through managed lists.
+# Reverse edges propagate an unsupported leaf once, without recursive scans.
+public func closure(mut catalog: Catalog, pool: syntax_value.Pool, elements: int[], managed: int[]) -> bool fails syntax_value.Problem:
+    const count = len(catalog.by_type)
+    if len(elements) != count:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="record and list catalog counts differ")
+    mut allowed: bool[] = []
+    mut parents: int[][] = []
+    for ty in range(count):
+        allowed.append(catalog.admitted[ty] or elements[ty] >= 0 or ty == 0 or ty == 1 or ty == 15)
+        parents.append([])
+    for ty in managed:
+        if ty >= 0:
+            if ty >= count:
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="managed catalog type exceeds retained prefix")
+            allowed[ty] = True
+    mut edges = 0
+    for ty in range(19, count):
+        mut children: int[] = []
+        if elements[ty] >= 0:
+            children.append(elements[ty])
+        if catalog.admitted[ty]:
+            const fields_id = try graph.field(pool, catalog.rows[ty - 19], "fields")
+            const fields = try graph.items(pool, fields_id)
+            for field in fields:
+                const child_id = try graph.field(pool, field, "ty")
+                const child = try graph.number(pool, child_id)
+                children.append(child)
+        for child in children:
+            if child < 0 or child >= count:
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="record field type exceeds retained prefix")
+            if edges >= 4194304:
+                fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="record type edge limit exceeded")
+            parents[child].append(ty)
+            edges = edges + 1
+    # List storage cuts layout edges. Only direct value-record edges must be acyclic.
+    mut remaining: int[] = []
+    mut layout_parents: int[][] = []
+    for unused in range(count):
+        remaining.append(0)
+        layout_parents.append([])
+    for ty in range(19, count):
+        if catalog.admitted[ty]:
+            const fields_id = try graph.field(pool, catalog.rows[ty - 19], "fields")
+            const fields = try graph.items(pool, fields_id)
+            for field in fields:
+                const child_id = try graph.field(pool, field, "ty")
+                const child = try graph.number(pool, child_id)
+                if catalog.admitted[child]:
+                    remaining[ty] = remaining[ty] + 1
+                    layout_parents[child].append(ty)
+    mut ready: int[] = []
+    mut nominal_count = 0
+    for ty in range(19, count):
+        if catalog.admitted[ty]:
+            nominal_count = nominal_count + 1
+            if remaining[ty] == 0:
+                ready.append(ty)
+    mut layout_cursor = 0
+    while layout_cursor < len(ready):
+        const ty = ready[layout_cursor]
+        layout_cursor = layout_cursor + 1
+        for parent in layout_parents[ty]:
+            remaining[parent] = remaining[parent] - 1
+            if remaining[parent] == 0:
+                ready.append(parent)
+    if len(ready) != nominal_count:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="cyclic value-record layout")
+    mut queue: int[] = []
+    for ty in range(count):
+        if not allowed[ty]:
+            queue.append(ty)
+    mut cursor = 0
+    while cursor < len(queue):
+        const rejected = queue[cursor]
+        cursor = cursor + 1
+        for parent in parents[rejected]:
+            if allowed[parent]:
+                allowed[parent] = False
+                queue.append(parent)
+    for ty in range(19, count):
+        if catalog.admitted[ty] and not allowed[ty]:
+            const span = try graph.field(pool, catalog.rows[ty - 19], "declaration")
+            const problem = try refusal(pool, span, "record field type is outside the admitted body closure")
+            fail problem
+    return True
+
+
+public func bind_names(mut catalog: Catalog, pool: syntax_value.Pool, source: bytes, modules: int[], aliases: int[]) -> bool fails syntax_value.Problem:
+    mut keys: bytes[] = []
+    mut types: int[] = []
+    mut total = 0
+    mut display: str[] = []
+    for position in range(len(catalog.declarations) + len(aliases)):
+        mut declaration = 0
+        mut ty = 0
+        if position < len(catalog.declarations):
+            declaration = catalog.declarations[position]
+            ty = catalog.ids[position]
+        else:
+            const alias = position - len(catalog.declarations)
+            declaration = aliases[alias]
+            ty = -2 - alias
+        const span = try graph.field(pool, declaration, "name")
+        const text = try graph.spelling(pool, source, span)
+        mut length = len(text)
+        if len(modules) != 0:
+            const start_id = try graph.field(pool, span, "start")
+            const start = try graph.number(pool, start_id)
+            const module = try names.module_at(pool, modules, start)
+            if module < 0:
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="nominal declaration has no source module")
+            const context = try graph.field(pool, modules[module], "context")
+            const name_id = try graph.field(pool, context, "name")
+            const name = try graph.get(pool, name_id)
+            length = length + len(name.data) + 2
+        if length > 67108864 - total:
+            fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="nominal index key bytes exceed body wire profile")
+        total = total + length
+        const key = try names.qualified(pool, source, modules, span)
+        keys.append(key)
+        types.append(ty)
+        if ty >= 19:
+            const name_id = try graph.field(pool, catalog.rows[ty - 19], "name")
+            const name = try graph.get(pool, name_id)
+            mut buffer = byte_buffer([])
+            mut cursor = 0
+            while cursor < len(name.data):
+                if name.data[cursor] == 58 and cursor + 1 < len(name.data) and name.data[cursor + 1] == 58:
+                    _ = buffer.append_byte(46)
+                    cursor = cursor + 2
+                else:
+                    _ = buffer.append_byte(name.data[cursor])
+                    cursor = cursor + 1
+            const surface = try suggestions.text(bytes(buffer))
+            display.append(surface)
+    match record_name_index.make(keys):
+        case Ok(table):
+            catalog.bindings = Bindings(table=table, types=types, aliases=aliases, display=display)
+        case Err(problem):
+            fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message=problem.message)
+    return True
+
+
+public func named(catalog: Catalog, key: bytes) -> int fails syntax_value.Problem:
+    match record_name_index.lookup(catalog.bindings.table, key):
+        case Ok(found):
+            if found.id < 0:
+                return -1
+            return catalog.bindings.types[found.id]
+        case Err(problem):
+            fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message=problem.message)
+
+
+public func equality(pool: syntax_value.Pool, catalog: Catalog, elements: int[], ty: int, managed: int[], visited: int[]) -> bool fails syntax_value.Problem:
+    if ty == 0 or ty == 1:
+        return True
+    if ty < 19:
+        return False
+    for prior in visited:
+        if prior == ty:
+            return True
+    if len(visited) >= 64:
+        return False
+    for sequence in managed:
+        if sequence >= 0 and ty == sequence:
+            return True
+    mut path = visited
+    path.append(ty)
+    if ty < len(elements) and elements[ty] >= 0:
+        return try equality(pool, catalog, elements, elements[ty], managed, path)
+    const row = schema(catalog, ty)
+    if row < 0:
+        return False
+    const fields_id = try graph.field(pool, row, "fields")
+    const fields = try graph.items(pool, fields_id)
+    for field in fields:
+        const type_id = try graph.field(pool, field, "ty")
+        const child = try graph.number(pool, type_id)
+        const supported = try equality(pool, catalog, elements, child, managed, path)
+        if not supported:
+            return False
+    return True

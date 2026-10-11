@@ -1,0 +1,102 @@
+import syntax_value
+import graph
+import locals
+import mutation_places
+import receiver_overlap
+
+record Fixture:
+    context: mutation_places.Context
+    scope: locals.Scope
+    statement: int
+
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh(disjoint: bool, unit: bool) -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const root_span = try syntax_value.span(mut pool, 4, 5)
+    const field_span = try syntax_value.span(mut pool, 4, 11)
+    const field_name = try syntax_value.span(mut pool, 6, 11)
+    const operand_span = try syntax_value.span(mut pool, 20, 21)
+    const marker_span = try syntax_value.span(mut pool, 16, 21)
+    const call_span = try syntax_value.span(mut pool, 14, 22)
+    const call_name = try syntax_value.span(mut pool, 14, 15)
+    const full_span = try syntax_value.span(mut pool, 4, 22)
+    const root = try node(mut pool, root_span, b"name", root_span)
+    const base = try syntax_value.integer(mut pool, 0)
+    const field_payload = try syntax_value.object(mut pool, ["base", "name"], [base, field_name])
+    const field = try node(mut pool, field_span, b"field", field_payload)
+    const operand = try node(mut pool, operand_span, b"name", operand_span)
+    const target = try syntax_value.integer(mut pool, 2)
+    const marker = try node(mut pool, marker_span, b"mut_argument", target)
+    const marker_id = try syntax_value.integer(mut pool, 3)
+    const arguments = try syntax_value.sequence(mut pool, [marker_id])
+    const absent = try syntax_value.absent(mut pool)
+    const call_payload = try syntax_value.object(mut pool, ["owner", "name", "arguments"], [absent, call_name, arguments])
+    const call = try node(mut pool, call_span, b"call", call_payload)
+    const receiver = try syntax_value.integer(mut pool, 1)
+    const value = try syntax_value.integer(mut pool, 4)
+    const assignment_payload = try syntax_value.object(mut pool, ["target", "value"], [receiver, value])
+    const assignment = try node(mut pool, full_span, b"field_assignment", assignment_payload)
+    const assignment_id = try syntax_value.integer(mut pool, 5)
+    const statement = try node(mut pool, full_span, b"discard", assignment_id)
+    mut typed_pool = syntax_value.empty()
+    mut ty = 0
+    if unit:
+        ty = 15
+    const type_id = try syntax_value.integer(mut typed_pool, ty)
+    const checked = try syntax_value.object(mut typed_pool, ["ty"], [type_id])
+    mut source = b"    x.value = f(mut x)\n"
+    if disjoint:
+        source = b"    x.value = f(mut y)\n"
+    mut scope = locals.empty()
+    _ = try locals.add(mut scope, b"x", root_span, 40, True, b"local")
+    _ = try locals.add(mut scope, b"y", operand_span, 40, True, b"local")
+    return Fixture(context=mutation_places.Context(pool=pool, source=source, nodes=[root, field, operand, marker, call, assignment], typed_pool=typed_pool, typed_nodes=[checked], resolved=[-1, -1, -1, -1, 0, -1]), scope=scope, statement=statement)
+
+
+public func test_field_receiver_overlap_reports_exact_span_note_and_split_fix() -> bool fails syntax_value.Problem:
+    const fixture = try fresh(False, False)
+    const problems = try receiver_overlap.check(fixture.context, fixture.statement, fixture.scope)
+    if len(problems) != 1:
+        return False
+    const diagnostic = problems[0]
+    return diagnostic.problem.code == "E_MUTATION_OVERLAP" and diagnostic.problem.start == 16 and diagnostic.problem.end == 21 and diagnostic.problem.message == "receiver `x.value` overlaps `mut x` evaluated in this statement; make the call `f(mut x)` in its own statement first, save its result in a local, then update the receiver using that local" and len(diagnostic.notes.related) == 1 and diagnostic.notes.related[0].start == 4 and diagnostic.notes.related[0].end == 11 and len(diagnostic.notes.edits) == 2 and diagnostic.notes.edits[0].start == 0 and diagnostic.notes.edits[0].text == b"    mutation_result_14 = f(mut x)\n" and diagnostic.notes.edits[1].start == 14 and diagnostic.notes.edits[1].end == 22 and diagnostic.notes.edits[1].text == b"mutation_result_14"
+
+
+public func test_disjoint_receiver_root_does_not_report_or_change_local_usage() -> bool fails syntax_value.Problem:
+    const fixture = try fresh(True, False)
+    const problems = try receiver_overlap.check(fixture.context, fixture.statement, fixture.scope)
+    return len(problems) == 0 and fixture.scope.locals[0].usage.writes == 0 and fixture.scope.locals[0].usage.reads == 0
+
+
+public func test_unit_mutating_call_reports_overlap_without_unsafe_split_fix() -> bool fails syntax_value.Problem:
+    const fixture = try fresh(False, True)
+    const problems = try receiver_overlap.check(fixture.context, fixture.statement, fixture.scope)
+    return len(problems) == 1 and len(problems[0].notes.edits) == 0
+
+
+public func test_generated_split_name_avoids_existing_source_spelling() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(False, False)
+    fixture.context.source = fixture.context.source + b"# mutation_result_14\n"
+    const problems = try receiver_overlap.check(fixture.context, fixture.statement, fixture.scope)
+    return len(problems) == 1 and problems[0].notes.edits[1].text == b"mutation_result_15"
+
+
+public func test_effectful_or_conditional_surrounding_expression_omits_split_fix() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(False, False)
+    const statement_span = try graph.field(fixture.context.pool, fixture.statement, "span")
+    const left = try syntax_value.integer(mut fixture.context.pool, 4)
+    const right = try syntax_value.integer(mut fixture.context.pool, 4)
+    const payload = try syntax_value.object(mut fixture.context.pool, ["left", "right"], [left, right])
+    const binary = try node(mut fixture.context.pool, statement_span, b"binary", payload)
+    fixture.context.nodes.append(binary)
+    const value = try syntax_value.integer(mut fixture.context.pool, 6)
+    const name = try syntax_value.span(mut fixture.context.pool, 4, 5)
+    const assignment = try syntax_value.object(mut fixture.context.pool, ["name", "value"], [name, value])
+    const statement = try node(mut fixture.context.pool, statement_span, b"assignment", assignment)
+    const problems = try receiver_overlap.check(fixture.context, statement, fixture.scope)
+    return len(problems) == 1 and len(problems[0].notes.edits) == 0

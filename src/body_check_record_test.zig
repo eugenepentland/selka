@@ -318,3 +318,40 @@ fn ordinaryId(catalog: value.Catalog) !typed.Type {
     for (catalog.records) |schema| if (records.ordinary(schema)) return schema.id;
     return error.ComponentProtocol;
 }
+
+fn stripContract(f: Fixture, kind: typed.AssertionKind) usize {
+    var count: usize = 0;
+    for (@constCast(f.output.batch.statements)) |*statement| {
+        if (statement.data != .assertion or statement.data.assertion.kind != kind) continue;
+        const condition = statement.data.assertion.condition;
+        statement.data = .{ .discard = condition };
+        count += 1;
+    }
+    return count;
+}
+fn contractGuard(a: std.mem.Allocator, text: []const u8, kind: typed.AssertionKind) !void {
+    const f = try fixture(a, text);
+    try validate.input(a, f.input);
+    try std.testing.expect(stripContract(f, kind) > 0);
+    var without = f.input;
+    without.program.attributes = &.{};
+    try validate.outcome(a, without, .{ .success = f.output });
+    try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = f.output }));
+    try validate.outcome(a, f.input, .{ .profile = .{
+        .code = "P_BODY_PROFILE",
+        .span = f.input.program.attributes[0].attributes[0].span,
+        .message = "function contract lowering is outside this profile",
+    } });
+}
+// spec-case: SELFHOST-BODY-RECORDS-1
+test "body records reject successful batches omitting required function entry contracts" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try contractGuard(arena.allocator(), "@requires(True)\nfunc value() -> int:\n    return 7\n", .requires);
+}
+// spec-case: SELFHOST-BODY-RECORDS-1
+test "body records reject successful batches omitting function return postconditions" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try contractGuard(arena.allocator(), "@ensures(result == 7)\nfunc value() -> int:\n    return 7\n", .ensures);
+}

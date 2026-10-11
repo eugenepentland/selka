@@ -86,10 +86,10 @@ const Builder = struct {
         self.heads[child] = self.edges.items.len - 1;
     }
 };
-/// Full raw authority is checked once; neither unsupported declarations nor invariant callbacks may disappear.
+/// Full raw authority is checked once; neither unsupported declarations nor contract lowering may disappear.
 pub fn success(a: std.mem.Allocator, request: value.Input) Error!void {
     for (request.program.attributes) |entry| for (entry.attributes) |attribute| {
-        if (attribute.kind == .invariant) return error.ComponentProtocol;
+        if (attribute.kind.contract()) return error.ComponentProtocol;
     };
     if (request.program.types.domains.len != 0 or request.program.types.variants.len != 0 or request.program.types.resources.len != 0) return error.ComponentProtocol;
     var raw: std.AutoHashMapUnmanaged(source.Span, void) = .empty;

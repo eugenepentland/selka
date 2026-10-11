@@ -1,5 +1,6 @@
 import syntax_value
 import graph
+import record_types
 
 public record Schema:
     id: int
@@ -12,18 +13,23 @@ public record Recipe:
     span: int
 
 
+public record TypeTables:
+    suffixes: int[]
+    records: record_types.Catalog
+
+
 public record Catalog:
     base_count: int
     available: bool
     known: Schema[]
     recipes: Recipe[]
-    suffixes: int[]
+    types: TypeTables
     by_element: int[]
     elements: int[]
 
 
 public func empty() -> Catalog:
-    return Catalog(base_count=0, available=False, known=[], recipes=[], suffixes=[], by_element=[], elements=[])
+    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty()), by_element=[], elements=[])
 
 
 func bad() -> syntax_value.Problem:
@@ -31,6 +37,10 @@ func bad() -> syntax_value.Problem:
 
 
 public func prepare(pool: syntax_value.Pool, id: int, suffixes: int[], managed: int[]) -> Catalog fails syntax_value.Problem:
+    return try prepare_records(pool, id, suffixes, managed, record_types.empty())
+
+
+public func prepare_records(pool: syntax_value.Pool, id: int, suffixes: int[], managed: int[], records: record_types.Catalog) -> Catalog fails syntax_value.Problem:
     const count_id = try graph.field(pool, id, "base_count")
     const count = try graph.number(pool, count_id)
     const available_id = try graph.field(pool, id, "list_available")
@@ -40,7 +50,8 @@ public func prepare(pool: syntax_value.Pool, id: int, suffixes: int[], managed: 
     mut catalog = empty()
     catalog.base_count = count
     catalog.available = available.integer != 0
-    catalog.suffixes = suffixes
+    catalog.types.suffixes = suffixes
+    catalog.types.records = records
     for unused in range(19 + count):
         catalog.by_element.append(-1)
         catalog.elements.append(-1)
@@ -69,6 +80,9 @@ public func prepare(pool: syntax_value.Pool, id: int, suffixes: int[], managed: 
             if leaf < 19 or leaf >= len(depths):
                 fail bad()
             depths[leaf] = 1
+    for ty in range(19, len(records.admitted)):
+        if records.admitted[ty]:
+            depths[ty] = 1
     for schema in catalog.known:
         if depths[schema.id] == 1:
             fail bad()
@@ -126,6 +140,8 @@ public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recip
         for id in managed:
             if current == id:
                 leaf = True
+        if current < len(catalog.types.records.admitted) and catalog.types.records.admitted[current]:
+            leaf = True
         if leaf:
             break
         current = element_type(catalog, current)

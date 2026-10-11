@@ -5,8 +5,8 @@ import syntax_value
 import emission
 import syntax_problem
 
-public func type_at(state: engine.State, span: int) -> int fails syntax_value.Problem:
-    return try engine.type_at(state, span)
+public func type_at(mut state: engine.State, span: int) -> int fails syntax_value.Problem:
+    return try engine.type_at(mut state, span)
 
 
 public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bool fails syntax_value.Problem:
@@ -44,7 +44,7 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
         const rejection = try engine.problem(state, declaration, "P_BODY_PROFILE", "B1 requires nongeneric functions without checked failure types")
         fail rejection
     const return_span = try graph.field(state.syntax.pool, signature_id, "return_type")
-    const return_type = try type_at(state, return_span)
+    const return_type = try type_at(mut state, return_span)
     state.return_type = return_type
     const parameters_id = try graph.field(state.syntax.pool, signature_id, "parameters")
     const parameters = try graph.items(state.syntax.pool, parameters_id)
@@ -64,7 +64,7 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
             state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
             fail rejection
         const type_span = try graph.field(state.syntax.pool, parameter, "ty")
-        const ty = try type_at(state, type_span)
+        const ty = try type_at(mut state, type_span)
         const mutable_id = try graph.field(state.syntax.pool, parameter, "mut")
         const mutable = try graph.get(state.syntax.pool, mutable_id)
         const default_id = try graph.field(state.syntax.pool, parameter, "default_value")

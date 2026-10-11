@@ -1,0 +1,17 @@
+import record_qualified
+import syntax_value
+
+public func test_qualified_alias_preserves_internal_source_bytes() -> bool fails syntax_value.Problem:
+    const name = try record_qualified.parse(b"one . #dot.in.comment\ntwo . Thing")
+    return name.alias == b"one . #dot.in.comment\ntwo" and name.name == b"Thing"
+
+
+public func test_qualified_name_excludes_separator_whitespace_and_comments() -> bool fails syntax_value.Problem:
+    const name = try record_qualified.parse(b"dep #comment.dot\n. Thing #tail.dot")
+    return name.alias == b"dep" and name.name == b"Thing"
+
+
+public func test_canonical_colon_name_and_callable_keyword() -> bool fails syntax_value.Problem:
+    const canonical = try record_qualified.parse(b"module::Record")
+    const callable = try record_qualified.parse(b"dep.replace")
+    return canonical.alias == b"module" and canonical.name == b"Record" and callable.alias == b"dep" and callable.name == b"replace"

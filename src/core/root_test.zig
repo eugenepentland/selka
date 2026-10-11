@@ -1,6 +1,7 @@
 //! Test root of the new compiler core (`zig build test-core`): unit tests of
 //! each stage, then the end-to-end slice programs under `test/core`.
 comptime {
+    _ = @import("print_test.zig");
     _ = @import("s2_views_test.zig");
     _ = @import("juice/tests.zig");
     _ = @import("task_ir_test.zig");

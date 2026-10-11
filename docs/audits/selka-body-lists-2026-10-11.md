@@ -121,11 +121,14 @@ Every workload first passes release facts/leak behavior checks. Runtime measures
 the generated release executable including process startup, so these short rows
 cannot establish broad runtime performance acceptance.
 
-The coordinator's current guest policy already optimizes each module. Guest
-`--release` changes this to one LLVM unit and changes debug metadata; the pinned
-compiler currently maps its `-O2` and `-O3` requests to Clang `-O2`. The private
-release producer therefore tests module fusion and metadata changes, not an
-optimization on/off comparison. It preserves the exact 39-file source snapshot,
+The qualified seed's default guest policy is unoptimized debug (`-O0`), with
+one LLVM unit per module. Guest `--release` enables optimization, combines the
+program into one LLVM unit and changes debug metadata. The pinned compiler maps
+its release `-O3` request to Clang `-O2`. This corrects the original audit's
+attribution to module fusion alone, which mistakenly used the current compiler's
+default rather than the frozen seed's `src/core/pipeline.zig:24` default. The
+measured artifacts, samples and verdicts are unchanged. The private release
+producer preserves the exact 39-file source snapshot,
 qualified seed, host and other six packages. Its artifact is 2,185,984 bytes,
 versus 4,643,320 bytes for the installed producer, with SHA-256
 `289030f7b035e99548af76afc155aeaab88c732a57f12ea5a5098549f58c7af3`.

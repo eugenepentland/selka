@@ -3,5 +3,9 @@ record Node:
     children: Node[]
 
 func main() -> int:
-    const node = Node(value=7, children=[])
-    return node.value
+    const leaf = Node(value=3, children=[])
+    mut node = Node(value=4, children=[leaf])
+    const saved = node
+    node.children[0].value = 9
+    assert saved.children[0].value == 3 and node.children[0].value == 9
+    return saved.value + saved.children[0].value

@@ -1,6 +1,7 @@
 import syntax_value
 import graph
 import record_types
+import record_index
 
 func declaration(mut pool: syntax_value.Pool, span: int, generic: bool) -> int fails syntax_value.Problem:
     const managed = try syntax_value.boolean(mut pool, False)
@@ -66,3 +67,56 @@ public func test_missing_or_duplicate_nominal_catalog_is_transport() -> bool fai
             return False
         case Err(problem):
             return problem.code == "P_BODY_TRANSPORT"
+
+
+func recursive_catalog(mut pool: syntax_value.Pool, element: int) -> record_types.Catalog fails syntax_value.Problem:
+    const span = try syntax_value.span(mut pool, 4, 10)
+    const ty = try syntax_value.integer(mut pool, element)
+    const field = try syntax_value.object(mut pool, ["ty"], [ty])
+    const fields = try syntax_value.sequence(mut pool, [field])
+    const schema = try syntax_value.object(mut pool, ["fields", "declaration"], [fields, span])
+    mut catalog = record_types.empty()
+    catalog.rows = [schema, schema]
+    for unused in range(21):
+        catalog.by_type.append(-1)
+        catalog.admitted.append(False)
+    catalog.by_type[19] = 0
+    catalog.admitted[19] = True
+    return catalog
+
+
+public func test_record_list_recursive_closure_is_admitted() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut catalog = try recursive_catalog(mut pool, 20)
+    mut elements: int[] = []
+    for unused in range(21):
+        elements.append(-1)
+    elements[20] = 19
+    return try record_types.closure(mut catalog, pool, elements, [])
+
+
+public func test_record_unsupported_leaf_propagates_to_declaration() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut catalog = try recursive_catalog(mut pool, 20)
+    mut elements: int[] = []
+    for unused in range(21):
+        elements.append(-1)
+    elements[20] = 2
+    match record_types.closure(mut catalog, pool, elements, []):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and problem.start == 4 and problem.end == 10
+
+
+public func test_direct_value_record_cycle_is_malformed() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut catalog = try recursive_catalog(mut pool, 19)
+    mut elements: int[] = []
+    for unused in range(21):
+        elements.append(-1)
+    match record_types.closure(mut catalog, pool, elements, []):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and problem.message == "cyclic value-record layout"

@@ -16,6 +16,13 @@ import list_lower
 import list_repeat
 import list_places
 import list_iteration
+import record_types
+import record_names
+import record_construct
+import record_name_index
+import record_places
+import mutation_places
+import receiver_overlap
 
 public record Syntax:
     pool: syntax_value.Pool
@@ -235,6 +242,11 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
         state.batch.resolved[raw_id] = id
         state.depth = state.depth - 1
         return Expression(id=id, ty=ty)
+    elif data.data == b"field_assignment":
+        const result = try record_assignment(mut state, payload, span)
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
     elif data.data == b"index_assignment":
         const target_id = try graph.field(state.syntax.pool, payload, "target")
         const target_raw = try graph.number(state.syntax.pool, target_id)
@@ -415,6 +427,20 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
             state.batch.resolved[raw_id] = id
             state.depth = state.depth - 1
             return Expression(id=id, ty=0)
+    elif data.data == b"field":
+        const base_id = try graph.field(state.syntax.pool, payload, "base")
+        const base_raw = try graph.number(state.syntax.pool, base_id)
+        const base = try expression(mut state, base_raw)
+        const name = try graph.field(state.syntax.pool, payload, "name")
+        const index = try record_field(state, base.ty, name)
+        const row = record_types.schema(state.batch.facts.lists.types.records, base.ty)
+        const fields_id = try graph.field(state.syntax.pool, row, "fields")
+        const fields = try graph.items(state.syntax.pool, fields_id)
+        const type_id = try graph.field(state.syntax.pool, fields[index], "ty")
+        ty = try graph.number(state.syntax.pool, type_id)
+        const typed_base = try syntax_value.integer(mut state.batch.pool, base.id)
+        const typed_index = try syntax_value.integer(mut state.batch.pool, index)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["base", "index"], [typed_base, typed_index])
     elif data.data == b"name":
         const name = try graph.spelling(state.syntax.pool, state.syntax.source, payload)
         const slot = locals.find(state.scope, name)
@@ -509,6 +535,41 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
             if owner_slot >= 0 and managed(state, state.scope.locals[owner_slot].ty):
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "non-list managed methods are outside the admitted body closure")
                 fail rejection
+        mut nominal = -1
+        if len(state.syntax.modules) == 0:
+            nominal = try nominal_key(mut state, raw_callee, call_name)
+        else:
+            const type_call = try record_names.is_type(state.syntax.pool, state.syntax.source, state.syntax.modules, record_names.Request(span=span, owner=owner, name=call_name))
+            if type_call:
+                const resolution = try record_names.resolve(mut state.problems, state.syntax.pool, state.syntax.source, state.syntax.modules, record_names.Request(span=span, owner=owner, name=call_name))
+                nominal = try nominal_key(mut state, resolution.key, call_name)
+                if resolution.from >= 0 and resolution.import_index >= 0:
+                    state.syntax.usage[resolution.from][resolution.import_index] = True
+        if record_types.schema(state.batch.facts.lists.types.records, nominal) >= 0:
+            if explicit_count != 0:
+                const rejection = try problem(state, span, "E_GENERIC_ARITY", "explicit type argument count does not match generic parameters")
+                fail rejection
+            const record_catalog = state.batch.facts.lists.types.records
+            const declaration = record_catalog.declarations[record_catalog.by_type[nominal]]
+            const fields_id = try graph.field(state.syntax.pool, declaration, "fields")
+            const fields = try graph.items(state.syntax.pool, fields_id)
+            const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
+            const arguments = try graph.items(state.syntax.pool, arguments_id)
+            mut raw_arguments: int[] = []
+            for argument in arguments:
+                const value = try graph.number(state.syntax.pool, argument)
+                raw_arguments.append(value)
+            const labels_id = try graph.field(state.syntax.pool, payload, "argument_names")
+            const labels = try graph.items(state.syntax.pool, labels_id)
+            const initializers = try record_construct.bind(state.syntax.pool, state.syntax.nodes, fields, record_construct.Input(source=state.syntax.source, name=call_name, span=span, arguments=raw_arguments, argument_names=labels), mut state.problems)
+            const initialized = try record_initializers(mut state, nominal, span, initializers)
+            const id = try emission.node(mut state.batch, state.syntax.pool, span, nominal, b"record", initialized)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=nominal)
+        if nominal >= 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "nonrecord nominal construction is outside the record body profile")
+            fail rejection
         if owner_value.kind == 0 and prelude_call(raw_callee):
             const expected_name = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, call_name)
             mut declared = False
@@ -626,7 +687,7 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
                 fail rejection
             const argument_raw = try graph.number(state.syntax.pool, argument)
             const type_span = try graph.field(state.syntax.pool, parameters[position], "ty")
-            const expected = try type_at(state, type_span)
+            const expected = try type_at(mut state, type_span)
             const checked = try expression_expected(mut state, argument_raw, expected)
             const argument_span = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "span")
             _ = try require(state, checked.ty, expected, argument_span)
@@ -652,13 +713,14 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
         for position_id in mutation_positions:
             const position = try graph.number(state.syntax.pool, position_id)
             mutation_indices.append(position)
-        const mutation_diagnostics = try mut_markers.check(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, mut_markers.Request(call_name=call_name, arguments=raw_slots, mut_positions=mutation_indices))
+        const mutation_context = mutation_places.Context(pool=state.syntax.pool, source=state.syntax.source, nodes=state.syntax.nodes, typed_pool=state.batch.pool, typed_nodes=state.batch.nodes, resolved=state.batch.resolved)
+        const mutation_diagnostics = try mut_markers.check_places(mutation_context, mut state.scope, mut_markers.Request(call_name=call_name, arguments=raw_slots, mut_positions=mutation_indices))
         for diagnostic in mutation_diagnostics:
             state.problems.append(diagnostic)
         if len(arguments) == len(parameters) and len(argument_names) == 0:
             order = []
         const result_span = try graph.field(state.syntax.pool, target_signature, "return_type")
-        ty = try type_at(state, result_span)
+        ty = try type_at(mut state, result_span)
         const argument_values = try emission.ids(mut state.batch, slots)
         const evaluation_order = try emission.ids(mut state.batch, order)
         const evaluation = try syntax_value.absent(mut state.batch.pool)
@@ -716,6 +778,11 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
                 const rejection = try problem(state, operator_span, "E_SET_OPERATOR", "`" + operator + "` combines two sets or two integers (`" + builtin + "(a, b)`)")
                 fail rejection
         _ = try require(state, right.ty, left.ty, operator_span)
+        if op.data == b"eq" or op.data == b"ne":
+            const supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, left.ty, [state.batch.facts.string_type, state.batch.facts.bytes_type], [])
+            if not supported:
+                const rejection = try problem(state, operator_span, "E_TYPE", "aggregate equality is not defined; compare the relevant elements explicitly")
+                fail rejection
         ty = left.ty
         if managed(state, left.ty):
             if list_types.element_type(state.batch.facts.lists, left.ty) >= 0 and op.data != b"eq" and op.data != b"ne":
@@ -765,6 +832,17 @@ public func expression_expected(mut state: State, raw_id: int, expected: int) ->
 
 
 public func statement(mut state: State, raw_id: int) -> Statement fails syntax_value.Problem:
+    const checked = try checked_statement(mut state, raw_id)
+    const context = mutation_places.Context(pool=state.syntax.pool, source=state.syntax.source, nodes=state.syntax.nodes, typed_pool=state.batch.pool, typed_nodes=state.batch.nodes, resolved=state.batch.resolved)
+    const diagnostics = try receiver_overlap.check(context, state.syntax.statements[raw_id], state.scope)
+    if len(diagnostics) != 0:
+        for diagnostic in diagnostics:
+            state.problems.append(diagnostic)
+        fail diagnostics[0].problem
+    return checked
+
+
+func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_value.Problem:
     if raw_id < 0 or raw_id >= len(state.syntax.statements):
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid statement index")
     if state.depth >= 256:
@@ -820,7 +898,7 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
         const annotation = try graph.get(state.syntax.pool, annotation_id)
         mut value = Expression(id=-1, ty=15)
         if annotation.kind != 0:
-            const ty = try type_at(state, annotation_id)
+            const ty = try type_at(mut state, annotation_id)
             value = try expression_expected(mut state, value_raw, ty)
             _ = try require(state, value.ty, ty, annotation_id)
         else:
@@ -1132,17 +1210,22 @@ public func managed(state: State, ty: int) -> bool:
 func type_name(state: State, ty: int) -> str:
     const element = list_types.element_type(state.batch.facts.lists, ty)
     if element >= 0:
-        return "list[" + type_name(state, element) + "]"
+        return type_name(state, element) + "[]"
     if ty >= 19 and ty == state.batch.facts.string_type:
         return "str"
     if ty >= 19 and ty == state.batch.facts.bytes_type:
         return "bytes"
+    const records = state.batch.facts.lists.types.records
+    if ty >= 19 and ty < len(records.by_type):
+        const declaration = records.by_type[ty]
+        if declaration >= 0 and declaration < len(records.bindings.display):
+            return records.bindings.display[declaration]
     return scalars.name(ty)
 
 
-public func type_at(state: State, span: int) -> int fails syntax_value.Problem:
+public func type_at(mut state: State, span: int) -> int fails syntax_value.Problem:
     const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
-    for suffix in state.batch.facts.lists.suffixes:
+    for suffix in state.batch.facts.lists.types.suffixes:
         const suffix_span = try graph.field(state.syntax.pool, suffix, "span")
         const suffix_text = try graph.spelling(state.syntax.pool, state.syntax.source, suffix_span)
         if suffix_text == text:
@@ -1152,7 +1235,7 @@ public func type_at(state: State, span: int) -> int fails syntax_value.Problem:
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "optional list annotation is outside the body profile")
                 fail rejection
             const base = try graph.field(state.syntax.pool, suffix, "base")
-            const element = try type_at(state, base)
+            const element = try type_at(mut state, base)
             const ty = list_types.lookup(state.batch.facts.lists, element)
             if ty < 0:
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "annotated list type is absent from the common catalog")
@@ -1167,7 +1250,7 @@ public func type_at(state: State, span: int) -> int fails syntax_value.Problem:
             const arguments_id = try graph.field(state.syntax.pool, application, "arguments")
             const arguments = try graph.items(state.syntax.pool, arguments_id)
             if name == b"list" and len(arguments) == 1:
-                const element = try type_at(state, arguments[0])
+                const element = try type_at(mut state, arguments[0])
                 const ty = list_types.lookup(state.batch.facts.lists, element)
                 if ty >= 0:
                     return ty
@@ -1179,6 +1262,13 @@ public func type_at(state: State, span: int) -> int fails syntax_value.Problem:
             const rejection = try problem(state, span, "P_BODY_PROFILE", "managed sequence builtin is unavailable")
             fail rejection
         return ty
+    if text != b"int" and text != b"i64" and text != b"bool" and text != b"Unit" and len(text) != 0:
+        const resolution = try record_names.resolve(mut state.problems, state.syntax.pool, state.syntax.source, state.syntax.modules, record_names.Request(span=span, owner=-1, name=span))
+        const ty = try nominal_key(mut state, resolution.key, span)
+        if ty >= 0:
+            if resolution.from >= 0 and resolution.import_index >= 0:
+                state.syntax.usage[resolution.from][resolution.import_index] = True
+            return ty
     const location = try problem(state, span, "", "")
     return try scalars.annotation(text, location.start, location.end)
 
@@ -1321,3 +1411,216 @@ func list_arity(kind: bytes) -> int:
     if kind == b"length" or kind == b"capacity" or kind == b"pop" or kind == b"reverse" or kind == b"sort" or kind == b"copy" or kind == b"clear":
         return 0
     return -1
+
+
+public func record_field(state: State, ty: int, span: int) -> int fails syntax_value.Problem:
+    const row = record_types.schema(state.batch.facts.lists.types.records, ty)
+    if row < 0:
+        const rejection = try problem(state, span, "E_TYPE", "operation requires a record value")
+        fail rejection
+    const fields_id = try graph.field(state.syntax.pool, row, "fields")
+    const fields = try graph.items(state.syntax.pool, fields_id)
+    const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    mut names_list: bytes[] = []
+    for index in range(len(fields)):
+        const name_id = try graph.field(state.syntax.pool, fields[index], "name")
+        const name = try graph.get(state.syntax.pool, name_id)
+        if name.kind != 3:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid record field name")
+        if name.data == text:
+            return index
+        names_list.append(name.data)
+    # Diagnostic enumeration is lexical, independent of hash/declaration order.
+    match record_name_index.make(names_list):
+        case Ok(table):
+            mut declared = ""
+            for position in table.order:
+                if len(declared) != 0:
+                    declared = declared + ", "
+                const name = try suggestions.text(table.names[position])
+                declared = declared + name
+            const rejection = try problem(state, span, "E_UNKNOWN_FIELD", "field does not exist on this record type; declared fields: " + declared)
+            fail rejection
+        case Err(error):
+            fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message=error.message)
+
+
+func record_initializers(mut state: State, ty: int, span: int, initializers: record_construct.Initializer[]) -> int fails syntax_value.Problem:
+    const row = record_types.schema(state.batch.facts.lists.types.records, ty)
+    const fields_id = try graph.field(state.syntax.pool, row, "fields")
+    const fields = try graph.items(state.syntax.pool, fields_id)
+    mut seen: bool[] = []
+    for field in fields:
+        seen.append(False)
+    mut indices: int[] = []
+    for initializer in initializers:
+        const index = try record_field(state, ty, initializer.name)
+        indices.append(index)
+        const type_id = try graph.field(state.syntax.pool, fields[index], "ty")
+        const expected = try graph.number(state.syntax.pool, type_id)
+        if initializer.value < 0 or initializer.value >= len(state.syntax.nodes):
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid record initializer node")
+        state.batch.facts.expected[initializer.value] = expected
+    # Native queues every child before final duplicate/type/completeness checks.
+    mut values: Expression[] = []
+    for initializer in initializers:
+        const value = try expression(mut state, initializer.value)
+        values.append(value)
+    mut checked: int[] = []
+    mut position = 0
+    for initializer in initializers:
+        const index = indices[position]
+        const value = values[position]
+        position = position + 1
+        if seen[index]:
+            const rejection = try problem(state, initializer.name, "E_DUPLICATE_FIELD", "named entry is initialized more than once")
+            fail rejection
+        seen[index] = True
+        const type_id = try graph.field(state.syntax.pool, fields[index], "ty")
+        const expected = try graph.number(state.syntax.pool, type_id)
+        const value_span = try graph.field(state.syntax.pool, state.syntax.nodes[initializer.value], "span")
+        _ = try require(state, value.ty, expected, value_span)
+        const index_value = try syntax_value.integer(mut state.batch.pool, index)
+        const value_id = try syntax_value.integer(mut state.batch.pool, value.id)
+        const field = try syntax_value.object(mut state.batch.pool, ["index", "value"], [index_value, value_id])
+        checked.append(field)
+    for index in range(len(fields)):
+        if not seen[index]:
+            const name_id = try graph.field(state.syntax.pool, fields[index], "name")
+            const name = try graph.get(state.syntax.pool, name_id)
+            const record_name_id = try graph.field(state.syntax.pool, row, "name")
+            const record_name = try graph.get(state.syntax.pool, record_name_id)
+            const field_text = try suggestions.text(name.data)
+            const record_text = try suggestions.text(record_name.data)
+            const rejection = try problem(state, span, "E_INCOMPLETE_CONSTRUCTION", "missing initializer for field `" + field_text + "` of `" + record_text + "`")
+            const declaration = try graph.field(state.syntax.pool, fields[index], "declaration")
+            const site = try problem(state, declaration, "", "")
+            const related = syntax_problem.Related(start=site.start, end=site.end, message="missing entry declared here", role="related")
+            state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+            fail rejection
+    return try syntax_value.sequence(mut state.batch.pool, checked)
+
+
+func nominal_key(mut state: State, key: bytes, span: int) -> int fails syntax_value.Problem:
+    const ty = try record_types.named(state.batch.facts.lists.types.records, key)
+    if ty >= -1:
+        return ty
+    const index = -2 - ty
+    const aliases = state.batch.facts.lists.types.records.bindings.aliases
+    if index < 0 or index >= len(aliases):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid nominal alias index")
+    if state.depth >= 256:
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "alias resolution depth exceeds the body profile")
+        fail rejection
+    state.depth = state.depth + 1
+    const target = try graph.field(state.syntax.pool, aliases[index], "target")
+    const resolved = try type_at(mut state, target)
+    state.depth = state.depth - 1
+    return resolved
+
+
+func record_assignment(mut state: State, assignment: int, span: int) -> Expression fails syntax_value.Problem:
+    const target_id = try graph.field(state.syntax.pool, assignment, "target")
+    const target = try graph.number(state.syntax.pool, target_id)
+    _ = try list_places.writable(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, target)
+    mut path_names: int[] = []
+    mut root = target
+    while True:
+        if root < 0 or root >= len(state.syntax.nodes) or len(path_names) >= 256:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid record field path")
+        const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[root], "data")
+        const data = try graph.get(state.syntax.pool, data_id)
+        if data.data != b"field":
+            break
+        const field = try graph.payload(state.syntax.pool, data_id)
+        const name = try graph.field(state.syntax.pool, field, "name")
+        path_names.append(name)
+        const base_id = try graph.field(state.syntax.pool, field, "base")
+        root = try graph.number(state.syntax.pool, base_id)
+    const root_span = try graph.field(state.syntax.pool, state.syntax.nodes[root], "span")
+    const root_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[root], "data")
+    const root_data = try graph.get(state.syntax.pool, root_data_id)
+    const root_payload = try graph.payload(state.syntax.pool, root_data_id)
+    const root_context = list_lower.Context(input=state.syntax.pool, span=root_span)
+    mut destination = record_places.Destination(owner=-1, index=-1, value=-1, refresh=-1, setup=[], dead_owner=-1)
+    if root_data.data == b"name":
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, root_payload)
+        const slot = locals.find(state.scope, name)
+        if slot < 0:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="record mutation root disappeared")
+        _ = try require_readable(mut state, slot, root_payload)
+        destination = try record_places.prepare_local(mut state.batch, mut state.scope, root_context, slot)
+    elif root_data.data == b"index":
+        const base_id = try graph.field(state.syntax.pool, root_payload, "base")
+        const base_raw = try graph.number(state.syntax.pool, base_id)
+        const base = try expression(mut state, base_raw)
+        const element = list_types.element_type(state.batch.facts.lists, base.ty)
+        if element < 0:
+            const rejection = try problem(state, root_span, "E_COLLECTION_METHOD", "indexed field assignment requires a list, dictionary or fixed array reached from a variable")
+            fail rejection
+        destination = try record_places.receiver(mut state.batch, mut state.scope, root_context, record_places.Receiver(base=base.id, ty=base.ty))
+        const index_id = try graph.field(state.syntax.pool, root_payload, "index")
+        const index_raw = try graph.number(state.syntax.pool, index_id)
+        const index = try expression(mut state, index_raw)
+        _ = try require(state, index.ty, 0, root_span)
+        destination = try record_places.indexed(mut state.batch, mut state.scope, root_context, destination, record_places.Index(value=index.id, element=element))
+    else:
+        const rejection = try problem(state, root_span, "E_ASSIGNMENT_TARGET", "field assignment requires a mutable local record or list slot")
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    mut path = record_places.Path(bases=[], indices=[], current=destination.value, ty=15)
+    mut position = len(path_names)
+    while position > 0:
+        position = position - 1
+        const base = path.current
+        const ty_id = try graph.field(state.batch.pool, state.batch.nodes[base], "ty")
+        const ty = try graph.number(state.batch.pool, ty_id)
+        const name = path_names[position]
+        const index = try record_field(state, ty, name)
+        const row = record_types.schema(state.batch.facts.lists.types.records, ty)
+        const fields_id = try graph.field(state.syntax.pool, row, "fields")
+        const fields = try graph.items(state.syntax.pool, fields_id)
+        const field_type_id = try graph.field(state.syntax.pool, fields[index], "ty")
+        const field_type = try graph.number(state.syntax.pool, field_type_id)
+        path.bases.append(base)
+        path.indices.append(index)
+        const field_value = try record_places.field(mut state.batch, context, base, index, field_type)
+        path.current = field_value
+        path.ty = field_type
+    if len(path.bases) == 0:
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "tuple assignment is outside the record body profile")
+        fail rejection
+    const rhs_id = try graph.field(state.syntax.pool, assignment, "value")
+    const rhs_raw = try graph.number(state.syntax.pool, rhs_id)
+    const rhs = try expression_expected(mut state, rhs_raw, path.ty)
+    _ = try require(state, rhs.ty, path.ty, span)
+    const op_id = try graph.field(state.syntax.pool, assignment, "op")
+    const op = try graph.get(state.syntax.pool, op_id)
+    mut mode = b"set"
+    mut value = rhs.id
+    if op.data != b"set":
+        mode = b"augmented"
+        if op.data == b"add" and list_types.element_type(state.batch.facts.lists, path.ty) >= 0:
+            mode = b"extend"
+        else:
+            if managed(state, path.ty):
+                if op.data != b"add":
+                    const rejection = try problem(state, span, "E_TEXT_OPERATOR", "a managed collection augments with `+=` only, and str, bytes and list are the types that support it")
+                    fail rejection
+            elif path.ty != 0:
+                const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
+                fail rejection
+            elif op.data == b"div":
+                const rejection = try problem(state, span, "E_TYPE", "augmented `/=` produces a float; declare the binding as float or use `//=`")
+                fail rejection
+            mut operator = op.data
+            if operator == b"rem":
+                operator = b"floor_rem"
+            value = try list_lower.binary(mut state.batch, context, operator, path.current, rhs.id, path.ty)
+    mut reference_parameter = False
+    if destination.dead_owner >= 0:
+        const local = state.scope.locals[destination.dead_owner]
+        reference_parameter = local.origin == b"parameter" and local.mutable
+    const result = try record_places.finish(mut state.batch, mut state.scope, context, record_places.Finish(destination=destination, path=path, value=value, mode=mode, reference_parameter=reference_parameter))
+    const id = try list_lower.append(mut state.batch, context, result)
+    return Expression(id=id, ty=15)
