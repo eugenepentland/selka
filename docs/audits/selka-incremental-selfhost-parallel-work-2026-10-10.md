@@ -259,7 +259,9 @@ nor a bootstrap fixed point is proven.
 | Remaining stage | Completion evidence |
 | --- | --- |
 | B5 variants, patterns and checked failures | Nongeneric variants, exhaustive/nested matches, Result/Option construction, fail/try and result consumption match complete native typed tables, catalogs and diagnostics. |
-| Remaining body language | Unions and patterns, other collections, generic specialization, checked failures, resources and all remaining forms cover the current language and the compiler's own source. Unsupported profile refusals cannot count as success. |
+| B6 byte/string and buffer operations | Slicing, conversions, byte-buffer construction, mutation and snapshots cover the compiler's pure algorithm libraries. Complete native typed metadata and diagnostics match; existing pure tests pass in debug and release with fact/leak checks. This does not yet qualify executable entrypoints. |
+| B7 capabilities and scoped resources | Filesystem/Stream signatures, file opening/reading, stream output and scoped file cleanup cover all seven component entrypoints. The selected Selka body checker checks and builds the actual component source closures without native body fallback, preserving capability, ownership and cleanup metadata. This is component-source bootstrap coverage, not a complete compiler bootstrap. |
+| Remaining body language | Other collections, generic specialization, callbacks, scalar widths, additional resources, contracts and all remaining forms cover the current language. Unsupported profile refusals cannot count as success. |
 | Remaining semantic ownership | Selka owns declaration/catalog construction, entry handling, effects/origins, contracts, codecs and warnings, with diagnostics and accepted/rejected programs matching the native reference. |
 | Core and LLVM backend | Selka lowers checked programs, performs required Core transformations and emits LLVM; generated programs pass the complete behavior, ownership, fact and leak suites. |
 | Compiler driver | Selka owns source/module loading and build/test/cache orchestration, invokes the external toolchain, and performs supported installed commands without a native compiler fallback or Python dependency. |
@@ -271,13 +273,24 @@ self-hosting requires Selka ownership of the compiler, not rewriting those
 dependencies. The native implementation remains an independent qualification
 oracle during migration; selected production paths must not silently fall back.
 
-The B2 measurements already show an unmet performance requirement: selected body
-checking took 4.93 ms versus 1.06 ms native, warm replay 9.07 ms versus 1.80 ms,
-and edit/link 71.28 ms versus 15.29 ms on a small two-module workload. These are
-component measurements with warm shared native units, not whole-compiler or
-cold-toolchain benchmarks. Performance work therefore runs alongside feature
-coverage, with exact mode/cache provenance and behavior checks. Intermediate
-subset benchmarks cannot establish full-language acceptance.
+The latest qualified [B4 performance measurements](selka-body-records-2026-10-11.md#isolated-performance)
+fail 20 of 24 strict median/p95 rows. Compile/check/test medians are approximately
+4.4–7.2 times native; the four short generated-runtime rows pass. Both sides use
+the same B4 ReleaseFast host, with only the candidate body checker selected as a
+component. These are component measurements with warm shared native units, not
+whole-compiler or cold-toolchain benchmarks. Performance work therefore runs
+alongside feature coverage, with exact mode/cache provenance and behavior checks.
+Intermediate subset benchmarks cannot establish full-language acceptance.
+
+The proposed B6/B7 split follows actual compiler source dependencies. Byte slices
+appear in `body_check/graph.my` and the codecs; buffer construction and writes
+appear in `parser_pilot/syntax_codec.my`, `type_interface/codec.my`,
+`declaration_index/codec.my` and `cache_plan/incremental.my`. Those pure libraries
+can be qualified before resource support. Executable adapters such as
+`body_check/main.my` additionally require `Filesystem`, `Stream`, `fs.open`,
+`with file as input`, `input.read` and output methods. The native representation
+and validation contract for each wave must be audited before its schema is
+frozen; these planned boundaries are not completed implementation claims.
 
 The B3 strict measurements also fail: only the three generated-runtime rows pass
 out of 18 workflows. Compile/check/test medians are about 6–10 times native with
