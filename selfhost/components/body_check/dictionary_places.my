@@ -1,0 +1,32 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+import list_places
+
+# The caller checks writability and canonical dictionary key/value types.
+# Reserve the receiver before checking the key, which may allocate locals.
+public func receiver(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, base: int, ty: int) -> list_places.Plan fails syntax_value.Problem:
+    return try list_places.receiver(mut batch, mut scope, context, base, ty)
+
+
+# Dictionary keys retain their value and type; they are never list-normalized.
+public func indexed(mut batch: emission.Batch, mut scope: locals.Scope, rooted: list_places.Plan, input: int, key_type: int, element: int) -> list_places.Plan fails syntax_value.Problem:
+    const context = rooted.context
+    const key_slot = try list_lower.temporary(mut scope, context, key_type)
+    const initialize_key = try list_lower.store(mut batch, context, key_slot, input, True)
+    const key = try list_lower.read(mut batch, context, key_slot, key_type)
+    const saved = try list_lower.temporary(mut scope, context, element)
+    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=rooted.owner, kind=b"read", arguments=[key], ty=element))
+    const refresh = try list_lower.store(mut batch, context, saved, value, True)
+    const current = try list_lower.read(mut batch, context, saved, element)
+    mut setup = rooted.setup
+    setup.append(initialize_key)
+    setup.append(refresh)
+    return list_places.Plan(context=context, owner=rooted.owner, index=key, current=current, setup=setup, element=element)
+
+
+# Evaluate the combined result once, then write to the saved receiver and key.
+# The assignment span can differ from the destination span used for setup.
+public func finish(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, plan: list_places.Plan, combined: int) -> list_lower.Lowered fails syntax_value.Problem:
+    return try list_places.finish(mut batch, mut scope, context, plan, combined)
