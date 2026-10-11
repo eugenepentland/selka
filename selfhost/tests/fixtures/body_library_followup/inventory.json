@@ -56,7 +56,7 @@
   "test_roots": 6,
   "bootstrap": "not established",
   "donors": {
-    "literal_constants.my": "5b44ce81285f22663da771421235ca583ca19fe00305f39c3936e930d12d6de0"
+    "literal_constants.my": "55f4c4c459937b724577a8dda8d6d8af99d588e32a2d4531fe81758b234d3648"
   },
   "explicit_limits": [
     "general scalar constant evaluation",
