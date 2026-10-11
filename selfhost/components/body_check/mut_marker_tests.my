@@ -1,0 +1,63 @@
+import syntax_value
+import graph
+import locals
+import mut_markers
+
+public record Fixture:
+    pool: syntax_value.Pool
+    nodes: int[]
+    scope: locals.Scope
+    request: mut_markers.Request
+
+
+func location(mut pool: syntax_value.Pool, start: int, end: int) -> int fails syntax_value.Problem:
+    const a = try syntax_value.integer(mut pool, start)
+    const b = try syntax_value.integer(mut pool, end)
+    return try syntax_value.object(mut pool, ["start", "end"], [a, b])
+
+
+func fixture(marked: bool, declared: bool) -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const callee = try location(mut pool, 0, 1)
+    const name = try location(mut pool, 7, 8)
+    const marker = try location(mut pool, 3, 8)
+    const data = try syntax_value.tagged(mut pool, b"name", name)
+    const node = try syntax_value.object(mut pool, ["span", "data"], [name, data])
+    const zero = try syntax_value.integer(mut pool, 0)
+    const marked_data = try syntax_value.tagged(mut pool, b"mut_argument", zero)
+    const marked_node = try syntax_value.object(mut pool, ["span", "data"], [marker, marked_data])
+    mut scope = locals.empty()
+    const slot = try locals.add(mut scope, b"x", name, 0, True, b"local")
+    mut argument = slot
+    if marked:
+        argument = 1
+    mut positions: int[] = []
+    if declared:
+        positions.append(0)
+    return Fixture(pool=pool, nodes=[node, marked_node], scope=scope, request=mut_markers.Request(call_name=callee, arguments=[argument], mut_positions=positions))
+
+
+public func test_valid_scalar_mut_alias_records_write() -> bool fails syntax_value.Problem:
+    mut value = try fixture(True, True)
+    const diagnostics = try mut_markers.check(value.pool, b"f( mut x)", value.nodes, mut value.scope, value.request)
+    return len(diagnostics) == 0 and value.scope.locals[0].usage.writes == 1
+
+
+public func test_missing_marker_exact_repair() -> bool fails syntax_value.Problem:
+    mut value = try fixture(False, True)
+    const diagnostics = try mut_markers.check(value.pool, b"f( mut x)", value.nodes, mut value.scope, value.request)
+    return len(diagnostics) == 1 and diagnostics[0].problem.code == "E_MUTATION_MARKER" and diagnostics[0].problem.message == "`f` writes `x`; write `(mut x)`" and diagnostics[0].notes.edits[0].start == 7 and diagnostics[0].notes.edits[0].end == 7 and diagnostics[0].notes.edits[0].text == b"mut "
+
+
+public func test_superfluous_marker_exact_repair() -> bool fails syntax_value.Problem:
+    mut value = try fixture(True, False)
+    const diagnostics = try mut_markers.check(value.pool, b"f( mut x)", value.nodes, mut value.scope, value.request)
+    return len(diagnostics) == 1 and diagnostics[0].problem.message == "`f` does not write `x`; remove `mut`: `(x)`" and diagnostics[0].notes.edits[0].start == 3 and diagnostics[0].notes.edits[0].end == 7 and diagnostics[0].notes.edits[0].text == b""
+
+
+public func test_overlapping_marked_scalar_roots() -> bool fails syntax_value.Problem:
+    mut value = try fixture(True, True)
+    value.request.arguments.append(1)
+    value.request.mut_positions.append(1)
+    const diagnostics = try mut_markers.check(value.pool, b"f( mut x)", value.nodes, mut value.scope, value.request)
+    return len(diagnostics) == 1 and diagnostics[0].problem.code == "E_MUTATION_OVERLAP" and len(diagnostics[0].notes.related) == 1 and value.scope.locals[0].usage.writes == 2

@@ -1,0 +1,140 @@
+import syntax_value
+import syntax_problem
+import graph
+import locals
+import suggestions
+
+public record Request:
+    call_name: int
+    arguments: int[]
+    mut_positions: int[]
+
+
+func problem(pool: syntax_value.Pool, location: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const begin = try graph.field(pool, location, "start")
+    const finish = try graph.field(pool, location, "end")
+    const start = try graph.number(pool, begin)
+    const end = try graph.number(pool, finish)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+func marked(pool: syntax_value.Pool, nodes: int[], argument: int) -> bool fails syntax_value.Problem:
+    const data = try graph.field(pool, nodes[argument], "data")
+    const value = try graph.get(pool, data)
+    return value.data == b"mut_argument"
+
+
+func target(pool: syntax_value.Pool, nodes: int[], argument: int) -> int fails syntax_value.Problem:
+    const data = try graph.field(pool, nodes[argument], "data")
+    const payload = try graph.payload(pool, data)
+    return try graph.number(pool, payload)
+
+
+func span(pool: syntax_value.Pool, nodes: int[], argument: int) -> int fails syntax_value.Problem:
+    return try graph.field(pool, nodes[argument], "span")
+
+
+func call_text(pool: syntax_value.Pool, source: bytes, nodes: int[], arguments: int[], position: int, remove: bool) -> str fails syntax_value.Problem:
+    mut text = "("
+    for index in range(len(arguments)):
+        if index > 0:
+            text = text + ", "
+        mut argument = arguments[index]
+        if index == position:
+            if remove:
+                argument = try target(pool, nodes, argument)
+            else:
+                text = text + "mut "
+        const location = try span(pool, nodes, argument)
+        const raw = try graph.spelling(pool, source, location)
+        const spelling = try suggestions.text(raw)
+        text = text + spelling
+    return text + ")"
+
+
+public func check(pool: syntax_value.Pool, source: bytes, nodes: int[], mut scope: locals.Scope, request: Request) -> syntax_problem.Diagnostic[] fails syntax_value.Problem:
+    mut result: syntax_problem.Diagnostic[] = []
+    mut roots: int[] = []
+    mut markers: int[] = []
+    const raw_callee = try graph.spelling(pool, source, request.call_name)
+    const callee = try suggestions.text(raw_callee)
+    for position in range(len(request.arguments)):
+        const argument = request.arguments[position]
+        mut declared = False
+        for writable in request.mut_positions:
+            if writable == position:
+                declared = True
+        const has_marker = try marked(pool, nodes, argument)
+        const location = try span(pool, nodes, argument)
+        if declared != has_marker:
+            mut operand = argument
+            if has_marker:
+                operand = try target(pool, nodes, argument)
+            const operand_span = try span(pool, nodes, operand)
+            const raw = try graph.spelling(pool, source, operand_span)
+            const operand_text = try suggestions.text(raw)
+            const replacement = try call_text(pool, source, nodes, request.arguments, position, has_marker)
+            mut message = "`" + callee + "` writes `" + operand_text + "`; write `" + replacement + "`"
+            if has_marker:
+                message = "`" + callee + "` does not write `" + operand_text + "`; remove `mut`: `" + replacement + "`"
+            const rejection = try problem(pool, location, "E_MUTATION_MARKER", message)
+            mut edit_end = rejection.start
+            mut edit_text = b"mut "
+            if has_marker:
+                const begin = try graph.field(pool, operand_span, "start")
+                edit_end = try graph.number(pool, begin)
+                edit_text = b""
+            result.append(syntax_problem.repaired(rejection, [syntax_problem.Edit(start=rejection.start, end=edit_end, text=edit_text)]))
+            continue
+        if not has_marker:
+            continue
+        const operand = try target(pool, nodes, argument)
+        const data = try graph.field(pool, nodes[operand], "data")
+        const value = try graph.get(pool, data)
+        if value.data == b"field" or value.data == b"index":
+            fail try problem(pool, location, "P_BODY_PROFILE", "managed mutation places are outside the scalar body profile")
+        if value.data != b"name":
+            fail try problem(pool, location, "E_MUTATION_MARKER", "`mut` requires an assignable argument (a variable, field or list slot); assign it to a local first")
+        const name_span = try graph.payload(pool, data)
+        const name = try graph.spelling(pool, source, name_span)
+        const slot = locals.find(scope, name)
+        if slot < 0:
+            fail try problem(pool, name_span, "E_UNKNOWN_NAME", "name is not defined in this scope")
+        if not scope.locals[slot].mutable:
+            const operand_span = try span(pool, nodes, operand)
+            fail try problem(pool, operand_span, "E_IMMUTABLE", "this binding and its nested data are read-only; declare it with `mut` to update it")
+        scope.locals[slot].usage.writes = scope.locals[slot].usage.writes + 1
+        roots.append(slot)
+        markers.append(argument)
+    if len(result) > 0:
+        return result
+    for first in range(len(roots)):
+        for second in range(first + 1, len(roots)):
+            if roots[first] != roots[second]:
+                continue
+            mut early = markers[first]
+            mut late = markers[second]
+            const early_span = try span(pool, nodes, early)
+            const late_span = try span(pool, nodes, late)
+            const early_start = try graph.field(pool, early_span, "start")
+            const late_start = try graph.field(pool, late_span, "start")
+            const early_offset = try graph.number(pool, early_start)
+            const late_offset = try graph.number(pool, late_start)
+            if early_offset > late_offset:
+                early = markers[second]
+                late = markers[first]
+            const a = try span(pool, nodes, early)
+            const b = try span(pool, nodes, late)
+            const a_raw = try graph.spelling(pool, source, a)
+            const a_text = try suggestions.text(a_raw)
+            const b_raw = try graph.spelling(pool, source, b)
+            const b_text = try suggestions.text(b_raw)
+            const root = try suggestions.text(scope.locals[roots[first]].name)
+            const message = "`" + callee + "` receives overlapping `mut` arguments `" + a_text + "` and `" + b_text + "`: both name `" + root + "`, and two `mut` arguments of one call must name disjoint places. Copy one into a local, pass `mut` that local and store it back (`copy = " + root + "`, pass `mut copy`, then `" + root + " = copy`), or pass the enclosing value `mut " + root + "` once"
+            const rejection = try problem(pool, b, "E_MUTATION_OVERLAP", message)
+            const previous = try problem(pool, a, "", "")
+            const related = syntax_problem.Related(start=previous.start, end=previous.end, message="the other `mut` argument naming an overlapping place", role="related")
+            mut diagnostic = syntax_problem.plain(rejection)
+            diagnostic.notes.related.append(related)
+            return [diagnostic]
+    return result
