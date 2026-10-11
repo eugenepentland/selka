@@ -1,5 +1,16 @@
 # Body component qualification
 
+Schema 6 keeps the same named-graph shape and uses a body-only ceiling of
+2,097,152 values for requests and replies. This admits the measured declaration
+DTO of 1,139,971 values. The 64 MiB wire ceiling, 4,194,304 aggregate edges,
+512 MiB native decoder budget and depth 256 remain unchanged. Parser syntax
+values retain their independent 1,048,576 ceiling; declaration and type-interface
+key/catalog bounds remain independent as well. The actual-library gate changes
+no boundary mode or limit: its selected lane changes only body checking, checks
+all 24 fixtures, nine libraries and six test roots, and requires 183 uncached
+operations without profile skips. A changed authenticated package key binds the
+new body policy; this developer harness update alone does not qualify an install.
+
 The proposed B6 `body-check` package owns checking and producing complete typed bodies for ordinary nongeneric functions using `int` (i64), `bool`, `Unit`, `str`, `bytes`, and supported lists and ordinary nongeneric records, unboxed enums/unions and checked Result/Option values whose payloads use admitted types. Record recursion through lists is supported. The retained native catalog supplies canonical identities; Selka supplies ordered tagged recipes for new list, Result and Option types. Entry policy, effect/origin analysis, and warnings remain separate. Other collections, generic/boxed records or variants, generics, callbacks/lambdas, resources, and unimplemented operations remain explicit profile refusals. They must never silently fall back to native body checking. Native reference remains the default.
 
 `MYLANG_BODY_CHECK_MODE=reference|shadow|component` selects this boundary. Shadow compares the entire canonical typed batch, ordered diagnostics, import usage and ordered catalog recipes. Native checking runs against its untouched initial catalog. After outcome comparison, a separate fresh catalog materializes the producer recipes and compares every resulting record field with the native final catalog. The `dump-typed` and `dump-ir` comparisons in the installed harness supplement those comparisons; their textual output is not a complete typed metadata oracle.

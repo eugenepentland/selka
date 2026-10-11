@@ -127,6 +127,56 @@ class BodyQualificationTests(unittest.TestCase):
         for data in (b'',b'SLKBKR01'+struct.pack('<II',0,0),b'SLKBKR01'+struct.pack('<II',1,1),b'SLKBKR01'+struct.pack('<II',1,0)+b'\x01'):
             with self.assertRaises(RuntimeError):D.graph_rows(data)
 
+    def test_body_value_policy_does_not_expand_syntax_or_other_transport_limits(self):
+        from unittest.mock import patch
+        import run_parser_pilot as P
+        import run_declaration_qualification as C
+        import run_type_interface_qualification as T
+        self.assertEqual(D.BODY_VALUE_LIMIT,2097152)
+        self.assertEqual((D.SCHEMA,D.MALFORMED_CHECKS,D.FORGED_CHECKS),(6,22,92))
+        for count,root in ((1048577,0),(2097152,2097151)):
+            # Admitted body header; the deliberately absent rows fail next.
+            with self.assertRaisesRegex(RuntimeError,'truncated captured kind'):
+                D.graph_rows(b'SLKBKR01'+struct.pack('<II',count,root))
+        for count,root in ((2097153,0),(2097152,2097152)):
+            with self.assertRaisesRegex(RuntimeError,'bad captured outcome root'):
+                D.graph_rows(b'SLKBKR01'+struct.pack('<II',count,root))
+        with self.assertRaisesRegex(AssertionError,'invalid syntax value count/root'):
+            P.wire_tree(b'SLKAST01'+struct.pack('<II',1048577,0))
+        with tempfile.TemporaryDirectory() as temporary:
+            work=Path(temporary)
+            body_requests=[]
+            def body_execute(command,env,cwd,timeout):
+                request=Path(command[2]).read_bytes()
+                body_requests.append(request)
+                if len(body_requests)>1:return (2,b'',b'fixture refusal')
+                payload=b'SLKBKR01'
+                return (0,request[:16]+struct.pack('<II',1,len(payload))+request[24:64]+payload,b'')
+            valid=D.frame(b'SLKBKI01'+struct.pack('<II',1,0))
+            with patch.object(D.F,'execute',side_effect=body_execute), patch.object(D,'mutate_input',return_value=[b'bad']*5):
+                verdict=D.transport(Path('/fixture'),work,{},valid)
+            self.assertEqual(verdict['malformed'],22)
+            headers=[struct.unpack('<II',r[72:80]) for r in body_requests if len(r)>=80 and r[64:72]==b'SLKBKI01']
+            self.assertIn((2097153,0),headers)
+            self.assertIn((1,2097152),headers)
+            for module,magic,reply,tail,expected in (
+                (C,b'SLKDCR01',struct.pack('<III',0,0,0),20,19),
+                (T,b'SLKTYR01',struct.pack('<IIIIII',0,1,0,1,0,0),56,35),
+            ):
+                requests=[]
+                def execute(command,env,cwd,timeout):
+                    request=Path(command[2]).read_bytes()
+                    requests.append(request)
+                    if len(requests)>1:return (2,b'',b'fixture refusal')
+                    payload=magic+reply
+                    return (0,request[:16]+struct.pack('<II',1,len(payload))+request[24:64]+payload,b'')
+                with patch.object(module.F,'execute',side_effect=execute):
+                    verdict=module.transport(Path('/fixture'),work,{})
+                self.assertEqual(verdict['malformed'],expected)
+                # Independent key/catalog caps still probe 65,537, not 2M.
+                self.assertTrue(any(len(r)>=64+tail and 65537 in struct.unpack('<'+'I'*(tail//4),r[-tail:]) for r in requests[1:]))
+                self.assertTrue(any(len(r)>1048576 and struct.pack('<I',1048577) in r for r in requests[1:]))
+
     def test_four_forges_change_authentic_typed_semantic_fields(self):
         rows=[]
         def add(kind,integer=0,data=b'',children=(),names=()):

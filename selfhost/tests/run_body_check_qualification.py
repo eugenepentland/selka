@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_check'
 COMPONENT = 'body-check'
 SCHEMA = 6
+BODY_VALUE_LIMIT = 2097152
 FORGED_CHECKS = 92
 MALFORMED_CHECKS = 22
 
@@ -45,7 +46,7 @@ def transport(binary, work, env, valid):
         changed=bytearray(valid);struct.pack_into('<I',changed,offset,value);malformed.append(bytes(changed))
     payload=valid[64:]
     malformed.extend([frame(b'BADMAGIC'+payload[8:]), frame(payload[:-1])])
-    for offset,value in ((8,1048577),(12,1048576)):
+    for offset,value in ((8,BODY_VALUE_LIMIT+1),(12,BODY_VALUE_LIMIT)):
         changed=bytearray(payload);struct.pack_into('<I',changed,offset,value);malformed.append(frame(changed))
     malformed.extend(frame(value) for value in mutate_input(payload))
     for index,value in enumerate(malformed):
@@ -60,7 +61,7 @@ def graph_rows(payload, magic=b'SLKBKR01'):
     """Read bounded named rows for developer mutations, never production decoding."""
     F.require(len(payload)>=16 and payload[:8]==magic,'not a body outcome')
     count,root=struct.unpack_from('<II',payload,8)
-    F.require(0<count<=1048576 and root<count,'bad captured outcome root')
+    F.require(0<count<=BODY_VALUE_LIMIT and root<count,'bad captured outcome root')
     at=16;rows=[]
     def read_u32():
         nonlocal at
