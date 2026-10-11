@@ -1,4 +1,4 @@
-//! Authenticated process boundary for Selka-owned scalar function body checking.
+//! Authenticated process boundary for Selka-owned scalar and text body checking.
 const std = @import("std");
 const value = @import("body_check_value.zig");
 const launch = @import("component_launch.zig");
@@ -34,7 +34,7 @@ fn directory(a: std.mem.Allocator, runtime: Runtime) Error![]u8 {
 pub fn identity(a: std.mem.Allocator, runtime: Runtime) Error![32]u8 {
     const selected = runtime.environ.get("MYLANG_BODY_CHECK_MODE") orelse reference_mode;
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("selka-body-check-v1/ordinary-scalar-bodies-v1/schema1/");
+    hash.update("selka-body-check-v2/managed-text-bodies-v1/schema2/");
     hash.update(selected);
     if (std.mem.eql(u8, selected, "shadow") or std.mem.eql(u8, selected, component_mode)) {
         const dir = try directory(a, runtime);

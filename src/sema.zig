@@ -1823,11 +1823,12 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     return checked;
 }
 
-// Refuse unsupported profiles before native symbolic checking; defer source
-// diagnostics until common declaration and entry validation have succeeded.
-fn openBody(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, options: CheckOptions) FrontendError!?body_value.Decoded {
+// The retained catalog supplies managed prelude identities. Refuse unsupported
+// profiles before native symbolic bodies; defer body source diagnostics until
+// common declaration and entry validation have succeeded.
+fn openBody(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, options: CheckOptions, catalog: records.Catalog) FrontendError!?body_value.Decoded {
     if (try body_check.mode(options.runtime) == .reference) return null;
-    const input = try body_projection.input(allocator, src, program, options.names, options.entry_required);
+    const input = try body_projection.input(allocator, src, program, options.names, options.entry_required, catalog);
     var reply = try body_check.execute(allocator, input, options.runtime.?);
     if (reply.outcome == .profile) {
         reply.deinit();
@@ -1842,10 +1843,10 @@ fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.P
     // native bodies, specializations or cross-function summary stand-ins.
     const cache = if (selected == .reference) options.cache else null;
     const module_names = options.names;
-    var body_reply = try openBody(allocator, src, program, options);
-    defer if (body_reply) |*reply| reply.deinit();
     const timing = activeTiming(cache);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
+    var body_reply = try openBody(allocator, src, program, options, catalog);
+    defer if (body_reply) |*reply| reply.deinit();
     var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
     var symbolic = try openSymbolicSession(cache, &session, src, module_names != null);
     defer deinitSymbolic(&symbolic);

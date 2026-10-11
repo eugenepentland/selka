@@ -5,16 +5,33 @@ const source = @import("source.zig");
 const Names = @import("module_names.zig").Names;
 const value = @import("body_check_value.zig");
 const declaration = @import("declaration_value.zig");
+const records = @import("records.zig");
+const typed = @import("typed.zig");
 /// Allocation or malformed raw namespace projection.
 pub const Error = error{ OutOfMemory, ComponentProtocol };
 
 /// Project raw syntax and existing namespace facts without checking a body.
-pub fn input(a: std.mem.Allocator, src: source.Source, program: ast.Program, names: ?*Names, entry_required: bool) Error!value.Input {
+pub fn input(a: std.mem.Allocator, src: source.Source, program: ast.Program, names: ?*Names, entry_required: bool, catalog: records.Catalog) Error!value.Input {
     return .{
         .context = .{ .path = src.path, .source = src.bytes, .trusted_intrinsics = src.trusted_intrinsics, .entry_required = entry_required },
         .program = program,
         .modules = if (names) |project_names| try modules(a, src, project_names) else &.{},
+        .catalog = .{
+            .string = sequence(catalog, "str", .string, .u32),
+            .bytes = sequence(catalog, "bytes", .bytes, .u8),
+        },
     };
+}
+
+// These identities belong to the retained common catalog. The producer still
+// resolves every body annotation and expression from the raw syntax.
+fn sequence(catalog: records.Catalog, name: []const u8, kind: @import("type_identity.zig").ManagedKind, element: typed.Type) ?value.Sequence {
+    const id = catalog.names.get(name) orelse return null;
+    if (!id.isAggregate() or id.recordIndex() >= catalog.records.len) return null;
+    const schema = catalog.records[id.recordIndex()];
+    if (schema.id != id or !schema.managed) return null;
+    if (schema.collection.kind != kind or schema.shape.buffer != element) return null;
+    return .{ .id = id, .element = element };
 }
 
 fn modules(a: std.mem.Allocator, src: source.Source, names: *Names) Error![]const value.Module {

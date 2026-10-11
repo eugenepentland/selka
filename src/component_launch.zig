@@ -161,8 +161,8 @@ fn manifestDeployment(a: std.mem.Allocator, io: std.Io, directory: []const u8, c
     defer parsed.deinit();
     const m = parsed.value;
     const version: u32 = if (std.mem.eql(u8, component, "cache-plan")) 2 else 1;
-    const frontend = std.mem.eql(u8, component, "lexer-pilot") or std.mem.eql(u8, component, "parser-pilot");
-    const schema: u32 = if (frontend) 2 else version;
+    const schema_two = std.mem.eql(u8, component, "lexer-pilot") or std.mem.eql(u8, component, "parser-pilot") or std.mem.eql(u8, component, "body-check");
+    const schema: u32 = if (schema_two) 2 else version;
     if (m.format != 1 or m.protocol != version or m.schema != schema) return error.ComponentManifest;
     if (!std.mem.eql(u8, m.component, component) or m.sha256.len != 64) return error.ComponentManifest;
     if (m.artifact.len == 0 or std.mem.indexOfAny(u8, m.artifact, "/\\") != null) return error.ComponentManifest;
@@ -193,6 +193,28 @@ fn digestFile(io: std.Io, path: []const u8, limit: usize) Error![32]u8 {
 
 fn mapFailure(err: anyerror, fallback: Error) Error {
     return if (err == error.OutOfMemory) error.OutOfMemory else fallback;
+}
+
+// spec-case: SELFHOST-BODY-MANAGED-1
+test "body check artifact admission requires managed schema two" {
+    const a = std.testing.allocator;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    defer a.free(directory);
+    const contents = "body component fixture";
+    const digest = content_hash.hash(contents);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "producer", .data = contents });
+    const schema_one = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"body-check\",\"protocol\":1,\"schema\":1,\"artifact\":\"producer\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
+    defer a.free(schema_one);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "body-check.json", .data = schema_one });
+    try std.testing.expectError(error.ComponentManifest, artifact(a, std.testing.io, directory, "body-check"));
+    const schema_two = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"body-check\",\"protocol\":1,\"schema\":2,\"artifact\":\"producer\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
+    defer a.free(schema_two);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "body-check.json", .data = schema_two });
+    const accepted = try artifact(a, std.testing.io, directory, "body-check");
+    defer a.free(accepted.path);
+    try std.testing.expectEqualSlices(u8, &digest, &accepted.digest);
 }
 
 // spec: SELFHOST-FRONTEND-VERIFY-1

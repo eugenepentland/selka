@@ -9,6 +9,7 @@ test {
     _ = @import("parser_component_test.zig");
     _ = @import("declaration_component_test.zig");
     _ = @import("type_interface_component_test.zig");
+    _ = @import("body_check_projection_test.zig");
     _ = @import("frontend_migration_test.zig");
     _ = @import("iteration_place_test.zig");
     _ = @import("input_probe_test.zig");

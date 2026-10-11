@@ -880,8 +880,8 @@ pub fn build(b: *std.Build) void {
     type_interfaces_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/type_interface_qualification_test.py" });
     type_interfaces_step.dependOn(&type_interfaces_checks.step);
     test_step.dependOn(type_interfaces_step);
-    const body_checks_step = b.step("test-selfhost-body-checks", "Qualify scalar body checking with the verified seed and installed compiler");
-    const body_checks_run = driver(b, "scalar body checking pure and installed qualification", rss.driver, "body_check_qualification");
+    const body_checks_step = b.step("test-selfhost-body-checks", "Qualify scalar and managed body checking with the verified seed and installed compiler");
+    const body_checks_run = driver(b, "scalar and managed body checking pure and installed qualification", rss.driver, "body_check_qualification");
     body_checks_run.has_side_effects = true;
     body_checks_run.addArgs(&.{ "python3", "selfhost/test_body_checks.py", "--zig", b.graph.zig_exe, "--builder" });
     body_checks_run.addArtifactArg(component_tool);
