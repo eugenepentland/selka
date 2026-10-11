@@ -1,0 +1,10 @@
+build-slot: build slot 1, FIFO ticket 1269 after 0s
+passed application_cache::test_durable_bounds_and_output_authority
+passed application_cache::test_memory_provider_cannot_claim_durability
+passed application_cache::test_persistent_bounds_reject_before_storage
+passed application_cache::test_record_rejects_noncanonical_and_nonstring_payloads
+passed application_cache::test_record_round_trip_and_corruption
+passed application_cache::test_sha256_block_boundary_oracles
+passed application_cache::test_sha256_known_vectors_and_padding
+passed application_cache::test_zero_retention_needs_no_storage_and_snapshots_bytes
+8 passed, 0 cached, 0 failed, 0 skipped

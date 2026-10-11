@@ -874,6 +874,24 @@ from `cf3578c67`; its scope and qualification are recorded in
 [`cache-wave7-20261011/PLAN.md`](../../experiments/cache-wave7-20261011/PLAN.md) and
 [`REPORT.md`](../../experiments/cache-wave7-20261011/REPORT.md).
 
+Waves **7b and 7c** now implement the persistent byte-value and durable byte-pipeline
+APIs in Selka, backed by compiler-issued callable identities and five narrow
+native durability operations. The application matrix has qualified 155 native
+invocations and 12 actual SIGKILL recovery cases against independent CSV and
+record oracles. The permanent gate includes a bounded recovery smoke matrix.
+Implementation details, full-gate status and precise limits are recorded in
+[the 7b/7c report](../../experiments/cache-wave7bc-20261011/REPORT.md).
+The provider uses complete bounded directory listing, since ordinary listing's
+256-entry ceiling cannot support a 1,024-chunk journal. Leases reject ambiguous
+physical roots, and recovery resynchronizes an already-visible published journal
+before acknowledging success after an uncertain prior sync.
+
+This completes the staged local application API scope; arbitrary effect replay,
+network/database transactions, distributed workers and experimentally proven
+power-loss recovery remain separate future work. Compiler/runtime upgrades may
+conservatively invalidate persistent identities and refuse older durable runs.
+
+
 Expose a small `incr`/memo library once the internal graph contract is proven.
 Start with explicit bounded caches for pure functions and stable immutable
 values. Persistent keys include reachable implementation, canonical argument

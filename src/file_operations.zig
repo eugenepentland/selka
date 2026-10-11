@@ -13,10 +13,15 @@ pub const Access = enum {
     listdir,
     mkdir,
     remove,
+    atomic_write_file,
+    lock_directory,
+    sync_directory,
+    read_regular_file,
+    list_directory,
     /// Source argument count including the leading capability.
     pub fn arity(self: Access) usize {
         return switch (self) {
-            .open, .write_file, .write_text => 3,
+            .open, .write_file, .write_text, .atomic_write_file, .read_regular_file, .list_directory => 3,
             else => 2,
         };
     }

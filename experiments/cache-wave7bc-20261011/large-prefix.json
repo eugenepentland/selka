@@ -1,0 +1,48 @@
+{
+  "schema": "application-large-prefix-v1",
+  "complete": true,
+  "chunks": 260,
+  "rows": 520,
+  "compiler_sha256": "bb8670209330f84006b66dbd1b3e33af854480f93eab91aa9680ee30dbfcc465",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "fixture_sha256": "aa94c91bc1c0948330948d57c88e624328b21b3775158c31f351a5e279a4821e",
+  "binary_path": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+  "binary_sha256": "ce14f410d0ec041c1a38bcb86b66056c12edfaf937844994b044de94735ef839",
+  "input_sha256": "7bb100c5cdac1cff7c5ae6266eb1bf6010bade8d76b3fd046478a510e02e8c28",
+  "oracle_output_sha256": "1885a4d902f321206e9749a9fc6ab7e2b01d368a4e54c98fa9b19f19b41082f8",
+  "state_hex": "34303634333230",
+  "calls": [
+    {
+      "name": "cold",
+      "exit": 0,
+      "stdout": "{\"ok\":true,\"mode\":\"durable\",\"fresh\":260,\"reused\":0,\"state_hex\":\"34303634333230\",\"output_digest\":\"1885a4d902f321206e9749a9fc6ab7e2b01d368a4e54c98fa9b19f19b41082f8\",\"function_digest\":\"fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349\"}\n",
+      "stderr": "",
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 260,
+        "reused": 0,
+        "state_hex": "34303634333230",
+        "output_digest": "1885a4d902f321206e9749a9fc6ab7e2b01d368a4e54c98fa9b19f19b41082f8",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      }
+    },
+    {
+      "name": "warm",
+      "exit": 0,
+      "stdout": "{\"ok\":true,\"mode\":\"durable\",\"fresh\":0,\"reused\":260,\"state_hex\":\"34303634333230\",\"output_digest\":\"1885a4d902f321206e9749a9fc6ab7e2b01d368a4e54c98fa9b19f19b41082f8\",\"function_digest\":\"fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349\"}\n",
+      "stderr": "",
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 260,
+        "state_hex": "34303634333230",
+        "output_digest": "1885a4d902f321206e9749a9fc6ab7e2b01d368a4e54c98fa9b19f19b41082f8",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      }
+    }
+  ],
+  "scope": "native correctness beyond256directoryentries; no timingclaim",
+  "store_entries": 262
+}

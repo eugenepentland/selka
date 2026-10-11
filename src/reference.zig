@@ -52,9 +52,25 @@ pub const entry_path = "reference.my";
 /// `src/stdlib/*.my` set, which turns an unlisted standard module into a
 /// failing test rather than a silent omission.
 pub const standard_modules = [_][]const u8{
-    "base64.my", "byte_builder.my", "environment.my", "filesystem.my", "hex.my",
-    "json.my",   "math.my",         "memo.my",        "network.my",    "path.my",
-    "pool.my",   "random.my",       "sort.my",        "strings.my",    "time.my",
+    "base64.my",
+    "byte_builder.my",
+    "cache_record.my",
+    "durable.my",
+    "environment.my",
+    "filesystem.my",
+    "hashes.my",
+    "hex.my",
+    "json.my",
+    "math.my",
+    "memo.my",
+    "network.my",
+    "path.my",
+    "persistent_memo.my",
+    "pool.my",
+    "random.my",
+    "sort.my",
+    "strings.my",
+    "time.my",
 };
 
 /// Read the synthesized entry module and refuse every other path.
@@ -373,6 +389,7 @@ const ListingFacts = struct { declarations: []const Declaration, modules: usize,
 /// emitted only when that table accepts it; a seed the table rejects produces
 /// no fact at all.
 const prelude_seeds = [_][]const u8{
+    "function_digest",
     "same_function",
     "sum",
     "min",

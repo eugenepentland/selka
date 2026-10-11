@@ -1,0 +1,58 @@
+import hashes
+import json
+
+# A record failed its format, canonical representation or content checksum.
+public enum Error:
+    Corrupt
+
+
+# Describe a rejected storage record.
+public func message(error: Error) -> str effects():
+    match error:
+        case Error.Corrupt:
+            return "corrupt or incompatible storage record"
+
+
+# Canonical string-array JSON protected by a versioned SHA-256 envelope.
+# The caller bounds the input before reading; this is integrity, not authentication.
+public func encode(fields: str[]) -> bytes:
+    mut values: json.Json[] = []
+    for field in fields:
+        values.append(json.text(field))
+    const payload = json.dumps(json.array(values)).encode()
+    return b"SELKA-RECORD-1\n" + hashes.sha256(payload).encode() + b"\n" + payload
+
+
+# Decode only a complete canonical record with the exact envelope and checksum.
+public func decode(data: bytes) -> Result[str[], Error]:
+    const prefix = b"SELKA-RECORD-1\n"
+    const offset = len(prefix) + 65
+    if len(data) < offset or not data.startswith(prefix):
+        return Err(Error.Corrupt)
+    if data[offset - 1] != 10:
+        return Err(Error.Corrupt)
+    const payload = data[offset:]
+    if data[len(prefix):offset - 1] != hashes.sha256(payload).encode():
+        return Err(Error.Corrupt)
+    match payload.decode():
+        case Err(_):
+            return Err(Error.Corrupt)
+        case Ok(text):
+            match json.loads(text):
+                case Err(_):
+                    return Err(Error.Corrupt)
+                case Ok(value):
+                    if json.dumps(value) != text:
+                        return Err(Error.Corrupt)
+                    match json.as_list(value):
+                        case None:
+                            return Err(Error.Corrupt)
+                        case Some(items):
+                            mut fields: str[] = []
+                            for item in items:
+                                match json.as_str(item):
+                                    case None:
+                                        return Err(Error.Corrupt)
+                                    case Some(field):
+                                        fields.append(field)
+                            return Ok(fields)

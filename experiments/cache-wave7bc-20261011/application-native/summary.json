@@ -1,0 +1,3102 @@
+{
+  "schema": "application-durability-qualification-v1",
+  "complete": true,
+  "error": null,
+  "scope": "native correctness and process-crash recovery; no timing/power-loss claim",
+  "compiler_sha256": "bb8670209330f84006b66dbd1b3e33af854480f93eab91aa9680ee30dbfcc465",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "fixture_sha256": "aa94c91bc1c0948330948d57c88e624328b21b3775158c31f351a5e279a4821e",
+  "shim_source_sha256": "e8c69317a6f95706c36c16d57a6df99d344d4430064cb1670a182153c20a8396",
+  "builds": [
+    {
+      "name": "baseline",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/application.my",
+        "-o",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+        "--release"
+      ],
+      "exit": 0,
+      "source_sha256": "aa94c91bc1c0948330948d57c88e624328b21b3775158c31f351a5e279a4821e",
+      "binary_sha256": "ce14f410d0ec041c1a38bcb86b66056c12edfaf937844994b044de94735ef839"
+    },
+    {
+      "name": "body",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/application.my",
+        "-o",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/body",
+        "--release"
+      ],
+      "exit": 0,
+      "source_sha256": "244278893884eff25d0218c5be3c9a8fed23f5959f6c11b4114c6ea7c5cd59c5",
+      "binary_sha256": "d8eaeb6090c250e7cc65f621896c5d401b67c537e774fdfd016bd698596fc14f"
+    },
+    {
+      "name": "private-helper",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/application.my",
+        "-o",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/private-helper",
+        "--release"
+      ],
+      "exit": 0,
+      "source_sha256": "efc04f37897ea398f1cae4967045f7a1ae5662b0d88cf6568b8b16ea869b0935",
+      "binary_sha256": "9f46425c87919aa09db604b4268d5c0cb5416509d1492e1a43af754ff3f35ebf"
+    },
+    {
+      "name": "shared-helper",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/application.my",
+        "-o",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/shared-helper",
+        "--release"
+      ],
+      "exit": 0,
+      "source_sha256": "10478feee75d88c47e9b7bdf868cd944477ac32fc97f129b37d754cbbe963be4",
+      "binary_sha256": "7e9c9ec188638f001a67f72cb8dcc0bbcf00b4469c6b09ce843452166bc07c78"
+    },
+    {
+      "name": "schema",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/application.my",
+        "-o",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/schema",
+        "--release"
+      ],
+      "exit": 0,
+      "source_sha256": "b2933d40d11b1fcda5d466007c9700be7979208a51c1d972e881907a877ba020",
+      "binary_sha256": "5559af66afeaa2f5b631e90287dde4bf09e085ae351201142aa2f24070ff2f15"
+    },
+    {
+      "name": "pipeline-body",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/bin/mylang",
+        "build",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/application.my",
+        "-o",
+        "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/pipeline-body",
+        "--release"
+      ],
+      "exit": 0,
+      "source_sha256": "366269d31195b4c7db202f0ec2fa36ef7b2886a5e9cabdaa7534c5a5b7772365",
+      "binary_sha256": "0f9198c8820eecf2aa6c96817a9eedee2e625e49267d1daaa2460af52fdb8fd5"
+    }
+  ],
+  "calls": [
+    {
+      "name": "persistent-cold",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-cold-warm",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "persistent-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-cold-warm",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "persistent-force",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-cold-warm",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "WAVE7_ENTRIES": "0"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "body-original",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-body",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "body-edit",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-body",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/body",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3338",
+        "function_digest": "c6904b5210fe8f7340a52e4e1968ff7686169d987a81ca33357eecd9e0e1c644"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "f9001430c7e1bb779f1686900bf9221daa5df0cb08e6ac79644d8cc925836431",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "body-edit-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-body",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/body",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3338",
+        "function_digest": "c6904b5210fe8f7340a52e4e1968ff7686169d987a81ca33357eecd9e0e1c644"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "788cb659135443f1ff24287fec7ef4c9118440a338b3ead41c257c8331f35fed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "body-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-body",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "private-helper-original",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-private-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "private-helper-edit",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-private-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/private-helper",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3333",
+        "function_digest": "516e890625f1707346875eed941b6968c6a6a83825c6219ae68134b4a940dfca"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "96e429d7355df560e1326af5229f0c01cf6eda617f3cc6307eafbe4a2ac06fba",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "private-helper-edit-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-private-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/private-helper",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3333",
+        "function_digest": "516e890625f1707346875eed941b6968c6a6a83825c6219ae68134b4a940dfca"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "d2e79a67ce5cfbfce8a69e69455a3a6dd1c3e27d85ca8e2b8965eddaf95c5eee",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "private-helper-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-private-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shared-helper-original",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-shared-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shared-helper-edit",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-shared-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/shared-helper",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3433",
+        "function_digest": "021e239139e300683fddeaf5686d0da0603f4d433d8cf6343067e1e189a92b59"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "644ed16ab1e40b72bd61581652ee47b168e0baec118a1020696a567a5667f874",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shared-helper-edit-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-shared-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/shared-helper",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3433",
+        "function_digest": "021e239139e300683fddeaf5686d0da0603f4d433d8cf6343067e1e189a92b59"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "1a58251cbcab52f356dd10b5645ae7d0c9a59626fece68c4cf27e0e70814c3e6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shared-helper-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-shared-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "schema-original",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-schema",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "schema-edit",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-schema",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/schema",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "74f3783056ade3f14e30701d2be475ba673e5cd049a8750fdb9f3a876b70c99b"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "ed20059561d2d99561b3c8accb0decb53c4a973a7064513c515248feaf261b73",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "schema-edit-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-schema",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/schema",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "74f3783056ade3f14e30701d2be475ba673e5cd049a8750fdb9f3a876b70c99b"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "426679b347df2e3d4fbcb0c16fb5dbee3be66a31bda892343d3d7d15fe0e56be",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "schema-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-schema",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "callback-change",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-cold-warm",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "32393a616c7465726e617465",
+        "function_digest": "2b3658a97a8c0cc7d295bccbf489000fc2d2e079b4ce513eb9d14973fde60b88"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "WAVE7_ALTERNATE": "1"
+      },
+      "stdout_sha256": "3bfa29b6883c8027e3069a14da6ea1870c114410efda0c19a8178ffa0565d424",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "callback-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-cold-warm",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "32393a616c7465726e617465",
+        "function_digest": "2b3658a97a8c0cc7d295bccbf489000fc2d2e079b4ce513eb9d14973fde60b88"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "WAVE7_ALTERNATE": "1"
+      },
+      "stdout_sha256": "0dedf8b134d8e6aa24116e976f55edbc53c89593e20003d2009c629e4ab4f643",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "callback-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-cold-warm",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "input-original",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-input",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "input-restored-mtime-edit",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-input",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3332",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "fc2a962007b45032bab01851c7c32508e95838eb845e5aedbe20759e16afcffd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "input-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-input",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-number-cold",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-number-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-text-cold",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "746578743a37",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "text",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "604f82ab34034f20df3c1e5eeb905efbea4390cbcdd3fc7f782dd4203a79ed73",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-text-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "746578743a37",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "text",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "5dd856a398bc755c2afd54da4b9212b758e31810a3e73b4967feed4f7965fe82",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-data-cold",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "62797465733a37",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "data",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "d6feec7efa796ec409d417e46117d5cbee3b081be93067d1d5e3cfd697dd6b09",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-data-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "62797465733a37",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "data",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "b496c10613ec804a57cd2212e4ae8adbda915e87d8bcecec440ad76743df538e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-number-retained",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-text-retained",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "746578743a37",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "text",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "5dd856a398bc755c2afd54da4b9212b758e31810a3e73b4967feed4f7965fe82",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tag-data-retained",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/tagged-identity",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "62797465733a37",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "data",
+        "WAVE7_ENTRIES": "3"
+      },
+      "stdout_sha256": "b496c10613ec804a57cd2212e4ae8adbda915e87d8bcecec440ad76743df538e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "empty-cold",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-empty",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "62797465733a",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "data"
+      },
+      "stdout_sha256": "f2c0750ab3befe77bcad74d9220b7ec0f65e2d2adadb036a9d9acd2364ad5580",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "empty-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-empty",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "62797465733a",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "data"
+      },
+      "stdout_sha256": "478eb5c86a2c56a84ab5de8940968fc1eaff9541aea0f5d6b3648e4e72f60e1c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-bytes-cold",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-nul-bytes",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "62797465733a00c3a9",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "data"
+      },
+      "stdout_sha256": "8e088ea7b4f2e6feaa8ed81d8c45a52afa15f6a5ff1a4928d161733b56c7c454",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-bytes-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-nul-bytes",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "62797465733a00c3a9",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "data"
+      },
+      "stdout_sha256": "3533c7a5bb31d9520d52715e55f2c0a7e6c97eeeb6df1e6b8c6bdfb6fa8cce5c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-text-cold",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-nul-text",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "746578743a00c3a9",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "text"
+      },
+      "stdout_sha256": "7e1e2c47321a808fae35f127580102b682908fdf905c1ede81024da5d83bbe42",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "nul-text-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-nul-text",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "746578743a00c3a9",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "text"
+      },
+      "stdout_sha256": "9ddb82f89f738c6236f237d7f155958a40efea453bfe188864db766ebb0b8def",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "corrupt-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-corruption",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "payload-corrupt",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-corruption",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "payload-corrupt-repaired",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-corruption",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "payload-truncate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-corruption",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "payload-truncate-repaired",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-corruption",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "payload-missing",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-corruption",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "payload-missing-repaired",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-corruption",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-1",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3131",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "63af78707ed7b3df3b8bb2c892bf0de459e94c72e0a135a700501373a5c2384a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-2",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3134",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "05879860fb9bb48c19680de578aea04b2b99bf96d7e296812a19a25b10a7497a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-3",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3137",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "61de9fd79fb98b8c79a9e9dd870a15e53120cf5632eab19b5a722523ebf6c0c5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-4",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3230",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a3be98dc9e70745211914c70b5a2b006c27c2937012106b0f65a46edac406c4b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-5",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3233",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "ceed4cb1286fab9b554955d3240e663d8bee2e7db0bee1194cefcbc8721cc073",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-6",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3236",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "03caf2ec5aa64138154d935c4df1b78bf36f93e526839fc7de647e4f155d8ccc",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-7",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-8",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3332",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "fc2a962007b45032bab01851c7c32508e95838eb845e5aedbe20759e16afcffd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "bounded-last-hit",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-bound",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3332",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "ee6a8abcf813ceba00fc2ad7148ce665dc1326ce1acfc3dd9874150ae0b6281a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "oversized-first",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-oversized",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "WAVE7_BYTES": "1"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "oversized-repeat",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-oversized",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": false,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "WAVE7_BYTES": "1"
+      },
+      "stdout_sha256": "a0a7f96813c786d493b2bc39c5ba4b733b40b7281dddc7a06a83228ada2be812",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "persistent-uncertain-publish",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-uncertain-publication",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "persistent",
+        "error": "atomic write 'memo-d6bd2ced8327db5ae5af49f4d99a75adebc8cf0ae076fc608aae1e688d211948.entry': directory sync failed; publication may have occurred"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/persistent-uncertain-publish.marker",
+        "W7_FAULT_OPERATION": "directory-sync-error",
+        "W7_FAULT_TARGET": "@directory",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "bff46fd6ef6940555d2f29eeaab7c430d3301d7586613c247ad50fcc5e983106",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "persistent-uncertain-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-uncertain-publication",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "persistent",
+        "error": "directory sync '': failed: the path does not exist or could not be used"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number",
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/persistent-uncertain-warm.marker",
+        "W7_FAULT_OPERATION": "directory-sync-error",
+        "W7_FAULT_TARGET": "@directory",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "9a995dd1e6aeab4e73bc0319476342456ecea6d466436121441fad21e1ea5ed6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "persistent-uncertain-recovery",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/persistent-uncertain-publication",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "persistent",
+        "reused": true,
+        "value_hex": "3239",
+        "function_digest": "66a2890df8302757439af8f798ee75f7100b0f51ae0dee3ea50d3fdf9369f3bd"
+      },
+      "mode": "persistent",
+      "settings": {
+        "WAVE7_KEY": "number"
+      },
+      "stdout_sha256": "37e7914636031fb4dfa61b64e6a796f3faf846a9a04f26c0e95b05e0fc124fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "uninterrupted-forced-empty-store",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/uninterrupted-oracle",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "uninterrupted-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/uninterrupted-oracle",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "empty-pipeline-cold",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/empty-pipeline",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 1,
+        "reused": 0,
+        "state_hex": "30",
+        "output_digest": "06e7a061da35d633c331eb166de20890881066fe1d3ee6fa44de18acb7088459",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "8954cbba169dfb37d913b7310da13e37fa78b051f801e886a2b70efab5d09ab4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "empty-pipeline-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/empty-pipeline",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 1,
+        "state_hex": "30",
+        "output_digest": "06e7a061da35d633c331eb166de20890881066fe1d3ee6fa44de18acb7088459",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "3216f18032cb70dedd47c200bd557efe974bd363e9c778741004d75a1a4ec629",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "write-before-chunk-0-entry-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/write-before-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/write-before-chunk-0-entry.marker",
+        "W7_FAULT_OPERATION": "write-before",
+        "W7_FAULT_TARGET": "chunk-0.entry",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "write-before-chunk-0-entry-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/write-before-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "write-before-chunk-0-entry-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/write-before-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "write-after-chunk-0-entry-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/write-after-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/write-after-chunk-0-entry.marker",
+        "W7_FAULT_OPERATION": "write-after",
+        "W7_FAULT_TARGET": "chunk-0.entry",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "write-after-chunk-0-entry-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/write-after-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "write-after-chunk-0-entry-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/write-after-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-chunk-0-entry-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/rename-before-chunk-0-entry.marker",
+        "W7_FAULT_OPERATION": "rename-before",
+        "W7_FAULT_TARGET": "chunk-0.entry",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-chunk-0-entry-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-chunk-0-entry-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-chunk-0-entry-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/rename-after-chunk-0-entry.marker",
+        "W7_FAULT_OPERATION": "rename-after",
+        "W7_FAULT_TARGET": "chunk-0.entry",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-chunk-0-entry-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-chunk-0-entry-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-chunk-0-entry",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-run-json-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/rename-before-run-json.marker",
+        "W7_FAULT_OPERATION": "rename-before",
+        "W7_FAULT_TARGET": "run.json",
+        "W7_FAULT_OCCURRENCE": "2"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-run-json-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-run-json-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-run-json-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/rename-after-run-json.marker",
+        "W7_FAULT_OPERATION": "rename-after",
+        "W7_FAULT_TARGET": "run.json",
+        "W7_FAULT_OCCURRENCE": "2"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-run-json-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 5,
+        "reused": 1,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "da2ac6b74a62f09454ba4b5165d4bf8e705c842865e81676821d7977ef257ae9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-run-json-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-final-csv-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/rename-before-final-csv.marker",
+        "W7_FAULT_OPERATION": "rename-before",
+        "W7_FAULT_TARGET": "final.csv",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-final-csv-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-before-final-csv-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-before-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-final-csv-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/rename-after-final-csv.marker",
+        "W7_FAULT_OPERATION": "rename-after",
+        "W7_FAULT_TARGET": "final.csv",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-final-csv-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-after-final-csv-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-after-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-before-run-json-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-before-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/directory-sync-before-run-json.marker",
+        "W7_FAULT_OPERATION": "directory-sync-before",
+        "W7_FAULT_TARGET": "run.json",
+        "W7_FAULT_OCCURRENCE": "2"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-before-run-json-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-before-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 5,
+        "reused": 1,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "da2ac6b74a62f09454ba4b5165d4bf8e705c842865e81676821d7977ef257ae9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-before-run-json-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-before-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-after-run-json-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-after-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/directory-sync-after-run-json.marker",
+        "W7_FAULT_OPERATION": "directory-sync-after",
+        "W7_FAULT_TARGET": "run.json",
+        "W7_FAULT_OCCURRENCE": "2"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-after-run-json-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-after-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 5,
+        "reused": 1,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "da2ac6b74a62f09454ba4b5165d4bf8e705c842865e81676821d7977ef257ae9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-after-run-json-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-after-run-json",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-before-final-csv-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-before-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/directory-sync-before-final-csv.marker",
+        "W7_FAULT_OPERATION": "directory-sync-before",
+        "W7_FAULT_TARGET": "final.csv",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-before-final-csv-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-before-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-before-final-csv-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-before-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-after-final-csv-killed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-after-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": -9,
+      "report": null,
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/directory-sync-after-final-csv.marker",
+        "W7_FAULT_OPERATION": "directory-sync-after",
+        "W7_FAULT_TARGET": "final.csv",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-after-final-csv-recover",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-after-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-after-final-csv-duplicate",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-after-final-csv",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "write-error-failure",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/write-error-failure",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "atomic write 'chunk-0.entry': failed: the path does not exist or could not be used"
+      },
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/write-error-failure.marker",
+        "W7_FAULT_OPERATION": "write-error",
+        "W7_FAULT_TARGET": "chunk-0.entry",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "fc51c6ae08162c1df1f416fcff72353e3c82d8ca911307a2cb425c699ac69da3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "write-error-failure-recovery",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/write-error-failure",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "file-sync-error-failure",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/file-sync-error-failure",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "atomic write 'chunk-0.entry': failed: the path does not exist or could not be used"
+      },
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/file-sync-error-failure.marker",
+        "W7_FAULT_OPERATION": "file-sync-error",
+        "W7_FAULT_TARGET": "chunk-0.entry",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "fc51c6ae08162c1df1f416fcff72353e3c82d8ca911307a2cb425c699ac69da3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "file-sync-error-failure-recovery",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/file-sync-error-failure",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-error-failure",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-error-failure",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "atomic write 'chunk-0.entry': failed: the path does not exist or could not be used"
+      },
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/rename-error-failure.marker",
+        "W7_FAULT_OPERATION": "rename-error",
+        "W7_FAULT_TARGET": "chunk-0.entry",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "fc51c6ae08162c1df1f416fcff72353e3c82d8ca911307a2cb425c699ac69da3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "rename-error-failure-recovery",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/rename-error-failure",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-error-failure",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-error-failure",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "atomic write 'final.csv': directory sync failed; publication may have occurred"
+      },
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/directory-sync-error-failure.marker",
+        "W7_FAULT_OPERATION": "directory-sync-error",
+        "W7_FAULT_TARGET": "final.csv",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "20784fa7e4b6f5d32c2666f040db4fdf90c3531a3c670e38437b353dd666eb5c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "directory-sync-error-failure-recovery",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/directory-sync-error-failure",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "published-journal-uncertain",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/published-journal-uncertain",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "atomic write 'run.json': directory sync failed; publication may have occurred"
+      },
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/published-journal-uncertain.marker",
+        "W7_FAULT_OPERATION": "directory-sync-error",
+        "W7_FAULT_TARGET": "run.json",
+        "W7_FAULT_OCCURRENCE": "8"
+      },
+      "stdout_sha256": "9857a9694747d42f978c4377f6844d18367d13897fea48774830013e9bbf55f9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "published-journal-repeat-sync",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/published-journal-uncertain",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "directory sync '': failed: the path does not exist or could not be used"
+      },
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/published-journal-repeat-sync.marker",
+        "W7_FAULT_OPERATION": "directory-sync-error",
+        "W7_FAULT_TARGET": "@directory",
+        "W7_FAULT_OCCURRENCE": "1"
+      },
+      "stdout_sha256": "d4355a5804c84bf1ed603f75888950af4cd73e202846cf9289d8d7d35fc5f9a5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "published-journal-sync-recovery",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/published-journal-uncertain",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "competing-denied",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/competing-recovery",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "directory lock '': failed: the path does not exist or could not be used"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "0e591b4766fb5856fd7d12c9bee0d4829ebdf3ab7678137bea7298d2fb061c66",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "competing-winner",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/competing-recovery",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/competing.marker",
+        "W7_FAULT_OPERATION": "rename-after",
+        "W7_FAULT_TARGET": "run.json",
+        "W7_FAULT_OCCURRENCE": "2"
+      },
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "competing-after-release",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/competing-recovery",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "journal-corrupt-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/journal-corrupt",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "journal-corrupt-fail-closed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/journal-corrupt",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "corrupt or missing committed durable evidence"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "03cd0c089efe6e40c7972b5039720b9090bda50c4f5ab7a628ea58a6d74ccf5c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "journal-truncate-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/journal-truncate",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "journal-truncate-fail-closed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/journal-truncate",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "corrupt or missing committed durable evidence"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "03cd0c089efe6e40c7972b5039720b9090bda50c4f5ab7a628ea58a6d74ccf5c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "artifact-corrupt-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/artifact-corrupt",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "artifact-corrupt-fail-closed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/artifact-corrupt",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "corrupt or missing committed durable evidence"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "03cd0c089efe6e40c7972b5039720b9090bda50c4f5ab7a628ea58a6d74ccf5c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "artifact-missing-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/artifact-missing",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "artifact-missing-fail-closed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/artifact-missing",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "corrupt or missing committed durable evidence"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "03cd0c089efe6e40c7972b5039720b9090bda50c4f5ab7a628ea58a6d74ccf5c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "coherent-index-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/coherent-index",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "coherent-index-fail-closed",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/coherent-index",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "corrupt or missing committed durable evidence"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "03cd0c089efe6e40c7972b5039720b9090bda50c4f5ab7a628ea58a6d74ccf5c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "orphan-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/orphan-gc",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "orphan-cleaned",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/orphan-gc",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-input-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/changed-input",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-input-incompatible",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/changed-input",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "durable journal is incompatible with this request or implementation"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "cd4f7e5a29d8df462ce3e45854861ae38f1dd9bf387d3a6639f1b109397ca3c6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-input-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/changed-input",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-input-deleted",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/changed-input",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "input"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "8c0b4e17d20429173f9a7d379908352fc4962d629ac6dfc65ee7c94c31e12bbe",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-input-deletion-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/changed-input",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "captured-input-original-completes",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/captured-input-mutation",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {
+        "LD_PRELOAD": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/faults.so",
+        "W7_FAULT_MARKER": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/captured-input.marker",
+        "W7_FAULT_OPERATION": "rename-after",
+        "W7_FAULT_TARGET": "run.json",
+        "W7_FAULT_OCCURRENCE": "2"
+      },
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "captured-input-next-run-incompatible",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/captured-input-mutation",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "durable journal is incompatible with this request or implementation"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "cd4f7e5a29d8df462ce3e45854861ae38f1dd9bf387d3a6639f1b109397ca3c6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "captured-input-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/captured-input-mutation",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shared-helper-journal-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-shared-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shared-helper-journal-incompatible",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-shared-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/shared-helper",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "durable journal is incompatible with this request or implementation"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "cd4f7e5a29d8df462ce3e45854861ae38f1dd9bf387d3a6639f1b109397ca3c6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shared-helper-journal-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-shared-helper",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "shared-helper-fresh-oracle",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-shared-helper-forced",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/shared-helper",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "33393132",
+        "output_digest": "012938b7498d6d02b28ee6b29a12f68f9fe0b16c8f74ce3513e4949091779ac7",
+        "function_digest": "ebfceb3cd9d752ba32405bf034130e96a6d1e8ba18eeefaa8d35f61ee505e716"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "8facf7503d57294de62ee21cfc6a534c5b5c210d4850de4cc0196e0211d24098",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "schema-journal-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-schema",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "schema-journal-incompatible",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-schema",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/schema",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "durable journal is incompatible with this request or implementation"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "cd4f7e5a29d8df462ce3e45854861ae38f1dd9bf387d3a6639f1b109397ca3c6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "schema-journal-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-schema",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "schema-fresh-oracle",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-schema-forced",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/schema",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "2ab393fc9e6f44292fb3f89c94b3596130d2f37b1dbb656fc35848bd1a43433d"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "fa63597a12c1f8103b5c468cec34c3a9895f17903edad99a5529f13a42d8b3b9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pipeline-body-journal-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-pipeline-body",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pipeline-body-journal-incompatible",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-pipeline-body",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/pipeline-body",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "durable journal is incompatible with this request or implementation"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "cd4f7e5a29d8df462ce3e45854861ae38f1dd9bf387d3a6639f1b109397ca3c6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pipeline-body-journal-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-pipeline-body",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pipeline-body-fresh-oracle",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-pipeline-body-forced",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/pipeline-body",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "34373034",
+        "output_digest": "13f2fb72b667e30002ba5fc6f7fb15c292fe08f91646d0f760b7a06ca9d40903",
+        "function_digest": "638e949e5b48fba407e2919e8bdc0cbf909c9b3143f292e8c2425b32eb1c4c8e"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "064d7200bd6da5dc76b20b36acb80f770c9ccfd215f0a9304a7ffc128285059d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unrelated-private-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-unrelated-private",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unrelated-private-edit",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-unrelated-private",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/private-helper",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "unrelated-private-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-unrelated-private",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-callback-prime",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-callback",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "384af546584536cbe8f22cc29f041741f2cae567d93146fb1e74a319789cf651",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-callback-incompatible",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-callback",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 1,
+      "report": {
+        "ok": false,
+        "mode": "durable",
+        "error": "durable journal is incompatible with this request or implementation"
+      },
+      "mode": "durable",
+      "settings": {
+        "WAVE7_ALTERNATE": "1"
+      },
+      "stdout_sha256": "cd4f7e5a29d8df462ce3e45854861ae38f1dd9bf387d3a6639f1b109397ca3c6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-callback-revert",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-callback",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "fcaf5bcb6100c9ba35de51914d61b164ce2bfa63d50d18341ff041dc305e5349"
+      },
+      "mode": "durable",
+      "settings": {},
+      "stdout_sha256": "2b3a72d217f23c46537cb6ed9ebf0b9e594cdcd03ac26719c45a964081f3ab2e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-callback-fresh",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-callback-forced",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 6,
+        "reused": 0,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "719c4321dad4cdee3dd4987637ff4b6b19419688c194614497b1b80ec7ec13f4"
+      },
+      "mode": "durable",
+      "settings": {
+        "WAVE7_ALTERNATE": "1"
+      },
+      "stdout_sha256": "9a2345af65f9d28ea65730b5f86b7a04c1c9402eaa705486801b1172b3e7278d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "durable-callback-warm",
+      "directory": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/cases/durable-callback-forced",
+      "binary": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/full-qualified/work/baseline",
+      "exit": 0,
+      "report": {
+        "ok": true,
+        "mode": "durable",
+        "fresh": 0,
+        "reused": 6,
+        "state_hex": "32333532",
+        "output_digest": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76",
+        "function_digest": "719c4321dad4cdee3dd4987637ff4b6b19419688c194614497b1b80ec7ec13f4"
+      },
+      "mode": "durable",
+      "settings": {
+        "WAVE7_ALTERNATE": "1"
+      },
+      "stdout_sha256": "cb2c035eddcaf1d206671589a31daec85bb246e154918cb798e6655b1aa92641",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "crash_cases": [
+    {
+      "name": "write-before-chunk-0-entry",
+      "kind": "crash",
+      "operation": "write-before",
+      "target": "chunk-0.entry",
+      "committed_at_crash": 0
+    },
+    {
+      "name": "write-after-chunk-0-entry",
+      "kind": "crash",
+      "operation": "write-after",
+      "target": "chunk-0.entry",
+      "committed_at_crash": 0
+    },
+    {
+      "name": "rename-before-chunk-0-entry",
+      "kind": "crash",
+      "operation": "rename-before",
+      "target": "chunk-0.entry",
+      "committed_at_crash": 0
+    },
+    {
+      "name": "rename-after-chunk-0-entry",
+      "kind": "crash",
+      "operation": "rename-after",
+      "target": "chunk-0.entry",
+      "committed_at_crash": 0
+    },
+    {
+      "name": "rename-before-run-json",
+      "kind": "crash",
+      "operation": "rename-before",
+      "target": "run.json",
+      "committed_at_crash": 0
+    },
+    {
+      "name": "rename-after-run-json",
+      "kind": "crash",
+      "operation": "rename-after",
+      "target": "run.json",
+      "committed_at_crash": 1
+    },
+    {
+      "name": "rename-before-final-csv",
+      "kind": "crash",
+      "operation": "rename-before",
+      "target": "final.csv",
+      "committed_at_crash": 6
+    },
+    {
+      "name": "rename-after-final-csv",
+      "kind": "crash",
+      "operation": "rename-after",
+      "target": "final.csv",
+      "committed_at_crash": 6
+    },
+    {
+      "name": "directory-sync-before-run-json",
+      "kind": "crash",
+      "operation": "directory-sync-before",
+      "target": "run.json",
+      "committed_at_crash": 1
+    },
+    {
+      "name": "directory-sync-after-run-json",
+      "kind": "crash",
+      "operation": "directory-sync-after",
+      "target": "run.json",
+      "committed_at_crash": 1
+    },
+    {
+      "name": "directory-sync-before-final-csv",
+      "kind": "crash",
+      "operation": "directory-sync-before",
+      "target": "final.csv",
+      "committed_at_crash": 6
+    },
+    {
+      "name": "directory-sync-after-final-csv",
+      "kind": "crash",
+      "operation": "directory-sync-after",
+      "target": "final.csv",
+      "committed_at_crash": 6
+    }
+  ]
+}

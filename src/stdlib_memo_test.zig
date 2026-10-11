@@ -202,3 +202,40 @@ fn reject(allocator: std.mem.Allocator, text: []const u8, code: []const u8) !voi
     }
     return error.TestUnexpectedResult;
 }
+
+// spec-case: STANDARD-PERSISTENT-MEMO-1
+test "persistent memo rejects callbacks with hidden host effects" {
+    try reject(t.allocator,
+        \\import memo
+        \\import persistent_memo
+        \\func forbidden(fs: Filesystem, compute: func(memo.Key) -> bytes effects(host)) -> int:
+        \\    const options = persistent_memo.Options(max_entries=1, max_bytes=64)
+        \\    _ = persistent_memo.call(fs, options, compute, memo.Key.Number(value=1))
+        \\    return 0
+        \\func main() -> int:
+        \\    return 0
+    , "E_TYPE");
+}
+
+// spec-case: STANDARD-DURABLE-1
+test "durable run rejects caller mutation and hidden host effects" {
+    try reject(t.allocator,
+        \\import durable
+        \\func change(chunk: bytes, mut state: bytes) -> durable.Step:
+        \\    state = chunk
+        \\    return durable.Step(output=chunk, state=state)
+        \\func forbidden(fs: Filesystem, request: durable.Request) -> int:
+        \\    _ = durable.run(fs, request, change)
+        \\    return 0
+        \\func main() -> int:
+        \\    return 0
+    , "E_TYPE");
+    try reject(t.allocator,
+        \\import durable
+        \\func forbidden(fs: Filesystem, request: durable.Request, compute: func(bytes, bytes) -> durable.Step effects(host)) -> int:
+        \\    _ = durable.run(fs, request, compute)
+        \\    return 0
+        \\func main() -> int:
+        \\    return 0
+    , "E_TYPE");
+}

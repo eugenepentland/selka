@@ -1,0 +1,2 @@
+build-slot: build slot 1, FIFO ticket 1280 after 0s
+{"complete": true, "calls": 5, "sigkill": 1}

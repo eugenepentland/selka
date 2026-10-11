@@ -1,0 +1,42 @@
+build-slot: build slot 3, FIFO ticket 1252 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 53/649 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 6 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1926 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (imports) — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 53 file(s) in scope
+guardian: failures grouped by check (1):
+  imports (6 findings)
+    - → src/core/pipeline.zig
+      fix: extract shared types into a third module, or invert one direction.
+    - → src/core/callable_digest.zig
+    - → src/core/test_runner_identity.zig
+    - +3 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+install
++- install mylang
+   +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 11/14 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native cached 8ms MaxRSS:39M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:38M
+|  |  +- WriteFile cached
+|  |  +- compile obj juice_bytes_hash fast native cached 7ms MaxRSS:38M
+|  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:42M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
++- install generated to selka-components cached
+|  +- compile exe selka-components safe native cached 7ms MaxRSS:39M
++- run exe selka-components success 393ms
+|  +- compile exe selka-components safe native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)

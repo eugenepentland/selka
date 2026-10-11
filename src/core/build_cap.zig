@@ -12,6 +12,11 @@ const stream_write_symbol = "myl_core_stream_write";
 const stream_write_bytes_symbol = "myl_core_stream_write_bytes";
 const stream_write_buffer_symbol = "myl_core_stream_write_buffer";
 
+fn durableLimit(comptime Context: type, c: Context, file: typed.FileAccess) Error!ir.Ref {
+    if (file.kind == .read_regular_file or file.kind == .list_directory) return c.expression(file.arguments[2]);
+    return c.constant(.i64, 0);
+}
+
 /// Bind capability lowering to one concrete function builder.
 pub fn Lower(comptime Context: type) type {
     return struct {
@@ -118,6 +123,10 @@ pub fn Lower(comptime Context: type) type {
             return mergeResult(c, node_type, shape, box, false, span);
         }
         fn fileAccess(c: Context, node: typed.Node, file: typed.FileAccess, span: u32) Error!ir.Ref {
+            switch (file.kind) {
+                .atomic_write_file, .lock_directory, .sync_directory, .read_regular_file, .list_directory => return durableFileAccess(c, node, file, span),
+                else => {},
+            }
             const cap = try c.expression(file.arguments[0]);
             const path = try c.expression(file.arguments[1]);
             const input = if (file.arguments.len > 2) try c.expression(file.arguments[2]) else try emptyString(c);
@@ -130,6 +139,20 @@ pub fn Lower(comptime Context: type) type {
             }
             const shape = try shapeOf(c, node.ty, span);
             const box = try c.effectCall(file_access_symbol, &.{ .capability, .u32, .str, c.typeOfRef(input) }, try resultSlot(c, try c.mb.mapType(shape.ok_type, span)), arguments, span);
+            return mergeResult(c, node.ty, shape, box, true, span);
+        }
+        fn durableFileAccess(c: Context, node: typed.Node, file: typed.FileAccess, span: u32) Error!ir.Ref {
+            const cap = try c.expression(file.arguments[0]);
+            const path = try c.expression(file.arguments[1]);
+            const input = if (file.kind == .atomic_write_file) try c.expression(file.arguments[2]) else try emptyString(c);
+            const limit = try durableLimit(Context, c, file);
+            const request = @as(u32, @backingInt(file.kind)) | (@as(u32, @intFromBool(node.ty.isFile())) << 17);
+            const arguments = &.{ cap, try c.constant(.u32, request), path, input, limit };
+            const parameters = &.{ ir.Type.capability, .u32, .str, c.typeOfRef(input), .i64 };
+            const symbol = "myl_core_durable_access";
+            if (node.ty.isFile()) return c.effectCall(symbol, parameters, .resource, arguments, span);
+            const shape = try shapeOf(c, node.ty, span);
+            const box = try c.effectCall(symbol, parameters, try resultSlot(c, try c.mb.mapType(shape.ok_type, span)), arguments, span);
             return mergeResult(c, node.ty, shape, box, true, span);
         }
         fn fileMethod(c: Context, node: typed.Node, file: typed.FileMethod, span: u32) Error!ir.Ref {

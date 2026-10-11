@@ -35,7 +35,7 @@ pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
     @embedFile("runtime/core_unicode_data.h") ++ "\n" ++
     @embedFile("runtime/core_text.c") ++ "\n" ++
     @embedFile("runtime/core_sort.c") ++ "\n" ++ @embedFile("runtime/core_number.c") ++ "\n" ++
-    @embedFile("runtime/core_io.c") ++ "\n" ++ @embedFile("runtime/core_host.c") ++ "\n" ++
+    @embedFile("runtime/core_io.c") ++ "\n" ++ @embedFile("runtime/core_durable.c") ++ "\n" ++ @embedFile("runtime/core_host.c") ++ "\n" ++
     @embedFile("runtime/core_bytes.c") ++ "\n" ++ @embedFile("runtime/core_values.c") ++ "\n" ++ @embedFile("runtime/core_test.c") ++ "\n" ++ @embedFile("runtime/core_tasks.c");
 
 /// One build: tools, directories, the program and how to optimize it.

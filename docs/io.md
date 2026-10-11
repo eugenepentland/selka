@@ -484,3 +484,45 @@ generic one.
 ## Related pages
 
 - [Scoped providers](experiments/scoped-providers.md) — the adapter these grants configure
+
+## Durable storage
+
+Native `Filesystem` capabilities provide five explicit operations:
+
+| Operation | Result |
+| --- | --- |
+| `list_directory(fs, path, max_entries)` | `Result[str[], str]` |
+| `read_regular_file(fs, path, max_bytes)` | `Result[bytes, str]` |
+| `atomic_write_file(fs, path, data)` | `Result[Unit, str]` |
+| `sync_directory(fs, path)` | `Result[Unit, str]` |
+| `lock_directory(fs, path)` | `Result[File, str]` |
+
+Use `with try lock_directory(fs, "") as lease:` to own a narrowed root until
+scope exit. The lease is exclusive across processes and is released after a
+process dies. Busy ownership returns an error. Overlapping grants must resolve to one physical
+directory for a lease; ambiguous roots are rejected. Listing accepts a bound of
+0–4,096 entries and rejects an incomplete read or oversized listing. Reads reject symlinks, special
+files and values above the requested limit before unbounded allocation. Reads
+and writes have a 64 MiB provider ceiling; scoped paths and write grants remain
+checked. Stand-in and embedding providers that cannot promise durability return
+an explicit unsupported error.
+
+```mylang
+# doc: expect 42
+import filesystem
+
+func main() -> int:
+    match atomic_write_file(filesystem.memory(), "result", b"value"):
+        case Err(_):
+            return 42
+        case Ok(_):
+            return 1
+```
+
+Atomic writes create an exclusive temporary file beside the destination,
+complete the write, synchronize the file, rename it and synchronize its parent.
+The old or new complete file survives an interrupted publication. A failure
+after rename reports that publication may have occurred. Callers must retain
+that uncertainty and recover from their journal. `File.flush()` is not a
+durability promise. The native tests establish process-crash recovery; they do
+not establish behavior under actual machine power loss.

@@ -553,3 +553,79 @@ fn qualifyCallbacks(project: *CacheProject, directory: std.Io.Dir) ![]const u8 {
     try std.testing.expectEqual(@as(i64, 3), discovery.object.get("cached").?.integer);
     return identity;
 }
+
+const digest_receipt_path = "identity.my";
+const digest_receipt_source =
+    \\func compatible(value: int) -> int effects(managed_allocation):
+    \\    _ = str(value)
+    \\    return value
+    \\
+    \\func indirect(callback: func(int) -> int effects(managed_allocation), value: int) -> int effects(managed_allocation):
+    \\    return callback(value)
+    \\
+    \\func test_digest() -> bool:
+    \\    return len(function_digest(indirect)) == 64
+    \\
+    \\func test_member() -> bool:
+    \\    return compatible(1) == 1
+    \\
+    \\func test_ordinary() -> bool:
+    \\    return True
+;
+
+fn digestReceiptReport(project: *CacheProject, extra: []const []const u8, status: u8) !std.json.Value {
+    const result = try project.run(digest_receipt_path, extra);
+    try std.testing.expectEqual(std.process.Child.Term{ .exited = status }, result.term);
+    return std.json.parseFromSliceLeaky(std.json.Value, project.arena, result.stdout, .{});
+}
+
+fn expectDigestFresh(value: std.json.Value, status: []const u8) !void {
+    try expectVerdict(value, "identity::test_digest", status, "");
+    const explanation = try cacheExplanation(value, "test_digest");
+    try std.testing.expectEqualStrings("execute", explanation.object.get("action").?.string);
+    try std.testing.expectEqualStrings("uncacheable-metadata", explanation.object.get("reason").?.string);
+    try std.testing.expect(explanation.object.get("key").? == .null);
+}
+
+fn qualifyDigestReceipts(a: std.mem.Allocator, mode: []const u8) !void {
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var project = try CacheProject.init(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    try project.environment.put("MYLANG_TEST_KEYS", mode);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = digest_receipt_path, .data = digest_receipt_source });
+    const cold = try digestReceiptReport(&project, &.{}, 0);
+    try expectDigestFresh(cold, "passed");
+    const warm = try digestReceiptReport(&project, &.{}, 0);
+    try expectDigestFresh(warm, "passed");
+    try expectVerdict(warm, "identity::test_member", "cached", "");
+    try expectVerdict(warm, "identity::test_ordinary", "cached", "");
+    const repeated = try digestReceiptReport(&project, &.{}, 0);
+    try expectDigestFresh(repeated, "passed");
+    const changed = try std.mem.replaceOwned(u8, a, digest_receipt_source, "_ = str(value)", "_ = function_digest(compatible)");
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = digest_receipt_path, .data = changed });
+    const edited = try digestReceiptReport(&project, &.{}, 1);
+    try expectDigestFresh(edited, "failed");
+    try expectVerdict(edited, "identity::test_ordinary", "cached", "");
+    const forced = try digestReceiptReport(&project, &.{"--force"}, 1);
+    try expectVerdict(forced, "identity::test_digest", "failed", "");
+    // This root excludes the compatible target that introduced the self-digest
+    // dependency. A narrower live module therefore has a qualified identity.
+    const isolated = try digestReceiptReport(&project, &.{ "--filter", "test_digest" }, 0);
+    try expectDigestFresh(isolated, "passed");
+    const combined = try digestReceiptReport(&project, &.{}, 1);
+    try expectDigestFresh(combined, "failed");
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest receipt refusal tracks compatible target edits and live batch membership in shared keys" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try qualifyDigestReceipts(arena.allocator(), "shared");
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest receipt refusal protects per-test fallback and keeps unrelated receipts" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try qualifyDigestReceipts(arena.allocator(), "per-test");
+}

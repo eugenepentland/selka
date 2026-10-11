@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 1283, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1283 after 5s
+{"complete": true, "calls": 155, "crashes": 12}

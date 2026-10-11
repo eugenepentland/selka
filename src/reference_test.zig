@@ -420,7 +420,7 @@ test "the embedded project reads exactly one in-memory path and no checkout file
     try t.expectEqualStrings("", served);
     try t.expect(try standardModulesMatchCheckout(&reference.standard_modules));
     // Stand-ins and application memoization are part of the reference project.
-    try t.expectEqual(@as(usize, 15), reference.standard_modules.len);
+    try t.expectEqual(@as(usize, 19), reference.standard_modules.len);
 }
 
 // spec: REFERENCE-10
@@ -459,4 +459,14 @@ test "the command reports usage on a malformed request and answers a well-formed
     var parsed = try envelope(t.allocator, answered.stdout);
     defer parsed.deinit();
     try t.expectEqual(@as(usize, 1), section(parsed.value, "features").len);
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest is discoverable through the reference" {
+    const bytes = try json("function_digest");
+    defer t.allocator.free(bytes);
+    var parsed = try envelope(t.allocator, bytes);
+    defer parsed.deinit();
+    const builtin = find(section(parsed.value, "builtins"), "name", "function_digest") orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings("prelude_builtins.reserved", stringAt(builtin, "source"));
 }

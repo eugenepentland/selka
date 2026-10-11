@@ -1,0 +1,35 @@
+{
+  "admission": "scripts/build-slot.sh build",
+  "specified_environment": {
+    "TMPDIR": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave7bc/tmp",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONPYCACHEPREFIX": "/dev/null"
+  },
+  "command": [
+    "python3",
+    "tests/application_cache.py",
+    "--compiler",
+    "zig-out/bin/mylang",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--output",
+    ".mylang-cache/cache-wave7bc/full-qualified"
+  ],
+  "exit": 0,
+  "application_invocations": 155,
+  "sigkill_cases": 12,
+  "artifact_scope": "text only; binaries and application stores remain ignored",
+  "claims": "native correctness/process-crash recovery only; no performance or power-loss measurement",
+  "compiler_sha256": "bb8670209330f84006b66dbd1b3e33af854480f93eab91aa9680ee30dbfcc465",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "admission_observed": {
+    "slot": 1,
+    "ticket": 1299,
+    "wait_seconds_reported": 0
+  },
+  "crash_prefix_definition": "committed_at_crash field is visible checksum-validated journal prefix; pre-directory-sync cases do not establish power-loss commitment"
+}

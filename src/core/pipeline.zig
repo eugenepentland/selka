@@ -24,6 +24,8 @@ const lowering_demand = @import("lowering_demand.zig");
 const ir_snapshot = @import("ir_snapshot.zig");
 const deferred_facts = @import("deferred_facts.zig");
 const backend_owned = @import("backend_owned.zig");
+const callable_digest = @import("callable_digest.zig");
+const tool_identity = @import("tool_identity.zig");
 
 /// What the command line asked for.
 pub const Options = struct {
@@ -370,6 +372,7 @@ fn linkEmitted(init: std.process.Init, module: *ir.Module, unit: Unit, options: 
 fn linkEmittedCached(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, cache: StageContext, report: *std.ArrayList(u8)) Error!driver.Outcome {
     const allocator = init.arena.allocator();
     const stages = cache.metrics;
+    const identity_tool = try prepareCallables(init, module, unit, options, cache);
     const emission = try emittedCached(.{ .result = allocator, .scratch = init.gpa }, module, unit, options, cache, report);
     if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = emission.whole.? }) catch return error.WriteFailed;
     const native_start = stage_metrics.now(init.io);
@@ -382,6 +385,7 @@ fn linkEmittedCached(init: std.process.Init, module: *ir.Module, unit: Unit, opt
         .units = emission.units,
         .verify = options.show.verify_cache,
     }, report) catch |err| return err;
+    if (identity_tool) |expected| if (!sameIdentityTool(expected, outcome.tool)) return error.ToolFailed;
     stages.nanoseconds.native = stage_metrics.elapsed(init.io, native_start);
     stages.nanoseconds.linker = outcome.counts.link_ns;
     if (emission.cost_report) |measured| {
@@ -436,9 +440,43 @@ const StageContext = struct { queries: ?*@import("cost_query.zig").Cache = null,
 
 const Memory = struct { result: std.mem.Allocator, scratch: std.mem.Allocator };
 
+fn prepareCallables(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, cache: StageContext) Error!?tool_identity.Identity {
+    if (!callable_digest.needed(module)) return null;
+    const a = init.arena.allocator();
+    const request: tool_identity.Request = .{ .arena = a, .io = init.io, .environment = init.environ_map, .executable = options.zig, .cache = options.cache };
+    const tool = tool_identity.capture(request) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return error.ToolFailed;
+    };
+    const settings = try std.json.Stringify.valueAlloc(a, .{
+        .mode = options.mode,
+        .facts = options.facts,
+        .codegen = options.show.codegen,
+        .target = targetFor(options.show),
+        .layout = init.environ_map.get("MYLANG_CORE_LAYOUT"),
+        .sanitize = init.environ_map.get("MYLANG_CORE_SANITIZE"),
+        .number_runtime = @import("number_runtime.zig").digest(),
+    }, .{});
+    const context: callable_digest.Context = .{ .tool = if (tool.cacheable and options.links.len == 0) tool.digest else null, .cpu = tool.native_target, .build = settings };
+    try callable_digest.prepare(a, module, locator(&unit.src), context, cache.demand);
+    const unchanged = tool_identity.unchanged(request, tool) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return error.ToolFailed;
+    };
+    if (!unchanged) return error.ToolFailed;
+    return if (context.tool != null) tool else null;
+}
+
+fn sameIdentityTool(expected: tool_identity.Identity, actual: tool_identity.Identity) bool {
+    if (!actual.cacheable or !std.mem.eql(u8, &expected.digest, &actual.digest)) return false;
+    return std.mem.eql(u8, &expected.generation, &actual.generation) and std.mem.eql(u8, &expected.native_target, &actual.native_target);
+}
+
 fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Options, stage: ?StageContext, report: *std.ArrayList(u8)) Error!Emission {
     const allocator = memory.result;
     const scratch = memory.scratch;
+    // IR-only callers lack actual toolchain authority; unresolved identities refuse reuse.
+    try callable_digest.prepare(allocator, module, locator(&unit.src), .{}, if (stage) |s| s.demand else null);
     // A debug build of the compiler checks the IR it built, and again after optimization.
     if (verify_ir.enabled) try verify_ir.check(allocator, module, &.{}, report);
     // Optimized modes compute facts; ordinary debug keeps every check.
@@ -608,4 +646,29 @@ fn mainCapabilities(allocator: std.mem.Allocator, program: language.typed.Progra
     const families = try allocator.alloc(u8, main.signature.parameter_count);
     for (families, main.scope.locals[0..families.len]) |*family, local| family.* = if (local.ty.capabilityIndex()) |index| @as(u8, index) else 255;
     return families;
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "prepareCallables function_digest refuses missing native tool authority and changed linking context" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const missing = try std.fs.path.join(a, &.{ directory, "missing-guest-tool" });
+    var environment = std.process.Environ.Map.init(std.testing.allocator);
+    defer environment.deinit();
+    const init: std.process.Init = .{ .minimal = undefined, .arena = &arena, .gpa = std.testing.allocator, .io = std.testing.io, .environ_map = &environment, .preopens = undefined };
+    var module: ir.Module = .{};
+    try module.functions.append(a, .{ .name = callable_digest.prefix ++ "test", .signature = .{ .params = &.{}, .ret = .str, .linkage = .runtime_c } });
+    const unit: Unit = .{ .src = .{ .path = "fixture.my", .bytes = "", .line_starts = &.{} }, .source_path = "fixture.my", .main = .{} };
+    var metrics: stage_metrics.Report = .{};
+    const cache: StageContext = .{ .storage = null, .io = std.testing.io, .lanes = 1, .metrics = &metrics };
+    try std.testing.expectError(error.ToolFailed, prepareCallables(init, &module, unit, .{ .zig = missing, .cache = directory }, cache));
+    const expected: tool_identity.Identity = .{ .path = "tool", .digest = @splat(1), .generation = @splat(2), .native_target = @splat(3), .inputs = 1, .memo_hit = false, .cacheable = true };
+    var changed = expected;
+    changed.generation = @splat(4);
+    try std.testing.expect(sameIdentityTool(expected, expected));
+    try std.testing.expect(!sameIdentityTool(expected, changed));
 }

@@ -58,6 +58,8 @@ const parser = @import("parser.zig");
 const ast = @import("ast.zig");
 /// The checked program the new compiler core (`src/core/`) lowers from.
 pub const typed = @import("typed.zig");
+/// Compiler-issued persistent callable schema admission.
+pub const callable_identity = @import("function_digest.zig");
 const sema = @import("sema.zig");
 /// Value semantics (`VALUE-SEMANTICS-1`): the process switch and cache-key byte.
 pub const value_semantics = @import("value_semantics.zig");

@@ -26,11 +26,16 @@ pub const Builtin = enum {
     listdir,
     mkdir,
     remove,
+    atomic_write_file,
+    lock_directory,
+    sync_directory,
+    read_regular_file,
+    list_directory,
     /// Number of positional value arguments, excluding the leading capability.
     pub fn arity(self: Builtin) usize {
         return switch (self) {
             .print => 0,
-            .write_file, .write_text => 2,
+            .write_file, .write_text, .atomic_write_file, .read_regular_file, .list_directory => 2,
             else => 1,
         };
     }

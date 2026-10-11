@@ -400,3 +400,38 @@ func area(width: int, height: int) -> int effects():
 func main() -> int effects():
     return area(2, 7)
 ```
+
+## Persistent function identity
+
+`function_digest(callback) -> str` returns a compiler-issued identity for the
+actual callable, its reachable implementation and source schemas, and relevant
+compiler, runtime, toolchain, target and build settings. It contributes managed
+allocation. It does not invoke the callback. A same-name function or a manually
+chosen version string cannot substitute for this identity.
+
+```mylang
+# doc: expect 42
+func next(value: int) -> int effects():
+    return value + 1
+
+func main() -> int:
+    const identity = function_digest(next)
+    if len(identity) != 64:
+        return 1
+    if identity != function_digest(next):
+        return 2
+    return 42
+```
+
+An empty string means the compiler cannot establish complete persistent
+authority, including unsupported external linking or an unqualified tool.
+Consumers must execute without persistent reuse or reject the durable request.
+Unknown indirect targets conservatively widen dependencies. Compiler and
+execution-context changes can invalidate all identities; this favors correctness
+over retaining results across an unqualified migration. Pure callback signatures
+remain a separate requirement: an identity alone does not make effects replayable.
+
+Tests that reach `function_digest` execute fresh rather than reuse an individual
+test receipt. The query can observe broader compilation dependencies than the
+ordinary rooted test key represents. Ordinary tests retain their existing reuse;
+application `persistent_memo` and `durable` still use the qualified identities.

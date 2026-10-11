@@ -7,6 +7,8 @@ comptime {
     _ = @import("task_scheduler_test.zig");
     _ = @import("share_walk_test.zig");
     _ = @import("runtime_threads_test.zig");
+    _ = @import("durable_test.zig");
+    _ = @import("pipeline.zig");
     _ = @import("shared_counts_test.zig");
     _ = @import("frontend_test.zig");
     _ = @import("demand_build_test.zig");

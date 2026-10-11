@@ -109,3 +109,123 @@ test "loop optimization preserves early returns when the latch is unreachable" {
     const text = try support.optimizedText(arena.allocator(), source);
     try std.testing.expect(std.mem.indexOf(u8, text, "ret") != null);
 }
+
+const callable_keys = @import("callable_digest.zig");
+const identity_ir = @import("ir.zig");
+const key_context: callable_keys.Context = .{ .tool = @splat(7), .cpu = @splat(8), .build = "debug" };
+const key_position: u8 = 0;
+fn keyLocation(_: *const anyopaque, _: u32) @import("emit_llvm.zig").Location {
+    return .{ .line = 1, .column = 1, .path = "fixture.my" };
+}
+const key_locator: @import("emit_llvm.zig").Locator = .{ .context = &key_position, .locate = keyLocation };
+
+fn keyFixture(a: std.mem.Allocator, helper_value: i64, other_value: i64, indirect: bool) !identity_ir.Module {
+    var module: identity_ir.Module = .{};
+    const inner = try module.intern(a, .{ .@"fn" = .{ .params = &.{}, .ret = .i64 } });
+    const parameters = try a.dupe(identity_ir.Type, &.{if (indirect) inner else .i64});
+    const root_signature: identity_ir.Signature = .{ .params = parameters, .ret = .i64 };
+    const callback = try module.intern(a, .{ .@"fn" = root_signature });
+    var root = try support.Hand.init(a, &module, "root", root_signature);
+    const result = if (indirect)
+        try root.emit(.{ .op = .call_indirect, .ty = .i64, .a = try root.param(0), .data = try root.extra(&.{}) })
+    else
+        try root.emit(.{ .op = .call, .ty = .i64, .a = @fromBackingInt(1), .data = try root.extra(&.{}) });
+    _ = try root.emit(.{ .op = .ret, .ty = .void, .a = result });
+    _ = try root.finish();
+    try keyLeaf(a, &module, "helper", helper_value);
+    try keyLeaf(a, &module, "other", other_value);
+    if (!indirect) module.functions.items[2].signature.params = parameters;
+    try module.functions.append(a, .{ .name = callable_keys.prefix ++ "schema", .signature = .{ .params = try a.dupe(identity_ir.Type, &.{callback}), .ret = .str, .linkage = .runtime_c } });
+    return module;
+}
+fn keyLeaf(a: std.mem.Allocator, module: *identity_ir.Module, name: []const u8, value: i64) !void {
+    var leaf = try support.Hand.init(a, module, name, .{ .params = &.{}, .ret = .i64 });
+    _ = try leaf.emit(.{ .op = .ret, .ty = .void, .a = try leaf.int(.i64, value) });
+    _ = try leaf.finish();
+}
+fn issuedKey(a: std.mem.Allocator, module: *identity_ir.Module, context: callable_keys.Context) ![]const u8 {
+    try callable_keys.prepare(a, module, key_locator, context, null);
+    try support.verified(a, module, &.{});
+    return module.strings.items[0];
+}
+
+// spec: FUNCTION-DIGEST-1
+test "function_digest closure keys invalidate helper edits preserve unrelated changes and restore on revert" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var baseline = try keyFixture(a, 3, 9, false);
+    var unrelated = try keyFixture(a, 3, 10, false);
+    var helper_edit = try keyFixture(a, 4, 9, false);
+    var reverted = try keyFixture(a, 3, 9, false);
+    const expected = try issuedKey(a, &baseline, key_context);
+    try std.testing.expectEqual(@as(usize, 64), expected.len);
+    try std.testing.expectEqualStrings(expected, try issuedKey(a, &unrelated, key_context));
+    try std.testing.expect(!std.mem.eql(u8, expected, try issuedKey(a, &helper_edit, key_context)));
+    try std.testing.expectEqualStrings(expected, try issuedKey(a, &reverted, key_context));
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest unknown indirect calls bind all compatible targets and context" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var baseline = try keyFixture(a, 3, 9, true);
+    var edited = try keyFixture(a, 3, 10, true);
+    var mode = try keyFixture(a, 3, 9, true);
+    var tool = try keyFixture(a, 3, 9, true);
+    var cpu = try keyFixture(a, 3, 9, true);
+    const expected = try issuedKey(a, &baseline, key_context);
+    try std.testing.expect(!std.mem.eql(u8, expected, try issuedKey(a, &edited, key_context)));
+    try std.testing.expect(!std.mem.eql(u8, expected, try issuedKey(a, &mode, .{ .tool = key_context.tool, .cpu = key_context.cpu, .build = "release" })));
+    try std.testing.expect(!std.mem.eql(u8, expected, try issuedKey(a, &tool, .{ .tool = @splat(9), .cpu = key_context.cpu, .build = key_context.build })));
+    try std.testing.expect(!std.mem.eql(u8, expected, try issuedKey(a, &cpu, .{ .tool = key_context.tool, .cpu = @splat(9), .build = key_context.build })));
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest handles recursive closures and refuses external or self-digest authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var recursive = try keyFixture(a, 3, 9, false);
+    _ = try recursive.functions.items[1].insts.append(a, .{ .op = .call, .ty = .i64, .a = @fromBackingInt(1) });
+    var no_tool = try keyFixture(a, 3, 9, false);
+    var external = try keyFixture(a, 3, 9, false);
+    external.functions.items[1].signature.linkage = .extern_c;
+    external.functions.items[1].insts = .empty;
+    external.functions.items[1].blocks = .empty;
+    const raw = try @import("test_runner_identity.zig").Shared.build(a, &recursive, key_locator);
+    try std.testing.expect((try callable_keys.digest(a, &recursive, raw, 0, "schema", key_context)) != null);
+    try std.testing.expectEqualStrings("", try issuedKey(a, &no_tool, .{}));
+    const external_raw = try @import("test_runner_identity.zig").Shared.build(a, &external, key_locator);
+    try std.testing.expect((try callable_keys.digest(a, &external, external_raw, 0, "schema", key_context)) == null);
+    const self_source = "func identify(value: int) -> str effects(managed_allocation):\n    return function_digest(identify)\nfunc main() -> int:\n    _ = function_digest(identify)\n    return 0\n";
+    var refusal: @import("build.zig").Refusal = .{};
+    var self = try support.buildSource(a, self_source, &refusal);
+    try callable_keys.prepare(a, &self, key_locator, key_context, null);
+    try std.testing.expectEqual(@as(usize, 1), self.strings.items.len);
+    try std.testing.expectEqualStrings("", self.strings.items[0]);
+}
+
+fn schemaKey(a: std.mem.Allocator, field: []const u8, extra: []const u8) ![]const u8 {
+    const format = "{s}record Output:\n    {s}: int\n" ++
+        "func compute(value: int) -> Output effects(managed_allocation):\n    return Output({s}=value)\n" ++
+        "func main() -> int:\n    _ = function_digest(compute)\n    return 0\n";
+    const source = try std.fmt.allocPrint(a, format, .{ extra, field, field });
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(a, source, &refusal);
+    return issuedKey(a, &module, key_context);
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest binds nominal result schema without binding unrelated catalog ordinals" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const baseline = try schemaKey(a, "value", "");
+    const field_edit = try schemaKey(a, "count", "");
+    const unrelated = try schemaKey(a, "value", "record Other:\n    number: bool\n");
+    try std.testing.expectEqual(@as(usize, 64), baseline.len);
+    try std.testing.expect(!std.mem.eql(u8, baseline, field_edit));
+    try std.testing.expectEqualStrings(baseline, unrelated);
+}

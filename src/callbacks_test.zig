@@ -367,3 +367,63 @@ test "E1 unused generic declarations use the directional callback relation" {
         \\
     , "E_GENERIC_TYPE");
 }
+
+const digest_source =
+    \\record Saved[T: storable]:
+    \\    compute: func(int) -> T effects(managed_allocation)
+    \\
+    \\func helper(value: int) -> int effects():
+    \\    return value + 1
+    \\
+    \\func first(value: int) -> int effects():
+    \\    return helper(value)
+    \\
+    \\func second(value: int) -> int effects():
+    \\    return helper(value) + 1
+    \\
+    \\func pick(flag: bool) -> func(int) -> int effects():
+    \\    return if (flag) then (first) else (second)
+    \\
+    \\func key[T: storable](saved: Saved[T]) -> str effects(managed_allocation):
+    \\    return function_digest(saved.compute)
+    \\
+    \\func main(args: str[]) -> int:
+    \\    const selected = pick(len(args) > 0)
+    \\    const saved = Saved[int](compute=selected)
+    \\    const first_key = function_digest(first)
+    \\    const second_key = function_digest(second)
+    \\    if len(first_key) != 64 or len(second_key) != 64 or first_key == second_key:
+    \\        return 1
+    \\    if function_digest(selected) != second_key:
+    \\        return 2
+    \\    if len(key[int](saved)) != 64 or key[int](saved) != key[int](saved):
+    \\        return 3
+    \\    return 42
+;
+fn runDigest(release: bool) !void {
+    var compilation = try language.Compilation.init(t.allocator, "callable-digest.my", digest_source);
+    defer compilation.deinit();
+    const outcome = native.runWithOptions(&compilation, .{ .arguments = if (release) &.{"--release"} else &.{} }) catch |err| {
+        for (compilation.diagnostics.items) |d| print("{s}: {s}\n", .{ d.code, d.message });
+        return err;
+    };
+    try t.expectEqual(@as(i64, 42), outcome.value);
+    try t.expect(!outcome.trapped());
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest identifies runtime-selected returned and stored generic callbacks in debug" {
+    try runDigest(false);
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest identifies runtime-selected callbacks in release" {
+    try runDigest(true);
+}
+
+// spec-case: FUNCTION-DIGEST-1
+test "function_digest rejects nonfunctions and arity including unused generic bodies" {
+    try reject("func main() -> int:\n    _ = function_digest(1)\n    return 0\n", "E_FUNCTION_DIGEST");
+    try reject("func main() -> int:\n    _ = function_digest(main, main)\n    return 0\n", "E_ARITY");
+    try reject("func key[T](value: T) -> str:\n    return function_digest(value)\n", "E_FUNCTION_DIGEST");
+}

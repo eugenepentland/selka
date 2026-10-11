@@ -1,0 +1,142 @@
+import durable
+import json
+import memo
+import persistent_memo
+
+record Row:
+    identifier: int
+    amount: int
+
+
+func text(data: bytes) -> str:
+    match data.decode():
+        case Ok(value):
+            return value
+        case Err(_):
+            assert False
+            return ""
+
+
+func decimal(value: str) -> int:
+    mut out = 0
+    for digit in value:
+        assert digit >= "0" and digit <= "9"
+        out = out * 10 + ord(digit) - 48
+    return out
+
+
+func shared(value: int) -> int effects():
+    return value * 3 + 1
+
+
+func private_map(value: int) -> int effects():
+    return shared(value) + 7
+
+
+func computed(key: memo.Key) -> bytes:
+    match key:
+        case memo.Key.Number(value=value):
+            mut row = Row(identifier=value, amount=private_map(value))
+            return str(row.amount).encode()
+        case memo.Key.Text(value=value):
+            return b"text:" + value.encode()
+        case memo.Key.Data(value=value):
+            return b"bytes:" + value
+
+
+func alternate(key: memo.Key) -> bytes:
+    return computed(key) + b":alternate"
+
+
+func chunk_step(chunk: bytes, state: bytes) -> durable.Step:
+    mut total = decimal(text(state))
+    mut output = ""
+    if total == 0:
+        output = "id,input,mapped,running_total\n"
+    for line in text(chunk).split("\n"):
+        if len(line) > 0:
+            mut fields = line.split(",")
+            assert len(fields) == 2
+            mut row = Row(identifier=decimal(fields[0]), amount=shared(decimal(fields[1])))
+            total += row.amount
+            output += str(row.identifier) + "," + fields[1] + "," + str(row.amount) + "," + str(total) + "\n"
+    return durable.Step(output=output.encode(), state=str(total).encode())
+
+
+func alternate_step(chunk: bytes, state: bytes) -> durable.Step:
+    const value = chunk_step(chunk, state)
+    return durable.Step(output=value.output, state=value.state)
+
+
+func chunks(input: bytes) -> bytes[]:
+    mut out: bytes[] = []
+    mut pending = b""
+    mut count = 0
+    for line in text(input).split("\n"):
+        if len(line) > 0:
+            pending += line.encode() + b"\n"
+            count += 1
+            if count == 2:
+                out.append(pending)
+                pending = b""
+                count = 0
+    if count > 0 or len(out) == 0:
+        out.append(pending)
+    return out
+
+
+func setting(value: str?, fallback: str) -> str:
+    match value:
+        case Some(found):
+            return found
+        case None:
+            return fallback
+
+
+func persistent(fs: Filesystem, env: Environment, out: Stream, input: bytes) -> int:
+    mut compute: func(memo.Key) -> bytes effects(managed_allocation) = computed
+    if setting(env.get("WAVE7_ALTERNATE"), "0") == "1":
+        compute = alternate
+    mut key = memo.Key.Data(value=input)
+    if setting(env.get("WAVE7_KEY"), "data") == "text":
+        key = memo.Key.Text(value=text(input))
+    if setting(env.get("WAVE7_KEY"), "data") == "number":
+        key = memo.Key.Number(value=decimal(text(input)))
+    mut options = persistent_memo.Options(max_entries=decimal(setting(env.get("WAVE7_ENTRIES"), "2")), max_bytes=decimal(setting(env.get("WAVE7_BYTES"), "1048576")))
+    mut store = fs.dir("persistent")
+    match persistent_memo.call(store, options, compute, key):
+        case Ok(value):
+            mut reused = "false"
+            if value.reused:
+                reused = "true"
+            out.print("{\"ok\":true,\"mode\":\"persistent\",\"reused\":" + reused + ",\"value_hex\":\"" + value.value.hex() + "\",\"function_digest\":\"" + function_digest(compute) + "\"}")
+            return 0
+        case Err(error):
+            out.print("{\"ok\":false,\"mode\":\"persistent\",\"error\":" + json.dumps(json.text(persistent_memo.message(error))) + "}")
+            return 1
+
+
+func pipeline(fs: Filesystem, env: Environment, out: Stream, input: bytes) -> int:
+    mut compute: func(bytes, bytes) -> durable.Step effects(managed_allocation) = chunk_step
+    if setting(env.get("WAVE7_ALTERNATE"), "0") == "1":
+        compute = alternate_step
+    mut request = durable.Request(input=input, chunks=chunks(input), initial_state=b"0", output_path="final.csv", max_bytes=decimal(setting(env.get("WAVE7_BYTES"), "1048576")))
+    mut store = fs.dir("durable")
+    match durable.run(store, request, compute):
+        case Ok(value):
+            out.print("{\"ok\":true,\"mode\":\"durable\",\"fresh\":" + str(value.fresh) + ",\"reused\":" + str(value.reused) + ",\"state_hex\":\"" + value.state.hex() + "\",\"output_digest\":\"" + value.output_digest + "\",\"function_digest\":\"" + function_digest(compute) + "\"}")
+            return 0
+        case Err(error):
+            out.print("{\"ok\":false,\"mode\":\"durable\",\"error\":" + json.dumps(json.text(durable.message(error))) + "}")
+            return 1
+
+
+func main(fs: Filesystem, env: Environment, out: Stream) -> int:
+    match fs.read_file("input.csv"):
+        case Ok(input):
+            if setting(env.get("WAVE7_MODE"), "durable") == "persistent":
+                return persistent(fs, env, out, input)
+            return pipeline(fs, env, out, input)
+        case Err(_):
+            out.print("{\"ok\":false,\"mode\":\"input\"}")
+            return 1

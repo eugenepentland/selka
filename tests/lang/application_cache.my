@@ -1,0 +1,134 @@
+import cache_record
+import durable
+import filesystem
+import hashes
+import memo
+import persistent_memo
+
+# spec: STANDARD-HASHES-1
+public func test_sha256_known_vectors_and_padding() -> bool:
+    if hashes.sha256(b"") != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855":
+        return False
+    if hashes.sha256(b"abc") != "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad":
+        return False
+    return hashes.sha256(b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") == "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
+
+
+func rejected(data: bytes) -> bool:
+    match cache_record.decode(data):
+        case Err(_):
+            return True
+        case Ok(_):
+            return False
+
+
+# spec: STANDARD-CACHE-RECORD-1
+public func test_record_round_trip_and_corruption() -> bool:
+    const fields = ["", "quotes \" and newline\n", "é", "00ff"]
+    const data = cache_record.encode(fields)
+    match cache_record.decode(data):
+        case Err(_):
+            return False
+        case Ok(decoded):
+            if decoded != fields:
+                return False
+    return rejected(data[:len(data) - 1]) and rejected(data + b"x") and rejected(b"wrong" + data[5:])
+
+
+# spec-case: STANDARD-CACHE-RECORD-1
+public func test_record_rejects_noncanonical_and_nonstring_payloads() -> bool:
+    const spaced = b'[ "value" ]'
+    const number = b'[1]'
+    const prefix = b"SELKA-RECORD-1\n"
+    return rejected(prefix + hashes.sha256(spaced).encode() + b"\n" + spaced) and rejected(prefix + hashes.sha256(number).encode() + b"\n" + number)
+
+
+func compute(key: memo.Key) -> bytes:
+    match key:
+        case memo.Key.Number(value=value):
+            return str(value).encode()
+        case memo.Key.Text(value=value):
+            return value.encode()
+        case memo.Key.Data(value=value):
+            return value
+
+
+# spec: STANDARD-PERSISTENT-MEMO-1
+public func test_zero_retention_needs_no_storage_and_snapshots_bytes() -> bool:
+    const fs = filesystem.memory()
+    const options = persistent_memo.Options(max_entries=0, max_bytes=0)
+    match persistent_memo.call(fs, options, compute, memo.Key.Data(value=b"snapshot")):
+        case Err(_):
+            return False
+        case Ok(found):
+            return not found.reused and found.value == b"snapshot" and fs.listdir("") == Ok([])
+
+
+# spec-case: STANDARD-PERSISTENT-MEMO-1
+public func test_persistent_bounds_reject_before_storage() -> bool:
+    const fs = filesystem.memory()
+    const key = memo.Key.Number(value=9)
+    return persistent_memo.call(fs, persistent_memo.Options(max_entries=-1, max_bytes=1), compute, key) == Err(persistent_memo.Error.Invalid) and persistent_memo.call(fs, persistent_memo.Options(max_entries=257, max_bytes=1), compute, key) == Err(persistent_memo.Error.Invalid) and persistent_memo.call(fs, persistent_memo.Options(max_entries=1, max_bytes=1048577), compute, key) == Err(persistent_memo.Error.Invalid)
+
+
+func step(chunk: bytes, state: bytes) -> durable.Step:
+    return durable.Step(output=chunk, state=state)
+
+
+# spec: STANDARD-DURABLE-1
+public func test_durable_bounds_and_output_authority() -> bool:
+    const fs = filesystem.memory()
+    mut request = durable.Request(input=b"x", chunks=[b"x"], initial_state=b"", output_path="../escape", max_bytes=8)
+    if durable.run(fs, request, step) != Err(durable.Error.Invalid):
+        return False
+    request.output_path = "run.json"
+    if durable.run(fs, request, step) != Err(durable.Error.Invalid):
+        return False
+    request.output_path = "result"
+    request.max_bytes = 0
+    if durable.run(fs, request, step) != Err(durable.Error.Invalid):
+        return False
+    request.max_bytes = 1
+    request.chunks = [b"x", b"y"]
+    return durable.run(fs, request, step) == Err(durable.Error.Invalid)
+
+
+# spec-case: NEW-CORE-DURABLE-STORAGE-1
+public func test_memory_provider_cannot_claim_durability() -> bool:
+    const fs = filesystem.memory()
+    match atomic_write_file(fs, "data", b"value"):
+        case Ok(_):
+            return False
+        case Err(_):
+            pass
+    match read_regular_file(fs, "data", 8):
+        case Ok(_):
+            return False
+        case Err(_):
+            pass
+    match sync_directory(fs, ""):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+# spec-case: STANDARD-HASHES-1
+public func test_sha256_block_boundary_oracles() -> bool:
+    if hashes.sha256(b"a" * 1) != "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb":
+        return False
+    if hashes.sha256(b"a" * 55) != "9f4390f8d30c2dd92ec9f095b65e2b9ae9b0a925a5258e241c9f1e910f734318":
+        return False
+    if hashes.sha256(b"a" * 56) != "b35439a4ac6f0948b6d6f9e3c6af0f5f590ce20f1bde7090ef7970686ec6738a":
+        return False
+    if hashes.sha256(b"a" * 63) != "7d3e74a05d7db15bce4ad9ec0658ea98e3f06eeecf16b4c6fff2da457ddc2f34":
+        return False
+    if hashes.sha256(b"a" * 64) != "ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb":
+        return False
+    if hashes.sha256(b"a" * 65) != "635361c48bb9eab14198e76ea8ab7f1a41685d6ad62aa9146d301d4f17eb0ae0":
+        return False
+    if hashes.sha256(b"a" * 119) != "31eba51c313a5c08226adf18d4a359cfdfd8d2e816b13f4af952f7ea6584dcfb":
+        return False
+    if hashes.sha256(b"a" * 120) != "2f3d335432c70b580af0e8e1b3674a7c020d683aa5f73aaaedfdc55af904c21c":
+        return False
+    return True

@@ -243,3 +243,6 @@ pub const embedded_migration = [_][]const u8{
 
 /// All live sources and selection policy read by the allocation-contract lint gate.
 pub const noalloc_lint = my_format ++ [_][]const u8{"scripts/check_noalloc.py"};
+
+/// Persistent application records, native provider failure and crash recovery driver.
+pub const application_cache = [_][]const u8{ "tests/application_cache.py", "test/fixtures/application-cache/", "src/" };

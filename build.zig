@@ -770,6 +770,12 @@ pub fn build(b: *std.Build) void {
     isolation_run.addArtifactArg(exe);
     isolation_step.dependOn(&isolation_run.step);
     test_step.dependOn(isolation_step);
+    const application_cache_step = b.step("test-application-cache", "Verify native persistent values and interrupted application recovery");
+    const application_cache_run = driver(b, "python3 tests/application_cache.py --smoke --compiler", rss.driver, "application_cache");
+    application_cache_run.addArgs(&.{ "python3", "tests/application_cache.py", "--smoke", "--compiler" });
+    application_cache_run.addArtifactArg(exe);
+    application_cache_step.dependOn(&application_cache_run.step);
+    test_step.dependOn(application_cache_step);
     const component_tests = driver(b, "python3 selfhost/test_components.py", rss.script, "component_builder");
     component_tests.addArgs(&.{ "python3", "selfhost/test_components.py", "--zig", b.graph.zig_exe, "--builder" });
     component_tests.addArtifactArg(component_tool);

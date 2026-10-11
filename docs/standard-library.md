@@ -1,6 +1,6 @@
 # Standard library
 
-Fifteen modules ship inside the compiler. They are ordinary guest source
+Nineteen modules ship inside the compiler. They are ordinary guest source
 built on the managed types described in the [language guide](python-syntax.md),
 [managed memory](managed-memory.md) and [managed byte strings](bytes.md): growable arrays (`T[]`),
 `dict`, `str`, `bytes`, value records, optional values (`T?`) and checked results. There is no
@@ -20,6 +20,10 @@ Import a module by name; projects do not copy these files.
 | [`json`](#json) | strict RFC 8259 parsing, rendering and typed access |
 | [`pool`](#pool) | generational handles into a reusable slot store |
 | [`memo`](#memo) | bounded, process-local reuse of pure computations |
+| [`hashes`](#hashes) | block-based SHA-256 in Selka |
+| [`cache_record`](#cache_record) | canonical string-array storage records with integrity checks |
+| [`persistent_memo`](#persistent_memo) | verified cross-process byte snapshots of pure computations |
+| [`durable`](#durable) | retained chunk progress and recoverable atomic output publication |
 | [`network`](#network) | capability-based connections and byte I/O, and a denied stand-in `Network` |
 | [`random`](#random) | seeded SplitMix64 streams, entropy-seeded generators and a seeded stand-in `Entropy` |
 | [`time`](#time) | wall-clock instants, checked durations and a simulated `Clock` |
@@ -650,8 +654,8 @@ memory limit. The cache is intended for small, explicit working sets. Use the
 constructor and operations to maintain its representation; `Entry` and the
 storage fields are implementation details, not a format for serialization.
 There is no filesystem access, expiration policy or cross-process reuse.
-Persistent memoization and recoverable application steps require additional
-implementation identities and a qualified durable provider.
+The separate `persistent_memo` and `durable` modules add compiler-issued
+implementation identities and a qualified native storage provider.
 
 ## network
 
@@ -1010,3 +1014,144 @@ func main() -> int:
 - `pool.create` takes a seed list instead of an explicit type argument, and
   `json`'s union variants are built through the module's constructor functions.
 - No module reads or writes a file; `path` is text algebra only.
+
+## hashes
+
+`hashes.sha256(data: bytes) -> str` returns 64 lowercase hexadecimal digits.
+The implementation is Selka, reads 64-byte blocks, and uses bounded working
+arrays without making a padded copy of the whole input.
+
+```mylang
+# doc: expect 42
+import hashes
+
+func main() -> int:
+    if hashes.sha256(b"abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad":
+        return 42
+    return 1
+```
+
+## cache_record
+
+`cache_record.encode(fields: str[]) -> bytes` writes canonical string-array JSON
+inside a versioned SHA-256 envelope. `decode(data)` returns `Result[str[], Error]`;
+`message(error)` explains a rejected record. Truncated, altered, noncanonical
+and nonstring records are rejected. The checksum detects damage; it does not
+authenticate an untrusted writer. Bound storage reads before decoding.
+
+```mylang
+# doc: expect 42
+import cache_record
+
+func main() -> int:
+    match cache_record.decode(cache_record.encode(["schema-v1", "00ff"])):
+        case Ok(fields):
+            if fields == ["schema-v1", "00ff"]:
+                return 42
+            return 1
+        case Err(_):
+            return 2
+```
+
+## persistent_memo
+
+`persistent_memo.call(fs, options, compute, key)` returns
+`Result[Lookup, Error]`, where `Lookup` holds `value: bytes` and `reused: bool`.
+The callback takes `memo.Key` and permits only managed allocation. It returns
+an immutable byte snapshot. Use `message(error)` to describe a failure.
+
+Pass a filesystem capability narrowed to an existing dedicated cache directory.
+`Options(max_entries, max_bytes)` accepts 0–256 entries and 0–1,048,576 raw bytes
+of key plus value per entry. Zero entries forces execution without storage.
+Oversized values and callbacks without a qualified `function_digest` execute
+without retaining a receipt. Tags distinguish text, bytes and integer keys.
+
+```mylang
+# doc: expect 42
+import filesystem
+import memo
+import persistent_memo
+
+func encoded(key: memo.Key) -> bytes:
+    match key:
+        case memo.Key.Number(value=value):
+            return str(value).encode()
+        case memo.Key.Text(value=value):
+            return value.encode()
+        case memo.Key.Data(value=value):
+            return value
+
+func main() -> int:
+    const options = persistent_memo.Options(max_entries=0, max_bytes=1024)
+    match persistent_memo.call(filesystem.memory(), options, encoded, memo.Key.Number(value=42)):
+        case Ok(found):
+            if not found.reused and found.value == b"42":
+                return 42
+            return 1
+        case Err(_):
+            return 2
+```
+
+For native persistence, replace the stand-in and zero limit with a real narrowed
+`Filesystem` and positive entry limit. Directory ownership serializes readers,
+writers and eviction. Each record binds the actual callable's reachable code,
+source schemas and execution context, exact tagged input, canonical byte encoding
+and checksum. A malformed record is a miss; provider failures remain errors.
+Lowered entry limits trim the directory deterministically. Entry count and
+per-entry size bound retention; there is no TTL or ambient file freshness rule.
+
+## durable
+
+`durable.run(fs, request, compute)` returns `Result[Report, Error]`. A pure
+`func(bytes, bytes) -> durable.Step effects(managed_allocation)` receives one
+captured chunk and the last state snapshot; `Step(output, state)` returns bytes.
+`Request(input, chunks, initial_state, output_path, max_bytes)` captures the
+workflow inputs. `Report(fresh, reused, output_digest, state)` counts newly
+computed and previously committed steps separately. `message(error)` describes
+invalid, corrupt, incompatible, uncacheable and provider failures.
+
+```mylang
+# doc: expect 42
+import durable
+import filesystem
+
+func copy_chunk(chunk: bytes, state: bytes) -> durable.Step:
+    return durable.Step(output=chunk, state=state)
+
+func main() -> int:
+    # Reserved output names are rejected before any storage operation.
+    const request = durable.Request(input=b"a\n", chunks=[b"a\n"], initial_state=b"", output_path="run.json", max_bytes=1024)
+    if durable.run(filesystem.memory(), request, copy_chunk) == Err(durable.Error.Invalid):
+        return 42
+    return 1
+```
+
+A real run needs an existing dedicated native directory, such as
+`fs.dir("durable")`, and an ordinary output filename such as `final.csv`.
+The caller creates the directory and synchronizes its parent before beginning
+if it needs directory creation to survive a crash. Limits permit at most 1,024
+chunks and a selected 1–8 MiB of input, total chunk bytes, total output and each
+state snapshot. The output filename cannot escape the directory or collide with
+`run.json`, `chunk-` artifacts or `.myl-durable-` temporary files.
+
+Each completed artifact is synchronized before its digest enters a synchronized
+journal replacement. Recovery validates the request, callable identity, every
+committed artifact and the chain of state snapshots before skipping work.
+Changed input, implementation, schemas, output name or limits rejects the old
+journal. Corrupt committed evidence fails closed; preserve it for diagnosis or
+start a new directory. Uncommitted artifacts and abandoned temporary files are
+collected while holding the directory lease. Committed progress is retained.
+
+Final output is atomically published from committed bytes. A failed directory
+sync may mean publication occurred: the operation returns an error, and retrying
+the same request safely checks or republishes the intended bytes. A second
+recoverer receives a busy error while the first owns the directory; ownership
+is released on normal exit or process death. Process-crash recovery is qualified
+with actual termination at publication boundaries. Power-loss behavior has not
+been experimentally established. These APIs do not replay network requests,
+external database transactions or arbitrary effects.
+
+The complete CSV application is in
+[`test/fixtures/application-cache/application.my`](../test/fixtures/application-cache/application.my).
+Its developer qualification driver runs cold, warm, edit, corruption and crash
+cases against independently calculated output.

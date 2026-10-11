@@ -1,0 +1,55 @@
+build-slot: build slot 2, FIFO ticket 1257 after 0s
+@stdlib/durable.my:112:20: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+      const fields = decode(data)?
+                     ^
+@stdlib/durable.my:119:27: error[E_TRY_POSITION]: extract this fallible operation into a declaration using 'try' before the enclosing expression
+      return Ok(Step(output=unhex(fields[5])?, state=unhex(fields[6])?))
+                            ^
+@stdlib/durable.my:119:52: error[E_TRY_POSITION]: extract this fallible operation into a declaration using 'try' before the enclosing expression
+      return Ok(Step(output=unhex(fields[5])?, state=unhex(fields[6])?))
+                                                     ^
+@stdlib/durable.my:138:17: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              _ = fs.remove(name)?
+                  ^
+@stdlib/durable.my:141:13: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+          _ = sync_directory(fs, "")?
+              ^
+@stdlib/durable.my:157:23: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+          const names = fs.listdir("")?
+                        ^
+@stdlib/durable.my:162:35: error[E_TRY_POSITION]: extract this fallible operation into a declaration using 'try' before the enclosing expression
+              const fields = decode(read_regular_file(fs, "run.json", 131072)?)?
+                                    ^
+@stdlib/durable.my:162:28: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              const fields = decode(read_regular_file(fs, "run.json", 131072)?)?
+                             ^
+@stdlib/durable.my:185:26: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              const data = read_regular_file(fs, name, request.max_bytes * 4 + 1024)?
+                           ^
+@stdlib/durable.my:188:26: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              const step = read_step(data, root, index, request.chunks[index], state)?
+                           ^
+@stdlib/durable.my:194:13: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+          _ = collect(fs, names, len(artifacts))?
+              ^
+@stdlib/durable.my:196:17: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              _ = atomic_write_file(fs, "run.json", journal(root, "running", "", artifacts))?
+                  ^
+@stdlib/durable.my:204:17: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              _ = atomic_write_file(fs, artifact_name(index), data)?
+                  ^
+@stdlib/durable.my:206:17: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              _ = atomic_write_file(fs, "run.json", journal(root, "running", "", artifacts))?
+                  ^
+@stdlib/durable.my:216:30: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              const existing = read_regular_file(fs, request.output_path, request.max_bytes)?
+                               ^
+@stdlib/durable.my:219:17: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              _ = atomic_write_file(fs, request.output_path, completed)?
+                  ^
+@stdlib/durable.my:221:17: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+              _ = atomic_write_file(fs, "run.json", journal(root, "published", digest, artifacts))?
+                  ^
+@stdlib/durable.my:225:13: error[E_FRONTEND_SYNTAX]: propagate failure with prefix 'try'
+          _ = sync_directory(fs, "")?
+              ^

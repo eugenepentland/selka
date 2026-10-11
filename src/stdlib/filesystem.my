@@ -1,7 +1,7 @@
-# An empty in-memory Filesystem. Every whole-path helper, `open`, `fs.dir(...)`,
+# An empty in-memory Filesystem. Ordinary whole-path helpers, `open`, `fs.dir(...)`,
 # `read_only()`, `exists` and `listdir` work on it; it starts with no files,
 # accepts only relative paths, sorts its listings by name, and never touches the
 # real filesystem. It grants no real authority, so building one needs no
-# capability and is not an effect.
+# capability and is not an effect. Durable native storage operations are refused.
 public func memory() -> Filesystem:
     return __stand_in[Filesystem](0)

@@ -1,0 +1,452 @@
+build-slot: build slot 1, FIFO ticket 1282 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 55/650 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 6 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1939 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 55 file(s) in scope
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+Build Summary: 34/34 steps succeeded
+verification-prepare success
++- install success
+|  +- install mylang cached
+|  |  +- compile exe mylang debug native cached 8ms MaxRSS:41M
+|  |  |  +- run exe build-identity (build_identity) cached
+|  |  |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:41M
+|  |  |  +- WriteFile cached
+|  |  |  +- compile obj juice_bytes_hash fast native cached 5ms MaxRSS:42M
+|  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:40M
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|  |     +- guardian-selfcheck success
+|  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 4ms
+|  +- install generated to selka-components cached
+|  |  +- compile exe selka-components safe native cached 6ms MaxRSS:40M
+|  +- run exe selka-components success 418ms
+|  |  +- compile exe selka-components safe native (reused)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated to bin/mylang success
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/units success
+|  +- compile test debug native success 2s MaxRSS:446M
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/cli success
+|  +- compile test debug native success 611ms MaxRSS:180M
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
+|        +- compile exe selka-components safe native (reused)
++- install generated to bin/core success
+|  +- compile test debug native success 4s MaxRSS:559M
+|     +- WriteFile (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options success
+|     |  +- compile exe mylang debug native (+5 more reused dependencies)
+|     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
++- install generated to bin/golden success
+|  +- compile test debug native success 577ms MaxRSS:158M
+|     +- options (+2 more reused dependencies)
++- install generated to bin/memory-budget cached
+|  +- compile test debug native cached 7ms MaxRSS:40M
++- install generated to bin/component-support cached
+|  +- compile test debug native cached 7ms MaxRSS:40M
++- install generated to bin/component-builder cached
+|  +- compile exe selka-components safe native (reused)
++- install generated to artifacts.json success
+   +- run python3 (artifacts.json) success 79ms
+      +- compile exe mylang debug native (+5 more reused dependencies)
+      +- compile test debug native (+2 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (+6 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (reused)
+      +- compile test debug native (reused)
+      +- compile exe selka-components safe native (reused)
+
+verification: fresh component-preparation (component manifests and installed outputs require validation)
+verification: fresh input-discovery (directory membership must be discovered at execution time)
+verification: fresh environment-discovery (live inherited environment must be discovered at execution time)
+verification: execute core (no valid receipt)
+verification: execute memory_budget (no valid receipt)
+verification: execute unit (no valid receipt)
+verification: execute cli (no valid receipt)
+verification: execute golden (no valid receipt)
+verification: execute idioms_self (no valid receipt)
+verification: execute idioms (no valid receipt)
+verification: execute incremental (no valid receipt)
+verification: execute interfaces (no valid receipt)
+verification: execute interface_oracle (no valid receipt)
+verification: execute parser_hints (no valid receipt)
+verification: execute friction (no valid receipt)
+verification: execute tooling_isolation (no valid receipt)
+verification: execute application_cache (no valid receipt)
+verification: execute component_builder (no valid receipt)
+verification: execute component_native (no valid receipt)
+verification: execute component-support (no valid receipt)
+verification: execute selfhost_numeric (no valid receipt)
+verification: fresh spec-history (SPEC replay reads git history and creates repositories)
+verification: fresh juice (native performance collectors and host state require fresh execution)
+verification: fresh juice-runtime (runtime collectors observe CPU, scheduler and current host state)
+verification: fresh identity-qualification (compiler identity qualification produces temporary compiler artifacts)
+verification: execute affected (no valid receipt)
+verification: execute coverage_self (no valid receipt)
+verification: fresh coverage (fixture membership and negative path lookups outside source recipes require freshness)
+verification: execute manifest_self (no valid receipt)
+verification: execute verification_cache (no valid receipt)
+verification: execute fuzz_campaign (no valid receipt)
+verification: execute juice_cache (no valid receipt)
+verification: execute doc-coverage (no valid receipt)
+verification: fresh guest (guest Host and external-effect eligibility remains compiler-authoritative)
+verification: fresh language (guest Host and external-effect eligibility requires execution-time admission)
+verification: execute doctest (no valid receipt)
+verification: execute zig-format (no valid receipt)
+verification: execute my_format (no valid receipt)
+verification: execute my_format_self (no valid receipt)
+verification: execute noalloc_lint (no valid receipt)
+verification: execute embedded_migration (no valid receipt)
+verification: fresh guardian (Guardian source, git scope and mutable policy validation require freshness)
+build-slot: FIFO ticket 142, position 1; all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: FIFO ticket 142, position 1; all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: FIFO ticket 142, position 1; all 1 gate slot(s) busy; waiting (121s so far)
+build-slot: gate slot 1, FIFO ticket 142 after 141s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 55/650 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 6 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1939 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 55 file(s) in scope
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test
++- run test w
+guardian/test: 10 test(s) selected
+guardian/test: test wall 0.60s; slowest over 50ms:
+guardian/test:   0.59s  component_support_test.test.streaming checksum hashes eight MiB with fixed storage
+guardian/test: PASS — 10 passed
+guardian/test: RESULT {"passed":10,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/a2e2d29ebd3470cd0660ad87c6fb1b46/test --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 55/650 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 6 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1939 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 55 file(s) in scope
+fmt-check
++- check live .my corpus formatting w
+.my format: 836 checked, 204 deliberate exclusions, 0 failures; experiments/ is historical and outside the live roots
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/check_my_format.py --compiler ./zig-out/bin/mylang
+
+passed aggregate_projection_reads::test_a_field_of_the_only_element_reads_from_either_end
+passed aggregate_projection_reads::test_a_loop_accumulates_through_every_branch_label
+passed aggregate_projection_reads::test_a_loop_and_a_call_join_to_the_right_value
+passed aggregate_projection_reads::test_a_recursion_with_a_large_frame_adds_sixty_per_level
+passed aggregate_projection_reads::test_a_snapshot_and_a_bytes_field_survive_element_writes_and_growth
+passed append_range_outcomes::test_negative_and_minimum_seeds_take_the_floor_remainder
+passed append_range_outcomes::test_zero_negative_short_boundary_growing_and_long_runs_keep_their_ends
+passed bounded_loop_seeds::test_a_float_to_i8_conversion_in_a_loop_truncates_toward_zero
+passed bounded_loop_seeds::test_a_helper_call_in_a_modular_loop_keeps_the_same_totals
+passed bounded_loop_seeds::test_extreme_and_short_seeds_keep_their_modular_totals
+passed byte_iteration_sums::test_byte_iteration_keeps_exact_values_for_masks_beyond_a_byte_and_extreme_seeds
+passed byte_iteration_sums::test_byte_iteration_sums_keep_exact_values_across_lengths
+passed closed_record_positive_index::test_closed_carrier_at_a_positive_index_keeps_the_same_snapshots
+passed constant_divisor_values::test_constant_divisors_give_their_exact_quotients_and_remainders
+passed constant_divisor_values::test_the_remainder_of_the_minimum_integer_by_minus_one_is_zero
+passed copy_on_write_values::test_a_child_exposed_before_a_later_copy_of_its_parent_stays_independent
+passed copy_on_write_values::test_a_completed_callback_updates_the_current_equal_array_entry
+passed copy_on_write_values::test_a_copy_shares_the_list_and_the_first_write_through_either_name_copies_it
+passed copy_on_write_values::test_a_flat_record_copy_writes_one_leaf_without_touching_the_original
+passed copy_on_write_values::test_a_loop_appending_through_a_copy_leaves_the_original_alone
+passed copy_on_write_values::test_a_mut_argument_the_callee_copied_is_a_real_copy
+passed copy_on_write_values::test_a_nested_write_in_a_loop_leaves_the_saved_rows_alone
+passed copy_on_write_values::test_a_pure_recursive_box_read_adds_up_the_chain
+passed copy_on_write_values::test_a_receiver_stays_pinned_across_later_argument_callbacks
+passed copy_on_write_values::test_a_record_that_can_reach_itself_through_a_zero_length_array_detaches_before_a_nested_write
+passed copy_on_write_values::test_a_variant_element_read_from_the_end_yields_its_selected_payload
+passed copy_on_write_values::test_a_write_through_a_nested_element_or_a_dictionary_value_copies_every_level
+passed copy_on_write_values::test_a_write_through_a_record_field_writes_the_copy_back_into_the_field
+passed copy_on_write_values::test_alternating_collection_owners_keep_both_snapshots
+passed copy_on_write_values::test_an_element_field_appended_through_a_copy_leaves_what_the_match_saw
+passed copy_on_write_values::test_appends_to_a_fresh_list_each_land_in_place
+passed index_update_outcomes::test_a_checksum_following_the_update_sees_the_stored_value
+passed index_update_outcomes::test_a_managed_prefix_and_a_snapshot_read_after_the_update_see_both_versions
+passed index_update_outcomes::test_aliases_rebinds_resizes_and_calls_before_the_write_keep_their_meaning
+passed index_update_outcomes::test_floor_quotients_and_the_minimum_integer_are_stored_exactly
+passed index_update_outcomes::test_floor_remainders_keep_the_divisors_sign
+passed index_update_outcomes::test_other_element_types_and_a_flag_list_keep_the_update
+passed index_update_outcomes::test_positive_and_negative_indices_update_the_selected_element_with_and_without_a_snapshot
+passed index_update_outcomes::test_the_stored_value_is_forwarded_exactly_across_the_integer_range
+passed index_update_outcomes::test_zero_trips_and_repeated_updates_keep_their_totals
+passed inlined_helpers::test_a_bytes_read_through_two_helpers_returns_each_in_range_byte
+passed inlined_helpers::test_a_checked_add_in_a_helper_returns_its_sum_up_to_the_limit
+passed inlined_helpers::test_a_construction_helper_keeps_the_payload_it_was_given
+passed inlined_helpers::test_a_constructor_helper_returns_a_record_whose_alias_keeps_its_fields
+passed inlined_helpers::test_a_helper_converting_between_integers_and_floats_truncates_toward_zero
+passed inlined_helpers::test_a_helper_that_builds_a_list_returns_its_element
+passed inlined_helpers::test_a_large_callee_returns_its_value_from_a_straight_line_and_a_loop_call
+passed inlined_helpers::test_a_leaf_helper_returns_its_comparison_through_a_caller
+passed inlined_helpers::test_a_propagated_error_reaches_a_caller_that_returns_another_type
+passed inlined_helpers::test_a_propagation_with_an_unfinished_caller_operand_keeps_that_operand
+passed inlined_helpers::test_an_option_helper_keeps_both_its_some_and_none_branches
+passed inlined_helpers::test_nested_helpers_called_before_their_definitions_add_up_to_the_limit
+passed inlined_helpers::test_zero_argument_helpers_called_twice_add_up
+passed invariant_dispatch_loops::test_a_dispatch_that_appends_before_each_read_keeps_both_arms
+passed invariant_dispatch_loops::test_a_dispatch_value_the_body_changes_is_read_afresh_each_trip
+passed invariant_dispatch_loops::test_a_dispatch_with_seventeen_literals_keeps_every_arm
+passed invariant_dispatch_loops::test_a_three_element_fold_reaches_its_sum_and_the_other_arms_reach_theirs
+passed invariant_dispatch_loops::test_a_zero_trip_loop_returns_its_seed_for_every_literal_and_the_default
+passed invariant_dispatch_loops::test_an_arm_that_appends_leaves_the_list_longer_by_the_trip_count
+passed invariant_dispatch_loops::test_comparison_joins_keep_short_circuit_and_conditional_values
+passed invariant_dispatch_loops::test_each_arm_reaches_the_integer_limit_exactly_without_passing_it
+passed list_literal_images::test_a_thousand_byte_elements_keep_their_length_and_content
+passed list_literal_images::test_a_thousand_primitive_elements_keep_their_length_and_values
+passed list_literal_images::test_a_thousand_text_elements_keep_their_length_and_content
+passed list_literal_images::test_indexed_long_text_elements_keep_samples_after_the_parent_detaches
+passed list_literal_images::test_primitive_widths_signed_bits_boolean_and_float_domains_remain_exact
+passed long_literals::test_a_frozen_literal_keeps_its_content_type_and_length
+passed long_literals::test_a_long_ascii_bytes_literal_keeps_every_octet
+passed long_literals::test_a_long_bytes_literal_reaches_the_program_intact
+passed long_literals::test_a_long_str_literal_reaches_the_program_intact
+passed loop_version_outcomes::test_a_comprehension_dividing_by_a_counter_floors_toward_minus_infinity
+passed loop_version_outcomes::test_a_loop_shorter_than_the_minimum_span_and_a_longer_one_sum_the_same
+passed loop_version_outcomes::test_a_product_of_counters_keeps_its_exact_float_sum
+passed loop_version_outcomes::test_a_quotient_by_a_negative_counter_floors_each_term
+passed loop_version_outcomes::test_a_row_shorter_than_the_other_is_updated_up_to_its_own_length
+passed loop_version_outcomes::test_a_sum_that_stops_just_below_the_integer_limit_does_not_overflow
+passed loop_version_outcomes::test_a_while_loop_with_a_step_held_in_a_local_clears_every_multiple
+passed loop_version_outcomes::test_an_accumulator_reaches_the_integer_limit_exactly
+passed loop_version_outcomes::test_an_index_one_past_the_counter_reads_the_next_element_up_to_the_last
+passed loop_version_outcomes::test_invariant_rows_of_a_matrix_product_keep_every_element
+passed loop_version_outcomes::test_negative_indices_and_a_negative_start_take_pythons_meaning
+passed loop_version_outcomes::test_presized_and_growing_appends_build_the_same_lists
+passed mut_callback_slots::test_a_later_readonly_record_argument_keeps_the_captured_field_and_snapshots
+passed mut_callback_slots::test_a_later_readonly_rows_argument_keeps_the_captured_leaf_and_snapshots
+passed mut_callback_slots::test_two_interior_slots_and_managed_returns_stay_independent
+passed positive_list_index_reads::test_a_write_before_the_replacing_call_is_what_the_selected_index_reads
+passed positive_list_index_reads::test_reads_at_both_ends_of_a_list_in_either_direction
+passed python_string_find::test_find_answers_the_first_scalar_index_for_short_long_and_overlong_needles
+passed remainder_bias_outcomes::test_a_modulus_beyond_the_signed_half_range_keeps_the_full_unsigned_bits
+passed remainder_bias_outcomes::test_a_seed_read_before_a_mutating_call_stays_the_value_it_had
+passed remainder_bias_outcomes::test_an_offset_that_cancels_the_seed_and_a_zero_count_with_an_extreme_offset
+passed remainder_bias_outcomes::test_negative_positive_and_extreme_seeds_keep_their_first_and_last_elements
+passed remainder_bias_outcomes::test_runs_of_thirty_two_three_and_zero_elements_for_each_seed
+passed remainder_bias_outcomes::test_scaled_seeds_at_both_magnitude_endpoints_keep_their_remainders
+passed unique_capture_snapshots::test_a_mutating_call_a_rebinding_and_a_managed_element_replace_the_right_list
+passed unique_capture_snapshots::test_a_replaced_element_and_a_held_copy_keep_their_values
+passed unique_capture_snapshots::test_loops_that_rewrite_one_element_keep_their_totals_with_and_without_a_snapshot
+passed variant_snapshots::test_native_snapshots_retained_loans_mutations_and_error_tags_survive
+98 passed, 0 cached, 0 failed, 0 skipped
+fmt-check
++- verify .my formatting gate w
+......
+----------------------------------------------------------------------
+Ran 6 tests in 1.787s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_my_format.py --compiler ./zig-out/bin/mylang
+
+doc-coverage: 219 documented features (158 language, 61 tooling) across 54 pages
+  docs/README.md: 1
+  docs/bytes.md: 6
+  docs/c-ffi.md: 3
+  docs/const-length-generics.md: 1
+  docs/contracts.md: 2
+  docs/diagnostic-recovery.md: 1
+  docs/effects.md: 9
+  docs/experiments/incremental-contract.md: 4
+  docs/floating-point.md: 4
+  docs/functions.md: 11
+  docs/generic-inference.md: 2
+  docs/generics.md: 5
+  docs/integer-operations.md: 5
+  docs/io.md: 10
+  docs/lambdas.md: 1
+  docs/managed-memory.md: 8
+  docs/match-expressions.md: 1
+  docs/module-constants.md: 4
+  docs/modules.md: 6
+  docs/performance.md: 1
+  docs/python-syntax.md: 9
+  docs/python-text-surface.md: 4
+  docs/range-iteration.md: 2
+  docs/records-and-unions.md: 13
+  docs/reference.md: 1
+  docs/results-and-options.md: 11
+  docs/sets.md: 3
+  docs/source-evaluation.md: 1
+  docs/standard-library.md: 19
+  docs/statements.md: 6
+  docs/structured-loop-exits.md: 1
+  docs/text.md: 8
+  docs/tooling/agent-context.md: 1
+  docs/tooling/api-diff.md: 1
+  docs/tooling/caches.md: 7
+  docs/tooling/cost.md: 1
+  docs/tooling/counters.md: 1
+  docs/tooling/documentation-gate.md: 2
+  docs/tooling/fix.md: 2
+  docs/tooling/guest-tests.md: 12
+  docs/tooling/import-policy.md: 2
+  docs/tooling/interface-files.md: 1
+  docs/tooling/lint.md: 1
+  docs/tooling/module-interfaces.md: 1
+  docs/tooling/native-build.md: 2
+  docs/tooling/navigation.md: 6
+  docs/tooling/packages.md: 1
+  docs/tooling/runtime-budgets.md: 4
+  docs/tooling/work-report.md: 3
+  docs/tuples.md: 2
+  docs/type-aliases.md: 1
+  docs/typed-holes.md: 2
+  docs/typed-json.md: 1
+  docs/value-semantics.md: 2
+doc-coverage: 19 standard modules, 205 exports named in docs/standard-library.md
+doc-coverage: 0 failures
+passed bindings::test_a_loop_variable_copy_can_be_changed_as_a_local
+passed bindings::test_a_match_binding_is_a_copy_of_the_payload
+passed bindings::test_changes_through_the_place_reach_the_collection
+passed bindings::test_dictionary_views_and_enumerate_read_the_values
+passed calls::test_a_mut_argument_before_or_after_its_snapshot
+passed calls::test_a_mut_record_field_is_redirected_after_a_later_snapshot
+passed calls::test_two_mut_operands_and_a_snapshot_of_one_of_them
+passed collections::test_a_byte_buffer_assignment_is_a_copy
+passed collections::test_a_dict_assignment_is_a_copy
+passed collections::test_a_list_assignment_is_a_copy
+passed collections::test_a_read_only_argument_is_read_in_place
+passed collections::test_a_returned_copy_of_each_collection_leaves_the_argument_alone
+passed collections::test_a_set_assignment_is_a_copy
+passed collections::test_nested_collections_copy_all_the_way_down
+passed copy_roots::test_fast_transfer_keeps_independent_snapshots
+passed copy_roots::test_pinned_transfer_keeps_original_and_other_live_values
+passed copy_scratch::test_payload_return_remains_a_snapshot_after_parent_replacement
+passed copy_scratch::test_returned_payload_is_independent_on_both_sides
+passed field_return::test_a_second_mut_parameter_observes_its_own_original_field
+passed field_return::test_a_sibling_scalar_field_stays_readable_during_mutation
+passed field_return::test_closed_loop_and_match_store_back_preserve_copies
+passed field_return::test_early_return_does_not_write_the_original_field
+passed field_return::test_external_join_preserves_preexisting_values
+passed field_return::test_field_return_preserves_existing_copies_and_sibling_values
+passed field_return::test_loop_exit_does_not_commit_a_partial_field_update
+passed field_return::test_loop_observations_read_the_original_field_until_store_back
+passed field_return::test_observation_before_store_back_sees_original_value
+passed field_return::test_retained_temporary_and_other_destination_stay_independent
+passed field_return::test_sibling_index_normalization_keeps_shared_snapshots_independent
+passed index_return::test_break_and_continue_cannot_skip_commit
+passed index_return::test_changed_index_keeps_original_element
+passed index_return::test_closed_loop_commits_and_preserves_a_caller_snapshot
+passed index_return::test_earlier_borrowed_child_survives_dead_match_binding
+passed index_return::test_earlier_element_local_stays_independent
+passed index_return::test_earlier_match_binding_stays_independent
+passed index_return::test_earlier_match_observed_after_store
+passed index_return::test_earlier_match_with_caller_snapshot_stays_independent
+passed index_return::test_earlier_parent_snapshot_stays_independent
+passed index_return::test_early_return_keeps_original_element
+passed index_return::test_index_changed_before_extraction_keeps_original
+passed index_return::test_iteration_binding_stays_independent
+passed index_return::test_local_parent_retains_outer_snapshot
+passed index_return::test_mut_list_caller_detaches_shared_outer_before_projection
+passed index_return::test_other_mut_parameter_cannot_observe_early_mutation
+passed index_return::test_parent_growth_keeps_checked_original_index
+passed index_return::test_parent_observation_keeps_snapshot
+passed index_return::test_payload_observation_keeps_snapshot
+passed index_return::test_readonly_parameter_alias_is_a_snapshot
+passed index_return::test_surviving_temporary_keeps_independent_post_store_value
+passed interactions::test_a_list_read_out_of_a_record_is_a_copy
+passed interactions::test_a_record_has_independent_nested_values
+passed interactions::test_old_captures_a_collection_by_value
+passed nested_array_callbacks::test_a_callback_can_snapshot_a_box_above_the_dictionary_owner
+passed nested_array_callbacks::test_a_callback_can_snapshot_a_box_on_the_pending_path
+passed nested_array_callbacks::test_a_callback_can_snapshot_an_outer_ancestor
+passed nested_array_callbacks::test_a_callback_can_snapshot_the_whole_parent
+passed nested_array_callbacks::test_a_last_use_key_borrow_survives_its_list_being_cleared
+passed nested_array_callbacks::test_a_negative_list_index_retains_its_pending_array
+passed nested_array_callbacks::test_colliding_keys_do_not_invalidate_the_other_receiver
+passed nested_array_callbacks::test_deep_recursive_siblings_are_outside_the_pending_path
+passed nested_array_callbacks::test_deleted_and_reinserted_entry_is_updated_after_the_call
+passed nested_array_callbacks::test_equal_list_element_replacement_is_updated_after_the_call
+passed nested_array_callbacks::test_equal_replacements_before_update_have_equal_results
+passed nested_array_callbacks::test_leaf_call_and_later_update_keep_both_writes
+passed nested_array_callbacks::test_nested_calls_finish_before_each_receiver_is_selected
+passed nested_array_callbacks::test_option_propagation_releases_a_pending_receiver
+passed nested_array_callbacks::test_other_entry_write_finishes_before_the_current_update
+passed nested_array_callbacks::test_reinserted_equal_entry_is_updated_after_the_call
+passed nested_array_callbacks::test_removing_an_element_finishes_before_selecting_the_shifted_receiver
+passed nested_array_callbacks::test_reordering_finishes_before_selecting_the_current_receiver
+passed nested_arrays::test_cleared_outer_list_can_be_repopulated_before_receiver_selection
+passed nested_arrays::test_dictionary_array_sliced_key_is_retained
+passed nested_arrays::test_dictionary_fixed_array_field_dictionary
+passed nested_arrays::test_dictionary_fixed_array_list
+passed nested_arrays::test_dynamic_negative_fixed_array_index
+passed nested_arrays::test_enum_table_collection_element
+passed nested_arrays::test_fixed_array_dictionary
+passed nested_arrays::test_fixed_array_list
+passed nested_arrays::test_fixed_array_list_dictionary
+passed nested_arrays::test_later_index_changes_the_original_key_variable
+passed nested_arrays::test_list_array_path_inside_a_loop
+passed nested_arrays::test_list_fixed_array_dictionary
+passed nested_arrays::test_list_record_fixed_array_field
+passed nested_arrays::test_rehash_call_finishes_before_dictionary_receiver_selection
+passed nested_arrays::test_removed_entry_can_be_reinserted_before_receiver_selection
+passed nested_arrays::test_repeated_fixed_array_wrappers
+passed nested_arrays::test_replacement_call_finishes_before_dictionary_receiver_selection
+passed nested_collections::test_both_aliases_can_change_different_nested_values
+passed nested_collections::test_dictionary_field_in_list
+passed nested_collections::test_dictionary_list_dictionary_path
+passed nested_collections::test_key_growth_finishes_before_receiver_selection
+passed nested_collections::test_key_mutates_original
+passed nested_collections::test_key_replacement_finishes_before_receiver_selection
+passed nested_collections::test_list_dictionary_list_path
+passed nested_collections::test_list_field_in_dictionary
+passed nested_collections::test_named_alias_of_nested_dictionary
+passed nested_collections::test_nested_byte_buffer_leaf
+passed nested_collections::test_nested_integer_keys
+passed nested_collections::test_nested_set_leaf
+passed nested_collections::test_nested_sliced_string_keys
+passed nested_collections::test_nested_writes_inside_a_loop
+passed nested_collections::test_receivers_and_keys_evaluate_once_in_source_order
+passed nested_collections::test_repeated_dictionary_wrappers
+passed nested_collections::test_repeated_list_dictionary_wrappers
+passed packed_calls::test_packed_mut_argument_receives_the_redirected_value
+passed pending_receiver_arguments::test_argument_propagation_releases_the_receiver_scope
+passed pending_receiver_arguments::test_callback_snapshot_keeps_captured_receiver_independent
+passed pending_receiver_arguments::test_dictionary_receiver_survives_argument_snapshot
+passed pending_receiver_arguments::test_loop_receiver_scopes_restore_the_previous_pin_state
+passed pending_receiver_arguments::test_nested_mut_call_finishes_before_the_outer_receiver_update
+passed pending_receiver_arguments::test_recursive_box_receiver_survives_argument_snapshot
+passed pure_box::test_pure_box_projection_retains_private_value_updates
+passed pure_box::test_pure_box_read_remains_live_across_other_allocations
+passed recursive::test_a_box_projection_copies_a_pinned_child
+passed recursive::test_a_copied_recursive_box_shares_and_separates_nested_lists
+passed recursive::test_a_projected_child_is_protected_before_a_later_box_copy
+passed recursive::test_repeated_write_through_a_boxed_child
+passed stdlib::test_builder_is_a_value_and_mut_updates_only_the_target
+passed stdlib::test_network_denied_is_still_deterministic
+passed stdlib::test_pool_handles_address_the_mutated_pool
+passed stores::test_a_nested_record_copy_is_independent
+passed stores::test_a_record_field_holds_its_own_list
+passed stores::test_copy_slice_and_list_copy_their_elements
+passed stores::test_element_and_dictionary_value_stores_copy
+passed stores::test_extend_and_sorted_copy_the_elements_they_take
+passed stores::test_setdefault_and_get_hand_back_copies
+passed stores::test_tuple_and_payload_stores_copy
+passed stores::test_update_copies_the_dictionary_values_it_takes
+passed value_rules::test_a_copy_of_a_parameter_is_writable_without_mut
+passed value_rules::test_a_read_only_argument_is_a_snapshot_of_a_mut_one
+passed value_rules::test_a_returned_parameter_does_not_alias_the_argument
+passed value_rules::test_assignment_and_storage_copy
+passed value_rules::test_loop_changes_go_through_the_place
+passed value_rules::test_mut_record_parameter_is_inout
+passed value_rules::test_nested_writes_after_copy_stay_in_the_copy
+passed value_rules::test_nested_writes_through_a_mut_record
+passed value_rules::test_rebinding_a_mut_record_replaces_the_callers_value
+passed variant_element::test_empty_arm_copies_no_payload
+passed variant_element::test_nonadjacent_dispatch_keeps_its_original_snapshot
+passed variant_element::test_payload_survives_parent_replacement_growth_and_collection
+140 passed, 0 cached, 0 failed, 0 skipped
+verification: cancelled; no new success receipts

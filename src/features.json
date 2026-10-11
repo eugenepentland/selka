@@ -1066,6 +1066,36 @@
       "kind": "tooling",
       "summary": "A test run sizes its worker pool from free memory as well as cores (each per-test ceiling plus 256 MiB of headroom must fit in MemAvailable), with --jobs and MYLANG_JOBS to override it.",
       "doc": "docs/tooling/runtime-budgets.md#test-fan-out"
+    },
+    "function-digest": {
+      "kind": "language",
+      "summary": "Compiler-issued callable and reachable dependency identities bind source schemas and execution context; unavailable authority returns an empty string.",
+      "doc": "docs/functions.md#persistent-function-identity"
+    },
+    "durable-storage": {
+      "kind": "language",
+      "summary": "Native filesystem capabilities provide bounded complete directory listings and regular-file reads, atomic synchronized writes, directory synchronization and crash-released exclusive directory leases.",
+      "doc": "docs/io.md#durable-storage"
+    },
+    "standard-hashes": {
+      "kind": "language",
+      "summary": "Pure Selka SHA-256 hashes byte inputs with block-sized working arrays.",
+      "doc": "docs/standard-library.md#hashes"
+    },
+    "standard-cache-record": {
+      "kind": "language",
+      "summary": "Canonical string-array records carry an exact version and SHA-256 checksum; malformed or noncanonical records are rejected.",
+      "doc": "docs/standard-library.md#cache_record"
+    },
+    "standard-persistent-memo": {
+      "kind": "language",
+      "summary": "Bounded persistent byte snapshots use exact tagged inputs and compiler-issued callable identity, verified records and exclusive atomic publication.",
+      "doc": "docs/standard-library.md#persistent_memo"
+    },
+    "standard-durable": {
+      "kind": "language",
+      "summary": "Pure chunk/state pipelines retain verified committed progress and recover final file publication after a process crash.",
+      "doc": "docs/standard-library.md#durable"
     }
   },
   "unsupported": [
@@ -1098,7 +1128,7 @@
     "sets": "managed insertion order over hashable elements; `set()` needs an expected type; no frozenset, no augmented operators (`|=`); generic bodies key only by integer-bounded parameters, `str` or concrete hashable types; a module that declares its own function named `set` keeps it, and there the type spelling `set[T]` is unavailable while literals still work",
     "generators": "generator expressions only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join; no suspended generator functions or stored generator values; yield belongs to source-first array comprehensions and match-expression arms",
     "native_tests": "one native process per test; exported test_ functions returning bool or Result[bool, E]; positive deterministic receipts keyed by the test program's Core IR, settings, toolchain and outcome-relevant environment; a run with --link or --verify-facts never reuses a receipt; directory runs share one worker budget (--jobs, MYLANG_JOBS or CPUs)",
-    "standard_library": "fifteen embedded modules using the canonical frontend: math, strings, sort, path, hex, base64, json, pool, memo, random, time, byte_builder, filesystem, network, environment",
+    "standard_library": "nineteen embedded Selka modules, including hashes, cache_record, persistent_memo and durable",
     "memory": "one-count reference counting with copy-on-write; no tracing collector; value semantics prevents cycles, and identity graphs use pool handles; `with arena()` is removed; its diagnostic carries a migration fix"
   },
   "removed": {

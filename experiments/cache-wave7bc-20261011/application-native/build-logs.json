@@ -1,0 +1,37 @@
+[
+  {
+    "name": "baseline",
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "body",
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "private-helper",
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "shared-helper",
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "schema",
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "pipeline-body",
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "shim",
+    "stdout": "",
+    "stderr": ""
+  }
+]

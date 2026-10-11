@@ -230,6 +230,22 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
     }, .{ .emit_null_optional_fields = false });
 }
 
+/// Describe only one checked type and the nominal contracts reachable from it.
+/// This is a compiler identity input, rather than a portable value encoding.
+pub fn renderType(allocator: std.mem.Allocator, program: typed.Program, ty: typed.Type) RenderError![]u8 {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var graph: Graph = .{ .allocator = a, .records = program.records, .functions = program.functions, .seen = try a.alloc(bool, typed.Type.record_base + program.records.len) };
+    @memset(graph.seen, false);
+    const root = try graph.reference(ty);
+    var definitions: std.ArrayList(Definition) = .empty;
+    var next: usize = 0;
+    while (next < graph.queue.items.len) : (next += 1) try definitions.append(a, try graph.definition(graph.queue.items[next]));
+    std.mem.sort(Definition, definitions.items, {}, lessDefinition);
+    return std.json.Stringify.valueAlloc(allocator, .{ .version = "callable-type-schema-v1", .root = root, .types = definitions.items }, .{ .emit_null_optional_fields = false });
+}
+
 fn identityKind(record: typed.Record) @FieldType(Definition, "kind") {
     if (record.shape.domain != null) return .domain;
     if (record.managed) return .list;

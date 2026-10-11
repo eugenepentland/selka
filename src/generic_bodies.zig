@@ -58,6 +58,7 @@ const generic_cache = @import("generic_cache.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const function_same = @import("function_same.zig");
+const function_digest = @import("function_digest.zig");
 const unknown_method = "unknown collection method";
 /// Whether a call on a named receiver is a list's `sort` with operands, the
 /// Python keyword form whose operands are named rather than positional.
@@ -1635,6 +1636,7 @@ const Checker = struct {
         return result;
     }
     fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (try self.functionDigestCall(input_call, span)) |value| return value;
         if (try self.sameFunctionCall(input_call, span)) |value| return value;
         if (try self.viewSnapshot(input_call, span)) |value| return value;
         if (try self.capabilityMethodCall(input_call, span)) |value| return value;
@@ -1664,6 +1666,17 @@ const Checker = struct {
         return null;
     }
 
+    fn functionDigestCall(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        if (invocation.owner != null or !std.mem.eql(u8, self.src.text(invocation.name), function_digest.name)) return null;
+        if (self.active.contains(function_digest.name) or try self.topLevel(invocation.name)) return null;
+        if (invocation.arguments.len != 1 or invocation.type_arguments.len != 0)
+            return self.sink.fail("E_ARITY", span, "function_digest requires one argument and no type arguments");
+        const value = try self.expression(invocation.arguments[0]);
+        if (!function_same.symbolicCompatible(value, value, self.catalog))
+            return self.sink.fail(function_digest.code, span, function_digest.message);
+        self.seedEffect(.managed_allocation);
+        return .{ .concrete = self.catalog.names.get("str") orelse return error.InternalError };
+    }
     fn sameFunctionCall(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
         if (invocation.owner != null or !std.mem.eql(u8, self.src.text(invocation.name), function_same.name)) return null;
         if (self.active.contains(function_same.name) or try self.topLevel(invocation.name)) return null;

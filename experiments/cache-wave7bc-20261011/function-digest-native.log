@@ -1,0 +1,29 @@
+build-slot: build slot 2, FIFO ticket 1259 after 0s
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test-units
++- run test w
+guardian/test: 10 test(s) selected by filter: "function_digest" — 3 match by name, 7 unnamed test block(s) run regardless
+guardian/test: SLOW  5.44s  callbacks_test.test.function_digest identifies runtime-selected returned and stored generic callbacks in debug
+guardian/test: test wall 5.69s; slowest over 50ms:
+guardian/test:   5.44s  callbacks_test.test.function_digest identifies runtime-selected returned and stored generic callbacks in debug
+guardian/test:   0.25s  callbacks_test.test.function_digest identifies runtime-selected callbacks in release
+guardian/test: PASS — 10 passed
+guardian/test: RESULT {"passed":10,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components ./.zig-cache/o/d77a786d8461a900f3e0cd08c137e9dc/test --guardian-filter=function_digest --cache-dir=./.zig-cache --seed=0x60404268 --listen=-
+
+Build Summary: 12/12 steps succeeded; 10/10 tests passed
+test-units success
++- run test 10 pass (10 total) 5s MaxRSS:162M
+   +- compile test debug native success 1s MaxRSS:297M
+   |  +- run exe build-identity (build_identity) cached
+   |  |  +- compile exe build-identity debug native cached 4ms MaxRSS:41M
+   |  +- options success
+   |     +- compile exe mylang debug native cached 9ms MaxRSS:42M
+   |        +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |        +- WriteFile cached
+   |        +- compile obj juice_bytes_hash fast native cached 4ms MaxRSS:39M
+   |        +- compile obj juice_bytes_hash fast native (reused)
+   |        +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 4ms MaxRSS:38M
+   +- run exe selka-components success 448ms
+      +- compile exe selka-components safe native cached 4ms MaxRSS:42M

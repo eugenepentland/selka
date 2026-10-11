@@ -1,0 +1,62 @@
+build-slot: build slot 1, FIFO ticket 1235 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 51/647 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 6 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 7/88 failed (spec, imports, cognitive-complexity, line-length, repeated-string-literal, try-in-return, error-path-test) — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 51 file(s) in scope
+guardian: failures grouped by check (7):
+  spec (4 findings)
+    - unverified: Standard library over managed types - [STANDARD-HASHES-1] The embedded Selka `hashes.sha256(bytes)` computes standard SHA-256 lowercase hexadecimal digests in 64-byte input blocks with bounded working arrays and no whole-input padding copy, including empty inputs and padding across block boundaries.
+    - unverified: Standard library over managed types - [STANDARD-CACHE-RECORD-1] The embedded Selka `cache_record` encodes string arrays as canonical JSON inside an exact versioned SHA-256 envelope. Decode rejects truncation, trailing bytes, noncanonical spellings, nonstring members and checksum mismatch. The checksum supplies integrity, not authentication; storage callers bound input reads before decoding.
+    - unverified: Standard library over managed types - [STANDARD-PERSISTENT-MEMO-1] Selka `persistent_memo.call` persists completed byte snapshots for exact tagged `memo.Key` inputs and compiler-issued callable identities in an existing dedicated filesystem directory. It validates record identity, schema, key, canonical representation and checksum before reuse. Missing or malformed records are misses; provider failures remain errors. Zero entries forces execution without storage; unavailable callable authority and oversized results execute without receipts. Options bound entries to 0..256 and each entry's raw key plus result to 0..1048576 bytes. Directory ownership serializes publication and deterministic eviction; lowered limits trim retained entries, orphan temporary files are collected under ownership, and atomic publication errors never report success.
+    - +1 more — use --verbose for full detail
+  imports (7 findings)
+    - → src/core/allocation_contract.zig
+      fix: extract shared types into a third module, or invert one direction.
+    - → src/core/build.zig
+    - → src/core/callable_digest.zig
+    - +4 more — use --verbose for full detail
+  cognitive-complexity (1 finding)
+    - src/core/build_cap.zig: fn Lower cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  line-length (1 finding)
+    - src/core/function_build_test.zig:211: line is 272 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  repeated-string-literal (1 finding)
+    - src/core/pipeline.zig: string literal tool_identity.zig appears 6 times (lines 442, 445, 446, 461, 469, 469) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  try-in-return (1 finding)
+    - src/prelude_builtins.zig:167: `return try function_digest.check...` — bind the tried value to a local, then return it
+      fix: const v = try <expr>; return v;
+  error-path-test (2 findings)
+    - src/core/pipeline.zig:446: new catch block — no test names enclosing fn `prepareCallables`
+      fix: add (or extend) a test that names the error identifier — `try testing.expectError(error.X, …)` is enough — in this same change.
+    - src/core/pipeline.zig:461: new catch block — no test names enclosing fn `prepareCallables`
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+install
++- install mylang
+   +- run ../guardian-zig/zig-out/bin/guardian-check failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+Build Summary: 11/14 steps succeeded (1 failed)
+install transitive failure
++- install mylang transitive failure
+|  +- compile exe mylang debug native success 3s MaxRSS:546M
+|  |  +- run exe build-identity (build_identity) success 35ms
+|  |  |  +- compile exe build-identity debug native cached 8ms MaxRSS:41M
+|  |  +- WriteFile cached
+|  |  +- compile obj juice_bytes_hash fast native cached 6ms MaxRSS:42M
+|  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 7ms MaxRSS:42M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check failure
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 7ms
++- install generated to selka-components cached
+|  +- compile exe selka-components safe native cached 6ms MaxRSS:42M
++- run exe selka-components success 412ms
+|  +- compile exe selka-components safe native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)

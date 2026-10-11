@@ -1,0 +1,12 @@
+application.my:89:19: error[E_ENVIRONMENT_NAME]: environment name must be a literal str
+      match env.get(name):
+                    ^
+@stdlib/durable.my:86:14: error[E_SHADOWING]: parameter shadows a top-level function
+  func journal(descriptor: str, phase: str, output: str, artifacts: str[]) -> bytes:
+               ^
+@stdlib/durable.my:111:29: error[E_SHADOWING]: parameter shadows a top-level function
+  func read_step(data: bytes, descriptor: str, index: int, chunk: bytes, state: bytes) -> Result[Step, Error]:
+                              ^
+@stdlib/durable.my:144:15: error[E_NONE_UNIT]: None means optional absence; write () for the Unit value
+      return Ok(None)
+                ^

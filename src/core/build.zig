@@ -1949,6 +1949,8 @@ const FnBuilder = struct {
         if (target == .byte_buffer) return build_bytes.fromValue(@TypeOf(self), self, source, operand, span);
         if (target == .bytes and source == .byte_buffer) return self.runtimeCall("myl_core_buffer_snapshot", &.{.byte_buffer}, .bytes, &.{operand}, span);
         if (target == .bytes and self.mb.module.kind(source) == .list) return build_text.fromList(@TypeOf(self), self, source, operand, span);
+        if (target == .str and self.mb.module.kind(source) == .@"fn")
+            return @import("build_callable_digest.zig").lower(self, operand_node, operand, span);
         if (target == .str) return self.textOf(operand, self.nodeOf(operand_node).ty, span);
         if (source == target) return operand;
         const from = source.integer() orelse return self.mb.refuse("cast source", span);

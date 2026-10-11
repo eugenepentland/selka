@@ -91,6 +91,11 @@ fn fileAccessSignature(kind: file_operations.Access) []const u8 {
         .listdir => "listdir(fs: Filesystem, path: str) -> Result[str[], str]",
         .mkdir => "mkdir(fs: Filesystem, path: str) -> Result[None, str]",
         .remove => "remove(fs: Filesystem, path: str) -> Result[None, str]",
+        .atomic_write_file => "atomic_write_file(fs: Filesystem, path: str, data: bytes) -> Result[None, str]",
+        .lock_directory => "lock_directory(fs: Filesystem, path: str) -> Result[File, str]",
+        .sync_directory => "sync_directory(fs: Filesystem, path: str) -> Result[None, str]",
+        .read_regular_file => "read_regular_file(fs: Filesystem, path: str, max_bytes: int) -> Result[bytes, str]",
+        .list_directory => "list_directory(fs: Filesystem, path: str, max_entries: int) -> Result[str[], str]",
     };
 }
 /// The accepted argument shapes of one open-handle method.

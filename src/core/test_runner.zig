@@ -32,6 +32,7 @@ const batch_entry = @import("test_runner_batch.zig");
 const directory_runner = @import("test_runner_directory.zig");
 const receipt = @import("test_runner_receipt.zig");
 const test_keys = @import("test_runner_identity.zig");
+const callable_digest = @import("callable_digest.zig");
 const tool_identity = @import("tool_identity.zig");
 const tool_ticket = @import("tool_ticket.zig");
 const planner = @import("mylang").cache_plan_adapter;
@@ -695,6 +696,9 @@ fn programIdentity(resources: IdentityResources, options: Options, checked: fron
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return null;
     };
+    // Identity queries observe final live-module membership and conservative
+    // indirect candidates, beyond this pre-finalization receipt closure.
+    if (callable_digest.needed(&module)) return null;
     const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
     const identity = receipt.programKey(base, case.name, .{ .module = &module, .source_path = source_path, .locator = pipeline.locator(&checked.src) });
     return identity;
@@ -806,7 +810,7 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
     const produced = try sharedFacts(s, .{ .checked = checked, .roots = roots, .catalog = planning_input.catalog }, &store, cache_plan.mode, work) orelse return null;
     const reachable = produced.module;
     const shared = produced.shared;
-    if (!readableRoots(&reachable, chosen)) return null;
+    if (!keyableRoots(&reachable, chosen)) return null;
     var schema: ?property_types.Schema = null;
     const tests = try a.alloc(?[32]u8, chosen.len);
     const requests = try s.alloc(test_keys.Test, chosen.len);
@@ -880,7 +884,9 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
 }
 
 /// `rootsFor` lists cases first, so ready case `i` is physical function `i`.
-fn readableRoots(module: *const @import("ir.zig").Module, chosen: []const Selected) bool {
+fn keyableRoots(module: *const @import("ir.zig").Module, chosen: []const Selected) bool {
+    // Fall back per test so unaffected roots keep their ordinary receipts.
+    if (callable_digest.needed(module)) return false;
     var root: usize = 0;
     for (chosen) |item| if (item.ready) {
         if (!expects(item.settings) and !entry.readable(module, module.functions.items[root].signature.ret)) return false;

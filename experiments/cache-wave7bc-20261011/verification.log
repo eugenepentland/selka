@@ -1,0 +1,125 @@
+build-slot: build slot 3, FIFO ticket 1277 after 0s
+Build Summary: 3/3 steps succeeded
+verification-plan success
++- install generated to inventory.json success
+   +- WriteFile verification-inventory.json success
+
+build-slot: FIFO ticket 1278, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 1278 after 5s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 55/650 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 6 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1938 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 55 file(s) in scope
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+Build Summary: 34/34 steps succeeded
+verification-prepare success
++- install success
+|  +- install mylang cached
+|  |  +- compile exe mylang debug native cached 9ms MaxRSS:42M
+|  |  |  +- run exe build-identity (build_identity) cached
+|  |  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:41M
+|  |  |  +- WriteFile cached
+|  |  |  +- compile obj juice_bytes_hash fast native cached 4ms MaxRSS:42M
+|  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:42M
+|  |  +- run ../guardian-zig/zig-out/bin/guardian-check success 2s
+|  |     +- guardian-selfcheck success
+|  |        +- run ../guardian-zig/zig-out/bin/guardian-check success 6ms
+|  +- install generated to selka-components cached
+|  |  +- compile exe selka-components safe native cached 10ms MaxRSS:42M
+|  +- run exe selka-components success 53s
+|  |  +- compile exe selka-components safe native (reused)
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install generated to bin/mylang success
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/units success
+|  +- compile test debug native success 4s MaxRSS:439M
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options cached
+|        +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/cli success
+|  +- compile test debug native success 1s MaxRSS:180M
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
+|        +- compile exe selka-components safe native (reused)
++- install generated to bin/core success
+|  +- compile test debug native success 5s MaxRSS:563M
+|     +- WriteFile (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options success
+|     |  +- compile exe mylang debug native (+5 more reused dependencies)
+|     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
++- install generated to bin/golden success
+|  +- compile test debug native success 607ms MaxRSS:159M
+|     +- options (+2 more reused dependencies)
++- install generated to bin/memory-budget cached
+|  +- compile test debug native cached 17ms MaxRSS:41M
++- install generated to bin/component-support cached
+|  +- compile test debug native cached 8ms MaxRSS:41M
++- install generated to bin/component-builder cached
+|  +- compile exe selka-components safe native (reused)
++- install generated to artifacts.json success
+   +- run python3 (artifacts.json) success 83ms
+      +- compile exe mylang debug native (+5 more reused dependencies)
+      +- compile test debug native (+2 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (+6 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (reused)
+      +- compile test debug native (reused)
+      +- compile exe selka-components safe native (reused)
+
+verification: fresh component-preparation (component manifests and installed outputs require validation)
+verification: fresh input-discovery (directory membership must be discovered at execution time)
+verification: fresh environment-discovery (live inherited environment must be discovered at execution time)
+verification: execute core (no valid receipt)
+verification: execute memory_budget (no valid receipt)
+verification: execute unit (no valid receipt)
+verification: execute cli (no valid receipt)
+verification: execute golden (no valid receipt)
+verification: execute idioms_self (no valid receipt)
+verification: execute idioms (no valid receipt)
+verification: execute incremental (no valid receipt)
+verification: execute interfaces (no valid receipt)
+verification: execute interface_oracle (no valid receipt)
+verification: execute parser_hints (no valid receipt)
+verification: execute friction (no valid receipt)
+verification: execute tooling_isolation (no valid receipt)
+verification: execute application_cache (no valid receipt)
+verification: execute component_builder (no valid receipt)
+verification: execute component_native (no valid receipt)
+verification: execute component-support (no valid receipt)
+verification: execute selfhost_numeric (no valid receipt)
+verification: fresh spec-history (SPEC replay reads git history and creates repositories)
+verification: fresh juice (native performance collectors and host state require fresh execution)
+verification: fresh juice-runtime (runtime collectors observe CPU, scheduler and current host state)
+verification: fresh identity-qualification (compiler identity qualification produces temporary compiler artifacts)
+verification: execute affected (no valid receipt)
+verification: execute coverage_self (no valid receipt)
+verification: fresh coverage (fixture membership and negative path lookups outside source recipes require freshness)
+verification: execute manifest_self (no valid receipt)
+verification: execute verification_cache (no valid receipt)
+verification: execute fuzz_campaign (no valid receipt)
+verification: execute juice_cache (no valid receipt)
+verification: execute doc-coverage (no valid receipt)
+verification: fresh guest (guest Host and external-effect eligibility remains compiler-authoritative)
+verification: fresh language (guest Host and external-effect eligibility requires execution-time admission)
+verification: execute doctest (no valid receipt)
+verification: execute zig-format (no valid receipt)
+verification: execute my_format (no valid receipt)
+verification: execute my_format_self (no valid receipt)
+verification: execute noalloc_lint (no valid receipt)
+verification: execute embedded_migration (no valid receipt)
+verification: fresh guardian (Guardian source, git scope and mutable policy validation require freshness)
+build-slot: FIFO ticket 141, position 1; all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: FIFO ticket 141, position 1; all 1 gate slot(s) busy; waiting (61s so far)
+build-slot: FIFO ticket 141, position 1; all 1 gate slot(s) busy; waiting (121s so far)
+build-slot: FIFO ticket 141, position 1; all 1 gate slot(s) busy; waiting (181s so far)
+Terminated                 sleep "$poll"
+verification: cancelled; no new success receipts

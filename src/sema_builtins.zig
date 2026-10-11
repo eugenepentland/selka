@@ -750,9 +750,10 @@ fn fileAccessType(comptime Checker: type, self: *Checker, kind: file_operations.
     const shapes = try fileShapes(Checker, self, span);
     const payload: typed.Type = switch (kind) {
         .open => if (mode.text) .text_file else .file,
-        .read_file => shapes.bytes,
+        .lock_directory => .file,
+        .read_file, .read_regular_file => shapes.bytes,
         .read_text => shapes.text,
-        .listdir => shapes.list,
+        .listdir, .list_directory => shapes.list,
         .exists => return .bool,
         else => .unit,
     };
@@ -770,9 +771,11 @@ fn checkFileAccess(comptime Checker: type, self: *Checker, node: ast.Node, kind:
     try self.require(self.nodes.items[@backingInt(receiver)].ty, .filesystem_cap, node.span);
     try self.require(self.nodes.items[@backingInt(arguments[1])].ty, shapes.text, self.nodes.items[@backingInt(arguments[1])].span);
     const mode = try openMode(Checker, self, kind, value_arguments);
-    if (kind == .write_file) try self.require(self.nodes.items[@backingInt(arguments[2])].ty, shapes.bytes, node.span);
+    if (kind == .write_file or kind == .atomic_write_file) try self.require(self.nodes.items[@backingInt(arguments[2])].ty, shapes.bytes, node.span);
+    if (kind == .read_regular_file or kind == .list_directory) try self.require(self.nodes.items[@backingInt(arguments[2])].ty, .i64, node.span);
     if (kind == .write_text) try self.require(self.nodes.items[@backingInt(arguments[2])].ty, shapes.text, node.span);
-    const direct = kind == .open and self.trapping_open != null and std.meta.eql(self.trapping_open.?, node.span);
+    const opens = kind == .open or kind == .lock_directory;
+    const direct = opens and self.trapping_open != null and std.meta.eql(self.trapping_open.?, node.span);
     out.ty = if (direct) (if (mode.text) .text_file else .file) else try fileAccessType(Checker, self, kind, mode, node.span);
     out.data = .{ .file_access = .{ .kind = kind, .mode = mode.letter, .text = mode.text, .arguments = arguments, .shapes = shapes } };
 }

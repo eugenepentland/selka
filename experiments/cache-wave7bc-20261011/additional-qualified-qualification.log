@@ -1,0 +1,3 @@
+build-slot: build slot 1, FIFO ticket 1300 after 0s
+{"complete": true, "kind": "large-prefix", "calls": 2, "chunks": 260, "store_entries": 262}
+{"complete": true, "kind": "debug-pipeline", "calls": 5, "sigkill": 1}

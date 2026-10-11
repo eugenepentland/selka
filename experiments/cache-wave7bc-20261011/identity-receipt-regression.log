@@ -1,0 +1,58 @@
+build-slot: build slot 1, FIFO ticket 1290 after 0s
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test-core
++- run test 0 pass, 2 fail (2 total)
+guardian/test: test wall 0.52s; slowest over 50ms:
+guardian/test:   0.26s  test_runner_test.test.function_digest receipt refusal protects per-test fallback and keeps unrelated receipts
+guardian/test:   0.25s  test_runner_test.test.function_digest receipt refusal tracks compatible target edits and live batch membership in shared keys
+guardian/test: FAIL — 2 failed of 2
+guardian/test: RESULT {"passed":0,"failed":2,"skipped":0}
+error: 'test_runner_test.test.function_digest receipt refusal tracks compatible target edits and live batch membership in shared keys' failed:
+       guardian/test: 2 test(s) selected by filter: "function_digest receipt refusal"
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x12901c9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_test.zig:587:5: 0x1291b57 in expectDigestFresh (root_test.zig)
+           try std.testing.expect(explanation.object.get("key") == null);
+           ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_test.zig:597:5: 0x1292241 in qualifyDigestReceipts (root_test.zig)
+           try expectDigestFresh(cold, "passed");
+           ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_test.zig:623:5: 0x12fd785 in test.function_digest receipt refusal tracks compatible target edits and live batch membership in shared keys (root_test.zig)
+           try qualifyDigestReceipts(arena.allocator(), "shared");
+           ^
+error: 'test_runner_test.test.function_digest receipt refusal protects per-test fallback and keeps unrelated receipts' failed:
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x12901c9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_test.zig:587:5: 0x1291b57 in expectDigestFresh (root_test.zig)
+           try std.testing.expect(explanation.object.get("key") == null);
+           ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_test.zig:597:5: 0x1292241 in qualifyDigestReceipts (root_test.zig)
+           try expectDigestFresh(cold, "passed");
+           ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_test.zig:630:5: 0x1293595 in test.function_digest receipt refusal protects per-test fallback and keeps unrelated receipts (root_test.zig)
+           try qualifyDigestReceipts(arena.allocator(), "per-test");
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components ./.zig-cache/o/a3ff2d1a6ff287fc23c9fcec22628827/test "--guardian-filter=function_digest receipt refusal" --cache-dir=./.zig-cache --seed=0xe24663af --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 0/2 tests passed (2 failed)
+test-core transitive failure
++- run test 0 pass, 2 fail (2 total)
+   +- compile test debug native success 322ms MaxRSS:191M
+   |  +- WriteFile cached
+   |  +- compile obj juice_bytes_hash fast native cached 6ms MaxRSS:37M
+   |  +- compile obj juice_bytes_hash fast native (reused)
+   |  +- run exe build-identity (build_identity) success 35ms
+   |  |  +- compile exe build-identity debug native cached 5ms MaxRSS:41M
+   |  +- options success
+   |  |  +- compile exe mylang debug native success 3s MaxRSS:553M
+   |  |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |  |     +- WriteFile (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:37M
+   |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+   +- run exe selka-components success 385ms
+      +- compile exe selka-components safe native cached 7ms MaxRSS:37M

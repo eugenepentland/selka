@@ -1,0 +1,43 @@
+build-slot: build slot 1, FIFO ticket 1226 after 0s
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test-core
++- run test
+   +- compile test debug native
+      +- options
+         +- compile exe mylang debug native 1 errors
+src/core/pipeline.zig:461:10: error: expected type 'error{CacheMiss,ConfigurationFailed,InvalidIr,OutOfMemory,PolicyDenied,SourceError,ToolFailed,Unsupported,WriteFailed}!?tool_identity.Identity', found 'error{OutOfMemory,ReadFailed,SourceChanged,ToolNotFound,WriteFailed}'
+    if (!try @import("tool_identity.zig").unchanged(request, tool)) return error.ToolFailed;
+         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/pipeline.zig:461:10: note: 'error.ReadFailed' not a member of destination error set
+src/core/pipeline.zig:461:10: note: 'error.SourceChanged' not a member of destination error set
+src/core/pipeline.zig:461:10: note: 'error.ToolNotFound' not a member of destination error set
+src/core/pipeline.zig:442:121: note: function return type declared here
+fn prepareCallables(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, cache: StageContext) Error!?@import("tool_identity.zig").Identity {
+                                                                                                                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+referenced by:
+    linkEmittedCached: src/core/pipeline.zig:374:47
+    buildAttempt: src/core/pipeline.zig:220:42
+    15 reference(s) hidden; use '-freference-trace=17' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep mylang --dep memory_budget --dep compiler_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep build_identity --dep mylang_core -Mroot=src/main.zig -ODebug --dep memory_budget -Mmylang=src/compiler.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -ODebug -Mbuild_identity=.zig-cache/o/811c3bafc1fa2c32010a6f4ba420f50d/build_identity/identity.zig .zig-cache/o/4c97392a0fe7357cb3738fea423e3ed9/juice_bytes_hash.o -ODebug -I .zig-cache/o/f77856bf22d15753e2ef722d1f09ae46 --dep mylang --dep core_tool_platform --dep build_identity --dep memory_budget --dep core_number_text_object -Mmylang_core=src/core/cli.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -Mcore_number_text_object=.zig-cache/o/613a15d57de9e110f222ab5a539d578c/core_number_text.o --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name mylang --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 7/12 steps succeeded (1 failed)
+test-core transitive failure
++- run test transitive failure
+   +- compile test debug native transitive failure
+   |  +- WriteFile cached
+   |  +- compile obj juice_bytes_hash fast native cached 5ms MaxRSS:42M
+   |  +- compile obj juice_bytes_hash fast native (reused)
+   |  +- run exe build-identity (build_identity) success 32ms
+   |  |  +- compile exe build-identity debug native cached 5ms MaxRSS:41M
+   |  +- options transitive failure
+   |  |  +- compile exe mylang debug native 1 errors
+   |  |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |  |     +- WriteFile (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:42M
+   |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+   +- run exe selka-components success 393ms
+      +- compile exe selka-components safe native cached 6ms MaxRSS:42M

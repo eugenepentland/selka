@@ -1,0 +1,57 @@
+[
+  {
+    "name": "build-logs.json",
+    "size": 485,
+    "sha256": "1f7301ffeda4a5e9bca2aa43429c365c05b16cc4822720a54d50f556317eaea1"
+  },
+  {
+    "name": "calls.jsonl",
+    "size": 40820,
+    "sha256": "5efd484231991c67a4d35ee6fbdea4d83618e9db8095a7e54812f5aeed29f8aa"
+  },
+  {
+    "name": "command.json",
+    "size": 1553,
+    "sha256": "489add7dd78dcfbfb64b93257403c1c4518bcd164d7d7c9e002826ed3018f4cf"
+  },
+  {
+    "name": "faults.jsonl",
+    "size": 2948,
+    "sha256": "40f2bf051cc7eb1eb8246ce490bcede6f97516645e742c4b112b8e7cc03591f4"
+  },
+  {
+    "name": "oracle-baseline.csv",
+    "size": 192,
+    "sha256": "a1e969038c65ae7cc31a882252268e20c1883e9594b8a8e2aaa3c63d625f8e76"
+  },
+  {
+    "name": "oracle-baseline.json",
+    "size": 117,
+    "sha256": "4f2c3bb3db8d44b697d26b108f6b0e8c698a406d40857ca22bdf4e056b2c94a6"
+  },
+  {
+    "name": "oracle-pipeline-body.csv",
+    "size": 195,
+    "sha256": "13f2fb72b667e30002ba5fc6f7fb15c292fe08f91646d0f760b7a06ca9d40903"
+  },
+  {
+    "name": "oracle-pipeline-body.json",
+    "size": 117,
+    "sha256": "f1c86b70347486f62316af33a0a4d22e154e39291c41b8d196da6bd72f6b1e2d"
+  },
+  {
+    "name": "oracle-shared-helper.csv",
+    "size": 197,
+    "sha256": "012938b7498d6d02b28ee6b29a12f68f9fe0b16c8f74ce3513e4949091779ac7"
+  },
+  {
+    "name": "oracle-shared-helper.json",
+    "size": 117,
+    "sha256": "26b5b3d8178b709d4cead865d4c319d513f957342b54f02b1583eb03bad76e00"
+  },
+  {
+    "name": "summary.json",
+    "size": 149080,
+    "sha256": "a85391bc3b9950e59641a7b1566662c1fdfcf1bc3be11afa6f5bb470670bd25d"
+  }
+]
