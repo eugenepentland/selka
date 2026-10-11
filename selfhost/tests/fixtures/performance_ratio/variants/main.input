@@ -1,0 +1,10 @@
+import helper
+
+public func test_work() -> bool:
+    return helper.work() == 7
+
+public func test_repeat() -> bool:
+    return helper.work() == helper.work()
+
+func main() -> int:
+    return helper.work()

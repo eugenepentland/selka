@@ -1,0 +1,33 @@
+public record Payload:
+    values: int[]
+
+public enum Choice:
+    item(payload: Payload, label: int = 2)
+    empty
+
+func make() -> Choice:
+    return Choice.item(payload=Payload(values=[3, 4]))
+
+func measure(value: Choice) -> int:
+    match value:
+        case Choice.item(label=label, payload=payload):
+            mut copied = payload
+            copied.values[0] = 99
+            if copied.values[0] == 99:
+                return payload.values[0] + payload.values[1] + label
+            return 0
+        case Choice.empty:
+            return 0
+
+public func work() -> int:
+    mut value = make()
+    mut total = 0
+    for index in range(100):
+        _ = index
+        value = make()
+        total += measure(value)
+    const saved = value
+    value = Choice.empty
+    if total == 900 and measure(value) == 0:
+        return measure(saved) - 2
+    return 0

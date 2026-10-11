@@ -1,0 +1,34 @@
+public enum Failure:
+    bad
+    empty
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure.bad
+    if value == 0:
+        fail Failure.empty
+    return value
+
+func forward(value: int) -> int fails Failure:
+    const result = try parse(value)
+    return result + 1
+
+public func work() -> int:
+    mut total = 0
+    for index in range(100):
+        _ = index
+        const result = forward(6)
+        match result:
+            case Ok(value):
+                total += value
+            case Err(_):
+                return 0
+    match forward(-1):
+        case Ok(value):
+            return value
+        case Err(Failure.bad):
+            if total == 700:
+                return 7
+            return 0
+        case Err(Failure.empty):
+            return 0

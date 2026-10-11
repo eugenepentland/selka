@@ -93,7 +93,7 @@ def main():
     for item in args.candidate_mode:
         name,value=item.split('=',1);F.require(name in MODES and name not in modes and value in ('reference','component'),'invalid explicit mode');modes[name]=value
     F.require(bool(modes),'candidate mode selection must be explicit')
-    evidence={'tool_sha256':F.digest(Path(__file__)),'affinity':sorted(os.sched_getaffinity(0)),'facts_leaks':'qualified before timings; disabled consistently during timings','scope':'intermediate seven-package scalar/managed/list/record subset, not full language selfhosting','iterations':args.iterations,'modes':modes,'hosts':{},'rows':{},'behavior_checks':[]}
+    evidence={'tool_sha256':F.digest(Path(__file__)),'affinity':sorted(os.sched_getaffinity(0)),'facts_leaks':'qualified before timings; disabled consistently during timings','scope':'intermediate seven-package scalar/managed/list/record/variant/failure subset, not full language selfhosting','iterations':args.iterations,'modes':modes,'hosts':{},'rows':{},'behavior_checks':[]}
     with tempfile.TemporaryDirectory(prefix='performance-ratio-') as temporary:
         work=Path(temporary);empty=work/'empty';empty.mkdir()
         # Match native-unit warmth before either host contributes timing samples.

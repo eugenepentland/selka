@@ -47,13 +47,13 @@ class StrictPerformanceTests(unittest.TestCase):
 
     def test_full_sweep_preserves_every_workflow_row(self):
         names=sorted(path.name for path in P.FIXTURES.iterdir())
-        self.assertEqual(names,['lists','managed','records','scalar'])
+        self.assertEqual(names,['failures','lists','managed','records','scalar','variants'])
         phases=['check','compile-fresh-application-cache','compile-warm','test-cold','test-warm','runtime']
         baseline={name+'/'+phase:self.row([100]*20) for name in names for phase in phases}
         candidate=dict(baseline)
-        candidate['records/runtime']=self.row([151]*20)
+        candidate['failures/runtime']=self.row([151]*20)
         result=P.verdict(baseline,candidate)
-        self.assertEqual(len(result['rows']),24)
+        self.assertEqual(len(result['rows']),36)
         self.assertFalse(result['passed'])
 
     def test_warm_build_requires_replay_and_zero_new_processes(self):
