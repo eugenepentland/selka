@@ -433,8 +433,9 @@ class BodyQualificationTests(unittest.TestCase):
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         refusals=[n for n,v in manifest.items() if v['status']==2]
-        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','profile_text_repeat.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my','optional_methods_profile.my','optional_narrowing_profile.my','bytes_encode_profile.my','bytes_decode_profile.my'})
+        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my','optional_methods_profile.my','optional_narrowing_profile.my','bytes_encode_profile.my','bytes_decode_profile.my'})
         self.assertEqual(manifest['profile_managed.my']['result'], 1)
+        self.assertEqual(manifest['profile_text_repeat.my'], {'status': 0, 'boundary': 'text-repetition-body', 'typed': True, 'library': False, 'result': 7})
         self.assertTrue(all((D.FIXTURES/Path(n).with_suffix('.input')).is_file() for n in manifest))
         self.assertTrue(manifest['library.my']['library'])
 

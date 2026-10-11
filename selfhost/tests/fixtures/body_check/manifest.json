@@ -129,10 +129,11 @@
     "library": false
   },
   "profile_text_repeat.my": {
-    "status": 2,
-    "boundary": "profile",
-    "typed": false,
-    "library": false
+    "status": 0,
+    "boundary": "text-repetition-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "profile_lambda.my": {
     "status": 2,
