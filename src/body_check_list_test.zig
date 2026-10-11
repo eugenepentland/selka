@@ -192,6 +192,62 @@ fn nativeBody(a: std.mem.Allocator, text: []const u8) !BodyFixture {
 fn admitted(a: std.mem.Allocator, f: BodyFixture) !void {
     try @import("body_check_validate.zig").outcome(a, f.input, .{ .success = f.output });
 }
+// spec: SELFHOST-BODY-KEYLESS-SORT-1
+test "body lists admit native keyless reverse sorting with immutable copy sources" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    for ([_][]const u8{ "i8", "i16", "i32", "int", "u8", "u16", "u32", "u64", "float", "str", "bytes" }) |element| {
+        const text = try std.fmt.allocPrint(a, "func order(values: {s}[], flag: bool) -> {s}[]:\n    return sorted(values, reverse=flag)\n", .{ element, element });
+        const f = try nativeBody(a, text);
+        try admitted(a, f);
+        const inplace = try std.fmt.allocPrint(a, "func order(mut values: {s}[], flag: bool) -> int:\n    values.sort(reverse=flag)\n    return 7\n", .{element});
+        try admitted(a, try nativeBody(a, inplace));
+    }
+}
+// spec-case: SELFHOST-BODY-KEYLESS-SORT-1
+test "body lists reject forged keyless sort types arity writability and independent keys" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try nativeBody(a, "func order(values: int[], flag: bool) -> int[]:\n    return sorted(values, reverse=flag)\n");
+    try admitted(a, f);
+    var found = false;
+    for (@constCast(f.output.batch.nodes)) |*node| {
+        if (node.data != .buffer_operation or node.data.buffer_operation.kind != .sort_keyed) continue;
+        found = true;
+        const original = node.*;
+        const arguments = original.data.buffer_operation.arguments;
+        node.ty = .i64;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        node.data.buffer_operation.arguments = arguments[0..2];
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        node.data.buffer_operation.arguments = &.{ arguments[2], arguments[1], arguments[2] };
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.data.buffer_operation.arguments = &.{ arguments[0], arguments[2], arguments[2] };
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.data.buffer_operation.arguments = &.{ arguments[0], arguments[1], arguments[0] };
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        const keys = &@constCast(f.output.batch.nodes)[@backingInt(arguments[1])];
+        const original_keys = keys.*;
+        keys.data.local = original.data.buffer_operation.owner;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        keys.* = original_keys;
+        const receiver = &@constCast(f.output.batch.functions[0].scope.locals)[@backingInt(original.data.buffer_operation.owner)];
+        receiver.mutable = false;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        receiver.mutable = true;
+        node.data.buffer_operation.owner = @fromBackingInt(1);
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        try admitted(a, f);
+        break;
+    }
+    try std.testing.expect(found);
+}
 // spec-case: SELFHOST-BODY-LISTS-1
 test "body lists admit native indexed augmentation and reject forged addition results and operands" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

@@ -509,6 +509,7 @@ fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
         return @import("body_check_buffer_validate.zig").operation(graph.context.catalog, owner, node.ty, operation.kind, arguments, writable);
     };
     if (operation.arguments.len != operation.kind.arity()) return error.ComponentProtocol;
+    if (operation.kind == .sort_keyed) return keylessSort(graph, node, owner, element);
     if (operation.kind == .sort and !sortableListElement(graph.context.catalog, element)) return error.ComponentProtocol;
     const expected: typed.Type = switch (operation.kind) {
         .length, .capacity => .u64,
@@ -531,6 +532,20 @@ fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
         };
         if (try nodeType(graph, argument) != wanted) return error.ComponentProtocol;
     }
+}
+
+fn keylessSort(graph: *Graph, node: typed.Node, owner: typed.Type, element: typed.Type) Error!void {
+    const operation = node.data.buffer_operation;
+    const receiver = graph.tables.functions[graph.function].scope.locals[@backingInt(operation.owner)];
+    if (node.ty != .unit or !receiver.mutable) return error.ComponentProtocol;
+    if (!sortableListElement(graph.context.catalog, element)) return error.ComponentProtocol;
+    const arguments = operation.arguments;
+    if (try nodeType(graph, arguments[0]) != owner or try nodeType(graph, arguments[1]) != owner or try nodeType(graph, arguments[2]) != .bool) return error.ComponentProtocol;
+    const source_node = graph.tables.nodes[@backingInt(arguments[0])];
+    const keys = graph.tables.nodes[@backingInt(arguments[1])];
+    // Keyless sorting reads the original list twice. A separate key list
+    // belongs to callback lowering and remains outside this admission.
+    if (source_node.data != .local or keys.data != .local or source_node.data.local != keys.data.local) return error.ComponentProtocol;
 }
 
 fn integerOption(initial: value.Catalog, recipes: []const value.CatalogRecipe) ?typed.Type {
