@@ -226,9 +226,16 @@ class BodyQualificationTests(unittest.TestCase):
 
     def test_b5_manifest_preserves_every_proposal_case_and_promotes_union(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
-        names={path.with_suffix('.my').name for path in (D.FIXTURES.parent/'body_check_b5').glob('*.input')}
+        inventory=json.loads((D.FIXTURES/'b5_inventory.json').read_text())
+        cases,donors=set(inventory['cases']),set(inventory['donors'])
+        names=cases|donors
+        self.assertEqual(len(inventory['cases']),24)
+        self.assertEqual(len(cases),24)
+        self.assertEqual(donors,{'variant_import_dep.my'})
         self.assertEqual(len(names),25)
-        self.assertEqual(names-set(manifest),{'variant_import_dep.my'})
+        self.assertEqual(names-set(manifest),donors)
+        self.assertTrue(all((D.FIXTURES/Path(name).with_suffix('.input')).is_file() for name in names))
+        self.assertEqual(inventory['counts'],{'success':14,'diagnostic':8,'profile':2})
         self.assertEqual(manifest['record_union_profile.my']['result'],7)
         self.assertEqual(manifest['variant_recursive_lists.my']['result'],7)
         self.assertEqual(manifest['variant_boxed_recursive_profile.my']['status'],2)
