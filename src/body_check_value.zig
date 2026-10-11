@@ -13,7 +13,11 @@ pub const Context = struct { path: []const u8, source: []const u8, trusted_intri
 /// Explicit module namespace and initial import usage in merged coordinates.
 pub const Module = struct { context: declaration.Context, offset: usize, imports: []const declaration.Import, symbols: []const declaration.Symbol, import_used: []const bool };
 /// Complete raw syntax and namespace inputs for one scalar body batch.
-pub const Input = struct { context: Context, program: ast.Program, modules: []const Module };
+pub const Input = struct { context: Context, program: ast.Program, modules: []const Module, catalog: Catalog = .{} };
+/// Native retained prelude identities; absent entries are unavailable, never inferred.
+pub const Catalog = struct { string: ?Sequence = null, bytes: ?Sequence = null };
+/// The exact managed identity and its internal scalar element representation.
+pub const Sequence = struct { id: typed.Type, element: typed.Type };
 /// Complete typed tables before entry adaptation and native postpasses.
 pub const Batch = struct { nodes: []const typed.Node, statements: []const typed.Statement, functions: []const typed.Function, ranges: []const @import("semantic_copy.zig").Range };
 /// Typed bodies and all ordered checker observations.

@@ -320,3 +320,124 @@ test "body check merges common prebody usage without concealing missing body obs
     try std.testing.expectError(error.ComponentProtocol, projection.mergeUsage(std.testing.allocator, &.{}, &common));
     try std.testing.expectError(error.ComponentProtocol, projection.mergeUsage(std.testing.allocator, &.{&.{false}}, &common));
 }
+
+fn managedFixture(a: std.mem.Allocator, text_source: []const u8) !Fixture {
+    const src = try source.Source.init(a, "managed.my", text_source);
+    var sink: diagnostic.Sink = .{ .allocator = a };
+    const tokens = try lexer.lex(a, src.bytes, &sink);
+    var p: parser.Parser = .{ .src = src, .tokens = tokens, .storage = a, .sink = &sink };
+    const syntax = try p.parse();
+    const program = try @import("sema.zig").checkLibraryProgram(a, src, syntax, &sink, null);
+    var catalog: value.Catalog = .{};
+    for (program.records) |record| {
+        if (!record.isCollection()) continue;
+        const entry: value.Sequence = .{ .id = record.id, .element = record.shape.buffer.? };
+        if (record.collection.kind == .string) catalog.string = entry;
+        if (record.collection.kind == .bytes and std.mem.eql(u8, record.name, "bytes")) catalog.bytes = entry;
+    }
+    const ranges = try a.alloc(@import("semantic_copy.zig").Range, 1);
+    ranges[0] = .{ .nodes = .{ .start = 0, .end = program.nodes.len }, .statements = .{ .start = 0, .end = program.statements.len } };
+    return .{
+        .input = .{ .context = .{ .path = src.path, .source = src.bytes, .trusted_intrinsics = false, .entry_required = false }, .program = syntax, .modules = &.{}, .catalog = catalog },
+        .output = .{ .batch = .{ .nodes = program.nodes, .statements = program.statements, .functions = program.functions, .ranges = ranges }, .import_used = &.{}, .diagnostics = &.{} },
+    };
+}
+fn acceptsManaged(a: std.mem.Allocator, f: Fixture) !void {
+    const request = try protocol.request(a, f.input, @splat(4));
+    defer a.free(request.bytes);
+    const response = try protocol.response(a, .{ .success = f.output }, request.identity);
+    defer a.free(response);
+    var decoded = try protocol.reply(a, response, request.identity, f.input);
+    defer decoded.deinit();
+    try std.testing.expect(try value.equal(a, .{ .success = f.output }, decoded.outcome));
+}
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check schema two accepts native Unicode text and byte sequence graphs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const cases = [_][]const u8{
+        "func text(value: str) -> str:\n    return value + \"é😀\"\n",
+        "func octets(value: bytes) -> bytes:\n    return value + b\"\\x00\\xff\"\n",
+        "func count(value: str) -> int:\n    return len(value)\n",
+        "func item(value: str) -> str:\n    return value[-1]\n",
+        "func item(value: bytes) -> int:\n    return value[0]\n",
+        "func order(left: bytes, right: bytes) -> bool:\n    return left < right\n",
+    };
+    for (cases) |case| try acceptsManaged(a, try managedFixture(a, case));
+}
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check rejects forged managed catalog identities and elements" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var f = try fixture(arena.allocator());
+    f.input.catalog.string = .{ .id = .i64, .element = .u32 };
+    try std.testing.expectError(error.ComponentProtocol, validate.input(std.testing.allocator, f.input));
+    f.input.catalog.string = .{ .id = @fromBackingInt(typed.Type.record_base), .element = .u8 };
+    try std.testing.expectError(error.ComponentProtocol, validate.input(std.testing.allocator, f.input));
+    f.input.catalog.string = .{ .id = @fromBackingInt(typed.Type.record_base), .element = .u32 };
+    f.input.catalog.bytes = .{ .id = @fromBackingInt(typed.Type.record_base), .element = .u8 };
+    try std.testing.expectError(error.ComponentProtocol, validate.input(std.testing.allocator, f.input));
+    f.input.catalog.bytes = .{ .id = @fromBackingInt(typed.Type.record_base + 65536), .element = .u8 };
+    try std.testing.expectError(error.ComponentProtocol, validate.input(std.testing.allocator, f.input));
+    f.input.catalog.bytes = .{ .id = @fromBackingInt(typed.Type.record_base + 65535), .element = .u8 };
+    try validate.input(std.testing.allocator, f.input);
+}
+fn corruptCodepoint(a: std.mem.Allocator, f: Fixture, number: i128) !void {
+    var output = f.output;
+    const nodes = try a.dupe(typed.Node, output.batch.nodes);
+    for (nodes) |*node| {
+        if (node.ty == .u32 and node.data == .integer) {
+            node.data.integer = number;
+            break;
+        }
+    }
+    output.batch.nodes = nodes;
+    try rejects(a, f.input, output);
+}
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check rejects surrogate and out of range managed text codepoints" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try managedFixture(a, "func text() -> str:\n    return \"x\"\n");
+    try acceptsManaged(a, f);
+    try corruptCodepoint(a, f, 0xd800);
+    try corruptCodepoint(a, f, 0x110000);
+}
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check refuses schema one replies and unavailable sequence identities" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try managedFixture(a, "func text() -> str:\n    return \"x\"\n");
+    const request = try protocol.request(a, f.input, @splat(5));
+    const response = try protocol.response(a, .{ .success = f.output }, request.identity);
+    std.mem.writeInt(u32, response[12..16], 1, .little);
+    try std.testing.expectError(error.ComponentProtocol, protocol.reply(a, response, request.identity, f.input));
+    var absent = f.input;
+    absent.catalog = .{};
+    try rejects(a, absent, f.output);
+}
+
+fn corruptManagedIndex(a: std.mem.Allocator, f: Fixture, wrong_type: bool) !void {
+    var output = f.output;
+    const nodes = try a.dupe(typed.Node, output.batch.nodes);
+    for (nodes) |*node| {
+        if (node.data != .index) continue;
+        if (wrong_type) node.ty = .bool else node.data.index.index = @fromBackingInt(nodes.len);
+        break;
+    }
+    output.batch.nodes = nodes;
+    try rejects(a, f.input, output);
+}
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check rejects managed index result type and out of table operand" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try managedFixture(a, "func item(value: bytes) -> int:\n    return value[0]\n");
+    try acceptsManaged(a, f);
+    try corruptManagedIndex(a, f, true);
+    try corruptManagedIndex(a, f, false);
+}
