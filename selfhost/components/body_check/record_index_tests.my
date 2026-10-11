@@ -1,0 +1,39 @@
+import syntax_value
+import record_index
+
+public func test_exact_span_join_preserves_input_identity() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const later = try syntax_value.span(mut pool, 100, 105)
+    const earlier = try syntax_value.span(mut pool, 3, 8)
+    const same_start = try syntax_value.span(mut pool, 3, 7)
+    const duplicate = try syntax_value.span(mut pool, 3, 8)
+    const index = try record_index.make(pool, [later, earlier, same_start, duplicate])
+    return index.order == [2, 1, 3, 0] and record_index.find(index, 3, 8) == 1 and record_index.find(index, 3, 9) == -1 and record_index.find(index, 100, 105) == 0
+
+
+public func test_reverse_4096_declarations_indexed_join() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut spans: int[] = []
+    for id in range(4096):
+        const span = try syntax_value.span(mut pool, 8192 - id * 2, 8193 - id * 2)
+        spans.append(span)
+    const index = try record_index.make(pool, spans)
+    for id in range(4096):
+        if record_index.find(index, 8192 - id * 2, 8193 - id * 2) != id:
+            return False
+    return True
+
+
+public func test_index_empty_and_invalid_span() -> bool fails syntax_value.Problem:
+    const empty = record_index.empty()
+    if record_index.find(empty, 0, 0) != -1:
+        return False
+    mut pool = syntax_value.empty()
+    const start = try syntax_value.integer(mut pool, 10)
+    const end = try syntax_value.integer(mut pool, 9)
+    const span = try syntax_value.object(mut pool, ["start", "end"], [start, end])
+    match record_index.make(pool, [span]):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

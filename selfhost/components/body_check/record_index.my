@@ -1,0 +1,86 @@
+import syntax_value
+import graph
+
+# Exact merged declaration spans, stable IDs, bottom-up merge order.
+public record Index:
+    starts: int[]
+    ends: int[]
+    order: int[]
+
+
+public func empty() -> Index:
+    return Index(starts=[], ends=[], order=[])
+
+
+func before(index: Index, left: int, right: int) -> bool:
+    if index.starts[left] != index.starts[right]:
+        return index.starts[left] < index.starts[right]
+    return index.ends[left] <= index.ends[right]
+
+
+public func make(pool: syntax_value.Pool, spans: int[]) -> Index fails syntax_value.Problem:
+    if len(spans) > 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="record declaration index limit exceeded")
+    mut index = empty()
+    for span in spans:
+        const start_id = try graph.field(pool, span, "start")
+        const end_id = try graph.field(pool, span, "end")
+        const start = try graph.number(pool, start_id)
+        const end = try graph.number(pool, end_id)
+        if start < 0 or end < start:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid record declaration span")
+        index.starts.append(start)
+        index.ends.append(end)
+        index.order.append(len(index.order))
+    mut scratch = index.order
+    mut width = 1
+    while width < len(index.order):
+        mut first = 0
+        while first < len(index.order):
+            mut middle = first + width
+            if middle > len(index.order):
+                middle = len(index.order)
+            mut finish = middle + width
+            if finish > len(index.order):
+                finish = len(index.order)
+            mut left = first
+            mut right = middle
+            mut output = first
+            while output < finish:
+                if left < middle and (right >= finish or before(index, index.order[left], index.order[right])):
+                    scratch[output] = index.order[left]
+                    left = left + 1
+                else:
+                    scratch[output] = index.order[right]
+                    right = right + 1
+                output = output + 1
+            first = finish
+        index.order = scratch
+        width = width * 2
+    return index
+
+
+public func find(index: Index, start: int, end: int) -> int:
+    mut low = 0
+    mut high = len(index.order)
+    while low < high:
+        const middle = (low + high) // 2
+        const id = index.order[middle]
+        if index.starts[id] < start or (index.starts[id] == start and index.ends[id] < end):
+            low = middle + 1
+        else:
+            high = middle
+    if low == len(index.order):
+        return -1
+    const id = index.order[low]
+    if index.starts[id] == start and index.ends[id] == end:
+        return id
+    return -1
+
+
+public func lookup(index: Index, pool: syntax_value.Pool, span: int) -> int fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return find(index, start, end)

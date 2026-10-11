@@ -1,0 +1,68 @@
+import syntax_value
+import graph
+import record_types
+
+func declaration(mut pool: syntax_value.Pool, span: int, generic: bool) -> int fails syntax_value.Problem:
+    const managed = try syntax_value.boolean(mut pool, False)
+    const fields = try syntax_value.sequence(mut pool, [])
+    mut parameters: int[] = []
+    if generic:
+        parameters.append(span)
+    const types = try syntax_value.sequence(mut pool, parameters)
+    return try syntax_value.object(mut pool, ["managed", "type_parameters", "name", "fields"], [managed, types, span, fields])
+
+
+func row(mut pool: syntax_value.Pool, span: int, ty: int) -> int fails syntax_value.Problem:
+    const id = try syntax_value.integer(mut pool, ty)
+    const no = try syntax_value.boolean(mut pool, False)
+    const yes = try syntax_value.boolean(mut pool, True)
+    const none = try syntax_value.absent(mut pool)
+    const builtin = try syntax_value.enumeration(mut pool, b"none")
+    const shape = try syntax_value.object(mut pool, ["array", "domain", "variants", "buffer", "resource", "builtin", "tuple"], [none, none, none, none, none, builtin, no])
+    const contract = try syntax_value.object(mut pool, ["move_only", "requires_handling", "callback", "storable"], [no, no, none, yes])
+    const fields = try syntax_value.sequence(mut pool, [])
+    return try syntax_value.object(mut pool, ["id", "declaration", "managed", "shape", "contract", "fields"], [id, span, no, shape, contract, fields])
+
+
+public func test_catalog_join_uses_span_not_row_order() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const first = try syntax_value.span(mut pool, 2, 7)
+    const second = try syntax_value.span(mut pool, 20, 25)
+    const raw_first = try declaration(mut pool, first, False)
+    const raw_second = try declaration(mut pool, second, False)
+    const retained_second = try row(mut pool, second, 19)
+    const retained_first = try row(mut pool, first, 20)
+    const catalog = try record_types.prepare(pool, [retained_second, retained_first], [raw_first, raw_second])
+    const ty_first = try record_types.type_for(catalog, pool, first)
+    const ty_second = try record_types.type_for(catalog, pool, second)
+    return ty_first == 20 and ty_second == 19 and record_types.schema(catalog, 20) == retained_first and record_types.schema(catalog, 0) == -1
+
+
+public func test_generic_record_refuses_at_declaration() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 4, 10)
+    const raw = try declaration(mut pool, span, True)
+    match record_types.prepare(pool, [], [raw]):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and problem.start == 4 and problem.end == 10
+
+
+public func test_missing_or_duplicate_nominal_catalog_is_transport() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 4, 10)
+    const raw = try declaration(mut pool, span, False)
+    match record_types.prepare(pool, [], [raw]):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "P_BODY_TRANSPORT":
+                return False
+    const first = try row(mut pool, span, 19)
+    const second = try row(mut pool, span, 20)
+    match record_types.prepare(pool, [first, second], [raw]):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

@@ -1,0 +1,129 @@
+import syntax_value
+import graph
+import record_index
+
+public record Catalog:
+    rows: int[]
+    declarations: int[]
+    index: record_index.Index
+    by_type: int[]
+    admitted: bool[]
+    ids: int[]
+
+
+public func empty() -> Catalog:
+    return Catalog(rows=[], declarations=[], index=record_index.empty(), by_type=[], admitted=[], ids=[])
+
+
+func refusal(pool: syntax_value.Pool, span: int, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message=message)
+
+
+func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_value.Problem:
+    const value_id = try graph.field(pool, row, name)
+    const value = try graph.get(pool, value_id)
+    if value.kind != 2:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid record catalog flag")
+    return value.integer != 0
+
+
+public func prepare(pool: syntax_value.Pool, rows: int[], declarations: int[]) -> Catalog fails syntax_value.Problem:
+    if len(rows) > 65536 or len(declarations) > 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="record catalog limit exceeded")
+    mut spans: int[] = []
+    for declaration in declarations:
+        const span = try graph.field(pool, declaration, "name")
+        const parameters_id = try graph.field(pool, declaration, "type_parameters")
+        const parameters = try graph.items(pool, parameters_id)
+        const managed = try flag(pool, declaration, "managed")
+        if len(parameters) != 0 or managed:
+            const problem = try refusal(pool, span, "generic or managed record is outside the body profile")
+            fail problem
+        spans.append(span)
+    const index = try record_index.make(pool, spans)
+    mut catalog = Catalog(rows=rows, declarations=declarations, index=index, by_type=[], admitted=[], ids=[])
+    for unused in declarations:
+        catalog.ids.append(-1)
+    for unused in range(19):
+        catalog.by_type.append(-1)
+        catalog.admitted.append(False)
+    for position in range(len(rows)):
+        const row = rows[position]
+        const id_id = try graph.field(pool, row, "id")
+        const id = try graph.number(pool, id_id)
+        if id != 19 + position:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="record catalog IDs are not dense")
+        const span = try graph.field(pool, row, "declaration")
+        const declaration = try record_index.lookup(index, pool, span)
+        catalog.by_type.append(declaration)
+        if declaration >= 0:
+            catalog.ids[declaration] = id
+        catalog.admitted.append(declaration >= 0)
+        if declaration < 0:
+            continue
+        const managed = try flag(pool, row, "managed")
+        if managed:
+            const problem = try refusal(pool, span, "reference-identity record is outside the body profile")
+            fail problem
+        const shape = try graph.field(pool, row, "shape")
+        for name in ["array", "domain", "variants", "buffer", "resource"]:
+            const value_id = try graph.field(pool, shape, name)
+            const value = try graph.get(pool, value_id)
+            if value.kind != 0:
+                const problem = try refusal(pool, span, "specialized record representation is outside the body profile")
+                fail problem
+        const builtin_id = try graph.field(pool, shape, "builtin")
+        const builtin = try graph.get(pool, builtin_id)
+        const tuple = try flag(pool, shape, "tuple")
+        if builtin.data != b"none" or tuple:
+            const problem = try refusal(pool, span, "specialized record representation is outside the body profile")
+            fail problem
+        const contract = try graph.field(pool, row, "contract")
+        for name in ["move_only", "requires_handling"]:
+            const refused = try flag(pool, contract, name)
+            if refused:
+                const problem = try refusal(pool, span, "owned or result-bearing record is outside the body profile")
+                fail problem
+        const callback_id = try graph.field(pool, contract, "callback")
+        const callback = try graph.get(pool, callback_id)
+        const storable = try flag(pool, contract, "storable")
+        if callback.kind != 0 or not storable:
+            const problem = try refusal(pool, span, "record storage contract is outside the body profile")
+            fail problem
+        const fields_id = try graph.field(pool, row, "fields")
+        const fields = try graph.items(pool, fields_id)
+        for field in fields:
+            const boxed = try flag(pool, field, "boxed")
+            if boxed:
+                const problem = try refusal(pool, span, "boxed record field is outside the body profile")
+                fail problem
+    # Every raw ordinary declaration must have one retained nominal schema.
+    mut seen: bool[] = []
+    for unused in declarations:
+        seen.append(False)
+    for declaration in catalog.by_type:
+        if declaration >= 0:
+            if seen[declaration]:
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="duplicate retained nominal declaration")
+            seen[declaration] = True
+    for present in seen:
+        if not present:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="missing retained nominal declaration")
+    return catalog
+
+
+public func type_for(catalog: Catalog, pool: syntax_value.Pool, span: int) -> int fails syntax_value.Problem:
+    const declaration = try record_index.lookup(catalog.index, pool, span)
+    if declaration < 0:
+        return -1
+    return catalog.ids[declaration]
+
+
+public func schema(catalog: Catalog, ty: int) -> int:
+    if ty < 19 or ty >= len(catalog.by_type) or catalog.by_type[ty] < 0:
+        return -1
+    return catalog.rows[ty - 19]
