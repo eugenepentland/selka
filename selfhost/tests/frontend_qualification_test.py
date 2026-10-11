@@ -40,6 +40,23 @@ class QualificationTests(unittest.TestCase):
         for call in set_limit.call_args_list:
             self.assertEqual(call.args[1], (4096, 4096))
 
+    def test_compiler_rebuild_budget_keeps_output_and_inherited_limits(self):
+        unlimited = Q.resource.RLIM_INFINITY
+        with patch.object(Q.resource, 'getrlimit', return_value=(unlimited, unlimited)), patch.object(Q.resource, 'setrlimit') as set_limit:
+            Q.process_limits(4 << 30)
+        self.assertEqual(set_limit.call_args_list[0].args,
+                         (Q.resource.RLIMIT_FSIZE, (Q.OUTPUT_LIMIT, Q.OUTPUT_LIMIT)))
+        self.assertEqual(set_limit.call_args_list[1].args,
+                         (Q.resource.RLIMIT_AS, (4 << 30, 4 << 30)))
+        with patch.object(Q.resource, 'getrlimit', return_value=(1 << 30, unlimited)), patch.object(Q.resource, 'setrlimit') as set_limit:
+            Q.process_limits(4 << 30)
+        self.assertEqual(set_limit.call_args_list[1].args,
+                         (Q.resource.RLIMIT_AS, (1 << 30, 1 << 30)))
+        with patch.object(Q.resource, 'getrlimit', return_value=(unlimited, unlimited)), patch.object(Q.resource, 'setrlimit') as set_limit:
+            Q.process_limits()
+        self.assertEqual(set_limit.call_args_list[1].args,
+                         (Q.resource.RLIMIT_AS, (2 << 30, 2 << 30)))
+
     def test_old_profile_requires_explicit_baseline_schema(self):
         with tempfile.TemporaryDirectory() as temporary, patch.object(Q, 'PACKAGES', ('lexer-pilot',)):
             root = Path(temporary)

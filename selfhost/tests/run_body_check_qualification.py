@@ -17,6 +17,9 @@ COMPONENT = 'body-check'
 SCHEMA = 5
 FORGED_CHECKS = 66
 MALFORMED_CHECKS = 19
+# Rebuilding the complete release producer invokes LLVM on the compiler itself.
+# Installed request, forged-reply, and guest workflows retain the 2 GiB default.
+COORDINATOR_ADDRESS_SPACE_BUDGET = 4 << 30
 
 
 def frame(payload):
@@ -366,7 +369,7 @@ def coordinator_edit(args, q):
     installation = q.work / 'coordinator-install'
     command = [args.builder, '--root', source, '--zig', args.zig, '--install-dir', installation]
     env = coordinator_environment()
-    initial = F.execute(command, env, q.work, 600)
+    initial = F.execute(command, env, q.work, 600, address_space_budget=COORDINATOR_ADDRESS_SPACE_BUDGET)
     F.require(initial[0] == 0, f'private coordinator initial install failed: {initial!r}')
     before = packages(installation)
     path = source / 'selfhost/components/body_check/checking.my'
@@ -374,7 +377,7 @@ def coordinator_edit(args, q):
     text = path.read_text()
     F.require(text.count(marker) == 1, 'body implementation edit hook missing/ambiguous')
     path.write_text(text.replace(marker, 'if path.data == b"body_edit_marker_changed":'))
-    rebuilt = F.execute(command, env, q.work, 600)
+    rebuilt = F.execute(command, env, q.work, 600, address_space_budget=COORDINATOR_ADDRESS_SPACE_BUDGET)
     F.require(rebuilt[0] == 0, f'private body_check rebuild failed: {rebuilt!r}')
     after = packages(installation)
     F.require(before[COMPONENT]['key'] != after[COMPONENT]['key'] and
