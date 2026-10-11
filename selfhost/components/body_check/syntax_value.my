@@ -1,1 +1,103 @@
-../parser_pilot/syntax_value.my
+# Body-only graph profile: two million values; canonical parser profile stays unchanged.
+public record Problem:
+    code: str
+    start: int
+    end: int
+    message: str
+
+
+# Exact syntax values. Unlike the original reachable-tree projection, record
+# fields, optional values, enum tags and byte payloads are preserved explicitly.
+public record Value:
+    kind: int
+    integer: int
+    data: bytes
+    children: int[]
+    names: str[]
+
+
+public record Pool:
+    values: Value[]
+    bytes_used: int
+    edges_used: int
+
+
+public func empty() -> Pool:
+    return Pool(values=[], bytes_used=0, edges_used=0)
+
+
+func push(mut pool: Pool, value: Value) -> int fails Problem:
+    if len(pool.values) >= 2097152:
+        fail Problem(code="P_SYNTAX_LIMIT", start=0, end=0, message="P_SYNTAX_LIMIT")
+    if pool.bytes_used + len(value.data) > 67108864:
+        fail Problem(code="P_SYNTAX_LIMIT", start=0, end=0, message="P_SYNTAX_LIMIT")
+    mut added_bytes = len(value.data)
+    for name in value.names:
+        added_bytes = added_bytes + len(name)
+    if pool.bytes_used + added_bytes > 67108864 or pool.edges_used + len(value.children) > 4194304:
+        fail Problem(code="P_SYNTAX_LIMIT", start=0, end=0, message="P_SYNTAX_LIMIT")
+    for child in value.children:
+        if child < 0 or child >= len(pool.values):
+            fail Problem(code="P_SYNTAX_INDEX", start=0, end=0, message="P_SYNTAX_INDEX")
+    const id = len(pool.values)
+    pool.bytes_used = pool.bytes_used + added_bytes
+    pool.edges_used = pool.edges_used + len(value.children)
+    pool.values.append(value)
+    return id
+
+
+public func integer(mut pool: Pool, value: int) -> int fails Problem:
+    return try push(mut pool, Value(kind=1, integer=value, data=b"", children=[], names=[]))
+
+
+public func boolean(mut pool: Pool, value: bool) -> int fails Problem:
+    mut number = 0
+    if value:
+        number = 1
+    return try push(mut pool, Value(kind=2, integer=number, data=b"", children=[], names=[]))
+
+
+public func octets(mut pool: Pool, data: bytes) -> int fails Problem:
+    return try push(mut pool, Value(kind=3, integer=0, data=data, children=[], names=[]))
+
+
+public func enumeration(mut pool: Pool, tag: bytes) -> int fails Problem:
+    if len(tag) == 0 or len(tag) > 64:
+        fail Problem(code="P_SYNTAX_TAG", start=0, end=0, message="P_SYNTAX_TAG")
+    return try push(mut pool, Value(kind=4, integer=0, data=tag, children=[], names=[]))
+
+
+public func object(mut pool: Pool, names: str[], children: int[]) -> int fails Problem:
+    if len(names) != len(children) or len(names) > 64:
+        fail Problem(code="P_SYNTAX_FIELDS", start=0, end=0, message="P_SYNTAX_FIELDS")
+    mut index = 0
+    for name in names:
+        if len(name) == 0 or len(name) > 64:
+            fail Problem(code="P_SYNTAX_FIELDS", start=0, end=0, message="P_SYNTAX_FIELDS")
+        for previous in names[:index]:
+            if previous == name:
+                fail Problem(code="P_SYNTAX_FIELDS", start=0, end=0, message="P_SYNTAX_FIELDS")
+        index = index + 1
+    return try push(mut pool, Value(kind=5, integer=0, data=b"", children=children, names=names))
+
+
+public func sequence(mut pool: Pool, children: int[]) -> int fails Problem:
+    return try push(mut pool, Value(kind=6, integer=0, data=b"", children=children, names=[]))
+
+
+public func tagged(mut pool: Pool, tag: bytes, payload: int) -> int fails Problem:
+    if len(tag) == 0 or len(tag) > 64:
+        fail Problem(code="P_SYNTAX_TAG", start=0, end=0, message="P_SYNTAX_TAG")
+    return try push(mut pool, Value(kind=7, integer=0, data=tag, children=[payload], names=[]))
+
+
+public func absent(mut pool: Pool) -> int fails Problem:
+    return try push(mut pool, Value(kind=0, integer=0, data=b"", children=[], names=[]))
+
+
+public func span(mut pool: Pool, start: int, end: int) -> int fails Problem:
+    if start < 0 or end < start:
+        fail Problem(code="P_SYNTAX_SPAN", start=0, end=0, message="P_SYNTAX_SPAN")
+    const first = try integer(mut pool, start)
+    const last = try integer(mut pool, end)
+    return try object(mut pool, ["start", "end"], [first, last])

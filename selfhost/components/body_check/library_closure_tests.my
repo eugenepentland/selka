@@ -1,0 +1,224 @@
+import syntax_value
+import graph
+import engine
+import locals
+
+# Graph-level controls for native conditional lowering and literal getters.
+# Complete captured source replies remain the independent end-to-end oracle.
+func raw(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh(pool: syntax_value.Pool, source: bytes, nodes: int[], statements: int[]) -> engine.State fails syntax_value.Problem:
+    mut input = pool
+    const empty = try syntax_value.sequence(mut input, [])
+    const expressions = try syntax_value.object(mut input, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut input, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const node_list = try syntax_value.sequence(mut input, nodes)
+    const statement_list = try syntax_value.sequence(mut input, statements)
+    const program = try syntax_value.object(mut input, ["nodes", "statements", "functions", "types"], [node_list, statement_list, empty, types])
+    return try engine.make(input, source, program)
+
+
+func number(pool: syntax_value.Pool, object: int, field: str) -> int fails syntax_value.Problem:
+    const id = try graph.field(pool, object, field)
+    const checked_1 = try graph.number(pool, id)
+    return checked_1
+
+
+func typed_data(pool: syntax_value.Pool, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const id = try graph.field(pool, row, "data")
+    return try graph.get(pool, id)
+
+
+public func test_conditional_preserves_branch_row_order_and_hidden_local_scope() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 7)
+    const condition_span = try syntax_value.span(mut pool, 0, 4)
+    const first_span = try syntax_value.span(mut pool, 5, 6)
+    const last_span = try syntax_value.span(mut pool, 6, 7)
+    const condition = try raw(mut pool, condition_span, b"name", condition_span)
+    const first = try raw(mut pool, first_span, b"integer", first_span)
+    const last = try raw(mut pool, last_span, b"integer", last_span)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const two = try syntax_value.integer(mut pool, 2)
+    const payload = try syntax_value.object(mut pool, ["condition", "then_value", "else_value"], [zero, one, two])
+    const conditional = try raw(mut pool, span, b"conditional", payload)
+    mut state = try fresh(pool, b"flag 79", [condition, first, last, conditional], [])
+    _ = try locals.add(mut state.scope, b"flag", condition_span, 1, False, b"parameter")
+    const result = try engine.expression(mut state, 3)
+    if result.id != 4 or result.ty != 0 or len(state.batch.nodes) != 5 or len(state.batch.statements) != 4 or len(state.scope.locals) != 2:
+        return False
+    const yes = try typed_data(state.batch.pool, state.batch.statements[0])
+    const no = try typed_data(state.batch.pool, state.batch.statements[1])
+    const branch = try typed_data(state.batch.pool, state.batch.statements[2])
+    const block = try typed_data(state.batch.pool, state.batch.statements[3])
+    const value = try typed_data(state.batch.pool, state.batch.nodes[4])
+    const read = try typed_data(state.batch.pool, state.batch.nodes[3])
+    const rows = try graph.items(state.batch.pool, block.children[0])
+    const row = try graph.number(state.batch.pool, rows[0])
+    const slot = try graph.number(state.batch.pool, read.children[0])
+    if yes.data != b"assign" or no.data != b"assign" or branch.data != b"branch" or block.data != b"block" or value.data != b"block_value" or read.data != b"local":
+        return False
+    const checked_2 = try number(state.batch.pool, yes.children[0], "slot")
+    const checked_3 = try number(state.batch.pool, yes.children[0], "value")
+    const checked_4 = try number(state.batch.pool, no.children[0], "value")
+    if checked_2 != 1 or checked_3 != 1 or checked_4 != 2:
+        return False
+    const checked_5 = try number(state.batch.pool, branch.children[0], "condition")
+    const checked_6 = try number(state.batch.pool, branch.children[0], "then_body")
+    const checked_7 = try number(state.batch.pool, branch.children[0], "else_body")
+    if checked_5 != 0 or checked_6 != 0 or checked_7 != 1 or row != 2 or slot != 1:
+        return False
+    const hidden = state.scope.locals[1]
+    const checked_8 = try number(state.batch.pool, value.children[0], "body")
+    const checked_9 = try number(state.batch.pool, value.children[0], "value")
+    return checked_8 == 3 and checked_9 == 3 and hidden.name == b"<conditional>" and hidden.ty == 0 and not hidden.mutable and hidden.usage.temporary and hidden.usage.reads == 1 and len(state.scope.active) == 1 and state.scope.active[0] == 0 and state.scope.locals[0].usage.reads == 1
+
+
+func negative(hinted: bool) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 2)
+    const digit = try syntax_value.span(mut pool, 1, 2)
+    const operator = try syntax_value.span(mut pool, 0, 1)
+    const integer = try raw(mut pool, digit, b"integer", digit)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const op = try syntax_value.enumeration(mut pool, b"neg")
+    const payload = try syntax_value.object(mut pool, ["op", "operand", "op_span"], [op, zero, operator])
+    const unary = try raw(mut pool, span, b"unary", payload)
+    mut state = try fresh(pool, b"-1", [integer, unary], [])
+    state.batch.facts.expected = [-1, -1]
+    if hinted:
+        state.batch.facts.expected[1] = 0
+    _ = try engine.expression(mut state, 1)
+    return state
+
+
+public func test_negative_literal_hint_controls_retained_positive_row() -> bool fails syntax_value.Problem:
+    const unhinted = try negative(False)
+    const hinted = try negative(True)
+    const positive = try typed_data(unhinted.batch.pool, unhinted.batch.nodes[0])
+    const folded = try typed_data(unhinted.batch.pool, unhinted.batch.nodes[1])
+    const direct = try typed_data(hinted.batch.pool, hinted.batch.nodes[0])
+    const location = try graph.field(unhinted.batch.pool, unhinted.batch.nodes[1], "span")
+    const checked_10 = try graph.number(unhinted.batch.pool, positive.children[0])
+    const checked_11 = try number(unhinted.batch.pool, folded.children[0], "operand")
+    const operator_id = try graph.field(unhinted.batch.pool, folded.children[0], "op")
+    const operator = try graph.get(unhinted.batch.pool, operator_id)
+    const operator_span = try graph.field(unhinted.batch.pool, folded.children[0], "op_span")
+    const operator_start = try number(unhinted.batch.pool, operator_span, "start")
+    const operator_end = try number(unhinted.batch.pool, operator_span, "end")
+    const checked_12 = try graph.number(hinted.batch.pool, direct.children[0])
+    const checked_13 = try number(unhinted.batch.pool, location, "start")
+    const checked_14 = try number(unhinted.batch.pool, location, "end")
+    return len(unhinted.batch.nodes) == 2 and len(hinted.batch.nodes) == 1 and positive.data == b"integer" and folded.data == b"unary" and operator.data == b"neg" and operator_start == 0 and operator_end == 1 and direct.data == b"integer" and checked_10 == 1 and checked_11 == 0 and checked_12 == -1 and checked_13 == 0 and checked_14 == 2 and len(unhinted.batch.statements) == 0 and len(hinted.scope.locals) == 0
+
+
+record Getter:
+    state: engine.State
+    function: int
+    use_span: int
+
+
+func getter(kind: int) -> Getter fails syntax_value.Problem:
+    mut source = b"int 9 TAB"
+    mut tag = b"integer"
+    mut type_end = 3
+    mut value_start = 4
+    mut value_end = 5
+    mut value = b""
+    if kind == 1:
+        source = b"bool True FLAG"
+        tag = b"boolean"
+        type_end = 4
+        value_start = 5
+        value_end = 9
+    elif kind == 2:
+        source = b"Unit () NOTHING"
+        tag = b"unit"
+        type_end = 4
+        value_start = 5
+        value_end = 7
+    elif kind == 3:
+        source = b"str 'é' TEXT"
+        tag = b"text"
+        value_end = 8
+        value = b"\xc3\xa9"
+    elif kind == 4:
+        source = b"bytes b'\\xff' OCTETS"
+        tag = b"bytes"
+        type_end = 5
+        value_start = 6
+        value_end = 13
+        value = b"\xff"
+    mut pool = syntax_value.empty()
+    const annotation = try syntax_value.span(mut pool, 0, type_end)
+    const span = try syntax_value.span(mut pool, value_start, value_end)
+    const name = try syntax_value.span(mut pool, value_end + 1, len(source))
+    mut payload = span
+    if kind == 1:
+        payload = try syntax_value.boolean(mut pool, True)
+    elif kind == 2:
+        payload = try syntax_value.absent(mut pool)
+    elif kind >= 3:
+        payload = try syntax_value.octets(mut pool, value)
+    const node = try raw(mut pool, span, tag, payload)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const ret = try raw(mut pool, span, b"ret", zero)
+    const children = try syntax_value.sequence(mut pool, [zero])
+    const block = try raw(mut pool, name, b"block", children)
+    const one = try syntax_value.integer(mut pool, 1)
+    const signature = try syntax_value.object(mut pool, ["return_type"], [annotation])
+    const function = try syntax_value.object(mut pool, ["name", "signature", "body"], [name, signature, one])
+    mut state = try fresh(pool, source, [node], [ret, block])
+    state.batch.facts.string_type = 19
+    state.batch.facts.bytes_type = 20
+    return Getter(state=state, function=function, use_span=name)
+
+
+public func test_scalar_literal_getters_fold_at_use_span_without_call_or_temporary() -> bool fails syntax_value.Problem:
+    for kind in [0, 1, 2]:
+        mut fixture = try getter(kind)
+        const result = try engine.constant_scalar(mut fixture.state, fixture.function, fixture.use_span)
+        const folded = try typed_data(fixture.state.batch.pool, fixture.state.batch.nodes[result.id])
+        const location = try graph.field(fixture.state.batch.pool, fixture.state.batch.nodes[result.id], "span")
+        const use_start = try number(fixture.state.syntax.pool, fixture.use_span, "start")
+        const checked_15 = try number(fixture.state.batch.pool, location, "start")
+        if len(fixture.state.batch.nodes) != 1 or len(fixture.state.batch.statements) != 0 or len(fixture.state.scope.locals) != 0 or checked_15 != use_start:
+            return False
+        const checked_16_value = try graph.get(fixture.state.batch.pool, folded.children[0])
+        const checked_16 = checked_16_value.integer
+        if kind == 0 and (result.ty != 0 or folded.data != b"integer" or checked_16 != 9):
+            return False
+        const checked_17_value = try graph.get(fixture.state.batch.pool, folded.children[0])
+        const checked_17 = checked_17_value.integer
+        if kind == 1 and (result.ty != 1 or folded.data != b"boolean" or checked_17 != 1):
+            return False
+        if kind == 2 and (result.ty != 15 or folded.data != b"unit"):
+            return False
+    return True
+
+
+public func test_managed_literal_getters_keep_unicode_and_byte_element_types() -> bool fails syntax_value.Problem:
+    for kind in [3, 4]:
+        mut fixture = try getter(kind)
+        const ty = try engine.constant_literal(mut fixture.state, fixture.function)
+        const result = try engine.expression(mut fixture.state, 0)
+        const array = try typed_data(fixture.state.batch.pool, fixture.state.batch.nodes[result.id])
+        const elements = try graph.items(fixture.state.batch.pool, array.children[0])
+        const element = try graph.number(fixture.state.batch.pool, elements[0])
+        const point = try typed_data(fixture.state.batch.pool, fixture.state.batch.nodes[element])
+        mut expected_type = 7
+        mut expected_value = 233
+        if kind == 4:
+            expected_type = 5
+            expected_value = 255
+        const checked_18 = try graph.number(fixture.state.batch.pool, point.children[0])
+        const checked_19 = try number(fixture.state.batch.pool, fixture.state.batch.nodes[element], "ty")
+        if ty != kind + 16 or result.ty != ty or array.data != b"array" or len(elements) != 1 or point.data != b"integer" or checked_18 != expected_value or checked_19 != expected_type:
+            return False
+        if len(fixture.state.batch.nodes) != 2 or len(fixture.state.batch.statements) != 0 or len(fixture.state.scope.locals) != 0:
+            return False
+    return True

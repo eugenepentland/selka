@@ -55,7 +55,7 @@ public func decode(data: bytes) -> Request fails syntax_value.Problem:
     mut reader = Reader(data=data, pos=8)
     const count = try read_u32(mut reader)
     const root = try read_u32(mut reader)
-    if count == 0 or count > 1048576 or root >= count:
+    if count == 0 or count > 2097152 or root >= count:
         fail bad()
     mut pool = syntax_value.empty()
     mut depths: int[] = []

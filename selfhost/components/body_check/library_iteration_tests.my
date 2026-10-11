@@ -1,0 +1,141 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import list_iteration
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    input: syntax_value.Pool
+    request: list_iteration.Input
+    nodes: int[]
+    statements: int[]
+
+
+func raw(mut input: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut input, tag, payload)
+    return try syntax_value.object(mut input, ["span", "data"], [span, data])
+
+
+func fresh(kind: int) -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const root_span = try syntax_value.span(mut input, 0, 2)
+    const name_span = try syntax_value.span(mut input, 3, 7)
+    const span = try syntax_value.span(mut input, 0, 7)
+    const root = try raw(mut input, root_span, b"name", root_span)
+    mut nodes = [root]
+    const zero_id = try syntax_value.integer(mut input, 0)
+    mut payload = try syntax_value.sequence(mut input, [])
+    mut tag = b"block"
+    if kind == 1:
+        const argument = try raw(mut input, span, b"mut_argument", zero_id)
+        nodes.append(argument)
+        payload = try syntax_value.integer(mut input, 1)
+        tag = b"discard"
+    elif kind == 2:
+        const operation = try syntax_value.enumeration(mut input, b"set")
+        payload = try syntax_value.object(mut input, ["name", "value", "op"], [root_span, zero_id, operation])
+        tag = b"assignment"
+    const statement = try raw(mut input, span, tag, payload)
+    mut scope = locals.empty()
+    const slot = try locals.add(mut scope, b"xs", root_span, 40, True, b"local")
+    scope.locals[slot].usage.reads = 1
+    mut batch = emission.empty()
+    const context = list_lower.Context(input=input, span=root_span)
+    const source = try list_lower.read(mut batch, context, slot, 40)
+    const request = list_iteration.Input(source=b"xs item", name=name_span, span=span, iterable=source, owner_type=40, element=0, loop_id=9)
+    return Fixture(batch=batch, scope=scope, input=input, request=request, nodes=nodes, statements=[statement])
+
+
+func lower(mut fixture: Fixture) -> list_lower.Lowered fails syntax_value.Problem:
+    const plan = try list_iteration.prepare(mut fixture.batch, mut fixture.scope, fixture.input, fixture.request)
+    const children = try emission.ids(mut fixture.batch, [])
+    const body = try emission.statement(mut fixture.batch, fixture.input, fixture.request.span, False, b"block", children)
+    const finish = list_iteration.Finish(raw_statements=fixture.statements, raw_nodes=fixture.nodes, body_raw=0, body=body)
+    return try list_iteration.finish(mut fixture.batch, mut fixture.scope, fixture.input, plan, finish)
+
+
+func slots(pool: syntax_value.Pool, lowered: list_lower.Lowered) -> int[] fails syntax_value.Problem:
+    const children = try graph.items(pool, lowered.payload)
+    mut result: int[] = []
+    for child in children:
+        const id = try graph.number(pool, child)
+        result.append(id)
+    return result
+
+
+# Authentic native captures text_iteration_ord and byte_iteration establish
+# string elements stay strings; byte elements read u8 then widen to i64.
+public func test_text_and_byte_iteration_bindings_guards_and_element_types() -> bool fails syntax_value.Problem:
+    for owner_type in [19, 20]:
+        mut fixture = try fresh(0)
+        fixture.batch.facts.string_type = 19
+        fixture.batch.facts.bytes_type = 20
+        fixture.scope.locals[0].ty = owner_type
+        fixture.request.owner_type = owner_type
+        fixture.request.element = 19
+        if owner_type == 20:
+            fixture.request.element = 0
+        const owner_ty = try graph.field(fixture.batch.pool, fixture.batch.nodes[0], "ty")
+        fixture.batch.pool.values[owner_ty].integer = owner_type
+        const lowered = try lower(mut fixture)
+        const parts = try slots(fixture.batch.pool, lowered)
+        if lowered.tag != b"block" or len(parts) != 4 or len(fixture.scope.locals) != 5 or len(fixture.batch.statements) != 12:
+            return False
+        const binding = fixture.scope.locals[4]
+        if binding.name != b"item" or binding.ty != fixture.request.element or binding.mutable or binding.origin != b"iteration" or not binding.initialized or not binding.usage.temporary or binding.usage.reads != 1:
+            return False
+        mut reads = 0
+        mut guards = 0
+        for node in fixture.batch.nodes:
+            const data_id = try graph.field(fixture.batch.pool, node, "data")
+            const data = try graph.get(fixture.batch.pool, data_id)
+            if data.data == b"buffer_operation":
+                const kind_id = try graph.field(fixture.batch.pool, data.children[0], "kind")
+                const kind = try graph.get(fixture.batch.pool, kind_id)
+                const arguments_id = try graph.field(fixture.batch.pool, data.children[0], "arguments")
+                const arguments = try graph.items(fixture.batch.pool, arguments_id)
+                const owner_id = try graph.field(fixture.batch.pool, data.children[0], "owner")
+                const owner = try graph.number(fixture.batch.pool, owner_id)
+                const ty_id = try graph.field(fixture.batch.pool, node, "ty")
+                const ty = try graph.number(fixture.batch.pool, ty_id)
+                if kind.data == b"read":
+                    reads = reads + 1
+                    mut expected = 19
+                    if owner_type == 20:
+                        expected = 5
+                    if ty != expected or owner != 1 or len(arguments) != 1:
+                        return False
+                elif kind.data == b"iteration_check":
+                    guards = guards + 1
+                    if ty != 15 or owner != 1 or len(arguments) != 1:
+                        return False
+        if reads != 1 or guards != 1:
+            return False
+        const initialize_id = try graph.field(fixture.batch.pool, fixture.batch.statements[4], "data")
+        const initialize = try graph.get(fixture.batch.pool, initialize_id)
+        const value_id = try graph.field(fixture.batch.pool, initialize.children[0], "value")
+        const value = try graph.number(fixture.batch.pool, value_id)
+        const data_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[value], "data")
+        const data = try graph.get(fixture.batch.pool, data_id)
+        if owner_type == 20:
+            if data.data != b"cast":
+                return False
+            const input_node = try graph.number(fixture.batch.pool, data.children[0])
+            const input_ty_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[input_node], "ty")
+            const input_ty = try graph.number(fixture.batch.pool, input_ty_id)
+            if input_ty != 5:
+                return False
+        elif data.data != b"buffer_operation":
+            return False
+    return True
+
+
+public func test_text_source_rebinding_keeps_entry_snapshot_and_no_live_refresh() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(2)
+    fixture.batch.facts.string_type = 40
+    const lowered = try lower(mut fixture)
+    const parts = try slots(fixture.batch.pool, lowered)
+    return parts == [1, 9, 10, 11] and len(fixture.scope.locals) == 5 and len(fixture.batch.nodes) == 12 and fixture.scope.locals[0].usage.reads == 1 and fixture.scope.active == [0, 4]

@@ -1,0 +1,188 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import list_slice
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+    request: list_slice.Slice
+
+
+func fresh(start: int, end: int, integer_type: int) -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 3, 12)
+    mut batch = emission.empty()
+    const context = list_lower.Context(input=input, span=span)
+    const base = try list_lower.read(mut batch, context, 0, 40)
+    mut scope = locals.empty()
+    _ = try locals.add(mut scope, b"values", span, 40, False, b"parameter")
+    mut first = -1
+    mut last = -1
+    if start != -999:
+        first = try list_lower.integer(mut batch, context, start, integer_type)
+    if end != -999:
+        last = try list_lower.integer(mut batch, context, end, integer_type)
+    return Fixture(batch=batch, scope=scope, context=context, request=list_slice.Slice(base=base, owner_type=40, element=0, start=first, end=last, loop_id=11))
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const child = try graph.field(pool, row, name)
+    return try graph.number(pool, child)
+
+
+func data(batch: emission.Batch, node: int) -> syntax_value.Value fails syntax_value.Problem:
+    const child = try graph.field(batch.pool, batch.nodes[node], "data")
+    return try graph.get(batch.pool, child)
+
+
+record Evaluation:
+    batch: emission.Batch
+    slots: int[]
+    length: int
+
+
+# Independent executable numeric semantics for endpoint blocks. Length is a
+# supplied collection length, not derived from the lowering under test.
+func evaluate(mut evaluation: Evaluation, id: int) -> int fails syntax_value.Problem:
+    const value = try data(evaluation.batch, id)
+    if value.data == b"integer":
+        return try graph.number(evaluation.batch.pool, value.children[0])
+    if value.data == b"local":
+        const slot = try graph.number(evaluation.batch.pool, value.children[0])
+        return evaluation.slots[slot]
+    if value.data == b"cast":
+        const operand = try graph.number(evaluation.batch.pool, value.children[0])
+        return try evaluate(mut evaluation, operand)
+    if value.data == b"buffer_operation":
+        const kind_id = try graph.field(evaluation.batch.pool, value.children[0], "kind")
+        const kind = try graph.get(evaluation.batch.pool, kind_id)
+        if kind.data == b"length":
+            return evaluation.length
+    if value.data == b"binary":
+        const operator_id = try graph.field(evaluation.batch.pool, value.children[0], "op")
+        const operator = try graph.get(evaluation.batch.pool, operator_id)
+        const left_id = try number(evaluation.batch.pool, value.children[0], "left")
+        const right_id = try number(evaluation.batch.pool, value.children[0], "right")
+        const left = try evaluate(mut evaluation, left_id)
+        const right = try evaluate(mut evaluation, right_id)
+        if operator.data == b"add":
+            return left + right
+        if operator.data == b"lt" and left < right:
+            return 1
+        if operator.data == b"gt" and left > right:
+            return 1
+        return 0
+    if value.data == b"block_value":
+        const body = try number(evaluation.batch.pool, value.children[0], "body")
+        try execute(mut evaluation, body)
+        const result = try number(evaluation.batch.pool, value.children[0], "value")
+        return try evaluate(mut evaluation, result)
+    fail syntax_value.Problem(code="TEST_FORM", start=0, end=0, message="unexpected endpoint expression")
+
+
+func execute(mut evaluation: Evaluation, id: int) -> Unit fails syntax_value.Problem:
+    const child = try graph.field(evaluation.batch.pool, evaluation.batch.statements[id], "data")
+    const value = try graph.get(evaluation.batch.pool, child)
+    if value.data == b"initialize" or value.data == b"assign":
+        const slot = try number(evaluation.batch.pool, value.children[0], "slot")
+        const input = try number(evaluation.batch.pool, value.children[0], "value")
+        const result = try evaluate(mut evaluation, input)
+        evaluation.slots[slot] = result
+        return
+    if value.data == b"branch":
+        const condition = try number(evaluation.batch.pool, value.children[0], "condition")
+        const result = try evaluate(mut evaluation, condition)
+        if result != 0:
+            const body = try number(evaluation.batch.pool, value.children[0], "then_body")
+            try execute(mut evaluation, body)
+        return
+    if value.data == b"block":
+        const children = try graph.items(evaluation.batch.pool, value.children[0])
+        for item in children:
+            const statement = try graph.number(evaluation.batch.pool, item)
+            try execute(mut evaluation, statement)
+        return
+    fail syntax_value.Problem(code="TEST_FORM", start=0, end=0, message="unexpected endpoint statement")
+
+
+func setup_value(batch: emission.Batch, lowered: list_lower.Lowered, position: int) -> int fails syntax_value.Problem:
+    const body = try number(batch.pool, lowered.payload, "body")
+    const block_id = try graph.field(batch.pool, batch.statements[body], "data")
+    const block = try graph.get(batch.pool, block_id)
+    const setup = try graph.items(batch.pool, block.children[0])
+    const statement = try graph.number(batch.pool, setup[position])
+    const child = try graph.field(batch.pool, batch.statements[statement], "data")
+    const value = try graph.get(batch.pool, child)
+    return try number(batch.pool, value.children[0], "value")
+
+
+public func test_slice_clamps_both_endpoints_after_negative_normalization() -> bool fails syntax_value.Problem:
+    const inputs = [-99, -4, -1, 0, 1, 4, 99]
+    const expected = [0, 0, 3, 0, 1, 4, 4]
+    mut position = 0
+    for input in inputs:
+        mut fixture = try fresh(input, input, 0)
+        const lowered = try list_slice.slice(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+        mut evaluation = Evaluation(batch=fixture.batch, slots=[0, 0, 0, 0, 0, 0, 0], length=4)
+        const first = try setup_value(fixture.batch, lowered, 1)
+        const last = try setup_value(fixture.batch, lowered, 2)
+        const first_value = try evaluate(mut evaluation, first)
+        const last_value = try evaluate(mut evaluation, last)
+        if first_value != expected[position] or last_value != expected[position]:
+            return False
+        position = position + 1
+    return True
+
+
+public func test_omitted_slice_fresh_capacity_and_copy_loop_reference_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(-999, -999, 0)
+    const lowered = try list_slice.slice(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+    const body_id = try number(fixture.batch.pool, lowered.payload, "body")
+    const block_id = try graph.field(fixture.batch.pool, fixture.batch.statements[body_id], "data")
+    const block = try graph.get(fixture.batch.pool, block_id)
+    const setup = try graph.items(fixture.batch.pool, block.children[0])
+    mut order: int[] = []
+    for item in setup:
+        const id = try graph.number(fixture.batch.pool, item)
+        order.append(id)
+    const acquire = try data(fixture.batch, 2)
+    const capacity = try number(fixture.batch.pool, acquire.children[0], "capacity")
+    const zero = try data(fixture.batch, capacity)
+    const zero_value = try graph.number(fixture.batch.pool, zero.children[0])
+    const read = try data(fixture.batch, 4)
+    const read_owner = try number(fixture.batch.pool, read.children[0], "owner")
+    const append = try data(fixture.batch, 5)
+    const output_owner = try number(fixture.batch.pool, append.children[0], "owner")
+    const arguments_id = try graph.field(fixture.batch.pool, append.children[0], "arguments")
+    const arguments = try graph.items(fixture.batch.pool, arguments_id)
+    const element = try graph.number(fixture.batch.pool, arguments[0])
+    const loop_id = try graph.field(fixture.batch.pool, fixture.batch.statements[6], "data")
+    const loop = try graph.get(fixture.batch.pool, loop_id)
+    const identity = try number(fixture.batch.pool, loop.children[0], "id")
+    const loop_body = try number(fixture.batch.pool, loop.children[0], "body")
+    const step = try number(fixture.batch.pool, loop.children[0], "step")
+    const result = try number(fixture.batch.pool, lowered.payload, "value")
+    if lowered.tag != b"block_value" or order != [2, 3, 4, 5, 6] or body_id != 7 or result != 12 or len(fixture.batch.nodes) != 13 or len(fixture.batch.statements) != 8:
+        return False
+    if acquire.data != b"acquire_buffer" or zero_value != 0 or read_owner != 1 or output_owner != 2 or element != 4 or identity != 11 or loop_body != 0 or step != 1:
+        return False
+    for slot in range(1, 5):
+        const hidden = fixture.scope.locals[slot]
+        if hidden.name != b"<collection>" or not hidden.mutable or hidden.initialized or not hidden.usage.temporary or hidden.usage.reads != 1 or hidden.origin != b"local":
+            return False
+    return len(fixture.scope.locals) == 5 and fixture.scope.active == [0]
+
+
+public func test_slice_widens_narrow_indices_without_mutating_source_binding() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(1, 99, 5)
+    const lowered = try list_slice.slice(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+    mut evaluation = Evaluation(batch=fixture.batch, slots=[0, 0, 0, 0, 0, 0, 0], length=4)
+    const first = try setup_value(fixture.batch, lowered, 1)
+    const last = try setup_value(fixture.batch, lowered, 2)
+    const start = try evaluate(mut evaluation, first)
+    const end = try evaluate(mut evaluation, last)
+    return start == 1 and end == 4 and len(fixture.scope.locals) == 7 and fixture.scope.active == [0] and not fixture.scope.locals[0].mutable and fixture.scope.locals[0].usage.reads == 0

@@ -1,0 +1,92 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import buffer_lower
+
+public record Slice:
+    base: int
+    owner_type: int
+    element: int
+    start: int
+    end: int
+    loop_id: int
+
+
+func branch(mut batch: emission.Batch, context: list_lower.Context, condition: int, body: int) -> int fails syntax_value.Problem:
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const then_body = try syntax_value.integer(mut batch.pool, body)
+    const absent = try syntax_value.absent(mut batch.pool)
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [test, then_body, absent])
+    return try emission.statement(mut batch, context.input, context.span, False, b"branch", payload)
+
+
+# collection_lower.Builder.index(clamp=true): the same local-read expressions
+# are reevaluated after normalization, so the second negative test sees the
+# normalized endpoint. Preserve this sharing and native statement order.
+func clamped_index(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, owner: int, input: int) -> int fails syntax_value.Problem:
+    const slot = try list_lower.temporary(mut scope, context, 0)
+    const type_id = try graph.field(batch.pool, batch.nodes[input], "ty")
+    const input_type = try graph.number(batch.pool, type_id)
+    mut value = input
+    if input_type != 0:
+        value = try buffer_lower.cast(mut batch, context, input, 0)
+    const initialize = try list_lower.store(mut batch, context, slot, value, True)
+    const current = try list_lower.read(mut batch, context, slot, 0)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const count = try list_lower.length(mut batch, context, owner)
+    const negative = try list_lower.binary(mut batch, context, b"lt", current, zero, 1)
+    const normalized = try list_lower.binary(mut batch, context, b"add", count, current, 0)
+    const fix = try list_lower.store(mut batch, context, slot, normalized, False)
+    const normalize = try branch(mut batch, context, negative, fix)
+    const low = try list_lower.store(mut batch, context, slot, zero, False)
+    const high = try list_lower.store(mut batch, context, slot, count, False)
+    const clamp_low = try branch(mut batch, context, negative, low)
+    const exceeds = try list_lower.binary(mut batch, context, b"gt", current, count, 1)
+    const clamp_high = try branch(mut batch, context, exceeds, high)
+    const block = try list_lower.block(mut batch, context, [initialize, normalize, clamp_low, clamp_high], current, 0)
+    return try list_lower.append(mut batch, context, block)
+
+
+# Exact append order from collection_lower.Builder.slice. Endpoint expressions
+# are already checked by the caller, but run inside the rooted owner setup.
+public func slice(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Slice) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.owner_type)
+    const output = try list_lower.temporary(mut scope, context, request.owner_type)
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const limit = try list_lower.temporary(mut scope, context, 0)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const capacity = try syntax_value.integer(mut batch.pool, zero)
+    const acquire_payload = try syntax_value.object(mut batch.pool, ["capacity"], [capacity])
+    const acquire = try emission.node(mut batch, context.input, context.span, request.owner_type, b"acquire_buffer", acquire_payload)
+    const current = try list_lower.read(mut batch, context, index, 0)
+    const read = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"read", arguments=[current], ty=request.element))
+    const append = try list_lower.operation(mut batch, context, list_lower.Operation(owner=output, kind=b"append", arguments=[read], ty=15))
+    const discarded = try syntax_value.integer(mut batch.pool, append)
+    const body = try emission.statement(mut batch, context.input, context.span, False, b"discard", discarded)
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", current, one, 0)
+    const step = try list_lower.store(mut batch, context, index, next, False)
+    const setup_owner = try list_lower.store(mut batch, context, owner, request.base, True)
+    mut first = zero
+    if request.start >= 0:
+        first = try clamped_index(mut batch, mut scope, context, owner, request.start)
+    const setup_index = try list_lower.store(mut batch, context, index, first, True)
+    mut last = -1
+    if request.end >= 0:
+        last = try clamped_index(mut batch, mut scope, context, owner, request.end)
+    else:
+        last = try list_lower.length(mut batch, context, owner)
+    const setup_limit = try list_lower.store(mut batch, context, limit, last, True)
+    const setup_output = try list_lower.store(mut batch, context, output, acquire, True)
+    const bound = try list_lower.read(mut batch, context, limit, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", current, bound, 1)
+    const loop_id = try syntax_value.integer(mut batch.pool, request.loop_id)
+    const condition_id = try syntax_value.integer(mut batch.pool, condition)
+    const body_id = try syntax_value.integer(mut batch.pool, body)
+    const step_id = try syntax_value.integer(mut batch.pool, step)
+    const loop = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [loop_id, condition_id, body_id, step_id])
+    const loop_statement = try emission.statement(mut batch, context.input, context.span, False, b"loop", loop)
+    const result = try list_lower.read(mut batch, context, output, request.owner_type)
+    return try list_lower.block(mut batch, context, [setup_owner, setup_index, setup_limit, setup_output, loop_statement], result, request.owner_type)

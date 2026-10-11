@@ -1,0 +1,145 @@
+import syntax_value
+import graph
+import engine
+import locals
+
+# Native controls: pure-followup-captures/{integer_text,text_iteration_ord}.
+# These fixtures isolate the same raw AST forms and assert typed references,
+# evaluation order, source locations and scope effects, not just return types.
+func fixture(source: bytes, builtin: bytes, tag: bytes, content: bytes, argument_type: int, count: int) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const empty = try syntax_value.sequence(mut pool, [])
+    const absent = try syntax_value.absent(mut pool)
+    const span = try syntax_value.span(mut pool, 0, len(source))
+    const name = try syntax_value.span(mut pool, 0, len(builtin))
+    const argument_span = try syntax_value.span(mut pool, len(builtin) + 1, len(source) - 1)
+    mut payload = argument_span
+    if tag == b"text":
+        payload = try syntax_value.octets(mut pool, content)
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    const argument = try syntax_value.object(mut pool, ["span", "data"], [argument_span, data])
+    const zero = try syntax_value.integer(mut pool, 0)
+    mut supplied: int[] = []
+    for unused in range(count):
+        supplied.append(zero)
+    const arguments = try syntax_value.sequence(mut pool, supplied)
+    const call_payload = try syntax_value.object(mut pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name, arguments, empty, empty])
+    const call_data = try syntax_value.tagged(mut pool, b"call", call_payload)
+    const call = try syntax_value.object(mut pool, ["span", "data"], [span, call_data])
+    const nodes = try syntax_value.sequence(mut pool, [argument, call])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    mut state = try engine.make(pool, source, program)
+    state.batch.facts.string_type = 19
+    if tag == b"name":
+        _ = try locals.add(mut state.scope, b"value", argument_span, argument_type, False, b"parameter")
+    return state
+
+
+func typed_number(state: engine.State, node: int, field: str) -> int fails syntax_value.Problem:
+    const child = try graph.field(state.batch.pool, state.batch.nodes[node], field)
+    return try graph.number(state.batch.pool, child)
+
+
+func typed_data(state: engine.State, node: int) -> syntax_value.Value fails syntax_value.Problem:
+    const id = try graph.field(state.batch.pool, state.batch.nodes[node], "data")
+    return try graph.get(state.batch.pool, id)
+
+
+public func test_str_scalar_and_identity_cast_preserve_operand_reference_and_scope() -> bool fails syntax_value.Problem:
+    for ty in [0, 1, 15, 19]:
+        mut state = try fixture(b"str(value)", b"str", b"name", b"", ty, 1)
+        const result = try engine.expression(mut state, 1)
+        const operand = try typed_data(state, 0)
+        const cast = try typed_data(state, 1)
+        const reference = try graph.number(state.batch.pool, cast.children[0])
+        const slot = try graph.number(state.batch.pool, operand.children[0])
+        const operand_type = try typed_number(state, 0, "ty")
+        const cast_type = try typed_number(state, 1, "ty")
+        const location = try graph.field(state.batch.pool, state.batch.nodes[1], "span")
+        const start_id = try graph.field(state.batch.pool, location, "start")
+        const end_id = try graph.field(state.batch.pool, location, "end")
+        const start = try graph.number(state.batch.pool, start_id)
+        const end = try graph.number(state.batch.pool, end_id)
+        if result.id != 1 or result.ty != 19 or operand_type != ty or cast_type != 19 or operand.data != b"local" or slot != 0 or cast.data != b"cast" or reference != 0 or start != 0 or end != 10:
+            return False
+        if len(state.batch.nodes) != 2 or len(state.batch.statements) != 0 or len(state.scope.locals) != 1 or state.scope.locals[0].usage.reads != 1 or state.scope.locals[0].usage.writes != 0:
+            return False
+    return True
+
+
+public func test_str_maximum_literal_keeps_i64_value_and_no_number_format_temporary() -> bool fails syntax_value.Problem:
+    mut state = try fixture(b"str(9223372036854775807)", b"str", b"integer", b"", 0, 1)
+    const result = try engine.expression(mut state, 1)
+    const integer = try typed_data(state, 0)
+    const value = try graph.number(state.batch.pool, integer.children[0])
+    const cast = try typed_data(state, result.id)
+    const reference = try graph.number(state.batch.pool, cast.children[0])
+    return value == 9223372036854775807 and integer.data == b"integer" and cast.data == b"cast" and reference == 0 and result.id == 1 and len(state.scope.locals) == 0 and len(state.batch.statements) == 0
+
+
+public func test_ord_unicode_single_codepoint_folds_without_temporary() -> bool fails syntax_value.Problem:
+    mut state = try fixture(b"ord('é')", b"ord", b"text", b"\xc3\xa9", 19, 1)
+    const result = try engine.expression(mut state, 1)
+    const point = try typed_data(state, 0)
+    const literal = try typed_data(state, 1)
+    const folded = try typed_data(state, 2)
+    const value = try graph.number(state.batch.pool, folded.children[0])
+    const items = try graph.items(state.batch.pool, literal.children[0])
+    const element = try graph.number(state.batch.pool, items[0])
+    const point_type = try typed_number(state, 0, "ty")
+    return result.id == 2 and result.ty == 0 and point_type == 7 and point.data == b"integer" and literal.data == b"array" and element == 0 and folded.data == b"integer" and value == 233 and len(state.batch.nodes) == 3 and len(state.batch.statements) == 0 and len(state.scope.locals) == 0
+
+
+public func test_str_arity_precedes_argument_checking() -> bool fails syntax_value.Problem:
+    mut state = try fixture(b"str(value)", b"str", b"name", b"", 20, 2)
+    match engine.expression(mut state, 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_ARITY" and problem.message == "str conversion requires one argument" and problem.start == 0 and problem.end == 10 and len(state.batch.nodes) == 0 and state.scope.locals[0].usage.reads == 0
+
+
+public func test_str_aggregate_rejection_preserves_checked_operand_and_exact_site() -> bool fails syntax_value.Problem:
+    mut state = try fixture(b"str(value)", b"str", b"name", b"", 20, 1)
+    match engine.expression(mut state, 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TEXT_CONVERSION" and problem.message == "str conversion requires a scalar or str value" and problem.start == 0 and problem.end == 10 and len(state.batch.nodes) == 1 and state.scope.locals[0].usage.reads == 1
+
+
+public func test_ord_nonconstant_uses_snapshot_temporary_and_exact_block_references() -> bool fails syntax_value.Problem:
+    mut state = try fixture(b"ord(value)", b"ord", b"name", b"", 19, 1)
+    const result = try engine.expression(mut state, 1)
+    const operation = try typed_data(state, 1)
+    const kind_id = try graph.field(state.batch.pool, operation.children[0], "kind")
+    const kind = try graph.get(state.batch.pool, kind_id)
+    const owner_id = try graph.field(state.batch.pool, operation.children[0], "owner")
+    const owner = try graph.number(state.batch.pool, owner_id)
+    const arguments_id = try graph.field(state.batch.pool, operation.children[0], "arguments")
+    const arguments = try graph.items(state.batch.pool, arguments_id)
+    const block = try typed_data(state, 2)
+    const body_id = try graph.field(state.batch.pool, block.children[0], "body")
+    const body = try graph.number(state.batch.pool, body_id)
+    const value_id = try graph.field(state.batch.pool, block.children[0], "value")
+    const value = try graph.number(state.batch.pool, value_id)
+    const initialize_id = try graph.field(state.batch.pool, state.batch.statements[0], "data")
+    const initialize = try graph.get(state.batch.pool, initialize_id)
+    const slot_id = try graph.field(state.batch.pool, initialize.children[0], "slot")
+    const slot = try graph.number(state.batch.pool, slot_id)
+    const input_id = try graph.field(state.batch.pool, initialize.children[0], "value")
+    const input_node = try graph.number(state.batch.pool, input_id)
+    const body_data_id = try graph.field(state.batch.pool, state.batch.statements[1], "data")
+    const body_data = try graph.get(state.batch.pool, body_data_id)
+    const children = try graph.items(state.batch.pool, body_data.children[0])
+    const first_statement = try graph.number(state.batch.pool, children[0])
+    if result.id != 2 or result.ty != 0 or len(state.batch.nodes) != 3 or len(state.batch.statements) != 2 or len(state.scope.locals) != 2:
+        return False
+    if operation.data != b"buffer_operation" or kind.data != b"text_ord" or owner != 1 or len(arguments) != 0 or block.data != b"block_value" or body != 1 or value != 1:
+        return False
+    if initialize.data != b"initialize" or slot != 1 or input_node != 0 or body_data.data != b"block" or len(children) != 1 or first_statement != 0:
+        return False
+    const temporary = state.scope.locals[1]
+    return temporary.name == b"<collection>" and temporary.ty == 19 and temporary.mutable and temporary.origin == b"local" and not temporary.initialized and temporary.usage.temporary and temporary.usage.reads == 1 and temporary.usage.writes == 0 and len(state.scope.active) == 1 and state.scope.active[0] == 0 and state.scope.locals[0].usage.reads == 1

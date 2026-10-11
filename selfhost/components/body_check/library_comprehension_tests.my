@@ -1,0 +1,95 @@
+import syntax_value
+import graph
+import engine
+import emission
+import locals
+
+func add(mut state: engine.State, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const data = try syntax_value.tagged(mut state.syntax.pool, tag, payload)
+    const node = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, data])
+    const id = len(state.syntax.nodes)
+    state.syntax.nodes.append(node)
+    return id
+
+
+func fresh(filtered: bool, valid_filter: bool) -> engine.State fails syntax_value.Problem:
+    mut batch = emission.empty()
+    batch.facts.lists.available = True
+    for _ in range(19):
+        batch.facts.lists.by_element.append(-1)
+        batch.facts.lists.elements.append(-1)
+    mut state = engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"2i", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=engine.fresh_control(), problems=[])
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const start = try add(mut state, b"unit", absent)
+    const spelling = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const end = try add(mut state, b"integer", spelling)
+    const name = try syntax_value.span(mut state.syntax.pool, 1, 2)
+    const output = try add(mut state, b"name", name)
+    mut filter = absent
+    if filtered:
+        mut raw = end
+        if valid_filter:
+            const yes = try syntax_value.boolean(mut state.syntax.pool, True)
+            const node = try add(mut state, b"boolean", yes)
+            raw = node
+        const selected = try syntax_value.integer(mut state.syntax.pool, raw)
+        filter = selected
+    const start_ref = try syntax_value.integer(mut state.syntax.pool, start)
+    const end_ref = try syntax_value.integer(mut state.syntax.pool, end)
+    const bounds = try syntax_value.object(mut state.syntax.pool, ["start", "end", "step"], [start_ref, end_ref, absent])
+    const source = try syntax_value.tagged(mut state.syntax.pool, b"range", bounds)
+    const output_ref = try syntax_value.integer(mut state.syntax.pool, output)
+    const no = try syntax_value.boolean(mut state.syntax.pool, False)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["output", "name", "source", "filter", "set"], [output_ref, name, source, filter, no])
+    _ = try add(mut state, b"comprehension", payload)
+    return state
+
+
+public func test_counted_range_capacity_is_unsigned_and_binding_does_not_escape() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, True)
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    if result.ty != 19 or len(state.scope.locals) != 4 or len(state.scope.active) != 0:
+        return False
+    if state.scope.locals[0].mutable or not state.scope.locals[0].initialized or state.scope.locals[0].origin != b"local" or state.scope.locals[3].ty != 8:
+        return False
+    mut found = False
+    for node in state.batch.nodes:
+        const data_id = try graph.field(state.batch.pool, node, "data")
+        const data = try graph.get(state.batch.pool, data_id)
+        if data.data == b"acquire_buffer":
+            const capacity_id = try graph.field(state.batch.pool, data.children[0], "capacity")
+            const capacity = try graph.number(state.batch.pool, capacity_id)
+            const type_id = try graph.field(state.batch.pool, state.batch.nodes[capacity], "ty")
+            const ty = try graph.number(state.batch.pool, type_id)
+            found = ty == 8
+    return found and len(state.batch.facts.lists.recipes) == 1 and state.batch.facts.lists.recipes[0].element == 0
+
+
+public func test_filter_uses_zero_capacity_without_unsigned_capacity_local() -> bool fails syntax_value.Problem:
+    mut state = try fresh(True, True)
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    return result.ty == 19 and len(state.scope.locals) == 3 and len(state.scope.active) == 0
+
+
+public func test_filter_error_precedes_output_resolution_and_recipe_publication() -> bool fails syntax_value.Problem:
+    mut state = try fresh(True, False)
+    match engine.expression(mut state, len(state.syntax.nodes) - 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.start == 0 and problem.end == 2 and problem.message == "expected bool, found int" and len(state.batch.facts.lists.recipes) == 0 and state.scope.locals[0].usage.reads == 1
+
+
+public func test_noninteger_range_start_uses_native_integer_requirement_site() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, True)
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const yes = try syntax_value.boolean(mut state.syntax.pool, True)
+    const data = try syntax_value.tagged(mut state.syntax.pool, b"boolean", yes)
+    const node = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, data])
+    state.syntax.nodes[0] = node
+    match engine.expression(mut state, len(state.syntax.nodes) - 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.start == 1 and problem.end == 2 and problem.message == "operation requires an integer type" and len(state.scope.locals) == 0 and len(state.batch.facts.lists.recipes) == 0

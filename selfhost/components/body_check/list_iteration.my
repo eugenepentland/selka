@@ -3,6 +3,7 @@ import graph
 import emission
 import locals
 import list_lower
+import buffer_lower
 
 public record Input:
     source: bytes
@@ -37,6 +38,7 @@ record Scan:
     statements: int[]
     name: bytes
     body: int
+    expressions: int[]
 
 
 record Path:
@@ -126,8 +128,10 @@ func method_changes(name: bytes) -> bool:
 
 
 func effects(scan: Scan) -> Effects fails syntax_value.Problem:
-    mut statements = [scan.body]
-    mut nodes: int[] = []
+    mut statements: int[] = []
+    if scan.body >= 0:
+        statements.append(scan.body)
+    mut nodes = scan.expressions
     mut seen_statements: bool[] = []
     mut seen_nodes: bool[] = []
     for _ in scan.statements:
@@ -392,6 +396,16 @@ func rebuild(mut batch: emission.Batch, mut scope: locals.Scope, context: list_l
     if data.data == b"block_value":
         const value = try field_number(batch.pool, payload, "value")
         return try rebuild(mut batch, mut scope, context, mut path, value, depth + 1)
+    if data.data == b"field":
+        const base = try field_number(batch.pool, payload, "base")
+        const rebuilt = try rebuild(mut batch, mut scope, context, mut path, base, depth + 1)
+        const index_id = try graph.field(batch.pool, payload, "index")
+        const index = try graph.number(batch.pool, index_id)
+        const first = try syntax_value.integer(mut batch.pool, rebuilt)
+        const second = try syntax_value.integer(mut batch.pool, index)
+        const fields = try syntax_value.object(mut batch.pool, ["base", "index"], [first, second])
+        const ty = try field_number(batch.pool, node, "ty")
+        return try emission.node(mut batch, context.input, context.span, ty, b"field", fields)
     if data.data == b"buffer_operation":
         const owner = try field_number(batch.pool, payload, "owner")
         const base = try initializer(batch, scope, owner)
@@ -415,7 +429,7 @@ func block_statement(mut batch: emission.Batch, context: list_lower.Context, sta
     return try emission.statement(mut batch, context.input, context.span, False, b"block", extracted_31)
 
 
-func guard(mut batch: emission.Batch, context: list_lower.Context, plan: Plan, refresh: int[], growing: bool) -> int fails syntax_value.Problem:
+public func guard(mut batch: emission.Batch, context: list_lower.Context, plan: Plan, refresh: int[], growing: bool) -> int fails syntax_value.Problem:
     mut statements = refresh
     const limit = try list_lower.read(mut batch, context, plan.limit, 0)
     const checked = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"iteration_check", arguments=[limit], ty=15))
@@ -438,14 +452,28 @@ func guard(mut batch: emission.Batch, context: list_lower.Context, plan: Plan, r
     return try block_statement(mut batch, context, statements)
 
 
-public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, plan: Plan, body: Finish) -> list_lower.Lowered fails syntax_value.Problem:
+public record SourceBody:
+    raw_statements: int[]
+    raw_nodes: int[]
+    body_raw: int
+    expressions: int[]
+
+
+public record Walk:
+    setup: int[]
+    refresh: int[]
+    growing: bool
+
+
+public func source(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, plan: Plan, body: SourceBody) -> Walk fails syntax_value.Problem:
     const context = list_lower.Context(input=input, span=plan.request.span)
     const root = try typed_root(batch, scope, plan.request.iterable)
     mut source_value = plan.request.iterable
     mut growing = False
     mut path = Path(setup=[], refresh=[])
-    if root >= 0:
-        const scan = Scan(input=input, source=plan.request.source, nodes=body.raw_nodes, statements=body.raw_statements, name=scope.locals[root].name, body=body.body_raw)
+    const text_source = plan.request.owner_type == batch.facts.string_type or plan.request.owner_type == batch.facts.bytes_type
+    if root >= 0 and not text_source:
+        const scan = Scan(input=input, source=plan.request.source, nodes=body.raw_nodes, statements=body.raw_statements, name=scope.locals[root].name, body=body.body_raw, expressions=body.expressions)
         const writes = try effects(scan)
         if writes.rebinds:
             const copy = try list_lower.access(mut batch, mut scope, context, list_lower.Access(base=source_value, owner_type=plan.request.owner_type, kind=b"copy", arguments=[], result_type=plan.request.owner_type, signed_length=False))
@@ -460,9 +488,27 @@ public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: sy
         const extracted_36 = try list_lower.store(mut batch, context, plan.owner, source_value, False)
         path.refresh.append(extracted_36)
     path.setup.append(setup_owner)
+    return Walk(setup=path.setup, refresh=path.refresh, growing=growing)
+
+
+public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, plan: Plan, body: Finish) -> list_lower.Lowered fails syntax_value.Problem:
+    const context = list_lower.Context(input=input, span=plan.request.span)
+    const walk = try source(mut batch, mut scope, input, plan, SourceBody(raw_statements=body.raw_statements, raw_nodes=body.raw_nodes, body_raw=body.body_raw, expressions=[]))
+    mut path = Path(setup=walk.setup, refresh=walk.refresh)
+    const growing = walk.growing
+    const text_source = plan.request.owner_type == batch.facts.string_type or plan.request.owner_type == batch.facts.bytes_type
     const index = try list_lower.read(mut batch, context, plan.index, 0)
     const checked = try guard(mut batch, context, plan, path.refresh, growing)
-    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"read", arguments=[index], ty=plan.request.element))
+    mut value = -1
+    if text_source:
+        mut read_type = plan.request.element
+        if plan.request.owner_type == batch.facts.bytes_type:
+            read_type = 5
+        value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"read", arguments=[index], ty=read_type))
+        if read_type == 5:
+            value = try buffer_lower.cast(mut batch, context, value, 0)
+    else:
+        value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"read", arguments=[index], ty=plan.request.element))
     const initial = try list_lower.store(mut batch, context, plan.binding, value, True)
     const iteration = try block_statement(mut batch, context, [checked, initial, body.body])
     const one = try list_lower.integer(mut batch, context, 1, 0)
@@ -473,7 +519,11 @@ public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: sy
     _ = unused_owner_setup
     const zero = try list_lower.integer(mut batch, context, 0, 0)
     const setup_index = try list_lower.store(mut batch, context, plan.index, zero, True)
-    const length = try list_lower.length(mut batch, context, plan.owner)
+    mut length = -1
+    if text_source:
+        length = try buffer_lower.length(mut batch, context, plan.owner)
+    else:
+        length = try list_lower.length(mut batch, context, plan.owner)
     const setup_limit = try list_lower.store(mut batch, context, plan.limit, length, True)
     const bound = try list_lower.read(mut batch, context, plan.limit, 0)
     const condition = try list_lower.binary(mut batch, context, b"lt", index, bound, 1)
