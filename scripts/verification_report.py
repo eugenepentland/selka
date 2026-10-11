@@ -154,7 +154,7 @@ _TEST_DURATION = re.compile(r'^(?P<prefix>[| +\\`├─└│-]*)(?P<name>run te
 _ANSI = re.compile(r'\x1b\[[0-9;]*m')
 
 
-def execution_timings(log_path):
+def execution_timings(log_path, *, capture_available=True):
     """Extract Zig summary observations, retaining nesting without summing it.
 
 Bound bytes, line size and observations. Zig node names are observations, not
@@ -163,6 +163,9 @@ CPU time and aggregate concurrent RSS are unavailable from this format.
 """
     result = dict(status='unknown', observations=[], truncated=False, additive=False,
                   cpu_seconds=None, aggregate_peak_rss_bytes=None)
+    if not capture_available:
+        result['reason'] = 'current execution log unavailable'
+        return result
     try:
         with Path(log_path).open('rb') as source:
             raw = source.read(MAX_BYTES + 1)

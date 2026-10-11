@@ -364,7 +364,9 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
                             "logs": [] if logs is None else [
                                 {"path": str(path), "truncated": logs.truncated[index],
                                  "bytes_seen": logs.bytes_seen[index],
-                                 "observed_steps": verification_report.execution_timings(path)}
+                                 "capture_available": logs.capture_available[index],
+                                 "observed_steps": verification_report.execution_timings(
+                                     path, capture_available=logs.capture_available[index])}
                                 for index, path in enumerate(logs.paths)],
                             "log_errors": [] if logs is None else logs.capture_errors})
         return status, held
@@ -374,6 +376,10 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
         if logs is not None:
             logs.close()
         raise
+    finally:
+        for stream in (process.stdout, process.stderr):
+            if stream is not None:
+                stream.close()
 
 
 def artifact_paths(root: Path) -> list[Path]:

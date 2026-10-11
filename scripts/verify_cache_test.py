@@ -596,6 +596,28 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertGreaterEqual(held, timings[0]['validation_seconds'] + timings[0]['worker_seconds'])
         self.assertAlmostEqual(timings[0]['elapsed_seconds'], timings[0]['admission_wait_seconds'] + held)
 
+    def test_failed_log_open_does_not_report_previous_execution_timings(self):
+        logs = self.root / '.logs'
+        old_log = self.write('.logs/stdout.log', 'compile exe old Debug native success 7s MaxRSS:90M\n')
+        environment = coordinator.normalized_environment(self.root)
+        environment.update(MYLANG_SLOT_DIR=str(self.root / '.log-slots'), MYLANG_GATE_SLOTS='1',
+                           MYLANG_GATE_MEM='0', MYLANG_SLOT_POLL='1', MYLANG_SLOT_SETTLE='0', MYLANG_TIMING_CPUS='')
+        original_open = Path.open
+        def open_log(path, mode='r', *args, **kwargs):
+            if path == old_log and mode == 'wb':
+                raise PermissionError('current log cannot be opened')
+            return original_open(path, mode, *args, **kwargs)
+        timings = []
+        with patch.object(Path, 'open', open_log):
+            status, _ = REAL_ADMISSION(self.root, 'gate', [sys.executable, '-c', 'pass'], environment,
+                                      lambda: True, timings=timings, log_dir=logs)
+        self.assertEqual(status, 0)
+        self.assertIn('old Debug', old_log.read_text())
+        captured = timings[0]['logs'][0]
+        self.assertFalse(captured['capture_available'])
+        self.assertEqual(captured['observed_steps']['status'], 'unknown')
+        self.assertEqual(captured['observed_steps']['observations'], [])
+
     def test_new_earlier_path_directory_cannot_shadow_normalized_worker_tool(self):
         tool = self.write('tools/existing/identity-tool', '#!/bin/sh\nprintf selected-tool\n')
         tool.chmod(0o755)
