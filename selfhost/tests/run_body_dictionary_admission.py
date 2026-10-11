@@ -98,6 +98,7 @@ def main():
     ap.add_argument('--builder', type=Path)
     ap.add_argument('--source-root', type=Path, default=D.ROOT)
     ap.add_argument('--report', type=Path, required=True)
+    ap.add_argument('--release', action='store_true')
     ap.add_argument('--native-controls', action='store_true')
     ap.add_argument('--native-body-schema', type=int, choices=range(1, SCHEMA + 1))
     args = normalize(ap.parse_args())
@@ -108,7 +109,7 @@ def main():
     before = identity(args)
     report = {'complete': False, 'selected_admission': 'pending', 'body_schema': SCHEMA,
               'scope': 'B8 dictionary/set/Option source fixtures; no compiler/bootstrap claim',
-              'native_controls': args.native_controls, 'native_body_schema': args.native_body_schema, 'modes': list(modes),
+              'release_facts_leaks': args.release, 'native_controls': args.native_controls, 'native_body_schema': args.native_body_schema, 'modes': list(modes),
               'expected_operations': expected_operations(manifest, modes),
               **before, **COUNTS, 'donors': inventory['donors'], 'records': [],
               'runtime_flags': ['--release', '--verify-facts', 'MYL_CORE_LEAKCHECK=1'],
@@ -148,6 +149,8 @@ def main():
             entry = source / name
             shutil.copyfile(FIXTURES / Path(name).with_suffix('.input'), entry)
             command = ['check-project', entry, '--no-cache', '--diagnostics=json']
+            if args.release:
+                command += ['--release', '--verify-facts']
             native = run(name, 'reference', 'check', command)
             native_contract(native, spec)
             for mode in modes[1:]:

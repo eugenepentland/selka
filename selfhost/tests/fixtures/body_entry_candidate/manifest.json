@@ -1,5 +1,5 @@
 {
-  "schema": 7,
+  "schema": 8,
   "scope": "strict B7 installed preparation; qualification pending",
   "cases": {
     "entry_binary_try.my": {

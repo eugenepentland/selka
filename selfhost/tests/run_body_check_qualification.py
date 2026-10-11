@@ -14,7 +14,7 @@ import run_frontend_qualification as F
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_check'
 COMPONENT = 'body-check'
-SCHEMA = 7
+SCHEMA = 8
 BODY_VALUE_LIMIT = 2097152
 FORGED_CHECKS = 92
 MALFORMED_CHECKS = 22

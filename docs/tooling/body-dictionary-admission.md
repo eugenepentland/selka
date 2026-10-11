@@ -22,3 +22,11 @@ scripts/build-slot.sh build python3 selfhost/tests/run_body_dictionary_admission
 ```
 
 For native-only preparation add `--native-controls --native-body-schema 5` when using the frozen B5 installation. Such a complete report still marks selected admission pending. Hostile schema8 catalog/operation validation belongs to separate authentic reply qualification; these source controls do not substitute for it.
+
+The mandatory `zig build test-selfhost-body-dictionaries` target runs normal and
+release qualification. Each lane requires all 246 distinct source operations
+and all 27 ordered authenticated hostile replies; duplicate, absent or skipped
+work cannot qualify. `test-selfhost-body-dictionaries-self` checks that accounting
+without claiming installed schema 8 support. Every successful runtime control
+uses release generation, fact verification and leak checks in both lanes; the
+release lane additionally passes release/fact flags to source checking.

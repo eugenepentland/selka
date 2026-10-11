@@ -11,16 +11,16 @@ import generate_body_entry_requests as G
 class RequestsTest(unittest.TestCase):
     def test_protocol_and_correlation(self):
         payload = b'SLKBKI01payload'
-        header = b'SLKBCK01'+struct.pack('<IIII', 1, 7, 0, len(payload))+b'nonce123'+hashlib.sha256(payload).digest()
+        header = b'SLKBCK01'+struct.pack('<IIII', 1, 8, 0, len(payload))+b'nonce123'+hashlib.sha256(payload).digest()
         request = header+payload
         reply = bytearray(request); struct.pack_into('<I', reply, 16, 1)
-        G.validate_exchange('body-check', request, bytes(reply), {'protocol': 1, 'schema': 7})
+        G.validate_exchange('body-check', request, bytes(reply), {'protocol': 1, 'schema': 8})
         wrong = bytearray(request); wrong[:8] = b'SLKPRS01'
         with self.assertRaises(RuntimeError):
-            G.validate_exchange('body-check', bytes(wrong), bytes(reply), {'protocol': 1, 'schema': 7})
+            G.validate_exchange('body-check', bytes(wrong), bytes(reply), {'protocol': 1, 'schema': 8})
         wrong = bytearray(reply); wrong[24] ^= 1
         with self.assertRaises(RuntimeError):
-            G.validate_exchange('body-check', request, bytes(wrong), {'protocol': 1, 'schema': 7})
+            G.validate_exchange('body-check', request, bytes(wrong), {'protocol': 1, 'schema': 8})
         with self.assertRaises(RuntimeError):
             G.validate_exchange('body-check', request, bytes(reply), {'protocol': 1, 'schema': 6})
 

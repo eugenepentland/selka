@@ -282,3 +282,9 @@ pub const body_entry_admission_self = [_][]const u8{
     "selfhost/tests/fixtures/body_entry_candidate/",
     "selfhost/tests/fixtures/body_entry_hostile/",
 };
+
+/// Schema8 source and authenticated hostile admission reads the full component closure.
+pub const body_dictionary_admission = [_][]const u8{"selfhost/"};
+
+/// Closed B8 inventory, oracle and deployment adversarial selfchecks.
+pub const body_dictionary_admission_self = [_][]const u8{ "selfhost/test_body_dictionaries.py", "selfhost/tests/body_dictionary_admission_test.py", "selfhost/tests/body_dictionary_hostile_test.py", "selfhost/tests/body_dictionary_gate_test.py", "selfhost/tests/run_body_dictionary_admission.py", "selfhost/tests/run_body_dictionary_hostile.py", "selfhost/tests/run_body_check_qualification.py", "selfhost/tests/run_body_library_join.py", "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/fixtures/body_dictionary_candidate/", "selfhost/tests/fixtures/body_dictionary_hostile/", "selfhost/tests/fixtures/body_check/exchange_fixture.c" };

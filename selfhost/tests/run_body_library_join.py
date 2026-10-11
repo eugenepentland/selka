@@ -83,8 +83,8 @@ def run(args, work, empty, checkpoint):
     F.require(result == native and reply[:8] == b'SLKBCK01' and len(reply) >= 64,
               'authentic selected join capture failed')
     F.require(request[:8] == b'SLKBCK01' and len(request) >= 64
-              and struct.unpack_from('<IIII', request, 8) == (1, 7, 0, len(request)-64)
-              and struct.unpack_from('<IIII', reply, 8) == (1, 7, 1, len(reply)-64)
+              and struct.unpack_from('<IIII', request, 8) == (1, 8, 0, len(request)-64)
+              and struct.unpack_from('<IIII', reply, 8) == (1, 8, 1, len(reply)-64)
               and request[24:32] == reply[24:32]
               and hashlib.sha256(request[64:]).digest() == reply[32:64],
               'join capture frame correlation failed')
