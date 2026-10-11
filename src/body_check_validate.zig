@@ -469,9 +469,10 @@ fn binaryNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
     if (!numeric.binary(operation.op, node.ty, left)) return error.ComponentProtocol;
 }
 
-/// A set snapshot preserves its canonical key identity in an existing list schema.
+/// Dictionary and set snapshots preserve the canonical key identity in a list schema.
 pub fn setKeySnapshot(catalog: value.Catalog, item: dictionaries.Descriptor, result: typed.Type, arguments: []const typed.NodeId) Error!void {
-    if (item.kind != .set or arguments.len != 0) return error.ComponentProtocol;
+    if (item.kind != .set and item.kind != .dict) return error.ComponentProtocol;
+    if (arguments.len != 0) return error.ComponentProtocol;
     const element = list_validate.listElement(catalog, result) orelse return error.ComponentProtocol;
     if (element != item.key) return error.ComponentProtocol;
 }

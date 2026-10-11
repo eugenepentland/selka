@@ -324,5 +324,52 @@ test "body dictionaries bind set snapshots to canonical matching key list identi
     try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, item, bool_list, &.{}));
     try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, item, .i64, &.{}));
     const mapping: dictionaries.Descriptor = .{ .kind = .dict, .key = .i64, .value = .bool };
-    try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, mapping, int_list, &.{}));
+    try validate.setKeySnapshot(catalog, mapping, int_list, &.{});
+}
+
+// spec: SELFHOST-BODY-PRELUDE-KEYS-1
+test "body dictionaries accept authentic ordinary prelude key snapshots" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const texts = [_][]const u8{
+        "func value(mapping: dict[int, bool], items: int[]) -> int:\n    _ = items\n    return sum(mapping)\n",
+        "func value(mapping: dict[int, bool], items: int[]) -> int:\n    _ = items\n    return min(mapping)\n",
+        "func value(mapping: dict[int, bool], items: int[]) -> int:\n    _ = items\n    return sorted(mapping)[0]\n",
+    };
+    for (texts) |text| try nativeKeySnapshot(a, text);
+    try std.testing.expectEqual(@as(usize, 3), texts.len);
+}
+
+fn nativeKeySnapshot(a: std.mem.Allocator, text: []const u8) !void {
+    const f = try fixture(a, text);
+    const output = try nativeOutput(a, f);
+    try validate.outcome(a, f.input, .{ .success = output });
+    var found = false;
+    for (@constCast(output.batch.nodes)) |*node| {
+        if (node.data != .buffer_operation or node.data.buffer_operation.kind != .keys) continue;
+        found = true;
+        const saved = node.ty;
+        node.ty = .bool;
+        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = output }));
+        node.ty = saved;
+        node.data.buffer_operation.arguments = &.{@fromBackingInt(0)};
+        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = output }));
+        node.data.buffer_operation.arguments = &.{};
+    }
+    try std.testing.expect(found);
+}
+
+// spec-case: SELFHOST-BODY-PRELUDE-KEYS-1
+test "body dictionaries reject foreign prelude key snapshot schemas and view owners" {
+    const list: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const catalog: value.Catalog = .{ .lists = &.{.{ .id = list, .element = .i64 }} };
+    const mapping: dictionaries.Descriptor = .{ .kind = .dict, .key = .i64, .value = .bool };
+    const wrong_key: dictionaries.Descriptor = .{ .kind = .dict, .key = .bool, .value = .i64 };
+    const view: dictionaries.Descriptor = .{ .kind = .dict_keys, .key = .i64, .value = .bool };
+    try validate.setKeySnapshot(catalog, mapping, list, &.{});
+    try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, wrong_key, list, &.{}));
+    try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, view, list, &.{}));
+    try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, mapping, .i64, &.{}));
+    try std.testing.expectError(error.ComponentProtocol, validate.setKeySnapshot(catalog, mapping, list, &.{@fromBackingInt(0)}));
 }
