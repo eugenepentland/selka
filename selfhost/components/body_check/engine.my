@@ -2712,6 +2712,10 @@ func nominal_key(mut state: State, key: bytes, span: int) -> int fails syntax_va
 func record_assignment(mut state: State, assignment: int, span: int) -> Expression fails syntax_value.Problem:
     const target_id = try graph.field(state.syntax.pool, assignment, "target")
     const target = try graph.number(state.syntax.pool, target_id)
+    const target_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[target], "data")
+    const target_data = try graph.get(state.syntax.pool, target_data_id)
+    if target_data.data == b"tuple":
+        return try tuple_assignment(mut state, assignment, target)
     _ = try list_places.writable(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, target)
     mut path_names: int[] = []
     mut root = target
@@ -5128,3 +5132,157 @@ func dictionary_pair_step(mut state: State, position: int, raw: int, span: int) 
         statements.append(statement_id)
     const payload = try emission.ids(mut state.batch, statements)
     return list_lower.Lowered(ty=15, tag=b"block", payload=payload)
+
+
+func tuple_assignment(mut state: State, assignment: int, target: int) -> Expression fails syntax_value.Problem:
+    const target_row = state.syntax.nodes[target]
+    const span = try graph.field(state.syntax.pool, target_row, "span")
+    const target_data = try graph.field(state.syntax.pool, target_row, "data")
+    const target_payload = try graph.payload(state.syntax.pool, target_data)
+    const targets = try graph.items(state.syntax.pool, target_payload)
+    const declaration_id = try graph.field(state.syntax.pool, assignment, "declaration")
+    const declaration = try graph.get(state.syntax.pool, declaration_id)
+    mut unknown = -1
+    mut all_unknown = True
+    for entry in targets:
+        const raw = try graph.number(state.syntax.pool, entry)
+        const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+        const data = try graph.get(state.syntax.pool, data_id)
+        if data.data != b"name":
+            if declaration.kind != 0:
+                const target_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+                const rejection = try problem(state, target_span, "E_ASSIGNMENT_TARGET", "a destructuring declaration requires binding names")
+                fail rejection
+            all_unknown = False
+            continue
+        const name_span = try graph.payload(state.syntax.pool, data_id)
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        if name == b"_" or declaration.kind != 0:
+            continue
+        const visible = try top_level(state, name_span)
+        if locals.find(state.scope, name) >= 0 or visible:
+            all_unknown = False
+        else:
+            unknown = name_span
+    if unknown >= 0:
+        const rejection = try problem(state, unknown, "E_BINDING_DECLARATION", "destructuring assignment requires declared bindings; declare the targets with const or mut")
+        if all_unknown:
+            const location = try problem(state, span, "", "")
+            state.problems.append(syntax_problem.repaired(rejection, [syntax_problem.Edit(start=location.start, end=location.start, text=b"mut ")]))
+        fail rejection
+    const rhs_id = try graph.field(state.syntax.pool, assignment, "value")
+    const rhs_raw = try graph.number(state.syntax.pool, rhs_id)
+    const rhs = try expression(mut state, rhs_raw)
+    const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, rhs.ty)
+    if tuple.id < 0:
+        const checked_span = try graph.field(state.batch.pool, state.batch.nodes[rhs.id], "span")
+        const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, checked_span, 0)
+        const rejection = try problem(state, copied_span, "E_TYPE", "a destructuring assignment binds the values of a tuple; `" + type_name(state, rhs.ty) + "` is not one — bind it with one name instead")
+        fail rejection
+    if len(tuple.elements) != len(targets):
+        mut origin = "the value has " + str(len(tuple.elements)) + " values"
+        const rhs_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[rhs_raw], "data")
+        const rhs_data = try graph.get(state.syntax.pool, rhs_data_id)
+        if rhs_data.data == b"call":
+            const call = try graph.payload(state.syntax.pool, rhs_data_id)
+            const owner_id = try graph.field(state.syntax.pool, call, "owner")
+            const owner = try graph.get(state.syntax.pool, owner_id)
+            if owner.kind == 0:
+                const name_id = try graph.field(state.syntax.pool, call, "name")
+                const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, name_id)
+                const name = try suggestions.text(spelling)
+                origin = "`" + name + "` returns " + str(len(tuple.elements)) + " values"
+        const rejection = try problem(state, span, "E_TUPLE_ARITY", origin + "; bind " + str(len(tuple.elements)) + " names, or `_` for one you do not need")
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const snapshot = try tuple_lower.prepare(mut state.batch, mut state.scope, context, tuple_lower.Input(value=rhs.id, ty=rhs.ty))
+    mut statements: int[] = [snapshot.initialize]
+    for position in range(len(targets)):
+        const raw = try graph.number(state.syntax.pool, targets[position])
+        const value = try tuple_lower.project(mut state.batch, context, snapshot.owner, rhs.ty, position, tuple.elements[position])
+        const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+        const data = try graph.get(state.syntax.pool, data_id)
+        if data.data == b"name":
+            const name_span = try graph.payload(state.syntax.pool, data_id)
+            const written = try tuple_bind(mut state, name_span, Expression(id=value, ty=tuple.elements[position]), declaration_id)
+            if written >= 0:
+                statements.append(written)
+        else:
+            const written = try tuple_place(mut state, raw, value)
+            statements.append(written)
+    const lowered = try tuple_lower.finish(mut state.batch, context, statements)
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=15)
+
+
+func tuple_bind(mut state: State, name_span: int, value: Expression, declaration_id: int) -> int fails syntax_value.Problem:
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+    if name == b"_":
+        return -1
+    const declaration = try graph.get(state.syntax.pool, declaration_id)
+    const slot = locals.find(state.scope, name)
+    const visible = try top_level(state, name_span)
+    if declaration.kind != 0 and (slot >= 0 or visible):
+        const rejection = try problem(state, name_span, "E_SHADOWING", "binding shadows an active declaration")
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=name_span)
+    if slot >= 0:
+        _ = try require(state, value.ty, state.scope.locals[slot].ty, name_span)
+        if not state.scope.locals[slot].mutable:
+            const rejection = try problem(state, name_span, "E_IMMUTABLE", "this binding cannot be assigned")
+            fail rejection
+        const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, value.ty)
+        if pending:
+            if state.scope.locals[slot].usage.transfer_available:
+                const rejection = try problem(state, name_span, "E_RESULT_OVERWRITE", "assignment would overwrite an unhandled result-bearing value")
+                fail rejection
+            state.scope.locals[slot].usage.transfer_available = True
+            state.scope.locals[slot].usage.transfer_span = -1
+        state.scope.locals[slot].usage.writes += 1
+        state.scope.locals[slot].flags.initialized = True
+        option_flow.forget(mut state.control.options, slot)
+        return try list_lower.store(mut state.batch, context, slot, value.id, False)
+    if visible:
+        const rejection = try problem(state, name_span, "E_SHADOWING", "binding shadows an active local or top-level function")
+        fail rejection
+    if declaration.kind == 0:
+        const rejection = try problem(state, name_span, "E_BINDING_DECLARATION", "destructuring assignment requires declared bindings")
+        fail rejection
+    const created = try locals.add(mut state.scope, name, name_span, value.ty, declaration.integer != 0, b"local")
+    const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, value.ty)
+    state.scope.locals[created].usage.transfer_available = pending
+    return try list_lower.store(mut state.batch, context, created, value.id, True)
+
+
+func tuple_place(mut state: State, target: int, value: int) -> int fails syntax_value.Problem:
+    while len(state.batch.resolved) < len(state.syntax.nodes):
+        state.batch.resolved.append(-1)
+    state.batch.resolved[target] = value
+    const row = state.syntax.nodes[target]
+    const span = try graph.field(state.syntax.pool, row, "span")
+    const data_id = try graph.field(state.syntax.pool, row, "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    const payload = try graph.payload(state.syntax.pool, data_id)
+    const target_id = try syntax_value.integer(mut state.syntax.pool, target)
+    mut result = Expression(id=-1, ty=15)
+    if data.data == b"field":
+        const op = try syntax_value.enumeration(mut state.syntax.pool, b"set")
+        const absent = try syntax_value.absent(mut state.syntax.pool)
+        const assignment = try syntax_value.object(mut state.syntax.pool, ["target", "value", "op", "declaration"], [target_id, target_id, op, absent])
+        result = try record_assignment(mut state, assignment, span)
+    elif data.data == b"index":
+        const base = try graph.field(state.syntax.pool, payload, "base")
+        const index = try graph.field(state.syntax.pool, payload, "index")
+        const inputs = try syntax_value.sequence(mut state.syntax.pool, [index, target_id])
+        const kind = try syntax_value.enumeration(mut state.syntax.pool, b"write")
+        const operation = try syntax_value.object(mut state.syntax.pool, ["base", "kind", "arguments"], [base, kind, inputs])
+        const tagged = try syntax_value.tagged(mut state.syntax.pool, b"list_operation", operation)
+        const synthetic = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, tagged])
+        const raw = len(state.syntax.nodes)
+        state.syntax.nodes.append(synthetic)
+        result = try expression(mut state, raw)
+    else:
+        const rejection = try problem(state, span, "E_ASSIGNMENT_TARGET", "assignment requires a field or indexed collection place")
+        fail rejection
+    const discarded = try syntax_value.integer(mut state.batch.pool, result.id)
+    return try emission.statement(mut state.batch, state.syntax.pool, span, False, b"discard", discarded)

@@ -1,0 +1,116 @@
+import syntax_value
+import graph
+import engine
+import tuple_types
+import list_types
+import locals
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh(kind: bytes) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 2)
+    const first = try syntax_value.span(mut pool, 0, 1)
+    const second = try syntax_value.span(mut pool, 1, 2)
+    const key_node = try node(mut pool, first, b"integer", first)
+    const value_node = try node(mut pool, second, b"integer", second)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const absent = try syntax_value.absent(mut pool)
+    const key = if kind == b"dict" then zero else absent
+    const step_data = try syntax_value.object(mut pool, ["value", "key"], [one, key])
+    const step = try node(mut pool, span, b"gather_step", step_data)
+    const steps = try syntax_value.sequence(mut pool, [zero])
+    const loop = try node(mut pool, span, b"block", steps)
+    const shape = try syntax_value.enumeration(mut pool, kind)
+    const gather_data = try syntax_value.object(mut pool, ["shape", "loop", "open"], [shape, one, first])
+    const gather = try node(mut pool, span, b"gather", gather_data)
+    const tuple_data = try syntax_value.sequence(mut pool, [zero, one])
+    const tuple_node = try node(mut pool, span, b"tuple", tuple_data)
+    const nodes = try syntax_value.sequence(mut pool, [key_node, value_node, gather, tuple_node])
+    const statements = try syntax_value.sequence(mut pool, [step, loop])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, statements, empty, types])
+    mut state = try engine.make(pool, b"07", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    state.batch.facts.lists.available = True
+    for unused in range(19):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+func destructuring(declare: bool) -> engine.State fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    state.syntax.source = b"07ab"
+    const first = try syntax_value.span(mut state.syntax.pool, 2, 3)
+    const second = try syntax_value.span(mut state.syntax.pool, 3, 4)
+    const span = try syntax_value.span(mut state.syntax.pool, 2, 4)
+    const name_a = try node(mut state.syntax.pool, first, b"name", first)
+    const name_b = try node(mut state.syntax.pool, second, b"name", second)
+    state.syntax.nodes.append(name_a)
+    state.syntax.nodes.append(name_b)
+    const a = try syntax_value.integer(mut state.syntax.pool, 4)
+    const b = try syntax_value.integer(mut state.syntax.pool, 5)
+    const names = try syntax_value.sequence(mut state.syntax.pool, [a, b])
+    const targets = try node(mut state.syntax.pool, span, b"tuple", names)
+    state.syntax.nodes.append(targets)
+    const target = try syntax_value.integer(mut state.syntax.pool, 6)
+    const value = try syntax_value.integer(mut state.syntax.pool, 3)
+    const op = try syntax_value.enumeration(mut state.syntax.pool, b"set")
+    mut declaration = try syntax_value.absent(mut state.syntax.pool)
+    if declare:
+        const flag = try syntax_value.boolean(mut state.syntax.pool, True)
+        declaration = flag
+    const payload = try syntax_value.object(mut state.syntax.pool, ["target", "value", "op", "declaration"], [target, value, op, declaration])
+    const assignment = try node(mut state.syntax.pool, span, b"field_assignment", payload)
+    state.syntax.nodes.append(assignment)
+    return state
+
+
+public func test_destructuring_declaration_projects_then_binds_each_name_in_order() -> bool fails syntax_value.Problem:
+    mut state = try destructuring(True)
+    const result = try engine.expression(mut state, 7)
+    if result.ty != 15 or len(state.scope.locals) != 3 or len(state.batch.statements) != 4:
+        return False
+    const first_data = try graph.field(state.batch.pool, state.batch.nodes[3], "data")
+    const first = try graph.get(state.batch.pool, first_data)
+    const second_data = try graph.field(state.batch.pool, state.batch.nodes[5], "data")
+    const second = try graph.get(state.batch.pool, second_data)
+    assert state.scope.locals[0].usage.temporary
+    assert state.scope.locals[1].name == b"a"
+    assert state.scope.locals[2].name == b"b"
+    assert state.scope.locals[1].mutable
+    assert state.scope.locals[2].mutable
+    assert first.data == b"local"
+    assert second.data == b"local"
+    return True
+
+
+public func test_unknown_tuple_targets_fail_before_rhs_with_native_declaration_fix() -> bool fails syntax_value.Problem:
+    mut state = try destructuring(False)
+    const result = engine.expression(mut state, 7)
+    match result:
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_BINDING_DECLARATION" and problem.start == 3 and len(state.batch.nodes) == 0 and len(state.problems) == 1 and state.problems[0].notes.edits[0].text == b"mut " and state.problems[0].notes.edits[0].start == 2
+
+
+public func test_existing_tuple_targets_use_assignment_and_count_writes() -> bool fails syntax_value.Problem:
+    mut state = try destructuring(False)
+    const first = try syntax_value.span(mut state.syntax.pool, 2, 3)
+    const second = try syntax_value.span(mut state.syntax.pool, 3, 4)
+    _ = try locals.add(mut state.scope, b"a", first, 0, True, b"local")
+    _ = try locals.add(mut state.scope, b"b", second, 0, True, b"local")
+    const result = try engine.expression(mut state, 7)
+    const first_data = try graph.field(state.batch.pool, state.batch.statements[1], "data")
+    const first_tag = try graph.get(state.batch.pool, first_data)
+    const second_data = try graph.field(state.batch.pool, state.batch.statements[2], "data")
+    const second_tag = try graph.get(state.batch.pool, second_data)
+    return result.ty == 15 and len(state.scope.locals) == 3 and state.scope.locals[0].usage.writes == 1 and state.scope.locals[1].usage.writes == 1 and first_tag.data == b"assign" and second_tag.data == b"assign"
