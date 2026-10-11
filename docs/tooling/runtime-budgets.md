@@ -209,7 +209,7 @@ The gate's two slow Zig test roots run as several processes rather than one:
 `zig build test` splits `src/root_test.zig` into `-Dtest-shards=N` shards
 (default 12) and `test/integration.zig` into `N/2`, each an independent run of
 the same test binary under `--guardian-shard=K/N`, declaring its own `max_rss`
-(2.5 GiB per unit shard, 2 GiB per CLI shard) so `zig build --maxrss` still
+(2.5 GiB per unit or CLI shard) so `zig build --maxrss` still
 bounds the whole gate. Guardian's runner gives each shard the named tests whose
 position among them is `K` modulo `N`, and the unnamed `test { }` blocks to
 shard 0 alone, so the shards partition the root and their `N test(s) selected`
@@ -244,8 +244,8 @@ of every test took 98 s instead of 136 s on the same loaded machine (81 s with
 no memory limit at all). Measure a step's tree before raising its ceiling; a
 larger number is not a safer one.
 
-The B4 uncached component bootstrap reported a 1,538,023,424-byte CLI shard
-peak on 2026-10-11, so CLI shards now reserve 2 GiB. Frontend and body
+The B6 uncached component bootstrap reported a 2,345,099,264-byte CLI shard
+peak on 2026-10-11, so CLI shards now reserve 2.5 GiB. Frontend and body
 qualification drivers also rebuild the optimized body component; they reserve
 2.5 GiB across the seed and clang. A body test build's process tree was sampled
 at 1,304,895,488 bytes before clang's peak. These are build scheduling allowances;

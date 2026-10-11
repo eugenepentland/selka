@@ -37,9 +37,10 @@ const rss = struct {
     /// 2.5G keeps a measured ceiling with headroom.
     const shard_unit: u64 = 2560 * mib;
     /// One shard of the CLI root, including uncached component bootstrap.
-    /// The B4 release body component rebuild reported a 1,538,023,424-byte
-    /// peak (2026-10-11); reserve 2 GiB for that shard with measured headroom.
-    const shard_cli: u64 = 2048 * mib;
+    /// The B6 pure-library body rebuild reported a 2,345,099,264-byte peak
+    /// (2026-10-11); reserve 2.5 GiB with measured headroom, matching the
+    /// unsharded CLI root and optimized component qualification drivers.
+    const shard_cli: u64 = 2560 * mib;
     /// The directory run of `tests/guest`. Observed on a clean cache
     /// (2026-09-23): `tests/guest` 1.33G.
     const guest_suite: u64 = 1536 * mib;
