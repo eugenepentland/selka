@@ -217,3 +217,18 @@ request fields or widening the body graph, byte, edge, depth, or allocation limi
 Development replies from rewritten schema-6 captures are not schema-7
 qualification evidence. Whole-source shadow and runtime qualification is required
 before declaring the new entrypoint closure qualified.
+
+
+The schema-8 dictionary/set producer is being implemented in reviewable slices.
+The connected foundation adds authenticated collection templates, one globally
+ordered recipe stream, dictionary literal arrays in written key/value order,
+contextual narrow integer literals, and structural Option facts and payload
+lowering. Collection recipes use the outer `collection` tag and six inner tags;
+views require their canonical dictionary to exist first. Ordinary record and
+collection storage recursion remains bounded and does not change wire limits.
+
+This slice does not qualify the complete dictionary/set closure. Collection
+methods, live views, dictionary/set iteration, set operators and comprehensions
+are still being connected and must pass the native-controlled corpus before
+selected-source admission is claimed. The previous B7 deployment and evidence
+remain separate from schema-8 development.

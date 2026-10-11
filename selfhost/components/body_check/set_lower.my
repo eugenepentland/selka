@@ -1,0 +1,190 @@
+import syntax_value
+import emission
+import graph
+import locals
+import list_lower
+import comprehension_lower
+
+public record Literal:
+    ty: int
+    values: int[]
+
+
+public record Binary:
+    ty: int
+    element: int
+    left: int
+    right: int
+    kind: bytes
+    loop_id: int
+
+
+public record Combined:
+    value: list_lower.Lowered
+    next_loop: int
+
+
+record Walk:
+    owner: int
+    element: int
+    element_type: int
+    body: int
+    running: int
+    loop_id: int
+
+
+record Filter:
+    source: int
+    other: int
+    output: int
+    element_type: int
+    present: bool
+    loop_id: int
+
+
+func empty(mut batch: emission.Batch, context: list_lower.Context, ty: int) -> int fails syntax_value.Problem:
+    const values = try emission.ids(mut batch, [])
+    return try emission.node(mut batch, context.input, context.span, ty, b"array", values)
+
+
+func discard(mut batch: emission.Batch, context: list_lower.Context, value: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.statement(mut batch, context.input, context.span, False, b"discard", payload)
+
+
+func add(mut batch: emission.Batch, context: list_lower.Context, owner: int, value: int) -> int fails syntax_value.Problem:
+    const absent = try syntax_value.absent(mut batch.pool)
+    const unit = try emission.node(mut batch, context.input, context.span, 15, b"unit", absent)
+    const write = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"write", arguments=[value, unit], ty=15))
+    return try discard(mut batch, context, write)
+
+
+public func literal(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Literal) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.ty)
+    const value = try empty(mut batch, context, request.ty)
+    const initialize = try list_lower.store(mut batch, context, owner, value, True)
+    mut statements = [initialize]
+    for element in request.values:
+        const added = try add(mut batch, context, owner, element)
+        statements.append(added)
+    const result = try list_lower.read(mut batch, context, owner, request.ty)
+    return try list_lower.block(mut batch, context, statements, result, request.ty)
+
+
+func membership(mut batch: emission.Batch, context: list_lower.Context, owner: int, element: int, element_type: int, present: bool) -> int fails syntax_value.Problem:
+    const value = try list_lower.read(mut batch, context, element, element_type)
+    const found = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"contains", arguments=[value], ty=1))
+    if present:
+        return found
+    const op = try syntax_value.enumeration(mut batch.pool, b"not")
+    const operand = try syntax_value.integer(mut batch.pool, found)
+    const location = try graph.clone(mut batch.pool, context.input, context.span, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["op", "operand", "op_span"], [op, operand, location])
+    return try emission.node(mut batch, context.input, context.span, 1, b"unary", payload)
+
+
+func walk(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Walk) -> int[] fails syntax_value.Problem:
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const limit = try list_lower.temporary(mut scope, context, 0)
+    const i = try list_lower.read(mut batch, context, index, 0)
+    const bound = try list_lower.read(mut batch, context, limit, 0)
+    const checked = try list_lower.operation(mut batch, context, list_lower.Operation(owner=request.owner, kind=b"iteration_check", arguments=[bound], ty=15))
+    const guard = try discard(mut batch, context, checked)
+    const key = try list_lower.operation(mut batch, context, list_lower.Operation(owner=request.owner, kind=b"key_at", arguments=[i], ty=request.element_type))
+    const bind = try list_lower.store(mut batch, context, request.element, key, True)
+    const body = try comprehension_lower.block_statement(mut batch, context, [guard, bind, request.body])
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", i, one, 0)
+    const advance = try list_lower.store(mut batch, context, index, next, False)
+    const step = try comprehension_lower.block_statement(mut batch, context, [guard, advance])
+    const end = try list_lower.read(mut batch, context, limit, 0)
+    mut condition = try list_lower.binary(mut batch, context, b"lt", i, end, 1)
+    if request.running >= 0:
+        const flag = try list_lower.read(mut batch, context, request.running, 1)
+        condition = try list_lower.binary(mut batch, context, b"logical_and", condition, flag, 1)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const first = try list_lower.store(mut batch, context, index, zero, True)
+    const length = try list_lower.length(mut batch, context, request.owner)
+    const last = try list_lower.store(mut batch, context, limit, length, True)
+    const loop = try comprehension_lower.loop_statement(mut batch, context, request.loop_id, condition, body, step)
+    return [first, last, loop]
+
+
+func filtered(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Filter) -> int[] fails syntax_value.Problem:
+    const element = try list_lower.temporary(mut scope, context, request.element_type)
+    const test = try membership(mut batch, context, request.other, element, request.element_type, request.present)
+    const value = try list_lower.read(mut batch, context, element, request.element_type)
+    const added = try add(mut batch, context, request.output, value)
+    const body = try comprehension_lower.branch_statement(mut batch, context, test, added)
+    return try walk(mut batch, mut scope, context, Walk(owner=request.source, element=element, element_type=request.element_type, body=body, running=-1, loop_id=request.loop_id))
+
+
+public func combine(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Binary) -> Combined fails syntax_value.Problem:
+    const first = try list_lower.temporary(mut scope, context, request.ty)
+    const second = try list_lower.temporary(mut scope, context, request.ty)
+    const output = try list_lower.temporary(mut scope, context, request.ty)
+    const left = try list_lower.store(mut batch, context, first, request.left, True)
+    const right = try list_lower.store(mut batch, context, second, request.right, True)
+    mut statements = [left, right]
+    mut next_loop = request.loop_id
+    if request.kind == b"union":
+        const copied = try list_lower.operation(mut batch, context, list_lower.Operation(owner=first, kind=b"copy", arguments=[], ty=request.ty))
+        const initialized = try list_lower.store(mut batch, context, output, copied, True)
+        statements.append(initialized)
+        const other = try list_lower.read(mut batch, context, second, request.ty)
+        const updated = try list_lower.operation(mut batch, context, list_lower.Operation(owner=output, kind=b"update", arguments=[other], ty=15))
+        const applied = try discard(mut batch, context, updated)
+        statements.append(applied)
+    else:
+        const fresh = try empty(mut batch, context, request.ty)
+        const initialized = try list_lower.store(mut batch, context, output, fresh, True)
+        statements.append(initialized)
+        const kept = try filtered(mut batch, mut scope, context, Filter(source=first, other=second, output=output, element_type=request.element, present=request.kind == b"intersection", loop_id=next_loop))
+        next_loop = next_loop + 1
+        for statement in kept:
+            statements.append(statement)
+        if request.kind == b"symmetric_difference":
+            const rest = try filtered(mut batch, mut scope, context, Filter(source=second, other=first, output=output, element_type=request.element, present=False, loop_id=next_loop))
+            next_loop = next_loop + 1
+            for statement in rest:
+                statements.append(statement)
+    const value = try list_lower.read(mut batch, context, output, request.ty)
+    const lowered = try list_lower.block(mut batch, context, statements, value, request.ty)
+    return Combined(value=lowered, next_loop=next_loop)
+
+
+public func relation(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Binary) -> Combined fails syntax_value.Problem:
+    const first = try list_lower.temporary(mut scope, context, request.ty)
+    const second = try list_lower.temporary(mut scope, context, request.ty)
+    mut inner = first
+    mut outer = second
+    if request.kind == b"superset" or request.kind == b"proper_superset":
+        inner = second
+        outer = first
+    const holds = try list_lower.temporary(mut scope, context, 1)
+    mut initial = -1
+    if request.kind == b"disjoint":
+        const truth = try syntax_value.boolean(mut batch.pool, True)
+        initial = try emission.node(mut batch, context.input, context.span, 1, b"boolean", truth)
+    else:
+        const left_length = try list_lower.length(mut batch, context, inner)
+        const right_length = try list_lower.length(mut batch, context, outer)
+        initial = try list_lower.binary(mut batch, context, b"le", left_length, right_length, 1)
+    const element = try list_lower.temporary(mut scope, context, request.element)
+    const settles = try membership(mut batch, context, outer, element, request.element, request.kind == b"disjoint")
+    const false_value = try syntax_value.boolean(mut batch.pool, False)
+    const refuted = try emission.node(mut batch, context.input, context.span, 1, b"boolean", false_value)
+    const assign = try list_lower.store(mut batch, context, holds, refuted, False)
+    const body = try comprehension_lower.branch_statement(mut batch, context, settles, assign)
+    const loop = try walk(mut batch, mut scope, context, Walk(owner=inner, element=element, element_type=request.element, body=body, running=holds, loop_id=request.loop_id))
+    mut answer = try list_lower.read(mut batch, context, holds, 1)
+    if request.kind == b"proper_subset" or request.kind == b"proper_superset":
+        const left_length = try list_lower.length(mut batch, context, inner)
+        const right_length = try list_lower.length(mut batch, context, outer)
+        const shorter = try list_lower.binary(mut batch, context, b"lt", left_length, right_length, 1)
+        answer = try list_lower.binary(mut batch, context, b"logical_and", answer, shorter, 1)
+    const left = try list_lower.store(mut batch, context, first, request.left, True)
+    const right = try list_lower.store(mut batch, context, second, request.right, True)
+    const flag = try list_lower.store(mut batch, context, holds, initial, True)
+    const lowered = try list_lower.block(mut batch, context, [left, right, flag, loop[0], loop[1], loop[2]], answer, 1)
+    return Combined(value=lowered, next_loop=request.loop_id + 1)

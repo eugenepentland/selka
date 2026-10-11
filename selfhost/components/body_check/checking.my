@@ -130,6 +130,7 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const buffer_basis = try buffer_types.prepare(pool, catalog)
     const managed_types = [string_type, bytes_type, buffer_basis.id]
     mut lists = try list_types.prepare_records(pool, catalog, suffixes, managed_types, records)
+    records = lists.types.records
     match record_types.closure(mut records, pool, lists.elements, managed_types):
         case Ok(admitted):
             _ = admitted
@@ -137,6 +138,7 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
             if problem.code == "P_BODY_PROFILE":
                 return try profile(problem)
             fail problem
+    lists.types.records = records
     lists.types.variants = variant_catalog
     _ = try list_types.seed_variants(mut lists, pool)
     state.batch.facts.lists = lists

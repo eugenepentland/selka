@@ -177,3 +177,55 @@ public func prepare(pool: syntax_value.Pool, input: int, records: int[]) -> Cata
                     fail bad()
                 _ = try add(mut result, Schema(id=19 + position, kind=kind, key=key, value=value, owner=owner))
     return result
+
+
+func member(mut pool: syntax_value.Pool, name: bytes, ty: int, declaration: int) -> int fails syntax_value.Problem:
+    const name_value = try syntax_value.octets(mut pool, name)
+    const type_id = try syntax_value.integer(mut pool, ty)
+    const nil = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    return try syntax_value.object(mut pool, ["name", "declaration", "ty", "default_value", "boxed"], [name_value, declaration, type_id, nil, no])
+
+
+public func materialize(mut pool: syntax_value.Pool, records: int[], value: Schema) -> int fails syntax_value.Problem:
+    const key_name = try variants.internal_name(pool, records, value.key)
+    mut name = label(value.kind) + b"<" + key_name
+    if value.kind != 1:
+        const value_name = try variants.internal_name(pool, records, value.value)
+        name += b"," + value_name
+    name += b">"
+    const declaration = try syntax_value.span(mut pool, 0, 0)
+    const nil = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    const yes = try syntax_value.boolean(mut pool, True)
+    const identity = try syntax_value.integer(mut pool, value.id)
+    const label_value = try syntax_value.octets(mut pool, name)
+    mut members: int[] = []
+    mut buffer = nil
+    mut key = nil
+    mut managed = no
+    mut set_flag = no
+    mut collection_kind = try syntax_value.enumeration(mut pool, b"list")
+    mut builtin = try syntax_value.enumeration(mut pool, b"none")
+    if value.kind < 2:
+        buffer = try syntax_value.integer(mut pool, value.value)
+        key = try syntax_value.integer(mut pool, value.key)
+        managed = yes
+        collection_kind = try syntax_value.enumeration(mut pool, b"dictionary")
+        if value.kind == 1:
+            set_flag = yes
+    elif value.kind == 2:
+        const first = try member(mut pool, b"key", value.key, declaration)
+        const second = try member(mut pool, b"value", value.value, declaration)
+        members = [first, second]
+    else:
+        if value.owner < 19:
+            fail bad()
+        const mapping = try member(mut pool, b"mapping", value.owner, declaration)
+        members = [mapping]
+        builtin = try syntax_value.enumeration(mut pool, b"live_view")
+    const fields = try syntax_value.sequence(mut pool, members)
+    const shape = try syntax_value.object(mut pool, ["array", "domain", "variants", "buffer", "resource", "builtin", "tuple"], [nil, nil, nil, buffer, nil, builtin, no])
+    const collection = try syntax_value.object(mut pool, ["kind", "key", "contains_cell", "set", "box"], [collection_kind, key, no, set_flag, no])
+    const contract = try syntax_value.object(mut pool, ["callback", "public_arguments", "codec", "codec_declared", "move_only", "storable", "requires_handling"], [nil, yes, nil, no, no, yes, no])
+    return try syntax_value.object(mut pool, ["collection", "managed", "id", "name", "declaration", "fields", "shape", "contract"], [collection, managed, identity, label_value, declaration, fields, shape, contract])

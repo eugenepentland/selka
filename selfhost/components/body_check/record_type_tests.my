@@ -22,7 +22,9 @@ func row(mut pool: syntax_value.Pool, span: int, ty: int) -> int fails syntax_va
     const shape = try syntax_value.object(mut pool, ["array", "domain", "variants", "buffer", "resource", "builtin", "tuple"], [none, none, none, none, none, builtin, no])
     const contract = try syntax_value.object(mut pool, ["move_only", "requires_handling", "callback", "storable"], [no, no, none, yes])
     const fields = try syntax_value.sequence(mut pool, [])
-    return try syntax_value.object(mut pool, ["id", "declaration", "managed", "shape", "contract", "fields"], [id, span, no, shape, contract, fields])
+    const kind = try syntax_value.enumeration(mut pool, b"list")
+    const collection = try syntax_value.object(mut pool, ["kind", "key", "contains_cell", "set", "box"], [kind, none, no, no, no])
+    return try syntax_value.object(mut pool, ["id", "declaration", "managed", "shape", "contract", "fields", "collection"], [id, span, no, shape, contract, fields, collection])
 
 
 public func test_catalog_join_uses_span_not_row_order() -> bool fails syntax_value.Problem:
@@ -76,7 +78,10 @@ func recursive_catalog(mut pool: syntax_value.Pool, element: int) -> record_type
     const fields = try syntax_value.sequence(mut pool, [field])
     const absent = try syntax_value.absent(mut pool)
     const shape = try syntax_value.object(mut pool, ["variants"], [absent])
-    const schema = try syntax_value.object(mut pool, ["fields", "declaration", "shape"], [fields, span, shape])
+    const no = try syntax_value.boolean(mut pool, False)
+    const kind = try syntax_value.enumeration(mut pool, b"list")
+    const collection = try syntax_value.object(mut pool, ["kind", "key", "contains_cell", "set", "box"], [kind, absent, no, no, no])
+    const schema = try syntax_value.object(mut pool, ["fields", "declaration", "shape", "collection", "managed"], [fields, span, shape, collection, no])
     mut catalog = record_types.empty()
     catalog.rows = [schema, schema]
     for unused in range(21):
@@ -103,7 +108,7 @@ public func test_record_unsupported_leaf_propagates_to_declaration() -> bool fai
     mut elements: int[] = []
     for unused in range(21):
         elements.append(-1)
-    elements[20] = 2
+    elements[20] = 11
     match record_types.closure(mut catalog, pool, elements, []):
         case Ok(unused):
             return False
