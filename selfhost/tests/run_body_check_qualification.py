@@ -366,14 +366,16 @@ def coordinator_edit(args, q):
     installation = q.work / 'coordinator-install'
     command = [args.builder, '--root', source, '--zig', args.zig, '--install-dir', installation]
     env = coordinator_environment()
-    F.require(F.execute(command, env, q.work, 600)[0] == 0, 'private coordinator initial install failed')
+    initial = F.execute(command, env, q.work, 600)
+    F.require(initial[0] == 0, f'private coordinator initial install failed: {initial!r}')
     before = packages(installation)
     path = source / 'selfhost/components/body_check/checking.my'
     marker = 'if path.data == b"body_edit_marker":'
     text = path.read_text()
     F.require(text.count(marker) == 1, 'body implementation edit hook missing/ambiguous')
     path.write_text(text.replace(marker, 'if path.data == b"body_edit_marker_changed":'))
-    F.require(F.execute(command, env, q.work, 600)[0] == 0, 'private body_check rebuild failed')
+    rebuilt = F.execute(command, env, q.work, 600)
+    F.require(rebuilt[0] == 0, f'private body_check rebuild failed: {rebuilt!r}')
     after = packages(installation)
     F.require(before[COMPONENT]['key'] != after[COMPONENT]['key'] and
               before[COMPONENT]['sha256'] != after[COMPONENT]['sha256'], 'implementation edit did not rebuild body_check artifact')
