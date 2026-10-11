@@ -83,3 +83,17 @@ public func test_conversion_cast_retains_operand_and_target_type() -> bool fails
     const checked_7 = try graph.number(fixture.batch.pool, ty)
     const checked_18 = try node_tag(fixture.batch, value)
     return value == 1 and checked_18 == b"cast" and checked_6 == base and checked_7 == 41
+
+
+public func test_byte_read_preserves_negative_index_without_list_normalization() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const base = try list_lower.integer(mut fixture.batch, fixture.context, 0, 41)
+    const index = try list_lower.integer(mut fixture.batch, fixture.context, -1, 0)
+    const lowered = try buffer_lower.access(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Access(base=base, owner_type=41, kind=b"read", arguments=[index], result_type=5, signed_length=False))
+    const data = try graph.field(fixture.batch.pool, fixture.batch.nodes[2], "data")
+    const payload = try graph.payload(fixture.batch.pool, data)
+    const arguments = try graph.field(fixture.batch.pool, payload, "arguments")
+    const rows = try graph.items(fixture.batch.pool, arguments)
+    const argument = try graph.number(fixture.batch.pool, rows[0])
+    const kind = try operation_kind(fixture.batch, 2)
+    return lowered.ty == 5 and len(fixture.batch.nodes) == 3 and len(fixture.batch.statements) == 2 and len(fixture.scope.locals) == 1 and kind == b"read" and argument == index
