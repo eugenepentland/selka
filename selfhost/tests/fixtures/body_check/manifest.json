@@ -304,5 +304,12 @@
     "typed": false,
     "library": false,
     "code": "E_UNKNOWN_NAME"
+  },
+  "imported_private_alias.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 0
   }
 }

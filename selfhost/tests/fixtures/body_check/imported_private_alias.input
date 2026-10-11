@@ -1,0 +1,4 @@
+import alias_dependency
+type Alias = alias_dependency.Scalar
+func main() -> int:
+    return 0
