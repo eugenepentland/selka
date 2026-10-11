@@ -1,0 +1,94 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+import comprehension_lower
+
+public record Shape:
+    mapping: int
+    key: int
+    value: int
+    item: int
+    list: int
+    kind: bytes
+
+
+public record Request:
+    view: int
+    shape: Shape
+    loop_id: int
+
+
+public record Snapshot:
+    value: list_lower.Lowered
+    next_loop: int
+
+
+func record_value(mut batch: emission.Batch, context: list_lower.Context, ty: int, values: int[]) -> int fails syntax_value.Problem:
+    mut fields: int[] = []
+    mut index = 0
+    for value in values:
+        const position = try syntax_value.integer(mut batch.pool, index)
+        const child = try syntax_value.integer(mut batch.pool, value)
+        const field = try syntax_value.object(mut batch.pool, ["index", "value"], [position, child])
+        fields.append(field)
+        index = index + 1
+    const payload = try syntax_value.sequence(mut batch.pool, fields)
+    return try emission.node(mut batch, context.input, context.span, ty, b"record", payload)
+
+
+public func construct(mut batch: emission.Batch, context: list_lower.Context, view_type: int, mapping: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const value = try record_value(mut batch, context, view_type, [mapping])
+    return try list_lower.block(mut batch, context, [], value, view_type)
+
+
+public func owner(mut batch: emission.Batch, context: list_lower.Context, view: int, mapping_type: int) -> int fails syntax_value.Problem:
+    const base = try syntax_value.integer(mut batch.pool, view)
+    const index = try syntax_value.integer(mut batch.pool, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["base", "index"], [base, index])
+    return try emission.node(mut batch, context.input, context.span, mapping_type, b"field", payload)
+
+
+public func at(mut batch: emission.Batch, context: list_lower.Context, mapping: int, position: int, shape: Shape) -> int fails syntax_value.Problem:
+    if shape.kind != b"keys" and shape.kind != b"values" and shape.kind != b"items":
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid dictionary projection kind")
+    const key = try list_lower.operation(mut batch, context, list_lower.Operation(owner=mapping, kind=b"key_at", arguments=[position], ty=shape.key))
+    if shape.kind == b"keys":
+        return key
+    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=mapping, kind=b"value_at", arguments=[position], ty=shape.value))
+    if shape.kind == b"values":
+        return value
+    return try record_value(mut batch, context, shape.item, [key, value])
+
+
+public func snapshot(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Request) -> Snapshot fails syntax_value.Problem:
+    const shape = request.shape
+    const mapping = try owner(mut batch, context, request.view, shape.mapping)
+    const input = try list_lower.temporary(mut scope, context, shape.mapping)
+    const output = try list_lower.temporary(mut scope, context, shape.list)
+    const count = try list_lower.temporary(mut scope, context, 0)
+    const cursor = try list_lower.temporary(mut scope, context, 0)
+    const index = try list_lower.read(mut batch, context, cursor, 0)
+    const element = try at(mut batch, context, input, index, shape)
+    const setup_input = try list_lower.store(mut batch, context, input, mapping, True)
+    const length = try list_lower.length(mut batch, context, input)
+    const setup_count = try list_lower.store(mut batch, context, count, length, True)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const setup_cursor = try list_lower.store(mut batch, context, cursor, zero, True)
+    const capacity = try list_lower.read(mut batch, context, count, 0)
+    const capacity_id = try syntax_value.integer(mut batch.pool, capacity)
+    const acquire = try syntax_value.object(mut batch.pool, ["capacity"], [capacity_id])
+    const fresh = try emission.node(mut batch, context.input, context.span, shape.list, b"acquire_buffer", acquire)
+    const setup_output = try list_lower.store(mut batch, context, output, fresh, True)
+    const bound = try list_lower.read(mut batch, context, count, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", index, bound, 1)
+    const appended = try list_lower.operation(mut batch, context, list_lower.Operation(owner=output, kind=b"append", arguments=[element], ty=15))
+    const discard = try syntax_value.integer(mut batch.pool, appended)
+    const body = try emission.statement(mut batch, context.input, context.span, False, b"discard", discard)
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", index, one, 0)
+    const step = try list_lower.store(mut batch, context, cursor, next, False)
+    const loop = try comprehension_lower.loop_statement(mut batch, context, request.loop_id, condition, body, step)
+    const result = try list_lower.read(mut batch, context, output, shape.list)
+    const value = try list_lower.block(mut batch, context, [setup_input, setup_count, setup_cursor, setup_output, loop], result, shape.list)
+    return Snapshot(value=value, next_loop=request.loop_id + 1)

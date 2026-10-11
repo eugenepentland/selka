@@ -1,0 +1,115 @@
+import syntax_value
+import graph
+import engine
+import collection_types
+import list_types
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh() -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const yes = try syntax_value.boolean(mut pool, True)
+    const no = try syntax_value.boolean(mut pool, False)
+    const first = try syntax_value.span(mut pool, 0, 4)
+    const second = try syntax_value.span(mut pool, 4, 5)
+    const third = try syntax_value.span(mut pool, 5, 10)
+    const fourth = try syntax_value.span(mut pool, 10, 11)
+    const span = try syntax_value.span(mut pool, 0, 11)
+    const a = try node(mut pool, first, b"boolean", yes)
+    const b = try node(mut pool, second, b"integer", second)
+    const c = try node(mut pool, third, b"boolean", no)
+    const d = try node(mut pool, fourth, b"integer", fourth)
+    mut indices: int[] = []
+    for index in range(4):
+        const id = try syntax_value.integer(mut pool, index)
+        indices.append(id)
+    const entries = try syntax_value.sequence(mut pool, indices)
+    const literal = try node(mut pool, span, b"dictionary_literal", entries)
+    const nodes = try syntax_value.sequence(mut pool, [a, b, c, d, literal])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    mut state = try engine.make(pool, b"True7False8", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    return state
+
+
+public func test_set_literal_lowers_unit_writes_in_source_order() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const first = try syntax_value.integer(mut state.syntax.pool, 0)
+    const second = try syntax_value.integer(mut state.syntax.pool, 2)
+    const inputs = try syntax_value.sequence(mut state.syntax.pool, [first, second])
+    const literal = try node(mut state.syntax.pool, span, b"set_literal", inputs)
+    state.syntax.nodes[4] = literal
+    const result = try engine.expression(mut state, 4)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const unit_data = try graph.field(state.batch.pool, state.batch.nodes[3], "data")
+    const unit = try graph.get(state.batch.pool, unit_data)
+    return result.ty == 19 and result.id == 8 and data.data == b"block_value" and unit.data == b"unit" and len(state.batch.statements) == 4 and len(state.scope.locals) == 1 and state.scope.locals[0].usage.temporary and state.batch.facts.lists.recipes[0].kind == "set" and state.batch.facts.lists.recipes[0].element == 1
+
+
+func empty_call(mut state: engine.State) -> int fails syntax_value.Problem:
+    state.syntax.source = b"set()"
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 3)
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 5)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const call = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, absent, empty, empty, empty])
+    const raw = try node(mut state.syntax.pool, span, b"call", call)
+    state.syntax.nodes.append(raw)
+    return span
+
+
+public func test_contextual_empty_set_has_no_synthetic_owner() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const span = try empty_call(mut state)
+    const ty = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=1, key=1, value=15, owner=-1), span)
+    const result = try engine.expression_expected(mut state, 5, ty)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == ty and result.id == 0 and data.data == b"array" and len(state.scope.locals) == 0 and len(state.batch.statements) == 0
+
+
+public func test_empty_set_inference_diagnostic_preserves_call_span() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try empty_call(mut state)
+    match engine.expression(mut state, 5):
+        case Ok(unused):
+            return False
+        case Err(error):
+            return error.code == "E_SET_INFERENCE" and error.start == 0 and error.end == 5 and len(state.batch.nodes) == 0
+
+
+public func test_set_union_dispatch_uses_operator_span_and_preserves_loop_counter() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"True7False8|"
+    const literal_span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const first = try syntax_value.integer(mut state.syntax.pool, 0)
+    const second = try syntax_value.integer(mut state.syntax.pool, 2)
+    const inputs = try syntax_value.sequence(mut state.syntax.pool, [first, second])
+    const literal = try node(mut state.syntax.pool, literal_span, b"set_literal", inputs)
+    state.syntax.nodes[4] = literal
+    const op_span = try syntax_value.span(mut state.syntax.pool, 11, 12)
+    const whole = try syntax_value.span(mut state.syntax.pool, 0, 12)
+    const op = try syntax_value.enumeration(mut state.syntax.pool, b"bit_or")
+    const operand = try syntax_value.integer(mut state.syntax.pool, 4)
+    const chained = try syntax_value.boolean(mut state.syntax.pool, False)
+    const binary = try syntax_value.object(mut state.syntax.pool, ["op", "left", "right", "op_span", "chained"], [op, operand, operand, op_span, chained])
+    const raw = try node(mut state.syntax.pool, whole, b"binary", binary)
+    state.syntax.nodes.append(raw)
+    state.control.next = 9
+    const result = try engine.expression(mut state, 5)
+    const span = try graph.field(state.batch.pool, state.batch.nodes[result.id], "span")
+    const start_id = try graph.field(state.batch.pool, span, "start")
+    const end_id = try graph.field(state.batch.pool, span, "end")
+    const start = try graph.number(state.batch.pool, start_id)
+    const end = try graph.number(state.batch.pool, end_id)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 19 and data.data == b"block_value" and start == 11 and end == 12 and state.control.next == 9

@@ -40,6 +40,7 @@ import option_flow
 import option_lower
 import collection_types
 import hash_keys
+import set_lower
 
 public record Syntax:
     pool: syntax_value.Pool
@@ -371,6 +372,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         state.batch.resolved[raw_id] = id
         state.depth = state.depth - 1
         return Expression(id=id, ty=ty)
+    elif data.data == b"set_literal":
+        const result = try set_literal(mut state, payload, span, state.batch.facts.expected[raw_id])
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
     elif data.data == b"dictionary_literal":
         const result = try dictionary_literal(mut state, payload, span, state.batch.facts.expected[raw_id])
         state.batch.resolved[raw_id] = result.id
@@ -540,7 +546,8 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             state.batch.resolved[raw_id] = id
             state.depth = state.depth - 1
             return Expression(id=id, ty=0)
-        if not managed(state, base.ty):
+        const collection = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
+        if not managed(state, base.ty) and collection.kind != 0 and collection.kind != 1:
             const rejection = try problem(state, span, "P_BODY_PROFILE", "length receiver is outside the managed sequence profile")
             fail rejection
         ty = 0
@@ -606,6 +613,20 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const index_raw = try graph.number(state.syntax.pool, index_id)
         const base = try expression(mut state, base_raw)
         const index = try expression(mut state, index_raw)
+        const collection = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
+        if collection.kind == 1:
+            const rejection = try problem(state, span, "E_SET_INDEX", "a set is not indexable; test membership with `x in s` or iterate it with `for x in s`")
+            fail rejection
+        if collection.kind == 0:
+            const unused = try require(state, index.ty, collection.key, span)
+            const typed_base = try syntax_value.integer(mut state.batch.pool, base.id)
+            const typed_index = try syntax_value.integer(mut state.batch.pool, index.id)
+            const no = try syntax_value.boolean(mut state.batch.pool, False)
+            const value = try syntax_value.object(mut state.batch.pool, ["base", "index", "from_end"], [typed_base, typed_index, no])
+            const id = try emission.node(mut state.batch, state.syntax.pool, span, collection.value, b"index", value)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=collection.value)
         const list_element = list_types.element_type(state.batch.facts.lists, base.ty)
         if list_element >= 0:
             if index.ty != 0:
@@ -985,6 +1006,23 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             if len(state.syntax.modules) != 0 and (raw_callee == b"bytes" or raw_callee == b"byte_buffer"):
                 declared = False
             if not declared:
+                if raw_callee == b"set":
+                    _ = try io_arguments.positional(state.syntax.pool, payload)
+                    const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const inputs = try graph.items(state.syntax.pool, arguments_id)
+                    if len(inputs) == 0:
+                        const result = try empty_set(mut state, span, state.batch.facts.expected[raw_id])
+                        state.batch.resolved[raw_id] = result.id
+                        state.depth = state.depth - 1
+                        return result
+                    for input in inputs:
+                        const argument_raw = try graph.number(state.syntax.pool, input)
+                        _ = try expression(mut state, argument_raw)
+                    if len(inputs) != 1:
+                        const rejection = try problem(state, span, "E_ARITY", "set takes at most one argument: `set()` or `set(iterable)`")
+                        fail rejection
+                    const rejection = try problem(state, span, "P_BODY_PROFILE", "set materialization from an iterable is being connected")
+                    fail rejection
                 if raw_callee == b"ord" and locals.find(state.scope, raw_callee) < 0:
                     const shadowed = try top_level(state, call_name)
                     if shadowed or explicit_count != 0:
@@ -1511,6 +1549,47 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 const rejection = try problem(state, operator_span, "E_SET_OPERATOR", "`" + operator + "` combines two sets or two integers (`" + builtin + "(a, b)`)")
                 fail rejection
         _ = try require(state, right.ty, left.ty, operator_span)
+        const left_collection = collection_types.schema(state.batch.facts.lists.types.collections, left.ty)
+        if left_collection.kind == 1 and op.data != b"eq" and op.data != b"ne":
+            mut kind = b""
+            mut relation = False
+            if op.data == b"bit_or":
+                kind = b"union"
+            elif op.data == b"bit_and":
+                kind = b"intersection"
+            elif op.data == b"sub":
+                kind = b"difference"
+            elif op.data == b"bit_xor":
+                kind = b"symmetric_difference"
+            elif op.data == b"le":
+                kind = b"subset"
+                relation = True
+            elif op.data == b"lt":
+                kind = b"proper_subset"
+                relation = True
+            elif op.data == b"ge":
+                kind = b"superset"
+                relation = True
+            elif op.data == b"gt":
+                kind = b"proper_superset"
+                relation = True
+            else:
+                const rejection = try problem(state, operator_span, "E_SET_OPERATOR", "sets combine with `|`, `&`, `-` and `^`, compare with `<=`, `<`, `>=` and `>`, and test equality with `==`")
+                fail rejection
+            const context = list_lower.Context(input=state.syntax.pool, span=operator_span)
+            const request = set_lower.Binary(ty=left.ty, element=left_collection.key, left=left.id, right=right.id, kind=kind, loop_id=state.control.next)
+            mut combined = set_lower.Combined(value=list_lower.Lowered(ty=left.ty, tag=b"", payload=-1), next_loop=state.control.next)
+            if relation:
+                const result = try set_lower.relation(mut state.batch, mut state.scope, context, request)
+                combined = result
+            else:
+                const result = try set_lower.combine(mut state.batch, mut state.scope, context, request)
+                combined = result
+            state.control.next = combined.next_loop
+            const id = try list_lower.append(mut state.batch, context, combined.value)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=combined.value.ty)
         if op.data == b"eq" or op.data == b"ne":
             const supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, left.ty, [state.batch.facts.string_type, state.batch.facts.bytes_type, state.batch.facts.lists.types.buffer.id], [])
             if not supported:
@@ -3957,4 +4036,68 @@ func dictionary_literal(mut state: State, payload: int, span: int, expected: int
         ids.append(values[index].id)
     const array = try emission.ids(mut state.batch, ids)
     const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, b"array", array)
+    return Expression(id=id, ty=ty)
+
+
+func require_set_element(mut state: State, element: int, span: int) -> bool fails syntax_value.Problem:
+    _ = try require_hash_key(mut state, element, span, True)
+    if element < 19:
+        return True
+    const row = record_types.schema(state.batch.facts.lists.types.records, element)
+    if row < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="set element schema is missing")
+    const contract = try graph.field(state.syntax.pool, row, "contract")
+    const storage_id = try graph.field(state.syntax.pool, contract, "storable")
+    const move_id = try graph.field(state.syntax.pool, contract, "move_only")
+    const pending_id = try graph.field(state.syntax.pool, contract, "requires_handling")
+    const storage = try graph.get(state.syntax.pool, storage_id)
+    const move = try graph.get(state.syntax.pool, move_id)
+    const pending = try graph.get(state.syntax.pool, pending_id)
+    if storage.kind != 2 or move.kind != 2 or pending.kind != 2:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid set element storage flags")
+    if storage.integer == 0 or move.integer != 0 or pending.integer != 0:
+        const rejection = try problem(state, span, "E_SET_ELEMENT", "set elements require copyable storable values without pending results")
+        fail rejection
+    return True
+
+
+func empty_set(mut state: State, span: int, expected: int) -> Expression fails syntax_value.Problem:
+    if expected < 0:
+        const rejection = try problem(state, span, "E_SET_INFERENCE", "`set()` needs an expected set type: annotate the binding, as in `seen: set[int] = set()`")
+        fail rejection
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, expected)
+    if schema.id < 0 or schema.kind != 1:
+        const rejection = try problem(state, span, "E_SET_INFERENCE", "`set()` builds a set, but the context expects another type")
+        fail rejection
+    _ = try require_set_element(mut state, schema.key, span)
+    const values = try emission.ids(mut state.batch, [])
+    const id = try emission.node(mut state.batch, state.syntax.pool, span, expected, b"array", values)
+    return Expression(id=id, ty=expected)
+
+
+func set_literal(mut state: State, payload: int, span: int, expected: int) -> Expression fails syntax_value.Problem:
+    const inputs = try graph.items(state.syntax.pool, payload)
+    if len(inputs) == 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="empty set literal is not source syntax")
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, expected)
+    mut element = -1
+    if schema.kind == 1:
+        element = schema.key
+    mut values: int[] = []
+    for input in inputs:
+        const raw = try graph.number(state.syntax.pool, input)
+        const value = try expression_expected(mut state, raw, element)
+        if element < 0:
+            element = value.ty
+        else:
+            const value_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+            _ = try require(state, value.ty, element, value_span)
+        values.append(value.id)
+    _ = try require_set_element(mut state, element, span)
+    mut ty = schema.id
+    if schema.kind != 1:
+        ty = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=1, key=element, value=15, owner=-1), span)
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const lowered = try set_lower.literal(mut state.batch, mut state.scope, context, set_lower.Literal(ty=ty, values=values))
+    const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=ty)

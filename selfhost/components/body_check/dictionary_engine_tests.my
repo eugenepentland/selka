@@ -90,3 +90,38 @@ public func test_contextual_u8_range_error_uses_literal_site_before_dictionary_f
             return False
         case Err(error):
             return error.code == "E_INTEGER_RANGE" and error.start == 10 and error.end == 13 and len(state.batch.nodes) == 3
+
+
+public func test_dictionary_index_preserves_direct_typed_index_without_hidden_receiver() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const base = try syntax_value.integer(mut state.syntax.pool, 4)
+    const key = try syntax_value.integer(mut state.syntax.pool, 0)
+    const access = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [base, key])
+    const raw = try node(mut state.syntax.pool, span, b"index", access)
+    state.syntax.nodes.append(raw)
+    state.batch.resolved.append(-1)
+    state.batch.facts.expected.append(-1)
+    const result = try engine.expression(mut state, 5)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const payload = try graph.payload(state.batch.pool, data_id)
+    const base_id = try graph.field(state.batch.pool, payload, "base")
+    const index_id = try graph.field(state.batch.pool, payload, "index")
+    const actual_base = try graph.number(state.batch.pool, base_id)
+    const actual_index = try graph.number(state.batch.pool, index_id)
+    return result.ty == 0 and result.id == 5 and data.data == b"index" and actual_base == 4 and actual_index == 0 and len(state.scope.locals) == 0 and len(state.batch.statements) == 0
+
+
+public func test_dictionary_length_keeps_single_length_node_without_collection_temporaries() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const input = try syntax_value.integer(mut state.syntax.pool, 4)
+    const raw = try node(mut state.syntax.pool, span, b"length", input)
+    state.syntax.nodes.append(raw)
+    const result = try engine.expression(mut state, 5)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const payload = try graph.payload(state.batch.pool, data_id)
+    const actual = try graph.number(state.batch.pool, payload)
+    return result.ty == 0 and result.id == 5 and data.data == b"length" and actual == 4 and len(state.scope.locals) == 0 and len(state.batch.statements) == 0
