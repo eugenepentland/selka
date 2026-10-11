@@ -1,4 +1,5 @@
 import syntax_value
+import floating_types
 import graph
 import record_index
 import record_name_index
@@ -150,12 +151,13 @@ public func schema(catalog: Catalog, ty: int) -> int:
 # Reverse edges propagate an unsupported leaf once, without recursive scans.
 public func closure(mut catalog: Catalog, pool: syntax_value.Pool, elements: int[], managed: int[]) -> bool fails syntax_value.Problem:
     const count = len(catalog.by_type)
+    const floating = try floating_types.identity(pool, catalog.rows)
     if len(elements) != count:
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="record and list catalog counts differ")
     mut allowed: bool[] = []
     mut parents: int[][] = []
     for ty in range(count):
-        allowed.append(catalog.admitted[ty] or elements[ty] >= 0 or ty == 0 or ty == 1 or ty == 15 or (ty >= 2 and ty <= 8))
+        allowed.append(ty == floating or catalog.admitted[ty] or elements[ty] >= 0 or ty == 0 or ty == 1 or ty == 15 or (ty >= 2 and ty <= 8))
         parents.append([])
     for ty in managed:
         if ty >= 0:
@@ -299,7 +301,7 @@ public func named(catalog: Catalog, key: bytes) -> int fails syntax_value.Proble
 
 
 public func equality(pool: syntax_value.Pool, catalog: Catalog, elements: int[], ty: int, managed: int[], visited: int[]) -> bool fails syntax_value.Problem:
-    if ty == 0 or ty == 1:
+    if ty == 0 or ty == 1 or (ty >= 2 and ty <= 8):
         return True
     if ty < 19:
         return False

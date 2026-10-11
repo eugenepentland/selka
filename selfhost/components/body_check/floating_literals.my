@@ -1,0 +1,96 @@
+import syntax_value
+import integer_literals
+
+func fail_literal(start: int, end: int, message: str) -> syntax_value.Problem:
+    return syntax_value.Problem(code="E_FLOAT_LITERAL", start=start, end=end, message=message)
+
+
+public func spelling(text: bytes) -> bool:
+    if len(text) >= 2 and text[0] == 48 and (text[1] == 120 or text[1] == 88 or text[1] == 111 or text[1] == 79 or text[1] == 98 or text[1] == 66):
+        return False
+    for octet in text:
+        if octet == 46 or octet == 101 or octet == 69:
+            return True
+    return False
+
+
+# Conversion follows the existing correctly rounded numeric runtime primitive.
+# Exact powers of two recover the binary64 representation without private
+# domain access, foreign calls, or any expansion of the qualified seed.
+public func bits(value: float, start: int, end: int) -> int fails syntax_value.Problem:
+    if value < 0.0 or value != value:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=start, end=end, message="float literal magnitude must be nonnegative and not NaN")
+    if value > 1.7976931348623157e308:
+        fail syntax_value.Problem(code="E_FLOAT_RANGE", start=start, end=end, message="floating-point literal overflows binary64")
+    if value == 0.0:
+        return 0
+    mut significand = value
+    mut exponent = 0
+    while significand >= 2.0:
+        significand = significand / 2.0
+        exponent = exponent + 1
+    while significand < 1.0:
+        significand = significand * 2.0
+        exponent = exponent - 1
+    if exponent >= -1022:
+        const fraction = int((significand - 1.0) * 4503599627370496.0)
+        return (exponent + 1023) * 4503599627370496 + fraction
+    mut scale = 1.0
+    for unused in range(exponent + 1074):
+        scale = scale * 2.0
+    return int(significand * scale)
+
+
+func run(text: bytes, begin: int, start: int, end: int) -> int fails syntax_value.Problem:
+    mut at = begin
+    mut underscore = False
+    while at < len(text):
+        const octet = text[at]
+        if octet == 95:
+            if at == begin:
+                fail fail_literal(start, end, "an underscore in a number must sit between two digits")
+            if underscore:
+                fail fail_literal(start, end, "doubled underscore in a number; a single underscore may separate digits")
+            underscore = True
+        elif octet >= 48 and octet <= 57:
+            underscore = False
+        else:
+            break
+        at = at + 1
+    if underscore:
+        fail fail_literal(start, end, "an underscore in a number must be followed by a digit; a width suffix goes directly after the last digit (1_000u32)")
+    return at
+
+
+public func parse(text: bytes, start: int, end: int) -> int fails syntax_value.Problem:
+    mut normalized = text
+    if len(text) >= 2 and text[0] == 48 and (text[1] == 120 or text[1] == 88 or text[1] == 111 or text[1] == 79 or text[1] == 98 or text[1] == 66):
+        normalized = try integer_literals.decimal(text, start, end)
+    else:
+        const whole = try run(text, 0, start, end)
+        mut at = whole
+        mut fraction = 0
+        if at < len(text) and text[at] == 46:
+            at = at + 1
+            const begin = at
+            at = try run(text, at, start, end)
+            fraction = at - begin
+        if whole == 0 and fraction == 0:
+            fail fail_literal(start, end, "invalid decimal floating-point literal")
+        if at < len(text) and (text[at] == 101 or text[at] == 69):
+            at = at + 1
+            if at < len(text) and (text[at] == 43 or text[at] == 45):
+                at = at + 1
+            const begin = at
+            at = try run(text, at, start, end)
+            if at == begin:
+                fail fail_literal(start, end, "a floating-point exponent needs digits after e, as in 1e5 or 2.5e-3")
+        if at != len(text):
+            if at + 1 == len(text) and (text[at] == 106 or text[at] == 74):
+                fail fail_literal(start, end, "imaginary literals such as 1j are not supported; mylang has no complex numbers")
+            fail fail_literal(start, end, "invalid decimal floating-point literal; a float literal takes no suffix")
+    match normalized.parse_float():
+        case Some(value):
+            return try bits(value, start, end)
+        case None:
+            fail fail_literal(start, end, "invalid decimal floating-point literal")

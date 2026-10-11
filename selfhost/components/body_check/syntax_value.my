@@ -50,6 +50,13 @@ public func integer(mut pool: Pool, value: int) -> int fails Problem:
     return try push(mut pool, Value(kind=1, integer=value, data=b"", children=[], names=[]))
 
 
+# The upper u64 half is carried as its signed i64 bit pattern, never arithmetic.
+public func upper_integer(mut pool: Pool, bits: int) -> int fails Problem:
+    if bits >= 0:
+        fail Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="noncanonical upper u64 payload")
+    return try push(mut pool, Value(kind=8, integer=bits, data=b"", children=[], names=[]))
+
+
 public func boolean(mut pool: Pool, value: bool) -> int fails Problem:
     mut number = 0
     if value:

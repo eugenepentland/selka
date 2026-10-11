@@ -1,0 +1,81 @@
+import integer_literals
+import syntax_value
+import syntax_codec
+import codec
+import graph
+
+public func test_full_width_upper_u64() -> bool fails syntax_value.Problem:
+    const high = try integer_literals.parse(b"18446744073709551615u64", False, -1, 3, 26)
+    const mid = try integer_literals.parse(b"0x8000_0000_0000_0000u64", False, -1, 0, 23)
+    return high.ty == 8 and high.upper and high.value == -1 and mid.upper and mid.value == -9223372036854775807 - 1
+
+
+public func test_width_suffixes_and_context() -> bool fails syntax_value.Problem:
+    const spellings = [b"127i8", b"32767i16", b"2147483647i32", b"255u8", b"65535u16", b"4294967295u32"]
+    for index in range(len(spellings)):
+        const literal = try integer_literals.parse(spellings[index], False, 8, 0, len(spellings[index]))
+        if literal.ty != index + 2 or literal.upper:
+            return False
+    const context = try integer_literals.parse(b"255", False, 5, 0, 3)
+    const explicit = try integer_literals.parse(b"255i64", False, 5, 0, 6)
+    return context.ty == 5 and explicit.ty == 0
+
+
+public func test_signed_minimum_magnitudes() -> bool fails syntax_value.Problem:
+    for index in range(4):
+        const text = [b"9223372036854775808i64", b"128i8", b"32768i16", b"2147483648i32"][index]
+        const literal = try integer_literals.parse(text, True, -1, 0, len(text))
+        if not literal.minimum or literal.upper:
+            return False
+        match integer_literals.parse(text, False, -1, 0, len(text)):
+            case Ok(value):
+                return False
+            case Err(problem):
+                if problem.code != "E_INTEGER_RANGE":
+                    return False
+    return True
+
+
+public func test_u128_magnitude_precedence() -> bool:
+    match integer_literals.parse(b"340282366920938463463374607431768211456i8", False, -1, 7, 46):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_INTEGER_RANGE" and problem.message == "integer literal magnitude is too large" and problem.start == 7 and problem.end == 46
+
+
+public func test_unknown_suffix_precedes_magnitude() -> bool:
+    match integer_literals.parse(b"340282366920938463463374607431768211456i128", False, -1, 0, 42):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_INTEGER_SUFFIX"
+
+
+public func test_u64_one_past_maximum() -> bool:
+    match integer_literals.parse(b"18446744073709551616u64", False, -1, 0, 23):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_INTEGER_RANGE" and problem.message == "integer literal does not fit its type; signed minimum magnitudes must be directly negated"
+
+
+public func test_upper_payload_roundtrip_and_clone() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const upper = try syntax_value.upper_integer(mut pool, -1)
+    _ = try syntax_value.object(mut pool, ["value"], [upper])
+    const data = try syntax_codec.encode_with_magic(pool, b"SLKBKI01")
+    const request = try codec.decode(data)
+    const id = try graph.field(request.pool, request.root, "value")
+    mut copy = syntax_value.empty()
+    const cloned = try graph.clone(mut copy, request.pool, id, 0)
+    return copy.values[cloned].kind == 8 and copy.values[cloned].integer == -1
+
+
+public func test_noncanonical_upper_payload_refused() -> bool:
+    mut pool = syntax_value.empty()
+    match syntax_value.upper_integer(mut pool, 1):
+        case Ok(id):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

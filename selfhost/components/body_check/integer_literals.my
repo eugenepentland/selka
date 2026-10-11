@@ -1,0 +1,182 @@
+import syntax_value
+
+public record Literal:
+    ty: int
+    value: int
+    upper: bool
+    minimum: bool
+
+
+func reject(code: str, message: str, start: int, end: int) -> syntax_value.Problem:
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+func digit(octet: int) -> int:
+    if octet >= 48 and octet <= 57:
+        return octet - 48
+    if octet >= 97 and octet <= 102:
+        return octet - 87
+    if octet >= 65 and octet <= 70:
+        return octet - 55
+    return -1
+
+
+func suffix(text: bytes, start: int, end: int) -> int fails syntax_value.Problem:
+    for index in range(8):
+        if text == [b"i64", b"bool", b"i8", b"i16", b"i32", b"u8", b"u16", b"u32", b"u64"][index]:
+            if index == 1:
+                fail reject("E_INTEGER_SUFFIX", "integer suffix must name an integer type", start, end)
+            return index
+    if text == b"u64":
+        return 8
+    if text == b"j" or text == b"J":
+        fail reject("E_INTEGER_SUFFIX", "imaginary literals such as 1j are not supported; mylang has no complex numbers", start, end)
+    fail reject("E_INTEGER_SUFFIX", "unknown integer suffix; use i8/i16/i32/i64 or u8/u16/u32/u64", start, end)
+
+
+# Eight little-endian radix-65536 limbs reproduce the native u128 magnitude
+# limit using only qualified signed-i64 arithmetic. Carry never exceeds 15.
+func magnitude(text: bytes, base: int, begin: int, finish: int, start: int, end: int) -> int[] fails syntax_value.Problem:
+    mut limbs = [0, 0, 0, 0, 0, 0, 0, 0]
+    for position in range(begin, finish):
+        if text[position] == 95:
+            continue
+        mut carry = digit(text[position])
+        for index in range(8):
+            const product = limbs[index] * base + carry
+            limbs[index] = product % 65536
+            carry = product // 65536
+        if carry != 0:
+            fail reject("E_INTEGER_RANGE", "integer literal magnitude is too large", start, end)
+    return limbs
+
+
+func within(limbs: int[], ty: int, allow_minimum: bool) -> bool:
+    for index in range(4, 8):
+        if limbs[index] != 0:
+            return False
+    if ty == 8:
+        return True
+    const widths = [64, 1, 8, 16, 32, 8, 16, 32]
+    const signed = ty == 0 or (ty >= 2 and ty <= 4)
+    const width = widths[ty]
+    mut limit = 1
+    mut remaining = width
+    if signed:
+        remaining = remaining - 1
+    const limb = remaining // 16
+    for unused in range(remaining % 16):
+        limit = limit * 2
+    mut lower_nonzero = False
+    for index in range(4):
+        if index > limb and limbs[index] != 0:
+            return False
+        if index < limb and limbs[index] != 0:
+            lower_nonzero = True
+    if signed and allow_minimum:
+        return limbs[limb] < limit or (limbs[limb] == limit and not lower_nonzero)
+    return limbs[limb] < limit
+
+
+record Parts:
+    base: int
+    begin: int
+    finish: int
+    suffix: bytes
+
+
+func parts(text: bytes, start: int, end: int) -> Parts fails syntax_value.Problem:
+    mut base = 10
+    mut begin = 0
+    if len(text) >= 2 and text[0] == 48:
+        if text[1] == 120 or text[1] == 88:
+            base = 16
+        elif text[1] == 111 or text[1] == 79:
+            base = 8
+        elif text[1] == 98 or text[1] == 66:
+            base = 2
+        if base != 10:
+            begin = 2
+    mut at = begin
+    if base != 10 and at < len(text) and text[at] == 95:
+        at = at + 1
+    const digit_begin = at
+    mut previous_underscore = at > begin
+    mut nonzero = False
+    while at < len(text):
+        const octet = text[at]
+        if octet == 95:
+            if previous_underscore:
+                fail reject("E_INTEGER_LITERAL", "doubled underscore in a number; a single underscore may separate digits", start, end)
+            previous_underscore = True
+        else:
+            const value = digit(octet)
+            if value < 0 or value >= base:
+                break
+            nonzero = nonzero or value != 0
+            previous_underscore = False
+        at = at + 1
+    if previous_underscore:
+        fail reject("E_INTEGER_LITERAL", "an underscore in a number must be followed by a digit; a width suffix goes directly after the last digit (1_000u32)", start, end)
+    if at == digit_begin:
+        mut message = "expected an integer literal"
+        if base == 16:
+            message = "a 0x literal needs at least one hexadecimal digit"
+        elif base == 8:
+            message = "a 0o literal needs at least one octal digit (0 through 7)"
+        elif base == 2:
+            message = "a 0b literal needs at least one binary digit (0 or 1)"
+        fail reject("E_INTEGER_LITERAL", message, start, end)
+    if at < len(text) and text[at] >= 48 and text[at] <= 57:
+        mut message = "invalid digit in a binary (0b) literal; binary digits are 0 and 1"
+        if base == 8:
+            message = "invalid digit in an octal (0o) literal; octal digits are 0 through 7"
+        fail reject("E_INTEGER_LITERAL", message, start, end)
+    if base == 10 and at > 1 and text[0] == 48 and nonzero:
+        fail reject("E_INTEGER_LITERAL", "leading zeros are not allowed in decimal integers; write `0o755` for octal or `755` for decimal", start, end)
+    return Parts(base=base, begin=begin, finish=at, suffix=text[at:])
+
+
+public func parse(text: bytes, allow_minimum: bool, expected: int, start: int, end: int) -> Literal fails syntax_value.Problem:
+    const found = try parts(text, start, end)
+    mut ty = expected
+    if ty != 0 and (ty < 2 or ty > 8):
+        ty = 0
+    if len(found.suffix) != 0:
+        ty = try suffix(found.suffix, start, end)
+    const limbs = try magnitude(text, found.base, found.begin, found.finish, start, end)
+    if not within(limbs, ty, allow_minimum):
+        fail reject("E_INTEGER_RANGE", "integer literal does not fit its type; signed minimum magnitudes must be directly negated", start, end)
+    mut high = limbs[3]
+    const upper = high >= 32768
+    if upper:
+        high = high - 65536
+    const value = high * 281474976710656 + limbs[2] * 4294967296 + limbs[1] * 65536 + limbs[0]
+    mut minimum = False
+    if ty != 8 and allow_minimum:
+        minimum = not within(limbs, ty, False)
+    return Literal(ty=ty, value=value, upper=upper and ty == 8, minimum=minimum)
+
+
+# Decimal rendering preserves every u128 magnitude before binary64 rounding.
+public func decimal(text: bytes, start: int, end: int) -> bytes fails syntax_value.Problem:
+    const found = try parts(text, start, end)
+    if len(found.suffix) != 0:
+        fail reject("E_FLOAT_LITERAL", "a float literal takes no integer suffix", start, end)
+    mut limbs = try magnitude(text, found.base, found.begin, found.finish, start, end)
+    mut reversed: int[] = []
+    mut nonzero = True
+    while nonzero:
+        mut remainder = 0
+        nonzero = False
+        for position in range(8):
+            const index = 7 - position
+            const value = remainder * 65536 + limbs[index]
+            limbs[index] = value // 10
+            remainder = value % 10
+            nonzero = nonzero or limbs[index] != 0
+        reversed.append(remainder + 48)
+    mut buffer = byte_buffer([])
+    for position in range(len(reversed)):
+        _ = buffer.append_byte(reversed[len(reversed) - 1 - position])
+    return bytes(buffer)

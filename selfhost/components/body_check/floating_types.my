@@ -1,0 +1,29 @@
+import syntax_value
+import graph
+
+# Match the retained native synthetic domain; source-defined float names have
+# no authority to replace it. No per-expression native type answers are used.
+public func identity(pool: syntax_value.Pool, rows: int[]) -> int fails syntax_value.Problem:
+    mut found = -1
+    for index in range(len(rows)):
+        const row = rows[index]
+        const name_id = try graph.field(pool, row, "name")
+        const name = try graph.get(pool, name_id)
+        if name.data != b"float":
+            continue
+        const declaration = try graph.field(pool, row, "declaration")
+        const first_id = try graph.field(pool, declaration, "start")
+        const last_id = try graph.field(pool, declaration, "end")
+        const first = try graph.number(pool, first_id)
+        const last = try graph.number(pool, last_id)
+        if first != 0 or last != 0:
+            continue
+        const shape = try graph.field(pool, row, "shape")
+        const domain_id = try graph.field(pool, shape, "domain")
+        const backing = try graph.get(pool, domain_id)
+        if backing.kind != 1 or backing.integer != 8:
+            continue
+        if found >= 0:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="duplicate synthetic float identity")
+        found = index + 19
+    return found

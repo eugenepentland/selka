@@ -1,6 +1,9 @@
 import syntax_value
 import graph
 import scalars
+import integer_literals
+import floating_literals
+import numeric_lower
 import sequences
 import emission
 import locals
@@ -200,7 +203,7 @@ public func top_level(state: State, span: int) -> bool fails syntax_value.Proble
 
 
 func prelude_call(name: bytes) -> bool:
-    for builtin in [b"len", b"range", b"int", b"i64", b"bool", b"str", b"bytes", b"byte_buffer", b"list", b"set", b"dict", b"tuple", b"print", b"sorted", b"min", b"max", b"abs", b"sum", b"all", b"any", b"enumerate", b"reversed", b"zip", b"Some", b"Ok", b"Err", b"parse_int", b"parse_float", b"ord"]:
+    for builtin in [b"len", b"range", b"int", b"i64", b"bool", b"str", b"bytes", b"byte_buffer", b"list", b"set", b"dict", b"tuple", b"print", b"sorted", b"min", b"max", b"abs", b"sum", b"all", b"any", b"enumerate", b"reversed", b"zip", b"Some", b"Ok", b"Err", b"parse_int", b"parse_float", b"ord", b"float", b"sqrt", b"floor", b"ceil", b"trunc", b"round"]:
         if name == builtin:
             return True
     return False
@@ -321,15 +324,38 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
     if data.data == b"integer":
         const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, payload)
         const location = try problem(state, span, "", "")
-        const number = try scalars.integer(spelling, False, location.start, location.end)
-        ty = 0
-        const expected = state.batch.facts.expected[raw_id]
-        if scalars.is_integer(expected) and not (len(spelling) >= 3 and spelling[len(spelling) - 3:] == b"i64"):
-            ty = expected
-        if not scalars.fits(number, ty):
-            const rejection = try problem(state, span, "E_INTEGER_RANGE", "integer literal does not fit its type; signed minimum magnitudes must be directly negated")
+        if floating_literals.spelling(spelling) or (state.batch.facts.float_type >= 0 and state.batch.facts.expected[raw_id] == state.batch.facts.float_type):
+            const bits = try floating_literals.parse(spelling, location.start, location.end)
+            const lowered = try numeric_lower.literal(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), bits)
+            const id = try list_lower.append(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), lowered)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=state.batch.facts.float_type)
+        const literal = try integer_literals.parse(spelling, False, state.batch.facts.expected[raw_id], location.start, location.end)
+        ty = literal.ty
+        if literal.upper:
+            result_payload = try syntax_value.upper_integer(mut state.batch.pool, literal.value)
+        else:
+            result_payload = try syntax_value.integer(mut state.batch.pool, literal.value)
+    elif data.data == b"cast":
+        const type_span = try graph.field(state.syntax.pool, payload, "ty")
+        const text = try graph.spelling(state.syntax.pool, state.syntax.source, type_span)
+        const location = try problem(state, type_span, "", "")
+        ty = try scalars.annotation(text, location.start, location.end)
+        const value_id = try graph.field(state.syntax.pool, payload, "value")
+        const value_raw = try graph.number(state.syntax.pool, value_id)
+        const value = try expression(mut state, value_raw)
+        if state.batch.facts.float_type >= 0 and value.ty == state.batch.facts.float_type:
+            const context = list_lower.Context(input=state.syntax.pool, span=span)
+            const lowered = try numeric_lower.to_integer(mut state.batch, context, value.id, ty)
+            const id = try list_lower.append(mut state.batch, context, lowered)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=ty)
+        if not scalars.is_integer(value.ty):
+            const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
             fail rejection
-        result_payload = try syntax_value.integer(mut state.batch.pool, number)
+        result_payload = try syntax_value.integer(mut state.batch.pool, value.id)
     elif data.data == b"boolean":
         const value = try graph.get(state.syntax.pool, payload)
         if value.kind != 2:
@@ -472,7 +498,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             if op.data != b"add":
                 const rejection = try problem(state, span, "E_TEXT_OPERATOR", "a managed collection augments with `+=` only, and str, bytes and list are the types that support it")
                 fail rejection
-        elif element != 0:
+        elif not scalars.is_integer(element):
             const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
             fail rejection
         elif op.data == b"div":
@@ -508,9 +534,9 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             kind_name = kind.data
         const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
         const inputs = try graph.items(state.syntax.pool, arguments_id)
-        if kind_name == b"parse_int":
+        if numeric_parse_name(kind_name):
             const base = try expression(mut state, base_raw)
-            const result = try parse_integer_access(mut state, span, base, -1, span, len(inputs))
+            const result = try parse_numeric_access(mut state, span, base, -1, span, kind_name, inputs)
             state.batch.resolved[raw_id] = result.id
             state.depth = state.depth - 1
             return result
@@ -766,26 +792,30 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             const operand_node = state.syntax.nodes[operand_raw]
             const operand_data_id = try graph.field(state.syntax.pool, operand_node, "data")
             const operand_data = try graph.get(state.syntax.pool, operand_data_id)
-            if operand_data.data == b"integer":
+            if operand_data.data == b"integer" and not (state.batch.facts.float_type >= 0 and state.batch.facts.expected[raw_id] == state.batch.facts.float_type):
                 const literal_span = try graph.payload(state.syntax.pool, operand_data_id)
                 const text = try graph.spelling(state.syntax.pool, state.syntax.source, literal_span)
                 const location = try problem(state, literal_span, "", "")
-                const negative = try scalars.integer(text, True, location.start, location.end)
                 const expected = state.batch.facts.expected[raw_id]
-                if negative == -9223372036854775807 - 1 or scalars.is_integer(expected):
-                    mut literal_type = 0
-                    if scalars.is_integer(expected) and not (len(text) >= 3 and text[len(text) - 3:] == b"i64"):
-                        literal_type = expected
-                    if not scalars.fits(negative, literal_type):
+                mut literal = integer_literals.Literal(ty=0, value=0, upper=False, minimum=False)
+                if not floating_literals.spelling(text):
+                    literal = try integer_literals.parse(text, True, expected, location.start, location.end)
+                if not floating_literals.spelling(text) and (literal.minimum or expected >= 0):
+                    if literal.upper or (literal.ty >= 5 and literal.value != 0):
                         const rejection = try problem(state, span, "E_INTEGER_RANGE", "negative integer literal does not fit its expected type")
                         fail rejection
+                    mut negative = literal.value
+                    if not (literal.ty == 0 and literal.minimum):
+                        negative = -negative
                     const minimum_payload = try syntax_value.integer(mut state.batch.pool, negative)
-                    const minimum_id = try emission.node(mut state.batch, state.syntax.pool, span, literal_type, b"integer", minimum_payload)
+                    const minimum_id = try emission.node(mut state.batch, state.syntax.pool, span, literal.ty, b"integer", minimum_payload)
                     state.batch.resolved[raw_id] = minimum_id
                     state.depth = state.depth - 1
-                    return Expression(id=minimum_id, ty=literal_type)
+                    return Expression(id=minimum_id, ty=literal.ty)
         if op.data == b"is_none":
             try hint_option_operand(mut state, operand_raw)
+        if state.batch.facts.float_type >= 0 and state.batch.facts.expected[raw_id] == state.batch.facts.float_type:
+            state.batch.facts.expected[operand_raw] = state.batch.facts.float_type
         const operand = try expression(mut state, operand_raw)
         ty = operand.ty
         if op.data == b"is_none":
@@ -802,10 +832,17 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             state.batch.resolved[raw_id] = id
             state.depth = state.depth - 1
             return Expression(id=id, ty=1)
+        if op.data == b"neg" and state.batch.facts.float_type >= 0 and operand.ty == state.batch.facts.float_type:
+            const context = list_lower.Context(input=state.syntax.pool, span=span)
+            const lowered = try numeric_lower.floating_unary(mut state.batch, context, b"f64_neg", operand.id)
+            const id = try list_lower.append(mut state.batch, context, lowered)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=operand.ty)
         if op.data == b"not":
             _ = try require(state, operand.ty, 1, operator_span)
             ty = 1
-        elif operand.ty != 0:
+        elif not scalars.is_integer(operand.ty):
             const rejection = try problem(state, operator_span, "E_TYPE", "operation requires an integer type")
             fail rejection
         const typed_op = try syntax_value.enumeration(mut state.batch.pool, op.data)
@@ -886,7 +923,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 state.batch.resolved[raw_id] = result.id
                 state.depth = state.depth - 1
                 return result
-            if owner_slot >= 0 and sequence_type(state, state.scope.locals[owner_slot].ty) and raw_callee != b"parse_int":
+            if owner_slot >= 0 and sequence_type(state, state.scope.locals[owner_slot].ty) and not numeric_parse_name(raw_callee):
                 const labels_id = try graph.field(state.syntax.pool, payload, "argument_names")
                 const labels = try graph.items(state.syntax.pool, labels_id)
                 if len(labels) != 0:
@@ -901,7 +938,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 state.batch.resolved[raw_id] = result.id
                 state.depth = state.depth - 1
                 return result
-            if owner_slot >= 0 and raw_callee == b"parse_int" and (state.scope.locals[owner_slot].ty == state.batch.facts.string_type or state.scope.locals[owner_slot].ty == state.batch.facts.bytes_type):
+            if owner_slot >= 0 and numeric_parse_name(raw_callee) and (state.scope.locals[owner_slot].ty == state.batch.facts.string_type or state.scope.locals[owner_slot].ty == state.batch.facts.bytes_type):
                 const labels_id = try graph.field(state.syntax.pool, payload, "argument_names")
                 const labels = try graph.items(state.syntax.pool, labels_id)
                 if len(labels) != 0:
@@ -913,7 +950,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
                 const arguments = try graph.items(state.syntax.pool, arguments_id)
                 const base = Expression(id=-1, ty=state.scope.locals[owner_slot].ty)
-                const result = try parse_integer_access(mut state, span, base, owner_slot, owner, len(arguments))
+                const result = try parse_numeric_access(mut state, span, base, owner_slot, owner, raw_callee, arguments)
                 state.batch.resolved[raw_id] = result.id
                 state.depth = state.depth - 1
                 return result
@@ -1159,7 +1196,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                     state.batch.resolved[raw_id] = id
                     state.depth = state.depth - 1
                     return Expression(id=id, ty=result_type)
-                if raw_callee == b"parse_int":
+                if raw_callee == b"parse_int" or raw_callee == b"parse_float":
                     if locals.find(state.scope, raw_callee) >= 0 or explicit_count != 0:
                         const rejection = try problem(state, span, "P_BODY_PROFILE", "shadowed or specialized numeric parsing is outside the body profile")
                         fail rejection
@@ -1178,7 +1215,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                     if argument.ty != state.batch.facts.string_type:
                         const rejection = try problem(state, span, "E_TYPE", "parse_int and parse_float require a str argument")
                         fail rejection
-                    const result = try parse_integer_access(mut state, span, argument, -1, span, 0)
+                    const result = try parse_numeric_access(mut state, span, argument, -1, span, raw_callee, [])
                     state.batch.resolved[raw_id] = result.id
                     state.depth = state.depth - 1
                     return result
@@ -1234,29 +1271,53 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                     state.batch.resolved[raw_id] = id
                     state.depth = state.depth - 1
                     return Expression(id=id, ty=expected)
-                if raw_callee == b"int" or raw_callee == b"i64":
+                if raw_callee == b"int" or raw_callee == b"i64" or raw_callee == b"float" or raw_callee == b"sqrt" or raw_callee == b"floor" or raw_callee == b"ceil" or raw_callee == b"trunc" or raw_callee == b"abs" or raw_callee == b"round":
                     const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
                     const inputs = try graph.items(state.syntax.pool, arguments_id)
                     const names_id = try graph.field(state.syntax.pool, payload, "argument_names")
                     const labels = try graph.items(state.syntax.pool, names_id)
-                    const types_id = try graph.field(state.syntax.pool, payload, "type_arguments")
-                    const explicit_types = try graph.items(state.syntax.pool, types_id)
-                    if len(inputs) != 1 or len(labels) != 0 or len(explicit_types) != 0:
-                        const rejection = try problem(state, span, "P_BODY_PROFILE", "integer conversion requires one plain admitted integer argument")
+                    if len(inputs) != 1 or len(labels) != 0 or explicit_count != 0:
+                        const rejection = try problem(state, span, "P_BODY_PROFILE", "numeric builtin requires one plain admitted argument")
                         fail rejection
                     const argument_raw = try graph.number(state.syntax.pool, inputs[0])
                     const argument = try expression(mut state, argument_raw)
-                    if managed(state, argument.ty):
-                        const rejection = try problem(state, span, "P_BODY_PROFILE", "managed integer conversion is outside the admitted body closure")
-                        fail rejection
-                    if not scalars.is_integer(argument.ty):
-                        const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
-                        fail rejection
-                    const operand = try syntax_value.integer(mut state.batch.pool, argument.id)
-                    const id = try emission.node(mut state.batch, state.syntax.pool, span, 0, b"cast", operand)
+                    const context = list_lower.Context(input=state.syntax.pool, span=span)
+                    const floating = state.batch.facts.float_type >= 0 and argument.ty == state.batch.facts.float_type
+                    mut lowered = list_lower.Lowered(ty=15, tag=b"", payload=-1)
+                    if raw_callee == b"int" or raw_callee == b"float":
+                        if argument.ty == state.batch.facts.string_type:
+                            const rejection = try problem(state, call_name, "E_NUMERIC_PARSE", "parse text explicitly with parse_int or parse_float; int and float convert numbers")
+                            const fix = syntax_problem.Edit(start=rejection.start, end=rejection.end, text=if raw_callee == b"float" then b"parse_float" else b"parse_int")
+                            state.problems.append(syntax_problem.repaired(rejection, [fix]))
+                            fail rejection
+                        if not floating and not scalars.is_integer(argument.ty):
+                            const rejection = try problem(state, span, "E_TYPE", "numeric conversion requires an integer or float")
+                            fail rejection
+                        if raw_callee == b"float":
+                            if floating:
+                                const numeric_data_id = try graph.field(state.batch.pool, state.batch.nodes[argument.id], "data")
+                                const numeric_data = try graph.get(state.batch.pool, numeric_data_id)
+                                const numeric_payload = try graph.payload(state.batch.pool, numeric_data_id)
+                                lowered = list_lower.Lowered(ty=argument.ty, tag=numeric_data.data, payload=numeric_payload)
+                            else:
+                                lowered = try numeric_lower.from_integer(mut state.batch, context, argument.id, argument.ty)
+                        elif floating:
+                            lowered = try numeric_lower.to_integer(mut state.batch, context, argument.id, 0)
+                        else:
+                            const operand = try syntax_value.integer(mut state.batch.pool, argument.id)
+                            lowered = list_lower.Lowered(ty=0, tag=b"cast", payload=operand)
+                    else:
+                        if not floating:
+                            const rejection = try problem(state, span, "E_TYPE", "this prelude operation requires a float argument")
+                            fail rejection
+                        if raw_callee == b"round":
+                            lowered = try numeric_lower.round_value(mut state.batch, mut state.scope, context, argument.id)
+                        else:
+                            lowered = try numeric_lower.floating_unary(mut state.batch, context, b"f64_" + raw_callee, argument.id)
+                    const id = try list_lower.append(mut state.batch, context, lowered)
                     state.batch.resolved[raw_id] = id
                     state.depth = state.depth - 1
-                    return Expression(id=id, ty=0)
+                    return Expression(id=id, ty=lowered.ty)
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "prelude call is outside the B1 ordinary-call profile")
                 fail rejection
         const resolution = try names.target(mut state.problems, state.syntax.pool, state.syntax.source, state.syntax.modules, span, owner, call_name)
@@ -1512,7 +1573,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
         const chained_id = try graph.field(state.syntax.pool, payload, "chained")
         const chained = try graph.get(state.syntax.pool, chained_id)
-        if chained.integer != 0 or op.data == b"python_div" or (len(op.data) >= 3 and op.data[:3] == b"f64"):
+        if chained.integer != 0 or (len(op.data) >= 3 and op.data[:3] == b"f64"):
             const rejection = try problem(state, span, "P_BODY_PROFILE", "binary operation is outside the B1 scalar profile")
             fail rejection
         mut sequence_constructor = False
@@ -1531,9 +1592,9 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 obvious = try obvious_type(state, right_raw, 0)
             if obvious < 0:
                 obvious = state.batch.facts.expected[raw_id]
-            if obvious == 0:
-                state.batch.facts.expected[left_raw] = 0
-                state.batch.facts.expected[right_raw] = 0
+            if scalars.is_integer(obvious) or (state.batch.facts.float_type >= 0 and obvious == state.batch.facts.float_type):
+                state.batch.facts.expected[left_raw] = obvious
+                state.batch.facts.expected[right_raw] = obvious
             elif op.data == b"eq" or op.data == b"ne":
                 const left_hint = try obvious_type(state, left_raw, 0)
                 const right_hint = try obvious_type(state, right_raw, 0)
@@ -1541,12 +1602,12 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                     state.batch.facts.expected[right_raw] = left_hint
                 if right_hint >= 0:
                     state.batch.facts.expected[left_raw] = right_hint
-        const left = try expression(mut state, left_raw)
+        mut left = try expression(mut state, left_raw)
         const pending_checkpoint = try pending_flow.snapshot(state.scope, len(state.scope.locals))
         const options_checkpoint = option_flow.snapshot(state.control.options)
         if op.data == b"logical_and" or op.data == b"logical_or":
             try option_flow.assume(mut state.control.options, option_context(state), state.scope, option_flow.Guard(condition=left_raw, truth=op.data == b"logical_and"))
-        const right = try expression(mut state, right_raw)
+        mut right = try expression(mut state, right_raw)
         if op.data == b"logical_and" or op.data == b"logical_or":
             option_flow.restore(mut state.control.options, options_checkpoint)
             const difference = try pending_flow.mismatch(state.scope, pending_checkpoint)
@@ -1569,7 +1630,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             state.batch.resolved[raw_id] = id
             state.depth = state.depth - 1
             return Expression(id=id, ty=sequence.ty)
-        if managed(state, left.ty) and collection_types.schema(state.batch.facts.lists.types.collections, left.ty).kind != 1:
+        if (managed(state, left.ty) or (state.batch.facts.float_type >= 0 and left.ty == state.batch.facts.float_type)) and collection_types.schema(state.batch.facts.lists.types.collections, left.ty).kind != 1:
             const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, operator_span)
             mut builtin = ""
             mut operator = ""
@@ -1585,6 +1646,24 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             if len(builtin) != 0:
                 const rejection = try problem(state, operator_span, "E_SET_OPERATOR", "`" + operator + "` combines two sets or two integers (`" + builtin + "(a, b)`)")
                 fail rejection
+        if state.batch.facts.float_type >= 0 and (op.data == b"python_div" or left.ty == state.batch.facts.float_type or right.ty == state.batch.facts.float_type):
+            const promotion_context = list_lower.Context(input=state.syntax.pool, span=operator_span)
+            if scalars.is_integer(left.ty):
+                const converted = try numeric_lower.from_integer(mut state.batch, promotion_context, left.id, left.ty)
+                const id = try list_lower.append(mut state.batch, promotion_context, converted)
+                left = Expression(id=id, ty=converted.ty)
+            if scalars.is_integer(right.ty):
+                const converted = try numeric_lower.from_integer(mut state.batch, promotion_context, right.id, right.ty)
+                const id = try list_lower.append(mut state.batch, promotion_context, converted)
+                right = Expression(id=id, ty=converted.ty)
+            _ = try require(state, right.ty, left.ty, operator_span)
+            if left.ty == state.batch.facts.float_type:
+                const context = list_lower.Context(input=state.syntax.pool, span=span)
+                const lowered = try numeric_lower.binary(mut state.batch, mut state.scope, context, op.data, left.id, right.id)
+                const id = try list_lower.append(mut state.batch, context, lowered)
+                state.batch.resolved[raw_id] = id
+                state.depth = state.depth - 1
+                return Expression(id=id, ty=lowered.ty)
         _ = try require(state, right.ty, left.ty, operator_span)
         const left_collection = collection_types.schema(state.batch.facts.lists.types.collections, left.ty)
         if left_collection.kind == 1 and op.data != b"eq" and op.data != b"ne":
@@ -1650,7 +1729,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         elif op.data == b"eq" or op.data == b"ne":
             ty = 1
         else:
-            if left.ty != 0:
+            if not scalars.is_integer(left.ty):
                 const rejection = try problem(state, operator_span, "E_TYPE", "operation requires an integer type")
                 fail rejection
             if op.data == b"lt" or op.data == b"le" or op.data == b"gt" or op.data == b"ge":
@@ -2243,6 +2322,8 @@ public func managed(state: State, ty: int) -> bool:
 
 
 func type_name(state: State, ty: int) -> str:
+    if ty >= 0 and ty == state.batch.facts.float_type:
+        return "float"
     const element = list_types.element_type(state.batch.facts.lists, ty)
     if element >= 0:
         return type_name(state, element) + "[]"
@@ -2282,6 +2363,8 @@ func type_name(state: State, ty: int) -> str:
 
 public func type_at(mut state: State, span: int) -> int fails syntax_value.Problem:
     const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    if text == b"float" and state.batch.facts.float_type >= 0:
+        return state.batch.facts.float_type
     for suffix in state.batch.facts.lists.types.suffixes:
         const suffix_span = try graph.field(state.syntax.pool, suffix, "span")
         const matches = try same_span(state.syntax.pool, suffix_span, span)
@@ -3169,41 +3252,53 @@ func fielded_variant(mut state: State, ty: int, tag: int, span: int, name: int, 
     return Expression(id=id, ty=ty)
 
 
-func parse_integer_access(mut state: State, span: int, base: Expression, owner: int, site: int, argument_count: int) -> Expression fails syntax_value.Problem:
+func numeric_parse_name(name: bytes) -> bool:
+    return name == b"parse_int" or name == b"parse_float" or name == b"parse_int_range" or name == b"parse_float_range"
+
+
+func parse_numeric_access(mut state: State, span: int, base: Expression, owner: int, site: int, kind: bytes, inputs: int[]) -> Expression fails syntax_value.Problem:
     if base.ty != state.batch.facts.string_type and base.ty != state.batch.facts.bytes_type:
-        const rejection = try problem(state, span, "P_BODY_PROFILE", "integer parsing receiver is outside the managed sequence profile")
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "numeric parsing receiver is outside the managed sequence profile")
         fail rejection
-    if owner < 0 and base.ty == state.batch.facts.bytes_type and base.id >= 0:
-        const node_data_id = try graph.field(state.batch.pool, state.batch.nodes[base.id], "data")
-        const node_data = try graph.get(state.batch.pool, node_data_id)
-        if node_data.data == b"block_value":
-            const block = try graph.payload(state.batch.pool, node_data_id)
-            const value_id = try graph.field(state.batch.pool, block, "value")
-            const value = try graph.number(state.batch.pool, value_id)
-            const operation_id = try graph.field(state.batch.pool, state.batch.nodes[value], "data")
-            const operation = try graph.get(state.batch.pool, operation_id)
-            if operation.data == b"buffer_operation":
-                const operation_payload = try graph.payload(state.batch.pool, operation_id)
-                const kind_id = try graph.field(state.batch.pool, operation_payload, "kind")
-                const kind = try graph.get(state.batch.pool, kind_id)
-                if kind.data == b"slice" or kind.data == b"view":
-                    const rejection = try problem(state, span, "P_BODY_PROFILE", "fused byte range parsing is outside the admitted byte closure")
-                    fail rejection
     if owner >= 0:
         _ = try require_readable(mut state, owner, site)
-    mut receiver = "str"
-    if base.ty == state.batch.facts.bytes_type:
-        receiver = "bytes"
-    if argument_count != 0:
-        const rejection = try problem(state, span, "E_ARITY", "`" + receiver + ".parse_int() -> Option[int]` takes 0 arguments, but this call passes " + str(argument_count))
+    const floating = kind == b"parse_float" or kind == b"parse_float_range"
+    const ranged = kind == b"parse_int_range" or kind == b"parse_float_range"
+    mut arity = 0
+    if ranged:
+        arity = 2
+    if len(inputs) != arity:
+        mut receiver = "str"
+        if base.ty == state.batch.facts.bytes_type:
+            receiver = "bytes"
+        mut signature = "() -> Option[int]"
+        if floating:
+            signature = "() -> Option[float]"
+        if ranged:
+            signature = "(start: int, end: int) -> Option[int]"
+            if floating:
+                signature = "(start: int, end: int) -> Option[float]"
+        const method_name = try suggestions.text(kind)
+        const rejection = try problem(state, span, "E_ARITY", "`" + receiver + "." + method_name + signature + "` takes " + str(arity) + " arguments, but this call passes " + str(len(inputs)))
         fail rejection
-    const ty = try list_types.union_intern(mut state.batch.facts.lists, mut state.syntax.pool, 0, -1, site, False)
+    mut arguments: int[] = []
+    for input in inputs:
+        const raw = try graph.number(state.syntax.pool, input)
+        const argument = try expression(mut state, raw)
+        if not scalars.is_integer(argument.ty):
+            const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
+            fail rejection
+        arguments.append(argument.id)
+    mut element = 0
+    if floating:
+        element = state.batch.facts.float_type
+    const ty = try list_types.union_intern(mut state.batch.facts.lists, mut state.syntax.pool, element, -1, site, False)
     const context = list_lower.Context(input=state.syntax.pool, span=span)
     if owner >= 0:
         state.scope.locals[owner].usage.reads = state.scope.locals[owner].usage.reads + 1
-        const id = try list_lower.operation(mut state.batch, context, list_lower.Operation(owner=owner, kind=b"parse_int", arguments=[], ty=ty))
+        const id = try list_lower.operation(mut state.batch, context, list_lower.Operation(owner=owner, kind=kind, arguments=arguments, ty=ty))
         return Expression(id=id, ty=ty)
-    const lowered = try list_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=b"parse_int", arguments=[], result_type=ty, signed_length=False))
+    const lowered = try list_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=kind, arguments=arguments, result_type=ty, signed_length=False))
     const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=ty)
 

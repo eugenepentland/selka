@@ -1,4 +1,5 @@
 import syntax_value
+import floating_types
 import graph
 import record_types
 import variants
@@ -91,12 +92,17 @@ public func prepare_records(pool: syntax_value.Pool, id: int, suffixes: int[], m
         depths.append(0)
     depths[0] = 1
     depths[1] = 1
+    for ty in range(2, 9):
+        depths[ty] = 1
     depths[15] = 1
     for leaf in managed:
         if leaf >= 0:
             if leaf < 19 or leaf >= len(depths):
                 fail bad()
             depths[leaf] = 1
+    const floating = try floating_types.identity(pool, records.rows)
+    if floating >= 0:
+        depths[floating] = 1
     for ty in range(19, len(records.admitted)):
         if catalog.types.records.admitted[ty]:
             depths[ty] = 1
@@ -159,12 +165,13 @@ public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recip
     if not catalog.available:
         const problem = try refusal(pool, request.span, "builtin List is unavailable")
         fail problem
+    const floating = try floating_types.identity(pool, catalog.types.records.rows)
     mut current = request.element
     mut depth = 2
     mut slow = current
     mut steps = 0
     while current >= 19:
-        mut leaf = current == catalog.types.buffer.id
+        mut leaf = current == catalog.types.buffer.id or current == floating
         for id in managed:
             if current == id:
                 leaf = True

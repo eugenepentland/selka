@@ -63,6 +63,8 @@ public func clone(mut destination: syntax_value.Pool, source: syntax_value.Pool,
         return try syntax_value.absent(mut destination)
     if value.kind == 1:
         return try syntax_value.integer(mut destination, value.integer)
+    if value.kind == 8:
+        return try syntax_value.upper_integer(mut destination, value.integer)
     if value.kind == 2:
         return try syntax_value.boolean(mut destination, value.integer != 0)
     if value.kind == 3:
