@@ -1,0 +1,15 @@
+func verify(low: u8, high: u8) -> bool:
+    if wrapping_add(high, 1u8) != low or wrapping_sub(low, 1u8) != high:
+        return False
+    if saturating_add(high, 1u8) != high or saturating_sub(low, 1u8) != low:
+        return False
+    if saturating_mul(high, high) != high:
+        return False
+    if bit_xor(high, high) != 0u8 or bit_and(7u8, 3u8) != 3u8:
+        return False
+    return shift_left(1u8, 2u8) == 4u8 and shift_right(4u8, 1u8) == 2u8
+
+
+func main() -> int:
+    assert verify(0u8, 255u8)
+    return 7

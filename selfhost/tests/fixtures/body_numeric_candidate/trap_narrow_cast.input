@@ -1,0 +1,7 @@
+func narrow(value: int) -> u8:
+    return u8(value)
+
+
+func main() -> int:
+    _ = narrow(256)
+    return 7

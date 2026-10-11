@@ -1,0 +1,15 @@
+func verify(low: i64, high: i64) -> bool:
+    if wrapping_add(high, 1i64) != low or wrapping_sub(low, 1i64) != high:
+        return False
+    if saturating_add(high, 1i64) != high or saturating_sub(low, 1i64) != low:
+        return False
+    if saturating_mul(high, high) != high:
+        return False
+    if bit_xor(high, high) != 0i64 or bit_and(7i64, 3i64) != 3i64:
+        return False
+    return shift_left(1i64, 2i64) == 4i64 and shift_right(4i64, 1i64) == 2i64
+
+
+func main() -> int:
+    assert verify(-9223372036854775808i64, 9223372036854775807i64)
+    return 7

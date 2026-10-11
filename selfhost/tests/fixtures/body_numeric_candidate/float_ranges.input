@@ -1,0 +1,12 @@
+func main() -> int:
+    match b"xx-2.5yy".parse_float_range(2, 6):
+        case Some(value):
+            assert value == -2.5
+        case None:
+            return 1
+    match b"xx42yy".parse_int_range(2, 4):
+        case Some(value):
+            assert value == 42
+        case None:
+            return 2
+    return 7

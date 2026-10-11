@@ -1,0 +1,10 @@
+func identity(value: float) -> float:
+    return value
+
+
+func main() -> int:
+    mut zero = identity(-0.0)
+    assert 1.0 / zero < 0.0
+    assert identity(-2.5) == -2.5
+    assert identity(0.125) == 0.125
+    return 7

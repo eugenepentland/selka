@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = 1u8 + 1u16
+    return 7

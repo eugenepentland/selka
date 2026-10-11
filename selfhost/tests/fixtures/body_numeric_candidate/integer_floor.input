@@ -1,0 +1,8 @@
+func verify(a: i32, b: i32) -> bool:
+    return a // b == -3i32 and a % b == 2i32
+
+
+func main() -> int:
+    assert verify(-7i32, 3i32)
+    assert -7 // 3 == -3 and -7 % 3 == 2
+    return 7

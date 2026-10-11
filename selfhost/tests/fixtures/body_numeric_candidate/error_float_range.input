@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = 1e309
+    return 7

@@ -1,0 +1,10 @@
+func verify(value: float) -> bool:
+    return i8(value) == 42i8 and i16(value) == 42i16 and i32(value) == 42i32 and i64(value) == 42 and u8(value) == 42u8 and u16(value) == 42u16 and u32(value) == 42u32 and u64(value) == 42u64
+
+
+func main() -> int:
+    assert verify(42.75)
+    assert i8(-128.5) == -128i8 and u8(-0.75) == 0u8
+    assert u64(18446744073709549568.0) == 18446744073709549568u64
+    assert float(9007199254740993u64) == 9007199254740992.0
+    return 7

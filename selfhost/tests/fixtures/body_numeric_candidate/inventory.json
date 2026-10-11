@@ -1,0 +1,72 @@
+{
+  "counts": {
+    "fixtures": 40,
+    "success": 21,
+    "diagnostic": 19,
+    "runtime_traps": 2,
+    "profiles": 0
+  },
+  "source_cases": [
+    "error_bool_cast.my",
+    "error_float_bit.my",
+    "error_float_range.my",
+    "error_magnitude_u128.my",
+    "error_max_i16.my",
+    "error_max_i32.my",
+    "error_max_i64.my",
+    "error_max_i8.my",
+    "error_max_u16.my",
+    "error_max_u32.my",
+    "error_max_u64.my",
+    "error_max_u8.my",
+    "error_min_i16.my",
+    "error_min_i32.my",
+    "error_min_i64.my",
+    "error_min_i8.my",
+    "error_mixed_width.my",
+    "error_suffix.my",
+    "error_text_conversion.my",
+    "float_arithmetic.my",
+    "float_casts.my",
+    "float_literals.my",
+    "float_nan.my",
+    "float_order.my",
+    "float_parse.my",
+    "float_ranges.my",
+    "integer_casts.my",
+    "integer_floor.my",
+    "integer_order.my",
+    "trap_checked_overflow.my",
+    "trap_narrow_cast.my",
+    "u64_metadata.my",
+    "width_i16.my",
+    "width_i32.my",
+    "width_i64.my",
+    "width_i8.my",
+    "width_u16.my",
+    "width_u32.my",
+    "width_u64.my",
+    "width_u8.my"
+  ],
+  "donors": {},
+  "runtime_trap_cases": [
+    "trap_checked_overflow.my",
+    "trap_narrow_cast.my"
+  ],
+  "parser_magnitude_cases": [
+    "error_max_u64.my",
+    "error_magnitude_u128.my"
+  ],
+  "scope": "B9 nongeneric fixed-width integer and native synthetic binary64 bodies; other language seams not qualified here",
+  "native_donor_anchors": [
+    "src/integer_operations_test.zig",
+    "src/integers_test.zig",
+    "src/integer_literal.zig",
+    "src/numeric_surface.zig",
+    "tests/lang/checked_arithmetic.my",
+    "tests/lang/float_integer_casts.my",
+    "tests/lang/float_nan.my",
+    "tests/lang/integer_float_rounding.my",
+    "tests/lang/byte_views.my"
+  ]
+}

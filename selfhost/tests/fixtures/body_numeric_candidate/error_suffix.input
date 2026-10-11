@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = 1i7
+    return 7

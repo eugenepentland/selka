@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = 32768i16
+    return 7

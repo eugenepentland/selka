@@ -1,0 +1,16 @@
+record Sample:
+    value: u64
+
+
+func pass_value(value: u64) -> u64:
+    return value
+
+
+func main() -> int:
+    mut maximum = 18446744073709551615u64
+    mut values: u64[] = [9223372036854775808u64, maximum]
+    mut sample = Sample(value=maximum)
+    assert sample.value == maximum and values[0] == 9223372036854775808u64
+    assert pass_value(values[1]) == maximum
+    assert wrapping_add(maximum, 1u64) == 0u64
+    return 7
