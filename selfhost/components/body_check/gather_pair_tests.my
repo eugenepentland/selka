@@ -1,0 +1,113 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import gather_lower
+import gather_pair
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 9, 22)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, row, name)
+    return try graph.number(pool, field)
+
+
+func data(batch: emission.Batch, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const field = try graph.field(batch.pool, row, "data")
+    return try graph.get(batch.pool, field)
+
+
+func ids(pool: syntax_value.Pool, sequence: int) -> int[] fails syntax_value.Problem:
+    const children = try graph.items(pool, sequence)
+    mut result: int[] = []
+    for child in children:
+        const value = try graph.number(pool, child)
+        result.append(value)
+    return result
+
+
+public func test_pair_is_saved_once_and_projected_in_key_value_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const source = try locals.add(mut fixture.scope, b"pair", fixture.context.span, 40, True, b"parameter")
+    const original = try list_lower.read(mut fixture.batch, fixture.context, source, 40)
+    const pair = try gather_pair.project(mut fixture.batch, mut fixture.scope, fixture.context, gather_pair.Input(value=original, ty=40, key_type=17, value_type=41))
+    const saved = try data(fixture.batch, fixture.batch.statements[pair.initialize])
+    const slot = try number(fixture.batch.pool, saved.children[0], "slot")
+    const value = try number(fixture.batch.pool, saved.children[0], "value")
+    const key = try data(fixture.batch, fixture.batch.nodes[pair.key])
+    const item = try data(fixture.batch, fixture.batch.nodes[pair.value])
+    const key_index = try number(fixture.batch.pool, key.children[0], "index")
+    const item_index = try number(fixture.batch.pool, item.children[0], "index")
+    const key_base = try number(fixture.batch.pool, key.children[0], "base")
+    const item_base = try number(fixture.batch.pool, item.children[0], "base")
+    const key_read = try data(fixture.batch, fixture.batch.nodes[key_base])
+    const item_read = try data(fixture.batch, fixture.batch.nodes[item_base])
+    const key_slot = try graph.number(fixture.batch.pool, key_read.children[0])
+    const item_slot = try graph.number(fixture.batch.pool, item_read.children[0])
+    const key_type = try number(fixture.batch.pool, fixture.batch.nodes[pair.key], "ty")
+    const item_type = try number(fixture.batch.pool, fixture.batch.nodes[pair.value], "ty")
+    return pair.initialize == 0 and saved.data == b"initialize" and slot == 1 and value == original and key.data == b"field" and item.data == b"field" and pair.key == 2 and pair.value == 4 and key_index == 0 and item_index == 1 and key_base == 1 and item_base == 3 and key_slot == slot and item_slot == slot and key_type == 17 and item_type == 41 and len(fixture.batch.statements) == 1
+
+
+public func test_pair_slot_is_hidden_and_keeps_collection_usage_metadata() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const source = try locals.add(mut fixture.scope, b"pair", fixture.context.span, 40, False, b"parameter")
+    const original = fixture.scope.locals[source]
+    const value = try list_lower.read(mut fixture.batch, fixture.context, source, 40)
+    _ = try gather_pair.project(mut fixture.batch, mut fixture.scope, fixture.context, gather_pair.Input(value=value, ty=40, key_type=5, value_type=0))
+    const hidden = fixture.scope.locals[1]
+    return fixture.scope.active == [0] and fixture.scope.locals[0] == original and hidden.name == b"<collection>" and hidden.ty == 40 and hidden.declaration == fixture.context.span and hidden.mutable and hidden.origin == b"local" and not hidden.flags.initialized and hidden.usage.temporary and hidden.usage.reads == 1 and hidden.usage.writes == 0
+
+
+public func test_pair_snapshot_precedes_accumulator_and_per_step_key_value_slots() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const source = try locals.add(mut fixture.scope, b"pair", fixture.context.span, 40, False, b"parameter")
+    const value = try list_lower.read(mut fixture.batch, fixture.context, source, 40)
+    const pair = try gather_pair.project(mut fixture.batch, mut fixture.scope, fixture.context, gather_pair.Input(value=value, ty=40, key_type=17, value_type=41))
+    const owner = try list_lower.temporary(mut fixture.scope, fixture.context, 42)
+    const step = try gather_lower.step(mut fixture.batch, mut fixture.scope, fixture.context, gather_lower.Step(owner=owner, key=pair.key, value=pair.value, kind=b"dict"))
+    const children = try ids(fixture.batch.pool, step.payload)
+    mut statements = [pair.initialize]
+    statements.extend(children)
+    const first = try data(fixture.batch, fixture.batch.statements[children[0]])
+    const second = try data(fixture.batch, fixture.batch.statements[children[1]])
+    const key_slot = try number(fixture.batch.pool, first.children[0], "slot")
+    const value_slot = try number(fixture.batch.pool, second.children[0], "slot")
+    const key = try number(fixture.batch.pool, first.children[0], "value")
+    const item = try number(fixture.batch.pool, second.children[0], "value")
+    return owner == 2 and key_slot == 3 and value_slot == 4 and key == pair.key and item == pair.value and statements == [0, 1, 2, 3] and len(fixture.scope.locals) == 5 and len(fixture.batch.statements) == 4
+
+
+public func test_effectful_pair_keeps_its_block_and_projection_uses_step_span() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const original_span = try syntax_value.span(mut fixture.context.input, 2, 8)
+    const original_context = list_lower.Context(input=fixture.context.input, span=original_span)
+    const source = try locals.add(mut fixture.scope, b"pair", original_span, 40, True, b"parameter")
+    const value = try list_lower.read(mut fixture.batch, original_context, source, 40)
+    const assignment = try list_lower.store(mut fixture.batch, original_context, source, value, False)
+    const block = try list_lower.block(mut fixture.batch, original_context, [assignment], value, 40)
+    const expression = try list_lower.append(mut fixture.batch, original_context, block)
+    const pair = try gather_pair.project(mut fixture.batch, mut fixture.scope, fixture.context, gather_pair.Input(value=expression, ty=40, key_type=0, value_type=17))
+    const saved = try data(fixture.batch, fixture.batch.statements[pair.initialize])
+    const saved_value = try number(fixture.batch.pool, saved.children[0], "value")
+    if saved_value != expression or len(fixture.batch.statements) != 3:
+        return False
+    for node in [pair.key, pair.value]:
+        const span = try graph.field(fixture.batch.pool, fixture.batch.nodes[node], "span")
+        const start = try number(fixture.batch.pool, span, "start")
+        const end = try number(fixture.batch.pool, span, "end")
+        if start != 9 or end != 22:
+            return False
+    const original = try data(fixture.batch, fixture.batch.nodes[expression])
+    return original.data == b"block_value" and pair.initialize == 2
