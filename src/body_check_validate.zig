@@ -397,7 +397,12 @@ fn binaryNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
     const right = try nodeType(graph, operation.right);
     if (left != right) return error.ComponentProtocol;
     if (list_validate.listElement(graph.context.catalog, left) != null) {
-        if ((operation.op != .eq and operation.op != .ne) or node.ty != .bool) return error.ComponentProtocol;
+        const result: typed.Type = switch (operation.op) {
+            .add => left,
+            .eq, .ne => .bool,
+            else => return error.ComponentProtocol,
+        };
+        if (node.ty != result) return error.ComponentProtocol;
         return;
     }
     if (sequenceElement(graph.context.catalog, left) != null) {
@@ -424,13 +429,14 @@ fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
     const owner = graph.tables.functions[graph.function].scope.locals[@backingInt(operation.owner)].ty;
     const element = list_validate.listElement(graph.context.catalog, owner) orelse return error.ComponentProtocol;
     if (operation.arguments.len != operation.kind.arity()) return error.ComponentProtocol;
+    if (operation.kind == .sort and !sortableListElement(graph.context.catalog, element)) return error.ComponentProtocol;
     const expected: typed.Type = switch (operation.kind) {
         .length, .capacity => .u64,
         .read, .pop, .pop_at => element,
         .contains => .bool,
         .index_of => .i64,
         .copy => owner,
-        .append, .write, .iteration_check, .extend, .insert, .remove, .reverse, .clear => .unit,
+        .append, .write, .iteration_check, .extend, .insert, .remove, .reverse, .sort, .clear => .unit,
         else => return error.ComponentProtocol,
     };
     if (node.ty != expected) return error.ComponentProtocol;
@@ -445,4 +451,11 @@ fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
         };
         if (try nodeType(graph, argument) != wanted) return error.ComponentProtocol;
     }
+}
+
+fn sortableListElement(catalog: value.Catalog, element: typed.Type) bool {
+    if (element == .i64) return true;
+    if (catalog.string) |sequence| if (sequence.id == element) return true;
+    if (catalog.bytes) |sequence| if (sequence.id == element) return true;
+    return false;
 }

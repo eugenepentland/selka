@@ -172,3 +172,142 @@ test "body lists project sequences only with their retained identity and exact e
     const valid = try materialize.project(a, f.native);
     try std.testing.expectEqual(ty, valid.string.?.id);
 }
+
+const BodyFixture = struct { input: value.Input, output: value.Output };
+fn nativeBody(a: std.mem.Allocator, text: []const u8) !BodyFixture {
+    const f = try fixture(a, text);
+    var sink: diagnostic.Sink = .{ .allocator = a };
+    const program = try @import("sema.zig").checkLibraryProgram(a, f.native.templates.store.?.context.src, f.input.program, &sink, null);
+    const nodes = try a.dupe(typed.Node, program.nodes);
+    const ranges = try a.alloc(@import("semantic_copy.zig").Range, 1);
+    ranges[0] = .{ .nodes = .{ .start = 0, .end = nodes.len }, .statements = .{ .start = 0, .end = program.statements.len } };
+    return .{ .input = f.input, .output = .{ .batch = .{ .nodes = nodes, .statements = program.statements, .functions = program.functions, .ranges = ranges }, .import_used = &.{}, .diagnostics = &.{} } };
+}
+fn admitted(a: std.mem.Allocator, f: BodyFixture) !void {
+    try @import("body_check_validate.zig").outcome(a, f.input, .{ .success = f.output });
+}
+// spec-case: SELFHOST-BODY-LISTS-1
+test "body lists admit native indexed augmentation and reject forged addition results and operands" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try nativeBody(a, "func update(mut rows: int[][], other: int[]) -> int:\n    rows[0] += other\n    return 7\n");
+    try admitted(a, f);
+    var found = false;
+    for (@constCast(f.output.batch.nodes)) |*node| {
+        if (node.data != .binary or node.data.binary.op != .add or !node.ty.isAggregate()) continue;
+        found = true;
+        const original = node.*;
+        node.ty = .bool;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        var integer: ?typed.NodeId = null;
+        for (f.output.batch.nodes, 0..) |candidate, index| {
+            if (candidate.ty == .i64 and candidate.data == .integer) {
+                integer = @fromBackingInt(index);
+                break;
+            }
+        }
+        node.data.binary.right = integer.?;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        node.data.binary.op = .lt;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        break;
+    }
+    try std.testing.expect(found);
+}
+// spec-case: SELFHOST-BODY-LISTS-1
+test "body lists admit closed native sort and reject keyed arity wrong results and owners" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try nativeBody(a, "func order(mut values: int[], count: int) -> int:\n    values.sort()\n    return count\n");
+    try admitted(a, f);
+    var found = false;
+    for (@constCast(f.output.batch.nodes)) |*node| {
+        if (node.data != .buffer_operation or node.data.buffer_operation.kind != .sort) continue;
+        found = true;
+        const original = node.*;
+        node.ty = .i64;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        node.data.buffer_operation.owner = @fromBackingInt(f.output.batch.functions[0].scope.locals.len);
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        node.data.buffer_operation.owner = @fromBackingInt(1);
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        node.data.buffer_operation.arguments = &.{@fromBackingInt(0)};
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        node.data.buffer_operation.kind = .sort_keyed;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.* = original;
+        break;
+    }
+    try std.testing.expect(found);
+}
+// spec-case: SELFHOST-BODY-LISTS-1
+test "body lists refuse sort over nonorderable admitted element schemas" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try nativeBody(a, "func reverse(mut flags: bool[]) -> int:\n    flags.reverse()\n    return 7\n");
+    try admitted(a, f);
+    var found = false;
+    for (@constCast(f.output.batch.nodes)) |*node| {
+        if (node.data != .buffer_operation or node.data.buffer_operation.kind != .reverse) continue;
+        found = true;
+        node.data.buffer_operation.kind = .sort;
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, f));
+        node.data.buffer_operation.kind = .reverse;
+        break;
+    }
+    try std.testing.expect(found);
+}
+// spec-case: SELFHOST-BODY-LISTS-1
+test "body lists reject wrong indexed write position and element types" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try nativeBody(a, "func update(mut values: int[], flag: bool) -> int:\n    values[0] = 7\n    return 7\n");
+    try admitted(a, f);
+    var flag: ?typed.NodeId = null;
+    // The unused parameter has no native read; append a valid local read in its owned interval.
+    const nodes = try a.alloc(typed.Node, f.output.batch.nodes.len + 1);
+    @memcpy(nodes[0..f.output.batch.nodes.len], f.output.batch.nodes);
+    nodes[nodes.len - 1] = .{ .span = f.input.program.functions[0].signature.parameters[1].name, .ty = .bool, .data = .{ .local = @fromBackingInt(1) } };
+    flag = @fromBackingInt(nodes.len - 1);
+    var forged = f;
+    forged.output.batch.nodes = nodes;
+    const ranges = try a.dupe(@import("semantic_copy.zig").Range, f.output.batch.ranges);
+    ranges[0].nodes.end = nodes.len;
+    forged.output.batch.ranges = ranges;
+    try admitted(a, forged);
+    var found = false;
+    for (nodes) |*node| {
+        if (node.data != .buffer_operation or node.data.buffer_operation.kind != .write) continue;
+        found = true;
+        const original = node.data.buffer_operation.arguments;
+        node.data.buffer_operation.arguments = &.{ flag.?, original[1] };
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, forged));
+        node.data.buffer_operation.arguments = &.{ original[0], flag.? };
+        try std.testing.expectError(error.ComponentProtocol, admitted(a, forged));
+        node.data.buffer_operation.arguments = original;
+        break;
+    }
+    try std.testing.expect(found);
+}
+
+// spec-case: SELFHOST-BODY-LISTS-1
+test "body lists admit native text and byte element sorting" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const strings = try nativeBody(a, "func order(mut values: str[]) -> int:\n    values.sort()\n    return 7\n");
+    try admitted(a, strings);
+    const bytes = try nativeBody(a, "func order(mut values: bytes[]) -> int:\n    values.sort()\n    return 7\n");
+    try admitted(a, bytes);
+}
