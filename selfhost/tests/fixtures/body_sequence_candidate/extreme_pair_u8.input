@@ -1,0 +1,4 @@
+func main() -> int:
+    assert min(3u8, 1u8) == 1u8
+    assert max(1u8, 3u8) == 3u8
+    return 7

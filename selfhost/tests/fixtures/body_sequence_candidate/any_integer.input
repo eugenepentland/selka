@@ -1,0 +1,3 @@
+func main() -> int:
+    const answer = any([1])
+    return 7

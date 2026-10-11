@@ -1,0 +1,147 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+import numeric_lower
+import prelude_lower
+
+public record Fold:
+    input: int
+    ty: int
+    element: int
+    loop_id: int
+    name: bytes
+
+
+public func sum(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Fold) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.ty)
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const limit = try list_lower.temporary(mut scope, context, 0)
+    const total = try list_lower.temporary(mut scope, context, request.element)
+    const setup_owner = try list_lower.store(mut batch, context, owner, request.input, True)
+    mut zero = -1
+    if request.element == batch.facts.float_type:
+        const literal = try numeric_lower.literal(mut batch, context, 0)
+        zero = try list_lower.append(mut batch, context, literal)
+    else:
+        zero = try list_lower.integer(mut batch, context, 0, request.element)
+    const current = try list_lower.read(mut batch, context, index, 0)
+    const check = try prelude_lower.guard(mut batch, context, owner, limit)
+    const guard = try prelude_lower.statements(mut batch, context, [check])
+    const addend = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"read", arguments=[current], ty=request.element))
+    const previous = try list_lower.read(mut batch, context, total, request.element)
+    const added = try prelude_lower.binary(mut batch, context, prelude_lower.Binary(op=b"add", left=previous, right=addend, element=request.element, result=request.element))
+    const assign = try list_lower.store(mut batch, context, total, added, False)
+    const body = try prelude_lower.statements(mut batch, context, [guard, assign])
+    const step = try prelude_lower.step(mut batch, context, index, current, guard)
+    const first = try list_lower.integer(mut batch, context, 0, 0)
+    const setup_index = try list_lower.store(mut batch, context, index, first, True)
+    const length = try list_lower.length(mut batch, context, owner)
+    const setup_limit = try list_lower.store(mut batch, context, limit, length, True)
+    const setup_total = try list_lower.store(mut batch, context, total, zero, True)
+    const bound = try list_lower.read(mut batch, context, limit, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", current, bound, 1)
+    const loop = try prelude_lower.loop(mut batch, context, prelude_lower.Loop(id=request.loop_id, condition=condition, body=body, step=step))
+    const value = try list_lower.read(mut batch, context, total, request.element)
+    return try list_lower.block(mut batch, context, [setup_owner, setup_index, setup_limit, setup_total, loop], value, request.element)
+
+
+public func any_all(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Fold) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.ty)
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const limit = try list_lower.temporary(mut scope, context, 0)
+    const total = try list_lower.temporary(mut scope, context, 1)
+    const done = try list_lower.temporary(mut scope, context, 1)
+    const setup_owner = try list_lower.store(mut batch, context, owner, request.input, True)
+    const current = try list_lower.read(mut batch, context, index, 0)
+    const check = try prelude_lower.guard(mut batch, context, owner, limit)
+    const guard = try prelude_lower.statements(mut batch, context, [check])
+    const previous = try list_lower.read(mut batch, context, total, 1)
+    const addend = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"read", arguments=[current], ty=1))
+    const is_any = request.name == b"any"
+    const folded = try list_lower.binary(mut batch, context, if is_any then b"logical_or" else b"logical_and", previous, addend, 1)
+    mut stop = folded
+    if not is_any:
+        stop = try prelude_lower.negate(mut batch, context, folded)
+    const assign = try list_lower.store(mut batch, context, total, folded, False)
+    const yes = try prelude_lower.boolean(mut batch, context, True)
+    const finish = try list_lower.store(mut batch, context, done, yes, False)
+    const branch = try prelude_lower.branch(mut batch, context, stop, finish)
+    const body = try prelude_lower.statements(mut batch, context, [guard, assign, branch])
+    const step = try prelude_lower.step(mut batch, context, index, current, guard)
+    const bound = try list_lower.read(mut batch, context, limit, 0)
+    const within = try list_lower.binary(mut batch, context, b"lt", current, bound, 1)
+    const complete = try list_lower.read(mut batch, context, done, 1)
+    const active = try prelude_lower.negate(mut batch, context, complete)
+    const condition = try list_lower.binary(mut batch, context, b"logical_and", within, active, 1)
+    const first = try list_lower.integer(mut batch, context, 0, 0)
+    const setup_index = try list_lower.store(mut batch, context, index, first, True)
+    const length = try list_lower.length(mut batch, context, owner)
+    const setup_limit = try list_lower.store(mut batch, context, limit, length, True)
+    const initial = try prelude_lower.boolean(mut batch, context, not is_any)
+    const setup_total = try list_lower.store(mut batch, context, total, initial, True)
+    const initial_done = try prelude_lower.boolean(mut batch, context, False)
+    const setup_done = try list_lower.store(mut batch, context, done, initial_done, True)
+    const loop = try prelude_lower.loop(mut batch, context, prelude_lower.Loop(id=request.loop_id, condition=condition, body=body, step=step))
+    const value = try list_lower.read(mut batch, context, total, 1)
+    return try list_lower.block(mut batch, context, [setup_owner, setup_index, setup_limit, setup_total, setup_done, loop], value, 1)
+
+
+func compare(mut batch: emission.Batch, context: list_lower.Context, request: prelude_lower.Binary, greatest: bool) -> int fails syntax_value.Problem:
+    mut swapped = request
+    if not greatest:
+        swapped.left = request.right
+        swapped.right = request.left
+    return try prelude_lower.binary(mut batch, context, swapped)
+
+
+public func extreme_list(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Fold) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.ty)
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const limit = try list_lower.temporary(mut scope, context, 0)
+    const result = try list_lower.temporary(mut scope, context, request.element)
+    const current = try list_lower.read(mut batch, context, index, 0)
+    const guard = try prelude_lower.guard(mut batch, context, owner, limit)
+    const candidate = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"read", arguments=[current], ty=request.element))
+    const previous = try list_lower.read(mut batch, context, result, request.element)
+    const condition = try compare(mut batch, context, prelude_lower.Binary(op=b"lt", left=previous, right=candidate, element=request.element, result=1), request.name == b"max")
+    const replacement = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"read", arguments=[current], ty=request.element))
+    const assign = try list_lower.store(mut batch, context, result, replacement, False)
+    const branch = try prelude_lower.branch(mut batch, context, condition, assign)
+    const body = try prelude_lower.statements(mut batch, context, [guard, branch])
+    const step = try prelude_lower.step(mut batch, context, index, current, guard)
+    const setup_owner = try list_lower.store(mut batch, context, owner, request.input, True)
+    const first = try list_lower.integer(mut batch, context, 1, 0)
+    const setup_index = try list_lower.store(mut batch, context, index, first, True)
+    const length = try list_lower.length(mut batch, context, owner)
+    const setup_limit = try list_lower.store(mut batch, context, limit, length, True)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const initial = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"read", arguments=[zero], ty=request.element))
+    const setup_result = try list_lower.store(mut batch, context, result, initial, True)
+    const bound = try list_lower.read(mut batch, context, limit, 0)
+    const active = try list_lower.binary(mut batch, context, b"lt", current, bound, 1)
+    const loop = try prelude_lower.loop(mut batch, context, prelude_lower.Loop(id=request.loop_id, condition=active, body=body, step=step))
+    const value = try list_lower.read(mut batch, context, result, request.element)
+    return try list_lower.block(mut batch, context, [setup_owner, setup_index, setup_limit, setup_result, loop], value, request.element)
+
+
+public record Pair:
+    left: int
+    right: int
+    ty: int
+    greatest: bool
+
+
+public func extreme_pair(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Pair) -> list_lower.Lowered fails syntax_value.Problem:
+    const result = try list_lower.temporary(mut scope, context, request.ty)
+    const other = try list_lower.temporary(mut scope, context, request.ty)
+    const left = try list_lower.read(mut batch, context, result, request.ty)
+    const right = try list_lower.read(mut batch, context, other, request.ty)
+    const condition = try compare(mut batch, context, prelude_lower.Binary(op=b"lt", left=left, right=right, element=request.ty, result=1), request.greatest)
+    const setup_result = try list_lower.store(mut batch, context, result, request.left, True)
+    const setup_other = try list_lower.store(mut batch, context, other, request.right, True)
+    const replacement = try list_lower.read(mut batch, context, other, request.ty)
+    const assign = try list_lower.store(mut batch, context, result, replacement, False)
+    const branch = try prelude_lower.branch(mut batch, context, condition, assign)
+    const value = try list_lower.read(mut batch, context, result, request.ty)
+    return try list_lower.block(mut batch, context, [setup_result, setup_other, branch], value, request.ty)

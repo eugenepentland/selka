@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: dict[int, int] = {3: 10, 1: 20, 2: 30}
+    assert sum(list(values.values())) == 60
+    return 7

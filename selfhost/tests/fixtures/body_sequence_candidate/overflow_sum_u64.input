@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: u64[] = [18446744073709551615u64, 1u64]
+    _ = sum(values)
+    return 7

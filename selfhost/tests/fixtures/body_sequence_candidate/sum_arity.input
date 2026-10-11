@@ -1,0 +1,3 @@
+func main() -> int:
+    const answer = sum()
+    return 7

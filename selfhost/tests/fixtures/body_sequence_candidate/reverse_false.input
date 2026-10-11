@@ -1,0 +1,4 @@
+func main() -> int:
+    const ordered = sorted([3, 1, 2], reverse=False)
+    assert ordered[0] == 1
+    return 7

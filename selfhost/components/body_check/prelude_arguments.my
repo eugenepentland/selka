@@ -1,0 +1,85 @@
+import syntax_value
+import graph
+import syntax_problem
+
+public record Syntax:
+    pool: syntax_value.Pool
+    source: bytes
+    nodes: int[]
+    call: int
+
+
+public record Sorted:
+    values: int[]
+    reverse: int
+    key: int
+
+
+public func accepts(name: bytes) -> bool:
+    return name == b"sum" or name == b"min" or name == b"max" or name == b"any" or name == b"all" or name == b"sorted"
+
+
+public func signature() -> str:
+    return "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]"
+
+
+public func call_signature(rejection: syntax_value.Problem, accepted: str) -> syntax_problem.Diagnostic:
+    mut diagnostic = syntax_problem.plain(rejection)
+    diagnostic.notes.requirement = [syntax_problem.Related(start=rejection.start, end=rejection.end, message=accepted, role="signature")]
+    return diagnostic
+
+
+func problem(pool: syntax_value.Pool, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+func reject(mut problems: syntax_problem.Diagnostic[], syntax: Syntax, span: int, code: str, message: str) -> int fails syntax_value.Problem:
+    const rejection = try problem(syntax.pool, span, code, message)
+    problems.append(call_signature(rejection, signature()))
+    fail rejection
+
+
+public func sorted(syntax: Syntax, mut problems: syntax_problem.Diagnostic[]) -> Sorted fails syntax_value.Problem:
+    const call_name = try graph.field(syntax.pool, syntax.call, "name")
+    const arguments_id = try graph.field(syntax.pool, syntax.call, "arguments")
+    const inputs = try graph.items(syntax.pool, arguments_id)
+    const names_id = try graph.field(syntax.pool, syntax.call, "argument_names")
+    const labels = try graph.items(syntax.pool, names_id)
+    if len(inputs) == 0:
+        _ = try reject(mut problems, syntax, call_name, "E_ARITY", "sorted requires a list")
+    mut result = Sorted(values=[], reverse=-1, key=-1)
+    for position in range(len(inputs)):
+        const raw = try graph.number(syntax.pool, inputs[position])
+        result.values.append(raw)
+        mut keyword = -1
+        if len(labels) != 0:
+            const label = try graph.get(syntax.pool, labels[position])
+            if label.kind != 0:
+                keyword = labels[position]
+        if position == 0:
+            if keyword >= 0:
+                _ = try reject(mut problems, syntax, keyword, "E_CALL_ARGUMENT", "the sorted list is positional")
+            continue
+        if keyword < 0:
+            const site = try graph.field(syntax.pool, syntax.nodes[raw], "span")
+            _ = try reject(mut problems, syntax, site, "E_CALL_ARGUMENT", "key and reverse are keyword-only: write key=callback and reverse=flag")
+        const name = try graph.spelling(syntax.pool, syntax.source, keyword)
+        if name != b"key" and name != b"reverse":
+            const rejection = try problem(syntax.pool, call_name, "E_CALL_ARGUMENT", "sorting accepts only the named arguments key= and reverse=")
+            mut diagnostic = call_signature(rejection, signature())
+            if name == b"cmp":
+                const note = try problem(syntax.pool, keyword, "E_CALL_ARGUMENT", "there is no comparison-function form; key= maps each element to the value compared instead, such as key=lambda item: (item.rank, item.name)")
+                diagnostic.notes.related = [syntax_problem.Related(start=note.start, end=note.end, message=note.message, role="alternative")]
+            problems.append(diagnostic)
+            fail rejection
+        if (name == b"key" and result.key >= 0) or (name == b"reverse" and result.reverse >= 0):
+            _ = try reject(mut problems, syntax, keyword, "E_CALL_ARGUMENT", "this sort argument is given more than once")
+        if name == b"key":
+            result.key = raw
+        else:
+            result.reverse = raw
+    return result

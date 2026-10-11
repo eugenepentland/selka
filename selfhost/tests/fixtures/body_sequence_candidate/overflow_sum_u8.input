@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: u8[] = [255u8, 1u8]
+    _ = sum(values)
+    return 7

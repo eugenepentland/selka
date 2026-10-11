@@ -1,0 +1,6 @@
+func main() -> int:
+    const values: u8[] = [3u8, 1u8, 2u8]
+    const ordered = sorted(values)
+    assert ordered[0] == 1u8
+    assert values[0] == 3u8
+    return 7

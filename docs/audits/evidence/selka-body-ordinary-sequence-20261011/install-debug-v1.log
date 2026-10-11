@@ -1,0 +1,86 @@
+build-slot: FIFO ticket 3318, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 3318, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 3318, position 2; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 3318, position 2; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 3318, position 2; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 3318, position 2; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 3318, position 2; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 3318, position 1; waiting for memory: 11.1 GiB available, build needs 16.0 GiB; waiting (421s so far)
+build-slot: FIFO ticket 3318, position 1; waiting for memory: 15.2 GiB available, build needs 16.0 GiB; waiting (482s so far)
+build-slot: FIFO ticket 3318, position 1; waiting for memory: 13.5 GiB available, build needs 16.0 GiB; waiting (542s so far)
+build-slot: FIFO ticket 3318, position 1; waiting for memory: 12.9 GiB available, build needs 16.0 GiB; waiting (602s so far)
+build-slot: build slot 2, FIFO ticket 3318 after 643s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 108/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 4 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2257 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 108 file(s) in scope
+e1f11e50a4fe3b4d450f620a2f256d33f8ccab0a97f565a19694d9b22881ce2b
+6444a82ddc11dfac84556a45d5ff0bf772bd7956693954e3b5c504a8275e6398
+ef6564a596debdd846120eede96d41307bb38da0891941e72d6c85c16a383aef
+6cebfba467f4b90b74629801a115cc7ac3cf07e70d14a7ad95d949a7f4f85dbd
+a0c9546438c7a0dd12fe73089aa488bf801a0b56fe78de2ec44958719911f7bb
+ca95deaa0fd7d43864134b0326d62d8a0e6fe0ffe8a138e5de46f8c9c218261c
+engine.my:289:22: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Err(unused):
+                       ^
+engine.my:784:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              const unused = try require(state, index.ty, collection.key, span)
+                    ^
+engine.my:2882:21: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Ok(unused):
+                      ^
+engine.my:3122:26: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+                  case Err(error):
+                           ^
+engine.my:3557:38: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func payload_local(mut state: State, arm_name: int, binding: int, internal_name: bytes, ty: int) -> int fails syntax_value.Problem:
+                                       ^
+engine.my:5158:21: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Ok(unused):
+                      ^
+engine.my:5631:21: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Ok(unused):
+                      ^
+engine.my:5904:21: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Ok(unused):
+                      ^
+engine.my:6202:39: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func range_stepping(mut state: State, name: int, step_id: int, element: int) -> range_stride.Plan fails syntax_value.Problem:
+                                        ^
+record_names.my:175:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_start = try graph.number(pool, diagnostic_start_id)
+            ^
+record_names.my:176:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_end = try graph.number(pool, diagnostic_end_id)
+            ^
+record_names.my:179:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              const owner_text = try graph.spelling(pool, source, owner)
+                    ^
+record_names.my:181:15: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          const original = try graph.spelling(pool, source, name)
+                ^
+record_names.my:189:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut used_import = -1
+          ^
+record_names.my:215:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut canonical_name = spelling
+          ^
+record_names.my:216:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut matched = False
+          ^
+constant_eval.my:828:22: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Err(problem):
+                       ^
+constant_eval.my:920:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Ok(valid):
+                  ^
+constant_integer.my:151:22: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Err(unused):
+                       ^
+integer_literals.my:189:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Err(problem):
+                   ^
+fbc77c423cd61cc4de0ab088ca9ec7acc1744d350aac292784c8d1c5ca311e66

@@ -1,0 +1,9 @@
+func take(mut events: int[], value: int) -> int:
+    events.append(value)
+    return value
+
+func main() -> int:
+    mut events: int[] = []
+    assert min(take(mut events, 3), take(mut events, 1)) == 1
+    assert events == [3, 1]
+    return 7

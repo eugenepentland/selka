@@ -1,0 +1,75 @@
+import syntax_value
+import emission
+import list_lower
+import numeric_lower
+
+public func boolean(mut batch: emission.Batch, context: list_lower.Context, value: bool) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.boolean(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, 1, b"boolean", payload)
+
+
+public func discard(mut batch: emission.Batch, context: list_lower.Context, value: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.statement(mut batch, context.input, context.span, False, b"discard", payload)
+
+
+public func statements(mut batch: emission.Batch, context: list_lower.Context, values: int[]) -> int fails syntax_value.Problem:
+    const payload = try emission.ids(mut batch, values)
+    return try emission.statement(mut batch, context.input, context.span, False, b"block", payload)
+
+
+public func branch(mut batch: emission.Batch, context: list_lower.Context, condition: int, body: int) -> int fails syntax_value.Problem:
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const yes = try syntax_value.integer(mut batch.pool, body)
+    const no = try syntax_value.absent(mut batch.pool)
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [test, yes, no])
+    return try emission.statement(mut batch, context.input, context.span, False, b"branch", payload)
+
+
+public record Loop:
+    id: int
+    condition: int
+    body: int
+    step: int
+
+
+public func loop(mut batch: emission.Batch, context: list_lower.Context, request: Loop) -> int fails syntax_value.Problem:
+    const id = try syntax_value.integer(mut batch.pool, request.id)
+    const condition = try syntax_value.integer(mut batch.pool, request.condition)
+    const body = try syntax_value.integer(mut batch.pool, request.body)
+    const step_id = try syntax_value.integer(mut batch.pool, request.step)
+    const payload = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [id, condition, body, step_id])
+    return try emission.statement(mut batch, context.input, context.span, False, b"loop", payload)
+
+
+public func negate(mut batch: emission.Batch, context: list_lower.Context, value: int) -> int fails syntax_value.Problem:
+    const lowered = try numeric_lower.unary(mut batch, context, b"not", value, 1)
+    return try list_lower.append(mut batch, context, lowered)
+
+
+public record Binary:
+    op: bytes
+    left: int
+    right: int
+    element: int
+    result: int
+
+
+public func binary(mut batch: emission.Batch, context: list_lower.Context, request: Binary) -> int fails syntax_value.Problem:
+    if request.element == batch.facts.float_type:
+        const lowered = try numeric_lower.binary_value(mut batch, context, request.op, request.left, request.right)
+        return try list_lower.append(mut batch, context, lowered)
+    return try list_lower.binary(mut batch, context, request.op, request.left, request.right, request.result)
+
+
+public func guard(mut batch: emission.Batch, context: list_lower.Context, owner: int, limit: int) -> int fails syntax_value.Problem:
+    const count = try list_lower.read(mut batch, context, limit, 0)
+    const check = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"iteration_check", arguments=[count], ty=15))
+    return try discard(mut batch, context, check)
+
+
+public func step(mut batch: emission.Batch, context: list_lower.Context, index: int, current: int, guard_id: int) -> int fails syntax_value.Problem:
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", current, one, 0)
+    const advance = try list_lower.store(mut batch, context, index, next, False)
+    return try statements(mut batch, context, [guard_id, advance])

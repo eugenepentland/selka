@@ -1,0 +1,44 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+import list_slice
+import prelude_lower
+
+public record Sort:
+    input: int
+    ty: int
+    element: int
+    reverse: int
+    loop_id: int
+
+
+public func sorted(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Sort) -> list_lower.Lowered fails syntax_value.Problem:
+    const result = try list_lower.temporary(mut scope, context, request.ty)
+    if request.reverse < 0:
+        const copied = try list_slice.slice(mut batch, mut scope, context, list_slice.Slice(base=request.input, owner_type=request.ty, element=request.element, start=-1, end=-1, loop_id=request.loop_id))
+        const input = try list_lower.append(mut batch, context, copied)
+        const initialize = try list_lower.store(mut batch, context, result, input, True)
+        const operation = try list_lower.operation(mut batch, context, list_lower.Operation(owner=result, kind=b"sort", arguments=[], ty=15))
+        const discarded = try prelude_lower.discard(mut batch, context, operation)
+        const value = try list_lower.read(mut batch, context, result, request.ty)
+        return try list_lower.block(mut batch, context, [initialize, discarded], value, request.ty)
+    const original = try list_lower.temporary(mut scope, context, request.ty)
+    const initialize = try list_lower.store(mut batch, context, original, request.input, True)
+    const flag = try list_lower.temporary(mut scope, context, 1)
+    const setup_flag = try list_lower.store(mut batch, context, flag, request.reverse, True)
+    const count = try list_lower.temporary(mut scope, context, 0)
+    const length = try list_lower.length(mut batch, context, original)
+    const setup_count = try list_lower.store(mut batch, context, count, length, True)
+    const source = try list_lower.read(mut batch, context, original, request.ty)
+    const keys = try list_lower.read(mut batch, context, original, request.ty)
+    const reverse = try list_lower.read(mut batch, context, flag, 1)
+    const operation = try list_lower.operation(mut batch, context, list_lower.Operation(owner=result, kind=b"sort_keyed", arguments=[source, keys, reverse], ty=15))
+    const discarded = try prelude_lower.discard(mut batch, context, operation)
+    const capacity = try list_lower.read(mut batch, context, count, 0)
+    const capacity_id = try syntax_value.integer(mut batch.pool, capacity)
+    const acquire_payload = try syntax_value.object(mut batch.pool, ["capacity"], [capacity_id])
+    const acquired = try emission.node(mut batch, context.input, context.span, request.ty, b"acquire_buffer", acquire_payload)
+    const setup_result = try list_lower.store(mut batch, context, result, acquired, True)
+    const value = try list_lower.read(mut batch, context, result, request.ty)
+    return try list_lower.block(mut batch, context, [initialize, setup_flag, setup_count, setup_result, discarded], value, request.ty)

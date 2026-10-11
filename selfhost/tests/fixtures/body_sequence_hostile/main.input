@@ -1,0 +1,10 @@
+func main() -> int:
+    const values = [3, 1, 2]
+    const ordinary = sorted(values)
+    const descending = sorted(values, reverse=True)
+    const ascending = sorted(values, reverse=False)
+    assert ordinary == [1, 2, 3]
+    assert descending == [3, 2, 1]
+    assert ascending == [1, 2, 3]
+    assert values == [3, 1, 2]
+    return 7

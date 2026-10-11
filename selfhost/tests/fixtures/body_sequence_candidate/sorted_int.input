@@ -1,0 +1,6 @@
+func main() -> int:
+    const values: int[] = [3, 1, 2]
+    const ordered = sorted(values)
+    assert ordered[0] == 1
+    assert values[0] == 3
+    return 7

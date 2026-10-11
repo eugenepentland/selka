@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: str[] = ["z", "a", "b"]
+    assert max(values) == "z"
+    return 7

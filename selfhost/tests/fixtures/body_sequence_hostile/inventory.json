@@ -1,0 +1,18 @@
+{
+  "schema": 10,
+  "source_sha256": "e1c905cce0ae85a4efd6210ebb3ee03396765543b987e28876c9a3740f8668e8",
+  "hostile_names": [
+    "copy_readonly_receiver",
+    "second_readonly_receiver",
+    "nonunit_result",
+    "short_arity",
+    "long_arity",
+    "source_type",
+    "keys_type",
+    "reverse_type",
+    "distinct_keys_local",
+    "nonlocal_source",
+    "nonlocal_keys",
+    "foreign_receiver"
+  ]
+}

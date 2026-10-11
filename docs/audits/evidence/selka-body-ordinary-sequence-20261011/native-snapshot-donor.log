@@ -1,0 +1,18 @@
+build-slot: FIFO ticket 3370, position 9; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 3370, position 7; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 3370, position 7; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 3370, position 4; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 3370, position 3; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 3370, position 1; all 3 build slot(s) busy; waiting (300s so far)
+build-slot: FIFO ticket 3370, position 1; all 3 build slot(s) busy; waiting (361s so far)
+build-slot: FIFO ticket 3370, position 1; all 3 build slot(s) busy; waiting (421s so far)
+build-slot: build slot 2, FIFO ticket 3370 after 431s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10007 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/selka-ordinary-sequence-20261011 ac1b97b3a] Admit canonical dictionary key snapshots for sequence preludes
+ 3 files changed, 52 insertions(+), 3 deletions(-)

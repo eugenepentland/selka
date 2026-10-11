@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: i8[] = [3i8, 1i8, 2i8]
+    assert min(values) == 1i8
+    return 7

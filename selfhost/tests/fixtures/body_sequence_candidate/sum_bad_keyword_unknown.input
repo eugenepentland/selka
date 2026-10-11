@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = sum(values=missing)
+    return 7

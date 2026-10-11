@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: u16[] = [3u16, 1u16, 2u16]
+    assert max(values) == 3u16
+    return 7

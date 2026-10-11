@@ -1,0 +1,5 @@
+func main() -> int:
+    const values: set[int] = {3, 1, 2}
+    const ordered = sorted(values)
+    assert ordered[0] == 1
+    return 7

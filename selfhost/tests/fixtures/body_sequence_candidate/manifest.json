@@ -1,0 +1,2134 @@
+{
+  "sum_i8.my": {
+    "status": 0,
+    "source_sha256": "855db73287ef0e3b615d03eaabd16159a76ff8c326fdbeec5a897082a7022216",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_i8.my": {
+    "status": 0,
+    "source_sha256": "1400953c4f538e6299b3f7f44604f42ad753b2346a97e4b6d71bbe04a26194ec",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_i8.my": {
+    "status": 0,
+    "source_sha256": "27376ca2d00ebce7d899816251ee0f202b9992739ff733bd3e59a047162ec396",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_i8.my": {
+    "status": 0,
+    "source_sha256": "279496aee58cbce8557be6cb7bfc0c629b800e42c7aaeffa25edba87a5558c7d",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_i8.my": {
+    "status": 0,
+    "source_sha256": "089403fefd59cf03350ffac314e4fe9c20ef7f97dc3e87d28590c569d424b8d5",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_i16.my": {
+    "status": 0,
+    "source_sha256": "02824c33ee62b97b092a84184850cfd3284809e9ee75c41bd4f82c001c767544",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_i16.my": {
+    "status": 0,
+    "source_sha256": "89e7c49e33464ba8cbe7b61c7e62cf09a2d3e886f01ad8c3c43cd7f95e29b38f",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_i16.my": {
+    "status": 0,
+    "source_sha256": "4de3579e1173b24616a7c85b31e5c01571021c55e8e54478581f961ee0a16570",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_i16.my": {
+    "status": 0,
+    "source_sha256": "381f18b634817a0967c45376135dd68cfc0cb31f4bd907571af546d3876abbdd",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_i16.my": {
+    "status": 0,
+    "source_sha256": "5743a6c9193d9153b9087d10cc0319aa540cc9d11c332afc2ac082f4be50bed4",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_i32.my": {
+    "status": 0,
+    "source_sha256": "1080c59633904939efcee83fd5b1e0a69dc9f756ab1f1de0cdcf36e20ca39225",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_i32.my": {
+    "status": 0,
+    "source_sha256": "fb86f09d98bb68afef9ee132424b9e574ea7927f24b15bf8e6bfef41d29e6b56",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_i32.my": {
+    "status": 0,
+    "source_sha256": "7f2a54d92b89bd31712eb1b47ecb93641dc0ff9279f55dbeb9a02f7ebb2743e9",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_i32.my": {
+    "status": 0,
+    "source_sha256": "b86126c82eb3da1761e0fdd8fc6d209948e164098b5133f7d1d57f46fd4bd077",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_i32.my": {
+    "status": 0,
+    "source_sha256": "0d2a0e9ef519bb7d87d70706f018b703eb47a76a5721b47caf8dc893c78405db",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_int.my": {
+    "status": 0,
+    "source_sha256": "73aa088fdfb7d5265fa874565000a44a787b03892b4ec5021aabd29a5bfa7788",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_int.my": {
+    "status": 0,
+    "source_sha256": "ce076f0ba99bea03fcd03fd6a61f5d63cf58406ae1875529d4cbae392324461a",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_int.my": {
+    "status": 0,
+    "source_sha256": "7c26dfb0bd762a9102ece5f93f1eeccf8cda5b68ad33ef75e0b0bf7244bcd877",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_int.my": {
+    "status": 0,
+    "source_sha256": "e04da2020b3131e1c4c834d4388d5496428b93565c16a5a0252f4d60b5253599",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_int.my": {
+    "status": 0,
+    "source_sha256": "7789a7a862236f4fb3aecc5ff607a7ebacbc234965a839ef22087e7ac4193691",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_u8.my": {
+    "status": 0,
+    "source_sha256": "b51f4aa6a0ca63192845964237ae0706ed1a6697214889a122bd3d16aae2fe7d",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_u8.my": {
+    "status": 0,
+    "source_sha256": "37dbd45555fab9e26934d4c806a2d199bf1cf5b75703f6ea45479973187d4fc4",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_u8.my": {
+    "status": 0,
+    "source_sha256": "8e2fdee6dea07219f05012226b1429dd42a8f80af02196523c8b5c20947b19a2",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_u8.my": {
+    "status": 0,
+    "source_sha256": "927e2100e1cd0a0401753e8fdcf16638bffd4cb6277d40dd1b1eeae9340e040b",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_u8.my": {
+    "status": 0,
+    "source_sha256": "c47ff56da03f8ec9f646b1e3d266481c36448001a553b1420a42e33fcecd4ca1",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_u16.my": {
+    "status": 0,
+    "source_sha256": "825bbfc891382c1e11145df93c9b3df18a1cecedf395edffdbe96234700c8a28",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_u16.my": {
+    "status": 0,
+    "source_sha256": "bbafdff5a130a5a4b9455bd4894c32afce605d2f64a41995b4f58a1f139ab6d4",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_u16.my": {
+    "status": 0,
+    "source_sha256": "e0270d07849db12afdbb1108d1e496cae9c12ee75625feb38cd1689178804393",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_u16.my": {
+    "status": 0,
+    "source_sha256": "316416407c0a0947ad149927aacfab95afc4e804e5b3ddf955906d94c69c0ea2",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_u16.my": {
+    "status": 0,
+    "source_sha256": "f3ef35879cbb5a9eae3101d92ff226326fcaee16e7c6d1ecf819e54862c08984",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_u32.my": {
+    "status": 0,
+    "source_sha256": "f9d2ea56227da4641b43c384dd1a6fbe3d0cb01ee9a1346b06c67c3580ef2758",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_u32.my": {
+    "status": 0,
+    "source_sha256": "cf3482c1600178ad3b4f5689ba44a56c1fa5bb60a71e619872a4f80dad52b069",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_u32.my": {
+    "status": 0,
+    "source_sha256": "0ba4ead2ad92932eeece7d168cf9cc00788c9ccb7b27563ae9f92b17a2a62210",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_u32.my": {
+    "status": 0,
+    "source_sha256": "c1823647b7390e33b3ec991570d7ce1ca211a2ba33b92584c80940d47cd58251",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_u32.my": {
+    "status": 0,
+    "source_sha256": "202a388856247f45e145dcae9388141731ce2b8e1a6803aff1750de6f920eacd",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_u64.my": {
+    "status": 0,
+    "source_sha256": "5e67239f9c80887056388bcd56b0e5228de9013eb763ed2d17b4e6bcfbb5be78",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_u64.my": {
+    "status": 0,
+    "source_sha256": "11307b131d7a7ac74ff746a7e3169dc062c063e302b33e768bce1c6871b6fae8",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_u64.my": {
+    "status": 0,
+    "source_sha256": "83026bd648e02b668fe4e88d2f429135bfa62dfaa0c389c5aa7507e91852edb0",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_u64.my": {
+    "status": 0,
+    "source_sha256": "64c9f14c9c2351ebf5ce33cb8a7d4467cfd0805f759ff783f96b77b0a2469138",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_u64.my": {
+    "status": 0,
+    "source_sha256": "80b07acafd753053da2414c2a74199067a61534c7aca5273103de91a0c8eee67",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_float.my": {
+    "status": 0,
+    "source_sha256": "19e02ef5c6cac0c3d08110381bf2141cf2e75a0ca514628084639e8b05d8f84e",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_float.my": {
+    "status": 0,
+    "source_sha256": "6f627b1574af6bb5ca42a609c08fb1f5ef7fb938e2e026cb4ede530c74575b07",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_float.my": {
+    "status": 0,
+    "source_sha256": "0e3895e07d9817afda45da7bc97aa72edc6570f6ba52b6ba8f92c5445223df0c",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_float.my": {
+    "status": 0,
+    "source_sha256": "2663ecc4fc68523824f53e6b458a05a2bbab72f7a917ae5c3570a3951029fd9e",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_float.my": {
+    "status": 0,
+    "source_sha256": "e97de5bb767dbcb500e9e226c84b8394f2becf6cd13f129421eabd3b2842e091",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_text.my": {
+    "status": 0,
+    "source_sha256": "30c401f3d325891a540ba8d710f4bd40097df146e006428494f884f4cd84462a",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "max_text.my": {
+    "status": 0,
+    "source_sha256": "d672fe6bcf9eedb29b8bf2daf0d27ff66379040860d1d9d30adc651e4741f92e",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_text.my": {
+    "status": 0,
+    "source_sha256": "28becaf22880300feca066140b1e891f62b1f9a57f4776a5ab3d994bf1bf5c5b",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_text.my": {
+    "status": 0,
+    "source_sha256": "d38f14d2a1fadef54911ead25405ba6ffa770ac577aa653340c53059fd52e75d",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_bytes.my": {
+    "status": 0,
+    "source_sha256": "7c1aeaacf436e4da98f314f7c6782d7fa994f51bb247cac0b7c6aa61c8cc6f15",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "any_bool.my": {
+    "status": 0,
+    "source_sha256": "69353281781b10ed0283645757073f1f4a584865a7601b555fc394fe6b794e6e",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "all_bool.my": {
+    "status": 0,
+    "source_sha256": "9becc234c0120c16308a1a209c1b88527120adf3797f21953f52de3c86b193a7",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_empty.my": {
+    "status": 0,
+    "source_sha256": "29e1680c1ef82e5a165f23ba650bde020304cd23854503d0ba0199062ec4425b",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "any_empty.my": {
+    "status": 0,
+    "source_sha256": "0e0f4e28433c83ff6b05d7f8a3e60a817180ab0188e8abfa560bbad26f3eb10b",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "all_empty.my": {
+    "status": 0,
+    "source_sha256": "546bba735dc0aa9c9defeb1cb06de5911c0f89e344784e03ba174f097b202762",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_empty.my": {
+    "status": 0,
+    "source_sha256": "074b864ff243ddc9e1725c559e921138a4571e8088ed924bd929c65e676ff669",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_empty.my": {
+    "status": 0,
+    "source_sha256": "5a579564c45f9ecffd3d9a33ace27073b2c6e20c562c299d1bb61966bceefd6d",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_LIST_BOUNDS",
+            "severity": "error",
+            "message": "native execution failed (index 0, length 0)",
+            "location": {
+              "path": "min_empty.my",
+              "start": {
+                "line": 2,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "min_empty.my",
+                    "start": {
+                      "line": 2,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "index",
+              "index": 0,
+              "length": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "max_empty.my": {
+    "status": 0,
+    "source_sha256": "7fb4449e14cf4652ef71952ce055def0f752a90f67118c8adf0c6dfb2c169af2",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_LIST_BOUNDS",
+            "severity": "error",
+            "message": "native execution failed (index 0, length 0)",
+            "location": {
+              "path": "max_empty.my",
+              "start": {
+                "line": 2,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "max_empty.my",
+                    "start": {
+                      "line": 2,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "index",
+              "index": 0,
+              "length": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sorted_reverse.my": {
+    "status": 0,
+    "source_sha256": "c45a94fbd2142c941bbe184b05685fe2b0e0e0203c40f78665a7cf3c85b87152",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_set.my": {
+    "status": 0,
+    "source_sha256": "72eddd98a7081e8d84b3f64a1297266eb7e19062dfc0309c7ed901ae59cbbd71",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_set.my": {
+    "status": 0,
+    "source_sha256": "c59e4319f0132efda57d1a33c7f3f37c4696679babc39e72211b1241e8190eb4",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_set.my": {
+    "status": 0,
+    "source_sha256": "bb6f150755e6bd37985fcdd70aa92026fe916509cab87d2e2d0e10116d8ebb5f",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_dict.my": {
+    "status": 0,
+    "source_sha256": "b63cde837e9eec6acd7c8b4eee4ca11b04a0f17088cb75b9c4f0e3c997ad64cb",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_keys.my": {
+    "status": 1,
+    "source_sha256": "7899438a6765b121263ebdc1445e83d93a16d2cc837c17f270805eaf1e5795a1",
+    "diagnostics": [
+      {
+        "code": "E_VIEW_STORED",
+        "message": "dictionary views cannot be stored or passed to functions; use list(values.keys()) for an independent snapshot",
+        "bytes": {
+          "start": 92,
+          "end": 105
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sum_values.my": {
+    "status": 1,
+    "source_sha256": "d66c634f391fbf54fb993989941d9f9b2b49d016f8946dc1e4b48c321b130bbc",
+    "diagnostics": [
+      {
+        "code": "E_VIEW_STORED",
+        "message": "dictionary views cannot be stored or passed to functions; use list(values.values()) for an independent snapshot",
+        "bytes": {
+          "start": 92,
+          "end": 107
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sum_keys_snapshot.my": {
+    "status": 0,
+    "source_sha256": "4064526c7c17491a599793d2e84611fe92a017d00bda2614fd1e156288c423b8",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sum_values_snapshot.my": {
+    "status": 0,
+    "source_sha256": "0ba2d947358407b17a2db7a10a895810a39a26c07e9227b7751849a5e73e1644",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "min_dict.my": {
+    "status": 0,
+    "source_sha256": "70cd7716f0367b027804c3dd3c1d0f0bccf8495ab57b6e1f9ce106af8baf6f34",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_dict.my": {
+    "status": 0,
+    "source_sha256": "7ad4deab63861e315b7d42421b0be400fe4b8f42dbb5a20e62bf94879914d42e",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "shadow_function.my": {
+    "status": 0,
+    "source_sha256": "3df40aec03dbde42d11efa13be42e48c3683c4f70f916bde7b8449dc1f7ca61a",
+    "diagnostics": [],
+    "warnings": [
+      {
+        "code": "W_UNUSED_BINDING",
+        "message": "binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed",
+        "bytes": {
+          "start": 9,
+          "end": 15
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": [
+        {
+          "code": "W_UNUSED_BINDING",
+          "message": "binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed",
+          "bytes": {
+            "start": 9,
+            "end": 15
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    }
+  },
+  "sum_bool.my": {
+    "status": 1,
+    "source_sha256": "94dad9ca133084fd165a7b298d96e6b99348c683d0d186bc82010c0b85182b9f",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "sum requires a list of int or float values",
+        "bytes": {
+          "start": 39,
+          "end": 50
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sum_text.my": {
+    "status": 1,
+    "source_sha256": "57e8caef491fb36a96e30327eec9fc76e7b5ca1b6bd3b01699dcb4bc0eba3627",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "sum requires a list of int or float values",
+        "bytes": {
+          "start": 39,
+          "end": 49
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "any_integer.my": {
+    "status": 1,
+    "source_sha256": "22aad9fd6c9900c812379c2b7b3e0abe89821f2954522978173dae11f18284cc",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "any requires a list of bool values",
+        "bytes": {
+          "start": 39,
+          "end": 47
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "all_integer.my": {
+    "status": 1,
+    "source_sha256": "3437e4bd756fe1b17534a07afa9a8ae3bff82a8ca7880337c85f0110fb2f8342",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "all requires a list of bool values",
+        "bytes": {
+          "start": 39,
+          "end": 47
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_bool.my": {
+    "status": 1,
+    "source_sha256": "b99ba5f1e306db18b16fe559f6f3f95a6c83d5dff7087a846a415560559e8c0d",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "sorted requires a list of int, float, str or bytes values, or a key=callback that maps each element to one",
+        "bytes": {
+          "start": 39,
+          "end": 53
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "extreme_bool.my": {
+    "status": 1,
+    "source_sha256": "3d770d2e5a116542f477e10de0468d163c5974599f44d8556b17acad6cd7f4da",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "min and max require int, float or str values",
+        "bytes": {
+          "start": 39,
+          "end": 55
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "extreme_mixed.my": {
+    "status": 1,
+    "source_sha256": "aa3712ba3db016600dcd08bf77729f085892f907de105776d6ba0fbbed2dd0b7",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "min and max require two values of the same type",
+        "bytes": {
+          "start": 39,
+          "end": 51
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sum_arity.my": {
+    "status": 1,
+    "source_sha256": "fbafd933257eb9716714368722fcd9301eb26ae6738b76155b64ab6859633881",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`sum(values: list[int]) -> int, or sum(values: list[float]) -> float` takes 1 argument, but this call passes 0",
+        "bytes": {
+          "start": 39,
+          "end": 44
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "min_arity.my": {
+    "status": 1,
+    "source_sha256": "363f04cd07e6521c26dc009f0050389cc031927eed97c27f53f59f501bc80738",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "min and max take one list or two values",
+        "bytes": {
+          "start": 39,
+          "end": 51
+        },
+        "notes": [
+          {
+            "role": "signature",
+            "message": "min(values: list[T]) -> T, or min(left: T, right: T) -> T",
+            "bytes": {
+              "start": 39,
+              "end": 51
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_arity.my": {
+    "status": 1,
+    "source_sha256": "8771ee1f1ce64ee2b7ce7cda1ff31bd79b291500722a25eecdfd73dfcf6630f5",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "sorted requires a list",
+        "bytes": {
+          "start": 39,
+          "end": 45
+        },
+        "notes": [
+          {
+            "role": "signature",
+            "message": "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]",
+            "bytes": {
+              "start": 39,
+              "end": 45
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "sum_keyword.my": {
+    "status": 1,
+    "source_sha256": "e2a13d2d3e32fc7b2fe9d7de2cb3eadba405d8f5cfa5d8aa2383e15815e65049",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "keyword arguments require a declared function or record constructor",
+        "bytes": {
+          "start": 39,
+          "end": 42
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_reverse_type.my": {
+    "status": 1,
+    "source_sha256": "4f08d4688d422444926336266abc1b70d95d5eab43f8614192accd637438f9d9",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "reverse= takes a bool: reverse=True sorts in descending order",
+        "bytes": {
+          "start": 59,
+          "end": 60
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_reverse_empty.my": {
+    "status": 1,
+    "source_sha256": "e104489b25119167a9e0e0dfda2a0ff6571f780c572a6352a7cb16fc0a7e5a5a",
+    "diagnostics": [
+      {
+        "code": "E_LIST_INFERENCE",
+        "message": "empty list requires an expected List type",
+        "bytes": {
+          "start": 46,
+          "end": 48
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sum_unknown_child.my": {
+    "status": 1,
+    "source_sha256": "c83a286c3a86fbce6689022023675a0435974011ffd87bd033b4bb8663f7c845",
+    "diagnostics": [
+      {
+        "code": "E_UNKNOWN_NAME",
+        "message": "name is not defined in this scope",
+        "bytes": {
+          "start": 43,
+          "end": 50
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "reverse_i8.my": {
+    "status": 0,
+    "source_sha256": "2b7858b0988d26734e2538cd11fe90191ea8e06859ae47b7e3c0c76c39563501",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_i16.my": {
+    "status": 0,
+    "source_sha256": "4c806c1dbacba95426f67f0f50b064e4e5c9c6c9519f6de6791c54be88ff8cce",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_i32.my": {
+    "status": 0,
+    "source_sha256": "c3835ca41ba10195f2b150428c0db93d4d0d57b3e1778b2d84a38edb8d14b97f",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_int.my": {
+    "status": 0,
+    "source_sha256": "04d4ad816bc1ac09e5485f3d7ef55387711c472a5940fd727b243ca517249c63",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_u8.my": {
+    "status": 0,
+    "source_sha256": "d104be0ae597ebecc69a63af66ed63eaff23a253f5de90c827d5567e3bfe19ed",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_u16.my": {
+    "status": 0,
+    "source_sha256": "0601efd49192f0b1c15cd9f2870ac70bd771da87c9dfc9cdae128879d34a6f8a",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_u32.my": {
+    "status": 0,
+    "source_sha256": "ec1872fdae991afb97af818bc2449fd146de887119854865f61c93680a0d8dd6",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_u64.my": {
+    "status": 0,
+    "source_sha256": "3a34edca5127d198610f1624d927c64877a52ef58af89c4b51feaeb8f1a6e789",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_float.my": {
+    "status": 0,
+    "source_sha256": "235cc1d8777dca5b30bcf8498669ac31ba63fdbeafcc1b2eaebf0d45f1c7e911",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_str.my": {
+    "status": 0,
+    "source_sha256": "1f6b0feb9d27e5641d363152db4cb26456f8f9fad7a0b3ebe19f50eb19051c3e",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_bytes.my": {
+    "status": 0,
+    "source_sha256": "f7be10acb84dbb2cae9b9d8b2214e43217b5aaeb54b1805d85d7929878111ae8",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "overflow_sum_i8.my": {
+    "status": 0,
+    "source_sha256": "1f1c8a66c9c062253980e21fea3b10a31d234cdc0e4b25fa1d61de70b234aa31",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 127, right 1, width 8)",
+            "location": {
+              "path": "overflow_sum_i8.my",
+              "start": {
+                "line": 3,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "overflow_sum_i8.my",
+                    "start": {
+                      "line": 3,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "left": 127,
+              "right": 1,
+              "width": 8
+            }
+          }
+        }
+      ]
+    }
+  },
+  "overflow_sum_i16.my": {
+    "status": 0,
+    "source_sha256": "769ef7286842a88af7a88405a8dcf5d55938cb705adf0c93855f5bd4c9401fc0",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 32767, right 1, width 16)",
+            "location": {
+              "path": "overflow_sum_i16.my",
+              "start": {
+                "line": 3,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "overflow_sum_i16.my",
+                    "start": {
+                      "line": 3,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "left": 32767,
+              "right": 1,
+              "width": 16
+            }
+          }
+        }
+      ]
+    }
+  },
+  "overflow_sum_i32.my": {
+    "status": 0,
+    "source_sha256": "9cd09a087e92405b2cbbbf81d0a71a15fcfb35adcca9942eb1f6f7da4e46cc8a",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 2147483647, right 1, width 32)",
+            "location": {
+              "path": "overflow_sum_i32.my",
+              "start": {
+                "line": 3,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "overflow_sum_i32.my",
+                    "start": {
+                      "line": 3,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "left": 2147483647,
+              "right": 1,
+              "width": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  "overflow_sum_int.my": {
+    "status": 0,
+    "source_sha256": "41af0e4006192267871f8d4bc6f340604dc0eccad6b68397be91bbbaf4ca37a9",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 9223372036854775807, right 1, width 64)",
+            "location": {
+              "path": "overflow_sum_int.my",
+              "start": {
+                "line": 3,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "overflow_sum_int.my",
+                    "start": {
+                      "line": 3,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "left": 9223372036854775807,
+              "right": 1,
+              "width": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  "overflow_sum_u8.my": {
+    "status": 0,
+    "source_sha256": "0c057bc7a379a0cbea5b9284501bd3c495e72e57ef9144af3de5dfdfa2e803e0",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 255, right 1, width 8)",
+            "location": {
+              "path": "overflow_sum_u8.my",
+              "start": {
+                "line": 3,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "overflow_sum_u8.my",
+                    "start": {
+                      "line": 3,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "unsigned": true,
+              "left": 255,
+              "right": 1,
+              "width": 8
+            }
+          }
+        }
+      ]
+    }
+  },
+  "overflow_sum_u16.my": {
+    "status": 0,
+    "source_sha256": "d3fff7e74322458337fcd30f4f18b4b5edc9d2aea7d7d7d1020137d55b7ffaa5",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 65535, right 1, width 16)",
+            "location": {
+              "path": "overflow_sum_u16.my",
+              "start": {
+                "line": 3,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "overflow_sum_u16.my",
+                    "start": {
+                      "line": 3,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "unsigned": true,
+              "left": 65535,
+              "right": 1,
+              "width": 16
+            }
+          }
+        }
+      ]
+    }
+  },
+  "overflow_sum_u32.my": {
+    "status": 0,
+    "source_sha256": "137632cfd316d8cc2217ae2eb8a3246b6b63875dbbc6d12933f9e6238e6a4197",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 4294967295, right 1, width 32)",
+            "location": {
+              "path": "overflow_sum_u32.my",
+              "start": {
+                "line": 3,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "overflow_sum_u32.my",
+                    "start": {
+                      "line": 3,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "unsigned": true,
+              "left": 4294967295,
+              "right": 1,
+              "width": 32
+            }
+          }
+        }
+      ]
+    }
+  },
+  "overflow_sum_u64.my": {
+    "status": 0,
+    "source_sha256": "a8a7d4dfffa1481f768e67c2541f196b8dd242f1bc6d116acb28b5209ec61f1b",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 1,
+      "stdout_hex": "",
+      "trap": true,
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "R_OVERFLOW",
+            "severity": "error",
+            "message": "native execution failed (add: left 18446744073709551615, right 1, width 64)",
+            "location": {
+              "path": "overflow_sum_u64.my",
+              "start": {
+                "line": 3,
+                "column": 9
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [
+                {
+                  "function": "main",
+                  "location": {
+                    "path": "overflow_sum_u64.my",
+                    "start": {
+                      "line": 3,
+                      "column": 9
+                    }
+                  }
+                }
+              ],
+              "omitted": 0
+            },
+            "trap_detail": {
+              "version": 1,
+              "operation": "add",
+              "unsigned": true,
+              "left": 18446744073709551615,
+              "right": 1,
+              "width": 64
+            }
+          }
+        }
+      ]
+    }
+  },
+  "empty_float.my": {
+    "status": 0,
+    "source_sha256": "e2166974b289bc61a49fe51b4a7d701b66973d60d19fe663363547ff5629cac9",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "bool_stops.my": {
+    "status": 0,
+    "source_sha256": "ab19fb3a95d520421cb52f12abfefa7c25acd9df5639f8ba565939e2408068f8",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_false.my": {
+    "status": 0,
+    "source_sha256": "580db788c4457be37d01ef1e75c18aa6774bac2aba4a294bc9eaf34260dea262",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_positional_reverse.my": {
+    "status": 1,
+    "source_sha256": "2cdbc4b99a8d893d9244b5f268379684bf50dd1ff57947c1f789cd2a78f4866b",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "key and reverse are keyword-only: write key=callback and reverse=flag",
+        "bytes": {
+          "start": 40,
+          "end": 44
+        },
+        "notes": [
+          {
+            "role": "signature",
+            "message": "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]",
+            "bytes": {
+              "start": 40,
+              "end": 44
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_keyword_list.my": {
+    "status": 1,
+    "source_sha256": "f2483e89cecce08248db3929885b200550c13a6cc84cba795639e7155ca7fec5",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "the sorted list is positional",
+        "bytes": {
+          "start": 35,
+          "end": 41
+        },
+        "notes": [
+          {
+            "role": "signature",
+            "message": "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]",
+            "bytes": {
+              "start": 35,
+              "end": 41
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_unknown_keyword.my": {
+    "status": 1,
+    "source_sha256": "381ae71594a01a231db91201610efeb6925f6583b80a3ebff05fbf1896a2276d",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "sorting accepts only the named arguments key= and reverse=",
+        "bytes": {
+          "start": 28,
+          "end": 34
+        },
+        "notes": [
+          {
+            "role": "signature",
+            "message": "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]",
+            "bytes": {
+              "start": 28,
+              "end": 34
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_cmp_keyword.my": {
+    "status": 1,
+    "source_sha256": "4991d5c156b54b6f013f732ad6ae1c6da39459cb5ba6f3560746877d9fa31739",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "sorting accepts only the named arguments key= and reverse=",
+        "bytes": {
+          "start": 28,
+          "end": 34
+        },
+        "notes": [
+          {
+            "role": "alternative",
+            "message": "there is no comparison-function form; key= maps each element to the value compared instead, such as key=lambda item: (item.rank, item.name)",
+            "bytes": {
+              "start": 40,
+              "end": 43
+            }
+          },
+          {
+            "role": "signature",
+            "message": "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]",
+            "bytes": {
+              "start": 28,
+              "end": 34
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_duplicate_reverse.my": {
+    "status": 1,
+    "source_sha256": "25310d5ca4c9574217efd6d9b42a348e2f08db58b3fa9a11740bcb47af04ac31",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "this sort argument is given more than once",
+        "bytes": {
+          "start": 54,
+          "end": 61
+        },
+        "notes": [
+          {
+            "role": "signature",
+            "message": "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]",
+            "bytes": {
+              "start": 54,
+              "end": 61
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_reverse_bool_elements.my": {
+    "status": 1,
+    "source_sha256": "ca69df67eaf19fd3a247b6c1b898767163d39296a11826ffaf3970b3782b512b",
+    "diagnostics": [
+      {
+        "code": "E_COLLECTION_METHOD",
+        "message": "sort requires an integer, float, str or bytes element type",
+        "bytes": {
+          "start": 28,
+          "end": 56
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_reverse_nonlist.my": {
+    "status": 1,
+    "source_sha256": "0b46193ac59931e7a46741cab3ecb2e7b4b23b4fe13a4b11aed8e6789557ee1a",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "sorted key requires a list input",
+        "bytes": {
+          "start": 35,
+          "end": 36
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sum_two_unknown.my": {
+    "status": 1,
+    "source_sha256": "8a7358a96ad602f1297408d75d9f5d41fb0deaaae994ebd97d45a863ffd21b67",
+    "diagnostics": [
+      {
+        "code": "E_UNKNOWN_NAME",
+        "message": "name is not defined in this scope",
+        "bytes": {
+          "start": 35,
+          "end": 42
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "min_unknown_child.my": {
+    "status": 1,
+    "source_sha256": "23c1ae65d3eecdeb3da88d95ff178b01d3e2a00149c7a1acdd30122aa416a40f",
+    "diagnostics": [
+      {
+        "code": "E_UNKNOWN_NAME",
+        "message": "name is not defined in this scope",
+        "bytes": {
+          "start": 38,
+          "end": 45
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sum_bad_keyword_unknown.my": {
+    "status": 1,
+    "source_sha256": "7aed0cad6330afce60f0cb9615f8c1339ca709afd2151ef8087aed70e1346078",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "keyword arguments require a declared function or record constructor",
+        "bytes": {
+          "start": 28,
+          "end": 31
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_bad_keyword_unknown.my": {
+    "status": 1,
+    "source_sha256": "d2bf3cd734820ad3cd039b0667354de627d25bcc35d0b86e0dc82cd7097c508e",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "sorting accepts only the named arguments key= and reverse=",
+        "bytes": {
+          "start": 28,
+          "end": 34
+        },
+        "notes": [
+          {
+            "role": "signature",
+            "message": "sorted(values: list[T], *, key: def(T) -> K = None, reverse: bool = False) -> list[T]",
+            "bytes": {
+              "start": 28,
+              "end": 34
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "sorted_reverse_unknown.my": {
+    "status": 1,
+    "source_sha256": "9b2822d26fb739d9b969ebdf3a9703ef5747a5750e632d9ff3f1bf53480540f1",
+    "diagnostics": [
+      {
+        "code": "E_UNKNOWN_NAME",
+        "message": "name is not defined in this scope",
+        "bytes": {
+          "start": 48,
+          "end": 55
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "min_wrong_record.my": {
+    "status": 1,
+    "source_sha256": "cb4ccaf6b6917ea8db509f75c34fba2605e3103edd73cf10a9d3086c7ddb1251",
+    "diagnostics": [
+      {
+        "code": "E_PRELUDE_TYPE",
+        "message": "this prelude builtin requires a list",
+        "bytes": {
+          "start": 94,
+          "end": 105
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "sum_source_once.my": {
+    "status": 0,
+    "source_sha256": "55725d8e9e9a9ed7271b6c9800a2c5ec8d7d87054303b37660eb5e8319d1688f",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "extreme_pair_once.my": {
+    "status": 0,
+    "source_sha256": "70febe92755b525ce4197d34e6ee0e5dcaae791ce133a3faa625320ca8d5ec9a",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "reverse_mutating_flag.my": {
+    "status": 0,
+    "source_sha256": "a0395edba4cb1ebe4bce3a4b16f46da53594dbbc86a863289320b64fae0d837c",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "sorted_snapshot.my": {
+    "status": 0,
+    "source_sha256": "04ffa12677589e355d3443f6ba4b88fb10eb5313cf3730e3dd58b523d328c31c",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "any_set.my": {
+    "status": 0,
+    "source_sha256": "7518421e5a0a8322b8ade6e46caed7656c9e17f007a13fe7ac12340ed652fcfc",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "all_set.my": {
+    "status": 0,
+    "source_sha256": "6279e3cf7c1dd30a578d1d21da40b9bffe90a8842106196c685904985005e803",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  },
+  "float_extremes.my": {
+    "status": 0,
+    "source_sha256": "e20c50829c4d533bee6ec3824f5237b4a3d075b4fbfbd58af0a814c594b71658",
+    "diagnostics": [],
+    "warnings": [],
+    "runtime": {
+      "status": 7,
+      "stdout_hex": "370a",
+      "trap": false,
+      "warnings": []
+    }
+  }
+}

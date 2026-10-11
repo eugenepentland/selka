@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: set[bool] = {False, True}
+    assert not all(values)
+    return 7

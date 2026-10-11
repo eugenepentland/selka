@@ -1,0 +1,4 @@
+func main() -> int:
+    assert min(3u32, 1u32) == 1u32
+    assert max(1u32, 3u32) == 3u32
+    return 7

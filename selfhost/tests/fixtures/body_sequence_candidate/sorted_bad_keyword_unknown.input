@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = sorted(missing, wrong=True)
+    return 7

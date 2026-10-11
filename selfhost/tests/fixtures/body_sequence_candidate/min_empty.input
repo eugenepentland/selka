@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = min([])
+    return 7

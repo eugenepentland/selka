@@ -1,0 +1,5 @@
+func main() -> int:
+    const values: str[] = ["z", "a", "b"]
+    const ordered = sorted(values)
+    assert ordered[0] == "a"
+    return 7

@@ -1,0 +1,18 @@
+build-slot: FIFO ticket 3401, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 3401, position 1; all 3 build slot(s) busy; waiting (60s so far)
+build-slot: FIFO ticket 3401, position 1; all 3 build slot(s) busy; waiting (120s so far)
+build-slot: FIFO ticket 3401, position 1; all 3 build slot(s) busy; waiting (181s so far)
+build-slot: FIFO ticket 3401, position 1; all 3 build slot(s) busy; waiting (241s so far)
+build-slot: FIFO ticket 3401, position 1; all 3 build slot(s) busy; waiting (301s so far)
+build-slot: FIFO ticket 3401, position 1; all 3 build slot(s) busy; waiting (361s so far)
+build-slot: build slot 2, FIFO ticket 3401 after 371s
+test_full_selection_and_phase_accounting (body_sequence_admission_test.SequenceAdmissionTests.test_full_selection_and_phase_accounting) ... ok
+test_keyless_hostile_inventory_is_exact (body_sequence_admission_test.SequenceAdmissionTests.test_keyless_hostile_inventory_is_exact) ... ok
+test_missing_extra_profile_reordered_and_dropped_trap_fail (body_sequence_admission_test.SequenceAdmissionTests.test_missing_extra_profile_reordered_and_dropped_trap_fail) ... ok
+test_shadow_warning_is_preserved_without_permitting_extra_diagnostics (body_sequence_admission_test.SequenceAdmissionTests.test_shadow_warning_is_preserved_without_permitting_extra_diagnostics) ... ok
+test_source_hash_cannot_be_silently_regenerated (body_sequence_admission_test.SequenceAdmissionTests.test_source_hash_cannot_be_silently_regenerated) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.017s
+
+OK

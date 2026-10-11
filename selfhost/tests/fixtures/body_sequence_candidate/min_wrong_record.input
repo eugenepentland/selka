@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: FixedArray[int, 2] = FixedArray[int, 2]([1, 2])
+    _ = min(values)
+    return 7

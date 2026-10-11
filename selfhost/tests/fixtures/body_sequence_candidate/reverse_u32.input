@@ -1,0 +1,6 @@
+func main() -> int:
+    const values: u32[] = [1u32, 3u32, 2u32]
+    const result = sorted(values, reverse=True)
+    assert result[0] == 3u32
+    assert len(values) == 3
+    return 7

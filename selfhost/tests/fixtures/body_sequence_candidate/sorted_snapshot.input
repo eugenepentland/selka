@@ -1,0 +1,8 @@
+func main() -> int:
+    mut values = [3, 1, 2]
+    mut ordered = sorted(values, reverse=True)
+    ordered[0] = 9
+    assert values == [3, 1, 2]
+    values[0] = 8
+    assert ordered == [9, 2, 1]
+    return 7

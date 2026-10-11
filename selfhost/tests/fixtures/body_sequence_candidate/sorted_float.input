@@ -1,0 +1,5 @@
+func main() -> int:
+    const values: float[] = [3.0, 1.0, 2.0]
+    const ordered = sorted(values)
+    assert ordered[0] == 1.0
+    return 7

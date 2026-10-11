@@ -1,0 +1,5 @@
+func main() -> int:
+    const values: bytes[] = [b"z", b"a", b"b"]
+    const ordered = sorted(values)
+    assert ordered[0] == b"a"
+    return 7

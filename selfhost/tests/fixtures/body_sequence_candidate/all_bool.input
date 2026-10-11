@@ -1,0 +1,3 @@
+func main() -> int:
+    assert all([True, True])
+    return 7

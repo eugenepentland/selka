@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: float[] = []
+    assert sum(values) == 0.0
+    return 7

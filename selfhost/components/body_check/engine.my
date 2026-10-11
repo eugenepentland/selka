@@ -8,6 +8,9 @@ import integer_literals
 import floating_literals
 import chained_compare
 import numeric_lower
+import prelude_arguments
+import prelude_fold
+import prelude_order
 import sequences
 import text_methods
 import emission
@@ -1279,6 +1282,13 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                                 state.batch.resolved[raw_id] = id
                                 state.depth = state.depth - 1
                                 return Expression(id=id, ty=gathered.ty)
+                if prelude_arguments.accepts(raw_callee) and explicit_count == 0 and locals.find(state.scope, raw_callee) < 0:
+                    const shadowed = try top_level(state, call_name)
+                    if not shadowed:
+                        const result = try ordinary_sequence(mut state, payload, span, raw_callee)
+                        state.batch.resolved[raw_id] = result.id
+                        state.depth = state.depth - 1
+                        return result
                 if raw_callee == b"dict":
                     const constructor_inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
                     const constructor_inputs = try graph.items(state.syntax.pool, constructor_inputs_id)
@@ -6454,3 +6464,174 @@ func range_statement(mut state: State, payload: int, span: int) -> int fails syn
     state.control.exited = state.control.exited[:last]
     state.scope.active = active
     return try range_lower.finish_typed(mut state.batch, mut state.scope, state.syntax.pool, plan, body.id)
+
+
+func sequence_snapshot(mut state: State, span: int, value: Expression) -> Expression fails syntax_value.Problem:
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, value.ty)
+    if schema.kind != 0 and schema.kind != 1:
+        return value
+    const ty = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=schema.key, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const lowered = try list_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=value.id, owner_type=value.ty, kind=b"keys", arguments=[], result_type=ty, signed_length=False))
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=ty)
+
+
+func sequence_view_argument(state: State, raw: int, value: Expression) -> bool fails syntax_value.Problem:
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, value.ty)
+    if schema.kind < 3 or schema.kind > 5:
+        return True
+    const site = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+    const source = try graph.spelling(state.syntax.pool, state.syntax.source, site)
+    mut text = ""
+    match source.decode():
+        case Ok(decoded):
+            text = decoded
+        case Err(reason):
+            _ = reason
+            const rejection = try problem(state, site, "P_BODY_TRANSPORT", "invalid source spelling encoding")
+            fail rejection
+    const rejection = try problem(state, site, "E_VIEW_STORED", "dictionary views cannot be stored or passed to functions; use list(" + text + ") for an independent snapshot")
+    fail rejection
+
+
+func sequence_element(state: State, span: int, ty: int) -> int fails syntax_value.Problem:
+    const element = list_types.element_type(state.batch.facts.lists, ty)
+    if element >= 0:
+        return element
+    mut message = "this prelude builtin requires a list"
+    if ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or ty == state.batch.facts.lists.types.buffer.id:
+        message = "this prelude builtin requires a list of int, float or str values"
+    const rejection = try problem(state, span, "E_PRELUDE_TYPE", message)
+    fail rejection
+
+
+func sequence_scalar(state: State, ty: int, text: bool) -> bool:
+    if ty == 0 or (ty >= 2 and ty <= 8) or (ty >= 0 and ty == state.batch.facts.float_type):
+        return True
+    return text and ty == state.batch.facts.string_type
+
+
+func sequence_hint(mut state: State, raw: int, element: int) -> bool fails syntax_value.Problem:
+    const node = state.syntax.nodes[raw]
+    const data_id = try graph.field(state.syntax.pool, node, "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    if data.data != b"list_literal":
+        return False
+    const payload = try graph.payload(state.syntax.pool, data_id)
+    const items = try graph.items(state.syntax.pool, payload)
+    if len(items) != 0:
+        return False
+    const span = try graph.field(state.syntax.pool, node, "span")
+    const ty = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=element, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+    state.batch.facts.expected[raw] = ty
+    return True
+
+
+func sequence_arity(mut state: State, span: int, name: bytes, count: int) -> bool fails syntax_value.Problem:
+    if name == b"min" or name == b"max":
+        if count == 1 or count == 2:
+            return True
+        const rejection = try problem(state, span, "E_ARITY", "min and max take one list or two values")
+        state.problems.append(prelude_arguments.call_signature(rejection, "min(values: list[T]) -> T, or min(left: T, right: T) -> T"))
+        fail rejection
+    if count == 1:
+        return True
+    mut signature = "sum(values: list[int]) -> int, or sum(values: list[float]) -> float"
+    if name == b"any":
+        signature = "any(conditions: list[bool]) -> bool"
+    elif name == b"all":
+        signature = "all(conditions: list[bool]) -> bool"
+    const rejection = try problem(state, span, "E_ARITY", "`" + signature + "` takes 1 argument, but this call passes " + str(count))
+    fail rejection
+
+
+func ordinary_sequence(mut state: State, call: int, span: int, name: bytes) -> Expression fails syntax_value.Problem:
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const inputs_id = try graph.field(state.syntax.pool, call, "arguments")
+    const inputs = try graph.items(state.syntax.pool, inputs_id)
+    mut sorted = prelude_arguments.Sorted(values=[], reverse=-1, key=-1)
+    if name == b"sorted":
+        sorted = try prelude_arguments.sorted(prelude_arguments.Syntax(pool=state.syntax.pool, source=state.syntax.source, nodes=state.syntax.nodes, call=call), mut state.problems)
+        if sorted.key >= 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "sort callbacks require callable body admission")
+            fail rejection
+    else:
+        _ = try io_arguments.positional(state.syntax.pool, call)
+    if len(inputs) == 1 and sorted.reverse < 0:
+        const raw = try graph.number(state.syntax.pool, inputs[0])
+        _ = try sequence_hint(mut state, raw, if name == b"any" or name == b"all" then 1 else 0)
+    mut values: Expression[] = []
+    for input in inputs:
+        const raw = try graph.number(state.syntax.pool, input)
+        if name == b"sorted" and raw == sorted.reverse:
+            state.batch.facts.expected[raw] = 1
+        const value = try expression(mut state, raw)
+        _ = try sequence_view_argument(state, raw, value)
+        if name == b"sorted" and sorted.reverse >= 0 and len(values) == 0:
+            const schema = collection_types.schema(state.batch.facts.lists.types.collections, value.ty)
+            const list_element = list_types.element_type(state.batch.facts.lists, value.ty)
+            if list_element < 0 and schema.kind != 0 and schema.kind != 1:
+                const site = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+                const rejection = try problem(state, site, "E_PRELUDE_TYPE", "sorted key requires a list input")
+                fail rejection
+        values.append(value)
+    if name != b"sorted":
+        _ = try sequence_arity(mut state, span, name, len(values))
+    if len(values) == 2 and (name == b"min" or name == b"max"):
+        if values[0].ty != values[1].ty:
+            const rejection = try problem(state, span, "E_PRELUDE_TYPE", "min and max require two values of the same type")
+            fail rejection
+        if not sequence_scalar(state, values[0].ty, True):
+            const rejection = try problem(state, span, "E_PRELUDE_TYPE", "min and max require int, float or str values")
+            fail rejection
+        const lowered = try prelude_fold.extreme_pair(mut state.batch, mut state.scope, context, prelude_fold.Pair(left=values[0].id, right=values[1].id, ty=values[0].ty, greatest=name == b"max"))
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        return Expression(id=id, ty=lowered.ty)
+    const input = try sequence_snapshot(mut state, span, values[0])
+    const element = try sequence_element(state, span, input.ty)
+    if name == b"sorted":
+        if not sequence_scalar(state, element, True) and element != state.batch.facts.bytes_type:
+            if sorted.reverse >= 0:
+                const rejection = try problem(state, span, "E_COLLECTION_METHOD", "sort requires an integer, float, str or bytes element type")
+                fail rejection
+            const rejection = try problem(state, span, "E_PRELUDE_TYPE", "sorted requires a list of int, float, str or bytes values, or a key=callback that maps each element to one")
+            fail rejection
+        mut reverse = -1
+        if sorted.reverse >= 0:
+            for index in range(len(sorted.values)):
+                if sorted.values[index] == sorted.reverse:
+                    if values[index].ty != 1:
+                        const site = try graph.field(state.syntax.pool, state.syntax.nodes[sorted.reverse], "span")
+                        const rejection = try problem(state, site, "E_TYPE", "reverse= takes a bool: reverse=True sorts in descending order")
+                        fail rejection
+                    reverse = values[index].id
+        const loop_id = state.control.next
+        if reverse < 0:
+            state.control.next += 1
+        const lowered = try prelude_order.sorted(mut state.batch, mut state.scope, context, prelude_order.Sort(input=input.id, ty=input.ty, element=element, reverse=reverse, loop_id=loop_id))
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        return Expression(id=id, ty=lowered.ty)
+    if name == b"any" or name == b"all":
+        if element != 1:
+            const message = if name == b"any" then "any requires a list of bool values" else "all requires a list of bool values"
+            const rejection = try problem(state, span, "E_PRELUDE_TYPE", message)
+            fail rejection
+    elif not sequence_scalar(state, element, name != b"sum"):
+        mut message = "min and max require a list of int, float or str values"
+        if name == b"sum":
+            message = "sum requires a list of int or float values"
+        const rejection = try problem(state, span, "E_PRELUDE_TYPE", message)
+        fail rejection
+    const loop_id = state.control.next
+    state.control.next += 1
+    const request = prelude_fold.Fold(input=input.id, ty=input.ty, element=element, loop_id=loop_id, name=name)
+    mut lowered = list_lower.Lowered(ty=-1, tag=b"", payload=-1)
+    if name == b"sum":
+        lowered = try prelude_fold.sum(mut state.batch, mut state.scope, context, request)
+    elif name == b"any" or name == b"all":
+        lowered = try prelude_fold.any_all(mut state.batch, mut state.scope, context, request)
+    else:
+        lowered = try prelude_fold.extreme_list(mut state.batch, mut state.scope, context, request)
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=lowered.ty)

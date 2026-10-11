@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: i32[] = [2147483647i32, 1i32]
+    _ = sum(values)
+    return 7

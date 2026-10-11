@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: u8[] = [3u8, 1u8, 2u8]
+    assert sum(values) == 6u8
+    return 7

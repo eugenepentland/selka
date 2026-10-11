@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: i8[] = [127i8, 1i8]
+    _ = sum(values)
+    return 7

@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 3394, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 3394, position 4; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 3394, position 4; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 3394, position 4; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 3394, position 4; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 3394, position 1; all 3 build slot(s) busy; waiting (301s so far)
+build-slot: build slot 2, FIFO ticket 3394 after 311s
+keyless sort: 12 authentic mutations refused; 0 failed, 0 skipped

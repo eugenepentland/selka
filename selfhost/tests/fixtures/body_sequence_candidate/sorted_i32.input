@@ -1,0 +1,6 @@
+func main() -> int:
+    const values: i32[] = [3i32, 1i32, 2i32]
+    const ordered = sorted(values)
+    assert ordered[0] == 1i32
+    assert values[0] == 3i32
+    return 7

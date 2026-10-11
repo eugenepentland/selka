@@ -1,0 +1,7 @@
+func main() -> int:
+    const nan = 0.0 / 0.0
+    assert min(nan, 1.0) != min(nan, 1.0)
+    assert max(1.0, nan) == 1.0
+    assert min([-0.0, 0.0]) == 0.0
+    assert sum([1.0e100, 1.0, -1.0e100]) == 0.0
+    return 7

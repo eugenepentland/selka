@@ -1,0 +1,6 @@
+func main() -> int:
+    assert any([True, False, False])
+    assert not all([False, True, True])
+    assert all([True, True])
+    assert not any([False, False])
+    return 7

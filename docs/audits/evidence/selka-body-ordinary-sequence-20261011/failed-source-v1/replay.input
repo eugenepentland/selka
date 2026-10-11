@@ -1,0 +1,32 @@
+import argparse, hashlib, json, pathlib, sys, tempfile
+root=pathlib.Path('/home/epentland/.codex/worktrees/selka-sequence-builtins-pilot/mylang')
+sys.path.insert(0,str(root/'selfhost/tests'))
+import run_body_check_qualification as D
+p=argparse.ArgumentParser();p.add_argument('--host',type=pathlib.Path,required=True);p.add_argument('--components',type=pathlib.Path,required=True);p.add_argument('--report',type=pathlib.Path,required=True);p.add_argument('--native-only',action='store_true');p.add_argument('--release',action='store_true');p.add_argument('--checks-only',action='store_true');a=p.parse_args()
+base=pathlib.Path('/home/epentland/ai/canopy/.selka-agent-cache/ordinary-sequence'); fixtures=base/'extended-cases';manifest=json.loads((fixtures/'selection.json').read_text()); modes=('reference',) if a.native_only else ('reference','shadow','component')
+identity={'host_sha256':D.F.digest(a.host),'packages':D.packages(a.components,body_schema=10)}
+r={'complete':False,'scope':'ordinary sequence calls only; generator/callback/generic key forms remain separate','schema':10,'release':a.release,'native_only':a.native_only,'selection':manifest,**identity,'records':[],'failures':[]}
+def save():a.report.write_text(json.dumps(r,indent=2)+'\n')
+save()
+with tempfile.TemporaryDirectory(prefix='sequence-replay-',dir=base/'tmp') as directory:
+ work=pathlib.Path(directory);empty=work/'empty';empty.mkdir()
+ for name,spec in manifest.items():
+  entry=fixtures/name;D.F.require(D.F.digest(entry)==spec['source_sha256'],'fixture changed '+name)
+  phases=['check'] if a.checks_only else ['syntax','check']+(['typed','runtime'] if spec['status']==0 else [])
+  for phase in phases:
+   if phase=='syntax':command=['dump-syntax',entry]
+   elif phase=='check':command=['check-project',entry,'--no-cache','--diagnostics=json']
+   elif phase=='typed':command=['dump-typed',entry]
+   else:command=['run-project',entry,'--no-cache','--print-result','--diagnostics=json','--cache-dir',work/'guest-cache','--zig=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig',*(['--release','--verify-facts'] if a.release else [])]
+   outputs=[]
+   for mode in modes:
+    env=D.environment(mode,a.components,empty)
+    if phase=='syntax':env.update(MYLANG_BODY_CHECK_MODE='reference',MYLANG_PARSER_MODE=mode)
+    result=D.F.execute([a.host,*command],env,work,600);outputs.append(result)
+    r['records'].append({'name':name,'phase':phase,'mode':mode,'source_sha256':spec['source_sha256'],'command':list(map(str,[a.host,*command])),'status':result[0],'stdout_hex':result[1].hex(),'stderr_hex':result[2].hex()});save()
+   expected=spec['status'] if phase=='check' else spec['runtime_status'] if phase=='runtime' else 0
+   if outputs[0][0]!=expected or not all(x==outputs[0] for x in outputs):r['failures'].append({'name':name,'phase':phase,'expected':expected});save();print('DIFF',name,phase,flush=True)
+   else:print('exact',name,phase,flush=True)
+ D.F.require(identity=={'host_sha256':D.F.digest(a.host),'packages':D.packages(a.components,body_schema=10)},'deployment changed')
+D.F.require(manifest==json.loads((fixtures/'selection.json').read_text()),'selection changed')
+r.update(complete=True,failed=len(r['failures']),skipped=0,operations=len(r['records']));save();D.F.require(not r['failures'],'source admission differs');print('passed',len(r['records']),'operations')

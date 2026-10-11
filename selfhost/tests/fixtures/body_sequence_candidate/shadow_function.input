@@ -1,0 +1,6 @@
+func sum(values: int[]) -> int:
+    return 17
+
+func main() -> int:
+    assert sum([2, 3]) == 17
+    return 7

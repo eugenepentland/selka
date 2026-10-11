@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: float[] = [3.0, 1.0, 2.0]
+    assert max(values) == 3.0
+    return 7

@@ -1,0 +1,3 @@
+func main() -> int:
+    const answer = sorted([1], reverse=1)
+    return 7

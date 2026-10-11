@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = min(1, 2, missing)
+    return 7

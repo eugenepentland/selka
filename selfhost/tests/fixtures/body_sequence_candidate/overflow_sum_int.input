@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: int[] = [9223372036854775807, 1]
+    _ = sum(values)
+    return 7

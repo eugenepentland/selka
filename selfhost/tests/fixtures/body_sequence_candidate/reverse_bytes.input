@@ -1,0 +1,6 @@
+func main() -> int:
+    const values: bytes[] = [b"a", b"z", b"b"]
+    const result = sorted(values, reverse=True)
+    assert result[0] == b"z"
+    assert len(values) == 3
+    return 7

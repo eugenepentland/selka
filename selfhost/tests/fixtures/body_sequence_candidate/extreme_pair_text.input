@@ -1,0 +1,4 @@
+func main() -> int:
+    assert min("z", "a") == "a"
+    assert max("a", "z") == "z"
+    return 7

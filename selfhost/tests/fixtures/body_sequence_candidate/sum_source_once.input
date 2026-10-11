@@ -1,0 +1,9 @@
+func source(mut events: int[]) -> int[]:
+    events.append(1)
+    return [3, 1, 2]
+
+func main() -> int:
+    mut events: int[] = []
+    assert sum(source(mut events)) == 6
+    assert len(events) == 1
+    return 7

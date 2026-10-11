@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = sorted([True], reverse=True)
+    return 7
