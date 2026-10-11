@@ -1,0 +1,10 @@
+enum Tree:
+    leaf(value: int)
+    branch(children: Tree[])
+
+func main() -> int:
+    match Tree.leaf(value=7):
+        case Tree.leaf(value=value):
+            return value
+        case Tree.branch(children=children):
+            return len(children)

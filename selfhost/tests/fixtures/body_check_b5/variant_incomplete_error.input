@@ -1,0 +1,8 @@
+enum Choice:
+    pair(left: int, right: int)
+    empty
+
+func main() -> int:
+    match Choice.empty:
+        case Choice.pair(left=left, right=right):
+            return left + right

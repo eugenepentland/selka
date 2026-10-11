@@ -1,0 +1,20 @@
+record Box:
+    values: int[]
+
+enum Failure:
+    bad
+
+func make(ok: bool) -> Box fails Failure:
+    if not ok:
+        fail Failure.bad
+    return Box(values=[3, 4])
+
+func forward() -> Box fails Failure:
+    return try make(True)
+
+func main() -> int:
+    match forward():
+        case Ok(box):
+            return box.values[0] + box.values[1]
+        case Err(_):
+            return 0
