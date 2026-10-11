@@ -1,0 +1,95 @@
+{
+  "passed": true,
+  "responses": [
+    {
+      "id": "cold",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 28801,
+        "bytes_hashed": 2301727079,
+        "digest_reuses": 0,
+        "directories_enumerated": 2283,
+        "metadata_observations": 964275,
+        "validation_calls": 31,
+        "snapshot_reuses": 0
+      }
+    },
+    {
+      "id": "warm",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175677,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    },
+    {
+      "id": "warm-2",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175677,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    },
+    {
+      "id": "warm-3",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175677,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    },
+    {
+      "id": "warm-4",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175677,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    }
+  ],
+  "stop": {
+    "id": "stop",
+    "status": 0,
+    "ok": true,
+    "restart_required": false,
+    "snapshot_work": {
+      "files_hashed": 0,
+      "bytes_hashed": 0,
+      "digest_reuses": 0,
+      "directories_enumerated": 0,
+      "metadata_observations": 0,
+      "validation_calls": 0,
+      "snapshot_reuses": 0
+    }
+  }
+}

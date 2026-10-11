@@ -1,0 +1,127 @@
+{
+  "source_commit": "66043848d2aa279956df09d441a41324d8f1d1af",
+  "merged_main": "9225adeb06cca3ab19a0f4437ec2065fbea34e2e",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_pin": "0.17.0-dev.1683+5ceec001b",
+  "configuration_qualification": "7cefed8043b05279aa8960b33ea742e728f91dfc294d08c6e48d7b4a0a8fd6fc",
+  "inventory_coverage": {
+    "required_actions": 94,
+    "registered_actions": 94,
+    "unknown_actions": []
+  },
+  "group_count": 45,
+  "requests": [
+    {
+      "request": "cold",
+      "success": true,
+      "stable": true,
+      "reused": 0,
+      "selected": 45,
+      "build_admitted_seconds": 0.0,
+      "gate_admitted_seconds": 621.4775403449312,
+      "elapsed_seconds": 633.5165458149277,
+      "queue_seconds": 0.2737190080806613,
+      "snapshot_work": {
+        "files_hashed": 28801,
+        "bytes_hashed": 2301727079,
+        "digest_reuses": 0,
+        "directories_enumerated": 2283,
+        "metadata_observations": 964275,
+        "validation_calls": 31,
+        "snapshot_reuses": 0
+      }
+    },
+    {
+      "request": "warm",
+      "success": true,
+      "stable": true,
+      "reused": 34,
+      "selected": 11,
+      "build_admitted_seconds": 0.0,
+      "gate_admitted_seconds": 36.664276749128476,
+      "elapsed_seconds": 42.96332341991365,
+      "queue_seconds": 0.45590135594829917,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175677,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    },
+    {
+      "request": "warm-2",
+      "success": true,
+      "stable": true,
+      "reused": 34,
+      "selected": 11,
+      "build_admitted_seconds": 0.0,
+      "gate_admitted_seconds": 31.648659761995077,
+      "elapsed_seconds": 35.60062946402468,
+      "queue_seconds": 0.3319047640543431,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175677,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    },
+    {
+      "request": "warm-3",
+      "success": true,
+      "stable": true,
+      "reused": 34,
+      "selected": 11,
+      "build_admitted_seconds": 0.0,
+      "gate_admitted_seconds": 27.78852699091658,
+      "elapsed_seconds": 31.68510999903083,
+      "queue_seconds": 0.3078459370881319,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175677,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    },
+    {
+      "request": "warm-4",
+      "success": true,
+      "stable": true,
+      "reused": 34,
+      "selected": 11,
+      "build_admitted_seconds": 0.0,
+      "gate_admitted_seconds": 30.989794173976406,
+      "elapsed_seconds": 34.48762995679863,
+      "queue_seconds": 0.2960464230272919,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175677,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    }
+  ],
+  "budget_member_statuses": {
+    "report_only_candidate": 21,
+    "insufficient_samples": 71,
+    "unknown": 2
+  },
+  "budget_accepted_observations": 176,
+  "budget_rejections": {
+    "capture unavailable, incomplete, malformed or truncated": 5,
+    "unmapped, ambiguous or reused action observation": 32
+  },
+  "cache_conditions": "Fresh retained session and no reusable action receipts for these inputs; prepared binaries, Zig cache and native artifact caches retained. First successful request needed no build admission.",
+  "performance_scope": "Operational shared-server observations only; no before/after, isolated latency, p95, CPU or aggregate RSS qualification."
+}
