@@ -21,8 +21,8 @@ inventory exports, and its complete digest still protects inventory preparation.
 
 Configuration dependencies remain conservative. Projection first requires an
 explicit `DECLARATIVE_CONFIG_SHA256` qualification of the complete watched
-`CONFIG_INPUTS` closure with the list file omitted. The default is `None`, which
-keeps action identities broad. Coordinator scripts are watched in a separate
+`CONFIG_INPUTS` closure with the list file omitted. `None` disables the projection
+and keeps action identities broad. Coordinator scripts are watched in a separate
 combined snapshot but excluded from this qualification to avoid hashing a
 fingerprint embedded in its own source. Changed or added configuration consumers
 disable projection until their complete dependency closure and uses of input
@@ -72,3 +72,14 @@ Computing this digest does not establish qualification. The reviewed configurati
 must consume these lists solely through each group's declared dependencies or
 through fresh global discovery/coverage. Any other use stays broadly keyed until
 its full effect is represented in the affected group contract.
+
+The integrated configuration at `9a339d391` was reviewed after the pure native
+root and registration refinement landed. The only imports of the declaration
+module are in `build.zig` and `build_verification.zig`: they pass the arrays to
+input-manifest generation, group registration and exported input lists. Global
+manifest discovery is fresh. No list controls another group's argv, compiler
+options or dependency wiring. The candidate fingerprint is
+`7cefed8043b05279aa8960b33ea742e728f91dfc294d08c6e48d7b4a0a8fd6fc`.
+This is the checked-in qualification; differing configuration/source-provider
+metadata conservatively restores broad invalidation. Full integration evidence
+is recorded separately after verification.

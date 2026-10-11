@@ -34,6 +34,7 @@ from verification_snapshot import Snapshot, SnapshotError
 import verification_snapshot
 import fuzz_campaign_store
 import verification_report
+import verification_budgets
 import verification_process
 from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned
 
@@ -43,7 +44,7 @@ INVENTORY_VERSION = 2
 # Explicit review of the complete CONFIG_INPUTS-only closure, without the
 # declarative list file. None keeps every action conservatively broad. Never
 # auto-update this qualification after consumer changes.
-DECLARATIVE_CONFIG_SHA256 = None
+DECLARATIVE_CONFIG_SHA256 = "7cefed8043b05279aa8960b33ea742e728f91dfc294d08c6e48d7b4a0a8fd6fc"
 RETRY = 75
 MAX_RECORD = 32 * 1024 * 1024
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
@@ -858,6 +859,13 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                   "evidence_store": {"shared": shared is not None,
                                      "root": str(shared.root if shared is not None else cache / "actions")},
                   "elapsed_seconds": elapsed}
+        try:
+            report["action_budgets"] = verification_budgets.calibrate(
+                [report], plan, context=report["budget_context"], action_keys=keys)
+        except Exception as error:
+            # Advisory evaluation cannot mask the gate verdict or revoke evidence.
+            report["action_budgets"] = {"status": "unknown", "enforced": False,
+                                       "reason": str(error)[:512]}
         diagnostic_record(cache / "last-run.json", report)
         print("verification: %s; %d reused, %d selected; build admitted %.3fs, gate admitted %.3fs" %
               ("PASS" if status == 0 else "FAIL", len(groups) - len(selected), len(selected), build_seconds, gate_seconds), flush=True)

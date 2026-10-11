@@ -112,7 +112,11 @@ def collect_report(report, inventory):
         if len(result['rejections']) < MAX_REJECTIONS:
             result['rejections'].append(reason)
     try:
-        report_digest = hashlib.sha256(_json(report)).hexdigest()
+        # The embedded evaluation is derived from these same observations. Its
+        # presence or later target-only reevaluation must not create a new run.
+        source_report = ({key: value for key, value in report.items() if key != 'action_budgets'}
+                         if isinstance(report, dict) else report)
+        report_digest = hashlib.sha256(_json(source_report)).hexdigest()
     except (ValueError, TypeError, OverflowError, RecursionError):
         reject('malformed or oversized report')
         return result

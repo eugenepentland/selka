@@ -31,7 +31,8 @@ Reports must prove `inputs_stable: true` and carry `action_metadata` matching th
 provided inventory; changed membership or original member meaning remains unknown.
 Reports need `budget_context` and action `action_key` SHA256 identities. The
 inventory declares unique member labels in its top-level `action_metadata`.
-Provenance retains the report digest, action contract, execution context, source
+Provenance retains the source-report digest (excluding its derived `action_budgets`
+field), action contract, execution context, source
 and observation index. Repeated reports contribute only one sample per member.
 
 Only matching execution contexts and action contracts share a cohort. Callers may

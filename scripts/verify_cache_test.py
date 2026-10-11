@@ -167,6 +167,17 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertTrue((self.cache / 'inventory.json').is_file())
         self.assertFalse((shared / 'inventory.json').exists())
 
+    def test_advisory_budget_failure_preserves_success_and_reuse(self):
+        with patch.object(coordinator.verification_budgets, 'calibrate', side_effect=ValueError('bad diagnostic')):
+            self.assertEqual(self.execute(), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertTrue(report['success'])
+        self.assertEqual(report['action_budgets']['status'], 'unknown')
+        self.admissions.clear()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.admissions, [])
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+
     def test_retained_session_warm_request_avoids_hashing_discovery_and_admission(self):
         with RetainedSession() as session, session.activate():
             self.assertEqual(self.execute(), 0)
