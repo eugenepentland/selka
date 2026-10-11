@@ -1,0 +1,6 @@
+func main() -> int:
+    const values = [for number in range(-2, 3) yield number + 2]
+    const empty = [for number in range(3, 1) yield number]
+    if len(values) != 5 or values[0] != 0 or values[4] != 4 or len(empty) != 0:
+        return 0
+    return 7

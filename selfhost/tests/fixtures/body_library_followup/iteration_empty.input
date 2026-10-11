@@ -1,0 +1,9 @@
+func main() -> int:
+    mut count = 0
+    for ch in "":
+        count = count + 1
+    for octet in b"":
+        count = count + 1
+    if count != 0:
+        return 0
+    return 7

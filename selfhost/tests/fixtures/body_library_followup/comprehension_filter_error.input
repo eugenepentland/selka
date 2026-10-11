@@ -1,0 +1,4 @@
+func main() -> int:
+    const values = [for number in range(3) if number yield number]
+    _ = values
+    return 7

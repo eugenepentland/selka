@@ -1,0 +1,5 @@
+func main() -> int:
+    const rows = [for count in [1, 2] yield [for number in range(count) yield number + 1]]
+    if len(rows) != 2 or rows[0] != [1] or rows[1] != [1, 2]:
+        return 0
+    return 7

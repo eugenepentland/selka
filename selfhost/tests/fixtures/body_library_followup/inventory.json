@@ -1,0 +1,41 @@
+{
+  "scope": "isolated pure-library followup; not B5/B6 installed manifest",
+  "counts": {
+    "success": 10,
+    "diagnostic": 6
+  },
+  "source_cases": [
+    "iteration_unicode_ord.my",
+    "iteration_empty.my",
+    "iteration_bytes_break.my",
+    "iteration_rebind_snapshot.my",
+    "comprehension_range_capacity.my",
+    "comprehension_iterable_filter.my",
+    "comprehension_nested.my",
+    "comprehension_text_bytes.my",
+    "format_integer_bounds.my",
+    "format_key_composition.my",
+    "iteration_readonly_error.my",
+    "iteration_shadow_error.my",
+    "comprehension_filter_error.my",
+    "format_arity_error.my",
+    "format_aggregate_error.my",
+    "ord_arity_error.my"
+  ],
+  "native_controls": {
+    "compiler_sha256": "a4b0323080cf6e247560df9e0b182baf32eb5c2dfe91873362ea424b752b83c1",
+    "mode": "all reference",
+    "generated_flags": [
+      "--release",
+      "--verify-facts"
+    ],
+    "MYL_CORE_LEAKCHECK": "1",
+    "source_checks": 16,
+    "runtime_executions": 10,
+    "failed": 0
+  },
+  "selected_library_admission": "pending",
+  "library_roots": 9,
+  "test_roots": 6,
+  "bootstrap": "not established"
+}

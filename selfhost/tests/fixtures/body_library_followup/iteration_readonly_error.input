@@ -1,0 +1,4 @@
+func main() -> int:
+    for ch in "a":
+        ch = "z"
+    return 7

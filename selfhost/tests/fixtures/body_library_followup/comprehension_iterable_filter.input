@@ -1,0 +1,6 @@
+func main() -> int:
+    const source = [-1, 3, 4]
+    const values = [for number in source if number > 0 yield number]
+    if len(values) != 2 or values[0] + values[1] != 7 or source[0] != -1:
+        return 0
+    return 7
