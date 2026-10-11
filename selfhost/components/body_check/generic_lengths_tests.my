@@ -1,0 +1,79 @@
+import generic_lengths
+import syntax_value
+
+func check(text: bytes) -> int fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 2, len(text) + 2)
+    return try generic_lengths.literal(generic_lengths.Context(pool=pool, source=b"  " + text), span)
+
+
+func error(text: bytes, message: str) -> bool fails syntax_value.Problem:
+    match check(text):
+        case Ok(unexpected):
+            return False
+        case Err(problem):
+            return problem.code == "E_GENERIC_LENGTH" and problem.start == 2 and problem.end == len(text) + 2 and problem.message == message
+
+
+public func test_unsigned_radices_separators_and_zero_match_native_lengths() -> bool fails syntax_value.Problem:
+    const zero = try check(b"0")
+    const decimal = try check(b"1_024")
+    const hex = try check(b"0X_10")
+    const octal = try check(b"0o20")
+    const binary = try check(b"0b10000")
+    const zeros = try check(b"00_0")
+    return zero == 0 and decimal == 1024 and hex == 16 and octal == 16 and binary == 16 and zeros == 0
+
+
+public func test_exact_length_bound_and_large_magnitude_priority() -> bool fails syntax_value.Problem:
+    const maximum = try check(b"1048576")
+    const bound = try error(b"1048577", "const length exceeds 1048576 elements")
+    const huge = try error(b"340282366920938463463374607431768211456", "integer literal magnitude is too large")
+    return maximum == 1048576 and bound and huge
+
+
+public func test_suffix_rejection_precedes_magnitude_and_bound() -> bool fails syntax_value.Problem:
+    const message = "a length takes no width suffix; write it as 16, 0x10 or 1_024"
+    const width = try error(b"16u8", message)
+    const suffix = try error(b"340282366920938463463374607431768211456unknown", message)
+    const negative = try error(b"-1", "expected an integer literal")
+    return width and suffix and negative
+
+
+public func test_integer_lexical_errors_keep_native_message_priority() -> bool fails syntax_value.Problem:
+    const doubled = try error(b"1__", "doubled underscore in a number; a single underscore may separate digits")
+    const trailing = try error(b"0x_", "an underscore in a number must be followed by a digit; a width suffix goes directly after the last digit (1_000u32)")
+    const missing = try error(b"0x", "a 0x literal needs at least one hexadecimal digit")
+    const digit = try error(b"0b2", "a 0b literal needs at least one binary digit (0 or 1)")
+    const leading = try error(b"0755", "leading zeros are not allowed in decimal integers; write `0o755` for octal or `755` for decimal")
+    return doubled and trailing and missing and digit and leading
+
+
+public func test_forwarded_length_is_ordered_value_not_a_type_identity() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const first = try syntax_value.span(mut pool, 0, 1)
+    const second = try syntax_value.span(mut pool, 2, 3)
+    const use = try syntax_value.span(mut pool, 4, 5)
+    const context = generic_lengths.Context(pool=pool, source=b"N T N")
+    const parameters = [generic_lengths.Parameter(name=first, constant_length=True), generic_lengths.Parameter(name=second, constant_length=False)]
+    const zero = try generic_lengths.resolve(context, use, parameters, [0, None])
+    const maximum = try generic_lengths.resolve(context, use, parameters, [1048576, None])
+    return zero == 0 and maximum == 1048576
+
+
+public func test_type_parameter_and_missing_length_fail_before_literal_fallback() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const name = try syntax_value.span(mut pool, 0, 1)
+    const use = try syntax_value.span(mut pool, 2, 3)
+    const context = generic_lengths.Context(pool=pool, source=b"T T")
+    match generic_lengths.resolve(context, use, [generic_lengths.Parameter(name=name, constant_length=False)], [None]):
+        case Ok(unexpected):
+            return False
+        case Err(problem):
+            if problem.code != "E_GENERIC_LENGTH" or problem.message != "expected a constant length argument, not a type parameter":
+                return False
+    match generic_lengths.resolve(context, use, [generic_lengths.Parameter(name=name, constant_length=True)], [None]):
+        case Ok(unexpected):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

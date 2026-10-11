@@ -1,0 +1,146 @@
+import syntax_value
+import graph
+
+public record Key:
+    declaration: int
+    arguments: int[]
+    lengths: int?[]
+
+
+public record Registry:
+    entries: Key[]
+    slots: int[]
+    counts: int[]
+    ordinary: int[]
+    queue: Key[]
+    ordinary_count: int
+
+
+func invalid() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid generic instance identity")
+
+
+# Callers resolve declaration privacy, parameter arity, requirements and type IDs.
+# Raw declaration ordinals and argument order are identities; names/layouts are not.
+public func make(parameter_counts: int[]) -> Registry fails syntax_value.Problem:
+    mut registry = Registry(entries=[], slots=[], counts=[], ordinary=[], queue=[], ordinary_count=0)
+    for declaration in range(len(parameter_counts)):
+        if parameter_counts[declaration] < 0 or parameter_counts[declaration] > 16:
+            fail invalid()
+        registry.counts.append(0)
+        mut ordinary = -1
+        if parameter_counts[declaration] == 0:
+            ordinary = len(registry.queue)
+            registry.queue.append(Key(declaration=declaration, arguments=[], lengths=[]))
+        registry.ordinary.append(ordinary)
+    registry.ordinary_count = len(registry.queue)
+    return registry
+
+
+public func ordinary_function(registry: Registry, declaration: int) -> int fails syntax_value.Problem:
+    if declaration < 0 or declaration >= len(registry.ordinary):
+        fail invalid()
+    return registry.ordinary[declaration]
+
+
+func length(key: Key, index: int) -> int:
+    if len(key.lengths) == 0:
+        return -1
+    const value = key.lengths[index]
+    if value is None:
+        return -1
+    return value
+
+
+func same(left: Key, right: Key) -> bool:
+    if left.declaration != right.declaration or len(left.arguments) != len(right.arguments):
+        return False
+    for index in range(len(left.arguments)):
+        if left.arguments[index] != right.arguments[index] or length(left, index) != length(right, index):
+            return False
+    return True
+
+
+func bucket(key: Key, capacity: int) -> int:
+    mut hash = (key.declaration + len(key.arguments)) % capacity
+    for index in range(len(key.arguments)):
+        hash = (hash * 1000003 + key.arguments[index] + 1) % capacity
+        hash = (hash * 1000033 + length(key, index) + 1) % capacity
+    return hash
+
+
+func find(registry: Registry, key: Key) -> int:
+    if len(registry.slots) == 0:
+        return -1
+    mut position = bucket(key, len(registry.slots))
+    mut visited = 0
+    while visited < len(registry.slots):
+        const entry = registry.slots[position]
+        if entry < 0:
+            return -1
+        if same(registry.entries[entry], key):
+            return entry
+        position = (position + 1) % len(registry.slots)
+        visited += 1
+    return -1
+
+
+func grow(mut registry: Registry) -> Unit:
+    mut capacity = len(registry.slots) * 2
+    if capacity == 0:
+        capacity = 16
+    registry.slots = []
+    for unused in range(capacity):
+        registry.slots.append(-1)
+    for entry in range(len(registry.entries)):
+        mut position = bucket(registry.entries[entry], capacity)
+        while registry.slots[position] >= 0:
+            position = (position + 1) % capacity
+        registry.slots[position] = entry
+
+
+func limit(pool: syntax_value.Pool, span: int) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return syntax_value.Problem(code="E_GENERIC_LIMIT", start=start, end=end, message="generic specialization exceeds instance or type argument budget")
+
+
+# Returns an executable function ID, not the registry ordinal. Register before
+# checking a body: a recursive demand then sees the original queue entry.
+public func intern(mut registry: Registry, pool: syntax_value.Pool, span: int, key: Key) -> int fails syntax_value.Problem:
+    if len(key.arguments) > 16 or (len(key.lengths) != 0 and len(key.lengths) != len(key.arguments)):
+        const rejected = try limit(pool, span)
+        fail rejected
+    if key.declaration < 0 or key.declaration >= len(registry.counts):
+        fail invalid()
+    for index in range(len(key.arguments)):
+        if key.arguments[index] < 0 or key.arguments[index] >= 65555 or length(key, index) < -1 or length(key, index) > 1048576:
+            fail invalid()
+    for value in key.lengths:
+        if value is not None and (value < 0 or value > 1048576):
+            fail invalid()
+    const previous = find(registry, key)
+    if previous >= 0:
+        return registry.ordinary_count + previous
+    if registry.counts[key.declaration] == 4096:
+        const rejected = try limit(pool, span)
+        fail rejected
+    if (len(registry.entries) + 1) * 2 > len(registry.slots):
+        grow(mut registry)
+    const entry = len(registry.entries)
+    registry.entries.append(key)
+    registry.queue.append(key)
+    registry.counts[key.declaration] += 1
+    mut position = bucket(key, len(registry.slots))
+    while registry.slots[position] >= 0:
+        position = (position + 1) % len(registry.slots)
+    registry.slots[position] = entry
+    return registry.ordinary_count + entry
+
+
+public func get(registry: Registry, function: int) -> Key fails syntax_value.Problem:
+    if function < 0 or function >= len(registry.queue):
+        fail invalid()
+    return registry.queue[function]

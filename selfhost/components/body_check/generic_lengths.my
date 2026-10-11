@@ -1,0 +1,64 @@
+import syntax_value
+import graph
+import integer_literals
+
+public record Context:
+    pool: syntax_value.Pool
+    source: bytes
+
+
+public record Parameter:
+    name: int
+    constant_length: bool
+
+
+func problem(context: Context, span: int, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(context.pool, span, "start")
+    const end_id = try graph.field(context.pool, span, "end")
+    const start = try graph.number(context.pool, start_id)
+    const end = try graph.number(context.pool, end_id)
+    return syntax_value.Problem(code="E_GENERIC_LENGTH", start=start, end=end, message=message)
+
+
+public func literal(context: Context, span: int) -> int fails syntax_value.Problem:
+    const text = try graph.spelling(context.pool, context.source, span)
+    const start_id = try graph.field(context.pool, span, "start")
+    const end_id = try graph.field(context.pool, span, "end")
+    const start = try graph.number(context.pool, start_id)
+    const end = try graph.number(context.pool, end_id)
+    mut decimal = b""
+    match integer_literals.decimal(text, start, end):
+        case Ok(value):
+            decimal = value
+        case Err(rejection):
+            mut message = rejection.message
+            if rejection.code == "E_FLOAT_LITERAL":
+                message = "a length takes no width suffix; write it as 16, 0x10 or 1_024"
+            const rejected = try problem(context, span, message)
+            fail rejected
+    if len(decimal) > 7:
+        const rejected = try problem(context, span, "const length exceeds 1048576 elements")
+        fail rejected
+    mut value = 0
+    for digit in decimal:
+        value = value * 10 + digit - 48
+    if value > 1048576:
+        const rejected = try problem(context, span, "const length exceeds 1048576 elements")
+        fail rejected
+    return value
+
+
+public func resolve(context: Context, span: int, parameters: Parameter[], values: int?[]) -> int fails syntax_value.Problem:
+    const spelling = try graph.spelling(context.pool, context.source, span)
+    for index in range(len(parameters)):
+        const candidate = try graph.spelling(context.pool, context.source, parameters[index].name)
+        if candidate != spelling:
+            continue
+        if not parameters[index].constant_length or index >= len(values):
+            const rejected = try problem(context, span, "expected a constant length argument, not a type parameter")
+            fail rejected
+        const value = values[index]
+        if value is None:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="constant parameter lacks its specialization length")
+        return value
+    return try literal(context, span)

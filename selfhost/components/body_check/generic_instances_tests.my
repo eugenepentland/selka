@@ -1,0 +1,102 @@
+import generic_instances
+import syntax_value
+
+func site(mut pool: syntax_value.Pool) -> int fails syntax_value.Problem:
+    return try syntax_value.span(mut pool, 7, 12)
+
+
+public func test_ordinary_mapping_skips_templates_before_first_demand() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try site(mut pool)
+    mut registry = try generic_instances.make([0, 1, 0, 2])
+    const first = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=3, arguments=[0, 1], lengths=[]))
+    const second = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=1, arguments=[2], lengths=[]))
+    const ordinary_first = try generic_instances.ordinary_function(registry, 0)
+    const template = try generic_instances.ordinary_function(registry, 1)
+    const other = try generic_instances.ordinary_function(registry, 2)
+    const key = try generic_instances.get(registry, first)
+    return ordinary_first == 0 and template == -1 and other == 1 and first == 2 and second == 3 and key.declaration == 3 and registry.queue[0].declaration == 0 and registry.queue[1].declaration == 2
+
+
+public func test_ordered_nominal_and_declaration_keys_reuse_recursive_demand() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try site(mut pool)
+    mut registry = try generic_instances.make([2, 2])
+    const first = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[19, 20], lengths=[]))
+    const reverse = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[20, 19], lengths=[]))
+    const distinct = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=1, arguments=[19, 20], lengths=[]))
+    const recursive = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[19, 20], lengths=[None, None]))
+    return first == 0 and reverse == 1 and distinct == 2 and recursive == first and len(registry.queue) == 3 and registry.counts == [2, 1]
+
+
+public func test_lengths_distinguish_none_zero_and_order_without_borrowing_keys() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try site(mut pool)
+    mut registry = try generic_instances.make([2])
+    mut arguments = [8, 0]
+    mut lengths: int?[] = [0, None]
+    const zero = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=arguments, lengths=lengths))
+    arguments[1] = 1
+    lengths[0] = 2
+    const changed = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=arguments, lengths=lengths))
+    const absent = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[8, 0], lengths=[]))
+    const saved = try generic_instances.get(registry, zero)
+    return zero == 0 and changed == 1 and absent == 2 and saved.arguments == [8, 0] and saved.lengths == [Some(0), None]
+
+
+public func test_per_declaration_4096_bound_preserves_reuse_and_other_declarations() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try site(mut pool)
+    mut registry = try generic_instances.make([1, 1])
+    for index in range(4096):
+        const id = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[8], lengths=[index]))
+        if id != index:
+            return False
+    const repeated = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[8], lengths=[0]))
+    match generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[8], lengths=[4096])):
+        case Ok(unexpected):
+            return False
+        case Err(problem):
+            if problem.code != "E_GENERIC_LIMIT" or problem.start != 7 or problem.end != 12 or problem.message != "generic specialization exceeds instance or type argument budget":
+                return False
+    const other = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=1, arguments=[8], lengths=[0]))
+    return repeated == 0 and other == 4096 and registry.counts == [4096, 1] and len(registry.queue) == 4097
+
+
+public func test_sixteen_arguments_and_malformed_parallel_lengths_preserve_registry() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try site(mut pool)
+    mut registry = try generic_instances.make([16])
+    mut arguments: int[] = []
+    for index in range(16):
+        arguments.append(index)
+    const valid = try generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=arguments, lengths=[]))
+    arguments.append(16)
+    match generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=arguments, lengths=[])):
+        case Ok(unexpected):
+            return False
+        case Err(problem):
+            if problem.code != "E_GENERIC_LIMIT":
+                return False
+    match generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[0, 1], lengths=[0])):
+        case Ok(unexpected):
+            return False
+        case Err(problem):
+            return valid == 0 and problem.code == "E_GENERIC_LIMIT" and len(registry.queue) == 1
+
+
+public func test_invalid_identity_and_get_bounds_are_transport_failures() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try site(mut pool)
+    mut registry = try generic_instances.make([1])
+    match generic_instances.intern(mut registry, pool, span, generic_instances.Key(declaration=0, arguments=[8], lengths=[-1])):
+        case Ok(unexpected):
+            return False
+        case Err(problem):
+            if problem.code != "P_BODY_TRANSPORT" or len(registry.queue) != 0:
+                return False
+    match generic_instances.get(registry, 0):
+        case Ok(unexpected):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
