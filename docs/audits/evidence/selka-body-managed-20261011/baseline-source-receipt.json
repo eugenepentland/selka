@@ -1,0 +1,7 @@
+{
+  "source_commit": "b7b62cdc6",
+  "scope": "seed-only coordinator source pin, not component build closure",
+  "files": {
+    "selfhost/component-seed.json": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c"
+  }
+}

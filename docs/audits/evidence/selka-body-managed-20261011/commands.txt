@@ -1,0 +1,58 @@
+Implementation: 9e67a52e9; producer integer-cast followup: 807ffd073.
+Branch: codex/selka-body-managed-20261011
+Working directory: /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang
+TMPDIR=/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots
+ZIG_LOCAL_CACHE_DIR=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+Pinned Zig: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+
+Passing integration commands (zig below is the pinned binary):
+scripts/build-slot.sh build zig build test-units '-Dtest-filter=body check' --summary all
+scripts/build-slot.sh build zig build --summary all
+scripts/build-slot.sh build zig build -Doptimize=ReleaseFast --prefix /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-managed-release --summary all
+scripts/build-slot.sh gate zig build test --summary all
+scripts/build-slot.sh build zig build fmt-check test-verification-cache --summary all
+scripts/build-slot.sh gate /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+scripts/build-slot.sh gate git commit -m 'Adopt schema-two managed body batches from the retained prelude catalog'
+
+The final full gate runs 49 pure body tests in EACH of normal and release
+fact/leak modes with --force --no-cache; installed normal/edit and release
+matrices; the six other component suites; complete native, language, tooling,
+documentation, cache and packaging checks. The aggregate count is the exact
+reported 2710; 29 Guardian native verdicts independently sum to 2710, zero
+failed and zero selected skipped. The separate fmt/cache run passed two registry
+tests. Counts across focused and full runs overlap and must not be added.
+
+release-host-command.json records the standalone ReleaseFast matrix's exact
+argv, environment, host, package inventory and successful exit. gate-normal.json
+and gate-release.json are copied from the final full gate report directory:
+/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/d990c3eb8fbe2d8277a703f62b9286dc/body-check-qualification
+Every final gate receipt was matched against artifacts.json; the private
+coordinator normal/edit baseline exactly equals the installed body package.
+
+Isolated timing after correctness gates, from the integration worktree:
+scripts/build-slot.sh gate python3 /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-managed/managed_body_isolated_measure.py taskset -c 2,3,10,11 python3 /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-managed/managed_body_matched_measure.py
+The launcher holds FIFO gate ticket 145 and all three build reservations.
+Both hosts' original and all five edited native workloads are prewarmed before
+any timing. The completed receipt records each command and successful exit;
+all final fresh/edit samples reused three units, compiled zero, linked once.
+All warm samples replayed programs with zero compiler subprocesses.
+Baseline source snapshot is only the verified seed pin, not a source archive.
+
+Final documentation checks:
+scripts/build-slot.sh build zig build test-docs fmt-check --summary all
+scripts/build-slot.sh gate /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+
+Earlier nonpassing evidence, not adoption receipts:
+- native-focused.log.gz: full disk during coordinator compilation; tests did not run.
+- debug-install.log.gz: Guardian boolean-condition complexity; guard split before green install.
+- initial-qualification.log.gz: explicit int(bytes[index]) returned ComponentProfile.
+- integration-commit.log.gz: first full gate, same cast-profile failure; nothing committed.
+- b2-recovery.txt.gz and b2-recovered-final-pure.log.gz: producer recovery from
+  disk-truncated write and full 48-per-mode validation before cast followup.
+- b2-int-index-followup.log.gz: 16 sequence tests in both modes after cast fix.
+- b2-final-format-check.log.gz: final engine and sequence test formatting passed.
+Final full gate has all 49 pure tests in both modes and the original byte fixture.
+No comparison, fixture or native fallback was weakened to obtain a pass.
+
+No Guardian feedback log was changed. No seed pin was changed.

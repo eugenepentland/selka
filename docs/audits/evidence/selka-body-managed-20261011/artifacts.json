@@ -1,0 +1,81 @@
+{
+  "debug_host_sha256": "115b7a22c9420dba146fc66abd2b00f7d9c0c31f115e661eae576e57a4c3519c",
+  "release_host_sha256": "3c9f1f1c1806eadd21c0281b4cf216d74e2a4854415a4176e2010416b99c3496",
+  "seed_pin": {
+    "format": 1,
+    "commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+    "zig": "0.17.0-dev.1683+5ceec001b",
+    "archive_sha256": "f7771acebf47c56f8436aaca8e44c5cabccb27d378e0c5535338c8db6e5b4c5c",
+    "recipe": {
+      "optimize": "ReleaseFast",
+      "target": "native",
+      "step": "affected-compiler"
+    },
+    "qualification": "Local receipt binds complete source/runtime/library identity, Zig executable digest and built compiler digest; it is verified before every use."
+  },
+  "packages": {
+    "body-check": {
+      "artifact": "body-check-31780c2b8ab565accdcac733f6a4fc5ad39d1812d04f1e618fb0df1c63be8eac",
+      "component": "body-check",
+      "format": 1,
+      "key": "78c9ccd846d96ad3b73592fe141b29b30e269b9ce8038886ceb8cb014e6a89d0",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "31780c2b8ab565accdcac733f6a4fc5ad39d1812d04f1e618fb0df1c63be8eac"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-cc8cf801d9680e49c965589de3d94560200771fe059896e78e6db615efbad395",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "4c1c8b6cb360e315a15d3f5ed1d37d89ab161fd72f48f79701b67beaf01000be",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "cc8cf801d9680e49c965589de3d94560200771fe059896e78e6db615efbad395"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-2ceaa0edb7b9da3a10dfb2e735c41c3a43e48677ea20d7c0faf24bce137265da",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "4caa47331e8454ead141e34550607d59358ef291bfdbb27c12e071c95d22afcc",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "2ceaa0edb7b9da3a10dfb2e735c41c3a43e48677ea20d7c0faf24bce137265da"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-34fa00d2e3f38e10e5b303093758a4153b14243e1abb2ecfc32d98f61c906412",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "016e1bd15ed7b49e1f1c47b5dd574d9d18d7359348b6abb19b4f519385336641",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "34fa00d2e3f38e10e5b303093758a4153b14243e1abb2ecfc32d98f61c906412"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-3b210e2ae95d12943cb535367cb201a84c61ed15778bf5110fd306be1ac579a6",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "f2cc332e685969c174d05f0428f341c9ee4f7ebfc870011138322d7b36912bd9",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "3b210e2ae95d12943cb535367cb201a84c61ed15778bf5110fd306be1ac579a6"
+    },
+    "test-index": {
+      "artifact": "test-index-360598afc374bf5375960c9118858b9d5f9a7a3d4f652995e937f5e0de38a26b",
+      "component": "test-index",
+      "format": 1,
+      "key": "cd36f53cb08c4938e497c93729d92428534dd65ec44f3741cea7d42944f953d0",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "360598afc374bf5375960c9118858b9d5f9a7a3d4f652995e937f5e0de38a26b"
+    },
+    "type-interface": {
+      "artifact": "type-interface-e081662fbbcd0a785fae6854cfa4e0845bd3ed5d74bc39edb5c9f4fe5ea88919",
+      "component": "type-interface",
+      "format": 1,
+      "key": "18229c91525dda1efa271b54c066615ab16e4c94af2f18821b43464b90bd9eb7",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "e081662fbbcd0a785fae6854cfa4e0845bd3ed5d74bc39edb5c9f4fe5ea88919"
+    }
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "label": "candidate",
+  "measurement_script_sha256": "32a3e3a19a9528d2260adae53ec736ac0f70539184516f6c28c5106ac8034db1",
+  "qualification_script_sha256": "94e39635f9634754ab5e7509f2f936b967d73d9bd7733526807047ae05951396",
+  "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+  "iterations": 20,
+  "edit_iterations": 5,
+  "baseline_reference_only": false,
+  "prewarm_only": true,
+  "native_prewarm_cache_samples": [
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    }
+  ],
+  "host_sha256": "3c9f1f1c1806eadd21c0281b4cf216d74e2a4854415a4176e2010416b99c3496",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-360598afc374bf5375960c9118858b9d5f9a7a3d4f652995e937f5e0de38a26b",
+      "component": "test-index",
+      "format": 1,
+      "key": "cd36f53cb08c4938e497c93729d92428534dd65ec44f3741cea7d42944f953d0",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "360598afc374bf5375960c9118858b9d5f9a7a3d4f652995e937f5e0de38a26b"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-cc8cf801d9680e49c965589de3d94560200771fe059896e78e6db615efbad395",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "4c1c8b6cb360e315a15d3f5ed1d37d89ab161fd72f48f79701b67beaf01000be",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "cc8cf801d9680e49c965589de3d94560200771fe059896e78e6db615efbad395"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-34fa00d2e3f38e10e5b303093758a4153b14243e1abb2ecfc32d98f61c906412",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "016e1bd15ed7b49e1f1c47b5dd574d9d18d7359348b6abb19b4f519385336641",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "34fa00d2e3f38e10e5b303093758a4153b14243e1abb2ecfc32d98f61c906412"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-3b210e2ae95d12943cb535367cb201a84c61ed15778bf5110fd306be1ac579a6",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "f2cc332e685969c174d05f0428f341c9ee4f7ebfc870011138322d7b36912bd9",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "3b210e2ae95d12943cb535367cb201a84c61ed15778bf5110fd306be1ac579a6"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-2ceaa0edb7b9da3a10dfb2e735c41c3a43e48677ea20d7c0faf24bce137265da",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "4caa47331e8454ead141e34550607d59358ef291bfdbb27c12e071c95d22afcc",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "2ceaa0edb7b9da3a10dfb2e735c41c3a43e48677ea20d7c0faf24bce137265da"
+    },
+    "type-interface": {
+      "artifact": "type-interface-e081662fbbcd0a785fae6854cfa4e0845bd3ed5d74bc39edb5c9f4fe5ea88919",
+      "component": "type-interface",
+      "format": 1,
+      "key": "18229c91525dda1efa271b54c066615ab16e4c94af2f18821b43464b90bd9eb7",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "e081662fbbcd0a785fae6854cfa4e0845bd3ed5d74bc39edb5c9f4fe5ea88919"
+    },
+    "body-check": {
+      "artifact": "body-check-31780c2b8ab565accdcac733f6a4fc5ad39d1812d04f1e618fb0df1c63be8eac",
+      "component": "body-check",
+      "format": 1,
+      "key": "78c9ccd846d96ad3b73592fe141b29b30e269b9ce8038886ceb8cb014e6a89d0",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "31780c2b8ab565accdcac733f6a4fc5ad39d1812d04f1e618fb0df1c63be8eac"
+    }
+  },
+  "verified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "fixed_modes": {
+    "lexer": "reference",
+    "parser": "reference",
+    "test-index": "reference",
+    "cache-plan": "reference",
+    "declaration": "reference",
+    "type-interface": "reference"
+  },
+  "fact_leak_checks": "disabled for timings, qualified independently",
+  "native_cache_scope": "private application caches; every original/edit native workload prewarmed untimed for both hosts before matched runs; shared native units/runtime/toolchain warm, receipts identify reuse",
+  "rows": [],
+  "affinity": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "children_peak_rss_kib": 47148,
+  "rss_scope": "cumulative child high-water across complete run, not per exchange"
+}

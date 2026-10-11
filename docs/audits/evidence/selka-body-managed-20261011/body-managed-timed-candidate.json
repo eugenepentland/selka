@@ -1,0 +1,747 @@
+{
+  "label": "candidate",
+  "measurement_script_sha256": "32a3e3a19a9528d2260adae53ec736ac0f70539184516f6c28c5106ac8034db1",
+  "qualification_script_sha256": "94e39635f9634754ab5e7509f2f936b967d73d9bd7733526807047ae05951396",
+  "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+  "iterations": 20,
+  "edit_iterations": 5,
+  "baseline_reference_only": false,
+  "prewarm_only": false,
+  "native_prewarm_cache_samples": [
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    },
+    {
+      "program": "linked",
+      "units": 3,
+      "reused": 3,
+      "compiled": 0,
+      "verified": 0,
+      "processes": 1
+    }
+  ],
+  "host_sha256": "3c9f1f1c1806eadd21c0281b4cf216d74e2a4854415a4176e2010416b99c3496",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-360598afc374bf5375960c9118858b9d5f9a7a3d4f652995e937f5e0de38a26b",
+      "component": "test-index",
+      "format": 1,
+      "key": "cd36f53cb08c4938e497c93729d92428534dd65ec44f3741cea7d42944f953d0",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "360598afc374bf5375960c9118858b9d5f9a7a3d4f652995e937f5e0de38a26b"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-cc8cf801d9680e49c965589de3d94560200771fe059896e78e6db615efbad395",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "4c1c8b6cb360e315a15d3f5ed1d37d89ab161fd72f48f79701b67beaf01000be",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "cc8cf801d9680e49c965589de3d94560200771fe059896e78e6db615efbad395"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-34fa00d2e3f38e10e5b303093758a4153b14243e1abb2ecfc32d98f61c906412",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "016e1bd15ed7b49e1f1c47b5dd574d9d18d7359348b6abb19b4f519385336641",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "34fa00d2e3f38e10e5b303093758a4153b14243e1abb2ecfc32d98f61c906412"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-3b210e2ae95d12943cb535367cb201a84c61ed15778bf5110fd306be1ac579a6",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "f2cc332e685969c174d05f0428f341c9ee4f7ebfc870011138322d7b36912bd9",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "3b210e2ae95d12943cb535367cb201a84c61ed15778bf5110fd306be1ac579a6"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-2ceaa0edb7b9da3a10dfb2e735c41c3a43e48677ea20d7c0faf24bce137265da",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "4caa47331e8454ead141e34550607d59358ef291bfdbb27c12e071c95d22afcc",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "2ceaa0edb7b9da3a10dfb2e735c41c3a43e48677ea20d7c0faf24bce137265da"
+    },
+    "type-interface": {
+      "artifact": "type-interface-e081662fbbcd0a785fae6854cfa4e0845bd3ed5d74bc39edb5c9f4fe5ea88919",
+      "component": "type-interface",
+      "format": 1,
+      "key": "18229c91525dda1efa271b54c066615ab16e4c94af2f18821b43464b90bd9eb7",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "e081662fbbcd0a785fae6854cfa4e0845bd3ed5d74bc39edb5c9f4fe5ea88919"
+    },
+    "body-check": {
+      "artifact": "body-check-31780c2b8ab565accdcac733f6a4fc5ad39d1812d04f1e618fb0df1c63be8eac",
+      "component": "body-check",
+      "format": 1,
+      "key": "78c9ccd846d96ad3b73592fe141b29b30e269b9ce8038886ceb8cb014e6a89d0",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "31780c2b8ab565accdcac733f6a4fc5ad39d1812d04f1e618fb0df1c63be8eac"
+    }
+  },
+  "verified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "fixed_modes": {
+    "lexer": "reference",
+    "parser": "reference",
+    "test-index": "reference",
+    "cache-plan": "reference",
+    "declaration": "reference",
+    "type-interface": "reference"
+  },
+  "fact_leak_checks": "disabled for timings, qualified independently",
+  "native_cache_scope": "private application caches; every original/edit native workload prewarmed untimed for both hosts before matched runs; shared native units/runtime/toolchain warm, receipts identify reuse",
+  "rows": [
+    {
+      "mode": "reference",
+      "phase": "fresh-application-cache",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":505187,\"lowering\":137712,\"optimizer\":362291,\"emission\":428474,\"native\":11800817,\"linker\":9931019,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":34913,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":121895,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":11826,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":18145,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":16607,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1544,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":835,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":10398,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":43803,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":302,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":16901,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":95,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":648,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":17216,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":104533,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":274919,\"inclusive\":true}]},\"frontend\":{\"checked\":3,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":3,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":3,\"deferred\":0,\"fallbacks\":0,\"materialized\":3,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[3,3,3,3,3,3,0],\"bypassed\":0,\"active_functions\":3,\"fresh_work\":3,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":3},\"emission\":{\"units\":3,\"reused\":0,\"rendered\":3,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":3,\"work\":{\"receipts_checked\":3,\"keys_built\":3,\"llvm_loaded_bytes\":22325,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":532174,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":4,\"packs_prepared\":1,\"pack_bytes_prepared\":13895,\"save_bytes_prepared\":32170,\"sequence_locks\":40}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        15601877
+      ],
+      "median_ns": 15601877,
+      "min_ns": 15601877,
+      "max_ns": 15601877
+    },
+    {
+      "mode": "reference",
+      "phase": "warm",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,\"reused\":0,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":null,\"storage\":null}\n",
+      "cache_samples": [
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        }
+      ],
+      "samples_ns": [
+        1867526,
+        1748186,
+        1814725,
+        1803112,
+        1838845,
+        1800431,
+        1806105,
+        1791763,
+        1812937,
+        1753802,
+        1924185,
+        1952100,
+        1787735,
+        1788468,
+        1880779,
+        1760056,
+        1830947,
+        1773339,
+        1813546,
+        1788533
+      ],
+      "median_ns": 1804608.5,
+      "min_ns": 1748186,
+      "max_ns": 1952100
+    },
+    {
+      "mode": "reference",
+      "phase": "edit",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":587298,\"lowering\":159136,\"optimizer\":247916,\"emission\":337447,\"native\":11540753,\"linker\":9701450,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":34176,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":64964,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":11633,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":12599,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":19473,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":16320,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1257,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":9437,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":28117,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":11635,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":166,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":15842,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":52,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":613,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":8289,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":71743,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":225845,\"inclusive\":true}]},\"frontend\":{\"checked\":1,\"reused\":2,\"summaries\":1,\"syntax_hits\":1,\"syntax_misses\":1,\"stored\":1,\"damaged\":0},\"lowering\":{\"reused\":2,\"lowered\":1,\"deferred\":1,\"fallbacks\":0,\"materialized\":3,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,1,1,0,2,0],\"misses\":[2,2,1,1,2,1,0],\"bypassed\":1,\"active_functions\":2,\"fresh_work\":1,\"restores\":{\"final\":2,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":3},\"emission\":{\"units\":3,\"reused\":2,\"rendered\":1,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":3,\"work\":{\"receipts_checked\":3,\"keys_built\":1,\"llvm_loaded_bytes\":6937,\"native_handles\":2}},\"frontend_misses\":{\"total\":[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":377867,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":9520,\"decoded_bytes\":21381,\"blocks_decoded\":2,\"payload_bytes_returned\":7284,\"block_cache_hits\":15,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":7523,\"save_bytes_prepared\":12808,\"sequence_locks\":19}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        16408740,
+        15159314,
+        14758258,
+        15518692,
+        15287668
+      ],
+      "median_ns": 15287668,
+      "min_ns": 14758258,
+      "max_ns": 16408740
+    },
+    {
+      "mode": "reference",
+      "phase": "check-project",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "samples_ns": [
+        1062322,
+        1040133,
+        1053873,
+        1108420,
+        1064998,
+        1073137,
+        1224088,
+        1109950,
+        1154633,
+        1041859,
+        1039104,
+        1096700,
+        1058629,
+        1137747,
+        1044940,
+        1162912,
+        1253098,
+        1064891,
+        1027161,
+        1008013
+      ],
+      "median_ns": 1064944.5,
+      "min_ns": 1008013,
+      "max_ns": 1253098
+    },
+    {
+      "mode": "component",
+      "phase": "fresh-application-cache",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":37303974,\"lowering\":164802,\"optimizer\":361393,\"emission\":418101,\"native\":18234419,\"linker\":10772876,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":1799484,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":7259273,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":1804767,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":3539800,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":15735308,\"inclusive\":true}]},\"frontend\":{\"checked\":0,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":0,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":3,\"deferred\":0,\"fallbacks\":0,\"materialized\":3,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[3,3,3,3,3,3,0],\"bypassed\":0,\"active_functions\":3,\"fresh_work\":3,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":3},\"emission\":{\"units\":3,\"reused\":0,\"rendered\":3,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":3,\"work\":{\"receipts_checked\":3,\"keys_built\":3,\"llvm_loaded_bytes\":22325,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":534569,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":4,\"packs_prepared\":1,\"pack_bytes_prepared\":13559,\"save_bytes_prepared\":31789,\"sequence_locks\":40}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        71773466
+      ],
+      "median_ns": 71773466,
+      "min_ns": 71773466,
+      "max_ns": 71773466
+    },
+    {
+      "mode": "component",
+      "phase": "warm",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,\"reused\":0,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":null,\"storage\":null}\n",
+      "cache_samples": [
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        }
+      ],
+      "samples_ns": [
+        9431682,
+        9101153,
+        9322706,
+        9042694,
+        9180287,
+        9019554,
+        8966764,
+        9007888,
+        9056055,
+        9083164,
+        8959965,
+        8893668,
+        9060277,
+        9164375,
+        9121764,
+        9081868,
+        9115144,
+        9046276,
+        9067618,
+        9143545
+      ],
+      "median_ns": 9074743.0,
+      "min_ns": 8893668,
+      "max_ns": 9431682
+    },
+    {
+      "mode": "component",
+      "phase": "edit",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":37165041,\"lowering\":170425,\"optimizer\":260219,\"emission\":447656,\"native\":18174648,\"linker\":10772141,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":1827966,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":3577163,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":3512688,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":1787858,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":3541652,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":15745064,\"inclusive\":true}]},\"frontend\":{\"checked\":0,\"reused\":0,\"summaries\":0,\"syntax_hits\":1,\"syntax_misses\":1,\"stored\":0,\"damaged\":0},\"lowering\":{\"reused\":2,\"lowered\":1,\"deferred\":0,\"fallbacks\":0,\"materialized\":3,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,1,1,0,2,0],\"misses\":[2,2,1,1,2,1,0],\"bypassed\":1,\"active_functions\":2,\"fresh_work\":1,\"restores\":{\"final\":2,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":3},\"emission\":{\"units\":3,\"reused\":2,\"rendered\":1,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":3,\"work\":{\"receipts_checked\":3,\"keys_built\":1,\"llvm_loaded_bytes\":6937,\"native_handles\":2}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":360022,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":8841,\"decoded_bytes\":20619,\"blocks_decoded\":2,\"payload_bytes_returned\":6903,\"block_cache_hits\":15,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":7184,\"save_bytes_prepared\":12427,\"sequence_locks\":19}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        70884222,
+        71278306,
+        71405106,
+        70822772,
+        71331230
+      ],
+      "median_ns": 71278306,
+      "min_ns": 70822772,
+      "max_ns": 71405106
+    },
+    {
+      "mode": "component",
+      "phase": "check-project",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "samples_ns": [
+        4914851,
+        4853134,
+        4815356,
+        4790427,
+        4928814,
+        4766661,
+        4783232,
+        4976747,
+        5025042,
+        4837385,
+        5094126,
+        5034816,
+        5082726,
+        5043311,
+        5002418,
+        4928141,
+        4911841,
+        4939814,
+        4836128,
+        5024674
+      ],
+      "median_ns": 4928477.5,
+      "min_ns": 4766661,
+      "max_ns": 5094126
+    }
+  ],
+  "affinity": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "children_peak_rss_kib": 47176,
+  "rss_scope": "cumulative child high-water across complete run, not per exchange"
+}
