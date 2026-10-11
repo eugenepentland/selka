@@ -3,8 +3,8 @@
 This producer owns typing and lowering of ordinary nongeneric function bodies
 from raw ASTs. It emits complete native typed nodes, statements, functions, local
 metadata, and per-function table ranges. It does not consume a native semantic
-worklist or native checked bodies. B3 extends the qualified scalar and immutable text/byte closure with growable
-lists. Selka chooses inferred list types and emits bounded catalog recipes; native
+worklist or native checked bodies. B3 extends the qualified scalar and immutable
+text/byte closure with growable lists. Selka chooses inferred list types and emits bounded catalog recipes; native
 code materializes those recipes without choosing body types.
 
 Admitted types are `int`/`i64`, `bool`, `Unit`, `str`, `bytes`, and recursively
@@ -27,7 +27,8 @@ and cause explicit profile refusal only when the unavailable managed type is
 used. UTF-8 literals emit exact code-point child nodes; byte literals emit octet
 children. A byte literal expected as `str` follows native contextual UTF-8
 materialization. Byte literals in scalar expected-type contexts require native
-fixed-array schema interning and are explicitly outside B2. Byte indexing emits the native narrow `u8` index node followed
+fixed-array schema interning and remain outside this profile. Byte indexing emits
+the native narrow `u8` index node followed
 by an `int` cast. These internal narrow types are not exposed as new source-level
 integer types. Full typed tables retain native intermediate nodes and exact spans.
 
@@ -51,9 +52,9 @@ batch at the body-checking seam. Reference mode remains available.
 
 `main.my` accepts `--exchange FILE` or unframed `--request FILE`. The normative
 wire contract is [WIRE.md](WIRE.md): protocol 1, schema 3, correlated `SLKBCK01`
-envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Schema-1 packages and
-requests are refused. The request contains raw ASTs, sources, declaration facts,
-and the two retained-catalog descriptors. Batch fields remain
+envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Schema-1 and schema-2
+packages and requests are refused. The request contains raw ASTs, sources, declaration facts,
+and the retained catalog descriptors. Batch fields remain
 `nodes`, `statements`, `functions`, and `ranges`.
 
 The bounded profile allows 64 MiB frames, 1,048,576 graph values, 4,194,304 graph
@@ -64,7 +65,7 @@ these same typed-node and graph limits. Existing parser value helpers are
 immutable symlinks copied into coordinator snapshots. Seed and component-v1
 language admission remain unchanged.
 
-Pure tests are the seven `*_tests.my` modules. Run each with the
+Pure tests are the twelve `*_tests.my` modules. Run each with the
 coordinator-verified seed under `scripts/build-slot.sh build`, normally and with
 `--release --verify-facts`, `MYL_CORE_LEAKCHECK=1`, private disk `TMPDIR`, and a
 worktree-local Zig cache. Installed workflow tests compare complete
