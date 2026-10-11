@@ -1,0 +1,5 @@
+build-slot: build slot 1, FIFO ticket 2065 after 0s
+{'name': 'slice_bound', 'mode': 'component', 'equal': True, 'status': 0, 'native_status': 0}
+{'name': 'slice_bound', 'mode': 'shadow', 'equal': True, 'status': 0, 'native_status': 0}
+{'name': 'comprehension_output', 'mode': 'component', 'equal': True, 'status': 0, 'native_status': 0}
+{'name': 'comprehension_output', 'mode': 'shadow', 'equal': True, 'status': 0, 'native_status': 0}

@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 2094, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2094 after 5s
+......................................................
+----------------------------------------------------------------------
+Ran 54 tests in 0.088s
+
+OK

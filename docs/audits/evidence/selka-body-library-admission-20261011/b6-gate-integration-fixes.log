@@ -1,0 +1,23 @@
+build-slot: gate slot 1, FIFO ticket 202 after 0s
+Auto-merging selfhost/tests/run_declaration_qualification.py
+CONFLICT (content): Merge conflict in selfhost/tests/run_declaration_qualification.py
+Auto-merging selfhost/tests/run_type_interface_qualification.py
+CONFLICT (content): Merge conflict in selfhost/tests/run_type_interface_qualification.py
+error: could not apply 74e5adb62... Repair library gate paths donor spans and current package schemas
+hint: After resolving the conflicts, mark them with
+hint: "git add/rm <pathspec>", then run
+hint: "git cherry-pick --continue".
+hint: You can instead skip this commit with "git cherry-pick --skip".
+hint: To abort and get back to the state before "git cherry-pick",
+hint: run "git cherry-pick --abort".
+hint: Disable this message with "git config set advice.mergeConflict false"
+build-slot: gate slot 1, FIFO ticket 203 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9846 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/selka-bootstrap-20261011 6ad3d0fbc] Repair library gate paths donor spans and current package schemas
+ Date: Sun Oct 11 10:45:45 2026 +0000
+ 9 files changed, 41 insertions(+), 5 deletions(-)

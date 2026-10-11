@@ -1,0 +1,6 @@
+{
+  "action": "SIGINT to own failed gate process group",
+  "pid": 1628521,
+  "command": "/bin/bash -lc env TMPDIR=/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots ZIG_LOCAL_CACHE_DIR=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache scripts/build-slot.sh gate /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test --summary all > /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/b6-final-full-gate.log 2>&1 ",
+  "reason": "Known fixture formatting, stale schema, relative CLI path and historical pruned-cache failures; stop before repairing inputs, preserve failed log."
+}

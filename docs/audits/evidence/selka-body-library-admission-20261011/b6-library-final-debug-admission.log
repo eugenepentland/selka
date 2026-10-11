@@ -1,0 +1,16 @@
+build-slot: gate slot 1, FIFO ticket 199 after 0s
+Traceback (most recent call last):
+  File "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_library_admission.py", line 210, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_library_admission.py", line 190, in main
+    join_records, join_capture = J.run(args, evidence, empty, checkpoint_join)
+                                 ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_library_join.py", line 89, in run
+    F.require(result[0] == 2 and not result[1] and b'ComponentProtocol' in result[2],
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              'join forged reply escaped protocol rejection: ' + name)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_frontend_qualification.py", line 53, in require
+    raise RuntimeError(message)
+RuntimeError: join forged reply escaped protocol rejection: wrong_result

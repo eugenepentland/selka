@@ -1,0 +1,10 @@
+build-slot: build slot 2, FIFO ticket 2087 after 0s
+imported_literal_constants reference 0 
+imported_literal_constants shadow 0 
+imported_literal_constants component 0 
+constant_private_import_error reference 1 {"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_PRIVATE_SYMBOL","severity":"error","message":"declaration is private to its module","location":{"path":"constant_private_import_error.my","start":{"line":3,"column":16},"end":{"line":3,"column":40},"bytes":{"start":60,"end":84}},"notes":[{"role":"related","message":"declaration is here","location":{"path":"literal_constants.my","start":{"line":7,"column":7},"end":{"line":7,"column":13},"bytes":{"start":86,"end":92}}}],"stack":{"frames":[],"omitted":0}}}
+
+constant_private_import_error shadow 1 {"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_PRIVATE_SYMBOL","severity":"error","message":"declaration is private to its module","location":{"path":"constant_private_import_error.my","start":{"line":3,"column":16},"end":{"line":3,"column":40},"bytes":{"start":60,"end":84}},"notes":[{"role":"related","message":"declaration is here","location":{"path":"literal_constants.my","start":{"line":7,"column":7},"end":{"line":7,"column":13},"bytes":{"start":86,"end":92}}}],"stack":{"frames":[],"omitted":0}}}
+
+constant_private_import_error component 1 {"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_PRIVATE_SYMBOL","severity":"error","message":"declaration is private to its module","location":{"path":"constant_private_import_error.my","start":{"line":3,"column":16},"end":{"line":3,"column":40},"bytes":{"start":60,"end":84}},"notes":[{"role":"related","message":"declaration is here","location":{"path":"literal_constants.my","start":{"line":7,"column":7},"end":{"line":7,"column":13},"bytes":{"start":86,"end":92}}}],"stack":{"frames":[],"omitted":0}}}
+

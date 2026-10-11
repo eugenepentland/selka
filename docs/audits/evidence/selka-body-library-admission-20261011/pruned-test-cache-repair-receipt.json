@@ -1,0 +1,15 @@
+{
+  "reason": "Invalidate only two native compile manifests after old test executables were pruned; empty output-directory removal alone did not invalidate Zig hits. Source and installed deployment remain unchanged.",
+  "manifests": [
+    {
+      "path": "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/h/7d913e6f873ee8deba2760e2f8497c1d.txt",
+      "sha256": "92fd168746d27deab7b03fca067760895031f426ff7fa51f9410784ae2bdde91",
+      "root": "selfhost/component_support_test.zig"
+    },
+    {
+      "path": "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/h/445c1925daeb49f4fc59295b70a150f1.txt",
+      "sha256": "fae6d8684217b2cf376b7d6c35e71ab8e97a16b2b3d127468951e73b66d63da4",
+      "root": "src/memory_budget.zig"
+    }
+  ]
+}
