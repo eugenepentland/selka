@@ -1,0 +1,692 @@
+{
+  "purpose": "Development exact replay through authenticated C fixture; installed qualification pending",
+  "host_sha256": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+  "comparisons": 76,
+  "matched": 76,
+  "results": [
+    {
+      "source": "checked_consumed_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_CONSUMED\",\"severity\":\"error\",\"message\":\"value has already been transferred or handled\",\"location\":{\"path\":\"checked_consumed_error.my\",\"start\":{\"line\":19,\"column\":11},\"end\":{\"line\":19,\"column\":17},\"bytes\":{\"start\":340,\"end\":346}},\"notes\":[{\"role\":\"related\",\"message\":\"earlier transfer or handling on this path\",\"location\":{\"path\":\"checked_consumed_error.my\",\"start\":{\"line\":14,\"column\":11},\"end\":{\"line\":14,\"column\":17},\"bytes\":{\"start\":243,\"end\":249}}},{\"role\":\"origin\",\"message\":\"value declared here\",\"location\":{\"path\":\"checked_consumed_error.my\",\"start\":{\"line\":13,\"column\":11},\"end\":{\"line\":13,\"column\":17},\"bytes\":{\"start\":215,\"end\":221}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_consumed_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_CONSUMED\",\"severity\":\"error\",\"message\":\"value has already been transferred or handled\",\"location\":{\"path\":\"checked_consumed_error.my\",\"start\":{\"line\":19,\"column\":11},\"end\":{\"line\":19,\"column\":17},\"bytes\":{\"start\":340,\"end\":346}},\"notes\":[{\"role\":\"related\",\"message\":\"earlier transfer or handling on this path\",\"location\":{\"path\":\"checked_consumed_error.my\",\"start\":{\"line\":14,\"column\":11},\"end\":{\"line\":14,\"column\":17},\"bytes\":{\"start\":243,\"end\":249}}},{\"role\":\"origin\",\"message\":\"value declared here\",\"location\":{\"path\":\"checked_consumed_error.my\",\"start\":{\"line\":13,\"column\":11},\"end\":{\"line\":13,\"column\":17},\"bytes\":{\"start\":215,\"end\":221}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_error_patterns.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_error_patterns.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_explicit_pending_discard.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_explicit_pending_discard.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_failure_list_payload.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_failure_list_payload.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_implicit_pending_discard_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPLICIT_DISCARD_REQUIRED\",\"severity\":\"error\",\"message\":\"a standalone non-unit value requires `_ =` or result handling\",\"location\":{\"path\":\"checked_implicit_pending_discard_error.my\",\"start\":{\"line\":10,\"column\":5},\"end\":{\"line\":10,\"column\":13},\"bytes\":{\"start\":153,\"end\":161}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_implicit_pending_discard_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPLICIT_DISCARD_REQUIRED\",\"severity\":\"error\",\"message\":\"a standalone non-unit value requires `_ =` or result handling\",\"location\":{\"path\":\"checked_implicit_pending_discard_error.my\",\"start\":{\"line\":10,\"column\":5},\"end\":{\"line\":10,\"column\":13},\"bytes\":{\"start\":153,\"end\":161}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_implicit_scalar_discard_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPLICIT_DISCARD_REQUIRED\",\"severity\":\"error\",\"message\":\"a standalone non-unit value requires `_ =` or result handling\",\"location\":{\"path\":\"checked_implicit_scalar_discard_error.my\",\"start\":{\"line\":5,\"column\":5},\"end\":{\"line\":5,\"column\":12},\"bytes\":{\"start\":59,\"end\":66}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0},\"fix\":{\"edits\":[{\"path\":\"checked_implicit_scalar_discard_error.my\",\"bytes\":{\"start\":59,\"end\":59},\"text\":\"_ = \"}]}}}\n"
+    },
+    {
+      "source": "checked_implicit_scalar_discard_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPLICIT_DISCARD_REQUIRED\",\"severity\":\"error\",\"message\":\"a standalone non-unit value requires `_ =` or result handling\",\"location\":{\"path\":\"checked_implicit_scalar_discard_error.my\",\"start\":{\"line\":5,\"column\":5},\"end\":{\"line\":5,\"column\":12},\"bytes\":{\"start\":59,\"end\":66}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0},\"fix\":{\"edits\":[{\"path\":\"checked_implicit_scalar_discard_error.my\",\"bytes\":{\"start\":59,\"end\":59},\"text\":\"_ = \"}]}}}\n"
+    },
+    {
+      "source": "checked_loop_consumption.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_loop_consumption.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_managed_result.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_managed_result.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_multi_argument_temporaries.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_multi_argument_temporaries.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_pending_list_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_LIST_ELEMENT\",\"severity\":\"error\",\"message\":\"managed list elements must be copyable values without resources or result obligations\",\"location\":{\"path\":\"checked_pending_list_error.my\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":1},\"bytes\":{\"start\":0,\"end\":0}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_pending_list_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_LIST_ELEMENT\",\"severity\":\"error\",\"message\":\"managed list elements must be copyable values without resources or result obligations\",\"location\":{\"path\":\"checked_pending_list_error.my\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":1},\"bytes\":{\"start\":0,\"end\":0}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_record_failure.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_record_failure.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_short_circuit_path_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_PATH\",\"severity\":\"error\",\"message\":\"ownership or result obligation must have the same state on every continuing path\",\"location\":{\"path\":\"checked_short_circuit_path_error.my\",\"start\":{\"line\":18,\"column\":28},\"end\":{\"line\":18,\"column\":40},\"bytes\":{\"start\":372,\"end\":384}},\"notes\":[{\"role\":\"related\",\"message\":\"binding declared here\",\"location\":{\"path\":\"checked_short_circuit_path_error.my\",\"start\":{\"line\":17,\"column\":11},\"end\":{\"line\":17,\"column\":17},\"bytes\":{\"start\":327,\"end\":333}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_short_circuit_path_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_PATH\",\"severity\":\"error\",\"message\":\"ownership or result obligation must have the same state on every continuing path\",\"location\":{\"path\":\"checked_short_circuit_path_error.my\",\"start\":{\"line\":18,\"column\":28},\"end\":{\"line\":18,\"column\":40},\"bytes\":{\"start\":372,\"end\":384}},\"notes\":[{\"role\":\"related\",\"message\":\"binding declared here\",\"location\":{\"path\":\"checked_short_circuit_path_error.my\",\"start\":{\"line\":17,\"column\":11},\"end\":{\"line\":17,\"column\":17},\"bytes\":{\"start\":327,\"end\":333}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_short_circuit_success.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_short_circuit_success.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_try_context_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TRY_RETURN\",\"severity\":\"error\",\"message\":\"try requires a function returning a declared result type\",\"location\":{\"path\":\"checked_try_context_error.my\",\"start\":{\"line\":13,\"column\":12},\"end\":{\"line\":13,\"column\":24},\"bytes\":{\"start\":216,\"end\":228}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_try_context_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TRY_RETURN\",\"severity\":\"error\",\"message\":\"try requires a function returning a declared result type\",\"location\":{\"path\":\"checked_try_context_error.my\",\"start\":{\"line\":13,\"column\":12},\"end\":{\"line\":13,\"column\":24},\"bytes\":{\"start\":216,\"end\":228}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_try_fail.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_try_fail.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "checked_try_live_result_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_UNHANDLED\",\"severity\":\"error\",\"message\":\"result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded\",\"location\":{\"path\":\"checked_try_live_result_error.my\",\"start\":{\"line\":11,\"column\":19},\"end\":{\"line\":11,\"column\":31},\"bytes\":{\"start\":213,\"end\":225}},\"notes\":[{\"role\":\"related\",\"message\":\"unhandled result-bearing binding\",\"location\":{\"path\":\"checked_try_live_result_error.my\",\"start\":{\"line\":10,\"column\":11},\"end\":{\"line\":10,\"column\":18},\"bytes\":{\"start\":176,\"end\":183}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_try_live_result_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_UNHANDLED\",\"severity\":\"error\",\"message\":\"result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded\",\"location\":{\"path\":\"checked_try_live_result_error.my\",\"start\":{\"line\":11,\"column\":19},\"end\":{\"line\":11,\"column\":31},\"bytes\":{\"start\":213,\"end\":225}},\"notes\":[{\"role\":\"related\",\"message\":\"unhandled result-bearing binding\",\"location\":{\"path\":\"checked_try_live_result_error.my\",\"start\":{\"line\":10,\"column\":11},\"end\":{\"line\":10,\"column\":18},\"bytes\":{\"start\":176,\"end\":183}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_unhandled_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_UNHANDLED\",\"severity\":\"error\",\"message\":\"result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded\",\"location\":{\"path\":\"checked_unhandled_error.my\",\"start\":{\"line\":14,\"column\":5},\"end\":{\"line\":14,\"column\":13},\"bytes\":{\"start\":237,\"end\":245}},\"notes\":[{\"role\":\"related\",\"message\":\"unhandled result-bearing binding\",\"location\":{\"path\":\"checked_unhandled_error.my\",\"start\":{\"line\":13,\"column\":11},\"end\":{\"line\":13,\"column\":17},\"bytes\":{\"start\":215,\"end\":221}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_unhandled_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_UNHANDLED\",\"severity\":\"error\",\"message\":\"result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded\",\"location\":{\"path\":\"checked_unhandled_error.my\",\"start\":{\"line\":14,\"column\":5},\"end\":{\"line\":14,\"column\":13},\"bytes\":{\"start\":237,\"end\":245}},\"notes\":[{\"role\":\"related\",\"message\":\"unhandled result-bearing binding\",\"location\":{\"path\":\"checked_unhandled_error.my\",\"start\":{\"line\":13,\"column\":11},\"end\":{\"line\":13,\"column\":17},\"bytes\":{\"start\":215,\"end\":221}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_wrong_failure_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected checked_wrong_failure_error.Failure, found int\",\"location\":{\"path\":\"checked_wrong_failure_error.my\",\"start\":{\"line\":6,\"column\":5},\"end\":{\"line\":6,\"column\":11},\"bytes\":{\"start\":72,\"end\":78}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "checked_wrong_failure_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected checked_wrong_failure_error.Failure, found int\",\"location\":{\"path\":\"checked_wrong_failure_error.my\",\"start\":{\"line\":6,\"column\":5},\"end\":{\"line\":6,\"column\":11},\"bytes\":{\"start\":72,\"end\":78}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "main.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "main.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "optional_parse_int_demand.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "optional_parse_int_demand.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "optional_parse_int_failures.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "optional_parse_int_failures.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "optional_parse_int_methods.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "optional_parse_int_methods.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "optional_try.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "optional_try.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "record_union_profile.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "record_union_profile.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_boxed_recursive_profile.my",
+      "mode": "component",
+      "status": 2,
+      "expected": 2,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: host failure: ComponentProfile\\n\"}\n"
+    },
+    {
+      "source": "variant_boxed_recursive_profile.my",
+      "mode": "shadow",
+      "status": 2,
+      "expected": 2,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: host failure: ComponentProfile\\n\"}\n"
+    },
+    {
+      "source": "variant_duplicate_pattern_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_DUPLICATE_ARM\",\"severity\":\"error\",\"message\":\"variant has more than one match arm\",\"location\":{\"path\":\"variant_duplicate_pattern_error.my\",\"start\":{\"line\":9,\"column\":21},\"end\":{\"line\":9,\"column\":26},\"bytes\":{\"start\":168,\"end\":173}},\"notes\":[{\"role\":\"related\",\"message\":\"previous arm\",\"location\":{\"path\":\"variant_duplicate_pattern_error.my\",\"start\":{\"line\":7,\"column\":21},\"end\":{\"line\":7,\"column\":26},\"bytes\":{\"start\":120,\"end\":125}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "variant_duplicate_pattern_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_DUPLICATE_ARM\",\"severity\":\"error\",\"message\":\"variant has more than one match arm\",\"location\":{\"path\":\"variant_duplicate_pattern_error.my\",\"start\":{\"line\":9,\"column\":21},\"end\":{\"line\":9,\"column\":26},\"bytes\":{\"start\":168,\"end\":173}},\"notes\":[{\"role\":\"related\",\"message\":\"previous arm\",\"location\":{\"path\":\"variant_duplicate_pattern_error.my\",\"start\":{\"line\":7,\"column\":21},\"end\":{\"line\":7,\"column\":26},\"bytes\":{\"start\":120,\"end\":125}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "variant_generic_profile.my",
+      "mode": "component",
+      "status": 2,
+      "expected": 2,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: host failure: ComponentProfile\\n\"}\n"
+    },
+    {
+      "source": "variant_generic_profile.my",
+      "mode": "shadow",
+      "status": 2,
+      "expected": 2,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: host failure: ComponentProfile\\n\"}\n"
+    },
+    {
+      "source": "variant_import_alias.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_import_alias.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_incomplete_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_INCOMPLETE_MATCH\",\"severity\":\"error\",\"message\":\"match does not handle variant `empty`; every variant requires an explicit arm\",\"location\":{\"path\":\"variant_incomplete_error.my\",\"start\":{\"line\":6,\"column\":5},\"end\":{\"line\":9,\"column\":1},\"bytes\":{\"start\":80,\"end\":182}},\"notes\":[{\"role\":\"related\",\"message\":\"unhandled variant declared here\",\"location\":{\"path\":\"variant_incomplete_error.my\",\"start\":{\"line\":3,\"column\":5},\"end\":{\"line\":3,\"column\":10},\"bytes\":{\"start\":49,\"end\":54}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "variant_incomplete_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_INCOMPLETE_MATCH\",\"severity\":\"error\",\"message\":\"match does not handle variant `empty`; every variant requires an explicit arm\",\"location\":{\"path\":\"variant_incomplete_error.my\",\"start\":{\"line\":6,\"column\":5},\"end\":{\"line\":9,\"column\":1},\"bytes\":{\"start\":80,\"end\":182}},\"notes\":[{\"role\":\"related\",\"message\":\"unhandled variant declared here\",\"location\":{\"path\":\"variant_incomplete_error.my\",\"start\":{\"line\":3,\"column\":5},\"end\":{\"line\":3,\"column\":10},\"bytes\":{\"start\":49,\"end\":54}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "variant_loop_branch.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_loop_branch.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_match_expression.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_match_expression.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_named_order.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_named_order.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_nested_default_constructors.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_nested_default_constructors.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_payload_defaults.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_payload_defaults.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_payload_type_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected int, found bool\",\"location\":{\"path\":\"variant_payload_type_error.my\",\"start\":{\"line\":6,\"column\":36},\"end\":{\"line\":6,\"column\":40},\"bytes\":{\"start\":111,\"end\":115}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "variant_payload_type_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected int, found bool\",\"location\":{\"path\":\"variant_payload_type_error.my\",\"start\":{\"line\":6,\"column\":36},\"end\":{\"line\":6,\"column\":40},\"bytes\":{\"start\":111,\"end\":115}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "variant_record_list_snapshot.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_record_list_snapshot.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_recursive_lists.my",
+      "mode": "component",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_recursive_lists.my",
+      "mode": "shadow",
+      "status": 0,
+      "expected": 0,
+      "matched": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "variant_unknown_case_error.my",
+      "mode": "component",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_VARIANT\",\"severity\":\"error\",\"message\":\"variant is not declared on this type; declared variants: empty, pair\",\"location\":{\"path\":\"variant_unknown_case_error.my\",\"start\":{\"line\":6,\"column\":26},\"end\":{\"line\":6,\"column\":33},\"bytes\":{\"start\":101,\"end\":108}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "source": "variant_unknown_case_error.my",
+      "mode": "shadow",
+      "status": 1,
+      "expected": 1,
+      "matched": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_VARIANT\",\"severity\":\"error\",\"message\":\"variant is not declared on this type; declared variants: empty, pair\",\"location\":{\"path\":\"variant_unknown_case_error.my\",\"start\":{\"line\":6,\"column\":26},\"end\":{\"line\":6,\"column\":33},\"bytes\":{\"start\":101,\"end\":108}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "scope": "Coordinator rebuild only; matrix deliberately not executed in isolated failure reproduction",
+  "result": {
+    "before": {
+      "artifact": "body-check-8a4d26ba2dbace37ae28586a86fe86883e90257eb98f82e31e200716ed2918cb",
+      "component": "body-check",
+      "format": 1,
+      "key": "76210079e48b9eaf6b78fd238f81f2b5589fec1f7d39c531db08425a674b03e0",
+      "protocol": 1,
+      "schema": 5,
+      "sha256": "8a4d26ba2dbace37ae28586a86fe86883e90257eb98f82e31e200716ed2918cb"
+    },
+    "after": {
+      "artifact": "body-check-4db6617861159decd3c6ec3229831197d488bfcb808843a3f26f2f7ec6358c90",
+      "component": "body-check",
+      "format": 1,
+      "key": "3bc91b2fb37fe637a8f9db9d6aa130fb0b9624283081f1c438737600478eef41",
+      "protocol": 1,
+      "schema": 5,
+      "sha256": "4db6617861159decd3c6ec3229831197d488bfcb808843a3f26f2f7ec6358c90"
+    },
+    "other_packages_unchanged": 6
+  }
+}

@@ -245,21 +245,21 @@ complete Selka compiler and requires compile time, test time and generated
 runtime to stay within 1.5 times the Zig implementation. This is an acceptance
 requirement for the completed compiler, not a claim about the current pilots.
 
-The last qualified boundary is B4, recorded in
-[the record body audit](selka-body-records-2026-10-11.md). Seven packages build
+The last qualified boundary is B5, recorded in
+[the variant/failure body audit](selka-body-variants-2026-10-11.md). Seven packages build
 with the unchanged qualified seed; ordinary scalar, text, byte, list and
-nongeneric record bodies use Selka checking without native body fallback.
-Complete typed metadata, ordered list recipes and final catalog schemas match
-native checking. Constructors/defaults, field access and mixed record/list
-mutation include finite recursion through lists and snapshots. B5 variants,
-patterns and checked failures are in progress in separate Sol lanes. The
-compiler still cannot check its own source, and neither a complete compiler
+nongeneric record/variant bodies and admitted checked Result/Option failures
+use Selka checking without native body fallback. Complete typed metadata,
+ordered List/Result/Option recipes and final catalog schemas match native
+checking. The full gate passes 131/131 steps, 199 pure tests per mode and all
+three installed 388-workflow matrices. B6 pure-library closure and B7 resource
+support are in progress in separate Sol lanes. The compiler still cannot check
+its own complete source, and neither a complete compiler
 nor a bootstrap fixed point is proven.
 
 | Remaining stage | Completion evidence |
 | --- | --- |
-| B5 variants, patterns and checked failures | Nongeneric variants, exhaustive/nested matches, Result/Option construction, fail/try and result consumption match complete native typed tables, catalogs and diagnostics. |
-| B6 byte/string and buffer operations | Slicing, conversions, byte-buffer construction, mutation and snapshots cover the compiler's pure algorithm libraries. Complete native typed metadata and diagnostics match; existing pure tests pass in debug and release with fact/leak checks. This does not yet qualify executable entrypoints. |
+| B6 pure compiler libraries | Byte/string and list slicing, conversions, byte-buffer construction/mutation/snapshots, iteration, comprehensions, conditional expressions and managed constant getters cover the actual compiler helper closures. Complete native typed metadata and diagnostics match; existing pure tests pass in debug and release with fact/leak checks. Synthetic fixtures alone do not qualify those sources or executable entrypoints. |
 | B7 capabilities and scoped resources | Filesystem/Stream signatures, file opening/reading, stream output and scoped file cleanup cover all seven component entrypoints. The selected Selka body checker checks and builds the actual component source closures without native body fallback, preserving capability, ownership and cleanup metadata. This is component-source bootstrap coverage, not a complete compiler bootstrap. |
 | Remaining body language | Other collections, generic specialization, callbacks, scalar widths, additional resources, contracts and all remaining forms cover the current language. Unsupported profile refusals cannot count as success. |
 | Remaining semantic ownership | Selka owns declaration/catalog construction, entry handling, effects/origins, contracts, codecs and warnings, with diagnostics and accepted/rejected programs matching the native reference. |
@@ -273,10 +273,10 @@ self-hosting requires Selka ownership of the compiler, not rewriting those
 dependencies. The native implementation remains an independent qualification
 oracle during migration; selected production paths must not silently fall back.
 
-The latest qualified [B4 performance measurements](selka-body-records-2026-10-11.md#isolated-performance)
-fail 20 of 24 strict median/p95 rows. Compile/check/test medians are approximately
-4.4–7.2 times native; the four short generated-runtime rows pass. Both sides use
-the same B4 ReleaseFast host, with only the candidate body checker selected as a
+The latest qualified [B5 performance measurements](selka-body-variants-2026-10-11.md#isolated-performance)
+fail 30 of 36 strict median/p95 rows. Compile/check/test medians are approximately
+5.3–9.2 times native; the six short generated-runtime rows pass. Both sides use
+the same B5 ReleaseFast host, with only the candidate body checker selected as a
 component. These are component measurements with warm shared native units, not
 whole-compiler or cold-toolchain benchmarks. Performance work therefore runs
 alongside feature coverage, with exact mode/cache provenance and behavior checks.
@@ -285,7 +285,12 @@ Intermediate subset benchmarks cannot establish full-language acceptance.
 The proposed B6/B7 split follows actual compiler source dependencies. Byte slices
 appear in `body_check/graph.my` and the codecs; buffer construction and writes
 appear in `parser_pilot/syntax_codec.my`, `type_interface/codec.my`,
-`declaration_index/codec.my` and `cache_plan/incremental.my`. Those pure libraries
+`declaration_index/codec.my` and `cache_plan/incremental.my`. Actual source
+admission also exposes text/byte iteration, `ord`, integer-to-text conversion,
+range/iterable comprehensions, list slices, nested collection iteration,
+conditional expressions and the lexer's imported string constant getters.
+These require exact native parity before the pure-library milestone is complete;
+the byte/buffer fixture implementation alone is insufficient. Those libraries
 can be qualified before resource support. Executable adapters such as
 `body_check/main.my` additionally require `Filesystem`, `Stream`, `fs.open`,
 `with file as input`, `input.read` and output methods. The native representation
@@ -301,7 +306,7 @@ all median/p95 verdicts, exact receipts and isolation records. Transitioning to 
 fused compiler removes intermediate process/transport boundaries, but remaining
 Selka algorithm, allocation and generated-runtime costs must still be measured.
 
-The B4 matched-host sweep fails all 20 compile/check/test rows across four
+The historical B4 matched-host sweep fails all 20 compile/check/test rows across four
 workloads, with medians around 4.4–7.2 times native. Only the four short
 runtime rows pass. The record audit retains all 24 median/p95 verdicts,
 20 samples per row, exact package provenance and FIFO isolation receipts.

@@ -1,0 +1,3900 @@
+{
+  "host_sha256": "5be1628129c9a7783d8db636c6dd8e4319b5befb4417f201e16e073aa6666b75",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-87a06f5edb58479a24bef394870567e0a672fc4b85547a23e984d4cfd75f5558",
+      "component": "test-index",
+      "format": 1,
+      "key": "4e8b4b2aacff840796da142a44d509b166df809be8840d29950853330ee2baca",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "87a06f5edb58479a24bef394870567e0a672fc4b85547a23e984d4cfd75f5558"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-632e9981a52949629a4fa03f437c09db6e1594a3e13ea7cd824c6c6640cfef86",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "57845edbdfbdfecccdc35a07375ea1fa5c95762e3db1eabe44848eb70c2265ae",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "632e9981a52949629a4fa03f437c09db6e1594a3e13ea7cd824c6c6640cfef86"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-2d5717c647a7f249fb83a2776896ee232254aed6644af56ac3930d68075e2162",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "0293ae4d3658f98920fd1211326607ea91f0dfd0c80eadc92cb14cc69ef9a750",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "2d5717c647a7f249fb83a2776896ee232254aed6644af56ac3930d68075e2162"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-d8480492e97eeb351298195fe026ba22a07d646e28ba98a03cedb63c197d803d",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "cb85147882565327006df48739cbc9f41918abeb0bc4eb5c24c9ac1ee63450e1",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "d8480492e97eeb351298195fe026ba22a07d646e28ba98a03cedb63c197d803d"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-e33aa081e794e0925e7dcfe61c4024535357498145e1c1308d62b0c400c7631f",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "038389b9709e8eedde0fdabe40132ffe7c6b9afe31729082fc2fd73a4c9eb52b",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "e33aa081e794e0925e7dcfe61c4024535357498145e1c1308d62b0c400c7631f"
+    },
+    "type-interface": {
+      "artifact": "type-interface-c448dfbc5a6c4fa2c47f3c2d623cd0dfd1f5373fa558d6a751d633a5059a3b27",
+      "component": "type-interface",
+      "format": 1,
+      "key": "3f4b8325fa96703c1fb7f899331ae498d2361a98b09a172dce3f8e7f9b905cae",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "c448dfbc5a6c4fa2c47f3c2d623cd0dfd1f5373fa558d6a751d633a5059a3b27"
+    },
+    "body-check": {
+      "artifact": "body-check-8a4d26ba2dbace37ae28586a86fe86883e90257eb98f82e31e200716ed2918cb",
+      "component": "body-check",
+      "format": 1,
+      "key": "76210079e48b9eaf6b78fd238f81f2b5589fec1f7d39c531db08425a674b03e0",
+      "protocol": 1,
+      "schema": 5,
+      "sha256": "8a4d26ba2dbace37ae28586a86fe86883e90257eb98f82e31e200716ed2918cb"
+    }
+  },
+  "workflows": 388,
+  "verified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "release_facts_leaks": true,
+  "comparisons": 776,
+  "warm_deployment_checks": 30,
+  "live_session_checks": 4,
+  "cache_enabled_test_receipts": {
+    "shadow": {
+      "passed": 2,
+      "cached": 0
+    },
+    "component": {
+      "passed": 0,
+      "cached": 2
+    }
+  },
+  "records": [
+    {
+      "workflow": "check",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "check-project",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list-declarations",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 558,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9df700f2b8de01ebf8956642382d3286549d16fc8bf0b64e81d9438b0609624d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list-modules",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 297,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a2b888f36280747f51db496272d4fbb870bdb4e37da2e7c5b7ae8ca14009cafd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "schema-project",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 895,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "73824305e8a2001703955ebe3c85489b8f46472c9e7d9f84f3e638342c5ed0d1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list-interfaces",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 360,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "fc6e8c7255a484eddd2afe5d22c3059feb672695db700d4a036d258c555ea6e6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "dump-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 751,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "fa2e5af53b131d480fc1a52270e2edf41782d2c204b444f6a95e35268f794b9f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "dump-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 110,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "49b0dfd60098ef3e6867027d7e5945a6778bed17a14c9b253251152c91750e82",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "scalar_calls.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "scalar_calls.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 323,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "0d012577c1bd19f444036e457f32f483e7bdbbbb11f1d171c86a659edd314f05",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "scalar_calls.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 159,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "6af2aaae2cc08f17da38704266418170ecc998f3c75deba69f54ec3166c8a02a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "branches.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "branches.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 334,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e0d48cf509dde7a1df505c95b616a3dd2109abd60afdc4f3a6d5c40f42f66947",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "branches.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 170,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "eb080b92447065a6daf397ce745dc3b92bc14755601d1182c42cf6752cf25de2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "while_loop.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "while_loop.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 349,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "c2f3c3a3beb98c779f39553b41079f2eae93dd1693af362ba07613a3742807a7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "while_loop.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 228,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "7ee6feb3506a3b9dc96c68faa9200a0748f70c882629e643c313a4c00eaf2c59",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "range_loop.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "range_loop.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 748,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a9737e2e0e3d7ba761b2d1d899a225d43a6f42d8a37b88ffd4a5d767b95b251b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "range_loop.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 316,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a2b602606ad5273e4da9609f003ddbd459a28ff02b46e3c4a181ea80072bcb68",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "unit_assert.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "unit_assert.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 323,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e31d7f8de88b6a9a4ecf5f1032bc6d4a711d90f4a7ca1b760b026524d00fde93",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "unit_assert.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 157,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "5de51b85fa83188a89ee21c3dde17b7a565f44127b8bb5760c9ff69057006dbe",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "bool_ops.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "bool_ops.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 624,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "3433329c2124a24888f2cac8ef928875c9d5aaff7e7a7782ce2d87c1d89eb37a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "bool_ops.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 446,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e7e83414f8515b975fcc85cace19fcef17410c96ce22a620c624300bef2b047a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "signed_math.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "signed_math.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 287,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "d29d1c96f67008296fc2c756ee716f60cc146051db51e727b12b5e75f67d9d40",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "signed_math.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 127,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "b72c6a9d4936a255b0276a1c077dc772d3b13d519b858ce7cdd2e0118b37a3d7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "library.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "unknown_name.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 325,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b15565e6d7d5a0acb72d75d52ad58ca0860622d2675aeae758f3b12fe2829d36"
+    },
+    {
+      "workflow": "multi_body_errors.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 660,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "79b154fa029d5e7625821471b303cfc8268dc5d043ebae49db1092ac20e57973"
+    },
+    {
+      "workflow": "wrong_return.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 307,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "14f0e778f2ef98fa6310a3dc39387969fbbecf4e094d08323084154e9bd2e508"
+    },
+    {
+      "workflow": "wrong_argument.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 310,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "bb0e4414791ac3e33c171c297ab3aa8e422f9708708790c6c0399964c8baa72d"
+    },
+    {
+      "workflow": "wrong_arity.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 330,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ea218cd3d4e7c5adfb04d0960dad89870aeef64683f6f900f65b67141932e8d1"
+    },
+    {
+      "workflow": "wrong_condition.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 309,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "a35c36b8990b5143be82e7010948e5fa31c0392694ab136f60e260b3876a207c"
+    },
+    {
+      "workflow": "readonly_write.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 321,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e89fe07c39c53e833cf9df51385dd2c108e9a693cff8b63669e5b77997af0d4e"
+    },
+    {
+      "workflow": "warning.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 388,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "dd87597aed842135a397b2ecee506047072c7863a14b99ef1134284579d55c59"
+    },
+    {
+      "workflow": "utf8_comment.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 325,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2e257a9afe0a2ae139fdcb25e2c09a05f0d66188b87d8bf030a15cc84b67969f"
+    },
+    {
+      "workflow": "profile_managed.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "profile_managed.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1172,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "648f06a17627308a5ee15668e5d5ab6489721c5fa51feca3f2f01bd043a6743c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "profile_managed.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 381,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "0c96fc4ae2ef731b8b5fed50430cb03e1e699d37fd15ad95690c2f0a110f254e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "profile_managed.my-run",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "profile_generic.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "profile_text_method.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "profile_text_repeat.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "profile_lambda.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "profile_division.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "profile_chained_comparison.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "private_import.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 514,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "4ff8a2cd2883e75f4005ba3ae85f0796fa3cabe5d98be2616864dcdeca1b68e2"
+    },
+    {
+      "workflow": "nongeneric_type_arguments.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 368,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b5665cc58e601ee997091f805c7d8d1dbde4a64c50c8b72dbdf409eb6e5ad976"
+    },
+    {
+      "workflow": "named_only_positional.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 436,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "92607ce33f270e65ec5175194ab90d2b48a7e420500aa191e442a42d83da488f"
+    },
+    {
+      "workflow": "named_only_valid.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "named_only_valid.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 219,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "7e6242ed6c4772dbcefcba48207766a8a39e70253fac87c88a11d69729468a7e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "named_only_valid.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 97,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "b71a1b86cedb1ce62c395f50ffa2f4f1ffd60dffd5dc270a002c2968d8971666",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "named_only_valid.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mut_call_marker.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 438,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "aba555abeeca199e35e246d991893abda9e4fcc802e72125212c4006838da19d"
+    },
+    {
+      "workflow": "mut_call_valid.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mut_call_valid.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 380,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "d86b364e95e7ab2108824570e230384f64b506f5cfa17753f80592c8364405b9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mut_call_valid.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 98,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "ed1251f2bf26f94a1749b6b24b8f5adc80bb1b15409934486a1b19daf945007b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mut_call_valid.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "shadow_function.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 345,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "c3b34547cc08f43f0b12b1b2735955db5c912d19906a0e8ebbb00f5bd5babeab"
+    },
+    {
+      "workflow": "shadow_type.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 341,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "854e4a89298a1dd4a1d941fdd86eb98e5439832dad9f3b785fb92f0d2095807f"
+    },
+    {
+      "workflow": "shadow_parameter.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 331,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "b8fe0b777db7b07d58ce21974a269113e430ba97fd296380d8e3127ecd293d0d"
+    },
+    {
+      "workflow": "signed_boundaries.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "signed_boundaries.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 498,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a3d0b21ef728a4762a4a1b400ee3da522c86b168e49242c42628e695f2a5ec90",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "signed_boundaries.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 234,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "8320bcf754f16355e77d7264f281288a5c1aae7e0f97db8aca2a6efda8cd944b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "signed_boundaries.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "literal_overflow.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 386,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2e5cc8d23e6aa93187c697b09ae553ff3b24e33523d350c0f1819f564f70402d"
+    },
+    {
+      "workflow": "repeated_defaults.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "repeated_defaults.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 421,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a47ee117d07e1be9c6f206795934361ff5799e5d6045548365fd2b2654a70eae",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "repeated_defaults.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 199,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "62d5eb5e0df9b6d5446fb726d3434edfe0f769ececdca418bd105d223252d9ec",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "repeated_defaults.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "named_argument_order.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "named_argument_order.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 324,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "27c7fe69c63abae47b84b43c4476daa8580bcdd69806c349f57da6d0f5df2d28",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "named_argument_order.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 147,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "04f04f0154c8943bcb069a8c16e0556b162fc7b3a4a8c6729cbab7b021299ed2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "named_argument_order.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "nested_loop_control.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "nested_loop_control.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1529,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "b8df996b3b58cbbc407c76100ec0586f78a511638475c61dc8f8f4d934cfb6cd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "nested_loop_control.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 778,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e15b17da6b8236fb66baaeb201f8fff4591319d232183c222cb9bfaacf1f42cb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "nested_loop_control.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "forward_call.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "forward_call.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 272,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "58bd16de725a4094697cf91cbcacfd9e9b6f71fdbbffaa4c30c11d241cc6a8df",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "forward_call.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 128,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "2416362803013fc60918499a4316b394dbe5ca10e7e3808bdebdb4ac62753733",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "forward_call.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "recursive_call.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "recursive_call.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 487,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "045108683ba78344e533319b2a75f9c6190955d0ffc05203b845af2c44e4f7eb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "recursive_call.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 282,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "bd7d93646087e56edca662135de26b215df4b49ea427f0972dfcc68574d543f5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "recursive_call.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mutual_recursion.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mutual_recursion.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 863,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9f927f25b8c1eee38fbdec490e8c6580bd533ade73710384a0237546f28f690c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mutual_recursion.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 507,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "100feb430f09d803266df8e6d4a9b7c2e3d8f2cbf86987dcce8302ac4712a9d1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mutual_recursion.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "profile_range_stride.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "profile_integer_suffix.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "readonly_range_write.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 327,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ab4fbb2e474c3ad935cf430f4fa10ac964dc1a0dc51cac14c79b5465d295575b"
+    },
+    {
+      "workflow": "augmented_mut_parameter.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "augmented_mut_parameter.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 432,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9064e1f9bc2dc77e6462b9c0c2755aae32c2f02c689c49ff51b203971275b77d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "augmented_mut_parameter.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 130,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "7e2c4ecabe39ae933f7b7c19990a15fba6f555d6f3cc650f02892009d4342a63",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "augmented_mut_parameter.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "augmented_negative_remainder.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "augmented_negative_remainder.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 316,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "4da5f800e4d5813a5532c95b80d2864b2fe23a964190d681f500d6854db21870",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "augmented_negative_remainder.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 125,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "d96008e9f1f4b00b4e8d8154ae180477a910d59dc021d831811643060440564f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "augmented_negative_remainder.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "augmented_float_division.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 370,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "57652c9c8639e1751bf3e843550ca83ef7ad5b4b69366a15ebbd2d26536fa260"
+    },
+    {
+      "workflow": "augmented_unknown_name.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 334,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "600212ec890229041dcf684c6addea0f25cdf2d2d33428b1dc45a9d2368a4466"
+    },
+    {
+      "workflow": "imported_private_alias.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "imported_private_alias.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 112,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "04dc598b19a25a949924676883a5873f38526600a239421d817bbe5dc71c2ba3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "imported_private_alias.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 57,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "28a0485803f1003cc99c9d38512b3902932bc066f86f1d618b81df8a8a5318a5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "imported_private_alias.my-run",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_unicode.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_unicode.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1468,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a73c0be16a27cd9be83d574f994e3717de59c1eaa39b41706722dd06f6d75273",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_unicode.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 883,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9777527ed1d7765729013bb7e4b79fb51d04b67354aa7c88ba0048edae68d015",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_unicode.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_bytes.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_bytes.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1504,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "2b1f87fd57ea138a7853c16d1f2ece5bf5c30b67e9d2385aae6dff005995c720",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_bytes.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1130,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "c5850fa7c231a819299dda18a584e5d6d30d0fcaff71edf01cefac20167c2b74",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_bytes.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_empty.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_empty.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1004,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a97610f15d8fa6950d827b0f6cd90a3f6d593c4b578d090cfecd3bc0e83fb57b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_empty.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 936,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "fead34a56aa9a96adc74af28c71e92e0e49273589c9732f2e5942191ddd66e40",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_empty.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_defaults.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_defaults.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1158,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "051f4e01c62cc6dccfb125d54c85b319b4464534ee915cadd92502a32f187f70",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_defaults.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 525,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "7cb087a666fad7a70aedd00d17a8417f071a34346ebd67b3acce31528ceb13d4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_defaults.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_mut_text.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_mut_text.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1323,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e82519bfa32725124fa84da5daefd49f93bd8028a4ce4d238efa02e9538a88f3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_mut_text.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 786,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "0003dd4e845537e8d297bc045a46c194525f65a029ae674b2d589babd8d672f3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_mut_text.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_mut_bytes.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_mut_bytes.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 889,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "760d4b33ead86efe0de3e88a78d20888640e4f6f239e8142d569d2fd683ac0e0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_mut_bytes.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 664,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "efffe780fe79a8b4accc49660c2f9722921b289e9dc67465c3b1cd047c4e439e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_mut_bytes.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_branch.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_branch.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1082,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "3b1e78f9a91b0a367c8255c51ce7fbf798f634f6c0cb2c3bac17f364c4303faf",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_branch.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 916,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9302dbd9df7f17d4a4f50bbd0b7463ee2b4c84915025045c87e3098a11a16134",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_branch.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_import.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_import.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1023,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "fdf313b8eed8e6eae93d5fff75517fad7a95416c587517ab701a9c3026cc336b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_import.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 853,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "20c451964ab0c1d94c7bde86046449d5b1b55e7dcdc7eb58d7069754ae55d3e0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_import.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "managed_bytes_default.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 347,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "cbe6c5cbd351ada1b1bf588438d8f895f4ba8b03cdf15528079ca2ccc98d42e5"
+    },
+    {
+      "workflow": "managed_mixed_concat.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 317,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "9ce7ffde2f9014db55dc377c827dd172d751826e2faee2f5045b0487f979b863"
+    },
+    {
+      "workflow": "managed_wrong_index.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 325,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e11bef5ab0154c4295d41abd51267bb2799e316d1e78845ed3e07f8d8784d7b4"
+    },
+    {
+      "workflow": "managed_return_type.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 315,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f436bf8bd45625f5e55b35cdcf9bc35b290d4714c92c4c694386605dbe9def3d"
+    },
+    {
+      "workflow": "list_empty_annotations.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_empty_annotations.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1929,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "75d19787e22ce524823fa4674aa520e8d283da9dc95b4a6511e0450821c1a077",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_empty_annotations.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 680,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "5ad82eb608970f46124dc407b426093cd5f651f4c920805a05f8180fc55a5529",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_empty_annotations.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_call_return.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_call_return.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2784,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "c9c242218782a80210835a5f9c617767a1125d6b9604f80d13249ef0ef562078",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_call_return.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1091,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "0ce66d08d602196eaeef8afbf046f2b9fb9574dfde45dfa2b5f055a43cb67732",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_call_return.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_nested_snapshots.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_nested_snapshots.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 9321,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "5a1e17482f950e7218d2daf3c32c56bd39500e9b863c17256a42973570321970",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_nested_snapshots.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3355,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "c87559f4e2552b10145b0b88b9c5647f58c21d04c89045c957558d611500fa45",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_nested_snapshots.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_mut_calls.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_mut_calls.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 4073,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "27c72d1f5a162bf2c807eacb0b396b9c62438b9e0517d7166a139bbfc1dfbef8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_mut_calls.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1491,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "f771a725be07fa5da906c3b0f315f7d3b1eddb60c4368a591e8a5a3ca33de33a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_mut_calls.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_methods.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_methods.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3508,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "0ad7904886946bb027bfbe6bd241a1f1640785ea671682ae058dcbfcaafe4fe9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_methods.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 5558,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "8bcd6e05c0786d461bc5ca35cf9ba725453ede169c970dc6a964d00027be0112",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_methods.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_augmented.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_augmented.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3836,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "ac38c82d9701f44c6e1eb9bd528e56b5c6f8372763ed700d60c3df855d156624",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_augmented.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2664,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "b97704132098a38dedd195ad4a6e607e1996838e5a448bd7ba638915e7ce2d67",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_augmented.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_elements.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_elements.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 6678,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "2f81a787f0d7e1adbf402305bf60004203fab851ab10721c5cc1618ee0287be4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_elements.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2548,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9082ca2a2cd4986696188e807248a98925256f42abafac5bc987e7038fbb7d5d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_elements.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1729,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "aa3c89f7e3c191b95f84300fd3a13a7854ef190579fb3bcc9dd6da86c89834d8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 524,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "21c9e7305c4c746ade265580b3fb3d1ece2424715861f069c58f5a30b6241308",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration_mutation.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration_mutation.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3917,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "170c1847d6e26fcda9eccfce58ac83f87f9f529537c6e73f9bf574c5791e39b1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration_mutation.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2221,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "82bd560bccbd36985b733b0d370e83beaaeefd91c39df4216ef1497d787f87bf",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration_mutation.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration_rebind.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration_rebind.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2653,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "ec420bdd5930f5ee4bde7944fdd5334b12b9625697506b709c4f8fad75228f6b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration_rebind.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1237,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "770b78231a8c641105cd3873aafa702488c1e2b8db5754c3eb6a225a0fcbfe51",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_iteration_rebind.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_intern_order.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_intern_order.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 5701,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "932dfd4791e1144bdf756e4b4162fc6eec0d1f2e9a718d6746c0478ec54f23da",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_intern_order.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1949,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "1d6a57fd3d182193adc190330a4aa767b62b3462a1886208373f850eb12dd8e0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_intern_order.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_repeat.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_repeat.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 4910,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "f291d620edcc34958cc8ba3ecea072781363fa8d5caf1cca1a6a1b82bb7391da",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_repeat.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2460,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e257d26b15ce2a3aa0a3d6c3cc46f6dc09a2620af956c60defff01734c39983d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_repeat.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_constant_63.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_constant_63.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 9249,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "c5d986101c0d79a9d92e56f9f54e9d0c44b6de8d25c0b30d0b666728d1b96c19",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_constant_63.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3650,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "5d6eb59d369e3a0caf1d84dbd7915880c8d57128c5f80767409e53a2580f2ad0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_constant_63.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_constant_64.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_constant_64.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 4298,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "3b7de8c3bdfe2986a6d90f8440f9211bcc2601f7086fa86ae2a6e59d3650a0b6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_constant_64.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3692,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "08ec236fb9e964fe332e6d92e83a92c171c08ac0c5e1826e0cb2212ca4322411",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_constant_64.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_inference_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 343,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2bfad1dd7d6748e891fd7c8d13f043deaa039a3752325f3644088bbc67923cb5"
+    },
+    {
+      "workflow": "list_mixed_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 312,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f880f95483ec3bb0294257129587b9498dfeab4a8498d990e1babe48c152bea7"
+    },
+    {
+      "workflow": "list_readonly_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 377,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "47f545e1663e7fdf708244a00c7f2d8dd8c3c75d8864d674863b8e4014233b0d"
+    },
+    {
+      "workflow": "list_mut_marker_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 452,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "c166505d820012ff2d21da4abf69d21864c54fc4dca81aa7b9b662aa606883bb"
+    },
+    {
+      "workflow": "list_index_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 324,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ff8ac04ed207016d3dc585e80c89694afb00b8d1060a80b8be7b45ee7f4bf9d2"
+    },
+    {
+      "workflow": "list_append_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 313,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "437c15d5f1be5cfa9e5f1a300c13a4c3c7f1b739743064eee6fb0e02e2183d1d"
+    },
+    {
+      "workflow": "list_iteration_readonly_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 336,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "c30e2e590bda00b7becca6e61918f5e3011cc44d7b9bbb68c40883f49b5fe044"
+    },
+    {
+      "workflow": "list_plus_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 389,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "a026a6681bc254bda17649875e0dda91a97e81828de2090bd645920a798a3ed3"
+    },
+    {
+      "workflow": "list_expression_methods.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_expression_methods.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 6425,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "2c42273f5ea0e9dc26510f09fd5f24dff9128ae21deb50811518004e2b7963a0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_expression_methods.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2609,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "aa4ba2df28dbd6bfb94fbd1d7a4e80f8ee6546e23fb8ef2f04503ec4fb9d38de",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_expression_methods.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_sort.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_sort.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 6285,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "6f642b51028a75bb7a352b8aed8c8a4c2d25f836f65658cde94917519e9c3731",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_sort.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3118,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "0930c6853278b4243385f0dc36aa404f2378e51a6783e6e28a4a15be960a206c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_sort.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_index_augmented.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_index_augmented.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 8521,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e9a73f2ccfde82da966fe3fed3f9e631ea706c2c169f9df3ca8f4cfc79ab6d11",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_index_augmented.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 4666,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "ec6022f4768ca5bc14efd0a4c07fb096577681031da026002e9c4de886e67ab8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_index_augmented.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_repeat_augmented.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_repeat_augmented.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 4663,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "be27d128e31fa1872261a3485961d2220c9f8aba1ef8f2cb76b86bd0a79f9748",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_repeat_augmented.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3217,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "023697dc63de5337752272aaeb8b1176870535afe5459201d2e84a45ab1c0ef8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "list_repeat_augmented.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_alias_import.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_alias_import.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 588,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9cae9480c6b7add3da01cbd4fe0a019e71efe65fb5800ee88f5cd9e0646a8025",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_alias_import.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 309,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "91c8950600c236990bcabe97a5216788fcbe6ae87d0651afadf2581cb273ce1b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_alias_import.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_call_return_list.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_call_return_list.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2339,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "229c4790d35899e34681706a5453e56fd6b5efcf8e4814aa53d7fced7aba8bb3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_call_return_list.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 918,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "77b0f67ada4baaffc3792e1a901b7ae79ce963651ebe43a198230f77c91d97d8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_call_return_list.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_constructor_defaults.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_constructor_defaults.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 333,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "90592068140ca730ae9aab0c5b5efa626aa34ebedaeee77cd28a0218087969a9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_constructor_defaults.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 173,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "874c767b06a15518891dcf4e0eed939d4e35ad4e5ddad6a20af08929de3e9b39",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_constructor_defaults.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_constructor_named_order.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_constructor_named_order.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 766,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a5af8c8b7f574145c78a75f0132fa620773c73b16f61379383bf2c97ba510914",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_constructor_named_order.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 572,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "af6e4f69de99ea8e3e02ab552d6c35ccd133e00568fcd5dde648bc83ae957605",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_constructor_named_order.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_duplicate_field_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 352,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "400d2d1d8738e21628a0aa605d4600a93f9bac93fd65bb4907a5a064583c69ef"
+    },
+    {
+      "workflow": "record_field_type_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 319,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "93044a41f74a06582b55f1c1bd82030123dba520e071ebf3d5cc1323019eb34f"
+    },
+    {
+      "workflow": "record_generic_profile.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "record_invariant_profile.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "record_list_path_snapshot.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_list_path_snapshot.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 10039,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "c00d937072f976dc25e34186e0ec76780a4663898f3bcaf6b779d0f33dd0673d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_list_path_snapshot.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 5166,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9c651023e1481521065a59c735f466174f33def5eb35ec36c1ccdba9ba4234ad",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_list_path_snapshot.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_missing_field_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 591,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "534660c5a427a0e564be8c2a5a5ff7606a15c2cb7d7490825dde021a365c5243"
+    },
+    {
+      "workflow": "record_mut_parameter_snapshot.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_mut_parameter_snapshot.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3719,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "f8064c3ed41ed45380c5fa85548c9bf3b00b903c8d8e77a4abf24d85c0711889",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_mut_parameter_snapshot.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2537,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "28ab8c6927616bff5454fa847bed3f65fbc75d1890d6be990dfb902955ecb925",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_mut_parameter_snapshot.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_nested_snapshot.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_nested_snapshot.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1421,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "927c970d19bed1996d5225e78cad59fb1a07cbd94d991391231031d4b762108f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_nested_snapshot.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 727,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "938bb0d18ee838c75110abaa5b69fae612ab7265f0ebd66f3861aab7f0f90917",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_nested_snapshot.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_private_import_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 527,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5b2ff386926667ae1b9efb0200adbd4c8797f5b688400083fe3a91a839579a0b"
+    },
+    {
+      "workflow": "record_readonly_field_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 384,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "20d29c560b9b5b674fb83e1fac58195b213892669e59d513ab88426b1c6ce1c4"
+    },
+    {
+      "workflow": "record_receiver_overlap_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 1027,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "4784caa59512ec7d09bdb8278766fb2eddb21a5412318abe26527826f50492f9"
+    },
+    {
+      "workflow": "record_refreshed_receiver.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_refreshed_receiver.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3808,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "c0082b3b706f0fee351203cedd6c61bb13b2f008437b170561139c364163eae2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_refreshed_receiver.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2452,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "8f8fdbf0b27a5ba61f76e76a414733f4a4ef6c4718fa9bcbdfe2c26d10bdd900",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_refreshed_receiver.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_union_profile.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_union_profile.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 642,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "3d86d09ca5e151e806ab615293f3f7e553e81312e43187615c66a7d86fc0c813",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_union_profile.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 437,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "812a067021ba1b51fa37898e43187f0aacec41e10fee8f9c3254efc1dbcc9808",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_union_profile.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_unknown_field_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 370,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "caf2365044fff8aeffc8504e23c0062228bcfffb4620e767e7336c5d85c2a948"
+    },
+    {
+      "workflow": "record_unknown_member_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 371,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f1150b044bb149f94c1385e994e28d68c5d04328718202b1520c09d643209c6a"
+    },
+    {
+      "workflow": "record_recursive_lists.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_recursive_lists.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 5023,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "7fc5fb7999de99d5614c65be463cfdea3a157cc95addb5b54680061f0e069aa9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_recursive_lists.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2009,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "84f56d561c81d13ba3659716f13e465b251f2cf7d33a5feffc665d5a0317ff4f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_recursive_lists.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "record_invariant_unused.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "record_invariant_imported.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "checked_consumed_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 760,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "0fed8f18ba8c59d44037349a2916b5d75433cd9ed2603606bac3bde0161963ad"
+    },
+    {
+      "workflow": "checked_error_patterns.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_error_patterns.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1129,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "09af7f978cfe76d5821667386f8f0122f85894e8038f99ce37ae3e3be35236a7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_error_patterns.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1000,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3e0a508a220c9ac7408ccf74ee7d76b086bd0fa2fd95faceae6da2f3567e009",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_error_patterns.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_failure_list_payload.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_failure_list_payload.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2866,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "1e5c4af2fb6a91f1f9bb83f252ab326ffeafa5e855d0cde108edd19fcbe99143",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_failure_list_payload.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1620,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "96e389a1446e8421816bbf4376f47178cdeb83e4f5205acd91eb6eff9c0aa996",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_failure_list_payload.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_loop_consumption.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_loop_consumption.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2593,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "a4ef1a087e470486c9252fd20f68abfcf31eecaee9a7fd6e77a0eb9bbe2bba7d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_loop_consumption.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1284,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "d0bb2a4c3c54b3f7da0054abd9dc2ed38338463c400848804e57e20faa8a0477",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_loop_consumption.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_managed_result.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_managed_result.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 3033,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "20489242b5b6a04feb201e0fedcccbf5869c47cdcd3446e8ebfca76b723da9a0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_managed_result.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1830,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "bc4afbb68ea38aef154ede5bd7b27c428e7ad59c0e4104a7e357bec46dca1183",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_managed_result.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_record_failure.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_record_failure.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 791,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "cc889e4e6c6dc8c762d0f1c16293a1e64dac219db2295e6cf14492bd44f69f52",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_record_failure.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 636,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "1628e29784f93da645b84e25e77c4155ebf5c25735cb8f8065060ccb8f888218",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_record_failure.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_try_context_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 363,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "5258fab5768096d0762fada6741a5ba0bf676d87e55e60bbb4f3e8704228999d"
+    },
+    {
+      "workflow": "checked_try_fail.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_try_fail.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1219,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e8a193b9466298dda5defef75720ea44346357762a4394ea6fb55b561255d543",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_try_fail.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1284,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "3c0fcf70956d7869539a2e7fae07d3ff8b716e92df141ff87b5ff2e897ab6694",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_try_fail.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_unhandled_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 619,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f53ebaf437a569985351713f8db1e6a491b894bd1b88460138c4be50643aa640"
+    },
+    {
+      "workflow": "checked_wrong_failure_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 353,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "7ebad1b59b12e439896ca0e522e22c1e1e031ae430695189c9663a5e06eb6a75"
+    },
+    {
+      "workflow": "optional_try.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_try.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 663,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "7dfeac2acbc7e95df990266787b5b8f6ac1fd6beb2748b03574a666e7dca4ac6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_try.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 595,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "84b815665b94b72ee914f1bbd261cc756ca6bddd3a57b237a9f8685faefd0964",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_try.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_boxed_recursive_profile.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "variant_duplicate_pattern_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 541,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "3f558c61bb1eb630074c0ec8ed30bf4276e66db54f59013cef4879b5ff1a3d7b"
+    },
+    {
+      "workflow": "variant_generic_profile.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "variant_import_alias.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_import_alias.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 881,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "33c4c473ab63366480a89df5448c6ec89fccc9933d46854dea4f08b5f4f5fe62",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_import_alias.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 495,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "ee6ad8b5d1d749bc1623f4350e728a5cb04436a750bb0f0a14c4da7616cbbdbd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_import_alias.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_incomplete_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 585,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "50a1d0e109732c0d9903f4eeaa6ef6e41fc84e0fd63c9411794b47ae475659d4"
+    },
+    {
+      "workflow": "variant_loop_branch.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_loop_branch.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2724,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "8c7155dd8543ce7df8f7e66622ce7fb530f1b27da14a5e61b9485cfb0915db25",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_loop_branch.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1145,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "58a5081b5f101d62d5163118147efb6212f851e2c1f3b5e34e1411071798361f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_loop_branch.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_match_expression.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_match_expression.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 967,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "0a7d8e3c0a7ae4d4a2d25586cde2e839cdf1dc212396ff3576f4c37e33e6697f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_match_expression.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 472,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e49a90b3e07e9a18b3ec105e4952b85a57617d2fe04093f908c8cb8bc818a041",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_match_expression.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_named_order.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_named_order.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1245,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "030e429a76bc18b98a53bfde9f8545fa744d73211be86732323b9cf53a3d78db",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_named_order.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 825,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "403fa7fc19378f83266141ba4c528874fc96ac7ef94c6523fc2e37d96b8f5562",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_named_order.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_payload_defaults.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_payload_defaults.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 714,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "2e2caf074dbdd89c7e6fe462c4adfd19e170975bf650d18bac8c0b77b19060e7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_payload_defaults.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 423,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "d6cd466be4a92ecb45165a27fff630faac53f2421ac557c8f1b287d35b61f6f3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_payload_defaults.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_payload_type_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 324,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "637d12d740877123a77865a1d3e7634c7a60a93b0b1bceff48ad2ce266e4c043"
+    },
+    {
+      "workflow": "variant_record_list_snapshot.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_record_list_snapshot.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 4845,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "98402f57ccf1bc67908e18cf19b9ee372289b940566cf49d28285eee72251f6c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_record_list_snapshot.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1848,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "64e9addc64f835649e5cf46e3162cb193d32abc36fa4c4f8b3e1757c9f88e2ec",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_record_list_snapshot.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_recursive_lists.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_recursive_lists.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 4943,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "1626c1b862da02a546933322ad43e88869136d372bf90dfc5ea57866ea995208",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_recursive_lists.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2059,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "32bd88cc3eb7a39f3d245b89d8582711e6304772178d1ac8c3e3f3002671ef21",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_recursive_lists.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_unknown_case_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 379,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "7956b06ff53e4acf95fb911f62e4bb81a69e0ed1fc7c34b038c1a8a86cb843c0"
+    },
+    {
+      "workflow": "checked_multi_argument_temporaries.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_multi_argument_temporaries.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 2015,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "3d1f0001fe8e32b7cdbd57303adf3497edcd1d1237c95f129d695561f271ef14",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_multi_argument_temporaries.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1858,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "04162830595f5a6f967e7fbfbfd276648a9c26f43ccfe856a3804309bbb5387b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_multi_argument_temporaries.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_nested_default_constructors.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_nested_default_constructors.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1472,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "5a12f88c8d78189a9680fb7aa3b45dc6d6ff054b604a07617e92e25f737fb681",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_nested_default_constructors.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1807,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "959ae63f5d02e5c81155623f054141156a095e1a72bc03b5e2069022a64d6ace",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "variant_nested_default_constructors.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_short_circuit_success.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_short_circuit_success.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1213,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "df0dd7f0323686f5c60842c65d5082e5030dd535f7a19c1d9269e632f6b4b877",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_short_circuit_success.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 833,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "919e64b58c436866c36cb65bc3a3a4e5d3c1afa50e8c5d7d7ad51ba09e1421f8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_short_circuit_success.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_short_circuit_path_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 599,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "37cc0481536570f340425cc473241a9e827074bce5cf8da97a27913c622acdc3"
+    },
+    {
+      "workflow": "checked_explicit_pending_discard.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_explicit_pending_discard.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 690,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "7dccf4b10aeeb231a2b42f133b58d62bbe7d47264b983a64639ce8aeabe2fb9a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_explicit_pending_discard.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 436,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "055a728e5147d42f3ae9cc5f7be364281f6436b895d36d5cfd60576de17b179e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_explicit_pending_discard.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "checked_implicit_scalar_discard_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 504,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "62fee4be1180a094b509760fe78a60f7322f8f89ff031dc9f8160c2712317741"
+    },
+    {
+      "workflow": "checked_implicit_pending_discard_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 395,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ba40f13b319224df77664cab6b40c8d713b69d2543c498f95b0db340fee6667e"
+    },
+    {
+      "workflow": "checked_pending_list_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 387,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "a8119ea6ba6a3f87b0f5b255f6be6a3de91fd1df305dfcaf2d18c2deb5af432d"
+    },
+    {
+      "workflow": "checked_pending_list_annotated_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 626,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "67dafedf1abe400e188cb0f093477372ce93ea21d8e44a23f9a8e76517cddb96"
+    },
+    {
+      "workflow": "checked_try_live_result_error.my",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 632,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "a86f1136c7a3cac6d5f1625c11ac11a1eecf5eac0422ab1bff8341b788a1c277"
+    },
+    {
+      "workflow": "optional_narrowing_profile.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "optional_methods_profile.my",
+      "phase": "installed",
+      "status": 2,
+      "boundary": "explicit-profile-refusal"
+    },
+    {
+      "workflow": "optional_parse_int_demand.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_demand.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 550,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "b40730bd97ec67285d5bb92548fb7952ec4df28bf137724a7c47d0e5c027fbea",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_demand.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 245,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "ae3c175a2a3f31898694ae750d0ec8639e4549619b620b9c3c3bff3dbb79ff66",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_demand.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_failures.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_failures.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1423,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "98b649b9becba47d8416bfddb78150903eee2bca64c8f61d86414ad1c6b91739",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_failures.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 424,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "9d9a9c8bf4576187d31b604a10764b56d21690550cbd1265a7e281be5af1a474",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_failures.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_methods.my",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_methods.my-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 1009,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "2a58317150d009bf3c31a66e8e58c2b35209d3430a9adf98393500b460e7d8ed",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_methods.my-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 731,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "8a5579068197164747b47084bc96f86ee24eeb9fd92b9d0ad8fc506ea44c9ce4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "optional_parse_int_methods.my-run",
+      "phase": "installed",
+      "status": 7,
+      "stdout_bytes": 2,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "10159baf262b43a92d95db59dae1f72c645127301661e0a3ce4e38b295a97c58",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "body-source-edit",
+      "phase": "installed",
+      "status": 1,
+      "stdout_bytes": 0,
+      "stderr_bytes": 320,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "fb1582a94c6d03a884ac61aecbb3da8a90bb44b1cd184501809cb9aafd41d815"
+    },
+    {
+      "workflow": "body-source-restored",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mixed-check-project",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mixed-dump-typed",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 751,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "fa2e5af53b131d480fc1a52270e2edf41782d2c204b444f6a95e35268f794b9f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "workflow": "mixed-dump-ir",
+      "phase": "installed",
+      "status": 0,
+      "stdout_bytes": 110,
+      "stderr_bytes": 0,
+      "serialized_ast_values": null,
+      "stdout_sha256": "49b0dfd60098ef3e6867027d7e5945a6778bed17a14c9b253251152c91750e82",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "failed": 0,
+  "skipped": 0,
+  "transport": {
+    "valid": 1,
+    "malformed": 19,
+    "request_sha256": "cb8777737416514d1bf3a515bb0b1e67082faa398c2cf8052657f9f29cdb3c0d",
+    "request_bytes": 21257,
+    "failed": 0,
+    "skipped": 0
+  },
+  "forged_reply_checks": 66,
+  "publication_checks": [
+    {
+      "mode": "shadow",
+      "status": 2,
+      "reply_sha256": "85e4994a92b7cc3d2d09e18b818af07392b8646cccb0de5b18905b2d799b125d",
+      "reply_bytes": 635,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: test-index component or manifest missing; rebuild/install components or set MYLANG_COMPONENT_DIR\\n\"}\n"
+    },
+    {
+      "mode": "component",
+      "status": 2,
+      "reply_sha256": "5d28a7722ea591a1dc54f15ed64eee413c6a373b5e08efad67b4bf3579eadde3",
+      "reply_bytes": 635,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: test-index component or manifest missing; rebuild/install components or set MYLANG_COMPONENT_DIR\\n\"}\n"
+    }
+  ],
+  "coordinator_edit": null
+}
