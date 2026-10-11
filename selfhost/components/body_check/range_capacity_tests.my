@@ -1,0 +1,60 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import range_capacity
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+    start: int
+    end: int
+
+
+func fresh(element: int) -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 2, 8)
+    const context = list_lower.Context(input=input, span=span)
+    mut batch = emission.empty()
+    const start = try list_lower.integer(mut batch, context, 0, element)
+    const end = try list_lower.integer(mut batch, context, 3, element)
+    return Fixture(batch=batch, scope=locals.empty(), context=context, start=start, end=end)
+
+
+public func test_signed_capacity_exact_native_append_order_and_temporary() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(0)
+    const before = fixture.batch
+    const result = try range_capacity.capacity(mut fixture.batch, mut fixture.scope, fixture.context, fixture.start, fixture.end, 0)
+    const local = fixture.scope.locals[0]
+    const node = fixture.batch.nodes[11]
+    const data = try graph.field(fixture.batch.pool, node, "data")
+    const unary = try graph.payload(fixture.batch.pool, data)
+    const operand = try graph.field(fixture.batch.pool, unary, "operand")
+    const adjusted = try graph.number(fixture.batch.pool, operand)
+    return result == 18 and len(fixture.batch.nodes) == 19 and len(fixture.batch.statements) == 7 and len(before.nodes) == 2 and adjusted == 10 and local.ty == 8 and local.mutable and not local.initialized and local.usage.temporary and local.usage.reads == 1 and len(fixture.scope.active) == 0
+
+
+public func test_unsigned_capacity_uses_direct_branch_without_signed_expansion() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(8)
+    const result = try range_capacity.capacity(mut fixture.batch, mut fixture.scope, fixture.context, fixture.start, fixture.end, 8)
+    const data = try graph.field(fixture.batch.pool, fixture.batch.statements[2], "data")
+    const branch = try graph.payload(fixture.batch.pool, data)
+    const otherwise = try graph.field(fixture.batch.pool, branch, "else_body")
+    const absent = try graph.get(fixture.batch.pool, otherwise)
+    return result == 8 and len(fixture.batch.nodes) == 9 and len(fixture.batch.statements) == 4 and absent.kind == 0
+
+
+public func test_crossing_zero_capacity_keeps_two_unsigned_additions_and_casts() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(0)
+    const result = try range_capacity.capacity(mut fixture.batch, mut fixture.scope, fixture.context, fixture.start, fixture.end, 0)
+    const data = try graph.field(fixture.batch.pool, fixture.batch.nodes[16], "data")
+    const binary = try graph.payload(fixture.batch.pool, data)
+    const lhs = try graph.field(fixture.batch.pool, binary, "left")
+    const rhs = try graph.field(fixture.batch.pool, binary, "right")
+    const left = try graph.number(fixture.batch.pool, lhs)
+    const right = try graph.number(fixture.batch.pool, rhs)
+    const ty = try graph.field(fixture.batch.pool, fixture.batch.nodes[16], "ty")
+    const output = try graph.number(fixture.batch.pool, ty)
+    return result == 18 and left == 14 and right == 15 and output == 8

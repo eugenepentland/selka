@@ -1,0 +1,55 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import buffer_lower
+
+func branch(mut batch: emission.Batch, context: list_lower.Context, condition: int, body: int, otherwise: int) -> int fails syntax_value.Problem:
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const then_body = try syntax_value.integer(mut batch.pool, body)
+    mut else_body = try syntax_value.absent(mut batch.pool)
+    if otherwise >= 0:
+        else_body = try syntax_value.integer(mut batch.pool, otherwise)
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [test, then_body, else_body])
+    return try emission.statement(mut batch, context.input, context.span, False, b"branch", payload)
+
+
+func negate(mut batch: emission.Batch, context: list_lower.Context, operand: int, ty: int) -> int fails syntax_value.Problem:
+    const op = try syntax_value.enumeration(mut batch.pool, b"neg")
+    const value = try syntax_value.integer(mut batch.pool, operand)
+    const span = try graph.clone(mut batch.pool, context.input, context.span, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["op", "operand", "op_span"], [op, value, span])
+    return try emission.node(mut batch, context.input, context.span, ty, b"unary", payload)
+
+
+public func capacity(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, start: int, end: int, element: int) -> int fails syntax_value.Problem:
+    if element != 0 and element != 8:
+        fail syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="range capacity requires an admitted integer type")
+    const slot = try list_lower.temporary(mut scope, context, 8)
+    const zero = try list_lower.integer(mut batch, context, 0, element)
+    const zero_capacity = try list_lower.integer(mut batch, context, 0, 8)
+    const difference = try list_lower.binary(mut batch, context, b"sub", end, start, element)
+    const direct = try buffer_lower.cast(mut batch, context, difference, 8)
+    const direct_assignment = try list_lower.store(mut batch, context, slot, direct, False)
+    const ascending = try list_lower.binary(mut batch, context, b"lt", start, end, 1)
+    mut reserve = direct_assignment
+    if element == 0:
+        const start_negative = try list_lower.binary(mut batch, context, b"lt", start, zero, 1)
+        const end_negative = try list_lower.binary(mut batch, context, b"lt", end, zero, 1)
+        const one = try list_lower.integer(mut batch, context, 1, element)
+        const adjusted = try list_lower.binary(mut batch, context, b"add", start, one, element)
+        const magnitude = try negate(mut batch, context, adjusted, element)
+        const low = try buffer_lower.cast(mut batch, context, magnitude, 8)
+        const high = try buffer_lower.cast(mut batch, context, end, 8)
+        const sum = try list_lower.binary(mut batch, context, b"add", high, low, 8)
+        const unsigned_one = try list_lower.integer(mut batch, context, 1, 8)
+        const crossed = try list_lower.binary(mut batch, context, b"add", sum, unsigned_one, 8)
+        const crossed_assignment = try list_lower.store(mut batch, context, slot, crossed, False)
+        const negative_start = try branch(mut batch, context, end_negative, direct_assignment, crossed_assignment)
+        reserve = try branch(mut batch, context, start_negative, negative_start, direct_assignment)
+    const initialize = try list_lower.store(mut batch, context, slot, zero_capacity, True)
+    const guarded = try branch(mut batch, context, ascending, reserve, -1)
+    const read = try list_lower.read(mut batch, context, slot, 8)
+    const block = try list_lower.block(mut batch, context, [initialize, guarded], read, 8)
+    return try list_lower.append(mut batch, context, block)
