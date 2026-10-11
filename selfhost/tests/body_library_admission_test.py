@@ -11,11 +11,13 @@ class LibraryAdmissionTests(unittest.TestCase):
     def test_corpus_pins_all_sources_and_ordered_native_errors(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         D.require_manifest(manifest)
-        self.assertEqual(len(manifest),24)
+        self.assertEqual(len(manifest),30)
         for name,spec in manifest.items():
             self.assertEqual(hashlib.sha256((D.FIXTURES/Path(name).with_suffix('.input')).read_bytes()).hexdigest(),spec['source_sha256'])
             self.assertEqual(bool(spec.get('diagnostics')),spec['status']==1)
-        self.assertEqual((sum(spec['status']==0 for spec in manifest.values()),sum(spec['status']==1 for spec in manifest.values())),(16,8))
+        self.assertEqual((sum(spec['status']==0 for spec in manifest.values()),sum(spec['status']==1 for spec in manifest.values())),(20,10))
+        self.assertEqual(manifest['repeat_wrong_count_error.my']['diagnostics'][0]['code'],'E_TYPE')
+        self.assertEqual(manifest['repeat_buffer_error.my']['diagnostics'][0]['code'],'E_TYPE')
         self.assertEqual(manifest['constant_literal_type_error.my']['diagnostics'][0]['code'],'E_TYPE')
         self.assertEqual(manifest['constant_private_import_error.my']['diagnostics'][0]['notes'][0]['role'],'related')
         self.assertEqual(manifest['iteration_shadow_error.my']['diagnostics'][0]['code'],'E_SHADOWING')

@@ -1,0 +1,4 @@
+func main() -> int:
+    const value = byte_buffer([65]) * 2
+    _ = value
+    return 7

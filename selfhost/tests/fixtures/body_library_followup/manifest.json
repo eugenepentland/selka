@@ -231,5 +231,61 @@
     "source_sha256": "1d695b56658767a00804f371aaec4a1f9eaeb0f7fff62b29bcab80022aef62d6",
     "result": 7,
     "typed": true
+  },
+  "repeat_augmented_snapshot.my": {
+    "status": 0,
+    "source_sha256": "1a1d563ceb4c218fb8352de0bb94dec3d04cd7c13123f83c1931d60b7411e77e",
+    "result": 7,
+    "typed": true
+  },
+  "repeat_buffer_error.my": {
+    "status": 1,
+    "source_sha256": "424f7094088756deccb9c8f27f118904bcf003ea9f2c310dce9ac2f910707030",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected byte_buffer, found int",
+        "bytes": {
+          "start": 56,
+          "end": 57
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "repeat_bytes_order.my": {
+    "status": 0,
+    "source_sha256": "76d396c169b8ce449f6ab001874127949b4cfeb2454f1c41b14a362e330a1ea6",
+    "result": 7,
+    "typed": true
+  },
+  "repeat_empty_negative.my": {
+    "status": 0,
+    "source_sha256": "4b543046ca8b38cf8de51059070d3849ab5f63fe151cb8391fc94f407ce1c6c7",
+    "result": 7,
+    "typed": true
+  },
+  "repeat_text_order.my": {
+    "status": 0,
+    "source_sha256": "d1f9de3d2882ee304be581743517844f8a7aa64bf3665f04331a54415261d0e9",
+    "result": 7,
+    "typed": true
+  },
+  "repeat_wrong_count_error.my": {
+    "status": 1,
+    "source_sha256": "e3501a789247f730eb0a1fafc60aa8e7bc60e78d592f70f57175f0ffd4fb2f0f",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected str, found bool",
+        "bytes": {
+          "start": 43,
+          "end": 44
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
   }
 }

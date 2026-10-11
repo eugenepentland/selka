@@ -24,8 +24,8 @@ TESTS = (
 
 
 def require_manifest(manifest):
-    F.require(len(manifest) == 24 and sum(s['status'] == 0 for s in manifest.values()) == 16
-              and sum(s['status'] == 1 for s in manifest.values()) == 8,
+    F.require(len(manifest) == 30 and sum(s['status'] == 0 for s in manifest.values()) == 20
+              and sum(s['status'] == 1 for s in manifest.values()) == 10,
               'incomplete pure-library followup selection')
     inventory = json.loads((FIXTURES / 'inventory.json').read_text())
     F.require(set(manifest) == set(inventory['source_cases']), 'fixture inventory changed')
