@@ -622,7 +622,7 @@ const ModuleState = struct {
         );
         if (self.options.counters) try out.appendSlice(self.allocator, emit_count.declarations);
         try out.appendSlice(self.allocator, task_bridge);
-        if (self.module.zero_rc) try out.appendSlice(self.allocator, "declare void @myl_core_drop_owned(ptr) nounwind\n");
+        if (self.module.zero_rc) try out.appendSlice(self.allocator, "declare void @myl_core_drop_owned(ptr) nounwind\ndeclare void @myl_core_box_drop_shell(ptr) nounwind\n");
         const prelude = if (self.options.counters) emit_count.fast_paths else runtime_fast_paths;
         const paths = if (self.module.zero_rc) try zero_rc.fastPaths(self.allocator, prelude) else prelude;
         try fastPaths(self.allocator, out, paths, body, self.layouts.text.items);
@@ -2136,6 +2136,7 @@ const FunctionEmitter = struct {
             .union_make => if (!self.memory.fused[ref.index()]) try self.unionMake(out, name, inst),
             .union_tag => try self.unionTag(out, name, inst.a),
             .union_payload => if (!try self.viewOf(out, name, ref, 8)) try self.unionPayload(out, .{ .result = name, .union_type = self.typeOf(inst.a), .value = try self.value(inst.a), .case = @intCast(inst.data) }),
+            .union_take => try self.unionTake(out, name, inst),
             .record_make => if (!self.memory.fused[ref.index()]) try self.recordMake(out, name, inst),
             .record_get => try self.recordGet(out, name, ref, inst),
             .record_set => try self.recordSet(out, name, ref, inst),
@@ -3064,6 +3065,22 @@ const FunctionEmitter = struct {
                 try self.loadValue(out, payload_type, slot, read.result);
             },
         }
+    }
+
+    /// Transfer the active payload before reclaiming a recursive box's shell.
+    /// Large payloads get their own home: none may keep pointing into that box.
+    fn unionTake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+        const m = self.state.module;
+        if (!m.zero_rc) return error.UnsupportedInstruction;
+        const union_type = self.typeOf(inst.a);
+        const stored = m.compound(union_type).@"union"[@intCast(inst.data)];
+        const boxed = m.kind(stored) == .box;
+        const payload = if (boxed) try self.fresh("%takenbox") else name;
+        try self.unionPayload(out, .{ .result = payload, .union_type = union_type, .value = try self.value(inst.a), .case = @intCast(inst.data) });
+        if (!boxed) return;
+        try self.loadValue(out, inst.ty, try self.offsetPointer(out, payload, data_offset), name);
+        _ = try self.countSite(out, .release_unique, "");
+        try out.print(self.a(), "  call void @myl_core_box_drop_shell(ptr {s})\n", .{payload});
     }
 
     /// Replace element `b` of list `a` in place with `extra[0]`; the element it

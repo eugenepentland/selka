@@ -1613,12 +1613,14 @@ const FnBuilder = struct {
         return self.propagatedPayload(input, 1 - none_tag, span);
     }
 
-    // A propagated Result owns its active payload. Until union extraction has
-    // a consuming IR form, explicitly copy that payload before dropping the
-    // source wrapper; never synthesize a retained alias in zero-RC mode.
+    // The source contract consumes a propagated Result/Option. Preserve that
+    // transfer in IR, including the ownership of a recursive boxed payload.
     fn propagatedPayload(self: *FnBuilder, input: ir.Ref, tag: usize, span: u32) Error!ir.Ref {
-        const payload = try self.payloadOf(input, tag, span);
-        return if (self.module().zero_rc and payload != .none) self.copyOwned(payload, span) else payload;
+        if (!self.module().zero_rc) return self.payloadOf(input, tag, span);
+        const stored = self.module().compound(self.typeOfRef(input)).@"union"[tag];
+        if (stored == .void) return .none;
+        const payload = if (self.module().kind(stored) == .box) self.module().compound(stored).box else stored;
+        return self.emit(.{ .op = .union_take, .ty = payload, .a = input, .data = tag, .span = span });
     }
 
     /// A string constant `Union.case` naming case `case` of the union `ty`, as the old core spells it.

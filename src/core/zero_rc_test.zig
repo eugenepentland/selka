@@ -939,3 +939,81 @@ test "zero RC copied records preserve function values without owning them" {
         \\    return 0
     , "item-7 42\n");
 }
+
+// spec: NEW-CORE-ZERO-RC-PAYLOAD-TRANSFER-1
+test "zero RC payload transfer preserves recursive success errors and mutable writebacks" {
+    try executes(std.testing.allocator,
+        \\enum Tree:
+        \\    leaf(items: dict[str, str[]])
+        \\    node(child: Tree)
+        \\func score(tree: Tree) -> int:
+        \\    match tree:
+        \\        case Tree.leaf(items=items):
+        \\            return len(items["key-1"][0])
+        \\        case Tree.node(child=child):
+        \\            return 1 + score(child)
+        \\func make(mut count: int, fail: bool) -> Result[Tree, str]:
+        \\    count += 1
+        \\    if fail:
+        \\        return Err("failure-" + str(count))
+        \\    mut tree = Tree.leaf(items={"key-" + str(1): ["value-" + str(1)]})
+        \\    for i in range(40):
+        \\        tree = Tree.node(child=tree)
+        \\    return Ok(tree)
+        \\func forward(mut count: int, fail: bool) -> Result[Tree, str]:
+        \\    const tree = try make(mut count, fail)
+        \\    return Ok(tree)
+        \\func run(mut count: int, fail: bool) -> Result[int, str]:
+        \\    const tree = try forward(mut count, fail)
+        \\    const saved = tree.copy()
+        \\    return Ok(score(tree) + score(saved))
+        \\func main(out: Stream) -> int:
+        \\    mut count = 0
+        \\    for i in range(3):
+        \\        match run(mut count, i == 1):
+        \\            case Ok(value):
+        \\                out.print(value)
+        \\            case Err(message):
+        \\                out.print(message)
+        \\    out.print(count)
+        \\    return 0
+    , "94\nfailure-2\n94\n3\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-PAYLOAD-TRANSFER-1
+test "zero RC payload transfer handles wide option values phis and discarded owners" {
+    try executes(std.testing.allocator,
+        \\record Wide:
+        \\    a: str
+        \\    b: str
+        \\    c: str
+        \\    d: str
+        \\    e: str
+        \\func make(n: int) -> Wide?:
+        \\    if n == 0:
+        \\        return None
+        \\    return Some(Wide(a="a-" + str(n), b="b-" + str(n), c="c-" + str(n), d="d-" + str(n), e="e-" + str(n)))
+        \\func forward(n: int) -> Wide?:
+        \\    mut result = make(n)
+        \\    if n > 2:
+        \\        result = make(n + 1)
+        \\    const value = try result
+        \\    return Some(value)
+        \\func discard(n: int) -> int?:
+        \\    _ = try make(n)
+        \\    return Some(7)
+        \\func main(out: Stream) -> int:
+        \\    for i in range(4):
+        \\        match forward(i):
+        \\            case Some(value):
+        \\                out.print(value.a, value.e)
+        \\            case None:
+        \\                out.print("none")
+        \\        match discard(i):
+        \\            case Some(value):
+        \\                out.print(value)
+        \\            case None:
+        \\                out.print("empty")
+        \\    return 0
+    , "none\nempty\na-1 e-1\n7\na-2 e-2\n7\na-4 e-4\n7\n");
+}

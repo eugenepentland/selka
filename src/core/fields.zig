@@ -279,7 +279,7 @@ fn copies(op: ir.Op) bool {
         .param, .undef, .copy, .phi, .func_ref, .call, .call_indirect => true,
         .record_make, .record_set, .record_get => true,
         .list_new, .list_get, .list_get_field, .list_push, .list_copy, .list_set, .list_pop, .list_set_field, .list_sort => true,
-        .union_make, .union_payload, .box_make, .box_get, .array_get, .array_set => true,
+        .union_make, .union_payload, .union_take, .box_make, .box_get, .array_get, .array_set => true,
         .dict_new, .dict_entry_key, .dict_entry_value, .dict_set_value, .dict_insert, .dict_remove, .dict_copy, .dict_clear => true,
         else => false,
     };

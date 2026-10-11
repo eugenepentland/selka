@@ -559,7 +559,7 @@ const Verifier = struct {
             .list_get_field => self.fieldSignature(s),
             .list_set_field => self.setFieldSignature(s),
             .buffer_append => inst.ty == .byte_buffer and s.a == .byte_buffer and (s.b == .bytes or s.b == .byte_buffer) and s.extra.len == 2 and self.typeOf(s.extra[0]) == .i64 and self.typeOf(s.extra[1]) == .i64,
-            .union_make, .union_tag, .union_payload => self.unionSignature(s),
+            .union_make, .union_tag, .union_payload, .union_take => self.unionSignature(s),
             .record_make => if (self.compoundOf(inst.ty, .record)) |fields| self.typesMatch(s.extra, fields) else if (self.compoundOf(inst.ty, .array)) |array| blk: {
                 if (s.extra.len != array.n) break :blk false;
                 for (s.extra) |element| if (self.typeOf(element) != array.elem) break :blk false;
@@ -634,6 +634,10 @@ const Verifier = struct {
         const cases = self.compoundOf(union_type, .@"union") orelse return false;
         if (inst.data >= cases.len) return false;
         const payload = cases[@intCast(inst.data)];
+        if (inst.op == .union_take) {
+            const inner = self.compoundOf(payload, .box) orelse payload;
+            return self.module.zero_rc and inner != .void and inner == inst.ty;
+        }
         if (inst.op == .union_payload) return payload != .void and payload == inst.ty;
         return if (payload == .void) inst.a == .none else inst.a != .none and s.a == payload;
     }

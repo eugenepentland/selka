@@ -1,0 +1,19 @@
+import json
+
+func main(out: Stream) -> int:
+    mut source = ""
+    for i in range(60):
+        source += "["
+    source += "1"
+    for i in range(60):
+        source += "]"
+    mut total = 0
+    for i in range(1000):
+        match json.loads(source):
+            case Ok(value):
+                total += len(json.dumps(value))
+            case Err(error):
+                out.print(json.message(error))
+                return 1
+    out.print(total)
+    return 0

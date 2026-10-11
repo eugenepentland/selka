@@ -76,6 +76,11 @@ cross calls under a single-input return contract. Mutation or moving that owner
 while a view is still used is rejected. Files and dependent capabilities use
 `with` scopes. Sharing and `.snapshot()` are refused in this mode.
 
+`try` transfers the active payload of an owned `Result` or `Option` directly.
+It does not make a deep copy. Pattern bindings from an ordinary `match` still
+borrow their matched value; `.copy()` explicitly requests an independent owner.
+See the [owned-payload experiment](../experiments/owned-payload-20261011/README.md).
+
 The zero-RC runtime has no reference-count field, retain/release functions, or
 count-based uniqueness checks. Heap allocation and ordinary destruction still
 occur. The header remains 32 bytes because of alignment, and explicit copies can

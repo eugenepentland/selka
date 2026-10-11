@@ -680,7 +680,7 @@ fn consuming(instruction: ir.Inst, k: usize) bool {
         .list_push, .record_set => true,
         // a (the list), b (the index), then extra[0] (the value).
         .list_set, .list_set_field, .array_set, .dict_set_value, .dict_insert => k >= 2,
-        .list_pop, .union_make, .box_make, .ret, .release, .record_make => true,
+        .list_pop, .union_make, .union_take, .box_make, .ret, .release, .record_make => true,
         else => false,
     };
 }

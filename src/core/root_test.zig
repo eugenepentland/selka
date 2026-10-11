@@ -3,6 +3,7 @@
 comptime {
     _ = @import("single_owner_test.zig");
     _ = @import("zero_rc_test.zig");
+    _ = @import("owned_payload_test.zig");
     _ = @import("zero_rc_task_test.zig");
     _ = @import("zero_rc_cache_test.zig");
     _ = @import("s2_views_test.zig");

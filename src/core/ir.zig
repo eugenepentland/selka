@@ -385,6 +385,10 @@ pub const Op = enum(u8) {
     /// Borrow string `a` between scalar positions `b: i64` and `extra[0]: i64`, clamped
     /// exactly as `str_slice` clamps them: the `str_view` of the octets `str_slice` would copy.
     str_slice_view,
+    /// Consume an owned union and transfer case `data`, unboxing its payload when
+    /// needed and freeing only the box shell. Zero-RC only; the active tag must
+    /// already be established. Unlike `union_payload`, the result is an owner.
+    union_take,
 
     /// Whether this operation ends a block.
     pub fn terminates(self: Op) bool {
