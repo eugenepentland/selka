@@ -20,6 +20,7 @@ import list_repeat
 import list_places
 import list_iteration
 import comprehension_lower
+import collection_comprehension
 import list_slice
 import range_capacity
 import record_types
@@ -3288,9 +3289,7 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
     const context = list_lower.Context(input=state.syntax.pool, span=span)
     const set_id = try graph.field(state.syntax.pool, payload, "set")
     const set_value = try graph.get(state.syntax.pool, set_id)
-    if set_value.integer != 0:
-        const rejection = try problem(state, span, "P_BODY_PROFILE", "set comprehensions are outside the admitted list closure")
-        fail rejection
+    const set_output = set_value.integer != 0
     const name_span = try graph.field(state.syntax.pool, payload, "name")
     const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
     const source_id = try graph.field(state.syntax.pool, payload, "source")
@@ -3298,6 +3297,9 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
     if source.kind != 7 or len(source.children) != 1:
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid comprehension source")
     const saved_active = state.scope.active
+    const options_before = option_flow.snapshot(state.control.options)
+    mut source_kind = b"list"
+    mut projection = dictionary_view_lower.Shape(mapping=-1, key=-1, value=-1, item=-1, list=-1, kind=b"list")
     mut owner = -1
     mut index = -1
     mut limit = -1
@@ -3341,10 +3343,33 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
         const checked = try expression(mut state, raw)
         iterable = checked
         mut element = list_types.element_type(state.batch.facts.lists, iterable.ty)
+        const schema = collection_types.schema(state.batch.facts.lists.types.collections, iterable.ty)
+        mut owner_type = iterable.ty
+        mut item_schema = -1
         if iterable.ty == state.batch.facts.string_type:
             element = iterable.ty
-        elif iterable.ty == state.batch.facts.bytes_type:
+            source_kind = b"text"
+        elif iterable.ty == state.batch.facts.bytes_type or iterable.ty == state.batch.facts.lists.types.buffer.id:
             element = 0
+            source_kind = b"bytes"
+        elif schema.kind == 0 or schema.kind == 1:
+            element = schema.key
+            source_kind = if schema.kind == 0 then b"dict" else b"set"
+        elif schema.kind >= 3:
+            element = schema.key
+            owner_type = schema.owner
+            source_kind = b"keys"
+            if schema.kind == 4:
+                element = schema.value
+                source_kind = b"values"
+            elif schema.kind == 5:
+                const item_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=2, key=schema.key, value=schema.value, owner=-1), span)
+                item_schema = item_type
+                element = item_type
+                source_kind = b"items"
+            const mapping = try dictionary_view_lower.owner(mut state.batch, context, iterable.id, owner_type)
+            iterable = Expression(id=mapping, ty=owner_type)
+        projection = dictionary_view_lower.Shape(mapping=owner_type, key=schema.key, value=schema.value, item=item_schema, list=-1, kind=source_kind)
         if element < 0:
             const rejection = try problem(state, span, "P_BODY_PROFILE", "comprehension receiver is outside the admitted collection closure")
             fail rejection
@@ -3377,24 +3402,45 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
         const filter_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
         _ = try require(state, checked.ty, 1, filter_span)
         condition = checked.id
+        try option_flow.assume(mut state.control.options, option_context(state), state.scope, option_flow.Guard(condition=raw, truth=True))
         raw_children.append(raw)
     const output_id = try graph.field(state.syntax.pool, payload, "output")
     const output_raw = try graph.number(state.syntax.pool, output_id)
     const produced = try expression(mut state, output_raw)
-    raw_children.append(output_raw)
+    mut analyzed_children = [output_raw]
+    for child in raw_children:
+        analyzed_children.append(child)
+    raw_children = analyzed_children
+    if set_output:
+        _ = try require_hash_key(mut state, produced.ty, span, True)
     const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, produced.ty)
     if pending:
         const rejection = try problem(state, span, "E_LIST_TYPE", "list elements require copyable storable values without pending results")
         fail rejection
-    const result_type = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=produced.ty, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+    mut result_type = -1
+    if set_output:
+        const ty = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=1, key=produced.ty, value=15, owner=-1), span)
+        result_type = ty
+    else:
+        const ty = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=produced.ty, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+        result_type = ty
     const output = try list_lower.temporary(mut state.scope, context, result_type)
-    const append = try list_lower.operation(mut state.batch, context, list_lower.Operation(owner=output, kind=b"append", arguments=[produced.id], ty=15))
+    mut append = -1
+    if set_output:
+        const unit_payload = try syntax_value.absent(mut state.batch.pool)
+        const unit = try emission.node(mut state.batch, state.syntax.pool, span, 15, b"unit", unit_payload)
+        const write = try list_lower.operation(mut state.batch, context, list_lower.Operation(owner=output, kind=b"write", arguments=[produced.id, unit], ty=15))
+        append = write
+    else:
+        const kept = try list_lower.operation(mut state.batch, context, list_lower.Operation(owner=output, kind=b"append", arguments=[produced.id], ty=15))
+        append = kept
     const append_id = try syntax_value.integer(mut state.batch.pool, append)
     mut body = try emission.statement(mut state.batch, state.syntax.pool, span, False, b"discard", append_id)
     if condition >= 0:
         const branch = try comprehension_lower.branch_statement(mut state.batch, context, condition, body)
         body = branch
     state.scope.active = saved_active
+    option_flow.restore(mut state.control.options, options_before)
     const loop_id = state.control.next
     state.control.next = loop_id + 1
     mut lowered = list_lower.Lowered(ty=result_type, tag=b"", payload=-1)
@@ -3406,7 +3452,7 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
         const end_value = try list_lower.read(mut state.batch, context, limit, start.ty)
         const test = try list_lower.binary(mut state.batch, context, b"lt", current, end_value, 1)
         mut capacity = -1
-        if condition < 0:
+        if condition < 0 and not set_output:
             const first = try list_lower.read(mut state.batch, context, index, start.ty)
             const last = try list_lower.read(mut state.batch, context, limit, start.ty)
             const count = try range_capacity.capacity(mut state.batch, mut state.scope, context, first, last, start.ty)
@@ -3414,9 +3460,16 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
         else:
             const zero = try list_lower.integer(mut state.batch, context, 0, 0)
             capacity = zero
-        const capacity_id = try syntax_value.integer(mut state.batch.pool, capacity)
-        const acquire = try syntax_value.object(mut state.batch.pool, ["capacity"], [capacity_id])
-        const fresh = try emission.node(mut state.batch, state.syntax.pool, span, result_type, b"acquire_buffer", acquire)
+        mut fresh = -1
+        if set_output:
+            const empty = try emission.ids(mut state.batch, [])
+            const allocated = try emission.node(mut state.batch, state.syntax.pool, span, result_type, b"array", empty)
+            fresh = allocated
+        else:
+            const capacity_id = try syntax_value.integer(mut state.batch.pool, capacity)
+            const acquire = try syntax_value.object(mut state.batch.pool, ["capacity"], [capacity_id])
+            const allocated = try emission.node(mut state.batch, state.syntax.pool, span, result_type, b"acquire_buffer", acquire)
+            fresh = allocated
         const setup_index = try list_lower.store(mut state.batch, context, index, start.id, True)
         const setup_limit = try list_lower.store(mut state.batch, context, limit, end.id, True)
         const setup_output = try list_lower.store(mut state.batch, context, output, fresh, True)
@@ -3427,7 +3480,7 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
     else:
         const plan = list_iteration.Plan(request=list_iteration.Input(source=state.syntax.source, name=name_span, span=span, iterable=iterable.id, owner_type=iterable.ty, element=state.scope.locals[binding].ty, loop_id=loop_id), owner=owner, index=index, limit=limit, binding=binding, before_active=saved_active)
         const source_body = list_iteration.SourceBody(raw_statements=state.syntax.statements, raw_nodes=state.syntax.nodes, body_raw=-1, expressions=raw_children)
-        const result = try comprehension_lower.iterable(mut state.batch, mut state.scope, context, comprehension_lower.Iterable(plan=plan, source=source_body, output=output, body=body, reserve=condition < 0, result_type=result_type))
+        const result = try collection_comprehension.collect(mut state.batch, mut state.scope, context, collection_comprehension.Input(plan=plan, source=source_body, projection=projection, kind=source_kind, output=collection_comprehension.Output(slot=output, body=body, ty=result_type, reserve=condition < 0 and not set_output, set=set_output)))
         lowered = result
     const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=result_type)

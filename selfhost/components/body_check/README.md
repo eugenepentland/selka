@@ -230,7 +230,7 @@ values and items with source operand typing and receiver usage metadata. Named s
 views require their canonical dictionary to exist first. `list` snapshots of dictionaries, sets and live views preserve native temporary and recipe order, including the intermediate result rows retained for keys and values. Ordinary dictionary/set and live-view iteration, including item unpacking and enumerated positions with native source rebinding analysis, is connected. Ordinary record and
 collection storage recursion remains bounded and does not change wire limits.
 
-This slice does not qualify the complete dictionary/set closure. Collection
-expression-receiver methods and collection comprehensions are still being connected and must pass the native-controlled corpus before
+This slice does not qualify the complete dictionary/set closure. List/set comprehensions over ranges and admitted collection families are connected with native projection, signed mapping lengths, source refresh and filter narrowing. Collection
+expression-receiver methods remain under implementation; these slices must pass the native-controlled corpus before
 selected-source admission is claimed. The previous B7 deployment and evidence
 remain separate from schema-8 development.
