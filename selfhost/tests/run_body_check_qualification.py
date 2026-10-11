@@ -501,10 +501,12 @@ def private_fixture(args,q):
 def capture_exchange(args,q,private,real,source,mode='component',mutate=False):
     env=environment(mode,private,q.empty_path)
     request=q.work/('capture-request-'+mode+'.bin');reply=q.work/('capture-reply-'+mode+'.bin')
+    request.unlink(missing_ok=True)
+    reply.unlink(missing_ok=True)
     env.update(BODY_REAL=str(real),BODY_REQUEST=str(request),BODY_CAPTURE=str(reply))
     if mutate:
         env.update(MYLANG_LEXER_MODE='component',BODY_MUTATE=str(private/'lexer-pilot.json'))
-    result=F.execute([q.compiler,'check-project',q.source/source,'--diagnostics=json'],env,q.work)
+    result=F.execute([q.compiler,'check-project',q.source/source,'--diagnostics=json','--no-cache'],env,q.work)
     return result,request.read_bytes(),reply.read_bytes()
 
 
@@ -524,7 +526,7 @@ def forged_replies(args,q,private,success,list_success,record_success,b5):
         path=q.work/f'forged-body-{case}.bin';path.write_bytes(payload)
         for mode in q.modes:
             env=environment(mode,private,q.empty_path);env['BODY_REPLY']=str(path)
-            result=F.execute([q.compiler,'check-project',q.source/source],env,q.work)
+            result=F.execute([q.compiler,'check-project',q.source/source,'--no-cache'],env,q.work)
             F.require(result[0]==2 and not result[1] and result[2],f'{mode}: forged typed body {case} escaped rejection: {result!r}')
             checked+=1
     return checked

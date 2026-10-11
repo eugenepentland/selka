@@ -41,6 +41,57 @@ class BodyQualificationTests(unittest.TestCase):
                'notes': [], 'fix': {'edits': [{'bytes': {'start': 1, 'end': 1}, 'text': 'é'}]}}
         self.assertEqual(D.diagnostic_contract(raw)['edits'][0]['text'].encode(), b'\xc3\xa9')
 
+    def test_forged_payload_changes_force_new_component_execution(self):
+        from contextlib import ExitStack
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as temporary, ExitStack() as stack:
+            work=Path(temporary)
+            q=SimpleNamespace(work=work,source=work,compiler=Path('/compiler'),
+                              empty_path=work,modes=['shadow','component'])
+            captures={name:b'0'*64 for name in ('variant_named_order.my','checked_try_fail.my',
+                                               'checked_loop_consumption.my','optional_parse_int_demand.my')}
+            mutators=['mutate_success','mutate_lists','mutate_records','mutate_variants','mutate_matches',
+                      'mutate_propagation','mutate_transfer','mutate_catalog_recipes']
+            has_buffers=hasattr(D,'mutate_buffers')
+            if has_buffers:mutators.append('mutate_buffers')
+            expected=20 if has_buffers else 18
+            for name in mutators:
+                stack.enter_context(patch.object(D,name,return_value=[b'changed']))
+            stack.enter_context(patch.object(D,'FORGED_CHECKS',expected))
+            def execute(command,env,cwd):
+                self.assertIn('--no-cache',command)
+                self.assertEqual(Path(env['BODY_REPLY']).read_bytes(),b'changed')
+                return (2,b'',b'ComponentProtocol')
+            spy=stack.enter_context(patch.object(D.F,'execute',side_effect=execute))
+            inputs=[None,q,work,b'0'*64,b'0'*64,b'0'*64,captures]
+            if has_buffers:inputs.append(b'0'*64)
+            self.assertEqual(D.forged_replies(*inputs),expected)
+            self.assertEqual(spy.call_count,expected)
+
+    def test_capture_and_publication_require_new_wrapper_side_effects(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as temporary:
+            work=Path(temporary)
+            q=SimpleNamespace(work=work,source=work,compiler=Path('/compiler'),empty_path=work)
+            request=work/'capture-request-component.bin'
+            reply=work/'capture-reply-component.bin'
+            request.write_bytes(b'stale request')
+            reply.write_bytes(b'stale reply')
+            def execute(command,env,cwd):
+                self.assertIn('--no-cache',command)
+                self.assertFalse(request.exists())
+                self.assertFalse(reply.exists())
+                Path(env['BODY_REQUEST']).write_bytes(b'fresh request')
+                Path(env['BODY_CAPTURE']).write_bytes(b'fresh reply')
+                self.assertEqual(env['BODY_MUTATE'],str(work/'lexer-pilot.json'))
+                return (2,b'',b'ComponentMissing')
+            with patch.object(D.F,'execute',side_effect=execute):
+                result,actual_request,actual_reply=D.capture_exchange(None,q,work,work/'real','main.my',mutate=True)
+            self.assertEqual(result[0],2)
+            self.assertEqual((actual_request,actual_reply),(b'fresh request',b'fresh reply'))
+
     def test_frame_binds_whole_request(self):
         payload=b'raw body\x00'+ 'éλ'.encode();frame=D.frame(payload)
         self.assertEqual(frame[:8],b'SLKBCK01')
