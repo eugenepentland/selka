@@ -1,10 +1,10 @@
-# Body-check batches through B9
+# Body-check batches through schema 11
 
 B1 through B9 transfer body checking for every admitted ordinary function to a qualified Selka process. Native catalog construction, entry checks/adaptation, effects/origin/mutation passes, domain codecs and final warnings remain explicit host stages. Unsupported syntax produces a located profile refusal; selected modes never fall back to native body checking. Reference remains the default.
 
 ## Framing
 
-The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/10`, direction `0` request or `1` reply, payload byte length at offset20, nonce8 at24 and request payload SHA256 at32. A reply echoes bytes24..64 exactly. Both complete frames are at most64MiB. Payloads are named postorder logical tables under `SLKBKI01`/`SLKBKR01`, using the existing parser value kinds0null,1signedi64,2bool,3bytes,4enum-tag,5namedrecord,6list,7taggedunion. Payload header contains value count and final root ID. References must point backward; duplicate/unknown fields, malformed tags, trailing bytes and correlation mismatches are host protocol failures.
+The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/11`, direction `0` request or `1` reply, payload byte length at offset20, nonce8 at24 and request payload SHA256 at32. A reply echoes bytes24..64 exactly. Both complete frames are at most64MiB. Payloads are named postorder logical tables under `SLKBKI01`/`SLKBKR01`, using the existing parser value kinds0null,1signedi64,2bool,3bytes,4enum-tag,5namedrecord,6list,7taggedunion, and body-only kind8 upper-half u64 integer bits. Payload header contains value count and final root ID. References must point backward; duplicate/unknown fields, malformed tags, trailing bytes and correlation mismatches are host protocol failures.
 
 ## Request
 
@@ -14,7 +14,7 @@ The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/10`,
 
 Outcome tags are `success`, `failure` and `profile`.
 
-Success is `Output{batch,import_used,diagnostics,recipes:CatalogRecipe[]}`. Batch is `{nodes,statements,functions,ranges}`, preserving all `typed.Node`, `typed.Statement` and `typed.Function` logical fields and stable append order. Ranges contain `{nodes:{start,end},statements:{start,end}}` per raw function, in declaration order. They form exact contiguous partitions and assign even unreachable intermediate rows to one lexical local table. Calls reference global function IDs; local IDs belong only to their owning function. Type IDs use builtins i64=0, bool=1 and Unit=15, internal octets u8=5/codepoints u32=7, and the request's managed prelude IDs. Scalar integer literals use signedi64 wire values widened to native i128; B1 cannot encode wider integers.
+Success is `Output{batch,import_used,diagnostics,recipes:CatalogRecipe[]}`. Batch is `{nodes,statements,functions,ranges}`, preserving all `typed.Node`, `typed.Statement` and `typed.Function` logical fields and stable append order. Ranges contain `{nodes:{start,end},statements:{start,end}}` per executable function. Nongeneric declarations form the ordinary prefix in raw declaration order; generic instances follow first-demand discovery order. They form exact contiguous partitions and assign even unreachable intermediate rows to one lexical local table. Calls reference global function IDs; local IDs belong only to their owning function. Type IDs use builtins i64=0, bool=1 and Unit=15, internal octets u8=5/codepoints u32=7, and the request's managed prelude IDs. Scalar integer literals use signed i64 values or body-only kind8 upper-half u64 bits, reconstructed as mathematical native i128 integers.
 
 The retained native catalog and entry phases may observe additional import uses
 after the raw request snapshot. Before adopting or comparing successful bodies,
@@ -115,3 +115,9 @@ existing depth/transport budgets. Native materialization independently compares
 the complete resulting schema. Every earlier body frame/package schema is
 rejected. This protocol preparation does not claim complete Selka structural
 source admission; the strict installed tuple/array/table corpus remains required.
+
+## Schema 11 generic function authority
+
+No request or reply field is added. Each generic executable function authenticates its raw declaration span, ordered `type_arguments`, and parallel nullable `signature.constant_arguments`. The ordinary prefix excludes generic declarations. Instance keys use the raw declaration ordinal plus both argument vectors; repeated and recursive demand reuses the same executable ID. At most 16 arguments and 4096 instances per declaration are admitted. Constant lengths are unsigned and at most 1048576.
+
+The host validates the unique canonical keys, substituted signatures against the retained catalog, ordinary entry ownership, and a demand from an earlier executable owner for every added instance. It restores the instance registry without native body checking. Signature authentication must not add or mutate semantic catalog authority. Exact first-demand order remains a producer and shadow-comparison obligation; the validator does not reconstruct raw discovery order. Native common-phase symbolic template checks remain retained ownership. Nominal specialization, callbacks, and unsupported structural/named/codec constraints produce explicit profile refusal.

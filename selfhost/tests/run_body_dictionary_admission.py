@@ -9,7 +9,7 @@ import tempfile
 import run_body_check_qualification as D
 
 F = D.F
-SCHEMA = 10
+SCHEMA = 11
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_dictionary_candidate'
 COUNTS = {'fixtures': 34, 'success': 24, 'diagnostic': 10, 'profiles': 0}
 MODES = ('reference', 'shadow', 'component')
@@ -108,7 +108,7 @@ def main():
     ap.add_argument('--native-body-schema', type=int, choices=range(1, SCHEMA + 1))
     args = normalize(ap.parse_args())
     F.require((args.native_body_schema is not None) == args.native_controls,
-              'native controls require an explicit historical body schema; selected admission requires schema10')
+              'native controls require an explicit historical body schema; selected admission requires schema11')
     manifest, inventory = selection()
     modes = ('reference',) if args.native_controls else MODES
     before = identity(args)

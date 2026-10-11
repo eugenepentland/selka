@@ -9,7 +9,7 @@ import run_body_dictionary_admission as A
 
 D = A.D
 F = D.F
-SCHEMA = 10
+SCHEMA = 11
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_collection_extensions'
 CASES = (
     'dict_augmentation.my', 'dict_expression_receiver.my',

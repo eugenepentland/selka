@@ -30,7 +30,7 @@ class DeclarationQualificationTests(unittest.TestCase):
                 D.packages(root)
             for name in ('declaration-index', 'type-interface', 'body-check'):
                 (root / f'{name}.json').write_text(json.dumps({'format': 1, 'protocol': 1,
-                    'schema': 10 if name == 'body-check' else 1, 'component': name, 'artifact': 'producer', 'sha256': D.F.digest(binary)}))
+                    'schema': 11 if name == 'body-check' else 1, 'component': name, 'artifact': 'producer', 'sha256': D.F.digest(binary)}))
             self.assertEqual(len(D.packages(root)), 7)
             old = json.loads((root / 'body-check.json').read_text())
             old['schema'] = 6

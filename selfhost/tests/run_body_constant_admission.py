@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exact scalar constant source admission through authentic installed schema 10."""
+"""Exact scalar constant source admission through authentic installed schema 11."""
 import argparse
 import hashlib
 import json
@@ -7,7 +7,7 @@ from pathlib import Path
 import tempfile
 import run_body_check_qualification as D
 
-SCHEMA=10
+SCHEMA=11
 FIXTURES=Path(__file__).with_name('fixtures')/'body_constant_candidate'
 COUNTS={'fixtures':158,'success':79,'diagnostic':79}
 MODES=('reference','shadow','component')

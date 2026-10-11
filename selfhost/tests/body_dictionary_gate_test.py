@@ -7,7 +7,7 @@ import test_body_dictionaries as G
 
 def reports():
     manifest, _ = G.A.selection()
-    source = dict(complete=True, selected_admission='passed', body_schema=10, modes=list(G.A.MODES),
+    source = dict(complete=True, selected_admission='passed', body_schema=11, modes=list(G.A.MODES),
                   operations=246, expected_operations=246, failed=0, skipped=0, records=[])
     for name, spec in manifest.items():
         for mode in G.A.MODES:
@@ -16,7 +16,7 @@ def reports():
     import json
     error = json.dumps({'version': 'diagnostic-v1', 'kind': 'message',
                         'message': 'mylang: test-index component frame malformed, oversized, stale, or contains invalid IDs\n'}).encode().hex()
-    hostile = dict(complete=True, selected_admission='passed', schema=10, hostile=27, failed=0,
+    hostile = dict(complete=True, selected_admission='passed', schema=11, hostile=27, failed=0,
                    skipped=0, records=[dict(name=n, status=2, stdout_hex='', stderr_hex=error) for n in G.H.NAMES])
     return source, hostile
 

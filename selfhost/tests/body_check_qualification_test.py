@@ -95,14 +95,14 @@ class BodyQualificationTests(unittest.TestCase):
     def test_frame_binds_whole_request(self):
         payload=b'raw body\x00'+ 'éλ'.encode();frame=D.frame(payload)
         self.assertEqual(frame[:8],b'SLKBCK01')
-        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,10,0,len(payload)))
+        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,11,0,len(payload)))
         self.assertEqual(frame[32:64],D.F.hashlib.sha256(payload).digest())
         self.assertEqual(frame[64:],payload)
 
     def test_package_authentication_requires_all_seven(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);artifact=root/'artifact';artifact.write_bytes(b'fixture')
-            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,10)]:
+            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,11)]:
                 (root/(name+'.json')).write_text(json.dumps(dict(format=1,component=name,protocol=protocol,schema=schema,artifact='artifact',sha256=D.F.digest(artifact))))
             self.assertEqual(len(D.packages(root)),7)
             manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=6;manifest.write_text(json.dumps(value))
@@ -133,7 +133,7 @@ class BodyQualificationTests(unittest.TestCase):
         import run_declaration_qualification as C
         import run_type_interface_qualification as T
         self.assertEqual(D.BODY_VALUE_LIMIT,2097152)
-        self.assertEqual((D.SCHEMA,D.MALFORMED_CHECKS,D.FORGED_CHECKS),(10,22,92))
+        self.assertEqual((D.SCHEMA,D.MALFORMED_CHECKS,D.FORGED_CHECKS),(11,22,92))
         for count,root in ((1048577,0),(2097152,2097151)):
             # Admitted body header; the deliberately absent rows fail next.
             with self.assertRaisesRegex(RuntimeError,'truncated captured kind'):
@@ -385,7 +385,7 @@ class BodyQualificationTests(unittest.TestCase):
         self.assertEqual(manifest['bytes_buffer_arity_precedence_error.my']['diagnostics'][0]['code'],'E_ARITY')
         self.assertEqual(manifest['bytes_buffer_argument_precedence_error.my']['diagnostics'][0]['code'],'E_IMMUTABLE')
         self.assertEqual(manifest['bytes_buffer_function_shadow.my']['library_check_status'],0)
-        self.assertEqual(D.SCHEMA,10)
+        self.assertEqual(D.SCHEMA,11)
 
     def test_buffer_forgeries_require_real_recipe_and_preserve_named_graph(self):
         rows=[]

@@ -1,5 +1,5 @@
 {
-  "schema": 10,
+  "schema": 11,
   "scope": "strict B7 installed source and generation qualification",
   "cases": {
     "entry_binary_try.my": {

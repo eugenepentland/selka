@@ -163,7 +163,7 @@ pub fn manifestDeployment(a: std.mem.Allocator, io: std.Io, directory: []const u
     const m = parsed.value;
     const version: u32 = if (std.mem.eql(u8, component, "cache-plan")) 2 else 1;
     const schema_two = std.mem.eql(u8, component, "lexer-pilot") or std.mem.eql(u8, component, "parser-pilot");
-    const schema: u32 = if (std.mem.eql(u8, component, "body-check")) 10 else if (schema_two) 2 else version;
+    const schema: u32 = if (std.mem.eql(u8, component, "body-check")) 11 else if (schema_two) 2 else version;
     if (m.format != 1 or m.protocol != version or m.schema != schema) return error.ComponentManifest;
     if (!std.mem.eql(u8, m.component, component) or m.sha256.len != 64) return error.ComponentManifest;
     if (m.artifact.len == 0 or std.mem.indexOfAny(u8, m.artifact, "/\\") != null) return error.ComponentManifest;
@@ -216,7 +216,7 @@ fn mapFailure(err: anyerror, fallback: Error) Error {
 }
 
 // spec-case: SELFHOST-BODY-STRUCTURAL-1
-test "body check artifact admission requires structural schema ten and refuses earlier profiles" {
+test "body check artifact admission requires generic function schema eleven and refuses earlier profiles" {
     const a = std.testing.allocator;
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -234,7 +234,8 @@ test "body check artifact admission requires structural schema ten and refuses e
     try std.testing.expectError(error.ComponentManifest, bodyFixture(a, temporary, directory, 7, digest));
     try std.testing.expectError(error.ComponentManifest, bodyFixture(a, temporary, directory, 8, digest));
     try std.testing.expectError(error.ComponentManifest, bodyFixture(a, temporary, directory, 9, digest));
-    const accepted = try bodyFixture(a, temporary, directory, 10, digest);
+    try std.testing.expectError(error.ComponentManifest, bodyFixture(a, temporary, directory, 10, digest));
+    const accepted = try bodyFixture(a, temporary, directory, 11, digest);
     defer a.free(accepted.path);
     try std.testing.expectEqualSlices(u8, &digest, &accepted.digest);
 }

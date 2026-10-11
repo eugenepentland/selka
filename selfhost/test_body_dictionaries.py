@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mandatory schema10 normal/release source and authentic hostile admission."""
+"""Mandatory schema11 normal/release source and authentic hostile admission."""
 import argparse
 import json
 from pathlib import Path

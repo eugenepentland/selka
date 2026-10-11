@@ -1,6 +1,6 @@
 {
   "source_sha256": "90c4b57bc900996b8f8373c93a41dfc5516451d9b222c55cc7bc98970c92b2d3",
-  "schema": 10,
+  "schema": 11,
   "hostile_names": [
     "recipe_gap",
     "recipe_duplicate",

@@ -1,4 +1,4 @@
-"""Synthetic construction checks only; not authentic schema10 qualification."""
+"""Synthetic construction checks only; not authentic schema11 qualification."""
 import struct
 import unittest
 import run_body_structural_hostile as H

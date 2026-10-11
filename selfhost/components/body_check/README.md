@@ -1,3 +1,9 @@
+# Schema 11 generic free-function body checking
+
+This stage adds scalar and admitted value generic free functions, including fixed-array signatures and literal or forwarded constant lengths. Selka owns specialization discovery, recursive instance reuse, substitution, and all concrete body checking. Native code authenticates the resulting instance keys and signatures against unchanged retained catalog authority; it does not check selected bodies. Native symbolic-template validity checks remain explicit common-phase ownership. Generic nominal specialization, callbacks, and unsupported structural/named/codec constraints remain located profile refusals. Installed schema 11 qualification is pending until the coherent producer and host pass the source, shadow, runtime, and hostile-reply inventories.
+
+The following historical profile description records prior stages and their original boundaries.
+
 # B9 numeric, collection, managed value, and scoped file body checking
 
 This producer owns typing and lowering of ordinary nongeneric function bodies
@@ -48,7 +54,7 @@ body batch, diagnostics, and import usage. Component mode adopts the validated
 batch at the body-checking seam. Reference mode remains available.
 
 `main.my` accepts `--exchange FILE` or unframed `--request FILE`. The normative
-wire contract is [WIRE.md](WIRE.md): protocol 1, schema 10, correlated `SLKBCK01`
+wire contract is [WIRE.md](WIRE.md): protocol 1, schema 11, correlated `SLKBCK01`
 envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Older body schemas and packages are refused. The request contains raw ASTs, sources, declaration facts,
 and the retained catalog descriptors. Batch fields remain
 `nodes`, `statements`, `functions`, and `ranges`.
