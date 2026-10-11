@@ -24,6 +24,9 @@ fn leaf(initial: value.Catalog, ty: typed.Type) bool {
     if (initial.string) |item| if (item.id == ty) return true;
     if (initial.bytes) |item| if (item.id == ty) return true;
     if (initial.templates.byte_buffer.identity) |item| if (item.id == ty) return true;
+    if (@import("body_check_dictionary_validate.zig").identify(initial, ty)) |entry| {
+        if (entry.kind == .dict or entry.kind == .set) return true;
+    }
     if (ty.isAggregate() and ty.recordIndex() < initial.records.len) return records.ordinary(initial.records[ty.recordIndex()]) or records.variant(initial.records[ty.recordIndex()]);
     return false;
 }
@@ -39,6 +42,7 @@ fn descriptor(initial: value.Catalog, item: value.Sequence, expected: typed.Type
 /// Validate all existing list dependencies, including forward edges, without assuming append topology.
 pub fn catalog(a: std.mem.Allocator, item: value.Catalog) Error!void {
     try records.catalog(item);
+    try @import("body_check_dictionary_validate.zig").bases(item);
     if (item.base_count > limit or item.lists.len > item.base_count) return error.ComponentProtocol;
     if (item.string) |entry| try descriptor(item, entry, .u32);
     if (item.bytes) |entry| try descriptor(item, entry, .u8);

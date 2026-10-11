@@ -5,11 +5,13 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const lists = @import("body_check_list_validate.zig");
 const records = @import("body_check_record_validate.zig");
+const dictionaries = @import("body_check_dictionary_validate.zig");
 /// Allocation failure or invalid catalog recipe/template authority.
 pub const Error = lists.Error;
-const Key = struct { kind: enum { list, result, option, byte_buffer }, first: typed.Type, second: typed.Type = .unit };
+const Key = struct { kind: enum { list, result, option, byte_buffer, dict, set, dict_item, dict_keys, dict_values, dict_items }, first: typed.Type, second: typed.Type = .unit };
 /// Validate native template declaration authority without supplying annotation answers.
 pub fn bases(input: value.Input) Error!void {
+    try dictionaries.bases(input.catalog);
     if (input.catalog.templates.result) |basis| _ = try basisCases(input, basis, true);
     if (input.catalog.templates.option) |basis| _ = try basisCases(input, basis, false);
     if (input.catalog.templates.result) |result| if (input.catalog.templates.option) |option| {
@@ -76,9 +78,24 @@ fn key(recipe: value.CatalogRecipe) Key {
         .byte_buffer => .{ .kind = .byte_buffer, .first = .unit },
         .result => |item| .{ .kind = .result, .first = item.success, .second = item.failure },
         .option => |item| .{ .kind = .option, .first = item.element },
+        .collection => |item| collectionKey(item),
+    };
+}
+fn collectionKey(recipe: value.CollectionRecipe) Key {
+    return switch (recipe) {
+        .set => |item| .{ .kind = .set, .first = item.element },
+        inline else => |item, tag| .{ .kind = @field(@FieldType(Key, "kind"), @tagName(tag)), .first = item.key, .second = item.value },
     };
 }
 fn existing(item: value.Catalog, record: typed.Record) ?Key {
+    if (dictionaries.identify(item, record.id)) |entry| return .{ .kind = switch (entry.kind) {
+        .dict => .dict,
+        .set => .set,
+        .dict_item => .dict_item,
+        .dict_keys => .dict_keys,
+        .dict_values => .dict_values,
+        .dict_items => .dict_items,
+    }, .first = entry.key, .second = entry.value };
     if (item.templates.result != null and std.mem.startsWith(u8, record.name, "Result<")) {
         if (typed.resultShape(record.id, item.records)) |shape| return .{ .kind = .result, .first = shape.ok_type, .second = shape.error_type };
     }
@@ -117,11 +134,11 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
     try lists.catalog(a, input.catalog);
     try bases(input);
     if (recipes.len > lists.limit - input.catalog.base_count) return error.ComponentProtocol;
-    var known: std.AutoHashMapUnmanaged(Key, void) = .empty;
+    var known: std.AutoHashMapUnmanaged(Key, typed.Type) = .empty;
     defer known.deinit(a);
-    if (input.catalog.templates.byte_buffer.identity != null) try known.put(a, .{ .kind = .byte_buffer, .first = .unit }, {});
-    for (input.catalog.lists) |item| try known.put(a, .{ .kind = .list, .first = item.element }, {});
-    for (input.catalog.records) |item| if (existing(input.catalog, item)) |item_key| try known.put(a, item_key, {});
+    if (input.catalog.templates.byte_buffer.identity != null) try known.put(a, .{ .kind = .byte_buffer, .first = .unit }, input.catalog.templates.byte_buffer.identity.?.id);
+    for (input.catalog.lists) |item| try known.put(a, .{ .kind = .list, .first = item.element }, item.id);
+    for (input.catalog.records) |item| if (existing(input.catalog, item)) |item_key| try known.put(a, item_key, item.id);
     var allowed_sites = try sites(a, input);
     defer allowed_sites.deinit(a);
     const schemas = try a.alloc(typed.Record, input.catalog.base_count + recipes.len);
@@ -134,17 +151,14 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
     const depths = try a.alloc(usize, schemas.len);
     @memset(depths, 1);
     for (recipes, 0..) |recipe, index| {
-        const id = switch (recipe) {
-            inline else => |item| item.id,
-        };
-        const at = switch (recipe) {
-            inline else => |item| item.span,
-        };
+        const id = value.recipeId(recipe);
+        const at = value.recipeSpan(recipe);
         if (@backingInt(id) != typed.Type.record_base + input.catalog.base_count + index) return error.ComponentProtocol;
         if (at.start > at.end or at.end > input.context.source.len or !allowed_sites.contains(at)) return error.ComponentProtocol;
         const item_key = key(recipe);
         const duplicate = try known.getOrPut(a, item_key);
         if (duplicate.found_existing) return error.ComponentProtocol;
+        duplicate.value_ptr.* = id;
         try dependencies(input.catalog, recipe, item_key, id);
         depths[id.recordIndex()] = try recipeDepth(recipe, item_key, depths);
         var schema: typed.Record = .{ .id = id, .name = "", .declaration = at, .fields = &.{} };
@@ -161,6 +175,9 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
             schema.collection.kind = .bytes;
             schema.shape.buffer = .u8;
             output.templates.byte_buffer.identity = .{ .id = id, .element = .u8 };
+        } else if (dictionaryKind(recipe)) |kind| {
+            const owner = if (kind == .dict_keys or kind == .dict_values or kind == .dict_items) known.get(.{ .kind = .dict, .first = item_key.first, .second = item_key.second }) orelse return error.ComponentProtocol else null;
+            schema = try dictionaries.schema(a, input.catalog, kind, .{ .id = id, .key = item_key.first, .value = item_key.second, .span = at }, owner);
         } else {
             schema.shape.variants = .{ .fallible = recipe == .result, .is_union = true, .cases = try cases(a, input, recipe) };
             schema.contract.requires_handling = recipe == .result;
@@ -180,23 +197,22 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
     const accepted = try records.policy(a, output);
     defer a.free(accepted);
     for (recipes) |recipe| {
-        const id = switch (recipe) {
-            inline else => |item| item.id,
-        };
+        const id = value.recipeId(recipe);
         if (!accepted[id.recordIndex()]) return error.ComponentProtocol;
     }
+    try hashableKeys(a, output);
     try lists.catalog(a, output);
     return output;
 }
 fn dependency(ty: typed.Type, id: typed.Type) Error!void {
-    if (ty == .i64 or ty == .bool or ty == .unit) return;
+    if (scalar(ty)) return;
     if (!ty.isAggregate() or @backingInt(ty) >= @backingInt(id)) return error.ComponentProtocol;
 }
 
 fn recipeDepth(recipe: value.CatalogRecipe, item_key: Key, depths: []const usize) Error!usize {
     var result: usize = if (recipe == .byte_buffer) 1 else 2;
     if (item_key.first.isAggregate()) result = 1 + depths[item_key.first.recordIndex()];
-    if (recipe == .result and item_key.second.isAggregate()) result = @max(result, 1 + depths[item_key.second.recordIndex()]);
+    if (pairRecipe(recipe) and item_key.second.isAggregate()) result = @max(result, 1 + depths[item_key.second.recordIndex()]);
     if (result > 256) return error.ComponentProtocol;
     return result;
 }
@@ -206,5 +222,35 @@ fn dependencies(catalog: value.Catalog, recipe: value.CatalogRecipe, item: Key, 
         const string = catalog.string orelse return error.ComponentProtocol;
         if (item.second != string.id) return error.ComponentProtocol;
     } else try dependency(item.first, id);
-    if (recipe == .result) try dependency(item.second, id);
+    if (pairRecipe(recipe)) try dependency(item.second, id);
+}
+
+fn dictionaryKind(recipe: value.CatalogRecipe) ?dictionaries.Kind {
+    if (recipe != .collection) return null;
+    return switch (recipe.collection) {
+        inline else => |_, tag| @field(dictionaries.Kind, @tagName(tag)),
+    };
+}
+fn pairRecipe(recipe: value.CatalogRecipe) bool {
+    if (recipe == .result) return true;
+    return recipe == .collection and recipe.collection != .set;
+}
+
+fn hashableKeys(a: std.mem.Allocator, output: value.Catalog) Error!void {
+    const hashable = try records.hashablePolicy(a, output);
+    defer a.free(hashable);
+    for (output.records) |schema| if (dictionaries.identify(output, schema.id)) |entry| {
+        if (entry.kind == .dict or entry.kind == .set) {
+            if (entry.key.isAggregate()) {
+                if (!hashable[entry.key.recordIndex()]) return error.ComponentProtocol;
+            } else if (!scalar(entry.key)) return error.ComponentProtocol;
+        }
+    };
+}
+
+fn scalar(ty: typed.Type) bool {
+    return switch (ty) {
+        .i64, .bool, .unit, .u8, .u32, .u64 => true,
+        else => false,
+    };
 }

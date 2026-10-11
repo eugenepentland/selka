@@ -25,7 +25,9 @@ pub const Catalog = struct {
     templates: Templates = .{},
 };
 /// Opaque retained builtin template authority, never per-use body answers.
-pub const Templates = struct { result: ?TemplateBasis = null, option: ?TemplateBasis = null, byte_buffer: BufferBasis = .{} };
+pub const Templates = struct { result: ?TemplateBasis = null, option: ?TemplateBasis = null, byte_buffer: BufferBasis = .{}, collections: CollectionTemplates = .{} };
+/// Exact injected collection declaration authorities; user declarations never grant these identities.
+pub const CollectionTemplates = struct { dict: ?TemplateBasis = null, set: ?TemplateBasis = null, DictItem: ?TemplateBasis = null, DictKeys: ?TemplateBasis = null, DictValues: ?TemplateBasis = null, DictItems: ?TemplateBasis = null };
 /// Authenticated optional octet-buffer identity and exact builtin addability.
 pub const BufferBasis = struct { available: bool = false, identity: ?Sequence = null };
 /// Exact common declaration authority; an empty span denotes the synthesized prelude.
@@ -45,8 +47,43 @@ pub const ListRecipe = struct { id: typed.Type, element: typed.Type, span: sourc
 pub const ResultRecipe = struct { id: typed.Type, success: typed.Type, failure: typed.Type, span: source.Span };
 /// One producer-selected canonical optional identity.
 pub const OptionRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
+/// Dictionary and projection schemas retain both canonical type arguments.
+pub const DictionaryRecipe = struct { id: typed.Type, key: typed.Type, value: typed.Type, span: source.Span };
 /// All append decisions share one native first-demand order.
-pub const CatalogRecipe = union(enum) { list: ListRecipe, result: ResultRecipe, option: OptionRecipe, byte_buffer: BufferRecipe };
+pub const CatalogRecipe = union(enum) {
+    list: ListRecipe,
+    result: ResultRecipe,
+    option: OptionRecipe,
+    byte_buffer: BufferRecipe,
+    collection: CollectionRecipe,
+};
+/// Grouped collection append roles preserve the qualified seven-field profile.
+pub const CollectionRecipe = union(enum) {
+    dict: DictionaryRecipe,
+    set: ListRecipe,
+    dict_item: DictionaryRecipe,
+    dict_keys: DictionaryRecipe,
+    dict_values: DictionaryRecipe,
+    dict_items: DictionaryRecipe,
+};
+/// Exact next runtime identity selected by any append recipe.
+pub fn recipeId(recipe: CatalogRecipe) typed.Type {
+    return switch (recipe) {
+        .collection => |item| switch (item) {
+            inline else => |entry| entry.id,
+        },
+        inline else => |item| item.id,
+    };
+}
+/// First source demand retained independently of recipe family.
+pub fn recipeSpan(recipe: CatalogRecipe) source.Span {
+    return switch (recipe) {
+        .collection => |item| switch (item) {
+            inline else => |entry| entry.span,
+        },
+        inline else => |item| item.span,
+    };
+}
 /// Located unsupported profile refusal; it never requests native fallback.
 pub const Profile = struct { code: []const u8, span: source.Span, message: []const u8 };
 /// Checked scalar bodies, source diagnostics, or explicit admission refusal.

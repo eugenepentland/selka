@@ -1634,3 +1634,5 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 - [SELFHOST-ARTIFACT-SESSION-1] Invocation-local artifact sessions retain at most seven entries and 64 MiB authenticated bytes, revalidate live manifest and exact executable contents at every authority barrier, reuse sealed descriptors, and fall back to full authentication without narrowing artifact admission. Reference performs no deployment I/O.
 
 - [SELFHOST-BODY-OWNED-COPY-1] Body adoption copies validated typed batches directly into caller-owned storage, preserving canonical values, codec row/edge/wire/depth/visit/allocation bounds and cleanup on allocation failure; no semantic validation is bypassed.
+
+- [SELFHOST-BODY-DICTIONARIES-1] Schema 8 authenticates retained dictionary/set/item/live-view template identities and ordered contiguous recipes. Live views require a prior canonical mapping; independent items do not. Typed key/value/operation/Option extraction metadata is structurally checked, with untouched native shadow oracle and independent full-schema materialization.

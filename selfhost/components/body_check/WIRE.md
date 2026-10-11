@@ -1,10 +1,10 @@
-# Body-check batches through B6
+# Body-check batches through B8
 
-B1 through B6 transfer body checking for every admitted ordinary function to a qualified Selka process. Native catalog construction, entry checks/adaptation, effects/origin/mutation passes, domain codecs and final warnings remain explicit host stages. Unsupported syntax produces a located profile refusal; selected modes never fall back to native body checking. Reference remains the default.
+B1 through B8 transfer body checking for every admitted ordinary function to a qualified Selka process. Native catalog construction, entry checks/adaptation, effects/origin/mutation passes, domain codecs and final warnings remain explicit host stages. Unsupported syntax produces a located profile refusal; selected modes never fall back to native body checking. Reference remains the default.
 
 ## Framing
 
-The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/6`, direction `0` request or `1` reply, payload byte length at offset20, nonce8 at24 and request payload SHA256 at32. A reply echoes bytes24..64 exactly. Both complete frames are at most64MiB. Payloads are named postorder logical tables under `SLKBKI01`/`SLKBKR01`, using the existing parser value kinds0null,1signedi64,2bool,3bytes,4enum-tag,5namedrecord,6list,7taggedunion. Payload header contains value count and final root ID. References must point backward; duplicate/unknown fields, malformed tags, trailing bytes and correlation mismatches are host protocol failures.
+The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/8`, direction `0` request or `1` reply, payload byte length at offset20, nonce8 at24 and request payload SHA256 at32. A reply echoes bytes24..64 exactly. Both complete frames are at most64MiB. Payloads are named postorder logical tables under `SLKBKI01`/`SLKBKR01`, using the existing parser value kinds0null,1signedi64,2bool,3bytes,4enum-tag,5namedrecord,6list,7taggedunion. Payload header contains value count and final root ID. References must point backward; duplicate/unknown fields, malformed tags, trailing bytes and correlation mismatches are host protocol failures.
 
 ## Request
 
@@ -75,3 +75,21 @@ Schema 7 keeps the complete named-value DTO unchanged and adds closed entry reso
 A file `with_scope` must join its raw statement and binding, contain a file-typed resource, readonly scoped-file local and matching body termination. Final local initialized flags may be false after native branch-flow merging; initialization is established by the with binding, while final metadata remains part of exact shadow comparison. A bounded topological traversal proves that every file method is dominated on **every** typed graph path by its unique binding's body. Nodes shared outside or between sibling scopes fail closed. Handle-valued operands may feed only the enclosing with resource; file parameters, returns, ordinary stores and handle collections are refused. Scope depth is bounded at 256 and typed graph edges at 4,194,304. Native entry/effect checks and Core cleanup insertion remain explicitly retained; arbitrary resources and unrelated file methods remain outside this profile. Schema 6 replies cannot be admitted as schema 7.
 
 Schema 7 native admission is restricted to binary read-only `open(..., "rb")` and binary `read`. Authentic text and writable open graphs are outside this profile and are rejected before adoption; their eventual source semantics require a separately qualified extension.
+
+## B7 scoped entry resources
+
+The primitive Filesystem/file/text_file/Stream identities are authenticated, not guessed from declaration names. The closed initial resource profile admits binary read-only `rb` opens, scoped binary reads, Stream write/print and their exact cleanup metadata. FileShapes demands List[str] before Result[file,str]. Typed file owners must belong to a dominating raw with scope in the same raw function; sibling/outside-scope/foreign-function owners are refused. Final initialized metadata is preserved rather than fixed to true: native match-arm flow can restore it to false. Native entry/effect/Core cleanup passes remain retained. Text/write modes and unrelated resource layouts remain explicit profile gaps.
+
+## B8 dictionaries, sets and Option flow
+
+Schema 8 extends Templates with `collections:{dict,set,DictItem,DictKeys,DictValues,DictItems}`, each a nullable TemplateBasis{id,declaration}. Only exact native injected builtin declaration identities with matching kind/arity grant authority. Unlike Result/Option standard bases, these declarations use the synthesized zero span; user aliases/declarations do not grant builtin authority.
+
+The unified ordered recipe tags now also include `dict{id,key,value,span}`, `set{id,element,span}` and `dict_item`, `dict_keys`, `dict_values`, `dict_items` each carrying `{id,key,value,span}`. IDs remain contiguous and each recipe must add exactly one native record. Live-view recipes require an exact canonical dict[key,value] in the retained prefix or earlier recipe; DictItem is independent and can be demanded directly. Native nominal graph insertion is root-first, so the host must not silently create a missing mapping while applying a view recipe. Independent native materialization checks exact observed ID, first site, recipe and full catalog schema. The shadow body oracle remains untouched by producer recipes.
+
+Dictionaries use typed array nodes alternating key/value; sets use an empty table plus ordered write(key,Unit) lowering. DictItem has exact key/value fields, and a live view has one mapping field. Closed buffer operations validate owner, arity, key/value/index roles, result type and mutability. Hash-key closure rejects mutable collections/buffers, capabilities, callbacks and pending results, including such nested members. Snapshot lists and ordinary record/list/dictionary value recursion remain bounded by the existing policy graph.
+
+Option flow introduces no per-use native answers or new Batch fields. The native structural optional shape is a closed nonfallible some(payload)/none union, regardless of builtin display name. Unwrap must produce its exact payload type. Producer guard facts, assignment/mut-call invalidation, continuing-branch intersections and eager default argument evaluation remain source semantic decisions; full native shadow comparison preserves their typed metadata.
+
+Body-only 2M values, 4M edges/visits, depth 256, 64MiB complete frame and 512MiB decoder budget remain unchanged. All earlier wire schemas are refused by the schema 8 boundary. Packaging/runtime selector wiring and installed producer qualification are separate from these native DTO tests.
+
+Schema 8 collection recipes are grouped: outer `collection` contains one tagged `dict`, `set`, `dict_item`, `dict_keys`, `dict_values` or `dict_items` recipe. All outer families still share one contiguous append order. Option flow uses native block values and matches; the domain-only typed `unwrap` opcode is not admitted.

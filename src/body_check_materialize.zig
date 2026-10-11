@@ -1,5 +1,7 @@
 //! Retained catalog projection and deterministic producer-selected type materialization.
 const std = @import("std");
+const nominal = @import("nominal_catalog.zig");
+const dictionaries = @import("body_check_dictionary_validate.zig");
 const typed = @import("typed.zig");
 const value = @import("body_check_value.zig");
 const lists = @import("body_check_list_validate.zig");
@@ -66,7 +68,14 @@ pub fn project(a: std.mem.Allocator, native: Native) Error!value.Catalog {
         .base_count = native.records.len,
         .records = try a.dupe(typed.Record, native.records),
         .list_available = available(native),
-        .templates = .{ .result = template(native, "Result", .result, 2), .option = template(native, "Option", .variants, 1), .byte_buffer = bufferBasis(native) },
+        .templates = .{ .result = template(native, "Result", .result, 2), .option = template(native, "Option", .variants, 1), .byte_buffer = bufferBasis(native), .collections = .{
+            .dict = template(native, "dict", .buffer, 2),
+            .set = template(native, "set", .buffer, 1),
+            .DictItem = template(native, "DictItem", .record, 2),
+            .DictKeys = template(native, "DictKeys", .record, 2),
+            .DictValues = template(native, "DictValues", .record, 2),
+            .DictItems = template(native, "DictItems", .record, 2),
+        } },
     };
     errdefer a.free(output.records);
     var entries: std.ArrayList(value.Sequence) = .empty;
@@ -109,6 +118,8 @@ pub fn added(a: std.mem.Allocator, native: Native, base_count: usize) Error![]co
             item.* = .{ .option = .{ .id = record.id, .element = shape.element, .span = site } };
         } else if (builtin(native, record.id, buffer_name)) {
             item.* = .{ .byte_buffer = .{ .id = record.id, .span = site } };
+        } else if (try collectionRecipe(native, record, site)) |recipe| {
+            item.* = recipe;
         } else return error.ComponentProtocol;
     }
     return output;
@@ -129,15 +140,17 @@ pub fn apply(a: std.mem.Allocator, native: *Native, input: value.Input, recipes:
         const id = switch (recipe) {
             .list => |item| @import("collection_lower.zig").listType(native, item.element, item.span),
             .byte_buffer => |item| @import("collection_lower.zig").preludeType(native, buffer_name, item.span),
-            .result => |item| @import("nominal_catalog.zig").instantiateLengths(native, (input.catalog.templates.result orelse return error.ComponentProtocol).id, &.{ item.success, item.failure }, &.{}, item.span),
-            .option => |item| @import("nominal_catalog.zig").instantiateLengths(native, (input.catalog.templates.option orelse return error.ComponentProtocol).id, &.{item.element}, &.{}, item.span),
+            .result => |item| nominal.instantiateLengths(native, (input.catalog.templates.result orelse return error.ComponentProtocol).id, &.{ item.success, item.failure }, &.{}, item.span),
+            .option => |item| nominal.instantiateLengths(native, (input.catalog.templates.option orelse return error.ComponentProtocol).id, &.{item.element}, &.{}, item.span),
+            .collection => |item| switch (item) {
+                .set => |entry| collectionApply(native, input.catalog, .set, .{ .id = entry.id, .key = entry.element, .value = .unit, .span = entry.span }),
+                inline else => |entry, tag| collectionApply(native, input.catalog, @field(dictionaries.Kind, @tagName(tag)), entry),
+            },
         } catch |err| return switch (err) {
             error.OutOfMemory => error.OutOfMemory,
             else => error.ComponentProtocol,
         };
-        const expected = switch (recipe) {
-            inline else => |item| item.id,
-        };
+        const expected = value.recipeId(recipe);
         if (id != expected or native.records.len != before + 1) return error.ComponentProtocol;
         const observed = try added(a, native.*, before);
         defer a.free(observed);
@@ -161,4 +174,40 @@ fn equalProjection(left: value.Catalog, right: value.Catalog) bool {
     if (!std.meta.eql(left.string, right.string) or !std.meta.eql(left.bytes, right.bytes)) return false;
     for (left.lists, right.lists) |a, b| if (!std.meta.eql(a, b)) return false;
     return true;
+}
+
+fn collectionApply(native: *Native, catalog: value.Catalog, kind: dictionaries.Kind, item: value.DictionaryRecipe) @import("diagnostic.zig").Error!typed.Type {
+    const authority = dictionaries.basis(catalog, kind) orelse return error.InternalError;
+    return nominal.instantiateLengths(native, authority.id, if (kind == .set) &.{item.key} else &.{ item.key, item.value }, &.{}, item.span);
+}
+fn collectionRecipe(native: Native, record: typed.Record, site: @import("source.zig").Span) Error!?value.CatalogRecipe {
+    const helpers = dictionaries;
+    if (builtin(native, record.id, "dict")) return .{ .collection = .{ .dict = .{
+        .id = record.id,
+        .key = record.collection.key orelse return error.ComponentProtocol,
+        .value = record.shape.buffer orelse return error.ComponentProtocol,
+        .span = site,
+    } } };
+    if (builtin(native, record.id, "set")) return .{ .collection = .{ .set = .{ .id = record.id, .element = record.collection.key orelse return error.ComponentProtocol, .span = site } } };
+    inline for (.{ helpers.Kind.dict_item, helpers.Kind.dict_keys, helpers.Kind.dict_values, helpers.Kind.dict_items }) |kind| {
+        if (builtin(native, record.id, helpers.name(kind))) {
+            var key: typed.Type = undefined;
+            var element: typed.Type = undefined;
+            if (kind == .dict_item) {
+                if (record.fields.len != 2) return error.ComponentProtocol;
+                key = record.fields[0].ty;
+                element = record.fields[1].ty;
+            } else {
+                if (record.fields.len != 1) return error.ComponentProtocol;
+                const mapping = record.fields[0].ty;
+                if (!builtin(native, mapping, "dict")) return error.ComponentProtocol;
+                const schema = native.records[mapping.recordIndex()];
+                key = schema.collection.key orelse return error.ComponentProtocol;
+                element = schema.shape.buffer orelse return error.ComponentProtocol;
+            }
+            const recipe: value.DictionaryRecipe = .{ .id = record.id, .key = key, .value = element, .span = site };
+            return .{ .collection = @unionInit(value.CollectionRecipe, @tagName(kind), recipe) };
+        }
+    }
+    return null;
 }
