@@ -1,0 +1,30 @@
+{
+  "branch": "codex/selka-development-loop-foundation-20261011",
+  "head": "06a840ca9976e1259279125b6cee9b07a4c2fb76",
+  "baseline": "e935448025873afc0740b345acf77b7e4f09dda3",
+  "toolchain": "0.17.0-dev.1683+5ceec001b",
+  "status": "passed",
+  "scope": [
+    "DL1 diagnostic foundation",
+    "DL2 opt-in command deadlines",
+    "DL3 first reviewed synthetic Juice cohort"
+  ],
+  "qualification_driver": "experiments/cache-wave11-20261011/qualify_session.py",
+  "timing_scope": "operational observations; no isolated before/after latency claim",
+  "selfhost_owner": "codex/selka-bootstrap-20261011",
+  "focused_process_tests": 28,
+  "process_test_environment": "PYTHONPYCACHEPREFIX=/dev/null taskset -c0",
+  "previous_full_run": {
+    "native_tests_passed": 2748,
+    "formatting_passed": true,
+    "failure": "three watchdog fixture startup races; fixed by explicit readiness handshakes"
+  },
+  "complete": true,
+  "qualified_tests": {
+    "coordinator": 55,
+    "process": 28,
+    "report": 11,
+    "admission_focused": 13,
+    "native_full_gate": 2748
+  }
+}

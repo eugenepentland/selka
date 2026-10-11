@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "responses": [
+    {
+      "id": "cold",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 28539,
+        "bytes_hashed": 2215180753,
+        "digest_reuses": 0,
+        "directories_enumerated": 2261,
+        "metadata_observations": 1095846,
+        "validation_calls": 42,
+        "snapshot_reuses": 0
+      }
+    },
+    {
+      "id": "warm",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 174197,
+        "validation_calls": 26,
+        "snapshot_reuses": 5
+      }
+    }
+  ],
+  "stop": {
+    "id": "stop",
+    "status": 0,
+    "ok": true,
+    "restart_required": false,
+    "snapshot_work": {
+      "files_hashed": 0,
+      "bytes_hashed": 0,
+      "digest_reuses": 0,
+      "directories_enumerated": 0,
+      "metadata_observations": 0,
+      "validation_calls": 0,
+      "snapshot_reuses": 0
+    }
+  }
+}

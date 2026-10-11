@@ -1,0 +1,1092 @@
+{
+  "version": 1,
+  "required_targets": [
+    "test",
+    "fmt-check"
+  ],
+  "groups": [
+    {
+      "id": "component-preparation",
+      "target": "verification-component-preparation",
+      "label": "run exe selka-components",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json"
+      ],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "component manifests and installed outputs require validation"
+    },
+    {
+      "id": "input-discovery",
+      "target": "verification-input-discovery",
+      "label": "hash declared test inputs",
+      "inputs": [],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "directory membership must be discovered at execution time"
+    },
+    {
+      "id": "environment-discovery",
+      "target": "verification-environment-discovery",
+      "label": "record the test environment",
+      "inputs": [],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "live inherited environment must be discovered at execution time"
+    },
+    {
+      "id": "core",
+      "target": "verification-core",
+      "label": "run test",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "src/",
+        "bench/parity/micro/dict_count.my",
+        "bench/parity/suite/knucleotide.my",
+        "tests/lang/rc_dictionary_keys.my",
+        "tests/lang/rc_dictionary_loops.my",
+        "tests/lang/rc_dictionary_text_loops.my",
+        "tests/lang/memo_cache.my",
+        "test/fixtures/",
+        "test/core/c_environment_context.my",
+        "test/core/c_environment_context_provider.c",
+        "test/core/c_runner_properties.my",
+        "test/core/c_runner_failures.my",
+        "test/core/c_runner_standins.my",
+        "test/core/c_runner_signal.my",
+        "test/core/c_runner_state_capture.my",
+        "experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_signal.c",
+        "experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_exit.c",
+        "docs/reference.md",
+        "docs/standard-library.md",
+        "velocity/friction/",
+        "test/",
+        "tests/",
+        "examples/",
+        "bench/",
+        "benchmarks/",
+        "selfhost/",
+        "velocity/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "memory_budget",
+      "target": "verification-memory_budget",
+      "label": "run test",
+      "inputs": [
+        "src/memory_budget.zig"
+      ],
+      "artifacts": [
+        "memory-budget",
+        "components"
+      ],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "unit",
+      "target": "verification-unit",
+      "label": "run test",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "src/",
+        "bench/parity/micro/dict_count.my",
+        "bench/parity/suite/knucleotide.my",
+        "tests/lang/rc_dictionary_keys.my",
+        "tests/lang/rc_dictionary_loops.my",
+        "tests/lang/rc_dictionary_text_loops.my",
+        "tests/lang/memo_cache.my",
+        "test/fixtures/",
+        "test/core/c_environment_context.my",
+        "test/core/c_environment_context_provider.c",
+        "test/core/c_runner_properties.my",
+        "test/core/c_runner_failures.my",
+        "test/core/c_runner_standins.my",
+        "test/core/c_runner_signal.my",
+        "test/core/c_runner_state_capture.my",
+        "experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_signal.c",
+        "experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_exit.c",
+        "docs/reference.md",
+        "docs/standard-library.md",
+        "velocity/friction/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "cli",
+      "target": "verification-cli",
+      "label": "run test",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "src/",
+        "examples/",
+        "tests/guest/",
+        "test/fixtures/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "golden",
+      "target": "verification-golden",
+      "label": "run test",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "src/",
+        "tests/goldens/",
+        "examples/",
+        "test/fixtures/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "idioms_self",
+      "target": "verification-idioms_self",
+      "label": "python3 tests/idiom_probes.py --self-test",
+      "inputs": [
+        "tests/idiom_probes.py"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "idioms",
+      "target": "verification-idioms",
+      "label": "python3 tests/idiom_probes.py --compiler",
+      "inputs": [
+        "tests/idiom_probes.py",
+        "tests/fixtures/idioms/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "incremental",
+      "target": "verification-incremental",
+      "label": "python3 tests/incremental_diff.py",
+      "inputs": [
+        "tests/incremental_diff.py",
+        "tests/differential_corpus.py",
+        "tests/fixtures/incremental/",
+        "tests/fixtures/module_projects/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "interfaces",
+      "target": "verification-interfaces",
+      "label": "python3 tests/interface_diff.py",
+      "inputs": [
+        "tests/interface_diff.py",
+        "tests/differential_corpus.py",
+        "tests/fixtures/interfaces/",
+        "tests/fixtures/interfaces_generic/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "interface_oracle",
+      "target": "verification-interface_oracle",
+      "label": "python3 tests/interface_oracle.py",
+      "inputs": [
+        "tests/interface_oracle.py",
+        "tests/lang/",
+        "tests/fixtures/interfaces/",
+        "tests/fixtures/interfaces_generic/",
+        "tests/fixtures/incremental/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "parser_hints",
+      "target": "verification-parser_hints",
+      "label": "python3 tests/parser_hints.py",
+      "inputs": [
+        "tests/parser_hints.py",
+        "src/parser.zig",
+        "velocity/friction/",
+        "velocity/suites/idioms/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "friction",
+      "target": "verification-friction",
+      "label": "python3 tests/test_friction_harvest.py",
+      "inputs": [
+        "tests/test_friction_harvest.py",
+        "velocity/friction/"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "tooling_isolation",
+      "target": "verification-tooling_isolation",
+      "label": "python3 tests/tooling_cache_isolation.py --compiler",
+      "inputs": [
+        "tests/tooling_cache_isolation.py"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "application_cache",
+      "target": "verification-application_cache",
+      "label": "python3 tests/application_cache.py --smoke --compiler",
+      "inputs": [
+        "tests/application_cache.py",
+        "test/fixtures/application-cache/",
+        "src/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "component_builder",
+      "target": "verification-component_builder",
+      "label": "python3 selfhost/test_components.py",
+      "inputs": [
+        "selfhost/*.zig",
+        "selfhost/test_components.py",
+        "selfhost/component-seed.json"
+      ],
+      "artifacts": [
+        "component-builder",
+        "components"
+      ],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "component_native",
+      "target": "verification-component_native",
+      "label": "pure Selka and native component qualification",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "selfhost/test_component_native.py",
+        "selfhost/tests/run_test_index_component.py",
+        "selfhost/tests/run_cache_plan_component.py"
+      ],
+      "artifacts": [
+        "component-builder",
+        "components"
+      ],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "component-support",
+      "target": "verification-component-support",
+      "label": "run test",
+      "inputs": [
+        "selfhost/*.zig",
+        "selfhost/test_components.py",
+        "selfhost/component-seed.json"
+      ],
+      "artifacts": [
+        "component-support"
+      ],
+      "cacheable": true,
+      "reason": "exact native support executable and declared inputs"
+    },
+    {
+      "id": "selfhost_numeric",
+      "target": "verification-selfhost_numeric",
+      "label": "python3 selfhost/tests/run_lexer_diff.py --compiler",
+      "inputs": [
+        "selfhost/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "spec-history",
+      "target": "verification-spec-history",
+      "label": "run python3",
+      "inputs": [],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "SPEC replay reads git history and creates repositories"
+    },
+    {
+      "id": "juice_pure",
+      "target": "verification-juice_pure",
+      "label": "Juice synthetic contracts and reports",
+      "inputs": [
+        "tests/test_juice.py",
+        "scripts/juice_tool/"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "juice",
+      "target": "verification-juice",
+      "label": "Juice native runner integration",
+      "inputs": [
+        "tests/test_juice.py",
+        "tests/test_juice_native.py",
+        "scripts/juice",
+        "scripts/juice_tool/",
+        "scripts/juice_validate.py",
+        "examples/juice/"
+      ],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "native performance collectors and host state require fresh execution"
+    },
+    {
+      "id": "juice-runtime",
+      "target": "verification-juice-runtime",
+      "label": "run python3",
+      "inputs": [
+        "tests/test_juice_runtime_bench.py",
+        "scripts/juice_tool/",
+        "scripts/juice_runtime_bench.py"
+      ],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "runtime collectors observe CPU, scheduler and current host state"
+    },
+    {
+      "id": "identity-qualification",
+      "target": "verification-identity-qualification",
+      "label": "run python3",
+      "inputs": [],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "compiler identity qualification produces temporary compiler artifacts"
+    },
+    {
+      "id": "affected",
+      "target": "verification-affected",
+      "label": "python3 tests/test_affected_tests.py",
+      "inputs": [
+        "scripts/affected_tests.py",
+        "scripts/focused_test.py",
+        "tests/test_affected_tests.py"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "coverage_self",
+      "target": "verification-coverage_self",
+      "label": "python3 tests/test_inputs_coverage.py --self-test",
+      "inputs": [
+        "tests/test_inputs_coverage.py"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "coverage",
+      "target": "verification-coverage",
+      "label": "python3 tests/test_inputs_coverage.py",
+      "inputs": [
+        "tests/test_inputs_coverage.py",
+        "build_test_inputs.zig",
+        "src/**/*.zig",
+        "test/**/*.zig"
+      ],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "fixture membership and negative path lookups outside source recipes require freshness"
+    },
+    {
+      "id": "manifest_self",
+      "target": "verification-manifest_self",
+      "label": "python3 tests/input_manifest.py --self-test",
+      "inputs": [
+        "tests/input_manifest.py"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "verification_cache",
+      "target": "verification-verification_cache",
+      "label": "python3 scripts/verify_cache_test.py",
+      "inputs": [
+        "scripts/cache_session.py",
+        "scripts/fuzz_campaign_store.py",
+        "scripts/verify_cache.py",
+        "scripts/verification_snapshot.py",
+        "scripts/verification_process.py",
+        "scripts/verification_process_test.py",
+        "scripts/verification_report.py",
+        "scripts/verification_report_test.py",
+        "scripts/verification_artifacts.py",
+        "scripts/verify_cache_test.py",
+        "scripts/verification_snapshot_test.py",
+        "scripts/build-slot.sh",
+        "tests/test_inputs_coverage.py"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "verification_session",
+      "target": "verification-verification_session",
+      "label": "python3 scripts/cache_session_test.py",
+      "inputs": [
+        "scripts/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "fuzz_campaign",
+      "target": "verification-fuzz_campaign",
+      "label": "python3 scripts/fuzz_campaign_store_test.py",
+      "inputs": [
+        "scripts/cache_session.py",
+        "scripts/fuzz_campaign.py",
+        "scripts/fuzz_campaign_identity.py",
+        "scripts/fuzz_campaign_store.py",
+        "scripts/fuzz_campaign_store_test.py",
+        "scripts/cache_retention.py",
+        "scripts/cache_retention_test.py",
+        "scripts/prune-caches.sh",
+        "scripts/fuzz_campaign_test.py",
+        "scripts/fuzz_coverage.py",
+        "scripts/fuzz_coverage_test.py",
+        "scripts/verify_cache.py",
+        "scripts/verification_snapshot.py",
+        "scripts/verification_process.py",
+        "scripts/verification_report.py",
+        "scripts/build-slot.sh",
+        "tests/differential_corpus.py",
+        "tests/test_differential_corpus.py",
+        "tests/incremental_diff.py",
+        "tests/interface_diff.py",
+        "test/fixtures/fuzz-campaign/"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "juice_cache",
+      "target": "verification-juice_cache",
+      "label": "python3 scripts/juice_cache_test.py",
+      "inputs": [
+        "scripts/cache_session.py",
+        "scripts/juice_cache.py",
+        "scripts/juice_cache_test.py",
+        "scripts/juice_evidence.py",
+        "scripts/juice_provider.py",
+        "scripts/juice_provider_test.py",
+        "scripts/juice_worker.py",
+        "scripts/juice_worker_test.py",
+        "tests/test_juice_evidence.py",
+        "scripts/juice_tool/",
+        "scripts/fuzz_campaign_identity.py",
+        "scripts/fuzz_campaign_store.py",
+        "scripts/verify_cache.py",
+        "scripts/verification_snapshot.py",
+        "scripts/verification_process.py",
+        "scripts/verification_report.py",
+        "scripts/build-slot.sh"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "doc-coverage",
+      "target": "verification-doc-coverage",
+      "label": "run exe mylang",
+      "inputs": [
+        "README.md",
+        "SPEC.md",
+        "docs/",
+        "src/"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete document and feature-contract scope"
+    },
+    {
+      "id": "guest",
+      "target": "verification-guest",
+      "label": "run exe mylang",
+      "inputs": [],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "guest Host and external-effect eligibility remains compiler-authoritative"
+    },
+    {
+      "id": "language",
+      "target": "verification-language",
+      "label": "mylang test tests/lang",
+      "inputs": [],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "guest Host and external-effect eligibility requires execution-time admission"
+    },
+    {
+      "id": "doctest",
+      "target": "verification-doctest",
+      "label": "mylang doctest .",
+      "inputs": [
+        "README.md",
+        "SPEC.md",
+        "docs/**/*.md"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "zig-format",
+      "target": "verification-zig-format",
+      "label": "zig fmt --check",
+      "inputs": [
+        "build.zig",
+        "build_identity.zig",
+        "build_test_inputs.zig",
+        "build_verification.zig",
+        "src/**/*.zig",
+        "tests/**/*.zig",
+        "test/**/*.zig",
+        "selfhost/**/*.zig"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "exact formatter and complete source-format scope"
+    },
+    {
+      "id": "my_format",
+      "target": "verification-my_format",
+      "label": "check live .my corpus formatting",
+      "inputs": [
+        "scripts/check_my_format.py",
+        "scripts/my_format_exclusions.json",
+        "bench/**/*.my",
+        "benchmarks/**/*.my",
+        "docs/**/*.my",
+        "examples/**/*.my",
+        "selfhost/**/*.my",
+        "src/**/*.my",
+        "test/**/*.my",
+        "tests/**/*.my",
+        "velocity/**/*.my"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "my_format_self",
+      "target": "verification-my_format_self",
+      "label": "verify .my formatting gate",
+      "inputs": [
+        "scripts/check_my_format.py",
+        "tests/test_my_format.py"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "noalloc_lint",
+      "target": "verification-noalloc_lint",
+      "label": "lint live noalloc contracts",
+      "inputs": [
+        "scripts/check_my_format.py",
+        "scripts/my_format_exclusions.json",
+        "bench/**/*.my",
+        "benchmarks/**/*.my",
+        "docs/**/*.my",
+        "examples/**/*.my",
+        "selfhost/**/*.my",
+        "src/**/*.my",
+        "test/**/*.my",
+        "tests/**/*.my",
+        "velocity/**/*.my",
+        "scripts/check_noalloc.py"
+      ],
+      "artifacts": null,
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "embedded_migration",
+      "target": "verification-embedded_migration",
+      "label": "verify embedded migration staging",
+      "inputs": [
+        "scripts/migrate_embedded.py",
+        "scripts/spelling_census.py",
+        "tests/test_migrate_embedded.py"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "guardian",
+      "target": "verification-guardian",
+      "label": "run ../guardian-zig/zig-out/bin/guardian-check",
+      "inputs": [],
+      "artifacts": null,
+      "cacheable": false,
+      "reason": "Guardian source, git scope and mutable policy validation require freshness"
+    }
+  ],
+  "input_lists": [
+    {
+      "name": "memory_budget",
+      "inputs": [
+        "src/memory_budget.zig"
+      ]
+    },
+    {
+      "name": "component_inputs",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json"
+      ]
+    },
+    {
+      "name": "unit",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "src/",
+        "bench/parity/micro/dict_count.my",
+        "bench/parity/suite/knucleotide.my",
+        "tests/lang/rc_dictionary_keys.my",
+        "tests/lang/rc_dictionary_loops.my",
+        "tests/lang/rc_dictionary_text_loops.my",
+        "tests/lang/memo_cache.my",
+        "test/fixtures/",
+        "test/core/c_environment_context.my",
+        "test/core/c_environment_context_provider.c",
+        "test/core/c_runner_properties.my",
+        "test/core/c_runner_failures.my",
+        "test/core/c_runner_standins.my",
+        "test/core/c_runner_signal.my",
+        "test/core/c_runner_state_capture.my",
+        "experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_signal.c",
+        "experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_exit.c",
+        "docs/reference.md",
+        "docs/standard-library.md",
+        "velocity/friction/"
+      ]
+    },
+    {
+      "name": "cli",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "src/",
+        "examples/",
+        "tests/guest/",
+        "test/fixtures/"
+      ]
+    },
+    {
+      "name": "core",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "src/",
+        "bench/parity/micro/dict_count.my",
+        "bench/parity/suite/knucleotide.my",
+        "tests/lang/rc_dictionary_keys.my",
+        "tests/lang/rc_dictionary_loops.my",
+        "tests/lang/rc_dictionary_text_loops.my",
+        "tests/lang/memo_cache.my",
+        "test/fixtures/",
+        "test/core/c_environment_context.my",
+        "test/core/c_environment_context_provider.c",
+        "test/core/c_runner_properties.my",
+        "test/core/c_runner_failures.my",
+        "test/core/c_runner_standins.my",
+        "test/core/c_runner_signal.my",
+        "test/core/c_runner_state_capture.my",
+        "experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_signal.c",
+        "experiments/new-core-s3-20261006/wave-b/s3-runner/c_runner_exit.c",
+        "docs/reference.md",
+        "docs/standard-library.md",
+        "velocity/friction/",
+        "test/",
+        "tests/",
+        "examples/",
+        "bench/",
+        "benchmarks/",
+        "selfhost/",
+        "velocity/"
+      ]
+    },
+    {
+      "name": "doc_coverage",
+      "inputs": [
+        "README.md",
+        "SPEC.md",
+        "docs/",
+        "src/"
+      ]
+    },
+    {
+      "name": "zig_format",
+      "inputs": [
+        "build.zig",
+        "build_identity.zig",
+        "build_test_inputs.zig",
+        "build_verification.zig",
+        "src/**/*.zig",
+        "tests/**/*.zig",
+        "test/**/*.zig",
+        "selfhost/**/*.zig"
+      ]
+    },
+    {
+      "name": "golden",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "src/",
+        "tests/goldens/",
+        "examples/",
+        "test/fixtures/"
+      ]
+    },
+    {
+      "name": "idioms",
+      "inputs": [
+        "tests/idiom_probes.py",
+        "tests/fixtures/idioms/"
+      ]
+    },
+    {
+      "name": "incremental",
+      "inputs": [
+        "tests/incremental_diff.py",
+        "tests/differential_corpus.py",
+        "tests/fixtures/incremental/",
+        "tests/fixtures/module_projects/"
+      ]
+    },
+    {
+      "name": "interfaces",
+      "inputs": [
+        "tests/interface_diff.py",
+        "tests/differential_corpus.py",
+        "tests/fixtures/interfaces/",
+        "tests/fixtures/interfaces_generic/"
+      ]
+    },
+    {
+      "name": "interface_oracle",
+      "inputs": [
+        "tests/interface_oracle.py",
+        "tests/lang/",
+        "tests/fixtures/interfaces/",
+        "tests/fixtures/interfaces_generic/",
+        "tests/fixtures/incremental/"
+      ]
+    },
+    {
+      "name": "idioms_self",
+      "inputs": [
+        "tests/idiom_probes.py"
+      ]
+    },
+    {
+      "name": "parser_hints",
+      "inputs": [
+        "tests/parser_hints.py",
+        "src/parser.zig",
+        "velocity/friction/",
+        "velocity/suites/idioms/"
+      ]
+    },
+    {
+      "name": "friction",
+      "inputs": [
+        "tests/test_friction_harvest.py",
+        "velocity/friction/"
+      ]
+    },
+    {
+      "name": "juice_pure",
+      "inputs": [
+        "tests/test_juice.py",
+        "scripts/juice_tool/"
+      ]
+    },
+    {
+      "name": "juice",
+      "inputs": [
+        "tests/test_juice.py",
+        "tests/test_juice_native.py",
+        "scripts/juice",
+        "scripts/juice_tool/",
+        "scripts/juice_validate.py",
+        "examples/juice/"
+      ]
+    },
+    {
+      "name": "juice_runtime",
+      "inputs": [
+        "tests/test_juice_runtime_bench.py",
+        "scripts/juice_tool/",
+        "scripts/juice_runtime_bench.py"
+      ]
+    },
+    {
+      "name": "doctest",
+      "inputs": [
+        "README.md",
+        "SPEC.md",
+        "docs/**/*.md"
+      ]
+    },
+    {
+      "name": "affected",
+      "inputs": [
+        "scripts/affected_tests.py",
+        "scripts/focused_test.py",
+        "tests/test_affected_tests.py"
+      ]
+    },
+    {
+      "name": "coverage",
+      "inputs": [
+        "tests/test_inputs_coverage.py",
+        "build_test_inputs.zig",
+        "src/**/*.zig",
+        "test/**/*.zig"
+      ]
+    },
+    {
+      "name": "coverage_self",
+      "inputs": [
+        "tests/test_inputs_coverage.py"
+      ]
+    },
+    {
+      "name": "verification_cache",
+      "inputs": [
+        "scripts/cache_session.py",
+        "scripts/fuzz_campaign_store.py",
+        "scripts/verify_cache.py",
+        "scripts/verification_snapshot.py",
+        "scripts/verification_process.py",
+        "scripts/verification_process_test.py",
+        "scripts/verification_report.py",
+        "scripts/verification_report_test.py",
+        "scripts/verification_artifacts.py",
+        "scripts/verify_cache_test.py",
+        "scripts/verification_snapshot_test.py",
+        "scripts/build-slot.sh",
+        "tests/test_inputs_coverage.py"
+      ]
+    },
+    {
+      "name": "verification_session",
+      "inputs": [
+        "scripts/"
+      ]
+    },
+    {
+      "name": "fuzz_campaign",
+      "inputs": [
+        "scripts/cache_session.py",
+        "scripts/fuzz_campaign.py",
+        "scripts/fuzz_campaign_identity.py",
+        "scripts/fuzz_campaign_store.py",
+        "scripts/fuzz_campaign_store_test.py",
+        "scripts/cache_retention.py",
+        "scripts/cache_retention_test.py",
+        "scripts/prune-caches.sh",
+        "scripts/fuzz_campaign_test.py",
+        "scripts/fuzz_coverage.py",
+        "scripts/fuzz_coverage_test.py",
+        "scripts/verify_cache.py",
+        "scripts/verification_snapshot.py",
+        "scripts/verification_process.py",
+        "scripts/verification_report.py",
+        "scripts/build-slot.sh",
+        "tests/differential_corpus.py",
+        "tests/test_differential_corpus.py",
+        "tests/incremental_diff.py",
+        "tests/interface_diff.py",
+        "test/fixtures/fuzz-campaign/"
+      ]
+    },
+    {
+      "name": "manifest_self",
+      "inputs": [
+        "tests/input_manifest.py"
+      ]
+    },
+    {
+      "name": "juice_cache",
+      "inputs": [
+        "scripts/cache_session.py",
+        "scripts/juice_cache.py",
+        "scripts/juice_cache_test.py",
+        "scripts/juice_evidence.py",
+        "scripts/juice_provider.py",
+        "scripts/juice_provider_test.py",
+        "scripts/juice_worker.py",
+        "scripts/juice_worker_test.py",
+        "tests/test_juice_evidence.py",
+        "scripts/juice_tool/",
+        "scripts/fuzz_campaign_identity.py",
+        "scripts/fuzz_campaign_store.py",
+        "scripts/verify_cache.py",
+        "scripts/verification_snapshot.py",
+        "scripts/verification_process.py",
+        "scripts/verification_report.py",
+        "scripts/build-slot.sh"
+      ]
+    },
+    {
+      "name": "tooling_isolation",
+      "inputs": [
+        "tests/tooling_cache_isolation.py"
+      ]
+    },
+    {
+      "name": "selfhost_numeric",
+      "inputs": [
+        "selfhost/"
+      ]
+    },
+    {
+      "name": "component_builder",
+      "inputs": [
+        "selfhost/*.zig",
+        "selfhost/test_components.py",
+        "selfhost/component-seed.json"
+      ]
+    },
+    {
+      "name": "component_native",
+      "inputs": [
+        "selfhost/components/",
+        "selfhost/*.zig",
+        "selfhost/component-seed.json",
+        "selfhost/test_component_native.py",
+        "selfhost/tests/run_test_index_component.py",
+        "selfhost/tests/run_cache_plan_component.py"
+      ]
+    },
+    {
+      "name": "my_format",
+      "inputs": [
+        "scripts/check_my_format.py",
+        "scripts/my_format_exclusions.json",
+        "bench/**/*.my",
+        "benchmarks/**/*.my",
+        "docs/**/*.my",
+        "examples/**/*.my",
+        "selfhost/**/*.my",
+        "src/**/*.my",
+        "test/**/*.my",
+        "tests/**/*.my",
+        "velocity/**/*.my"
+      ]
+    },
+    {
+      "name": "my_format_self",
+      "inputs": [
+        "scripts/check_my_format.py",
+        "tests/test_my_format.py"
+      ]
+    },
+    {
+      "name": "embedded_migration",
+      "inputs": [
+        "scripts/migrate_embedded.py",
+        "scripts/spelling_census.py",
+        "tests/test_migrate_embedded.py"
+      ]
+    },
+    {
+      "name": "noalloc_lint",
+      "inputs": [
+        "scripts/check_my_format.py",
+        "scripts/my_format_exclusions.json",
+        "bench/**/*.my",
+        "benchmarks/**/*.my",
+        "docs/**/*.my",
+        "examples/**/*.my",
+        "selfhost/**/*.my",
+        "src/**/*.my",
+        "test/**/*.my",
+        "tests/**/*.my",
+        "velocity/**/*.my",
+        "scripts/check_noalloc.py"
+      ]
+    },
+    {
+      "name": "application_cache",
+      "inputs": [
+        "tests/application_cache.py",
+        "test/fixtures/application-cache/",
+        "src/"
+      ]
+    }
+  ],
+  "configuration": {
+    "filtered": false,
+    "rerun": false,
+    "optimize": "debug"
+  },
+  "coverage": {
+    "required_actions": 91,
+    "registered_actions": 91,
+    "unknown_actions": []
+  }
+}
