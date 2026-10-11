@@ -1,0 +1,57 @@
+func append_batch(values: int[], base: int, width: int) -> int[]:
+    mut result = values
+    for offset in range(width):
+        result.append(base + offset)
+    return result
+
+
+func score(values: int[]) -> int:
+    mut total = len(values)
+    for value in values:
+        total += value
+    return total
+
+
+func repeated(rounds: int, seed: int) -> int:
+    mut values: int[] = []
+    for batch in range(rounds):
+        values = append_batch(values, seed + batch, 3)
+    return score(values)
+
+
+func snapshots(rounds: int, seed: int) -> int:
+    mut values: int[] = []
+    mut held = 0
+    for batch in range(rounds):
+        const snapshot = values
+        values = append_batch(values, seed + batch, 3)
+        if len(snapshot) > 0:
+            held += len(snapshot) + snapshot[-1]
+    return held + score(values)
+
+
+func number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    const rounds = number(args[1])
+    const seed = number(args[2])
+    if args[0] == "trap":
+        out.print(score(append_batch([], seed, 3)))
+        return 0
+    if rounds < 1 or rounds > 8000 or seed < 1 or seed > 10000:
+        return 2
+    if args[0] == "replace":
+        out.print(repeated(rounds, seed))
+    elif args[0] == "snapshot":
+        out.print(snapshots(rounds, seed))
+    else:
+        return 2
+    return 0

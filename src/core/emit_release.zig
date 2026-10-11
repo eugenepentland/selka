@@ -8,11 +8,19 @@ pub const Parts = struct {
     guards: []const [3]u32,
     /// Dictionary entries additionally release just their key or value.
     split: ?u32 = null,
+    zero_rc: bool = false,
 };
 
 /// Emit one layout descriptor and its specialized whole/key/value destructors.
 pub fn emit(a: std.mem.Allocator, out: *std.ArrayList(u8), name: []const u8, stride: u32, parts: Parts) std.mem.Allocator.Error!void {
     const words = 3 + 2 * parts.refs.len + 3 * parts.guards.len;
+    if (parts.zero_rc) {
+        try out.print(a, "{s} = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ name, words, stride, parts.refs.len, parts.guards.len });
+        for (parts.refs) |ref| try out.print(a, ", i32 {d}, i32 {d}", .{ ref[0], ref[1] });
+        for (parts.guards) |guard| try out.print(a, ", i32 {d}, i32 {d}, i32 {d}", .{ guard[0], guard[1], guard[2] });
+        try out.appendSlice(a, "], align 8\n");
+        return;
+    }
     try out.print(a, "{s} = private constant {{ [{d} x i32], ptr, ptr, ptr }} {{ [{d} x i32] [i32 {d}, i32 {d}, i32 -{d}", .{ name, words, words, stride, parts.refs.len, parts.guards.len + 1 });
     for (parts.refs) |ref| try out.print(a, ", i32 {d}, i32 {d}", .{ ref[0], ref[1] });
     for (parts.guards) |guard| try out.print(a, ", i32 {d}, i32 {d}, i32 {d}", .{ guard[0], guard[1], guard[2] });

@@ -1,0 +1,13 @@
+func probe(n: int) -> int:
+    mut values = [for i in range(300 + n) yield (73 * i + 19 * n) % 1009]
+    values.sort()
+    mut total = 0
+    for i in range(len(values)):
+        total += (i + 1) * values[i]
+    return total
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

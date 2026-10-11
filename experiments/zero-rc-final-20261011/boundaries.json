@@ -1,0 +1,31 @@
+{
+  "compiler_sha256": "b8a00892fcc41313ff1589447766d84496db6f53099edc56a10afc34710cceb7",
+  "harness_sha256": "af59e39035ebd60ae7a93cd4035ac91344d7835c7b166c4551b1a1b17c344ad4",
+  "refusals": {
+    "escaped-capability": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-final-20261011/refusals/escaped-capability.my:3:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          return child\n                 ^\n",
+      "source_sha256": "e256e2b735d39bae16a5f3b4787fd655f370129084929a6457f609cbc4f0bb11"
+    },
+    "moved-parent": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-final-20261011/refusals/moved-parent.my:4:16: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          return fs\n                 ^\n",
+      "source_sha256": "26fcc67ba996e9e42a7f225bd273eaf805070dba14f7aa7aea20812cd837b649"
+    },
+    "unscoped-dependency": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-final-20261011/refusals/unscoped-dependency.my:2:12: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode\n      return fs.dir(\"logs\")\n             ^\n",
+      "source_sha256": "696b18e55ec7d6acba6f8d15ab7e0b829be635df670cd4b24e40138acc6e7050"
+    },
+    "foreign-managed-input": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-final-20261011/refusals/foreign-managed-input.my:1:30: error[E_EXTERN_SIGNATURE]: extern signatures support fixed-width integers, bool, float (C double), and unit results (C void); pointers, aggregates and variadic calls are not supported\n  extern func save(host: Host, value: str) -> int effects(host)\n                               ^\n",
+      "source_sha256": "6f9c793b332cf7522b4db4195d98bb621ff354fabc442841b43dc383f05578d6"
+    },
+    "foreign-managed-result": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-final-20261011/refusals/foreign-managed-result.my:1:33: error[E_EXTERN_SIGNATURE]: extern signatures support fixed-width integers, bool, float (C double), and unit results (C void); pointers, aggregates and variadic calls are not supported\n  extern func load(host: Host) -> str effects(host)\n                                  ^\n",
+      "source_sha256": "e4d8478072500ed5abc5414b3a9d9d9b8b23eb83b1575f4e75dcf35366f82ddd"
+    }
+  }
+}

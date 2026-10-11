@@ -1,0 +1,57 @@
+func make_values(seed: int) -> int[]:
+    mut values: int[] = []
+    for i in range(8):
+        values.append(seed + i)
+    return values
+
+
+func weighted_sum(values: int[]) -> int:
+    mut total = 0
+    for i in range(len(values)):
+        total += (i + 1) * values[i]
+    return total
+
+
+func repeated(rounds: int, seed: int) -> int:
+    mut total = 0
+    for batch in range(rounds):
+        const values = make_values(seed + batch % 257)
+        total = (total + weighted_sum(values)) % 1000000007
+    return total
+
+
+func snapshots(rounds: int, seed: int) -> int:
+    mut total = 0
+    for batch in range(rounds):
+        mut values = make_values(seed + batch % 257)
+        const snapshot = values
+        values[0] = values[0] + 1
+        total = (total + weighted_sum(snapshot) + weighted_sum(values)) % 1000000007
+    return total
+
+
+func number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) != 3:
+        return 2
+    const rounds = number(args[1])
+    const seed = number(args[2])
+    if args[0] == "trap":
+        out.print(weighted_sum(make_values(seed)))
+        return 0
+    if rounds < 1 or rounds > 1000000 or seed < 1 or seed > 10000:
+        return 2
+    if args[0] == "replace":
+        out.print(repeated(rounds, seed))
+    elif args[0] == "snapshot":
+        out.print(snapshots(rounds, seed))
+    else:
+        return 2
+    return 0

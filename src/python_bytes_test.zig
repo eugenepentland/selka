@@ -255,11 +255,11 @@ test "UTF8-DECODE-1 truncated and stray continuation bytes stay invalid" {
 }
 
 // spec-case: PY-BYTES-7
-test "PY-BYTES-7 views and copies exist only on the immutable byte string" {
+test "PY-BYTES-7 views require immutable bytes while text and buffers support copies" {
     try rejected("func main() -> int:\n    mut empty: int[] = []\n    mut data = byte_buffer(empty)\n    return len(data.view(0, 1))\n", "E_COLLECTION_METHOD");
-    try rejected("func main() -> int:\n    mut empty: int[] = []\n    mut data = byte_buffer(empty)\n    return len(data.copy())\n", "E_COLLECTION_METHOD");
+    try t.expectEqual(@as(i64, 0), try value("func main() -> int:\n    mut empty: int[] = []\n    mut data = byte_buffer(empty)\n    return len(data.copy())\n"));
     try rejected("func main() -> int:\n    mut text = \"abc\"\n    return len(text.view(0, 1))\n", "E_COLLECTION_METHOD");
-    try rejected("func main() -> int:\n    mut text = \"abc\"\n    return len(text.copy())\n", "E_COLLECTION_METHOD");
+    try t.expectEqual(@as(i64, 3), try value("func main() -> int:\n    mut text = \"abc\"\n    return len(text.copy())\n"));
     try rejected("func main() -> int:\n    mut text = \"abc\"\n    return len(text.scalar_count())\n", "E_COLLECTION_METHOD");
     try rejected("func main() -> int:\n    mut raw = b\"abc\"\n    return len(raw.view(\"a\", 1))\n", "E_TYPE");
     try rejected("func main() -> int:\n    mut raw = b\"abc\"\n    return len(raw.view(0, 1, 2))\n", "E_ARITY");

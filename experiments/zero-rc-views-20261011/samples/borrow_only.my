@@ -1,0 +1,15 @@
+func segment(source: TextView, start: int) -> TextView noalloc:
+    return source.borrow(start, start + 3)
+
+func probe(n: int) -> int noalloc:
+    const text = "aλ🙂z1234"
+    const full = text.borrow(0, len(text))
+    mut total = 0
+    for i in range(n):
+        const part = segment(full, i % 5)
+        total += len(part)
+    return total
+
+func main(args: str[], out: Stream) -> int:
+    out.print(probe(len(args) * 1000))
+    return 0

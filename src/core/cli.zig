@@ -95,6 +95,12 @@ pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
         return status;
     }
     const rest = args[2..];
+    if (std.mem.eql(u8, command, "check")) {
+        for (rest) |arg| if (std.mem.eql(u8, arg, "--experimental-single-owner") or std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+            const result = try @import("check_command.zig").run(init, rest);
+            return result;
+        };
+    }
     const status = status: {
         for (retired_commands) |retired| if (std.mem.eql(u8, command, retired.name)) break :status try refuse(init, command, retired.message);
         if (retiredFlag(rest)) |retired| break :status try refuse(init, command, retired.message);
@@ -146,6 +152,9 @@ const build_usage =
     \\Default: optimized debug; --optimize-debug and --mode Debug select the same mode.
     \\--unoptimized disables Core and LLVM optimization; --release optimizes the whole program.
     \\       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
+    \\       [--experimental-single-owner]    prototype: lists move; calls borrow; .copy() duplicates
+    \\                                        .snapshot() opts a list family into copy-on-write
+    \\       [--experimental-zero-rc]         prototype: strings/bytes also move; no sharing or RC
     \\
 ;
 

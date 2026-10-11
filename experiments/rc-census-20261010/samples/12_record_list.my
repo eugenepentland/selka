@@ -1,0 +1,28 @@
+record Batch:
+    factor: int
+    items: int[]
+
+
+func make_batch(n: int) -> Batch:
+    mut items: int[] = []
+    for i in range(n):
+        items.append(i + 1)
+    return Batch(factor=n, items=items)
+
+
+func score(batch: Batch) -> int:
+    mut total = 0
+    for value in batch.items:
+        total += value * batch.factor
+    return total
+
+
+func probe(n: int) -> int:
+    const batch = make_batch(n)
+    return score(batch)
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

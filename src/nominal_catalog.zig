@@ -359,6 +359,10 @@ const Builder = struct {
                     schema.managed = declaration.managed;
                     if (declaration.builtin_name) |name| {
                         if (std.mem.eql(u8, name, "str")) schema.collection.kind = .string;
+                        if (std.mem.eql(u8, name, "TextView") or std.mem.eql(u8, name, "ByteView")) {
+                            schema.shape.builtin = .borrowed_view;
+                            schema.collection.kind = if (std.mem.eql(u8, name, "TextView")) .string else .bytes;
+                        }
                         if (std.mem.eql(u8, name, "bytes")) schema.collection.kind = .bytes;
                         // The mutable octet buffer is a byte-kind buffer too: it
                         // shares the one-byte element descriptor and every read

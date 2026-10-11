@@ -1,0 +1,12 @@
+import environment
+func main(out: Stream) -> int:
+    mut values = {"NAME": "value-" + str(7)}
+    const env = environment.fixed(values)
+    values.clear()
+    out.print(len(env.names()))
+    match env.get("NAME"):
+        case Some(value):
+            out.print(value)
+        case None:
+            out.print("missing")
+    return 0

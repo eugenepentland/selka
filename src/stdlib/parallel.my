@@ -1,0 +1,8 @@
+# Apply a read-only function to each input, preserving order. In zero-RC builds
+# workers borrow distinct elements and all work joins before map returns.
+# Ordinary builds use this sequential implementation with identical values.
+public func map[T: copy + storable, R: copy + storable](values: T[], function: func(T) -> R) -> R[]:
+    mut out: R[] = []
+    for value in values:
+        out.append(function(value))
+    return out

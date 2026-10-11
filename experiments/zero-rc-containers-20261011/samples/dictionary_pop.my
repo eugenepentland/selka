@@ -1,0 +1,13 @@
+func main(out: Stream) -> int:
+    mut values = {1: "value-" + str(1), 2: "value-" + str(2)}
+    const first = values.pop(1)
+    const second = values.pop(2, "unused-" + str(3))
+    const missing = values.pop(3, "fallback-" + str(4))
+    values[9] = "unused-" + str(9)
+    _ = values.pop(9)
+    out.print(first, second, missing, len(values))
+    mut keys = {"key-" + str(1), "key-" + str(2)}
+    const key = keys.pop()
+    keys.clear()
+    out.print(key)
+    return 0

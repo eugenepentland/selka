@@ -5,7 +5,7 @@ const typed = @import("mylang").typed;
 /// Allocation and located source refusals from effect lowering.
 pub const Error = error{ OutOfMemory, Unsupported };
 /// A live lexical file scope and the loop depth at which it was opened.
-pub const Scope = struct { owner: ir.Ref, depth: usize };
+pub const Scope = struct { owner: ir.Ref, depth: usize, provider: ir.Ref = .none };
 
 const file_access_symbol = "myl_core_file_access";
 const stream_write_symbol = "myl_core_stream_write";
@@ -15,6 +15,16 @@ const stream_write_buffer_symbol = "myl_core_stream_write_buffer";
 fn durableLimit(comptime Context: type, c: Context, file: typed.FileAccess) Error!ir.Ref {
     if (file.kind == .read_regular_file or file.kind == .list_directory) return c.expression(file.arguments[2]);
     return c.constant(.i64, 0);
+}
+
+/// Read a C result slot, transferring managed pointers in the owned ABI.
+fn slotField(comptime Context: type, c: Context, box: ir.Ref, field: u32, span: u32) Error!ir.Ref {
+    const ty = c.module().compound(c.typeOfRef(box)).box;
+    const field_type = c.module().compound(ty).record[field];
+    if (c.module().zero_rc and c.module().isBlock(field_type))
+        return c.effectCall("myl_core_result_take_pointer", &.{ c.typeOfRef(box), .u32 }, field_type, &.{ box, try c.constant(.u32, field) }, span);
+    const value = try c.emit(.{ .op = .box_get, .ty = ty, .a = box, .span = span });
+    return c.emit(.{ .op = .record_get, .ty = c.module().compound(ty).record[field], .a = value, .data = field, .span = span });
 }
 
 /// Bind capability lowering to one concrete function builder.
@@ -80,17 +90,12 @@ pub fn Lower(comptime Context: type) type {
             const slot = try c.module().intern(c.allocator(), .{ .record = &.{ .u64, if (value_type == .void) .u64 else value_type, .str } });
             return c.module().intern(c.allocator(), .{ .box = slot });
         }
-        fn slotField(c: Context, box: ir.Ref, field: u32, span: u32) Error!ir.Ref {
-            const ty = c.module().compound(c.typeOfRef(box)).box;
-            const value = try c.emit(.{ .op = .box_get, .ty = ty, .a = box, .span = span });
-            return c.emit(.{ .op = .record_get, .ty = c.module().compound(ty).record[field], .a = value, .data = field, .span = span });
-        }
         fn unionValue(c: Context, ty: ir.Type, tag: usize, payload: ir.Ref, span: u32) Error!ir.Ref {
             return c.emit(.{ .op = .union_make, .ty = ty, .a = payload, .data = tag, .span = span });
         }
         fn mergeResult(c: Context, result_type: typed.Type, shape: typed.ResultShape, box: ir.Ref, error_text: bool, span: u32) Error!ir.Ref {
             const ty = try c.mb.mapType(result_type, span);
-            const status = try slotField(c, box, 0, span);
+            const status = try slotField(Context, c, box, 0, span);
             const good = try c.emit(.{ .op = .cmp, .ty = .bool, .a = status, .b = try c.constant(.u64, 0), .data = @backingInt(ir.Predicate.eq), .span = span });
             const success = try c.newBlock();
             const failure = try c.newBlock();
@@ -99,12 +104,12 @@ pub fn Lower(comptime Context: type) type {
             try c.branch(good, success, failure, span);
             try c.seal(success);
             c.enter(success);
-            const payload = if (shape.ok_type == .unit) ir.Ref.none else try slotField(c, box, 1, span);
+            const payload = if (shape.ok_type == .unit) ir.Ref.none else try slotField(Context, c, box, 1, span);
             try c.write(variable, success, try unionValue(c, ty, shape.ok_tag, payload, span));
             try c.jump(done);
             try c.seal(failure);
             c.enter(failure);
-            const code = if (error_text) try slotField(c, box, 2, span) else try c.emit(.{ .op = .convert, .ty = .i64, .a = status, .span = span });
+            const code = if (error_text) try slotField(Context, c, box, 2, span) else try c.emit(.{ .op = .convert, .ty = .i64, .a = status, .span = span });
             const bad = try unionValue(c, ty, shape.error_tag, code, span);
             _ = try c.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.runtime), .span = span });
             try c.write(variable, failure, bad);
@@ -135,7 +140,7 @@ pub fn Lower(comptime Context: type) type {
             if (node.ty.isFile()) return c.effectCall(file_access_symbol, &.{ .capability, .u32, .str, c.typeOfRef(input) }, .resource, arguments, span);
             if (node.ty == .bool) {
                 const box = try c.effectCall(file_access_symbol, &.{ .capability, .u32, .str, c.typeOfRef(input) }, try resultSlot(c, .bool), arguments, span);
-                return slotField(c, box, 1, span);
+                return slotField(Context, c, box, 1, span);
             }
             const shape = try shapeOf(c, node.ty, span);
             const box = try c.effectCall(file_access_symbol, &.{ .capability, .u32, .str, c.typeOfRef(input) }, try resultSlot(c, try c.mb.mapType(shape.ok_type, span)), arguments, span);
@@ -164,7 +169,7 @@ pub fn Lower(comptime Context: type) type {
             const input = if (writing) argument else try emptyString(c);
             const request = @as(u32, @backingInt(file.kind)) | (@as(u32, @intFromBool(file.text)) << 16);
             const box = try c.effectCall("myl_core_file_method", &.{ .resource, .u32, .i64, c.typeOfRef(input) }, try resultSlot(c, ty), &.{ owner, try c.constant(.u32, request), count, input }, span);
-            return if (ty == .void) .none else slotField(c, box, 1, span);
+            return if (ty == .void) .none else slotField(Context, c, box, 1, span);
         }
         fn emptyString(c: Context) Error!ir.Ref {
             const index = c.module().strings.items.len;
@@ -258,17 +263,17 @@ pub fn Lower(comptime Context: type) type {
         fn byteResult(c: Context, result_type: typed.Type, shape: typed.ByteResultShape, raw: ir.Ref, span: u32) Error!ir.Ref {
             const array_ty = try c.mb.mapType(shape.bytes_type, span);
             const capacity = c.module().compound(array_ty).array.n;
-            const bytes = try slotField(c, raw, 1, span);
+            const bytes = try slotField(Context, c, raw, 1, span);
             const octets = try c.allocator().alloc(ir.Ref, capacity);
             for (octets, 0..) |*octet, index| octet.* = try c.emit(.{ .op = .list_get, .ty = .u8, .a = bytes, .b = try c.constant(.u64, @intCast(index)), .span = span });
             const array = try c.emit(.{ .op = .record_make, .ty = array_ty, .data = try c.extraSlice(octets), .span = span });
             const payload_ty = try c.mb.mapType(shape.result.ok_type, span);
             const fields = try c.allocator().alloc(ir.Ref, 3);
             fields[shape.bytes_field] = array;
-            fields[shape.length_field] = try slotField(c, raw, 2, span);
-            fields[shape.flag_field] = try slotField(c, raw, 3, span);
+            fields[shape.length_field] = try slotField(Context, c, raw, 2, span);
+            fields[shape.flag_field] = try slotField(Context, c, raw, 3, span);
             const payload = try c.emit(.{ .op = .record_make, .ty = payload_ty, .data = try c.extraSlice(fields), .span = span });
-            const status = try slotField(c, raw, 0, span);
+            const status = try slotField(Context, c, raw, 0, span);
             // Rebox the copied fixed payload using ordinary typed Core record construction.
             const slot_ty = c.module().compound(try resultSlot(c, payload_ty)).box;
             const slot = try c.emit(.{ .op = .record_make, .ty = slot_ty, .data = try c.extraSlice(&.{ status, payload, try emptyString(c) }), .span = span });
@@ -278,6 +283,27 @@ pub fn Lower(comptime Context: type) type {
     };
 }
 
+/// The source-level parent whose lifetime encloses a dependent scope.
+pub fn scopeProvider(node: typed.Node) ?typed.NodeId {
+    return switch (node.data) {
+        .file_access => |file| file.arguments[0],
+        .dir_resource => |dir| dir.capability,
+        .host_resource => |host| host.capability,
+        .restrict_resource => |restrict| restrict.value,
+        .environment_only => |only| only.capability,
+        else => null,
+    };
+}
+
+/// Close and drop a scoped handle while its provider is still a borrowed argument.
+pub fn closeScope(comptime Context: type, c: Context, scope: Scope, span: u32) Error!void {
+    if (c.module().zero_rc) {
+        const ty = c.typeOfRef(scope.owner);
+        const symbol = if (ty == .resource) "myl_core_owned_file_scope_end" else "myl_core_owned_cap_scope_end";
+        _ = try c.effectCall(symbol, &.{ ty, .capability }, .void, &.{ scope.owner, scope.provider }, span);
+    } else if (c.typeOfRef(scope.owner) == .resource) _ = try c.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{scope.owner}, span);
+}
+
 /// Close active file scopes crossed by a return or a loop exit, innermost first.
 pub fn closeScopes(comptime Context: type, c: Context, depth: usize, span: u32) Error!void {
     var left = c.ssa.resources.items.len;
@@ -285,8 +311,7 @@ pub fn closeScopes(comptime Context: type, c: Context, depth: usize, span: u32) 
         left -= 1;
         const scope = c.ssa.resources.items[left];
         if (scope.depth < depth) continue;
-        const owner = scope.owner;
-        _ = try c.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{owner}, span);
+        try closeScope(Context, c, scope, span);
     }
 }
 

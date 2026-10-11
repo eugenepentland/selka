@@ -1,0 +1,22 @@
+func sum_values(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        total += value
+    return total
+
+
+func fill_values(mut values: int[], n: int):
+    for i in range(8):
+        values.append(n + i)
+
+
+func probe(n: int) -> int:
+    mut values: int[] = []
+    fill_values(mut values, n)
+    return sum_values(values)
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0
+

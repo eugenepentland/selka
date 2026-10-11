@@ -1,0 +1,86 @@
+{
+  "scope": "Exact selected function fragments; LLVM declarations and metadata are omitted.",
+  "script_sha256": "e99ece90393dbe9a2274df4d62099a1444c37867630809d41043a200bec43897",
+  "files": {
+    "baseline-04_returned_list.core": {
+      "compiler_sha256": "5ca393ede35337754edf06c0cf5551f491dc87037d3988ea4d410b0422e3db2d",
+      "raw_path": ".tmp/caller-consume-20261010/baseline-capture/04_returned_list/core.ir",
+      "raw_sha256": "cc9b8fb1f11d202760641d3575df626d50323977b02eb797ba469050d8675349",
+      "functions": [
+        "probe",
+        "make_values"
+      ],
+      "fragment_sha256": "c3423341891a2f57cfe55e14d475bec3cac29272bc5e6d9e5e88d07c460d197f"
+    },
+    "baseline-04_returned_list.llvm": {
+      "compiler_sha256": "5ca393ede35337754edf06c0cf5551f491dc87037d3988ea4d410b0422e3db2d",
+      "raw_path": ".tmp/caller-consume-20261010/baseline-capture/04_returned_list/plain.ll",
+      "raw_sha256": "21b43aef5c9e4ac3e26e281acd3f997d95cf372761b2cb9cc306da6192bd9ef5",
+      "functions": [
+        "probe",
+        "make_values"
+      ],
+      "fragment_sha256": "04281f56016e1d574dc564915a0bde0d198928df2ed8b2a5a5b62d9b3314254b"
+    },
+    "baseline-20_loop_carried.core": {
+      "compiler_sha256": "5ca393ede35337754edf06c0cf5551f491dc87037d3988ea4d410b0422e3db2d",
+      "raw_path": ".tmp/caller-consume-20261010/baseline-capture/20_loop_carried/core.ir",
+      "raw_sha256": "b9dfd38565cf8a9f8e5958f86ade0650bc3908e9d41bd5c585403039a2b11f24",
+      "functions": [
+        "probe",
+        "append_batch"
+      ],
+      "fragment_sha256": "c4d96372a19ab4df6dfc1ddb71eab8c82fe6acfb588c60dd4d433669c3f4ba8b"
+    },
+    "baseline-20_loop_carried.llvm": {
+      "compiler_sha256": "5ca393ede35337754edf06c0cf5551f491dc87037d3988ea4d410b0422e3db2d",
+      "raw_path": ".tmp/caller-consume-20261010/baseline-capture/20_loop_carried/plain.ll",
+      "raw_sha256": "7027c12c199c9c12d81c1fb6795989370587e439aa28a833e94b18d31fc20681",
+      "functions": [
+        "probe",
+        "append_batch"
+      ],
+      "fragment_sha256": "a99875b6f530637c9435be20897b405a0acafb103789609e4826c58a73e910a0"
+    },
+    "candidate-04_returned_list.core": {
+      "compiler_sha256": "e0ec1d9b3a5a7d201de28ed3ae60bb2e1702bd6d1e85ac55b6cc7bb5f1a80bbf",
+      "raw_path": ".tmp/caller-consume-20261010/candidate-capture/04_returned_list/core.ir",
+      "raw_sha256": "9c87f213456d4bf86496c352c19871c779522129cc5cfd14f0caa2dbd8957cd6",
+      "functions": [
+        "probe",
+        "make_values"
+      ],
+      "fragment_sha256": "10ff9045ee6c61ff5af6aff10cd05ecd05ff90c091949aeef8d499a1295de63e"
+    },
+    "candidate-04_returned_list.llvm": {
+      "compiler_sha256": "e0ec1d9b3a5a7d201de28ed3ae60bb2e1702bd6d1e85ac55b6cc7bb5f1a80bbf",
+      "raw_path": ".tmp/caller-consume-20261010/candidate-capture/04_returned_list/plain.ll",
+      "raw_sha256": "973dea20edd8aaa1e59fa85207e1fe2e8fd88db264266ae6d3e8ca96a868a5fe",
+      "functions": [
+        "probe",
+        "make_values"
+      ],
+      "fragment_sha256": "049c82aace1235e015622971fb3c5c796f77eba9b307ce23264fef12077e030c"
+    },
+    "candidate-20_loop_carried.core": {
+      "compiler_sha256": "e0ec1d9b3a5a7d201de28ed3ae60bb2e1702bd6d1e85ac55b6cc7bb5f1a80bbf",
+      "raw_path": ".tmp/caller-consume-20261010/candidate-capture/20_loop_carried/core.ir",
+      "raw_sha256": "a55be52015f74e07d9a1b0f2ff35427188454efc33b6353984c62fa0d18b8787",
+      "functions": [
+        "probe",
+        "append_batch"
+      ],
+      "fragment_sha256": "ce5ddcd3c1f7dd245a184bff8b66b28c300d477b70e4a83e40c4a51ea796c0f2"
+    },
+    "candidate-20_loop_carried.llvm": {
+      "compiler_sha256": "e0ec1d9b3a5a7d201de28ed3ae60bb2e1702bd6d1e85ac55b6cc7bb5f1a80bbf",
+      "raw_path": ".tmp/caller-consume-20261010/candidate-capture/20_loop_carried/plain.ll",
+      "raw_sha256": "4049179bcf4f1629b5ef0dc3481b5c205ba85fdb258c086f7c9f7ac6c0fdee62",
+      "functions": [
+        "probe",
+        "append_batch"
+      ],
+      "fragment_sha256": "f07b64e973444afd7b63a5b5626c55a021d48b78ea00f002e619e40d119b1f65"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "zero-rc-abi-proof-v1",
+  "source_sha256": "16ce545e74586b0e6ab25f226048a3a0c194fc9eee5f667f93c97e8b6ed8f7be",
+  "object_sha256": "cc25c63ebd1d9c862ba688f5da310edc55c8256c45e2cdb9273cc5bf2308172c",
+  "preprocessed_sha256": "8904bc81311e82ce089a00e19bb8ee2d3051e90bbe8a3b6dcffcd11eee29ba6f",
+  "command": [
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "cc",
+    "-std=c11",
+    "-pthread",
+    "-O0",
+    "-Werror=implicit-function-declaration",
+    "-c",
+    ".tmp/zero-rc-final-20261011/abi/runtime.c",
+    "-o",
+    ".tmp/zero-rc-final-20261011/abi/runtime.o"
+  ],
+  "inputs": {
+    "src/core/runtime/core_rt.c": "4eced08381ef8d270f8bdf97c4ee80d353445245c5b1723439fad3c5f4e632cd",
+    "src/core/runtime/core_dict.c": "379da380517be9cb7e6ef0dba0a16dded8f1b18d836002409c4555a3d53e5ba1",
+    "src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "src/core/runtime/core_text.c": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+    "src/core/runtime/core_sort.c": "7750f5158bac0c5d210d516038e9734dd7375addb81e3beb738db7ecb84fd545",
+    "src/core/runtime/core_number.c": "24134473bbeb81ca4896e37c86ff662f0e1f2524bd9a6b3db8599b9e61ac9143",
+    "src/core/runtime/core_io.c": "302102d37d20192ccba6a176c389f28b05278ecda5683c6914802088d2200ef7",
+    "src/core/runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "src/core/runtime/core_bytes.c": "a4740e070873ff1acb2730ea75b0994b2b3bf2b91b230ea4bd0e093e2a861c09",
+    "src/core/runtime/core_values.c": "26dd1195c8974fb3493645947b812ce6af5904c7fb0e619c6621ccdbbe066123",
+    "src/core/runtime/core_owned_copy.c": "41e6c3cbf06c6fd97ccfb97d4cb4144e88510b22dec07e80e2fb0fa96b82fc83",
+    "src/core/runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+    "src/core/runtime/core_tasks.c": "d20b1fb84a1edb085925c3de99d9c53c10ec1fd4417fcf76fce4b77b03ab8e4b"
+  },
+  "header_members": "uint32_t kind;\n    int64_t len;\n    int64_t cap;\n    int64_t reserved;",
+  "kind_offset": 0,
+  "header_size": 32,
+  "layout_evidence": "C _Static_asserts in the compiled runtime",
+  "absent_symbols": [
+    "count_load",
+    "count_retain",
+    "count_release",
+    "count_is_unique",
+    "myl_core_retain",
+    "myl_core_release",
+    "myl_core_share",
+    "myl_core_free_block"
+  ]
+}

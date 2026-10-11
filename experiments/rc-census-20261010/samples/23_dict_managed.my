@@ -1,0 +1,16 @@
+func probe(n: int) -> int:
+    mut values: dict[int, str] = {}
+    for i in range(n):
+        values[i] = "entry-" + str(i + n)
+    for i in range(n):
+        values[i] = values[i] + "!"
+    mut total = 0
+    for i in range(n):
+        total += (i + 1) * len(values[i])
+    return total
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

@@ -100,7 +100,7 @@ pub fn operation(comptime Context: type, context: Context, node: Operation, ty: 
             try context.writeOwner(node.owner, changed, span);
             return .none;
         },
-        .copy => return context.receiverOf(node.owner),
+        .copy => return if (context.module().zero_rc) @import("single_owner_copy.zig").copy(Context, context, try context.receiverOf(node.owner), span) else context.receiverOf(node.owner),
         .pop => {
             const receiver = try context.writableReceiverOf(node.owner, span);
             const length = try context.emit(.{ .op = .list_len, .ty = .u64, .a = receiver, .span = span });

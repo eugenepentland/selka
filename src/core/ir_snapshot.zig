@@ -110,6 +110,9 @@ pub fn layout(a: std.mem.Allocator, context: Context) std.mem.Allocator.Error!Di
     var writer = codec.Writer.init(a);
     defer writer.deinit();
     try writer.write([]const u8, "source-line-column-v2");
+    try writer.write(bool, context.module.single_owner);
+    try writer.write(bool, context.module.zero_rc);
+    try writer.write([]const ir.Type, context.module.shared_lists.items);
     try writer.write([]const ir.Compound, context.module.compounds.items);
     try writer.write(u64, context.module.functions.items.len);
     for (context.module.functions.items) |function| {

@@ -1,0 +1,11 @@
+func probe(n: int) -> int:
+    mut text = ""
+    for i in range(n):
+        text += "abλ"
+    return 17 * len(text) + text.find("λ")
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

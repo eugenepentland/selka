@@ -299,8 +299,8 @@ pub const Session = struct {
         else
             try self.bodyKey(mb, checked) else try self.bodyKey(mb, checked);
         if (self.cache.demand) |queries| if (queries.omitted(checked.id)) try queries.record(checked.id, body);
-        const debug = [_]u8{@intFromBool(mb.input.drop_debug)};
-        return self.cache.store.key("lowered-function-v3", &.{ &self.catalog, &self.guard, &self.assets, &body, &debug });
+        const modes = [_]u8{ @intFromBool(mb.input.drop_debug), @intFromBool(mb.module.single_owner), @intFromBool(mb.module.zero_rc) };
+        return self.cache.store.key("lowered-function-v4", &.{ &self.catalog, &self.guard, &self.assets, &body, &modes });
     }
 
     fn bodyKey(self: *Session, mb: Context, checked: typed.Function) Error!stage.Digest {
@@ -534,7 +534,7 @@ fn validWireSources(sources: *demand_sources.Cache, wire: Wire, first: usize) st
 }
 
 fn sameSignature(a: ir.Signature, b: ir.Signature) bool {
-    return a.ret == b.ret and a.linkage == b.linkage and a.owned == b.owned and a.views == b.views and std.mem.eql(ir.Type, a.params, b.params);
+    return a.ret == b.ret and a.linkage == b.linkage and a.owned == b.owned and a.consumes == b.consumes and a.views == b.views and std.mem.eql(ir.Type, a.params, b.params);
 }
 
 fn validSignature(module: *const ir.Module, sig: ir.Signature) bool {

@@ -19,9 +19,9 @@ public func is_absolute(value: str) -> bool:
 # Two path pieces joined; an absolute right side replaces the left one.
 public func join(left: str, right: str) -> str:
     if len(right) == 0:
-        return left
+        return left.copy()
     if len(left) == 0 or is_absolute(right):
-        return right
+        return right.copy()
     if strings.ends_with(left, separator()):
         return left + right
     return left + separator() + right
@@ -60,7 +60,7 @@ public func splitext(value: str) -> Split:
     while cut > 0 and name[cut - 1] != ".":
         cut -= 1
     if cut <= 1:
-        return Split(root=value, extension="")
+        return Split(root=value.copy(), extension="")
     mut boundary = len(value) - (len(name) - cut) - 1
     return Split(root=value[0:boundary], extension=value[boundary:len(value)])
 
@@ -72,7 +72,8 @@ public func stem(value: str) -> str:
 
 # The final suffix of a path, including its leading dot, or the empty text.
 public func extension(value: str) -> str:
-    return splitext(value).extension
+    const parts = splitext(value)
+    return parts.extension.copy()
 
 
 # Nonempty components of a path, with separators and single dots removed.
@@ -80,7 +81,7 @@ public func components(value: str) -> str[]:
     mut out: str[] = []
     for piece in value.split(separator()):
         if len(piece) > 0 and piece != ".":
-            out.append(piece)
+            out.append(piece.copy())
     return out
 
 
@@ -92,11 +93,11 @@ public func normalize(value: str) -> str:
     mut parts: str[] = []
     for piece in components(value):
         if piece != "..":
-            parts.append(piece)
+            parts.append(piece.copy())
         elif len(parts) > 0 and parts[len(parts) - 1] != "..":
-            parts = parts[0:len(parts) - 1]
+            _ = parts.pop()
         elif not absolute:
-            parts.append(piece)
+            parts.append(piece.copy())
     mut body = separator().join(parts)
     if absolute:
         return separator() + body

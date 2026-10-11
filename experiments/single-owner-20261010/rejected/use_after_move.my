@@ -1,0 +1,5 @@
+func main(out: Stream) -> int:
+    const values = [1, 2, 3]
+    const moved = values
+    out.print(len(values), len(moved))
+    return 0

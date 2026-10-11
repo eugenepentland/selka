@@ -541,3 +541,17 @@ fn hasRecordName(records: []const language.typed.Record, name: []const u8) bool 
     for (records) |record| if (std.mem.eql(u8, record.name, name)) return true;
     return false;
 }
+
+// spec-case: NEW-CORE-ZERO-RC-VIEWS-1
+test "nominal borrowed view prelude preserves explicit source aliases" {
+    var compilation = try language.Compilation.init(t.allocator, "aliases.my",
+        \\type TextView = int
+        \\type ByteView = int
+        \\func main() -> int:
+        \\    const text: TextView = 4
+        \\    const data: ByteView = 3
+        \\    return text + data
+    );
+    defer compilation.deinit();
+    try compilation.check();
+}

@@ -1,0 +1,23 @@
+record Batch:
+    items: int[]
+    factor: int
+
+func fill(mut values: int[], n: int):
+    for i in range(n):
+        values.append(i + 1)
+
+func make_batch(n: int) -> Batch:
+    mut values: int[] = []
+    fill(mut values, n)
+    return Batch(items=values, factor=n)
+
+func score(batch: Batch) -> int:
+    mut result = 0
+    for value in batch.items:
+        result += value * batch.factor
+    return result
+
+func main(args: str[], out: Stream) -> int:
+    const batch = make_batch(len(args) * 1000)
+    out.print(score(batch))
+    return 0

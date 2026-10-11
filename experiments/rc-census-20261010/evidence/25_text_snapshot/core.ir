@@ -1,0 +1,73 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  jump b1
+b1: ; preds b0 b3
+  %4 = phi i64 0:i64, %13
+  %8 = phi str str0, %10
+  %6 = cmp.lt bool %4, param0
+  branch %6, b2, b4
+b2: ; preds b1
+  %44 = is_unique bool %8
+  branch %44, b9, b10
+b3: ; preds b9
+  %13 = add.proven i64 %4, 1:i64
+  jump b1
+b4: ; preds b1
+  retain %8
+  jump b5
+b5: ; preds b4 b7
+  %18 = phi i64 0:i64, %27
+  %22 = phi str %8, %24
+  %20 = cmp.lt bool %18, param0
+  branch %20, b6, b8
+b6: ; preds b5
+  %54 = is_unique bool %22
+  branch %54, b11, b12
+b7: ; preds b11
+  %27 = add.proven i64 %18, 1:i64
+  jump b5
+b8: ; preds b5
+  %31 = call u64 myl_core_str_chars(%8)
+  %32 = convert.exact i64 %31
+  %33 = mul.exact i64 100:i64, %32
+  %34 = call u64 myl_core_str_chars(%22)
+  %35 = convert.exact i64 %34
+  %36 = add.exact i64 %33, %35
+  %38 = call i64 myl_core_str_find(%8, str3)
+  release %8
+  %39 = add.exact i64 %36, %38
+  %41 = call i64 myl_core_str_find(%22, str4)
+  release %22
+  %42 = add.exact i64 %39, %41
+  ret %42
+b9: ; preds b2 b10
+  %53 = phi str %8, %50
+  %10 = str_append str %53, str1
+  jump b3
+b10: ; preds b2
+  %48 = str_len u64 %8
+  %49 = str_view_of str_view %8, 0:u64, %48
+  %50 = str_from_view str %49
+  release %8
+  jump b9
+b11: ; preds b6 b12
+  %63 = phi str %22, %60
+  %24 = str_append str %63, str2
+  jump b7
+b12: ; preds b6
+  %58 = str_len u64 %22
+  %59 = str_view_of str_view %22, 0:u64, %58
+  %60 = str_from_view str %59
+  release %22
+  jump b11
+fn myl_core_str_chars(str) -> u64 extern
+fn myl_core_str_find(str, str) -> i64 extern
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %4=[0,140737488355328] %5=[-9223372036854775808,9223372036854775807] %6=[0,1] %13=[1,140737488355328] %16=[-9223372036854775808,9223372036854775807] %18=[0,140737488355328] %19=[-9223372036854775808,9223372036854775807] %20=[0,1] %27=[1,140737488355328] %31=[0,18446744073709551615] %32=[0,9223372036854775807] %33=[0,9223372036854775807] %34=[0,18446744073709551615] %35=[0,9223372036854775807] %36=[0,9223372036854775807] %38=[-9223372036854775808,9223372036854775807] %39=[-9223372036854775808,9223372036854775807] %41=[-9223372036854775808,9223372036854775807] %42=[-9223372036854775808,9223372036854775807]

@@ -1,0 +1,14 @@
+func probe(n: int) -> int:
+    mut text = ""
+    for i in range(n):
+        text += "abλ"
+    const snapshot = text
+    for i in range(n):
+        text += "z"
+    return 100 * len(snapshot) + len(text) + snapshot.find("z") + text.find("z")
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

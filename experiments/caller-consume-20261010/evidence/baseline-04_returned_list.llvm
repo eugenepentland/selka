@@ -1,0 +1,90 @@
+define internal fastcc i64 @"my.probe"(i64 %p0) nounwind uwtable !dbg !1000006 {
+entry:
+  %slot = alloca i64, align 8
+  br label %b0
+b0:
+  %v1 = notail call fastcc ptr @"my.make_values"(i64 %p0), !dbg !1000008
+  %v2 = notail call fastcc i64 @"my.sum_values"(ptr %v1), !dbg !1000010
+  %rc.1 = load atomic i32, ptr %v1 unordered, align 8, !tbaa !3, !range !8
+  %rp.2 = icmp ult i32 %rc.1, 2147483648
+  br i1 %rp.2, label %rc.dec.3, label %rc.slow.4, !prof !23
+rc.dec.3:
+  %rn.6 = sub nuw i32 %rc.1, 1
+  %rz.7 = icmp eq i32 %rn.6, 0
+  br i1 %rz.7, label %rc.free.9, label %rc.keep.8
+rc.keep.8:
+  store i32 %rn.6, ptr %v1, align 8, !tbaa !3
+  br label %b0.5
+rc.free.9:
+  call void @myl_core_free(ptr %v1)
+  br label %b0.5
+rc.slow.4:
+  call preserve_mostcc void @myl_core_release_slow(ptr %v1)
+  br label %b0.5
+b0.5:
+  ret i64 %v2
+}
+
+define internal fastcc ptr @"my.make_values"(i64 %p0) nounwind uwtable !dbg !1000011 {
+entry:
+  %slot = alloca i64, align 8
+  %state0.len = alloca i64, align 8
+  %state0.cap = alloca i64, align 8
+  br label %b0
+b0:
+  %v2 = call ptr @myl_core_list_new(i64 0, i64 8)
+  %stl.1 = getelementptr inbounds i8, ptr %v2, i64 8
+  %stl.2 = load i64, ptr %stl.1, align 8, !tbaa !5
+  store i64 %stl.2, ptr %state0.len, align 8
+  %stc.3 = getelementptr inbounds i8, ptr %v2, i64 16
+  %stc.4 = load i64, ptr %stc.3, align 8, !tbaa !5
+  store i64 %stc.4, ptr %state0.cap, align 8
+  br label %b1
+b1:
+  %v6 = phi i64 [ 0, %b0 ], [ %v16, %b3 ]
+  %v12 = phi ptr [ %v2, %b0 ], [ %v13, %b3 ]
+  %v8 = icmp ult i64 %v6, 8
+  br i1 %v8, label %b2, label %edge.5
+edge.5:
+  %sts.6 = load i64, ptr %state0.len, align 8
+  %sts.7 = getelementptr inbounds i8, ptr %v12, i64 8
+  store i64 %sts.6, ptr %sts.7, align 8, !tbaa !5
+  br label %b4
+b2:
+  %p.8 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p0, i64 %v6)
+  %v11 = extractvalue { i64, i1 } %p.8, 0
+  %o.9 = extractvalue { i64, i1 } %p.8, 1
+  br i1 %o.9, label %trap.10, label %b2.11, !prof !0
+trap.10:
+  call void @myl_core_trap(ptr @myl.site.0, i64 %p0, i64 %v6) #2, !dbg !1000013
+  unreachable
+b2.11:
+  %spl.12 = load i64, ptr %state0.len, align 8
+  %spc.13 = load i64, ptr %state0.cap, align 8
+  %spr.14 = icmp ult i64 %spl.12, %spc.13
+  br i1 %spr.14, label %push.fits.15, label %push.grow.16, !prof !10
+push.grow.16:
+  %sts.19 = load i64, ptr %state0.len, align 8
+  %sts.20 = getelementptr inbounds i8, ptr %v12, i64 8
+  store i64 %sts.19, ptr %sts.20, align 8, !tbaa !5
+  %spg.18 = call ptr @myl_core_list_grow(ptr %v12, i64 8)
+  %spc.21 = getelementptr inbounds i8, ptr %spg.18, i64 16
+  %spc.22 = load i64, ptr %spc.21, align 8, !tbaa !5
+  store i64 %spc.22, ptr %state0.cap, align 8
+  br label %b2.17
+push.fits.15:
+  br label %b2.17
+b2.17:
+  %v13 = phi ptr [ %v12, %push.fits.15 ], [ %spg.18, %push.grow.16 ]
+  %data.23 = getelementptr inbounds i8, ptr %v13, i64 32
+  %elt.24 = getelementptr inbounds i64, ptr %data.23, i64 %spl.12
+  store i64 %v11, ptr %elt.24, align 8, !tbaa !14
+  %spn.25 = add nuw nsw i64 %spl.12, 1
+  store i64 %spn.25, ptr %state0.len, align 8
+  br label %b3
+b3:
+  %v16 = add nuw nsw i64 %v6, 1
+  br label %b1
+b4:
+  ret ptr %v12
+}

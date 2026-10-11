@@ -1,0 +1,39 @@
+{
+  "core_debug": {
+    "passed": 833,
+    "failed": 0,
+    "shards": 8,
+    "skipped_other_shard_instances": 5831,
+    "log": ".tmp/caller-consume-20261010/core-tests-final.log",
+    "log_sha256": "38a6be7e30c9a0333eff26d46ed80d165113d996b1e99653113bb63c39193393"
+  },
+  "whole_tree_guardian": {
+    "checks_passed": 88,
+    "log": ".tmp/caller-consume-20261010/guardian-full-final.log",
+    "log_sha256": "6b2c01ca9a9894f2cb3e16b818f4dc603a1ba19e15902c7fa20792ac13a08c43"
+  },
+  "optimized_install": {
+    "steps_passed": 12,
+    "log": ".tmp/caller-consume-20261010/install.log",
+    "log_sha256": "e44ad6b4ca3a7d8de6f768abe7fe9e861fd40c268ee96fc55e36b97f92ebcd17"
+  },
+  "capture": {
+    "executions_per_compiler": 230,
+    "census_programs": 30,
+    "census_inputs": [
+      4,
+      11
+    ],
+    "modes": [
+      "plain",
+      "counted",
+      "verify"
+    ],
+    "successful_runs_use_leakcheck": true,
+    "successful_counted_live_at_exit": 0,
+    "overflow_trap": "R_OVERFLOW",
+    "cold_warm_binary_parity_cases": 4,
+    "old_census_artifacts_unchanged": 159
+  },
+  "scope": "Full Core test target and compiler Guardian gate; not a claim that every repository test target was run."
+}

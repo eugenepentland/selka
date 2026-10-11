@@ -1,0 +1,107 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %2 = dict_new dict[i64, str] 0:u64
+  jump b1
+b1: ; preds b0 b3
+  %5 = phi i64 0:i64, %27
+  %14 = phi dict[i64, str] %2, %23
+  %7 = cmp.lt bool %5, param0
+  branch %7, b2, b4
+b2: ; preds b1
+  %11 = add.proven i64 %5, param0
+  %12 = call str myl_core_str_from_i64(%11)
+  %90 = str_len u64 str0
+  %91 = str_view_of str_view str0, 0:u64, %90
+  %92 = str_from_view str %91
+  %13 = str_append str %92, %12
+  release %12
+  %15 = dict_find i64 %14, %5
+  %17 = cmp.ge bool %15, 0:i64
+  branch %17, b5, b6
+b3: ; preds b7
+  %27 = add.proven i64 %5, 1:i64
+  jump b1
+b4: ; preds b1
+  jump b8
+b5: ; preds b2
+  %19 = dict_set_value dict[i64, str] %14, %15, %13
+  jump b7
+b6: ; preds b2
+  %21 = dict_insert dict[i64, str] %14, %15, %5, %13
+  jump b7
+b7: ; preds b5 b6
+  %23 = phi dict[i64, str] %19, %21
+  jump b3
+b8: ; preds b4 b10
+  %33 = phi i64 0:i64, %58
+  %37 = phi dict[i64, str] %14, %54
+  %35 = cmp.lt bool %33, param0
+  branch %35, b9, b11
+b9: ; preds b8
+  %38 = dict_find i64 %37, %33
+  %40 = cmp.ge bool %38, 0:i64
+  branch %40, b12, b13
+b10: ; preds b16
+  %58 = add.proven i64 %33, 1:i64
+  jump b8
+b11: ; preds b8
+  jump b17
+b12: ; preds b9
+  %43 = dict_entry_value str %37, %38
+  %94 = str_len u64 %43
+  %95 = str_view_of str_view %43, 0:u64, %94
+  %96 = str_from_view str %95
+  %45 = str_append str %96, str1
+  %48 = iconst bool 1
+  branch 1:bool, b14, b15
+b13: ; preds b9
+  unreachable
+b14: ; preds b12
+  %50 = dict_set_value dict[i64, str] %37, %38, %45
+  jump b16
+b15: ; preds b12
+  %52 = dict_insert dict[i64, str] %37, %38, %33, %45
+  jump b16
+b16: ; preds b14 b15
+  %54 = phi dict[i64, str] %50, %52
+  jump b10
+b17: ; preds b11 b19
+  %66 = phi i64 0:i64, %86
+  %70 = phi i64 0:i64, %83
+  %68 = cmp.lt bool %66, param0
+  branch %68, b18, b20
+b18: ; preds b17
+  %72 = add.proven i64 %66, 1:i64
+  %74 = dict_find i64 %37, %66
+  %76 = cmp.ge bool %74, 0:i64
+  branch %76, b21, b22
+b19: ; preds b21
+  %86 = add.proven i64 %66, 1:i64
+  jump b17
+b20: ; preds b17
+  release %37
+  ret %70
+b21: ; preds b18
+  %79 = dict_entry_value str %37, %74
+  %80 = call u64 myl_core_str_chars(%79)
+  %81 = convert.exact i64 %80
+  %82 = mul.exact i64 %72, %81
+  %83 = add.exact i64 %70, %82
+  jump b19
+b22: ; preds b18
+  unreachable
+fn myl_core_str_from_i64(i64) -> str extern
+fn myl_core_str_chars(str) -> u64 extern
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[0,9223372036854775807]
+facts probe: %0=[0,140737488355328] %5=[0,140737488355328] %6=[-9223372036854775808,9223372036854775807] %7=[0,1] %10=[-9223372036854775808,9223372036854775807] %11=[1,281474976710655] %15=[-9223372036854775808,9223372036854775807] %17=[0,1] %25=[-9223372036854775808,9223372036854775807] %27=[1,140737488355328] %29=[-9223372036854775808,9223372036854775807] %30=[-9223372036854775808,9223372036854775807] %33=[0,140737488355328] %34=[-9223372036854775808,9223372036854775807] %35=[0,1] %38=[-9223372036854775808,9223372036854775807] %40=[0,1] %46=[-9223372036854775808,9223372036854775807] %48=[1,1] %56=[-9223372036854775808,9223372036854775807] %58=[1,140737488355328] %60=[-9223372036854775808,9223372036854775807] %63=[-9223372036854775808,9223372036854775807] %64=[-9223372036854775808,9223372036854775807] %66=[0,140737488355328] %67=[-9223372036854775808,9223372036854775807] %68=[0,1] %70=[0,9223372036854775807] %72=[1,140737488355328] %74=[-9223372036854775808,9223372036854775807] %76=[0,1] %80=[0,18446744073709551615] %81=[0,9223372036854775807] %82=[0,9223372036854775807] %83=[0,9223372036854775807] %86=[1,140737488355328]
+list probe %14: settled=true length=%-1
+list probe %23: settled=true length=%-1
+list probe %37: settled=true length=%-1
+list probe %54: settled=true length=%-1

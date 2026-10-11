@@ -1,0 +1,2442 @@
+{
+  "schema": "mylang-zero-rc-audit-v1",
+  "audit_sha256": "36e0707f6622782d94df1df6489064c4ec2928ef55fc65efa4a0d5eaa6ce1bdb",
+  "scope": "Whole execution, including main and startup/teardown (<outside>).",
+  "limitations": [
+    "Existing counters do not cover every runtime reference-count read or check.",
+    "Zero observed events does not prove that unexecuted paths contain no RC.",
+    "Emitted and runtime RC columns can overlap; do not sum them.",
+    "Memory measures managed blocks, not RSS or all allocator storage."
+  ],
+  "summary": {
+    "runs": 54,
+    "observed_rc_free_runs": 0,
+    "managed_leak_free_runs": 54
+  },
+  "runs": [
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/01_scalar/release/counts-11.json",
+      "counter_sha256": "c7ac1d37a7ee81ee50f63819a76922172e5d6260b0cbc3e840e8604650fabe34",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "reallocs": 0,
+        "peak_live_bytes": 832,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/01_scalar/release/counts-4.json",
+      "counter_sha256": "6e19ebec50b5a03015d087227f29e90d892244c46c4e7b3ebd737a33d8e73355",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 5,
+        "alloc_bytes": 320,
+        "frees": 5,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/02_local_list/release/counts-11.json",
+      "counter_sha256": "10da34432932c4f4f5a7ff8445f8594f8af93fde3268f9c4f5d8697fb3c29bc0",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "reallocs": 0,
+        "peak_live_bytes": 832,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/02_local_list/release/counts-4.json",
+      "counter_sha256": "14cde702066f15cae81f3ea9473b9a196293e97d97a3029f7161b3ea3cc5ed1b",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 5,
+        "alloc_bytes": 320,
+        "frees": 5,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/03_borrowed_reader/release/counts-11.json",
+      "counter_sha256": "1d8db78ce7388f332024c910c7aba2e998bd45e2ae6c0fa7078033492b6b7cee",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "reallocs": 0,
+        "peak_live_bytes": 832,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/03_borrowed_reader/release/counts-4.json",
+      "counter_sha256": "81d7f23d1e79879966b7415eac6850c93f9b8d1596f49c10a3517cda8183a77a",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 5,
+        "alloc_bytes": 320,
+        "frees": 5,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/04_returned_list/release/counts-11.json",
+      "counter_sha256": "8126a5e404a428506d871891bf2dffb11f9ab74a0b4d3ab1114bdfe027166e99",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "reallocs": 0,
+        "peak_live_bytes": 832,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/04_returned_list/release/counts-4.json",
+      "counter_sha256": "0dfa73bef7f08e1cb6fbfc6333bef47770ee2fe7c5f71bf41a6f24ad59a0d0b1",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 5,
+        "alloc_bytes": 320,
+        "frees": 5,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/05_mut_destination/release/counts-11.json",
+      "counter_sha256": "18416e4d4a8f7d4c275ca3bb5fe2cc2e13e197854cbf2a54e6020230418abbdf",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "reallocs": 0,
+        "peak_live_bytes": 832,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/05_mut_destination/release/counts-4.json",
+      "counter_sha256": "c6d84ca18351baa8909c4bb0d1fd310efff374e914fc74b71c2b8e29448ed064",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 5,
+        "alloc_bytes": 320,
+        "frees": 5,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/06_dynamic_list/release/counts-11.json",
+      "counter_sha256": "b747a04dd1c40a0206ca53841ae45b0ed94302a2d87929cc05bf33d910703658",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 13,
+        "alloc_bytes": 960,
+        "frees": 13,
+        "reallocs": 0,
+        "peak_live_bytes": 960,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/06_dynamic_list/release/counts-4.json",
+      "counter_sha256": "38de436ec9bcfc69ea92a9b358805b281709476051bc6d2f45d8be68b7a56abc",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 6,
+        "alloc_bytes": 384,
+        "frees": 6,
+        "reallocs": 0,
+        "peak_live_bytes": 384,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/07_large_list/release/counts-11.json",
+      "counter_sha256": "8e3fc81005b0c3a5b40535b3512b7df0f4ddd50f1a39796486f274bd50185c5c",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 13,
+        "alloc_bytes": 5672,
+        "frees": 13,
+        "reallocs": 0,
+        "peak_live_bytes": 5672,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/07_large_list/release/counts-4.json",
+      "counter_sha256": "bc4e4dcd9566db2d45275ff9992adf466c7a39a44836af031d9b151489c1d4bc",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 6,
+        "alloc_bytes": 5160,
+        "frees": 6,
+        "reallocs": 0,
+        "peak_live_bytes": 5160,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/08_snapshot_read/release/counts-11.json",
+      "counter_sha256": "63f43da1c0429956064da12e48c9a90406a36e3dd72ac5d53d57237f08ce8760",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "reallocs": 0,
+        "peak_live_bytes": 832,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/08_snapshot_read/release/counts-4.json",
+      "counter_sha256": "523bd8501498d849fe187bfa0cbcdecc8c570e47ebeba2e9a1a682a2654b2d7f",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 5,
+        "alloc_bytes": 320,
+        "frees": 5,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/09_snapshot_mutate/release/counts-11.json",
+      "counter_sha256": "f8355e85fc03878b1763b674c9e769afd36eb0a554146cceb1e005814166e609",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 2,
+      "memory": {
+        "allocs": 15,
+        "alloc_bytes": 1216,
+        "frees": 15,
+        "reallocs": 0,
+        "peak_live_bytes": 1216,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/09_snapshot_mutate/release/counts-4.json",
+      "counter_sha256": "57a7a0d40531155a2694b3f8d22406aecef94398d0a38cce8a0ebf02e16aacb8",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 2,
+      "memory": {
+        "allocs": 8,
+        "alloc_bytes": 704,
+        "frees": 8,
+        "reallocs": 0,
+        "peak_live_bytes": 704,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/10_loop_snapshots/release/counts-11.json",
+      "counter_sha256": "1c1449b39c5f527e4e2f68e60725f7f7ad51cfaae2473dee752fe79803663d03",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 13,
+      "memory": {
+        "allocs": 25,
+        "alloc_bytes": 2176,
+        "frees": 25,
+        "reallocs": 0,
+        "peak_live_bytes": 2176,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/10_loop_snapshots/release/counts-4.json",
+      "counter_sha256": "ac4a2cf3188b5b0fa6a2435c2a45aaedfcde1859d262a787956816020af26490",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 6,
+      "memory": {
+        "allocs": 11,
+        "alloc_bytes": 736,
+        "frees": 11,
+        "reallocs": 0,
+        "peak_live_bytes": 736,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/11_record_scalar/release/counts-11.json",
+      "counter_sha256": "7174f8e62cb1dda506f02f3941344ba1196f2f55c2956cf1edb3dd901b991508",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "reallocs": 0,
+        "peak_live_bytes": 832,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/11_record_scalar/release/counts-4.json",
+      "counter_sha256": "0973d85a1dc3c1308b9c8f9feba37b8438477974dbaecca6a5f8159ef6e211c7",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 5,
+        "alloc_bytes": 320,
+        "frees": 5,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/12_record_list/release/counts-11.json",
+      "counter_sha256": "09b3b087319cfb6598dcd77312002b0e67b384e83322932b81a5215e5e100660",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 13,
+        "alloc_bytes": 960,
+        "frees": 13,
+        "reallocs": 0,
+        "peak_live_bytes": 960,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/12_record_list/release/counts-4.json",
+      "counter_sha256": "ce784831a6b6f1b816dc9241d2b018395bcb77f1ab98e338777112076f745054",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 6,
+        "alloc_bytes": 384,
+        "frees": 6,
+        "reallocs": 0,
+        "peak_live_bytes": 384,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/13_record_snapshot/release/counts-11.json",
+      "counter_sha256": "1736968c99bb930e457cd134ab7cdf1c8ab8222bcd42db44adc7bf97eafd92b3",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 2,
+      "memory": {
+        "allocs": 16,
+        "alloc_bytes": 1216,
+        "frees": 16,
+        "reallocs": 0,
+        "peak_live_bytes": 1152,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/13_record_snapshot/release/counts-4.json",
+      "counter_sha256": "e3253ec8a3e722ed7e59809fddaea1e311b30db4de6c386ef56b11a1cec624b1",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 2,
+      "memory": {
+        "allocs": 8,
+        "alloc_bytes": 544,
+        "frees": 8,
+        "reallocs": 0,
+        "peak_live_bytes": 544,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/14_nested_lists/release/counts-11.json",
+      "counter_sha256": "9d1c9c639309b8c4cb2b8b768bebabe9c173b6bd743746e088cd9bec94609a1b",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 12,
+      "memory": {
+        "allocs": 37,
+        "alloc_bytes": 2528,
+        "frees": 37,
+        "reallocs": 0,
+        "peak_live_bytes": 2080,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/14_nested_lists/release/counts-4.json",
+      "counter_sha256": "be4b7284f88ec403aca07f74cd1526a417bcb5886b11bfb77cafbd19f5be1391",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 5,
+      "memory": {
+        "allocs": 15,
+        "alloc_bytes": 960,
+        "frees": 15,
+        "reallocs": 0,
+        "peak_live_bytes": 832,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/15_managed_elements/release/counts-11.json",
+      "counter_sha256": "d500824b0a2ee449ab0d4ff215365fd45804c13c779aec6378a05246f510ff21",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 22,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 12,
+      "memory": {
+        "allocs": 57,
+        "alloc_bytes": 3872,
+        "frees": 57,
+        "reallocs": 0,
+        "peak_live_bytes": 2528,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/15_managed_elements.my",
+          "line": 23,
+          "column": 21,
+          "kind": "release",
+          "count": 11
+        },
+        {
+          "function": "make_entries",
+          "origin": "make_entries",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/15_managed_elements.my",
+          "line": 9,
+          "column": 45,
+          "kind": "release",
+          "count": 11
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/15_managed_elements/release/counts-4.json",
+      "counter_sha256": "1232d190cf7b980792faa1a1f6be923bd5d5ea9c0a1eabcb4cdcc64eea6c16df",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 8,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 5,
+      "memory": {
+        "allocs": 22,
+        "alloc_bytes": 1440,
+        "frees": 22,
+        "reallocs": 0,
+        "peak_live_bytes": 992,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/15_managed_elements.my",
+          "line": 23,
+          "column": 21,
+          "kind": "release",
+          "count": 4
+        },
+        {
+          "function": "make_entries",
+          "origin": "make_entries",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/15_managed_elements.my",
+          "line": 9,
+          "column": 45,
+          "kind": "release",
+          "count": 4
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/16_branch_alias/release/counts-11.json",
+      "counter_sha256": "942e49c6ec5fff75dbec28bd6afcb2fbe436196edb5e4e7ee3062736149437f7",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 3,
+      "memory": {
+        "allocs": 15,
+        "alloc_bytes": 1024,
+        "frees": 15,
+        "reallocs": 0,
+        "peak_live_bytes": 1024,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/16_branch_alias/release/counts-4.json",
+      "counter_sha256": "467b91c31181f3ebe87c7720bc21ce21da07ffd4c2960dc204e70a9f31121452",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 3,
+      "memory": {
+        "allocs": 8,
+        "alloc_bytes": 512,
+        "frees": 8,
+        "reallocs": 0,
+        "peak_live_bytes": 512,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/17_indirect_reader/release/counts-11.json",
+      "counter_sha256": "6f5753d63f95b3acda2d674b858ee2a51e1cdee5e92b705ff94893ef6171cf9c",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 13,
+        "alloc_bytes": 896,
+        "frees": 13,
+        "reallocs": 0,
+        "peak_live_bytes": 896,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/17_indirect_reader/release/counts-4.json",
+      "counter_sha256": "3d533c75674c8b56ad54e917faf471ec52006211133b700cffa2613b6fe4f1de",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 6,
+        "alloc_bytes": 384,
+        "frees": 6,
+        "reallocs": 0,
+        "peak_live_bytes": 384,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/18_recursive_reader/release/counts-11.json",
+      "counter_sha256": "6425e474f1ab6f49f736099af15be4a74f29a936bba1b62c3da212d899c5b82a",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 13,
+        "alloc_bytes": 896,
+        "frees": 13,
+        "reallocs": 0,
+        "peak_live_bytes": 896,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/18_recursive_reader/release/counts-4.json",
+      "counter_sha256": "48ff2e88e107cce7c46110350a9a215beddbafd3f7200b46ff6086f01a48f4e5",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 6,
+        "alloc_bytes": 384,
+        "frees": 6,
+        "reallocs": 0,
+        "peak_live_bytes": 384,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/19_return_field/release/counts-11.json",
+      "counter_sha256": "0c92d639e08e156c6ca686d61ef40899cec716e0b97d5a891e9acbef25642292",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 2,
+      "memory": {
+        "allocs": 14,
+        "alloc_bytes": 960,
+        "frees": 14,
+        "reallocs": 0,
+        "peak_live_bytes": 960,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/19_return_field/release/counts-4.json",
+      "counter_sha256": "1972d3d960bec2e36b68063ebdea91087732477a35874c58e3f8bd87c8c7234e",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 2,
+      "memory": {
+        "allocs": 7,
+        "alloc_bytes": 448,
+        "frees": 7,
+        "reallocs": 0,
+        "peak_live_bytes": 448,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/20_loop_carried/release/counts-11.json",
+      "counter_sha256": "cebfd000ca26332b2c2f035322c02f93c9f850f2488174fc2744e2d0c3f007fb",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 17,
+        "alloc_bytes": 1952,
+        "frees": 17,
+        "reallocs": 0,
+        "peak_live_bytes": 1664,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/20_loop_carried/release/counts-4.json",
+      "counter_sha256": "a18c2a0b7ef3b86037ac40a4f41ca0179650ad4b511bd12235a9c62cf9385019",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 7,
+        "alloc_bytes": 448,
+        "frees": 7,
+        "reallocs": 0,
+        "peak_live_bytes": 448,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/24_text_builder/release/counts-11.json",
+      "counter_sha256": "4e49bbce7787e20746993ee8aecd3d02f24ac7b7f50c589ffde05bba80d3ec7b",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 2,
+        "unique_test": 11
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 15,
+        "alloc_bytes": 1056,
+        "frees": 15,
+        "reallocs": 0,
+        "peak_live_bytes": 992,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/24_text_builder.my",
+          "line": 4,
+          "column": 14,
+          "kind": "unique_test",
+          "count": 11
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/24_text_builder.my",
+          "line": 1,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/24_text_builder.my",
+          "line": 4,
+          "column": 14,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/24_text_builder/release/counts-4.json",
+      "counter_sha256": "d7d666c239092f308f56793c17734d85bce71808a14fca7d49b6d48b711066f2",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 2,
+        "unique_test": 4
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 7,
+        "alloc_bytes": 448,
+        "frees": 7,
+        "reallocs": 0,
+        "peak_live_bytes": 448,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/24_text_builder.my",
+          "line": 4,
+          "column": 14,
+          "kind": "unique_test",
+          "count": 4
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/24_text_builder.my",
+          "line": 1,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/24_text_builder.my",
+          "line": 4,
+          "column": 14,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/25_text_snapshot/release/counts-11.json",
+      "counter_sha256": "daab31acedb96dc5e4c21efd5c1a10b9ed55bdbe4b341e2d677f1844a3e57030",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 1,
+        "release": 4,
+        "unique_test": 22
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 17,
+        "alloc_bytes": 1280,
+        "frees": 17,
+        "reallocs": 0,
+        "peak_live_bytes": 1152,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 4,
+          "column": 14,
+          "kind": "unique_test",
+          "count": 11
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 1,
+          "column": 6,
+          "kind": "retain",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 7,
+          "column": 14,
+          "kind": "unique_test",
+          "count": 11
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 1,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 1,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 4,
+          "column": 14,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 7,
+          "column": 14,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/25_text_snapshot/release/counts-4.json",
+      "counter_sha256": "5043b205b5f76324bbc7e3820645337ae2d086ccdf48a22014d7b222175861fb",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 1,
+        "release": 4,
+        "unique_test": 8
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 9,
+        "alloc_bytes": 608,
+        "frees": 9,
+        "reallocs": 0,
+        "peak_live_bytes": 544,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 4,
+          "column": 14,
+          "kind": "unique_test",
+          "count": 4
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 1,
+          "column": 6,
+          "kind": "retain",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 7,
+          "column": 14,
+          "kind": "unique_test",
+          "count": 4
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 1,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 1,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 4,
+          "column": 14,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/25_text_snapshot.my",
+          "line": 7,
+          "column": 14,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/26_text_slice/release/counts-11.json",
+      "counter_sha256": "1216e06dd80a9b1d8bb9ca4f61fe9bbdea9a7fe6bad4db7af4154eb6433bc539",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 4,
+        "unique_test": 13
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 16,
+        "alloc_bytes": 1120,
+        "frees": 16,
+        "reallocs": 0,
+        "peak_live_bytes": 992,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 8,
+          "column": 14,
+          "kind": "unique_test",
+          "count": 13
+        },
+        {
+          "function": "probe",
+          "origin": "segment",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 5,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 2,
+          "column": 12,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 11,
+          "column": 34,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 8,
+          "column": 14,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/26_text_slice/release/counts-4.json",
+      "counter_sha256": "d1c7b97b0a10758b33b706870499ca7fec53c0eec1ea2415e72279be70113df5",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 4,
+        "unique_test": 6
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 9,
+        "alloc_bytes": 576,
+        "frees": 9,
+        "reallocs": 0,
+        "peak_live_bytes": 448,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 8,
+          "column": 14,
+          "kind": "unique_test",
+          "count": 6
+        },
+        {
+          "function": "probe",
+          "origin": "segment",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 5,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 2,
+          "column": 12,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 11,
+          "column": 34,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/26_text_slice.my",
+          "line": 8,
+          "column": 14,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/27_buffer_builder/release/counts-11.json",
+      "counter_sha256": "3382cd39f42c0607852381129db0ba4aa54f6440d88f2d43a85cd943dbcbd696",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 1,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 18,
+        "alloc_bytes": 1184,
+        "frees": 18,
+        "reallocs": 0,
+        "peak_live_bytes": 992,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/27_buffer_builder.my",
+          "line": 1,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/27_buffer_builder/release/counts-4.json",
+      "counter_sha256": "4425111c95ed56a450b6496f3260da83b2a407638d1e0087412ac8737efad7f6",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 1,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 9,
+        "alloc_bytes": 512,
+        "frees": 9,
+        "reallocs": 0,
+        "peak_live_bytes": 448,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/27_buffer_builder.my",
+          "line": 1,
+          "column": 6,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/28_buffer_snapshot/release/counts-11.json",
+      "counter_sha256": "1facaf83535a0d459dd44516f208325d974e8ea95a37064d202aa9d011077a6b",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 2,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 19,
+        "alloc_bytes": 1280,
+        "frees": 19,
+        "reallocs": 0,
+        "peak_live_bytes": 1024,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/28_buffer_snapshot.my",
+          "line": 5,
+          "column": 22,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/28_buffer_snapshot.my",
+          "line": 6,
+          "column": 9,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/28_buffer_snapshot/release/counts-4.json",
+      "counter_sha256": "bd527b1b677d83f0ddcc89c92c54ca159777812c90404b9e39aa44e152fbaed3",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 2,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 10,
+        "alloc_bytes": 576,
+        "frees": 10,
+        "reallocs": 0,
+        "peak_live_bytes": 448,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/28_buffer_snapshot.my",
+          "line": 5,
+          "column": 22,
+          "kind": "release",
+          "count": 1
+        },
+        {
+          "function": "probe",
+          "origin": "probe",
+          "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/experiments/rc-census-20261010/samples/28_buffer_snapshot.my",
+          "line": 6,
+          "column": 9,
+          "kind": "release",
+          "count": 1
+        }
+      ],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/29_list_filter/release/counts-11.json",
+      "counter_sha256": "48f3f6d81b8abdfd4676f7b97fecdcc8ade622a66a23925f420b073c38498f23",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 2,
+      "memory": {
+        "allocs": 16,
+        "alloc_bytes": 1440,
+        "frees": 16,
+        "reallocs": 0,
+        "peak_live_bytes": 1408,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/29_list_filter/release/counts-4.json",
+      "counter_sha256": "79bea272183fdc8b1180e3c33f282e0c53315f520055d1266c3c59660d3537e6",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 2,
+      "memory": {
+        "allocs": 8,
+        "alloc_bytes": 576,
+        "frees": 8,
+        "reallocs": 0,
+        "peak_live_bytes": 576,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/30_sort_scratch/release/counts-11.json",
+      "counter_sha256": "be105b20f7ff35fc0543cfc7111d7449223d0186d5d2e5fffacbc9e3012f5dac",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 12,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 13,
+        "alloc_bytes": 3368,
+        "frees": 13,
+        "reallocs": 0,
+        "peak_live_bytes": 3368,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 12,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    },
+    {
+      "counter_file": ".tmp/shared-snapshot-20261011/measurements/controls/census/30_sort_scratch/release/counts-4.json",
+      "counter_sha256": "c168cc82607fd2bfbc5d469fe90977cfc0db253feb34e2086bb8daaf005a3c13",
+      "observed_rc_free": false,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 5,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 1,
+      "memory": {
+        "allocs": 6,
+        "alloc_bytes": 2792,
+        "frees": 6,
+        "reallocs": 0,
+        "peak_live_bytes": 2792,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": [
+        {
+          "function": "<outside>",
+          "runtime_retains": 0,
+          "runtime_releases": 5,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        }
+      ]
+    }
+  ]
+}

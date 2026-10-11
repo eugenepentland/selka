@@ -1,0 +1,18 @@
+func grow(mut values: int[], n: int):
+    for i in range(n):
+        values.append(i)
+
+func score(values: int[]) -> int:
+    mut answer = 0
+    for value in values:
+        answer += value
+    return answer
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args) * 1000
+    mut values: int[] = []
+    grow(mut values, n)
+    const before = values.snapshot()
+    grow(mut values, 3)
+    out.print(score(before), score(values))
+    return 0

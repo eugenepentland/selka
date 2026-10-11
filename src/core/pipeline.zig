@@ -1,6 +1,7 @@
 //! One `mylang-core build`: check, build the Core IR, compute facts (optimized modes),
 //! emit LLVM IR and link. Every failure is rendered into `report`.
 const std = @import("std");
+const single_owner_contract = @import("single_owner.zig");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
 const project_entry = @import("project_entry.zig");
@@ -72,8 +73,11 @@ pub const Show = struct {
     compiler_cache_disabled: bool = false,
 };
 
-/// Code-generation choices that change the executable without changing the program.
+/// Compilation choices controlling experimental semantics and generated code.
 pub const Codegen = struct {
+    /// Validate the experimental single-owner source contract before code generation.
+    single_owner: bool = false,
+    zero_rc: bool = false,
     /// Emit only generic LLVM vector code, no x86 intrinsics (`--generic-vectors`): the
     /// portable fallback a target without AVX2 would get, testable on this one.
     generic_vectors: bool = false,
@@ -147,7 +151,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     if (!allow_lazy) stages.lowering.fallbacks = 1;
     var lowered_arena = std.heap.ArenaAllocator.init(init.gpa);
     defer lowered_arena.deinit();
-    var demand_enabled = !options.show.verify_cache;
+    var demand_enabled = !options.show.verify_cache and !options.show.codegen.single_owner;
     const lazy_allowed = useDemandBodies(options, budget);
     const Prepared = struct { module: ir.Module, unit: Unit, sources: ?[]const @import("unit_cache.zig").Dependency, lazy: ?*lowering_cache.Deferred };
     var prepared: Prepared = while (true) {
@@ -170,6 +174,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
             error.OutOfMemory => return error.OutOfMemory,
             else => return error.SourceError,
         };
+        try validateSource(allocator, checked, options, report);
         if (options.show.diagnostics != .errors) try report.appendSlice(allocator, try session.warnings(allocator));
         const sources = if (replaying) try build_replay.inputs(context, &session) else null;
         try entry.validate(allocator, &session, report);
@@ -180,14 +185,15 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         if (session.demandState()) |state| demand.attach(state.prepared, state.omitted);
         const lowering_start = stage_metrics.now(init.io);
         var refusal: build_ir.Refusal = .{};
-        const input: build_ir.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = drop_debug };
+        const input: build_ir.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = drop_debug, .single_owner = options.show.codegen.single_owner, .zero_rc = options.show.codegen.zero_rc };
         var lowering = lowering_cache.Cache.init(&storage);
         lowering.demand = &demand;
         const a = lowered_arena.allocator();
         const lazy = if (lazy_allowed) try a.create(lowering_cache.Deferred) else null;
         if (lazy) |state| state.* = .{ .arena = a, .store = &storage, .force_eager = !allow_lazy };
         lowering.lazy = lazy;
-        const lowered = if (options.show.verify_cache) build_ir.buildExecutable(a, input, &refusal) else build_ir.buildExecutableCached(a, input, &refusal, &lowering);
+        const uncached = options.show.verify_cache or (options.show.codegen.single_owner and !options.show.codegen.zero_rc);
+        const lowered = if (uncached) build_ir.buildExecutable(a, input, &refusal) else build_ir.buildExecutableCached(a, input, &refusal, &lowering);
         var module = lowered catch |err| switch (err) {
             error.CacheMiss => {
                 // A cache can disappear after admission. Discard partial IR and
@@ -218,7 +224,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     const module = &prepared.module;
     if (prepared.lazy) |state| state.input.module = module;
     const caches: StageContext = .{
-        .storage = if (options.show.verify_cache) null else &storage,
+        .storage = if (options.show.verify_cache or (options.show.codegen.single_owner and !options.show.codegen.zero_rc)) null else &storage,
         .io = init.io,
         .lanes = @import("unit_cache.zig").width(init.environ_map, module.functions.items.len),
         .metrics = &stages,
@@ -238,6 +244,12 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     return 0;
 }
 
+fn validateSource(a: std.mem.Allocator, checked: frontend.Checked, options: Options, report: *std.ArrayList(u8)) Error!void {
+    if (!options.show.codegen.single_owner) return;
+    const format: language.diagnostic_output.Format = if (options.show.diagnostics == .json) .json else .text;
+    if (!try single_owner_contract.validateMode(a, checked.program, checked.src, format, report, options.show.codegen.zero_rc)) return error.SourceError;
+}
+
 fn replayBuild(context: build_replay.Context, options: Options, report: *std.ArrayList(u8)) Error!bool {
     if (options.show.llvm != null or options.show.verify_cache) return false;
     if (!try build_replay.replay(context, options.output, report)) return false;
@@ -246,6 +258,7 @@ fn replayBuild(context: build_replay.Context, options: Options, report: *std.Arr
 }
 
 fn useDemandBodies(options: Options, budget: ?run_budget.RunBudget) bool {
+    if (options.show.codegen.single_owner) return false;
     if (budget != null or verify_ir.enabled) return false;
     if (options.mode != .optimized_debug or options.facts != .on) return false;
     return !options.show.stats and options.show.llvm == null and !options.show.verify_cache;
@@ -301,6 +314,8 @@ fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget
     for (options.links, links) |link, *absolute| absolute.* = std.Io.Dir.cwd().realPathFileAlloc(init.io, link, allocator) catch link;
     return std.json.Stringify.valueAlloc(allocator, .{
         .mode = options.mode,
+        .single_owner = options.show.codegen.single_owner,
+        .zero_rc = options.show.codegen.zero_rc,
         .facts = options.facts,
         .stats = options.show.stats,
         .vectors = options.show.codegen.generic_vectors,
@@ -479,6 +494,14 @@ fn sameIdentityTool(expected: tool_identity.Identity, actual: tool_identity.Iden
     return std.mem.eql(u8, &expected.generation, &actual.generation) and std.mem.eql(u8, &expected.native_target, &actual.native_target);
 }
 
+fn verifyOwnership(allocator: std.mem.Allocator, module: *const ir.Module, src: language.source.Source, diagnostics: @FieldType(@FieldType(Options, "show"), "diagnostics"), report: *std.ArrayList(u8)) Error!void {
+    var failure: single_owner_contract.Failure = .{};
+    single_owner_contract.verifyLowered(module, &failure) catch {
+        try single_owner_contract.render(allocator, src, failure, if (diagnostics == .json) .json else .text, report);
+        return error.SourceError;
+    };
+}
+
 fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Options, stage: ?StageContext, report: *std.ArrayList(u8)) Error!Emission {
     const allocator = memory.result;
     const scratch = memory.scratch;
@@ -521,6 +544,7 @@ fn emittedCached(memory: Memory, module: *ir.Module, unit: Unit, options: Option
         break :cached result;
     } else if (optimized) try passes.runWithScratch(allocator, scratch, module, mode) else try passes.debugWithScratch(allocator, scratch, module);
     if (stage) |s| s.metrics.nanoseconds.optimizer = stage_metrics.elapsed(s.io, optimizer_start);
+    if (options.show.codegen.single_owner) try verifyOwnership(allocator, module, unit.src, options.show.diagnostics, report);
     if (verify_ir.enabled) try verify_ir.check(allocator, module, result.plans, report);
     const measured = if (!options.show.stats) null else if (stage != null and stage.?.queries != null)
         stage.?.queries.?.measure(allocator, module, &result, locator(&unit.src)) catch |err| switch (err) {

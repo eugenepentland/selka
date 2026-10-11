@@ -1,0 +1,132 @@
+define internal fastcc i64 @"my.probe"(i64 %p0) nounwind uwtable !dbg !1000006 {
+entry:
+  %slot = alloca i64, align 8
+  br label %b0
+b0:
+  %v2 = urem i64 %p0, 3
+  %v4 = add nuw nsw i64 %v2, 1
+  %v6 = call ptr @myl_core_list_new(i64 0, i64 8)
+  br label %b1
+b1:
+  %v9 = phi i64 [ 0, %b0 ], [ %v20, %b3 ]
+  %v13 = phi ptr [ %v6, %b0 ], [ %v17, %b3 ]
+  %v11 = icmp ult i64 %v9, %p0
+  br i1 %v11, label %b2, label %b4
+b2:
+  %v15 = add nuw nsw i64 %p0, %v9
+  %v17 = notail call fastcc ptr @"my.append_batch"(ptr %v13, i64 %v15, i64 %v4), !dbg !1000008
+  br label %b3
+b3:
+  %v20 = add nuw nsw i64 %v9, 1
+  br label %b1
+b4:
+  %v22 = notail call fastcc i64 @"my.score"(ptr %v13), !dbg !1000010
+  %rc.1 = load atomic i32, ptr %v13 unordered, align 8, !tbaa !3, !range !8
+  %rp.2 = icmp ult i32 %rc.1, 2147483648
+  br i1 %rp.2, label %rc.dec.3, label %rc.slow.4, !prof !23
+rc.dec.3:
+  %rn.6 = sub nuw i32 %rc.1, 1
+  %rz.7 = icmp eq i32 %rn.6, 0
+  br i1 %rz.7, label %rc.free.9, label %rc.keep.8
+rc.keep.8:
+  store i32 %rn.6, ptr %v13, align 8, !tbaa !3
+  br label %b4.5
+rc.free.9:
+  call void @myl_core_free(ptr %v13)
+  br label %b4.5
+rc.slow.4:
+  call preserve_mostcc void @myl_core_release_slow(ptr %v13)
+  br label %b4.5
+b4.5:
+  ret i64 %v22
+}
+
+define internal fastcc ptr @"my.append_batch"(ptr %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000011 {
+entry:
+  %slot = alloca i64, align 8
+  %state0.len = alloca i64, align 8
+  %state0.cap = alloca i64, align 8
+  br label %b0
+b0:
+  br label %b5
+b1:
+  %v5 = phi i64 [ 0, %b7 ], [ %v15, %b3 ]
+  %v11 = phi ptr [ %v24, %b7 ], [ %v12, %b3 ]
+  %v7 = icmp ult i64 %v5, %p2
+  br i1 %v7, label %b2, label %edge.1
+edge.1:
+  %sts.2 = load i64, ptr %state0.len, align 8
+  %sts.3 = getelementptr inbounds i8, ptr %v11, i64 8
+  store i64 %sts.2, ptr %sts.3, align 8, !tbaa !5
+  br label %b4
+b2:
+  %p.4 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p1, i64 %v5)
+  %v10 = extractvalue { i64, i1 } %p.4, 0
+  %o.5 = extractvalue { i64, i1 } %p.4, 1
+  br i1 %o.5, label %trap.6, label %b2.7, !prof !0
+trap.6:
+  call void @myl_core_trap(ptr @myl.site.0, i64 %p1, i64 %v5) #2, !dbg !1000013
+  unreachable
+b2.7:
+  %spl.8 = load i64, ptr %state0.len, align 8
+  %spc.9 = load i64, ptr %state0.cap, align 8
+  %spr.10 = icmp ult i64 %spl.8, %spc.9
+  br i1 %spr.10, label %push.fits.11, label %push.grow.12, !prof !10
+push.grow.12:
+  %sts.15 = load i64, ptr %state0.len, align 8
+  %sts.16 = getelementptr inbounds i8, ptr %v11, i64 8
+  store i64 %sts.15, ptr %sts.16, align 8, !tbaa !5
+  %spg.14 = call ptr @myl_core_list_grow(ptr %v11, i64 8)
+  %spc.17 = getelementptr inbounds i8, ptr %spg.14, i64 16
+  %spc.18 = load i64, ptr %spc.17, align 8, !tbaa !5
+  store i64 %spc.18, ptr %state0.cap, align 8
+  br label %b2.13
+push.fits.11:
+  br label %b2.13
+b2.13:
+  %v12 = phi ptr [ %v11, %push.fits.11 ], [ %spg.14, %push.grow.12 ]
+  %data.19 = getelementptr inbounds i8, ptr %v12, i64 32
+  %elt.20 = getelementptr inbounds i64, ptr %data.19, i64 %spl.8
+  store i64 %v10, ptr %elt.20, align 8, !tbaa !14
+  %spn.21 = add nuw nsw i64 %spl.8, 1
+  store i64 %spn.21, ptr %state0.len, align 8
+  br label %b3
+b3:
+  %v15 = add nuw nsw i64 %v5, 1
+  br label %b1
+b4:
+  ret ptr %v11
+b5:
+  %rc.22 = load atomic i32, ptr %p0 unordered, align 8, !tbaa !3, !range !8
+  %v18 = icmp eq i32 %rc.22, 1
+  br i1 %v18, label %b7, label %b6
+b6:
+  %v21 = call ptr @myl_core_list_copy(ptr %p0, i64 8)
+  %rc.23 = load atomic i32, ptr %p0 unordered, align 8, !tbaa !3, !range !8
+  %rp.24 = icmp ult i32 %rc.23, 2147483648
+  br i1 %rp.24, label %rc.dec.25, label %rc.slow.26, !prof !23
+rc.dec.25:
+  %rn.28 = sub nuw i32 %rc.23, 1
+  %rz.29 = icmp eq i32 %rn.28, 0
+  br i1 %rz.29, label %rc.free.31, label %rc.keep.30
+rc.keep.30:
+  store i32 %rn.28, ptr %p0, align 8, !tbaa !3
+  br label %b6.27
+rc.free.31:
+  call void @myl_core_free(ptr %p0)
+  br label %b6.27
+rc.slow.26:
+  call preserve_mostcc void @myl_core_release_slow(ptr %p0)
+  br label %b6.27
+b6.27:
+  br label %b7
+b7:
+  %v24 = phi ptr [ %p0, %b5 ], [ %v21, %b6.27 ]
+  %stl.32 = getelementptr inbounds i8, ptr %v24, i64 8
+  %stl.33 = load i64, ptr %stl.32, align 8, !tbaa !5
+  store i64 %stl.33, ptr %state0.len, align 8
+  %stc.34 = getelementptr inbounds i8, ptr %v24, i64 16
+  %stc.35 = load i64, ptr %stc.34, align 8, !tbaa !5
+  store i64 %stc.35, ptr %state0.cap, align 8
+  br label %b1
+}

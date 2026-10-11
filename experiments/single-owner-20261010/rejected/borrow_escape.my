@@ -1,0 +1,6 @@
+func keep(values: int[]) -> int[]:
+    return values
+
+func main(out: Stream) -> int:
+    out.print(len(keep([1, 2, 3])))
+    return 0

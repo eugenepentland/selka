@@ -73,11 +73,12 @@ fn statementWithFile(comptime Checker: type, self: *Checker, stmt: ast.Statement
     defer self.trapping_open = null;
     const value = try self.expression(scope.resource.?);
     const value_type = self.nodes.items[@backingInt(value)].ty;
-    if (!value_type.isFile()) {
+    const capability_scope = value_type.capabilityIndex() != null and !value_type.isStream() and value_type != .host_cap;
+    if (!value_type.isFile() and !capability_scope) {
         const guidance = if (typed.resultShape(value_type, self.catalog.records) != null)
             "`with` opens an arena or a file; `open` returns a Result, so propagate it with `open(...)?` or match it first"
         else
-            "`with` opens `arena()` or a file handle; no other value can be used as a resource";
+            "`with` opens `arena()`, a file handle, or a provider capability";
         return self.sink.fail(eWithResource, self.nodes.items[@backingInt(value)].span, guidance);
     }
     const declared = scope.name orelse return self.sink.fail(eWithResource, stmt.span, "a file `with` scope requires a binding, as in `with open(fs, path, \"rb\")? as f:`");
@@ -85,7 +86,7 @@ fn statementWithFile(comptime Checker: type, self: *Checker, stmt: ast.Statement
     if (try self.shadows(declared)) return self.sink.fail(eShadowing, declared, "file name shadows an active name");
     if (!std.mem.eql(u8, name, "_")) for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "file name shadows an enclosing arena scope");
     const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-    try self.locals.append(self.allocator, .{ .name = name, .declaration = declared, .ty = value_type, .mutable = false, .ownership = .{ .initialized = true, .scoped_file = true }, .usage = .{ .reads = 1 } });
+    try self.locals.append(self.allocator, .{ .name = name, .declaration = declared, .ty = value_type, .mutable = false, .ownership = .{ .initialized = true, .scoped_file = value_type.isFile() }, .usage = .{ .reads = 1 } });
     const hidden = try self.bindScoped(name, slot);
     defer self.unbindScoped(name, hidden);
     const body = try statement(Checker, self, scope.body);
@@ -291,6 +292,7 @@ fn bindOrderedFieldedPayload(comptime Checker: type, self: *Checker, case_schema
             .ownership = .{ .initialized = true, .transfer_available = self.transfers(field_info.ty) },
             .name = name,
             .usage = .{ .temporary = internal },
+            .origin = .pattern,
             .declaration = binding_span,
             .ty = field_info.ty,
             .mutable = false,

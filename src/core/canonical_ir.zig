@@ -11,6 +11,7 @@ pub const Digest = [32]u8;
 pub const Error = error{ OutOfMemory, UnknownMetadata };
 
 const equal_prefix = @import("emit_values.zig").equal_prefix;
+const copy_prefix = @import("emit_values.zig").copy_prefix;
 const show_prefix = "myl_core_show_";
 
 fn put(hash: *std.crypto.hash.Blake3, comptime T: type, value: T) void {
@@ -99,6 +100,7 @@ pub const Canon = struct {
         var low: ?usize = null;
         const compound = self.module.compounds.items[index];
         text(&hash, @tagName(compound));
+        if (compound == .list) put(&hash, u8, @intFromBool(self.module.exclusiveList(ty)));
         const children: []const ir.Type = switch (compound) {
             .list => |element| &.{element},
             .box => |inner| &.{inner},
@@ -112,6 +114,7 @@ pub const Canon = struct {
             .@"fn" => |pointer| blk: {
                 put(&hash, u8, @backingInt(pointer.linkage));
                 put(&hash, u64, pointer.owned);
+                put(&hash, u64, pointer.consumes);
                 put(&hash, u64, pointer.views);
                 put(&hash, u64, pointer.params.len);
                 break :blk try std.mem.concat(self.a, ir.Type, &.{ pointer.params, &.{pointer.ret} });
@@ -136,6 +139,7 @@ pub const Canon = struct {
         hash.update(&try self.typeDigest(sig.ret));
         put(hash, u8, @backingInt(sig.linkage));
         put(hash, u64, sig.owned);
+        put(hash, u64, sig.consumes);
         put(hash, u64, sig.views);
     }
 
@@ -166,11 +170,17 @@ pub const Canon = struct {
     fn referenceDigest(self: *Canon, index: u32) Error!Digest {
         const function = self.module.functions.items[index];
         var hash = std.crypto.hash.Blake3.init(.{});
+        put(&hash, u8, @intFromBool(self.module.single_owner));
+        put(&hash, u8, @intFromBool(self.module.zero_rc));
         try self.signature(&hash, function.signature);
         const name = function.name;
         if (function.signature.linkage == .runtime_c and std.mem.startsWith(u8, name, equal_prefix)) {
             const id = std.fmt.parseInt(u32, name[equal_prefix.len..], 10) catch return error.UnknownMetadata;
             text(&hash, equal_prefix);
+            hash.update(&try self.typeDigest(@fromBackingInt(id)));
+        } else if (function.signature.linkage == .runtime_c and std.mem.startsWith(u8, name, copy_prefix)) {
+            const id = std.fmt.parseInt(u32, name[copy_prefix.len..], 10) catch return error.UnknownMetadata;
+            text(&hash, copy_prefix);
             hash.update(&try self.typeDigest(@fromBackingInt(id)));
         } else if (function.signature.linkage == .runtime_c and std.mem.startsWith(u8, name, show_prefix)) {
             text(&hash, show_prefix);
@@ -218,6 +228,8 @@ pub const Canon = struct {
         if (f.signature.linkage != .internal) return self.callee(index);
         var hash = std.crypto.hash.Blake3.init(.{});
         text(&hash, f.name);
+        put(&hash, u8, @intFromBool(self.module.single_owner));
+        put(&hash, u8, @intFromBool(self.module.zero_rc));
         try self.signature(&hash, f.signature);
         self.locate(&hash, f.span);
         put(&hash, u64, f.insts.items.len);

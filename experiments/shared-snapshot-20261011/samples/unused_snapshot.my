@@ -1,0 +1,13 @@
+func fill(mut values: int[], n: int):
+    for i in range(n):
+        values.append(i)
+
+func first(values: int[]) -> int:
+    return values[0]
+
+func main(args: str[], out: Stream) -> int:
+    mut values: int[] = []
+    fill(mut values, len(args) * 1000)
+    const before = values.snapshot()
+    out.print(first(values), first(before))
+    return 0

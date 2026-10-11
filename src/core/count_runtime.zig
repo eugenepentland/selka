@@ -24,7 +24,7 @@ const patches = [_]Patch{
     .{ .anchor = "#include <malloc.h>\n", .after = header },
     .{ .anchor = "static void os_exit(int status) { ", .after = "if (!core_parallel()) myl_count_dump(); " },
     // Every block: carved from a chunk or a free list, or a large aligned allocation.
-    .{ .anchor = "    block->count = 1;\n    block->kind = kind | (class << MYL_CLASS_SHIFT);\n", .before = "    myl_count_alloc(class ? (size_t)class * MYL_GRANULE : malloc_usable_size(block));\n" },
+    .{ .anchor = "    block->kind = kind | (class << MYL_CLASS_SHIFT);\n", .before = "    myl_count_alloc(class ? (size_t)class * MYL_GRANULE : malloc_usable_size(block));\n" },
     .{
         .anchor = "static void block_free(myl_block *block) {\n    uint32_t class = class_of(block);\n",
         .after = "    myl_count_free(class ? (size_t)class * MYL_GRANULE : malloc_usable_size(block));\n",
@@ -78,6 +78,7 @@ const patches = [_]Patch{
         .anchor = "    memcpy(block_data(grown), block_data(dict), (size_t)meta->elen * meta->desc->stride);\n",
         .after = "    myl_count_event(MYL_COUNT_DICT_GROWS, (size_t)meta->elen * ((size_t)meta->desc->stride + 8));\n",
     },
+    .{ .anchor = "myl_block *myl_core_owned_octets_copy(myl_block *source) {\n", .after = "    myl_count_copy(kind_of(source) == MYL_KIND_STR ? MYL_COUNT_TEXT_COPIES : MYL_COUNT_BUFFER_COPIES, (size_t)source->len);\n" },
     .{ .anchor = "myl_block *myl_core_ir_str_from_view(const unsigned char *data, uint64_t len) { ", .after = "myl_count_copy(MYL_COUNT_TEXT_COPIES, (size_t)len); " },
     .{ .anchor = "myl_block *myl_core_ir_str_from_span(const unsigned char *data, uint64_t len, bool ascii) { ", .after = "myl_count_copy(MYL_COUNT_TEXT_COPIES, (size_t)len); " },
     .{

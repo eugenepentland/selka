@@ -157,7 +157,9 @@ test "shared count cold dispatch preserves immortal and allocated strings throug
 // its sanctioned access sites. A new unsanctioned access fails C compilation,
 // even through a typedef or a renamed pointer; unrelated .count fields survive.
 fn guarded(a: std.mem.Allocator, source: []const u8) Error![]const u8 {
-    var text = try std.mem.replaceOwned(u8, a, source, "    uint32_t count;\n    uint32_t kind;", "    uint32_t guarded_rc;\n    uint32_t kind;");
+    const declaration = "    uint32_t count;\n#endif\n    uint32_t kind;";
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, source, declaration));
+    var text = try std.mem.replaceOwned(u8, a, source, declaration, "    uint32_t guarded_rc;\n#endif\n    uint32_t kind;");
     const allowed = [_][]const u8{ "count_load", "count_saturate_plain", "core_share_child", "myl_core_retain_slow", "count_release_shared", "count_retain", "count_release", "block_alloc" };
     for (allowed) |name| {
         const signature = try std.fmt.allocPrint(a, "{s}(", .{name});
@@ -219,4 +221,19 @@ test "shared count source guard permits only typed helper and initialization acc
     try std.testing.expect(try compiles(a, source, true));
     try std.testing.expect(try compiles(a, counted, true));
     try std.testing.expect(!try compiles(a, invalid, false));
+}
+
+// spec-case: NEW-CORE-ZERO-RC-ABI-1
+test "zero RC runtime ABI has no count member and forbids legacy helpers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source = try std.mem.concat(a, u8, &.{ "#define MYL_ZERO_RC 1\n", driver.runtime_source });
+    const counted = try std.mem.concat(a, u8, &.{ "#define MYL_ZERO_RC 1\n", try counting.source(a, driver.runtime_source) });
+    const field = try std.mem.concat(a, u8, &.{ source, "\nvoid illegal_field(myl_block *p) { p->count = 1; }\n" });
+    const helper = try std.mem.concat(a, u8, &.{ source, "\nvoid illegal_helper(myl_block *p) { count_retain(p); }\n" });
+    try std.testing.expect(try compiles(a, source, true));
+    try std.testing.expect(try compiles(a, counted, true));
+    try std.testing.expect(!try compiles(a, field, false));
+    try std.testing.expect(!try compiles(a, helper, false));
 }

@@ -1,0 +1,27 @@
+record Packet:
+    id: int
+    values: int[]
+
+
+func values_of(packet: Packet) -> int[]:
+    return packet.values.copy()
+
+
+func score(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        total += value
+    return total
+
+
+func probe(n: int) -> int:
+    const packet = Packet(id=n, values=[n, n + 1, n + 2])
+    mut extracted = values_of(packet)
+    extracted.append(n + 3)
+    return score(packet.values) * 100 + score(extracted) + packet.id
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

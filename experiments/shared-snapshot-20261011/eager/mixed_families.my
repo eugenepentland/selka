@@ -1,0 +1,23 @@
+func make_ints(n: int) -> int[]:
+    mut values: int[] = []
+    for i in range(n):
+        values.append(i)
+    return values
+
+func make_floats(n: int) -> float[]:
+    mut values: float[] = []
+    for i in range(n):
+        values.append(float(i))
+    return values
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args) * 100
+    mut shared = make_ints(n)
+    const saved = shared.copy()
+    shared.append(7)
+    mut independent = make_ints(n)
+    independent.append(8)
+    mut floats = make_floats(n)
+    floats.append(8.0)
+    out.print(len(saved), len(shared), len(independent), len(floats))
+    return 0

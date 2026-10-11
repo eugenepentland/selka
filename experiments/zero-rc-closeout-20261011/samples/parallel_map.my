@@ -1,0 +1,40 @@
+import parallel
+
+record Item:
+    text: str
+    values: int[]
+
+func make(value: int) -> Item:
+    return Item(text="item-" + str(value), values=[value, value + 1])
+
+func transform(value: Item) -> Item:
+    return Item(text=value.text + "!", values=value.values.copy())
+
+func square(value: int) -> int:
+    return value * value
+
+func nested(values: int[]) -> int[]:
+    return parallel.map(values, square)
+
+func main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(64):
+        source.append(i)
+    mut items = parallel.map(source, make)
+    const changed = parallel.map(items, transform)
+    if items[0].text != "item-0" or changed[63].text != "item-63!":
+        return 1
+    items.clear()
+    mut total = 0
+    for item in changed:
+        total += item.values[0]
+    if total != 2016 or len(source) != 64:
+        return 2
+    const nested_result = parallel.map([[1, 2], [3, 4]], nested)
+    if nested_result[1][1] != 16:
+        return 3
+    const empty: int[] = []
+    if len(parallel.map(empty, square)) != 0:
+        return 4
+    out.print(total, changed[0].text, nested_result[1][1])
+    return 0

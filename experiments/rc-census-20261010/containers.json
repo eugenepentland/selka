@@ -1,0 +1,132 @@
+[
+  {
+    "id": "21_dict_unique",
+    "title": "Unique scalar dictionary updates",
+    "category": "dictionary",
+    "source": "samples/21_dict_unique.my",
+    "intent": "Construct a dictionary and replace its values while it has one owner.",
+    "expected": {
+      "4": "26\n",
+      "11": "187\n"
+    },
+    "oracle": "Sum of i+1+n for i=0..n-1: n(n+1)/2+n^2.",
+    "focus": "probe lines 2-6 construct and update the same dictionary; lines 8-9 consume every value."
+  },
+  {
+    "id": "22_dict_snapshot",
+    "title": "Dictionary snapshot across updates",
+    "category": "dictionary",
+    "source": "samples/22_dict_snapshot.my",
+    "intent": "Keep an alias alive across the same scalar dictionary updates and consume both versions.",
+    "expected": {
+      "4": "126\n",
+      "11": "847\n"
+    },
+    "oracle": "Sum of 10(i+1)+(i+1+n): 11n(n+1)/2+n^2.",
+    "focus": "probe line 5 keeps the original dictionary live; line 7 mutates values; line 10 reads both versions."
+  },
+  {
+    "id": "23_dict_managed",
+    "title": "Managed text dictionary values",
+    "category": "dictionary",
+    "source": "samples/23_dict_managed.my",
+    "intent": "Insert runtime strings into a dictionary, replace each with a concatenated value, then read them.",
+    "expected": {
+      "4": "80\n",
+      "11": "594\n"
+    },
+    "oracle": "Each entry has length 7+decimal_digits(i+n); sum (i+1) times that length. For n=4 all values have one digit, and for n=11 all have two.",
+    "focus": "probe lines 4 and 6 allocate or replace managed text values inside an integer-keyed dictionary."
+  },
+  {
+    "id": "24_text_builder",
+    "title": "Unique Unicode text append",
+    "category": "text",
+    "source": "samples/24_text_builder.my",
+    "intent": "Append a short Unicode piece repeatedly without publishing an alias.",
+    "expected": {
+      "4": "206\n",
+      "11": "563\n"
+    },
+    "oracle": "The text has 3n codepoints; the first lambda is at index 2 for n>0. Result: 51n+2.",
+    "focus": "probe lines 2-4 build Unicode text; line 5 consumes its length and search result."
+  },
+  {
+    "id": "25_text_snapshot",
+    "title": "Text snapshot across append",
+    "category": "text",
+    "source": "samples/25_text_snapshot.my",
+    "intent": "Retain the pre-append text and consume both its original content and the extended version.",
+    "expected": {
+      "4": "1227\n",
+      "11": "3376\n"
+    },
+    "oracle": "Original length=3n, new length=4n, original z index=-1, new z index=3n. Result: 300n+4n-1+3n=307n-1.",
+    "focus": "probe line 5 preserves the original text across line 7 appends; line 8 observes both versions."
+  },
+  {
+    "id": "26_text_slice",
+    "title": "Escaping Unicode substring",
+    "category": "text",
+    "source": "samples/26_text_slice.my",
+    "intent": "Return a three-codepoint substring from a helper, discard the source binding, and consume the substring.",
+    "expected": {
+      "4": "1255\n",
+      "11": "422\n"
+    },
+    "oracle": "The slice always has three codepoints and starts at character n modulo 3 of a/lambda/z. Result: 300+ord(character), giving 1255 or 422.",
+    "focus": "segment line 2 returns the slice; probe lines 9-11 keep it after rebinding the source. Materialization versus sharing is to be measured."
+  },
+  {
+    "id": "27_buffer_builder",
+    "title": "Unique byte-buffer append",
+    "category": "buffer",
+    "source": "samples/27_buffer_builder.my",
+    "intent": "Build a mutable buffer from runtime byte values and read its weighted checksum.",
+    "expected": {
+      "4": "10036\n",
+      "11": "72155\n"
+    },
+    "oracle": "Let b_i=(17i+n) mod256 for 0<=i<3n. Result: sum (i+1)b_i.",
+    "focus": "probe lines 2-4 construct and append to the buffer; lines 6-7 consume its bytes."
+  },
+  {
+    "id": "28_buffer_snapshot",
+    "title": "Immutable bytes snapshot across append",
+    "category": "buffer",
+    "source": "samples/28_buffer_snapshot.my",
+    "intent": "Convert a buffer to immutable bytes, append to the buffer, and consume both versions.",
+    "expected": {
+      "4": "122595\n",
+      "11": "338181\n"
+    },
+    "oracle": "The snapshot has 3n bytes b_i=(17i+n) mod256. The buffer adds 255. Result: 30000n+2 sum b_i+255.",
+    "focus": "probe line 5 publishes immutable bytes; line 6 appends; lines 7-11 consume both. Copy versus shared storage is to be measured."
+  },
+  {
+    "id": "29_list_filter",
+    "title": "Materialized filtered list",
+    "category": "list",
+    "source": "samples/29_list_filter.my",
+    "intent": "Materialize an input list and a filtered result with runtime sizes, preserving filtered order in a checksum.",
+    "expected": {
+      "4": "120\n",
+      "11": "2112\n"
+    },
+    "oracle": "The selected n values are m,m+3,...,m+3(n-1), where m=3ceil(n/3). Weighted sum: n(n+1)(m+2n-2)/2.",
+    "focus": "probe lines 2-3 build the input and filtered lists; lines 5-6 read the materialized result."
+  },
+  {
+    "id": "30_sort_scratch",
+    "title": "Large nonmonotone scalar sort",
+    "category": "sort",
+    "source": "samples/30_sort_scratch.my",
+    "intent": "Sort 300+n runtime-derived integers, beyond the small-sort paths, and consume their order. Ordinary malloc scratch is a counter blindspot to check, not a measured byte claim.",
+    "expected": {
+      "4": "31156678\n",
+      "11": "32308550\n"
+    },
+    "oracle": "Independently numerically sort the multiset {(73i+19n) mod1009 | 0<=i<300+n}, then sum its kth element times k+1. Expected values computed with Python sorted.",
+    "focus": "probe line 3 sorts 304 or 311 nonmonotone integers. Source dispatch reaches core_sort.c scalar radix scratch malloc beyond 256 elements; managed counters exclude that malloc."
+  }
+]

@@ -1,0 +1,120 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %2 = dict_new dict[i64, i64] 0:u64
+  jump b1
+b1: ; preds b0 b3
+  %5 = phi i64 0:i64, %24
+  %11 = phi dict[i64, i64] %2, %20
+  %7 = cmp.lt bool %5, param0
+  branch %7, b2, b4
+b2: ; preds b1
+  %10 = add.proven i64 %5, 1:i64
+  %12 = dict_find i64 %11, %5
+  %14 = cmp.ge bool %12, 0:i64
+  branch %14, b5, b6
+b3: ; preds b7
+  %24 = add.proven i64 %5, 1:i64
+  jump b1
+b4: ; preds b1
+  retain %11
+  jump b8
+b5: ; preds b2
+  %16 = dict_set_value dict[i64, i64] %11, %12, %10
+  jump b7
+b6: ; preds b2
+  %18 = dict_insert dict[i64, i64] %11, %12, %5, %10
+  jump b7
+b7: ; preds b5 b6
+  %20 = phi dict[i64, i64] %16, %18
+  jump b3
+b8: ; preds b4 b10
+  %31 = phi i64 0:i64, %56
+  %35 = phi dict[i64, i64] %11, %52
+  %33 = cmp.lt bool %31, param0
+  branch %33, b9, b11
+b9: ; preds b8
+  %36 = dict_find i64 %35, %31
+  %38 = cmp.ge bool %36, 0:i64
+  branch %38, b12, b13
+b10: ; preds b16
+  %56 = add.proven i64 %31, 1:i64
+  jump b8
+b11: ; preds b8
+  jump b17
+b12: ; preds b9
+  %41 = dict_entry_value i64 %35, %36
+  %43 = add.exact i64 %41, param0
+  %46 = iconst bool 1
+  branch 1:bool, b14, b15
+b13: ; preds b9
+  unreachable
+b14: ; preds b12
+  %93 = is_unique bool %35
+  branch %93, b25, b26
+b15: ; preds b12
+  %100 = is_unique bool %35
+  branch %100, b27, b28
+b16: ; preds b25 b27
+  %52 = phi dict[i64, i64] %48, %50
+  jump b10
+b17: ; preds b11 b19
+  %63 = phi i64 0:i64, %88
+  %67 = phi i64 0:i64, %85
+  %65 = cmp.lt bool %63, param0
+  branch %65, b18, b20
+b18: ; preds b17
+  %70 = dict_find i64 %11, %63
+  %72 = cmp.ge bool %70, 0:i64
+  branch %72, b21, b22
+b19: ; preds b23
+  %88 = add.proven i64 %63, 1:i64
+  jump b17
+b20: ; preds b17
+  release %11
+  release %35
+  ret %67
+b21: ; preds b18
+  %75 = dict_entry_value i64 %11, %70
+  %76 = mul.proven i64 10:i64, %75
+  %78 = dict_find i64 %35, %63
+  %80 = cmp.ge bool %78, 0:i64
+  branch %80, b23, b24
+b22: ; preds b18
+  unreachable
+b23: ; preds b21
+  %83 = dict_entry_value i64 %35, %78
+  %84 = add.exact i64 %76, %83
+  %85 = add.exact i64 %67, %84
+  jump b19
+b24: ; preds b21
+  unreachable
+b25: ; preds b14 b26
+  %99 = phi dict[i64, i64] %35, %96
+  %48 = dict_set_value dict[i64, i64] %99, %36, %43
+  jump b16
+b26: ; preds b14
+  %96 = dict_copy dict[i64, i64] %35
+  release %35
+  jump b25
+b27: ; preds b15 b28
+  %106 = phi dict[i64, i64] %35, %103
+  %107 = dict_find i64 %106, %31
+  %50 = dict_insert dict[i64, i64] %106, %107, %31, %43
+  jump b16
+b28: ; preds b15
+  %103 = dict_copy dict[i64, i64] %35
+  release %35
+  jump b27
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[0,9223372036854775807]
+facts probe: %0=[0,140737488355328] %5=[0,140737488355328] %6=[-9223372036854775808,9223372036854775807] %7=[0,1] %10=[1,140737488355328] %12=[-9223372036854775808,9223372036854775807] %14=[0,1] %22=[-9223372036854775808,9223372036854775807] %24=[1,140737488355328] %26=[-9223372036854775808,9223372036854775807] %28=[-9223372036854775808,9223372036854775807] %29=[-9223372036854775808,9223372036854775807] %31=[0,140737488355328] %32=[-9223372036854775808,9223372036854775807] %33=[0,1] %36=[-9223372036854775808,9223372036854775807] %38=[0,1] %41=[-9223372036854775808,9223372036854775807] %42=[-9223372036854775808,9223372036854775807] %43=[-9223372036854775807,9223372036854775807] %44=[-9223372036854775808,9223372036854775807] %46=[1,1] %54=[-9223372036854775808,9223372036854775807] %56=[1,140737488355328] %58=[-9223372036854775808,9223372036854775807] %59=[-9223372036854775808,9223372036854775807] %63=[0,140737488355328] %64=[-9223372036854775808,9223372036854775807] %65=[0,1] %67=[-9223372036854775808,9223372036854775807] %70=[-9223372036854775808,9223372036854775807] %72=[0,1] %75=[1,140737488355328] %76=[10,1407374883553280] %78=[-9223372036854775808,9223372036854775807] %80=[0,1] %83=[-9223372036854775808,9223372036854775807] %84=[-9223372036854775798,9223372036854775807] %85=[-9223372036854775808,9223372036854775807] %88=[1,140737488355328]
+list probe %11: settled=true length=%-1
+list probe %20: settled=true length=%-1
+list probe %35: settled=true length=%-1
+list probe %52: settled=true length=%-1

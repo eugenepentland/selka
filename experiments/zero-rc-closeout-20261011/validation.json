@@ -1,0 +1,91 @@
+{
+  "schema": "zero-rc-closeout-validation-v1",
+  "branch": "codex/borrow-call-stack-20261010",
+  "base": "1d202d41bfff888ee91354f706cb74e860dc4b94",
+  "prototype_closeout_complete": true,
+  "general_language_rollout_complete": false,
+  "candidate": {
+    "prefix": ".tmp/zero-rc-closeout-20261011/candidate-v2",
+    "files": {
+      "bin/mylang": "3482abac69776d3fcd2ef6c41a3e550fb17fea193c296ad7442e9beebc1c3b41",
+      "libexec/mylang/components/cache-plan-32b041751efe201cad0ff392831ec2d2218849ecbe2f1b156b11e850cb80e3df": "32b041751efe201cad0ff392831ec2d2218849ecbe2f1b156b11e850cb80e3df",
+      "libexec/mylang/components/cache-plan.json": "3a07446b118859f9db6896d7989d3b63627f7aa450de17b71fc58e36a898bee8",
+      "libexec/mylang/components/test-index-9a87d7f926b1ffd5661b93aaf27e60e88ace01a59790239c98993810e157cb17": "9a87d7f926b1ffd5661b93aaf27e60e88ace01a59790239c98993810e157cb17",
+      "libexec/mylang/components/test-index.json": "d69b4dd88908f8935d40991b08f578bbe31bc845e855674a0d2525e0115ef6b7",
+      "tools/selka-components": "6f5e4801af72c41978492e26897c2b35e97f7c171ae39daa1e750562c648097c"
+    }
+  },
+  "zig": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "checks": {
+    "core": {
+      "path": ".tmp/zero-rc-closeout-core-v2.log",
+      "sha256": "41ceb66bef2a74332516c9a6f37e203cc290448fefff239fd0cb130900cdbf1f",
+      "passed": 907,
+      "status": 0,
+      "test_binaries": {
+        "./.zig-cache/o/89844e5b82426392c5d21b2fc635cfd8/test": "5adfb2b0f7023eba053b7b8b67033168d64150461fe5c94916df62683a6c8da0"
+      }
+    },
+    "frontend": {
+      "path": ".tmp/zero-rc-closeout-frontend.log",
+      "sha256": "07dfe0491b29640b01dea49e184873363b0a48613d9f4f87cfe89a1b83bf4ae8",
+      "passed": 101,
+      "status": 0,
+      "test_binaries": {
+        "./.zig-cache/o/df58a5a01ed9fac9c33c384ad7328db7/test": "eaa4fb79921961394bcdf0feb64d2cb4dda92a60fd4424cd843eee36dbe5f336"
+      }
+    },
+    "guardian": {
+      "path": ".tmp/zero-rc-closeout-guardian-final.log",
+      "sha256": "2985990b867e2a637179fde657e97cefdca226675b5aabc359e0232377e66ae0",
+      "passed": 88,
+      "scope": "whole-tree",
+      "status": 0
+    },
+    "regression_programs": 48,
+    "regression_executions": 470,
+    "library_fixtures": 10,
+    "library_zero_rc_executions": 50,
+    "source_task_counted_executions": 230,
+    "source_task_thread_sanitized_executions": 206,
+    "total_counted_zero_rc_executions": 750,
+    "total_thread_sanitized_executions": 206,
+    "rc_control_executions": 12,
+    "refusals": 7,
+    "census_programs": 30,
+    "census_allocating_workloads": {
+      "4": 23,
+      "11": 23
+    }
+  },
+  "reports": {
+    "abi.json": "c46b941f83bc8055d73e9c382561e6d13ae3b0240a7c9685b36185fb035d76e8",
+    "boundaries.json": "fde7fcc5422fc08e76270f61308e85ce04f548201eac8c2d051021e2ff5fa677",
+    "library.json": "52833cd4ff36b6436a2dc52d60531f66364c4933c62530fd5e65c0fc1cf9e9ab",
+    "memory.json": "b0309fb3a30ab4759178ea2ec3841dce2df2079d1c5bf8df3361cad4719e66c5",
+    "regression.json": "2cb03944780d8523e90a060f95614ac2ea08acc73ff821bac8c5b2260eeb3fc2",
+    "repetitions.json": "e4d66489565e163534ff73c5bc12c1ef65f614392f3230bca83b9c38740650e8",
+    "source-sha256.json": "08ba1a12d062c50a1dc2e1614828695ab54e92b16b7fa9b43a58ccfa79f6554b",
+    "tasks.json": "7bfa3c1e1a6398b6900228aa326deccfed6a8a59aa2651d332d6cef8de5c52fe"
+  },
+  "harnesses": {
+    "abi.py": "bbac19f89b1360daf416aadb4d1e459f854a47db11114c2e9109d945b6f14715",
+    "boundaries.py": "c77caa98c18521cd6d4c33f974aca0d885368d3b3edd2578cc92945245ba8848",
+    "probe.py": "60900f1dc4d5cab7ed6eb9e7052282cc2e86957171dd8ff31128492d52aac47b",
+    "qualify.py": "78e57f9e6d259dc0e7fc97a2cdee3b0c141f2b2bc5d316694b66ec923080a580",
+    "repeat.py": "7c0012e431b059edcfb291888dc4eed2224b7b29d7d2092913526903fff46a09"
+  },
+  "documentation": {
+    "README.md": "b70dbb1d915b08b8a173202ceb553122f7c261f271b5a3141aed8774c0b53dd6"
+  },
+  "limits": [
+    "Opt-in subset; selected library fixtures do not establish support for every API.",
+    "Source tasks are synchronous map calls without closure captures, detached work, escaping handles or Unit elements.",
+    "RC controls for map are sequential and are not a paired parallel-performance baseline.",
+    "Explicit copies increase allocation traffic; no general runtime or compile-time speedup is claimed.",
+    "Managed counters exclude raw/native allocations and are not total process memory."
+  ]
+}

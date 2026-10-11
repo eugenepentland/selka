@@ -620,6 +620,8 @@ fn effectBytes(a: std.mem.Allocator, summaries: effects.Summaries) ![]const u8 {
         try writer.write([2]bool, answers);
         try writer.write(u64, params.len);
         for (params) |effect| {
+            try writer.write(bool, effect.borrow_only);
+            try writer.write(bool, effect.consumes);
             inline for (.{ "reads", "writes", "when_true", "when_false" }) |field| {
                 const paths = @field(effect, field);
                 try writer.write(bool, paths.whole);
@@ -634,6 +636,8 @@ fn sameEffectSets(expected: effects.Summaries, actual: effects.Summaries) !void 
     try std.testing.expectEqualDeep(expected.may, actual.may);
     for (expected.params, actual.params) |left, right| {
         for (left, right) |old, new| {
+            try std.testing.expectEqual(old.borrow_only, new.borrow_only);
+            try std.testing.expectEqual(old.consumes, new.consumes);
             inline for (.{ "reads", "writes", "when_true", "when_false" }) |field| {
                 try std.testing.expect(@field(old, field).same(&@field(new, field)));
             }

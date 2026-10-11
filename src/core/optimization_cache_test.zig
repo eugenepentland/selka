@@ -67,6 +67,22 @@ const mutating =
     \\    return 0
 ;
 const Scenario = enum { callee, parameters, recursion, effects };
+const borrowed_reader =
+    \\func read(xs: int[]) -> int[]:
+    \\    mut total = 0
+    \\    for i in range(len(xs)):
+    \\        total += xs[i]
+    \\    return [total]
+    \\
+    \\func forward(xs: int[]) -> int[]:
+    \\    return read(xs)
+    \\
+    \\func main(out: Stream) -> int:
+    \\    const xs = [4, 8, 15, 16, 23, 42]
+    \\    const answer = forward(xs)
+    \\    out.print(len(answer), len(xs))
+    \\    return 0
+;
 const Produced = struct { llvm: []const u8, core: []const u8, result: passes.Result, statistics: cache.Statistics, ancestry: []const cache.Provenance = &.{} };
 
 fn locate(_: *const anyopaque, offset: u32) emit.Location {
@@ -184,6 +200,244 @@ test "callee caller parameter recursive return and recursive effect edits invali
 }
 
 const DeferredProduced = struct { output: Produced, fact_key: store.Digest };
+
+const consuming_source =
+    \\func append_batch(values: int[], n: int) -> int[]:
+    \\    mut result = values
+    \\    for i in range(n):
+    \\        result.append(i)
+    \\    return result
+    \\
+    \\func replace(n: int) -> int:
+    \\    mut values: int[] = []
+    \\    for i in range(n):
+    \\        values = append_batch(values, 3)
+    \\    return len(values)
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(replace(8))
+    \\    return 0
+;
+
+// spec: NEW-CORE-CONSUME-2
+test "consuming list conventions survive caches and invalidate when the returned root changes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const edited_source = try std.mem.replaceOwned(u8, a, consuming_source, "return result", "return values");
+    for ([_]passes.Mode{ .trusted, .verify }) |mode| {
+        var temporary = std.testing.tmpDir(.{});
+        defer temporary.cleanup();
+        var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+        defer storage.deinit();
+        const oracle = try compile(a, std.testing.allocator, consuming_source, null, mode);
+        const cold = try compile(a, std.testing.allocator, consuming_source, &storage, mode);
+        const warm = try compile(a, std.testing.allocator, consuming_source, &storage, mode);
+        try equal(oracle, cold);
+        try equal(oracle, warm);
+        try std.testing.expectEqual(@as(usize, 0), total(&warm.statistics.misses));
+        const changed = try compile(a, std.testing.allocator, edited_source, null, mode);
+        try equal(changed, try compile(a, std.testing.allocator, edited_source, &storage, mode));
+        try equal(changed, try compile(a, std.testing.allocator, edited_source, &storage, mode));
+        try equal(oracle, try compile(a, std.testing.allocator, consuming_source, &storage, mode));
+    }
+}
+
+// spec-case: NEW-CORE-CONSUME-2
+test "consuming list demand proofs agree with eager ownership across omitted bodies and function values" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const callback =
+        \\func apply(f: func(int) -> int, n: int) -> int:
+        \\    return f(n)
+        \\
+    ;
+    const indirect_main = try std.mem.replaceOwned(u8, a, consuming_source, "out.print(replace(8))", "out.print(apply(lambda n: replace(n), 8))");
+    const indirect = try std.mem.concat(a, u8, &.{ callback, "\n", indirect_main });
+    const edited_source = try std.mem.replaceOwned(u8, a, consuming_source, "return result", "return values");
+    for ([_]passes.Mode{ .trusted, .verify }) |mode| {
+        var temporary = std.testing.tmpDir(.{});
+        defer temporary.cleanup();
+        var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+        defer storage.deinit();
+        for ([_][]const u8{ consuming_source, edited_source, consuming_source, indirect, consuming_source }) |text| {
+            const oracle = try compile(a, std.testing.allocator, text, null, mode);
+            const cold = try compileDemandGuarded(a, std.testing.allocator, text, &storage, .{ .mode = mode, .omit = true });
+            const warm = try compileDemandGuarded(a, std.testing.allocator, text, &storage, .{ .mode = mode, .omit = true });
+            try equal(oracle, cold.output);
+            try equal(oracle, warm.output);
+            try std.testing.expect(warm.omitted > 0);
+            try std.testing.expectEqual(@as(usize, 0), warm.output.statistics.active_functions);
+        }
+    }
+}
+
+const caller_destination_source =
+    \\func make_values(seed: int) -> int[]:
+    \\    mut values: int[] = []
+    \\    for i in range(8):
+    \\        values.append(seed + i)
+    \\    return values
+    \\
+    \\func sum_values(values: int[]) -> int:
+    \\    mut total = 0
+    \\    for value in values:
+    \\        total += value
+    \\    return total
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(sum_values(make_values(7)))
+    \\    return 0
+;
+
+// spec: NEW-CORE-DEST-2
+test "caller destination caches invalidate when a constructor exceeds the stack bound" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const larger = try std.mem.replaceOwned(u8, a, caller_destination_source, "range(8)", "range(600)");
+    for ([_]passes.Mode{ .trusted, .verify }) |mode| {
+        var temporary = std.testing.tmpDir(.{});
+        defer temporary.cleanup();
+        var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+        defer storage.deinit();
+        const oracle = try compile(a, std.testing.allocator, caller_destination_source, null, mode);
+        try std.testing.expectEqual(@as(u32, 1), oracle.result.own.promoted);
+        const cold = try compile(a, std.testing.allocator, caller_destination_source, &storage, mode);
+        const warm = try compile(a, std.testing.allocator, caller_destination_source, &storage, mode);
+        try equal(oracle, cold);
+        try equal(oracle, warm);
+        try std.testing.expectEqual(@as(usize, 0), total(&warm.statistics.misses));
+        const edited_oracle = try compile(a, std.testing.allocator, larger, null, mode);
+        try std.testing.expectEqual(@as(u32, 0), edited_oracle.result.own.promoted);
+        const edited = try compile(a, std.testing.allocator, larger, &storage, mode);
+        try equal(edited_oracle, edited);
+        try std.testing.expect(edited.statistics.misses[@backingInt(cache.Stage.inline_cfg)] > 0);
+        try equal(oracle, try compile(a, std.testing.allocator, caller_destination_source, &storage, mode));
+    }
+}
+
+// spec-case: NEW-CORE-DEST-2
+test "caller destination proofs agree across deferred bodies and constructor edits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const larger = try std.mem.replaceOwned(u8, a, caller_destination_source, "range(8)", "range(600)");
+    for ([_]passes.Mode{ .trusted, .verify }) |mode| {
+        var temporary = std.testing.tmpDir(.{});
+        defer temporary.cleanup();
+        var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+        defer storage.deinit();
+        const oracle = try compile(a, std.testing.allocator, caller_destination_source, null, mode);
+        const cold = try compileDemandGuarded(a, std.testing.allocator, caller_destination_source, &storage, .{ .mode = mode, .omit = true });
+        const warm = try compileDemandGuarded(a, std.testing.allocator, caller_destination_source, &storage, .{ .mode = mode, .omit = true });
+        try equal(oracle, cold.output);
+        try equal(oracle, warm.output);
+        try std.testing.expectEqual(@as(u32, 1), warm.output.result.own.promoted);
+        try std.testing.expect(warm.omitted > 0);
+        const edited_oracle = try compile(a, std.testing.allocator, larger, null, mode);
+        const edited = try compileDemandGuarded(a, std.testing.allocator, larger, &storage, .{ .mode = mode, .omit = true });
+        const repeated = try compileDemandGuarded(a, std.testing.allocator, larger, &storage, .{ .mode = mode, .omit = true });
+        try equal(edited_oracle, edited.output);
+        try equal(edited_oracle, repeated.output);
+        try std.testing.expectEqual(@as(u32, 0), edited.output.result.own.promoted);
+        try std.testing.expectEqual(@as(usize, 0), repeated.output.statistics.active_functions);
+        const restored = try compileDemandGuarded(a, std.testing.allocator, caller_destination_source, &storage, .{ .mode = mode, .omit = true });
+        try equal(oracle, restored.output);
+    }
+}
+
+// spec: NEW-CORE-STACK-4
+test "borrow-only proofs survive warm optimizer caches and a transitive returned alias removes stack promotion" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const after = try std.mem.replaceOwned(u8, a, borrowed_reader, "return [total]", "return xs");
+    for ([_]passes.Mode{ .trusted, .verify }) |mode| {
+        var temporary = std.testing.tmpDir(.{});
+        defer temporary.cleanup();
+        var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+        defer storage.deinit();
+        const before = try compile(a, std.testing.allocator, borrowed_reader, null, mode);
+        try std.testing.expectEqual(@as(u32, 1), before.result.own.promoted);
+        const cold = try compile(a, std.testing.allocator, borrowed_reader, &storage, mode);
+        const warm = try compile(a, std.testing.allocator, borrowed_reader, &storage, mode);
+        try equal(before, cold);
+        try equal(before, warm);
+        try std.testing.expectEqual(@as(usize, 0), total(&warm.statistics.misses));
+        const oracle = try compile(a, std.testing.allocator, after, null, mode);
+        try std.testing.expectEqual(@as(u32, 0), oracle.result.own.promoted);
+        const changed = try compile(a, std.testing.allocator, after, &storage, mode);
+        const repeated = try compile(a, std.testing.allocator, after, &storage, mode);
+        try equal(oracle, changed);
+        try equal(oracle, repeated);
+        try std.testing.expect(changed.statistics.misses[@backingInt(cache.Stage.final)] > 0);
+        try std.testing.expectEqual(@as(usize, 0), total(&repeated.statistics.misses));
+        try equal(before, try compile(a, std.testing.allocator, borrowed_reader, &storage, mode));
+    }
+}
+
+// spec-case: NEW-CORE-STACK-4
+test "borrow-only proofs survive deferred bodies and invalidate unchanged transitive callers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const after = try std.mem.replaceOwned(u8, a, borrowed_reader, "return [total]", "return xs");
+    for ([_]passes.Mode{ .trusted, .verify }) |mode| {
+        var temporary = std.testing.tmpDir(.{});
+        defer temporary.cleanup();
+        var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+        defer storage.deinit();
+        const before = try compile(a, std.testing.allocator, borrowed_reader, null, mode);
+        const cold = try compileDemandGuarded(a, std.testing.allocator, borrowed_reader, &storage, .{ .mode = mode, .omit = true });
+        const warm = try compileDemandGuarded(a, std.testing.allocator, borrowed_reader, &storage, .{ .mode = mode, .omit = true });
+        try equal(before, cold.output);
+        try equal(before, warm.output);
+        try std.testing.expectEqual(@as(u32, 1), warm.output.result.own.promoted);
+        try std.testing.expect(warm.omitted > 0);
+        const oracle = try compile(a, std.testing.allocator, after, null, mode);
+        const changed = try compileDemandGuarded(a, std.testing.allocator, after, &storage, .{ .mode = mode, .omit = true });
+        const repeated = try compileDemandGuarded(a, std.testing.allocator, after, &storage, .{ .mode = mode, .omit = true });
+        try equal(oracle, changed.output);
+        try equal(oracle, repeated.output);
+        try std.testing.expectEqual(@as(u32, 0), changed.output.result.own.promoted);
+        try std.testing.expectEqual(@as(usize, 0), repeated.output.statistics.active_functions);
+        const restored = try compileDemandGuarded(a, std.testing.allocator, borrowed_reader, &storage, .{ .mode = mode, .omit = true });
+        try equal(before, restored.output);
+    }
+}
+
+// spec-case: NEW-CORE-STACK-4
+test "borrow-only proof changes final cache identity even when field effects are unchanged" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a, borrowed_reader, &refusal);
+    const token: u8 = 0;
+    const locator: emit.Locator = .{ .context = &token, .locate = locate };
+    var context = cache.Context.init(&storage, try snapshot.Context.init(a, &module, null), locator);
+    try context.prepare(a);
+    const summaries = try @import("effects.zig").analyze(a, &module);
+    var reader: ?usize = null;
+    var caller: ?u32 = null;
+    for (module.functions.items, 0..) |function, index| {
+        if (std.mem.eql(u8, function.name, "read")) reader = index;
+        if (std.mem.eql(u8, function.name, "forward")) caller = @intCast(index);
+    }
+    try std.testing.expect(summaries.of(reader.?, 0).borrow_only);
+    const provenance: @import("inline_origins.zig").Table = .{};
+    const request: cache.Request = .{ .stage = .final, .function = caller.?, .mode = @backingInt(passes.Mode.trusted), .provenance = &provenance, .inputs = .{ .effects = &summaries } };
+    const before = (try context.key(a, request)).?;
+    summaries.params[reader.?][0].borrow_only = false;
+    const after = (try context.key(a, request)).?;
+    try std.testing.expect(!std.mem.eql(u8, &before, &after));
+}
 
 fn compileDeferred(a: std.mem.Allocator, backing: std.mem.Allocator, text: []const u8, storage: *store.Store) !DeferredProduced {
     var refusal: build.Refusal = .{};

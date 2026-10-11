@@ -104,7 +104,7 @@ public func choice[T: copy + storable](mut generator: Random, items: T[]) -> T? 
         return None
     match randint(mut generator, 0, len(items) - 1):
         case Ok(index):
-            return Some(items[index])
+            return Some(items[index].copy())
         case Err(_):
             return None
 
@@ -115,8 +115,8 @@ public func shuffle[T: copy + storable](mut generator: Random, mut items: T[]) e
     while index > 0:
         match randint(mut generator, 0, index):
             case Ok(pick):
-                mut held = items[index]
-                items[index] = items[pick]
+                mut held = items[index].copy()
+                items[index] = items[pick].copy()
                 items[pick] = held
             case Err(_):
                 index = 0

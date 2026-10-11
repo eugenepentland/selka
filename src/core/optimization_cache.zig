@@ -306,6 +306,9 @@ fn writeEffects(writer: *codec.Writer, summaries: *const effects.Summaries, func
     try writer.write([2]bool, summaries.may[function]);
     try writer.write(u64, summaries.params[function].len);
     for (summaries.params[function]) |effect| {
+        // Stack promotion consults this proof independently of field reads/writes.
+        try writer.write(bool, effect.borrow_only);
+        try writer.write(bool, effect.consumes);
         for ([_]effects.Paths{ effect.reads, effect.writes, effect.when_true, effect.when_false }) |paths| {
             try writer.write(bool, paths.whole);
             try writer.write([]const effects.Path, paths.items.items);
