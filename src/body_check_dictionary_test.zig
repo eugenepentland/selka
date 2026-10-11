@@ -257,3 +257,36 @@ fn wrongOctet(a: std.mem.Allocator, input: value.Input, output: value.Output) !b
     };
     return false;
 }
+
+// spec-case: SELFHOST-BODY-DICTIONARIES-1
+test "body dictionaries preserve native signed lengths and reject foreign capacity results" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "func value() -> int:\n    const mapping: dict[int, bool] = {7: True}\n    const members: set[int] = {7, 8}\n    return len(mapping) + len(members)\n");
+    const output = try nativeOutput(a, f);
+    try validate.outcome(a, f.input, .{ .success = output });
+    var checked: usize = 0;
+    var native = f.native;
+    for (f.input.catalog.records, 0..) |record, index| {
+        if (record.collection.kind != .dictionary) continue;
+        const owner_type: typed.Type = @fromBackingInt(typed.Type.record_base + index);
+        const expected = try @import("collection_lower.zig").operationType(&native, owner_type, .length, f.input.program.functions[0].name);
+        try std.testing.expectEqual(typed.Type.i64, expected);
+        const descriptor = dictionaries.identify(f.input.catalog, owner_type).?;
+        try dictionaries.operation(descriptor, owner_type, expected, .length, &.{}, false);
+        try std.testing.expectError(error.ComponentProtocol, dictionaries.operation(descriptor, owner_type, .u64, .length, &.{}, false));
+        checked += 1;
+    }
+    try std.testing.expectEqual(@as(usize, 2), checked);
+}
+
+// spec-case: SELFHOST-BODY-DICTIONARIES-1
+test "body dictionaries reject unsupported capacities and length operands" {
+    const owner: typed.Type = @fromBackingInt(typed.Type.record_base);
+    for ([_]dictionaries.Kind{ .dict, .set }) |kind| {
+        const descriptor: dictionaries.Descriptor = .{ .kind = kind, .key = .i64, .value = .bool };
+        try std.testing.expectError(error.ComponentProtocol, dictionaries.operation(descriptor, owner, .u64, .capacity, &.{}, false));
+        try std.testing.expectError(error.ComponentProtocol, dictionaries.operation(descriptor, owner, .i64, .length, &.{.i64}, false));
+    }
+}

@@ -118,7 +118,7 @@ pub fn operation(item: Descriptor, owner: typed.Type, result: typed.Type, kind: 
     if (item.kind != .dict and item.kind != .set) return error.ComponentProtocol;
     if (arguments.len != kind.arity() or (kind.mutates() and !writable)) return error.ComponentProtocol;
     const expected: typed.Type = switch (kind) {
-        .length, .capacity => .u64,
+        .length => .i64,
         .contains => .bool,
         .key_at => item.key,
         .value_at, .read, .get, .pop_key, .pop_default, .setdefault => item.value,
