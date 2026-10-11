@@ -1,0 +1,174 @@
+import syntax_value
+import graph
+import emission
+import locals
+import variants
+
+record Context:
+    input: syntax_value.Pool
+    span: int
+
+
+func node(mut batch: emission.Batch, context: Context, ty: int, tag: bytes, value: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, ty, tag, payload)
+
+
+func statement(mut batch: emission.Batch, context: Context, tag: bytes, value: int, terminates: bool) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.statement(mut batch, context.input, context.span, terminates, tag, payload)
+
+
+func block(mut batch: emission.Batch, context: Context, children: int[]) -> int fails syntax_value.Problem:
+    const payload = try emission.ids(mut batch, children)
+    return try emission.statement(mut batch, context.input, context.span, True, b"block", payload)
+
+
+func usage(mut pool: syntax_value.Pool, reads: int) -> int fails syntax_value.Problem:
+    const yes = try syntax_value.boolean(mut pool, True)
+    const count = try syntax_value.integer(mut pool, reads)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const absent = try syntax_value.absent(mut pool)
+    return try syntax_value.object(mut pool, ["temporary", "reads", "writes", "dead_write_reads", "dead_write_span"], [yes, count, zero, zero, absent])
+
+
+func parameter(mut batch: emission.Batch, context: Context, raw: int) -> int fails syntax_value.Problem:
+    const row = try graph.get(context.input, raw)
+    mut fields: int[] = []
+    for index in range(len(row.names)):
+        mut value = -1
+        if row.names[index] == "usage":
+            value = try usage(mut batch.pool, 1)
+        else:
+            value = try graph.clone(mut batch.pool, context.input, row.children[index], 0)
+        fields.append(value)
+    return try syntax_value.object(mut batch.pool, row.names, fields)
+
+
+func payload_local(mut batch: emission.Batch, context: Context, name: bytes, ty: int, reads: int) -> int fails syntax_value.Problem:
+    const local = locals.Local(name=name, declaration=context.span, ty=ty, mutable=False, origin=b"local", flags=locals.Flags(initialized=False), usage=locals.Usage(reads=reads, writes=0, dead_write_reads=0, dead_write_span=-1, temporary=True))
+    return try locals.encode(mut batch.pool, context.input, local)
+
+
+func arm(mut batch: emission.Batch, tag: int, slot: int, body: int) -> int fails syntax_value.Problem:
+    const tag_value = try syntax_value.integer(mut batch.pool, tag)
+    mut slot_value = try syntax_value.absent(mut batch.pool)
+    if slot >= 0:
+        slot_value = try syntax_value.integer(mut batch.pool, slot)
+    const statement_id = try syntax_value.integer(mut batch.pool, body)
+    return try syntax_value.object(mut batch.pool, ["tag", "slot", "body"], [tag_value, slot_value, statement_id])
+
+
+record MatchInput:
+    shape: variants.ResultShape
+    count: int
+    call: int
+    zero: int
+    one: int
+
+
+func result_body(mut batch: emission.Batch, context: Context, input: MatchInput, mut bindings: int[]) -> int fails syntax_value.Problem:
+    mut error_reads = 1
+    if input.shape.failure == 0:
+        error_reads = 2
+    const error_local = try payload_local(mut batch, context, b"<entry-error>", input.shape.failure, error_reads)
+    bindings.append(error_local)
+    const error_value = try node(mut batch, context, input.shape.failure, b"local", input.count)
+    const sink = try syntax_value.enumeration(mut batch.pool, b"error_report")
+    const arguments = try emission.ids(mut batch, [error_value])
+    const absent = try syntax_value.absent(mut batch.pool)
+    const no = try syntax_value.boolean(mut batch.pool, False)
+    const print = try syntax_value.object(mut batch.pool, ["sink", "arguments", "separator", "terminator", "stream", "debug"], [sink, arguments, absent, absent, absent, no])
+    const message_node = try emission.node(mut batch, context.input, context.span, 15, b"print", print)
+    const message = try statement(mut batch, context, b"discard", message_node, False)
+    mut status = input.one
+    if input.shape.failure == 0:
+        status = try node(mut batch, context, 0, b"local", input.count)
+    const failed_ret = try statement(mut batch, context, b"ret", status, True)
+    const failed_body = try block(mut batch, context, [message, failed_ret])
+    mut success_slot = -1
+    mut success_value = input.zero
+    if input.shape.success == 0:
+        success_slot = input.count + 1
+        const success_local = try payload_local(mut batch, context, b"<entry-status>", 0, 1)
+        bindings.append(success_local)
+        success_value = try node(mut batch, context, 0, b"local", success_slot)
+    const success_body = try statement(mut batch, context, b"ret", success_value, True)
+    const ok = try arm(mut batch, input.shape.ok, success_slot, success_body)
+    const err = try arm(mut batch, input.shape.err, input.count, failed_body)
+    const arms = try syntax_value.sequence(mut batch.pool, [ok, err])
+    const call = try syntax_value.integer(mut batch.pool, input.call)
+    const match_value = try syntax_value.object(mut batch.pool, ["value", "arms"], [call, arms])
+    return try emission.statement(mut batch, context.input, context.span, True, b"match", match_value)
+
+
+func wrapper(mut batch: emission.Batch, context: Context, count: int, bindings: int[], body: int) -> int fails syntax_value.Problem:
+    const empty = try syntax_value.sequence(mut batch.pool, [])
+    const no = try syntax_value.boolean(mut batch.pool, False)
+    const absent = try syntax_value.absent(mut batch.pool)
+    const zero = try syntax_value.integer(mut batch.pool, 0)
+    const policy = try syntax_value.object(mut batch.pool, ["c_abi", "host", "effect_bound", "effects", "owner", "restricted", "conversion"], [no, absent, absent, zero, absent, no, no])
+    const unknown = try syntax_value.tagged(mut batch.pool, b"unknown", absent)
+    const inferred = try syntax_value.object(mut batch.pool, ["writes", "external"], [no, no])
+    const parameters = try syntax_value.integer(mut batch.pool, count)
+    const signature = try syntax_value.object(mut batch.pool, ["constant_arguments", "return_type", "parameter_count", "mutates", "return_origin", "declared_mutates", "inferred"], [empty, zero, parameters, empty, unknown, empty, inferred])
+    const local_values = try syntax_value.sequence(mut batch.pool, bindings)
+    const statement_id = try syntax_value.integer(mut batch.pool, body)
+    const scope = try syntax_value.object(mut batch.pool, ["parameter_labels", "body", "locals"], [empty, statement_id, local_values])
+    const id = len(batch.functions)
+    const identity = try syntax_value.integer(mut batch.pool, id)
+    const name = try syntax_value.octets(mut batch.pool, b"<entry>")
+    const declaration = try graph.clone(mut batch.pool, context.input, context.span, 0)
+    const function = try syntax_value.object(mut batch.pool, ["policy", "type_arguments", "signature", "scope", "id", "name", "declaration"], [policy, empty, signature, scope, identity, name, declaration])
+    batch.functions.append(function)
+    return id
+
+
+# Consumes independently checked typed tables. Existing source functions and
+# their ranges are untouched; the synthetic function has no source-body range.
+public func adapt(mut batch: emission.Batch, input: syntax_value.Pool, records: int[], main: int) -> int fails syntax_value.Problem:
+    if main < 0 or main >= len(batch.functions):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="entry function is out of bounds")
+    const function = batch.functions[main]
+    const signature = try graph.field(batch.pool, function, "signature")
+    const result_id = try graph.field(batch.pool, signature, "return_type")
+    const result_type = try graph.number(batch.pool, result_id)
+    if result_type == 0:
+        return main
+    const shape = try variants.result_shape(input, records, result_type)
+    if result_type != 15 and (not shape.valid or (shape.success != 0 and shape.success != 15)):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="unchecked entry return type")
+    const span = try graph.field(batch.pool, function, "declaration")
+    const context = Context(input=batch.pool, span=span)
+    const count_id = try graph.field(context.input, signature, "parameter_count")
+    const count = try graph.number(context.input, count_id)
+    const scope = try graph.field(context.input, function, "scope")
+    const locals_id = try graph.field(context.input, scope, "locals")
+    const parameters = try graph.items(context.input, locals_id)
+    if count < 0 or count > len(parameters):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="entry parameter count is invalid")
+    mut bindings: int[] = []
+    mut arguments: int[] = []
+    for index in range(count):
+        const parameter_id = try parameter(mut batch, context, parameters[index])
+        bindings.append(parameter_id)
+        const ty_id = try graph.field(context.input, parameters[index], "ty")
+        const ty = try graph.number(context.input, ty_id)
+        const argument = try node(mut batch, context, ty, b"local", index)
+        arguments.append(argument)
+    const function_id = try syntax_value.integer(mut batch.pool, main)
+    const argument_values = try emission.ids(mut batch, arguments)
+    const empty = try syntax_value.sequence(mut batch.pool, [])
+    const absent = try syntax_value.absent(mut batch.pool)
+    const call_data = try syntax_value.object(mut batch.pool, ["evaluation_order", "evaluation", "function", "arguments"], [empty, absent, function_id, argument_values])
+    const call = try emission.node(mut batch, context.input, span, result_type, b"call", call_data)
+    const zero = try node(mut batch, context, 0, b"integer", 0)
+    const one = try node(mut batch, context, 0, b"integer", 1)
+    mut body = -1
+    if shape.valid:
+        body = try result_body(mut batch, context, MatchInput(shape=shape, count=count, call=call, zero=zero, one=one), mut bindings)
+    else:
+        const discard = try statement(mut batch, context, b"discard", call, False)
+        const ret = try statement(mut batch, context, b"ret", zero, True)
+        body = try block(mut batch, context, [discard, ret])
+    return try wrapper(mut batch, context, count, bindings, body)

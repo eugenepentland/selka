@@ -1,0 +1,76 @@
+import syntax_value
+import graph
+import names
+import engine
+import generic_instances
+import entry_types
+
+# A missing entry is kept distinct so an earlier generic-contract failure can
+# suppress E_MAIN at the same coordinator point as the native frontend.
+public func declaration(state: engine.State) -> int fails syntax_value.Problem:
+    for index in range(len(state.syntax.functions)):
+        const function = state.syntax.functions[index]
+        const span = try graph.field(state.syntax.pool, function, "name")
+        const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+        if spelling != b"main":
+            continue
+        const policy = try graph.field(state.syntax.pool, function, "policy")
+        const owner_id = try graph.field(state.syntax.pool, policy, "owner")
+        const owner = try graph.get(state.syntax.pool, owner_id)
+        if owner.kind != 0:
+            continue
+        if len(state.syntax.modules) != 0:
+            const start_id = try graph.field(state.syntax.pool, span, "start")
+            const start = try graph.number(state.syntax.pool, start_id)
+            const module = try names.module_at(state.syntax.pool, state.syntax.modules, start)
+            if module != 0:
+                continue
+        return index
+    return -1
+
+
+public func missing() -> syntax_value.Problem:
+    return syntax_value.Problem(code="E_MAIN", start=0, end=0, message="the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main")
+
+
+public func check(mut state: engine.State, selected: int) -> int fails syntax_value.Problem:
+    if selected < 0 or selected >= len(state.syntax.functions):
+        fail missing()
+    const function = state.syntax.functions[selected]
+    const span = try graph.field(state.syntax.pool, function, "name")
+    const ordinary = try generic_instances.ordinary_function(state.batch.facts.execution.registry, selected)
+    if ordinary < 0:
+        const problem = try engine.problem(state, span, "E_MAIN", "main cannot have type parameters")
+        fail problem
+    const policy = try graph.field(state.syntax.pool, function, "policy")
+    const host_id = try graph.field(state.syntax.pool, policy, "host")
+    const host = try graph.get(state.syntax.pool, host_id)
+    const constant_id = try graph.field(state.syntax.pool, policy, "constant")
+    const constant = try graph.get(state.syntax.pool, constant_id)
+    if host.kind != 0 or constant.integer != 0:
+        const problem = try engine.problem(state, span, "E_MAIN", "main must have a guest function body")
+        fail problem
+    const signature = try graph.field(state.syntax.pool, function, "signature")
+    const parameters_id = try graph.field(state.syntax.pool, signature, "parameters")
+    const parameters = try graph.items(state.syntax.pool, parameters_id)
+    mut validated = entry_types.empty_parameters()
+    for parameter in parameters:
+        const ty_span = try graph.field(state.syntax.pool, parameter, "ty")
+        const ty = try engine.type_at(mut state, ty_span)
+        const name_span = try graph.field(state.syntax.pool, parameter, "name")
+        const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const element = try entry_types.argv_element(state.syntax.pool, state.batch.facts.lists.types.records.rows, ty)
+        const message = entry_types.parameter(mut validated, ty, name, element >= 0)
+        if message != "":
+            mut location = name_span
+            if message == "entry parameters must be `args: str[]` followed by capabilities":
+                location = ty_span
+            const problem = try engine.problem(state, location, "E_MAIN", message)
+            fail problem
+    const return_span = try graph.field(state.syntax.pool, signature, "return_type")
+    const return_type = try engine.type_at(mut state, return_span)
+    const supported = try entry_types.supported(state.syntax.pool, state.batch.facts.lists, return_type)
+    if not supported:
+        const problem = try engine.problem(state, return_span, "E_TYPE", "main must return int, None, or Result[int or None, E] whose error E print can render")
+        fail problem
+    return ordinary

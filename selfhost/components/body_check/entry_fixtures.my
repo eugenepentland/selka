@@ -1,0 +1,86 @@
+import syntax_value
+import graph
+import emission
+import locals
+
+public record Fixture:
+    batch: emission.Batch
+    input: syntax_value.Pool
+    records: int[]
+
+
+public func body(ty: int, parameters: int[]) -> emission.Batch fails syntax_value.Problem:
+    mut batch = emission.empty()
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 5, 9)
+    mut local_rows: int[] = []
+    for parameter in parameters:
+        const local = locals.Local(name=b"argument", declaration=span, ty=parameter, mutable=True, origin=b"parameter", flags=locals.Flags(initialized=True), usage=locals.Usage(reads=7, writes=2, dead_write_reads=3, dead_write_span=span, transfer_available=True, transfer_span=span))
+        const row = try locals.encode(mut batch.pool, input, local)
+        local_rows.append(row)
+    const empty = try syntax_value.sequence(mut batch.pool, [])
+    const absent = try syntax_value.absent(mut batch.pool)
+    const no = try syntax_value.boolean(mut batch.pool, False)
+    const zero = try syntax_value.integer(mut batch.pool, 0)
+    const count = try syntax_value.integer(mut batch.pool, len(parameters))
+    const return_type = try syntax_value.integer(mut batch.pool, ty)
+    const unknown = try syntax_value.tagged(mut batch.pool, b"unknown", absent)
+    const inferred = try syntax_value.object(mut batch.pool, ["writes", "external"], [no, no])
+    const signature = try syntax_value.object(mut batch.pool, ["constant_arguments", "return_type", "parameter_count", "mutates", "return_origin", "declared_mutates", "inferred"], [empty, return_type, count, empty, unknown, empty, inferred])
+    const policy = try syntax_value.object(mut batch.pool, ["c_abi", "host", "effect_bound", "effects", "owner", "restricted", "conversion"], [no, absent, absent, zero, absent, no, no])
+    const local_values = try syntax_value.sequence(mut batch.pool, local_rows)
+    const scope = try syntax_value.object(mut batch.pool, ["parameter_labels", "body", "locals"], [empty, zero, local_values])
+    const declaration = try graph.clone(mut batch.pool, input, span, 0)
+    const name = try syntax_value.octets(mut batch.pool, b"main")
+    const function = try syntax_value.object(mut batch.pool, ["policy", "type_arguments", "signature", "scope", "id", "name", "declaration"], [policy, empty, signature, scope, zero, name, declaration])
+    batch.functions.append(function)
+    const unit = try emission.node(mut batch, input, span, 15, b"unit", absent)
+    const payload = try syntax_value.integer(mut batch.pool, unit)
+    _ = try emission.statement(mut batch, input, span, True, b"ret", payload)
+    return batch
+
+
+func variant(mut pool: syntax_value.Pool, name: bytes, ty: int) -> int fails syntax_value.Problem:
+    const spelling = try syntax_value.octets(mut pool, name)
+    const span = try syntax_value.span(mut pool, 0, 0)
+    const payload = try syntax_value.integer(mut pool, ty)
+    const no = try syntax_value.boolean(mut pool, False)
+    return try syntax_value.object(mut pool, ["name", "declaration", "payload", "fielded", "boxed"], [spelling, span, payload, no, no])
+
+
+public func result(success: int, failure: int, reversed: bool) -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const ok = try variant(mut input, b"ok", success)
+    const err = try variant(mut input, b"err", failure)
+    mut cases = [ok, err]
+    if reversed:
+        cases = [err, ok]
+    const rows = try syntax_value.sequence(mut input, cases)
+    const yes = try syntax_value.boolean(mut input, True)
+    const variant_shape = try syntax_value.object(mut input, ["fallible", "is_union", "cases"], [yes, yes, rows])
+    const shape = try syntax_value.object(mut input, ["variants"], [variant_shape])
+    const record = try syntax_value.object(mut input, ["shape"], [shape])
+    const batch = try body(19, [])
+    return Fixture(batch=batch, input=input, records=[record])
+
+
+public func number(pool: syntax_value.Pool, row: int, field: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, field)
+    return try graph.number(pool, value)
+
+
+public func flag(pool: syntax_value.Pool, row: int, field: str) -> bool fails syntax_value.Problem:
+    const value_id = try graph.field(pool, row, field)
+    const value = try graph.get(pool, value_id)
+    return value.integer != 0
+
+
+public func bindings(batch: emission.Batch, function: int) -> int[] fails syntax_value.Problem:
+    const scope = try graph.field(batch.pool, batch.functions[function], "scope")
+    const values = try graph.field(batch.pool, scope, "locals")
+    return try graph.items(batch.pool, values)
+
+
+public func data(batch: emission.Batch, node: int) -> syntax_value.Value fails syntax_value.Problem:
+    const id = try graph.field(batch.pool, batch.nodes[node], "data")
+    return try graph.get(batch.pool, id)

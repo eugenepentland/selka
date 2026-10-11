@@ -1,0 +1,122 @@
+import syntax_value
+import graph
+import entry_adapter
+import entry_fixtures
+
+public func test_scalar_entry_has_no_wrapper_or_pool_mutation() -> bool fails syntax_value.Problem:
+    mut batch = try entry_fixtures.body(0, [11, 18])
+    const before = batch
+    const main = try entry_adapter.adapt(mut batch, syntax_value.empty(), [], 0)
+    return main == 0 and batch == before
+
+
+public func test_unit_entry_calls_original_once_then_returns_zero() -> bool fails syntax_value.Problem:
+    mut batch = try entry_fixtures.body(15, [])
+    const original = batch.functions[0]
+    const main = try entry_adapter.adapt(mut batch, syntax_value.empty(), [], 0)
+    const call = try entry_fixtures.data(batch, 1)
+    const call_id = try entry_fixtures.number(batch.pool, call.children[0], "function")
+    const zero = try entry_fixtures.data(batch, 2)
+    const zero_value = try graph.number(batch.pool, zero.children[0])
+    const name_id = try graph.field(batch.pool, batch.functions[main], "name")
+    const name = try graph.get(batch.pool, name_id)
+    const scope = try graph.field(batch.pool, batch.functions[main], "scope")
+    const body = try entry_fixtures.number(batch.pool, scope, "body")
+    const data_id = try graph.field(batch.pool, batch.statements[body], "data")
+    const data = try graph.get(batch.pool, data_id)
+    const children = try graph.items(batch.pool, data.children[0])
+    return main == 1 and len(batch.functions) == 2 and batch.functions[0] == original and len(batch.nodes) == 4 and len(batch.statements) == 4 and call.data == b"call" and call_id == 0 and zero.data == b"integer" and zero_value == 0 and name.data == b"<entry>" and data.data == b"block" and len(children) == 2
+
+
+public func test_forwarded_parameters_preserve_ownership_and_reset_usage() -> bool fails syntax_value.Problem:
+    mut batch = try entry_fixtures.body(15, [11, 18])
+    const main = try entry_adapter.adapt(mut batch, syntax_value.empty(), [], 0)
+    const original = try entry_fixtures.bindings(batch, 0)
+    const forwarded = try entry_fixtures.bindings(batch, main)
+    if len(forwarded) != 2:
+        return False
+    for index in range(2):
+        const original_ownership = try graph.field(batch.pool, original[index], "ownership")
+        const forwarded_ownership = try graph.field(batch.pool, forwarded[index], "ownership")
+        const original_flag = try entry_fixtures.flag(batch.pool, original_ownership, "transfer_available")
+        const forwarded_flag = try entry_fixtures.flag(batch.pool, forwarded_ownership, "transfer_available")
+        const usage = try graph.field(batch.pool, forwarded[index], "usage")
+        const reads = try entry_fixtures.number(batch.pool, usage, "reads")
+        const writes = try entry_fixtures.number(batch.pool, usage, "writes")
+        const temporary = try entry_fixtures.flag(batch.pool, usage, "temporary")
+        const original_usage = try graph.field(batch.pool, original[index], "usage")
+        const old_reads = try entry_fixtures.number(batch.pool, original_usage, "reads")
+        if not original_flag or not forwarded_flag or reads != 1 or writes != 0 or not temporary or old_reads != 7:
+            return False
+        const argument = try entry_fixtures.data(batch, index + 1)
+        const slot = try graph.number(batch.pool, argument.children[0])
+        if argument.data != b"local" or slot != index:
+            return False
+    return True
+
+
+func checked_result(success: int, failure: int, reversed: bool) -> bool fails syntax_value.Problem:
+    mut fixture = try entry_fixtures.result(success, failure, reversed)
+    const main = try entry_adapter.adapt(mut fixture.batch, fixture.input, fixture.records, 0)
+    const batch = fixture.batch
+    const bindings = try entry_fixtures.bindings(batch, main)
+    mut local_count = 1
+    mut error_reads = 1
+    if success == 0:
+        local_count += 1
+    if failure == 0:
+        error_reads = 2
+    const error_usage = try graph.field(batch.pool, bindings[0], "usage")
+    const reads = try entry_fixtures.number(batch.pool, error_usage, "reads")
+    const ownership = try graph.field(batch.pool, bindings[0], "ownership")
+    const initialized = try entry_fixtures.flag(batch.pool, ownership, "initialized")
+    const scope = try graph.field(batch.pool, batch.functions[main], "scope")
+    const body_id = try entry_fixtures.number(batch.pool, scope, "body")
+    const data_id = try graph.field(batch.pool, batch.statements[body_id], "data")
+    const data = try graph.get(batch.pool, data_id)
+    const arms_id = try graph.field(batch.pool, data.children[0], "arms")
+    const arms = try graph.items(batch.pool, arms_id)
+    const ok_tag = try entry_fixtures.number(batch.pool, arms[0], "tag")
+    const err_tag = try entry_fixtures.number(batch.pool, arms[1], "tag")
+    mut expected_ok = 0
+    if reversed:
+        expected_ok = 1
+    const err_slot = try entry_fixtures.number(batch.pool, arms[1], "slot")
+    const ok_slot_id = try graph.field(batch.pool, arms[0], "slot")
+    const ok_slot = try graph.get(batch.pool, ok_slot_id)
+    mut success_slot_ok = ok_slot.kind == 0
+    if success == 0:
+        success_slot_ok = ok_slot.kind == 1 and ok_slot.integer == 1
+    const print = try entry_fixtures.data(batch, 5)
+    const sink_id = try graph.field(batch.pool, print.children[0], "sink")
+    const sink = try graph.get(batch.pool, sink_id)
+    return main == 1 and len(bindings) == local_count and reads == error_reads and not initialized and data.data == b"match" and ok_tag == expected_ok and err_tag == 1 - expected_ok and err_slot == 0 and success_slot_ok and print.data == b"print" and sink.data == b"error_report"
+
+
+public func test_result_int_error_is_exit_status_and_preserves_reversed_tags() -> bool fails syntax_value.Problem:
+    return try checked_result(0, 0, True)
+
+
+public func test_unit_result_uses_zero_and_noninteger_error_uses_one() -> bool fails syntax_value.Problem:
+    return try checked_result(15, 1, False)
+
+
+public func test_result_success_and_error_types_are_independent() -> bool fails syntax_value.Problem:
+    const integer_success = try checked_result(0, 1, False)
+    const unit_success = try checked_result(15, 0, True)
+    return integer_success and unit_success
+
+
+public func test_invalid_entry_id_or_return_type_is_transport_error() -> bool fails syntax_value.Problem:
+    mut batch = try entry_fixtures.body(1, [])
+    match entry_adapter.adapt(mut batch, syntax_value.empty(), [], 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "P_BODY_TRANSPORT":
+                return False
+    match entry_adapter.adapt(mut batch, syntax_value.empty(), [], 0):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(batch.functions) == 1

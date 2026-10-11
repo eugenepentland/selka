@@ -1,0 +1,81 @@
+import syntax_value
+import graph
+import variants
+import print_types
+import list_types
+
+# Common entry semantics; callers resolve parameter types in source order.
+public record Parameters:
+    capabilities: int[]
+    count: int = 0
+    out: bool = False
+    err: bool = False
+
+
+public func empty_parameters() -> Parameters:
+    return Parameters(capabilities=[])
+
+
+public func argv_element(pool: syntax_value.Pool, records: int[], ty: int) -> int fails syntax_value.Problem:
+    if ty < 19 or ty - 19 >= len(records):
+        return -1
+    const row = records[ty - 19]
+    const managed_id = try graph.field(pool, row, "managed")
+    const managed = try graph.get(pool, managed_id)
+    const collection = try graph.field(pool, row, "collection")
+    const kind_id = try graph.field(pool, collection, "kind")
+    const kind = try graph.get(pool, kind_id)
+    if managed.integer == 0 or kind.data != b"list":
+        return -1
+    const shape = try graph.field(pool, row, "shape")
+    const element_id = try graph.field(pool, shape, "buffer")
+    const element_value = try graph.get(pool, element_id)
+    if element_value.kind == 0:
+        return -1
+    const element = try graph.number(pool, element_id)
+    if element < 19 or element - 19 >= len(records):
+        return -1
+    const text = records[element - 19]
+    const text_managed_id = try graph.field(pool, text, "managed")
+    const text_managed = try graph.get(pool, text_managed_id)
+    const text_collection = try graph.field(pool, text, "collection")
+    const text_kind_id = try graph.field(pool, text_collection, "kind")
+    const text_kind = try graph.get(pool, text_kind_id)
+    if text_managed.integer == 0 or text_kind.data != b"string":
+        return -1
+    return element
+
+
+public func supported(pool: syntax_value.Pool, catalog: list_types.Catalog, ty: int) -> bool fails syntax_value.Problem:
+    if ty == 0 or ty == 15:
+        return True
+    const shape = try variants.result_shape(pool, catalog.types.records.rows, ty)
+    if not shape.valid or (shape.success != 0 and shape.success != 15):
+        return False
+    return try print_types.renderable(pool, catalog, shape.failure)
+
+
+# Empty return means accepted; otherwise the caller attaches the exact source
+# name/type span. No native entry verdict is consumed by this state machine.
+public func parameter(mut state: Parameters, ty: int, name: bytes, argv: bool) -> str:
+    if state.count == 0 and argv:
+        state.count += 1
+        return ""
+    if ty == 18:
+        if name != b"out" and name != b"err":
+            return "entry Stream parameters must be named `out` or `err`"
+        if (name == b"out" and state.out) or (name == b"err" and state.err):
+            return "entry requests at most one `out` and one `err` Stream"
+        if name == b"out":
+            state.out = True
+        else:
+            state.err = True
+    else:
+        if ty < 9 or ty > 14:
+            return "entry parameters must be `args: str[]` followed by capabilities"
+        for previous in state.capabilities:
+            if previous == ty:
+                return "entry requests at most one value parameter of each capability kind"
+        state.capabilities.append(ty)
+    state.count += 1
+    return ""

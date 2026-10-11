@@ -1,0 +1,86 @@
+import syntax_value
+import graph
+import entry_types
+import entry_fixtures
+import list_types
+
+public func test_all_capabilities_are_distinct_and_streams_split_by_name() -> bool:
+    mut state = entry_types.empty_parameters()
+    for ty in range(9, 15):
+        const message = entry_types.parameter(mut state, ty, b"capability", False)
+        if message != "":
+            return False
+    const out = entry_types.parameter(mut state, 18, b"out", False)
+    const err = entry_types.parameter(mut state, 18, b"err", False)
+    return out == "" and err == "" and state.count == 8
+
+
+public func test_duplicate_capability_and_stream_messages_are_distinct() -> bool:
+    mut state = entry_types.empty_parameters()
+    _ = entry_types.parameter(mut state, 11, b"fs", False)
+    const duplicate = entry_types.parameter(mut state, 11, b"files", False)
+    _ = entry_types.parameter(mut state, 18, b"out", False)
+    const stream = entry_types.parameter(mut state, 18, b"out", False)
+    const named = entry_types.parameter(mut state, 18, b"log", False)
+    return duplicate == "entry requests at most one value parameter of each capability kind" and stream == "entry requests at most one `out` and one `err` Stream" and named == "entry Stream parameters must be named `out` or `err`" and state.count == 2
+
+
+public func test_argv_is_optional_first_only_and_uses_type_not_name() -> bool:
+    mut state = entry_types.empty_parameters()
+    const argv = entry_types.parameter(mut state, 27, b"anything", True)
+    const fs = entry_types.parameter(mut state, 11, b"fs", False)
+    const second = entry_types.parameter(mut state, 27, b"args", True)
+    mut ordinary = entry_types.empty_parameters()
+    const wrong = entry_types.parameter(mut ordinary, 0, b"args", False)
+    return argv == "" and fs == "" and second == "entry parameters must be `args: str[]` followed by capabilities" and wrong == second and state.count == 2 and ordinary.count == 0
+
+
+public func test_all_scalar_nonentry_results_are_rejected() -> bool fails syntax_value.Problem:
+    const pool = syntax_value.empty()
+    const catalog = list_types.empty()
+    for ty in range(19):
+        const accepted = try entry_types.supported(pool, catalog, ty)
+        if accepted != (ty == 0 or ty == 15):
+            return False
+    return True
+
+
+public func test_checked_results_require_supported_success_and_printable_error() -> bool fails syntax_value.Problem:
+    for success in [0, 15, 1]:
+        for failure in [0, 1, 8, 15, 11, 16, 18]:
+            const fixture = try entry_fixtures.result(success, failure, False)
+            mut catalog = list_types.empty()
+            catalog.types.records.rows = fixture.records
+            const accepted = try entry_types.supported(fixture.input, catalog, 19)
+            const printable = failure == 0 or failure == 1 or failure == 8 or failure == 15
+            if accepted != (success != 1 and printable):
+                return False
+    return True
+
+
+func collection(mut pool: syntax_value.Pool, kind: bytes, element: int, managed: bool) -> int fails syntax_value.Problem:
+    const kind_id = try syntax_value.enumeration(mut pool, kind)
+    const properties = try syntax_value.object(mut pool, ["kind"], [kind_id])
+    const buffer = try syntax_value.integer(mut pool, element)
+    const shape = try syntax_value.object(mut pool, ["buffer"], [buffer])
+    const flag = try syntax_value.boolean(mut pool, managed)
+    return try syntax_value.object(mut pool, ["managed", "collection", "shape"], [flag, properties, shape])
+
+
+public func test_argv_recognizes_nominal_shapes_without_fixed_type_ids() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const octet_row = try collection(mut pool, b"bytes", 5, True)
+    const text = try collection(mut pool, b"string", 7, True)
+    const argv = try collection(mut pool, b"list", 20, True)
+    const octets = try collection(mut pool, b"list", 19, True)
+    const scalar = try collection(mut pool, b"list", 0, True)
+    const unowned = try collection(mut pool, b"list", 20, False)
+    const records = [octet_row, text, argv, octets, scalar, unowned]
+    const admitted = try entry_types.argv_element(pool, records, 21)
+    if admitted != 20:
+        return False
+    for ty in [0, 18, 19, 20, 22, 23, 24, 25]:
+        const element = try entry_types.argv_element(pool, records, ty)
+        if element != -1:
+            return False
+    return True

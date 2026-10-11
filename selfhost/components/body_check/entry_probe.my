@@ -1,0 +1,55 @@
+import syntax_value
+import codec
+import graph
+import emission
+import entry_adapter
+
+# Qualification adapter only. Production body schema 11 remains unchanged.
+func adapt(data: bytes) -> bytes fails syntax_value.Problem:
+    const request = try codec.decode(data)
+    mut batch = emission.empty()
+    batch.pool = request.pool
+    const nodes_id = try graph.field(request.pool, request.root, "nodes")
+    const statements_id = try graph.field(request.pool, request.root, "statements")
+    const functions_id = try graph.field(request.pool, request.root, "functions")
+    const input_nodes = try graph.items(request.pool, nodes_id)
+    const input_statements = try graph.items(request.pool, statements_id)
+    const input_functions = try graph.items(request.pool, functions_id)
+    batch.nodes = input_nodes
+    batch.statements = input_statements
+    batch.functions = input_functions
+    const records_id = try graph.field(request.pool, request.root, "records")
+    const records = try graph.items(request.pool, records_id)
+    const main_id = try graph.field(request.pool, request.root, "main")
+    const selected_entry = try graph.number(request.pool, main_id)
+    const adapted = try entry_adapter.adapt(mut batch, request.pool, records, selected_entry)
+    const nodes = try syntax_value.sequence(mut batch.pool, batch.nodes)
+    const statements = try syntax_value.sequence(mut batch.pool, batch.statements)
+    const functions = try syntax_value.sequence(mut batch.pool, batch.functions)
+    const result_main = try syntax_value.integer(mut batch.pool, adapted)
+    const aliases = try graph.field(request.pool, request.root, "aliases")
+    _ = try syntax_value.object(mut batch.pool, ["aliases", "nodes", "statements", "functions", "main", "records"], [aliases, nodes, statements, functions, result_main, records_id])
+    return try codec.encode(batch.pool)
+
+
+func exchange(fs: Filesystem, path: str) -> bytes fails syntax_value.Problem:
+    match fs.open(path, "rb"):
+        case Ok(file):
+            with file as input:
+                const data = input.read(67108865)
+                return try adapt(data)
+        case Err(message):
+            fail syntax_value.Problem(code="P_IO", start=0, end=0, message=message)
+
+
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) != 1:
+        err.print("entry-probe: expected REQUEST")
+        return 2
+    match exchange(fs, args[0]):
+        case Ok(reply):
+            _ = out.write(reply)
+            return 0
+        case Err(problem):
+            err.print(problem.code, problem.message)
+            return 2
