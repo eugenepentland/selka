@@ -3,6 +3,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -39,6 +40,40 @@ class QualificationTests(unittest.TestCase):
         self.assertEqual(set_limit.call_count, 2)
         for call in set_limit.call_args_list:
             self.assertEqual(call.args[1], (4096, 4096))
+
+    def test_compiler_rebuild_budget_keeps_output_and_inherited_limits(self):
+        unlimited = Q.resource.RLIM_INFINITY
+        with patch.object(Q.resource, 'getrlimit', return_value=(unlimited, unlimited)), patch.object(Q.resource, 'setrlimit') as set_limit:
+            Q.process_limits(4 << 30)
+        self.assertEqual(set_limit.call_args_list[0].args,
+                         (Q.resource.RLIMIT_FSIZE, (Q.OUTPUT_LIMIT, Q.OUTPUT_LIMIT)))
+        self.assertEqual(set_limit.call_args_list[1].args,
+                         (Q.resource.RLIMIT_AS, (4 << 30, 4 << 30)))
+        with patch.object(Q.resource, 'getrlimit', return_value=(1 << 30, unlimited)), patch.object(Q.resource, 'setrlimit') as set_limit:
+            Q.process_limits(4 << 30)
+        self.assertEqual(set_limit.call_args_list[1].args,
+                         (Q.resource.RLIMIT_AS, (1 << 30, 1 << 30)))
+        with patch.object(Q.resource, 'getrlimit', return_value=(unlimited, unlimited)), patch.object(Q.resource, 'setrlimit') as set_limit:
+            Q.process_limits()
+        self.assertEqual(set_limit.call_args_list[1].args,
+                         (Q.resource.RLIMIT_AS, (2 << 30, 2 << 30)))
+
+    def test_build_file_allowance_does_not_expand_captured_output(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(Q, 'OUTPUT_LIMIT', 1024):
+            output = Path(temporary) / 'compiler-output'
+            command = [sys.executable, '-c',
+                       'import pathlib,sys; pathlib.Path(sys.argv[1]).write_bytes(b"x"*2048); sys.stdout.buffer.write(b"y"*2048)',
+                       output]
+            result = Q.execute(command, os.environ.copy(), temporary, file_size_budget=4096)
+            self.assertEqual(result, (0, b'y' * 1024, b''))
+            self.assertEqual(output.stat().st_size, 2048)
+
+    def test_build_file_allowance_preserves_inherited_file_ceiling(self):
+        unlimited = Q.resource.RLIM_INFINITY
+        with patch.object(Q.resource, 'getrlimit', return_value=(4096, unlimited)), patch.object(Q.resource, 'setrlimit') as set_limit:
+            Q.process_limits(4 << 30, 128 << 20)
+        self.assertEqual(set_limit.call_args_list[0].args,
+                         (Q.resource.RLIMIT_FSIZE, (4096, 4096)))
 
     def test_old_profile_requires_explicit_baseline_schema(self):
         with tempfile.TemporaryDirectory() as temporary, patch.object(Q, 'PACKAGES', ('lexer-pilot',)):
