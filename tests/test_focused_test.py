@@ -45,13 +45,23 @@ class CommandTests(unittest.TestCase):
     def test_focused_command_names_the_target_and_filter(self):
         self.assertEqual(
             focused.command('units', 'arena'),
-            ['zig', 'build', 'test-units', '--summary', 'all', '-Dtest-filter=arena'])
+            [focused.zig_program(), 'build', 'test-units', '--summary', 'all', '-Dtest-filter=arena'])
         self.assertEqual(
             focused.command('cli', 'CLI managed'),
-            ['zig', 'build', 'test-cli', '--summary', 'all', '-Dtest-filter=CLI managed'])
+            [focused.zig_program(), 'build', 'test-cli', '--summary', 'all', '-Dtest-filter=CLI managed'])
+
+    def test_tooling_and_explicit_legacy_namespace_route_without_losing_guard(self):
+        self.assertEqual(focused.command('tooling', 'invalidation')[2], 'test-tooling-units')
+        self.assertEqual(focused.command('units', 'invalidation_test.test.')[2], 'test-tooling-units')
+        argv = focused.command('units', 'doc_coverage.test.sections')
+        self.assertEqual(argv[2], 'test-tooling-units')
+        self.assertEqual(argv[-1], '-Dtest-filter=doc_coverage_test.test.sections')
+        self.assertEqual(focused.command('units', 'no-such-test')[2], 'test-units')
+        with self.assertRaises(focused.FilterError):
+            focused.validate('tooling', '')
 
     def test_full_command_has_no_filter(self):
-        self.assertEqual(focused.command('full', None), ['zig', 'build', 'test', '--summary', 'all'])
+        self.assertEqual(focused.command('full', None), [focused.zig_program(), 'build', 'test', '--summary', 'all'])
 
 
 class OutputTests(unittest.TestCase):
@@ -119,7 +129,7 @@ class MainTests(unittest.TestCase):
         self.assertEqual(len(logs), 1)
         self.assertIn('selected', logs[0])
         self.assertEqual(run.call_args.args[0],
-                         ['zig', 'build', 'test-units', '--summary', 'all', '-Dtest-filter=arena'])
+                         [focused.zig_program(), 'build', 'test-units', '--summary', 'all', '-Dtest-filter=arena'])
 
     def test_main_rejects_an_empty_filter_without_running_zig(self):
         with mock.patch.object(focused.subprocess, 'run') as run:

@@ -7,9 +7,21 @@ and release with `--release --verify-facts` under
 `MYL_CORE_LEAKCHECK=1`, so a test that ends with blocks still live fails. Each run
 keeps its own result cache under `.mylang-cache`, with `-unoptimized` and
 `-release` suffixes for the explicit alternatives. The compiler's machinery is tested in Zig, under
-`src/root_test.zig`. This page states that rule, shows the inner loop each side
+`src/root_test.zig`, with independent tooling helpers under
+`src/tooling_root_test.zig`. This page states that rule, shows the inner loop each side
 gives you, and lists the Zig tests that still belong on the mylang side as of
 2026-09-18.
+
+The pure tooling root runs documentation text contracts, input probing against
+private temporary files, fix edit selection, phase-record arithmetic, and synthetic
+invalidation reports. It has its own executable and exact source recipe. Run it
+with `zig build test-tooling-units` or `python3 scripts/focused_test.py tooling NAME`.
+Unfiltered `test-units` and `test-units-sharded` include both unit roots. Filters
+on those targets select the compiler root; select tooling explicitly when filtering.
+The focused wrapper routes explicit old helper namespaces to tooling, translating
+`doc_coverage.test.` to `doc_coverage_test.test.` after test extraction. Broad
+filters stay scoped to the requested root and no-match remains a failure. The
+affected-test wrapper discovers both roots and routes their selections separately.
 
 ## The rule
 

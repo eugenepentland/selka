@@ -20,6 +20,8 @@ import affected_tests as at  # noqa: E402
 
 FILES = {
     "src/root_test.zig": 'test {\n    _ = @import("foo_test.zig");\n    _ = @import("foo.zig");\n    _ = @import("bar_test.zig");\n}\n',
+    "src/tooling_root_test.zig": 'test { _ = @import("tool_test.zig"); }\n',
+    "src/tool_test.zig": '// spec: TOOL-1\ntest "tool works" { try t.expect(true); }\n',
     "src/foo.zig": 'const part = @import("foo_part.zig");\npub fn computeThing() void {}\ntest "inline foo" {\n    try t.expect(true);\n}\n',
     "src/foo_part.zig": 'pub fn part() void {}\n',
     "src/foo_test.zig": 'const foo = @import("foo.zig");\n// spec: FOO-1\ntest "foo works" {\n    foo.computeThing();\n}\n',
@@ -58,6 +60,15 @@ class SyntheticRepo(unittest.TestCase):
 
 
 class Mapping(SyntheticRepo):
+    def test_independent_tooling_source_routes_to_its_executable(self) -> None:
+        sel = self.select({"src/tool_test.zig": ["// spec: TOOL-1"]})
+        self.assertEqual(sel.unit, {})
+        self.assertIn("tool_test.test.", sel.tooling)
+        builds, guests = at.plan(sel, "zig")
+        self.assertEqual(len(builds), 1)
+        self.assertIn("test-tooling-units", builds[0].argv)
+        self.assertEqual(guests, [])
+
     def test_performance_proxy_selects_its_integrity_tests(self) -> None:
         for path in ("scripts/juice", "scripts/juice_tool/engine.py", "scripts/juice_validate.py", "tests/test_juice.py", "tests/test_juice_native.py", "examples/juice/native/kernel.c"):
             sel = self.select({path: ["changed"]})

@@ -24,11 +24,13 @@ import os
 from pathlib import Path
 import re
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUTS = ROOT / "build_test_inputs.zig"
 # Cached Zig test roots and the list in build_test_inputs.zig that covers each.
 ROOTS = {
+    "src/tooling_root_test.zig": "tooling_unit",
     "src/memory_budget.zig": "memory_budget",
     "src/root_test.zig": "unit",
     "test/integration.zig": "cli",
@@ -143,6 +145,12 @@ def named_paths(text: str) -> list[tuple[int, str]]:
     return cleaned
 
 
+def source_gaps(root: str, entries: list[str]) -> list[str]:
+    """Require every local source imported by an independent root in its recipe."""
+    return ["{}: imported source {} is outside its declared recipe".format(root, path)
+            for path in reachable(root) if not covered(path, entries)]
+
+
 def gaps() -> list[str]:
     """Uncovered repository paths, one message each."""
     lists = declared_lists(INPUTS.read_text())
@@ -152,6 +160,8 @@ def gaps() -> list[str]:
         if entries is None:
             problems.append("build_test_inputs.zig declares no `{}` list for {}".format(list_name, root))
             continue
+        if list_name == "tooling_unit":
+            problems.extend(source_gaps(root, entries))
         for path in reachable(root):
             for number, named in named_paths(test_text(path)):
                 if not (ROOT / named).exists():
@@ -177,6 +187,17 @@ def self_test() -> int:
     assert covered("d/a/b.md", ["d/**/*.md"]) and not covered("d/a/b.txt", ["d/**/*.md"])
     paths = [p for _, p in named_paths('const f = "tests/native/a.my";\nx(&.{ root, "tests", "goldens" });\ny("docs/{s}");\n')]
     assert paths == ["tests/native/a.my", "tests/goldens", "docs"], paths
+    global ROOT
+    previous = ROOT
+    with tempfile.TemporaryDirectory(prefix="source-closure-") as scratch:
+        ROOT = Path(scratch)
+        try:
+            (ROOT / "root.zig").write_text('test { _ = @import("child.zig"); }')
+            (ROOT / "child.zig").write_text('const std = @import("std");')
+            assert source_gaps("root.zig", ["root.zig", "child.zig"]) == []
+            assert len(source_gaps("root.zig", ["root.zig"])) == 1
+        finally:
+            ROOT = previous
     print("inputs coverage self-test: passed")
     return 0
 

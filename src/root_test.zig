@@ -5,11 +5,9 @@ pub const compiler_language = @import("compiler.zig");
 test {
     _ = @import("frontend_migration_test.zig");
     _ = @import("iteration_place_test.zig");
-    _ = @import("input_probe_test.zig");
     _ = @import("compiler.zig").module_syntax;
     _ = @import("view_cycles_test.zig");
 
-    _ = @import("doc_coverage.zig");
     _ = @import("tokens_dump_test.zig");
     _ = @import("doc_coverage_command.zig");
     _ = @import("doctest_command.zig");
@@ -78,7 +76,6 @@ test {
     _ = @import("domain_equality_test.zig");
     _ = @import("diagnostic_output_test.zig");
     _ = @import("diagnostic_fix_test.zig");
-    _ = @import("fix_plan_test.zig");
     _ = @import("diagnostic_recovery_test.zig");
     _ = @import("generic_inference_test.zig");
     _ = @import("flow_inference_test.zig");
@@ -182,8 +179,6 @@ test {
     _ = @import("embed_test.zig");
     _ = @import("typing_papercuts_test.zig");
     _ = @import("incremental_test.zig");
-    _ = @import("timings_test.zig");
-    _ = @import("invalidation_test.zig");
     _ = @import("for_range_test.zig");
     _ = @import("type_aliases_test.zig");
     _ = @import("tuples_test.zig");

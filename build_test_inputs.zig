@@ -25,6 +25,14 @@
 //! reading a new file, declare it here; `-Dtest-rerun=true` re-runs every cached
 //! test step regardless.
 
+/// Complete independent tooling test implementation closure; no live fixtures.
+pub const tooling_unit = [_][]const u8{
+    "src/tooling_root_test.zig", "src/doc_coverage_test.zig", "src/doc_coverage.zig",
+    "src/input_probe_test.zig",  "src/input_probe.zig",       "src/fix_plan_test.zig",
+    "src/fix_plan.zig",          "src/timings_test.zig",      "src/timings.zig",
+    "src/invalidation_test.zig", "src/invalidation.zig",
+};
+
 /// The independently gated named byte-ceiling module.
 pub const memory_budget = [_][]const u8{"src/memory_budget.zig"};
 
@@ -140,6 +148,7 @@ pub const affected = [_][]const u8{
     "scripts/affected_tests.py",
     "scripts/focused_test.py",
     "tests/test_affected_tests.py",
+    "tests/test_focused_test.py",
 };
 
 /// `tests/test_inputs_coverage.py`: this file and every Zig test source the
@@ -163,7 +172,9 @@ pub const verification_cache = [_][]const u8{
     "scripts/verification_process.py",
     "scripts/verification_process_test.py",
     "scripts/verification_report.py",
+    "scripts/verification_budgets.py",
     "scripts/verification_report_test.py",
+    "scripts/verification_budgets_test.py",
     "scripts/verification_artifacts.py",
     "scripts/verify_cache_test.py",
     "scripts/verification_snapshot_test.py",
@@ -191,6 +202,7 @@ pub const fuzz_campaign = [_][]const u8{
     "scripts/verification_snapshot.py",
     "scripts/verification_process.py",
     "scripts/verification_report.py",
+    "scripts/verification_budgets.py",
     "scripts/build-slot.sh",
     "tests/differential_corpus.py",
     "tests/test_differential_corpus.py",
@@ -220,6 +232,7 @@ pub const juice_cache = [_][]const u8{
     "scripts/verification_snapshot.py",
     "scripts/verification_process.py",
     "scripts/verification_report.py",
+    "scripts/verification_budgets.py",
     "scripts/build-slot.sh",
 };
 

@@ -44,6 +44,7 @@ import focused_test  # noqa: E402  (shares the zig/zigw choice)
 
 LOG_DIR = ROOT / ".mylang-cache" / "affected-tests"
 UNIT_ROOT = "src/root_test.zig"
+TOOLING_ROOT = "src/tooling_root_test.zig"
 CLI_ROOT = "test/integration.zig"
 LANG_CACHE = ".mylang-cache/lang-tests"
 # `test-lang` runs tests/lang twice: at debug, and at release with its facts
@@ -76,6 +77,7 @@ HOST_STEPS = (
     ("tests/test_juice.py", "test-juice"),
     ("tests/test_juice_native.py", "test-juice"),
     ("examples/juice/", "test-juice"),
+    ("src/tooling_root_test.zig", "test-tooling-units"),
     ("src/core/", "test-core"),
     ("test/core/", "test-core"),
     ("test/golden_parity.zig", "test-golden"),
@@ -110,6 +112,7 @@ class Selection:
 
     def __init__(self) -> None:
         self.unit: dict[str, list[str]] = {}
+        self.tooling: dict[str, list[str]] = {}
         self.cli: dict[str, list[str]] = {}
         self.steps: dict[str, list[str]] = {}
         self.guest: dict[str, list[str]] = {}
@@ -123,7 +126,7 @@ class Selection:
             reasons.append(reason)
 
     def empty(self) -> bool:
-        return not (self.unit or self.cli or self.steps or self.guest or self.doctest or self.doc_coverage)
+        return not (self.unit or self.tooling or self.cli or self.steps or self.guest or self.doctest or self.doc_coverage)
 
 
 # ── git ──────────────────────────────────────────────────────────────────────
@@ -243,7 +246,8 @@ class Corpus:
     """The Zig and guest tests the mapping can select from, indexed once."""
 
     def __init__(self) -> None:
-        self.unit_files = sorted(p for p in reachable(UNIT_ROOT) if p.startswith("src/"))
+        self.tooling_files = set(reachable(TOOLING_ROOT))
+        self.unit_files = sorted(p for p in set(reachable(UNIT_ROOT)) | self.tooling_files if p.startswith("src/"))
         self.unit_tests = {path: zig_tests(read(ROOT / path)) for path in self.unit_files}
         self.cli_tests = zig_tests(read(ROOT / CLI_ROOT))
         self.guest_files = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "tests" / "lang").rglob("*.my"))
@@ -407,6 +411,10 @@ def select(files: list[str], lines_by_file: dict[str, list[str]], corpus: Corpus
     select_by_tokens(sel, corpus, lines_by_file)
     if guest_full and sel.guest:
         sel.guest = {"tests/lang": ["--guest-full"]}
+    tooling_prefixes = tuple(namespace(path) for path in corpus.tooling_files)
+    for filt in list(sel.unit):
+        if filt.startswith(tooling_prefixes):
+            sel.tooling[filt] = sel.unit.pop(filt)
     return sel
 
 
@@ -432,7 +440,7 @@ def plan(sel: Selection, zig: str, shards: int = 8) -> tuple[list[Command], list
     names a hundred slow tests still finishes in the time of its slowest slice.
     """
     builds: list[Command] = []
-    for table, step, label in ((sel.unit, "test-units-sharded", "unit"), (sel.cli, "test-cli-sharded", "CLI")):
+    for table, step, label in ((sel.unit, "test-units-sharded", "unit"), (sel.tooling, "test-tooling-units", "tooling"), (sel.cli, "test-cli-sharded", "CLI")):
         if table:
             argv = [zig, "build", step, "--summary", "line", "-Dtest-shards={}".format(shards)]
             argv += ["-Dtest-filter=" + f for f in sorted(table)]
@@ -491,7 +499,7 @@ def execute(command: Command, stamp: str, index: int) -> Command:
 
 def describe(sel: Selection) -> list[str]:
     lines = []
-    for title, table in (("zig unit filter", sel.unit), ("zig CLI filter", sel.cli), ("build step", sel.steps),
+    for title, table in (("zig unit filter", sel.unit), ("zig tooling filter", sel.tooling), ("zig CLI filter", sel.cli), ("build step", sel.steps),
                          ("guest tests", sel.guest), ("doctest page", sel.doctest)):
         for key in sorted(table):
             lines.append("  {:<16} {}".format(title, key))

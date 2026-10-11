@@ -7,7 +7,7 @@ Run from anywhere inside the repository:
     python3 scripts/focused_test.py cli "CLI managed constants"
     python3 scripts/focused_test.py full
 
-``units``, ``cli`` and ``golden`` require a non-empty substring and compile only
+``units``, ``tooling``, ``cli`` and ``golden`` require a non-empty substring and compile only
 the tests whose names match it, so an ordinary edit cycle never selects the whole
 suite by accident. ``full`` is the explicit full-suite request and refuses a
 filter, which keeps "I meant one area" and "I meant everything" distinguishable.
@@ -38,7 +38,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 LOG_DIR = ROOT / ".mylang-cache" / "focused-tests"
 # Targets that honour `-Dtest-filter`. `full` is the whole gate, which does not.
-FOCUSED = {"units": "test-units", "cli": "test-cli", "golden": "test-golden"}
+FOCUSED = {"units": "test-units", "cli": "test-cli", "golden": "test-golden", "tooling": "test-tooling-units"}
 FULL = "full"
 SELECTED = re.compile(r"(\d+)\s+test\(s\) selected")
 RESULT = re.compile(r"guardian/test: RESULT (\{.*\})")
@@ -80,6 +80,13 @@ def zig_program() -> str:
 def command(root: str, filt: str | None) -> list[str]:
     """The supported ``zig build`` command line for one request."""
     target = "test" if root == FULL else FOCUSED[root]
+    # Explicit legacy namespaces route to their independent executable. Broad
+    # filters remain scoped to the requested root; no-match remains a failure.
+    moved = ("input_probe_test.test.", "fix_plan_test.test.", "timings_test.test.",
+             "invalidation_test.test.", "doc_coverage_test.test.", "doc_coverage.test.")
+    if root == "units" and filt is not None and filt.startswith(moved):
+        target = FOCUSED["tooling"]
+        filt = filt.replace("doc_coverage.test.", "doc_coverage_test.test.", 1)
     argv = [zig_program(), "build", target, "--summary", "all"]
     if filt is not None:
         argv.append("-Dtest-filter=" + filt)
@@ -150,7 +157,7 @@ def log_path(root: str, filt: str | None) -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("target", help="units, cli, golden, or full")
+    parser.add_argument("target", help="units, tooling, cli, golden, or full")
     parser.add_argument("filter", nargs="?", help="non-empty substring for a focused target")
     parser.add_argument("--tail", type=int, default=60, help="log lines to show after a failure (default 60)")
     args = parser.parse_args(argv)
@@ -162,6 +169,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     argv = command(args.target, filt)
+    if args.target == "units":
+        message = ("routing explicit helper namespace to independent tooling root"
+                   if "test-tooling-units" in argv else
+                   "units filters select the compiler root; independent helpers use tooling")
+        print("focused tests: " + message, file=sys.stderr)
     started = time.time()
     completed = subprocess.run(argv, cwd=str(ROOT), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     elapsed = time.time() - started

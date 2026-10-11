@@ -55,6 +55,11 @@ go on the reserved timing CPUs, never beside a gate.
   (`src/core/root_test.zig`: unit tests plus the end-to-end slice under
   `test/core`) whose name contains SUBSTRING, in one process; unfiltered it runs
   in `-Dcore-shards=N` shards (default 8).
+- `zig build test-tooling-units -Dtest-filter=SUBSTRING` — the independent pure
+  tooling root (`src/tooling_root_test.zig`); no compiler or component artifacts.
+  `python3 scripts/focused_test.py tooling SUBSTRING` wraps this target.
+  An unfiltered `test-units` includes this root; filtered `test-units` selects
+  only the compiler unit root, and a no-match filter still fails.
 - `zig build test-units -Dtest-filter=SUBSTRING` — `src/root_test.zig` (front end,
   diagnostics, tooling, and programs run through `native_execute`, which builds
   them with `mylang run`). `zig build test-cli -Dtest-filter=…` does the same for

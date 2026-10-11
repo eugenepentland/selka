@@ -588,6 +588,18 @@ pub fn build(b: *std.Build) void {
     run.step.dependOn(b.getInstallStep());
     b.step("run", "Check, run, or inspect a source program").dependOn(&run.step);
 
+    const tooling_unit = b.addTest(.{
+        .name = "tooling-unit-tests",
+        .max_rss = rss.compile,
+        .test_runner = guardian.testRunner(guardian_dep),
+        .filters = test_filters,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/tooling_root_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    guardian.enableTestDiagnostics(tooling_unit.root_module);
     const unit = b.addTest(.{
         .max_rss = rss.compile,
         .test_runner = guardian.testRunner(guardian_dep),
@@ -642,6 +654,24 @@ pub fn build(b: *std.Build) void {
         .root_module = budget,
     });
     guardian.enableTestDiagnostics(budget_unit.root_module);
+    // Pure native tooling consumes its own executable and declared closure.
+    // Do not use cached()/bounded(): those bind compiler/component artifacts.
+    const run_tooling_unit = b.addRunArtifact(tooling_unit);
+    run_tooling_unit.step.max_rss = rss.script;
+    run_tooling_unit.setCwd(b.path("."));
+    run_tooling_unit.has_side_effects = test_rerun;
+    run_tooling_unit.addFileInput(input_manifests.?.path(b, "tooling_unit.txt"));
+    run_tooling_unit.addFileInput(environment_manifest.?);
+    forwardFilters(b, run_tooling_unit, test_filters);
+    verification_registry.?.declared(&run_tooling_unit.step, "tooling_unit");
+    test_step.dependOn(&run_tooling_unit.step);
+    compile_tests.dependOn(&tooling_unit.step);
+    const focused_tooling = b.addRunArtifact(tooling_unit);
+    focused_tooling.step.max_rss = rss.script;
+    focused_tooling.setCwd(b.path("."));
+    focused_tooling.has_side_effects = true;
+    forwardFilters(b, focused_tooling, test_filters);
+    b.step("test-tooling-units", "Run independent pure tooling tests, honouring -Dtest-filter").dependOn(&focused_tooling.step);
     const run_budget_unit = bounded(b.addRunArtifact(budget_unit), rss.driver);
     cached(run_budget_unit, "memory_budget");
     const budget_step = b.step("test-memory-budget", "Verify guest byte ceilings, kernel guards and fan-out bounds");
@@ -660,13 +690,16 @@ pub fn build(b: *std.Build) void {
     dependOnAll(test_step, unit_runs);
     // The fast inner loops: no Python drivers, no Guardian and no full install graph,
     // so `-Dtest-filter` returns in seconds.
-    b.step("test-units", "Run only src/root_test.zig, honouring -Dtest-filter").dependOn(&run_unit.step);
+    const units_step = b.step("test-units", "Run compiler and pure tooling units; filters select the compiler root");
+    units_step.dependOn(&run_unit.step);
+    if (test_filters.len == 0) units_step.dependOn(&focused_tooling.step);
     b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
     // The same focused runs split into `-Dtest-shards` concurrent processes even
     // under a filter, for `scripts/affected_tests.py`: its selections can name a
     // hundred slow tests, and it sums the shards' counts itself. They are never
     // cached, so every run reports what it selected.
     const units_sharded = b.step("test-units-sharded", "Run src/root_test.zig split into -Dtest-shards processes, honouring -Dtest-filter");
+    if (test_filters.len == 0) units_sharded.dependOn(&focused_tooling.step);
     const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
     dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = "", .whole = run_unit, .filters = test_filters, .cache = false }));
     dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false }));
@@ -674,6 +707,7 @@ pub fn build(b: *std.Build) void {
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
     boundedChecks(audit_runtime);
+    audit_runtime.dependOn(&focused_tooling.step);
     dependOnAll(audit_runtime, unit_runs);
     dependOnAll(audit_runtime, cli_runs);
     const intent_step = b.step("test-intent", "Verify requirement links, revisions and source-pinned evidence");
@@ -861,6 +895,9 @@ pub fn build(b: *std.Build) void {
     const affected_run = driver(b, "python3 tests/test_affected_tests.py", rss.script, "affected");
     affected_run.addArgs(&.{ "python3", "tests/test_affected_tests.py" });
     affected_step.dependOn(&affected_run.step);
+    const focused_wrapper_tests = driver(b, "python3 tests/test_focused_test.py", rss.script, "affected");
+    focused_wrapper_tests.addArgs(&.{ "python3", "tests/test_focused_test.py" });
+    affected_step.dependOn(&focused_wrapper_tests.step);
     test_step.dependOn(affected_step);
     const coverage_step = b.step("test-inputs-coverage", "Require every repository file a cached test names to be a declared input");
     const coverage_self = driver(b, "python3 tests/test_inputs_coverage.py --self-test", rss.script, "coverage_self");
@@ -875,7 +912,7 @@ pub fn build(b: *std.Build) void {
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
     const verification_tests = b.step("test-verification-cache", "Verify action receipt admission and immutable input snapshots");
-    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py" }) |script| {
+    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py", "scripts/verification_budgets_test.py" }) |script| {
         const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
         verification_run.addArgs(&.{ "python3", script });
         verification_tests.dependOn(&verification_run.step);
@@ -1006,6 +1043,7 @@ pub fn build(b: *std.Build) void {
     const verification_preparation = verification.prepare(b, &.{
         .{ .label = "mylang", .binary = exe },
         .{ .label = "units", .binary = unit },
+        .{ .label = "tooling-units", .binary = tooling_unit },
         .{ .label = "cli", .binary = integration },
         .{ .label = "core", .binary = verification_core_binary.? },
         .{ .label = "golden", .binary = golden_unit },
@@ -1020,6 +1058,7 @@ pub fn build(b: *std.Build) void {
     for ([_][]const u8{ "idioms_self", "friction", "affected", "coverage_self", "manifest_self", "verification_cache", "fuzz_campaign", "juice_cache", "juice_pure", "embedded_migration" }) |id| {
         verification_registry.?.artifactDependencies(id, &.{});
     }
+    verification_registry.?.artifactDependencies("tooling_unit", &.{"tooling-units"});
     verification_registry.?.artifactDependencies("memory_budget", &.{ "memory-budget", "components" });
     verification_registry.?.artifactDependencies("component-support", &.{"component-support"});
     verification_registry.?.artifactDependencies("component_builder", &.{ "component-builder", "components" });
