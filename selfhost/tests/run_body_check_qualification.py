@@ -14,9 +14,9 @@ import run_frontend_qualification as F
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_check'
 COMPONENT = 'body-check'
-SCHEMA = 5
-FORGED_CHECKS = 66
-MALFORMED_CHECKS = 19
+SCHEMA = 6
+FORGED_CHECKS = 92
+MALFORMED_CHECKS = 22
 
 
 def frame(payload):
@@ -41,7 +41,7 @@ def transport(binary, work, env, valid):
     F.require(status == 0 and not stderr and stdout[:8] == b'SLKBCK01' and stdout[24:64] == valid[24:64], 'valid body exchange failed')
     F.require(struct.unpack('<IIII', stdout[8:24]) == (1, SCHEMA, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
     malformed = [b'', valid[:63], valid[:-1], valid+b'X', b'BADMAGIC'+valid[8:]]
-    for offset,value in ((8,2),(12,1),(12,2),(12,3),(12,4),(16,1),(20,67108864)):
+    for offset,value in ((8,2),(12,1),(12,2),(12,3),(12,4),(12,5),(16,1),(20,67108864)):
         changed=bytearray(valid);struct.pack_into('<I',changed,offset,value);malformed.append(bytes(changed))
     payload=valid[64:]
     malformed.extend([frame(b'BADMAGIC'+payload[8:]), frame(payload[:-1])])
@@ -89,12 +89,17 @@ def mutate_input(payload):
         return row['children'][row['names'].index(name)]
     # Keep a complete, bounded graph while refusing wrong DTO kinds before typing.
     catalog = field(root, b'catalog')
-    targets=[catalog,field(field(root,b'context'),b'source'),field(catalog,b'templates')]
+    templates = field(catalog, b'templates')
+    buffer = field(templates, b'byte_buffer')
+    targets=[catalog,field(field(root,b'context'),b'source'),templates,buffer]
     variants=[]
     for target in targets:
         changed=bytearray(payload)
         changed[rows[target]['integer_at']-1]=1
         variants.append(bytes(changed))
+    changed=bytearray(payload)
+    struct.pack_into('<q', changed, rows[field(buffer,b'available')]['integer_at'], 2)
+    variants.append(bytes(changed))
     return variants
 
 
@@ -483,6 +488,75 @@ def mutate_catalog_recipes(payload, tag):
                             (argument, graph.rows[identity]['integer']), (argument, 7),
                             (graph.field(graph.field(recipe, b'span'), b'end'), 2147483647)])
 
+def rewrite_edges(payload, changes):
+    """Re-encode bounded captured rows with explicit graph edge substitutions."""
+    rows, root = graph_rows(payload)
+    result = bytearray(payload[:16])
+    for index, row in enumerate(rows):
+        children = changes.get(index, row['children'])
+        result.extend(bytes([row['kind']]) + struct.pack('<q', row['integer']) + blob(row['data']))
+        result.extend(struct.pack('<I', len(children)))
+        result.extend(b''.join(struct.pack('<I', child) for child in children))
+        result.extend(struct.pack('<I', len(row['names'])))
+        for name in row['names']:
+            result.extend(blob(name))
+    F.require(bytes(result) != payload, 'edge mutation did not change capture')
+    return bytes(result)
+
+
+def mutate_buffers(payload):
+    """Thirteen authentic buffer recipe, cast, operation and ownership attacks."""
+    graph = CapturedGraph(payload)
+    recipes = graph.field(graph.output, b'recipes')
+    tagged_recipe = next((row for row in graph.items(recipes)
+                          if graph.rows[row]['data'] == b'byte_buffer'), None)
+    F.require(tagged_recipe is not None, 'capture has no byte_buffer append recipe')
+    recipe = graph.rows[tagged_recipe]['children'][0]
+    identity = graph.field(recipe, b'id')
+    buffer_type = graph.rows[identity]['integer']
+    casts = []
+    operations = {}
+    for index, node in enumerate(graph.nodes):
+        data = graph.rows[graph.field(node, b'data')]
+        if data['data'] == b'cast':
+            casts.append((node, data['children'][0]))
+        if data['data'] == b'buffer_operation':
+            operation = data['children'][0]
+            kind = graph.rows[graph.field(operation, b'kind')]['data']
+            operations.setdefault(kind, (node, operation))
+    append, operation = operations[b'buffer_append_range']
+    reserve, reserve_operation = operations[b'buffer_reserve']
+    arguments = graph.field(operation, b'arguments')
+    argument_rows = graph.items(arguments)
+    F.require(len(argument_rows) == 3 and len(casts) >= 2, 'capture lacks buffer operations/casts')
+    owner = graph.field(operation, b'owner')
+    locals_ = graph.items(graph.field(graph.field(graph.functions[0], b'scope'), b'locals'))
+    local = locals_[graph.rows[owner]['integer']]
+    snapshot = next(node for node, value in casts
+                    if graph.rows[graph.field(node, b'ty')]['integer'] != buffer_type
+                    and graph.rows[graph.field(graph.nodes[graph.rows[value]['integer']], b'ty')]['integer'] == buffer_type)
+    immutable_type = graph.rows[graph.field(snapshot, b'ty')]['integer']
+    byte_node = graph.nodes.index(snapshot)
+    targets = [(identity, buffer_type + 1),
+               (graph.field(graph.field(recipe, b'span'), b'end'), 2147483647),
+               (graph.field(casts[0][0], b'ty'), 0),
+               (graph.field(snapshot, b'ty'), buffer_type),
+               (graph.field(append, b'ty'), 0), (owner, len(locals_)),
+               (argument_rows[1], byte_node), (argument_rows[0], graph.integer_node()),
+               (graph.field(local, b'mutable'), 0),
+               (graph.field(local, b'ty'), immutable_type)]
+    changed = graph.mutations(targets)
+    changed.append(rewrite_edges(payload, {recipes: graph.items(recipes) + [tagged_recipe]}))
+    field_row = graph.rows[operation]
+    edges = list(field_row['children'])
+    edges[field_row['names'].index(b'arguments')] = graph.field(reserve_operation, b'arguments')
+    changed.append(rewrite_edges(payload, {operation: edges}))
+    # An otherwise valid byte constructor cannot read its operand from itself.
+    changed.extend(graph.mutations([(casts[0][1], graph.nodes.index(casts[0][0]))]))
+    F.require(len(changed) == 13, 'incomplete buffer mutation selection')
+    return changed
+
+
 def private_fixture(args,q):
     binary=q.work/'exchange-fixture'
     compiled=F.execute([args.zig,'cc',FIXTURES/'exchange_fixture.c','-O2','-o',binary],coordinator_environment(),q.work,180)
@@ -506,7 +580,7 @@ def capture_exchange(args,q,private,real,source,mode='component',mutate=False):
     return result,request.read_bytes(),reply.read_bytes()
 
 
-def forged_replies(args,q,private,success,list_success,record_success,b5):
+def forged_replies(args,q,private,success,list_success,record_success,b5,b6):
     checked=0
     cases = [('main.my', payload) for payload in mutate_success(success[64:])]
     cases.extend(('profile_managed.my', payload) for payload in mutate_lists(list_success[64:]))
@@ -517,6 +591,7 @@ def forged_replies(args,q,private,success,list_success,record_success,b5):
     cases.extend(('checked_loop_consumption.my', payload) for payload in mutate_transfer(b5['checked_loop_consumption.my'][64:]))
     cases.extend(('checked_try_fail.my', payload) for payload in mutate_catalog_recipes(b5['checked_try_fail.my'][64:], b'result'))
     cases.extend(('optional_parse_int_demand.my', payload) for payload in mutate_catalog_recipes(b5['optional_parse_int_demand.my'][64:], b'option'))
+    cases.extend(('bytes_buffer_operations.my', payload) for payload in mutate_buffers(b6[64:]))
     F.require(len(cases) * len(q.modes) == FORGED_CHECKS, 'incomplete forged body selection')
     for case,(source,payload) in enumerate(cases):
         path=q.work/f'forged-body-{case}.bin';path.write_bytes(payload)
@@ -580,7 +655,9 @@ def main():
             captured, _, body_reply = capture_exchange(args, q, private, real, source)
             F.require(captured == (0, b'', b''), 'authentic B5 capture failed: ' + source)
             b5[source] = body_reply
-        forged = forged_replies(args, q,private,reply,list_reply,record_reply,b5)
+        buffer_captured, _, buffer_reply = capture_exchange(args, q, private, real, 'bytes_buffer_operations.my')
+        F.require(buffer_captured == (0, b'', b''), 'authentic B6 buffer capture failed')
+        forged = forged_replies(args, q,private,reply,list_reply,record_reply,b5,buffer_reply)
         publication = publication_checks(args, q)
         edit = coordinator_edit(args, q) if args.edit_check else None
         report = {'host_sha256': host, 'packages': manifests, 'workflows': workflows,

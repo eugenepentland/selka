@@ -1,0 +1,4 @@
+func main() -> int:
+    if "é".encode() != b"\xc3\xa9":
+        return 0
+    return 7

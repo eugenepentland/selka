@@ -1,0 +1,7 @@
+func main() -> int:
+    mut buffer = byte_buffer([65])
+    if buffer.reserve(-1) or buffer.append_byte(256) or buffer.append_byte(-1) or buffer.append_range(b"abc", -1, 2) or buffer.append_range(b"abc", 2, 1) or buffer.append_range(b"abc", 0, 4):
+        return 0
+    if bytes(buffer) != b"A":
+        return 0
+    return 7

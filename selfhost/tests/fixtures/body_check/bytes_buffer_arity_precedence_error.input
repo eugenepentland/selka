@@ -1,0 +1,4 @@
+func main() -> int:
+    const value = byte_buffer([65])
+    _ = value.append_range("bad", 0)
+    return 7

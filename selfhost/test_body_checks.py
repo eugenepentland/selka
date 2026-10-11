@@ -29,9 +29,9 @@ def require_summary(output, edit=False):
     expected = len(fixtures) + 2 * sum(bool(value.get('typed')) and not value.get('library') for value in fixtures.values()) + sum('result' in value for value in fixtures.values()) + 8 + 2 + 3 + 3
     if len(fixtures) < 20 or workflows != expected or comparisons!=(4 if edit else 2)*workflows or warm!=30 or live!=4:
         raise RuntimeError('incomplete body_check qualification selection')
-    if re.findall(r'^body_check transport: (\d+) valid, (\d+) malformed; 0 failed, 0 skipped$', output, re.M) != [('1', '19')]:
+    if re.findall(r'^body_check transport: (\d+) valid, (\d+) malformed; 0 failed, 0 skipped$', output, re.M) != [('1', '22')]:
         raise RuntimeError('missing/incomplete body_check transport selection')
-    if re.findall(r'^body_check forged replies: (\d+) rejected; 0 failed, 0 skipped$', output, re.M) != ['66']:
+    if re.findall(r'^body_check forged replies: (\d+) rejected; 0 failed, 0 skipped$', output, re.M) != ['92']:
         raise RuntimeError('missing/incomplete hostile body_check reply selection')
     if re.findall(r'^body_check publication: (\d+) host failures; 0 failed, 0 skipped$', output, re.M) != ['2']:
         raise RuntimeError('missing/incomplete cross-boundary publication selection')

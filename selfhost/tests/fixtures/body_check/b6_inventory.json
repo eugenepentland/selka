@@ -1,0 +1,32 @@
+{
+  "cases": [
+    "bytes_slice_unicode.my",
+    "bytes_slice_bytes.my",
+    "bytes_slice_clamped.my",
+    "bytes_slice_receiver_order.my",
+    "bytes_buffer_fresh_conversion.my",
+    "bytes_buffer_operations.my",
+    "bytes_buffer_snapshot_alias.my",
+    "bytes_buffer_mut_parameter.my",
+    "bytes_buffer_self_range.my",
+    "bytes_buffer_refused_bounds.my",
+    "bytes_buffer_immutable_error.my",
+    "bytes_buffer_write_error.my",
+    "bytes_buffer_arity_error.my",
+    "bytes_buffer_range_type_error.my",
+    "bytes_bytes_conversion_type_error.my",
+    "bytes_bytes_slice_step_error.my",
+    "bytes_encode_profile.my",
+    "bytes_decode_profile.my",
+    "bytes_buffer_arity_precedence_error.my",
+    "bytes_buffer_argument_precedence_error.my",
+    "bytes_buffer_function_shadow.my"
+  ],
+  "counts": {
+    "success": 11,
+    "diagnostic": 8,
+    "profile": 2
+  },
+  "schema": 6,
+  "history": "B5 retains148cases and388workflows; B6 selected qualification pending"
+}
