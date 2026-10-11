@@ -1,0 +1,80 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+
+public record Step:
+    owner: int
+    key: int
+    value: int
+    kind: bytes
+
+
+func require_kind(kind: bytes) -> Unit fails syntax_value.Problem:
+    if kind != b"dict" and kind != b"set" and kind != b"list":
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid gather collection kind")
+
+
+func node_type(batch: emission.Batch, id: int) -> int fails syntax_value.Problem:
+    if id < 0 or id >= len(batch.nodes):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid gather value reference")
+    const field = try graph.field(batch.pool, batch.nodes[id], "ty")
+    return try graph.number(batch.pool, field)
+
+
+func discard(mut batch: emission.Batch, context: list_lower.Context, value: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.statement(mut batch, context.input, context.span, False, b"discard", payload)
+
+
+# The checker creates the accumulator on the first typed step. Return statement
+# data here so checked_statement appends its outer statement exactly once.
+public func step(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Step) -> list_lower.Lowered fails syntax_value.Problem:
+    try require_kind(request.kind)
+    if request.kind == b"dict":
+        const key_type = try node_type(batch, request.key)
+        const value_type = try node_type(batch, request.value)
+        const key_slot = try list_lower.temporary(mut scope, context, key_type)
+        const value_slot = try list_lower.temporary(mut scope, context, value_type)
+        const initialize_key = try list_lower.store(mut batch, context, key_slot, request.key, True)
+        const initialize_value = try list_lower.store(mut batch, context, value_slot, request.value, True)
+        const key = try list_lower.read(mut batch, context, key_slot, key_type)
+        const value = try list_lower.read(mut batch, context, value_slot, value_type)
+        const write = try list_lower.operation(mut batch, context, list_lower.Operation(owner=request.owner, kind=b"write", arguments=[key, value], ty=15))
+        const written = try discard(mut batch, context, write)
+        const payload = try emission.ids(mut batch, [initialize_key, initialize_value, written])
+        return list_lower.Lowered(ty=15, tag=b"block", payload=payload)
+    if request.kind == b"set":
+        const absent = try syntax_value.absent(mut batch.pool)
+        const unit = try emission.node(mut batch, context.input, context.span, 15, b"unit", absent)
+        const write = try list_lower.operation(mut batch, context, list_lower.Operation(owner=request.owner, kind=b"write", arguments=[request.value, unit], ty=15))
+        const written = try discard(mut batch, context, write)
+        const payload = try emission.ids(mut batch, [written])
+        return list_lower.Lowered(ty=15, tag=b"block", payload=payload)
+    const added = try list_lower.operation(mut batch, context, list_lower.Operation(owner=request.owner, kind=b"append", arguments=[request.value], ty=15))
+    const payload = try syntax_value.integer(mut batch.pool, added)
+    return list_lower.Lowered(ty=15, tag=b"discard", payload=payload)
+
+
+# The loop has already been checked. Emit the initial value afterwards, but run
+# its initialization before the loop in the returned expression's block.
+public func finish(mut batch: emission.Batch, scope: locals.Scope, context: list_lower.Context, owner: int, loop: int, kind: bytes) -> list_lower.Lowered fails syntax_value.Problem:
+    try require_kind(kind)
+    if owner < 0 or owner >= len(scope.locals):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid gather accumulator")
+    const ty = scope.locals[owner].ty
+    mut fresh = -1
+    if kind == b"list":
+        const capacity = try list_lower.integer(mut batch, context, 0, 0)
+        const capacity_id = try syntax_value.integer(mut batch.pool, capacity)
+        const payload = try syntax_value.object(mut batch.pool, ["capacity"], [capacity_id])
+        const acquired = try emission.node(mut batch, context.input, context.span, ty, b"acquire_buffer", payload)
+        fresh = acquired
+    else:
+        const entries = try emission.ids(mut batch, [])
+        const allocated = try emission.node(mut batch, context.input, context.span, ty, b"array", entries)
+        fresh = allocated
+    const initialize = try list_lower.store(mut batch, context, owner, fresh, True)
+    const value = try list_lower.read(mut batch, context, owner, ty)
+    return try list_lower.block(mut batch, context, [initialize, loop], value, ty)
