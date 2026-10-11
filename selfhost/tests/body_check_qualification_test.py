@@ -13,7 +13,7 @@ import test_body_checks as G
 class BodyQualificationTests(unittest.TestCase):
     def summary(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
-        n=len(manifest)+2*sum(bool(v.get('typed')) and not v.get('library') for v in manifest.values())+16
+        n=len(manifest)+2*sum(bool(v.get('typed')) and not v.get('library') for v in manifest.values())+sum('result' in v for v in manifest.values())+16
         return (f'body_check qualification: {n} workflows, {n*2} comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
                 'body_check transport: 1 valid, 13 malformed; 0 failed, 0 skipped\n'
                 'body_check forged replies: 8 rejected; 0 failed, 0 skipped\n'

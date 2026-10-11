@@ -1,0 +1,5 @@
+type Value = int
+
+func main() -> int:
+    const Value = 7
+    return Value

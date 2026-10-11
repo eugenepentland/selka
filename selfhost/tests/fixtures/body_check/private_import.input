@@ -1,0 +1,4 @@
+import private_dependency
+
+func main() -> int:
+    return private_dependency.value()

@@ -1,0 +1,5 @@
+func value(named x: int) -> int:
+    return x
+
+func main() -> int:
+    return value(7)

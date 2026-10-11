@@ -1,0 +1,6 @@
+func value() -> int:
+    return 1
+
+func main() -> int:
+    const value = 7
+    return value

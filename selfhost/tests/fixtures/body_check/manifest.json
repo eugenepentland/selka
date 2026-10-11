@@ -130,5 +130,61 @@
     "boundary": "profile",
     "typed": false,
     "library": false
+  },
+  "private_import.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "nongeneric_type_arguments.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "named_only_positional.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "named_only_valid.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "mut_call_marker.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "mut_call_valid.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "shadow_function.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "shadow_type.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "shadow_parameter.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
   }
 }
