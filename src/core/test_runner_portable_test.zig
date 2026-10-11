@@ -249,7 +249,7 @@ fn boundaryMatrix(projects: *Projects) !void {
 }
 
 fn receiptCount(projects: Projects) !u64 {
-    const path_name = try projects.path(&.{ "shared", "native-tests-v1", "receipts" });
+    const path_name = try projects.path(&.{ "shared", "native-tests-v2", "receipts" });
     var directory = std.Io.Dir.cwd().openDir(std.testing.io, path_name, .{ .iterate = true }) catch |err| {
         if (err == error.FileNotFound) return 0;
         return err;
@@ -308,7 +308,7 @@ test "portable shared receipts forward through directory fanout without private 
 }
 
 fn damageReceipts(projects: Projects) !void {
-    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, try projects.path(&.{ "shared", "native-tests-v1", "receipts" }), .{ .iterate = true });
+    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, try projects.path(&.{ "shared", "native-tests-v2", "receipts" }), .{ .iterate = true });
     defer directory.close(std.testing.io);
     var iterator = directory.iterate();
     var damaged: usize = 0;
@@ -452,7 +452,7 @@ test "portable validateShared rejects a bad configured format before warm privat
     var projects = try Projects.init(arena.allocator(), try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()));
     defer projects.environment.deinit();
     try status(try projects.run(.{ .project = "a" }), 0);
-    try projects.write("shared", "native-tests-v1/format", "unknown shared format");
+    try projects.write("shared", "native-tests-v2/format", "unknown shared format");
     const rejected = try projects.run(.{ .project = "a" });
     try std.testing.expectEqual(@as(u8, 2), rejected.status);
     try std.testing.expect(std.mem.indexOf(u8, rejected.stderr, "ReadFailed") != null);

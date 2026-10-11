@@ -1,12 +1,13 @@
 //! Native cross-worktree success receipts. Records are disposable, bounded and
 //! published under a short process lock; checking and execution hold no store lock.
 const std = @import("std");
+const retention = @import("mylang").native_cache_retention;
 
 /// A complete portable test execution identity.
 pub const Digest = [32]u8;
 /// Explicitly configured storage must be usable; damaged receipts remain misses.
 pub const Error = error{ OutOfMemory, ReadFailed, WriteFailed };
-const format = "selka-native-test-store-v1\n";
+const format = "selka-native-test-store-v2\n";
 const maximum_record = 512;
 
 /// A dedicated namespace beneath the caller's shared cache directory.
@@ -18,8 +19,25 @@ pub const Store = struct {
     /// Create or validate the versioned namespace without changing another cache format.
     pub fn open(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error!Store {
         if (directory.len == 0) return error.WriteFailed;
-        const self: Store = .{ .arena = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "native-tests-v1" }) };
+        const self: Store = .{ .arena = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "native-tests-v2" }) };
         std.Io.Dir.cwd().createDirPath(io, self.root) catch return error.WriteFailed;
+        try self.initialize();
+        self.retentionContext().automatic();
+        return self;
+    }
+
+    fn retentionContext(self: Store) retention.Context {
+        return retention.Context.init(self.arena, self.io, self.root, .tests);
+    }
+
+    fn lease(self: Store) Error!std.Io.File {
+        return self.retentionContext().lease() catch |err| return mapRetention(err);
+    }
+
+    fn initialize(self: Store) Error!void {
+        const io = self.io;
+        const lease_guard = try self.lease();
+        defer lease_guard.close(io);
         const guard = try self.lock(.exclusive);
         defer guard.close(io);
         if (try self.read(try self.path("format"))) |bytes| {
@@ -30,12 +48,12 @@ pub const Store = struct {
             defer dir.close(io);
             var entries = dir.iterate();
             while (entries.next(io) catch return error.ReadFailed) |entry| {
-                if (std.mem.eql(u8, entry.name, ".lock") or std.mem.eql(u8, entry.name, "format.partial")) continue;
+                if (std.mem.eql(u8, entry.name, ".retention.lock") or std.mem.eql(u8, entry.name, ".lock") or std.mem.eql(u8, entry.name, "format.partial")) continue;
                 return error.ReadFailed;
             }
             try self.publish(try self.path("format"), format);
         }
-        return self;
+        _ = self.retentionContext().policy() catch |err| return mapRetention(err);
     }
 
     /// Address a receipt directly; lookup never enumerates the shared store.
@@ -45,27 +63,38 @@ pub const Store = struct {
 
     /// Accept only an exact success envelope for this identity.
     pub fn hit(self: Store, key: Digest) Error!bool {
+        const lease_guard = try self.lease();
+        defer lease_guard.close(self.io);
         const guard = try self.lock(.shared);
         defer guard.close(self.io);
         try self.validate();
         const found = try self.read(try self.artifactPath(key)) orelse return false;
-        return std.mem.eql(u8, found, try self.success(key));
+        const verified = std.mem.eql(u8, found, try self.success(key));
+        if (verified) self.retentionContext().touchPath(try self.artifactPath(key));
+        return verified;
     }
 
     /// Atomically publish a completed success after the caller revalidates its inputs.
     pub fn save(self: Store, key: Digest) Error!void {
+        const lease_guard = try self.lease();
+        defer lease_guard.close(self.io);
         const guard = try self.lock(.exclusive);
         defer guard.close(self.io);
         try self.validate();
         const destination = try self.artifactPath(key);
         const bytes = try self.success(key);
-        if (try self.read(destination)) |previous| if (std.mem.eql(u8, previous, bytes)) return;
+        if (try self.read(destination)) |previous| if (std.mem.eql(u8, previous, bytes)) {
+            self.retentionContext().touchPath(destination);
+            return;
+        };
         std.Io.Dir.cwd().createDirPath(self.io, try self.path("receipts")) catch return error.WriteFailed;
         try self.publish(destination, bytes);
     }
 
     /// Discard an earlier success before an explicit forced execution begins.
     pub fn invalidate(self: Store, key: Digest) Error!void {
+        const lease_guard = try self.lease();
+        defer lease_guard.close(self.io);
         const guard = try self.lock(.exclusive);
         defer guard.close(self.io);
         try self.validate();
@@ -140,6 +169,14 @@ pub const Store = struct {
     }
 };
 
+fn mapRetention(err: retention.Error) Error {
+    return switch (err) {
+        error.OutOfMemory => error.OutOfMemory,
+        error.ReadFailed => error.ReadFailed,
+        else => error.WriteFailed,
+    };
+}
+
 fn removePartial(io: std.Io, path: []const u8) void {
     std.Io.Dir.cwd().deleteFile(io, path) catch return;
 }
@@ -212,4 +249,55 @@ test "shared test store preserves foreign formats and permanent lock ownership" 
     try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = try store.path("foreign"), .data = "preserve" });
     try std.testing.expectError(error.ReadFailed, Store.open(a, std.testing.io, root));
     try std.testing.expectEqualStrings("preserve", (try store.read(try store.path("foreign"))).?);
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "shared receipt verified hits refresh retention while corruption remains old" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(io, ".", a);
+    const store = try Store.open(a, io, root);
+    const key: Digest = @splat(21);
+    try store.save(key);
+    const path_name = try store.artifactPath(key);
+    try std.Io.Dir.cwd().setTimestamps(io, path_name, .{ .modify_timestamp = .{ .new = .{ .nanoseconds = 1 } } });
+    try std.testing.expect(try store.hit(key));
+    try std.testing.expect((try std.Io.Dir.cwd().statFile(io, path_name, .{})).mtime.nanoseconds > 1);
+    try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = path_name, .data = "corrupt" });
+    try std.Io.Dir.cwd().setTimestamps(io, path_name, .{ .modify_timestamp = .{ .new = .{ .nanoseconds = 1 } } });
+    try std.testing.expect(!try store.hit(key));
+    try std.testing.expectEqual(@as(i96, 1), (try std.Io.Dir.cwd().statFile(io, path_name, .{})).mtime.nanoseconds);
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "shared receipt collection misses refill and protects publication lock inodes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(io, ".", a);
+    const store = try Store.open(a, io, root);
+    const key: Digest = @splat(22);
+    try store.save(key);
+    const context = store.retentionContext();
+    var policy = retention.Policy.defaults(.tests);
+    policy.max_entries = 0;
+    const lease_guard = try context.lease();
+    const publication = try store.lock(.exclusive);
+    const lock_path = try store.path(".lock");
+    const before = try std.Io.Dir.cwd().statFile(io, lock_path, .{});
+    try std.testing.expect((try context.collect(policy, false)).skipped_active);
+    try std.testing.expectEqual(before.inode, (try std.Io.Dir.cwd().statFile(io, lock_path, .{})).inode);
+    publication.close(io);
+    lease_guard.close(io);
+    try std.testing.expectEqual(@as(usize, 1), (try context.collect(policy, false)).removed.entries);
+    try std.testing.expect(!try store.hit(key));
+    try store.save(key);
+    try std.testing.expect(try store.hit(key));
 }

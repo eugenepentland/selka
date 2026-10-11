@@ -1,0 +1,39 @@
+{
+  "baseline": "19b920524",
+  "focused_checks": [
+    {
+      "command": "zig build test-units -Dtest-filter='native retention'",
+      "passed": 14,
+      "status": 0,
+      "log": "native-retention.log"
+    },
+    {
+      "command": "zig build test-units -Dtest-filter='shared compiler'",
+      "passed": 12,
+      "status": 0,
+      "log": "shared-compiler.log"
+    },
+    {
+      "command": "zig build test-cli -Dtest-filter='native retention CLI'",
+      "passed": 11,
+      "status": 0,
+      "log": "native-cli.log"
+    },
+    {
+      "command": "zig build test-core -Dtest-filter='shared receipt'",
+      "passed": 13,
+      "status": 0,
+      "log": "shared-receipts.log"
+    },
+    {
+      "command": "python3 scripts/cache_retention_test.py",
+      "passed": 4,
+      "status": 0
+    },
+    {
+      "command": "python3 tests/test_inputs_coverage.py",
+      "status": 0
+    }
+  ],
+  "note": "Filtered Zig totals include unnamed root tests. Focused revisions preceded the final clock-boundary and Guardian cleanup; final verification covers the combined implementation."
+}

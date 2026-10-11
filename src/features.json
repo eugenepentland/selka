@@ -672,6 +672,11 @@
       "summary": "One structural contract may require several fields and operations together.",
       "doc": "docs/generics.md#composite-structural-signatures"
     },
+    "native-cache-retention": {
+      "kind": "tooling",
+      "summary": "Shared native compiler and test caches use configurable LRU disk budgets, process leases and Python-free preview/apply collection through `mylang cache`.",
+      "doc": "docs/tooling/cache-retention.md#native-cache-retention"
+    },
     "local-locked-packages": {
       "kind": "tooling",
       "summary": "`mylang packages lock` pins every local package's sources by SHA-256, and `mylang packages build` compiles a verified private snapshot of the application and its locked packages.",

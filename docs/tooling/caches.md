@@ -148,7 +148,7 @@ export MYLANG_COMPILER_SHARED_CACHE="$HOME/.cache/mylang/compiler-artifacts"
 mylang build app/main.my -o app.bin --cache-dir .mylang-cache/private --report
 ```
 
-The optional store uses `compiler-artifacts-v1/{syntax,typed,program}`. Ordinary
+The optional store uses `compiler-artifacts-v2/{syntax,typed,program}`. Ordinary
 parsed syntax can move between paths because its serializer contains source
 spans and bytes, not the original pathname. Compiler and contract identity,
 exact source bytes and body start still match; trusted intrinsic and standard
@@ -184,9 +184,13 @@ File publication and materialization stream through a fixed buffer.
 No cache lock spans parsing, checking, code generation or linking. Records are
 staged and hashed before taking a per-key publication lock; comparing an
 existing record happens under that key's lock. Reads use opened immutable files
-without locks. The directory lock covers only format initialization. Use trusted
-local producers and follow [retention guidance](cache-retention.md#native-compiler-artifacts)
-when clearing this disposable store.
+without publication locks. A shared retention lease covers each storage
+operation, including staging and publication-lock waits. It prevents collection
+during active I/O without serializing readers and writers. The directory lock
+covers only format initialization. The store automatically attempts throttled
+LRU collection under an exclusive nonblocking retention lease. Use trusted local
+producers and see [retention policies](cache-retention.md#native-cache-retention)
+for budgets, configuration and explicit cleanup.
 
 ## Check summaries
 

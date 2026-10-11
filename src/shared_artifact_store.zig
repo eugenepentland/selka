@@ -1,6 +1,7 @@
 //! Opt-in immutable compiler artifacts. Indexes and materialized executables stay local.
 const std = @import("std");
 const storage = @import("shared_artifact_io.zig");
+const retention = @import("native_cache_retention.zig");
 
 /// Explicit opt-in, independent of private caches and shared test-success receipts.
 pub const environment_variable = "MYLANG_COMPILER_SHARED_CACHE";
@@ -12,7 +13,7 @@ pub const Error = storage.Error;
 pub const Kind = enum(u8) { syntax = 1, typed = 2, program = 3 };
 /// Complete producer key supplied by the syntax, semantic or native layer.
 pub const Key = [32]u8;
-const format = "selka-compiler-artifact-store-v1\n";
+const format = "selka-compiler-artifact-store-v2\n";
 const magic = "selka-compiler-blob-v1\x00";
 const header_size = magic.len + 1 + 32 + 8 + 32;
 
@@ -32,10 +33,25 @@ pub const Store = struct {
     /// Create or validate a dedicated namespace. Release the owned path with deinit.
     pub fn open(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error!Store {
         if (directory.len == 0) return error.WriteFailed;
-        const self: Store = .{ .allocator = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "compiler-artifacts-v1" }) };
+        const self: Store = .{ .allocator = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "compiler-artifacts-v2" }) };
         errdefer a.free(self.root);
         const cwd = std.Io.Dir.cwd();
         cwd.createDirPath(io, self.root) catch return error.WriteFailed;
+        try self.initialize();
+        self.retentionContext().automatic();
+        return self;
+    }
+
+    fn retentionContext(self: *const Store) retention.Context {
+        return retention.Context.init(self.allocator, self.io, self.root, .compiler);
+    }
+
+    fn initialize(self: *const Store) Error!void {
+        const a = self.allocator;
+        const io = self.io;
+        const cwd = std.Io.Dir.cwd();
+        const lease = try self.retentionContext().lease();
+        defer lease.close(io);
         const lock_path = try self.path(".lock");
         defer a.free(lock_path);
         const guard = try storage.lock(a, io, lock_path);
@@ -50,7 +66,7 @@ pub const Store = struct {
             defer directory_handle.close(io);
             var entries = directory_handle.iterate();
             while (entries.next(io) catch return error.ReadFailed) |entry| {
-                if (std.mem.eql(u8, entry.name, ".lock") or std.mem.eql(u8, entry.name, "format.partial")) continue;
+                if (std.mem.eql(u8, entry.name, ".retention.lock") or std.mem.eql(u8, entry.name, ".lock") or std.mem.eql(u8, entry.name, "format.partial")) continue;
                 return error.ReadFailed;
             }
             const temporary = try self.path("format.partial");
@@ -62,7 +78,7 @@ pub const Store = struct {
             file.writeStreamingAll(io, format) catch return error.WriteFailed;
             cwd.rename(temporary, cwd, marker, io) catch return error.WriteFailed;
         }
-        return self;
+        _ = try self.retentionContext().policy();
     }
 
     /// Release the path; committed artifacts and permanent lock files remain.
@@ -79,6 +95,8 @@ pub const Store = struct {
 
     /// Load verified bytes into the caller's allocator; damaged records miss.
     pub fn load(self: *const Store, a: std.mem.Allocator, kind: Kind, key: Key) Error!?[]u8 {
+        const lease = try self.retentionContext().lease();
+        defer lease.close(self.io);
         const entry = try self.record(kind, key) orelse return null;
         defer entry.file.close(self.io);
         const bytes = try a.alloc(u8, entry.content.size);
@@ -94,6 +112,7 @@ pub const Store = struct {
             a.free(bytes);
             return null;
         }
+        self.retentionContext().touch(entry.file);
         return bytes;
     }
 
@@ -114,6 +133,8 @@ pub const Store = struct {
 
     /// Stream verified bytes to a new private staging file; a corrupt copy is removed.
     pub fn restore(self: *const Store, kind: Kind, key: Key, destination: []const u8) Error!bool {
+        const lease = try self.retentionContext().lease();
+        defer lease.close(self.io);
         const entry = try self.record(kind, key) orelse return false;
         defer entry.file.close(self.io);
         const output = std.Io.Dir.cwd().createFile(self.io, destination, .{ .exclusive = true }) catch return error.WriteFailed;
@@ -127,6 +148,7 @@ pub const Store = struct {
         if (!std.mem.eql(u8, &actual.digest, &entry.content.digest)) return false;
         output.setPermissions(self.io, .fromMode(if (kind == .program) 0o700 else 0o600)) catch return error.WriteFailed;
         keep = true;
+        self.retentionContext().touch(entry.file);
         return true;
     }
 
@@ -165,6 +187,8 @@ pub const Store = struct {
     }
 
     fn publish(self: *Store, kind: Kind, key: Key, input: Input, size: usize) Error!bool {
+        const lease = try self.retentionContext().lease();
+        defer lease.close(self.io);
         try self.validate();
         const a = self.allocator;
         const directory = try self.path(@tagName(kind));
@@ -190,6 +214,7 @@ pub const Store = struct {
             };
             if (actual) |verified| if (std.mem.eql(u8, &verified.digest, &previous.content.digest)) {
                 if (content.size != verified.size or !std.mem.eql(u8, &content.digest, &verified.digest)) return error.DeterminismMismatch;
+                self.retentionContext().touch(previous.file);
                 return true;
             };
         }

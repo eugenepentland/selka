@@ -254,7 +254,7 @@ current directory:
 
 `mylang test --shared-cache-dir DIR` additionally shares eligible ordinary test
 successes across project roots; `MYLANG_TEST_SHARED_CACHE` supplies the same
-opt-in. Its separate portable identities and `DIR/native-tests-v1` namespace do
+opt-in. Its separate portable identities and `DIR/native-tests-v2` namespace do
 not relocate these private frontend, executable or report-manifest caches. See
 [shared test results](guest-tests.md#reusing-unaffected-results) for eligibility.
 
@@ -283,7 +283,7 @@ export MYLANG_COMPILER_SHARED_CACHE="$HOME/.cache/mylang/compiler-artifacts"
 mylang build app/main.my -o app.bin --cache-dir .mylang-cache/private --report
 ```
 
-The namespace is `compiler-artifacts-v1`, separate from test-success receipts.
+The namespace is `compiler-artifacts-v2`, separate from test-success receipts.
 The shared program key binds the compiler, exact ordered object bytes and
 qualified toolchain/link settings, including `SOURCE_DATE_EPOCH` and
 `ZERO_AR_DATE`. Existing logical module paths can produce identical objects

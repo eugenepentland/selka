@@ -977,14 +977,43 @@ publication lock; staging and hashing precede a permanent per-key lock, which
 only covers comparison and replacement. Corruption is a miss; valid same-key
 disagreement is an explicit determinism error. Configured storage failures are
 visible before private replay. `--no-cache` and `--verify-cache` suppress the new
-shared tiers. This namespace has no online collection/lease protocol yet; its
-permanent locks may only be cleared while all users are stopped.
+shared tiers. Wave 9 introduced v1 namespaces without online collection.
+Wave 10 replaces them with separate retention-aware v2 namespaces; old v1
+namespaces remain disposable only while all their users are stopped.
 
 Two-root qualification, source/configuration/embed edits, diagnostic paths,
 corruption, bypasses and concurrent empty-PATH commands are specified in
 [`cache-wave9-20261011/PLAN.md`](../../experiments/cache-wave9-20261011/PLAN.md).
 
-### Proposed follow-up — Wave 10
+### Wave 10 — Bounded shared native cache retention
+
+Add Python-free automatic and explicit retention for the shared compiler and
+native test stores. Use new `compiler-artifacts-v2` and `native-tests-v2`
+namespaces so old binaries that do not take retention leases cannot race with
+collection. Existing v1 namespaces are never silently adopted or collected.
+
+Each storage operation holds a shared process lease, including staging and
+waiting for publication locks. Collection takes a nonblocking exclusive lease,
+skips busy stores and never holds server admission. Preserve permanent namespace
+locks; reclaim abandoned staging files and unused per-key locks only under the
+exclusive lease. Eviction does not invalidate a materialized private executable.
+
+Default to 10 GiB for compiler artifacts, 256 MiB for native test receipts and
+100,000 entries per namespace, evicting least recently used records. Verified
+hits refresh eviction recency without changing content admission. Age expiry is
+optional and disabled by default. Persist configurable policies; opportunistic
+collection is throttled to once an hour on store opening, so these are soft
+limits between collections. The native `mylang cache` command provides explicit
+preview/apply collection and policy configuration. Report active-store skips,
+retained/deleted bytes and entries, bounded-inventory limits and unmet budgets.
+
+Qualify collection beside active readers/publishers, lock waiters, process
+termination, partial records, malformed policies, foreign files, exact-content
+refill after eviction, and automatic throttling. Keep every installed command
+Python-free. The acceptance plan and results live under
+[`cache-wave10-20261011`](../../experiments/cache-wave10-20261011/PLAN.md).
+
+### Proposed follow-up — Wave 11
 
 Reduce repeated warm validation and admission overhead through retained
 validated graph state and coordination of duplicate concurrent work. This

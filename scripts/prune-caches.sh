@@ -170,8 +170,8 @@ prune_scratch() {
     # Scratch can hold explicitly selected shared evidence too. Its permanent
     # lock is retained even after all payloads are evicted. The dedicated GC
     # owns cleanup; never walk through its leased or pinned blobs here.
-    if [ -n "$(find "$scratch" -path '*/locks/retention.lock' -print -quit 2>/dev/null)" ]; then
-        echo "kept      $scratch  (evidence retention; use cache_retention.py)"
+    if [ -n "$(find "$scratch" \( -path '*/locks/retention.lock' -o -name .retention.lock \) -print -quit 2>/dev/null)" ]; then
+        echo "kept      $scratch  (retention-managed cache; use its dedicated collector)"
         return
     fi
     while IFS= read -r -d '' dir; do

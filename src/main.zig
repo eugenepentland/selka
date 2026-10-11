@@ -100,6 +100,7 @@ const usage = "usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) 
     "reference --query TERM [--format=text|json] (compiler-derived facts from this executable)\n       mylang " ++
     "docs [TOPIC] (list the user guides built into this executable, or print one)\n       mylang " ++
     "packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)\n       mylang " ++
+    "cache gc|configure --shared-cache-dir DIR --kind compiler|tests (shared native cache retention; cache --help for options)\n       mylang " ++
     "dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)\n       mylang " ++
     "interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)\n       mylang " ++
     "<schema-project|input-module|check|di" ++
@@ -276,6 +277,7 @@ fn dispatch(process: std.process.Init) !u8 {
     if (args.len >= 2 and std.mem.eql(u8, args[1], "reference")) return @import("reference_command.zig").run(@import("mylang"), process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "docs")) return @import("docs_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "interfaces")) return @import("module_interface_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "cache")) return @import("cache_command.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "packages")) {
         const identity = std.fmt.bytesToHex(build_identity, .lower);
         return @import("packages_command.zig").run(process, args[2..], &identity);

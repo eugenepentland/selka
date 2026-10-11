@@ -39,6 +39,8 @@ pub const syntax_cache = @import("syntax_cache.zig");
 pub const frontend_cache = @import("frontend_cache.zig");
 /// Optional immutable artifact transport across compatible local worktrees.
 pub const shared_artifact_store = @import("shared_artifact_store.zig");
+/// Native shared-store leases, disk budgets and explicit collection.
+pub const native_cache_retention = @import("native_cache_retention.zig");
 /// Bounded plain-data encoding shared by frontend and Core stage artifacts.
 pub const persist_codec = @import("persist_codec.zig");
 pub const project = @import("project.zig");

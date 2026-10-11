@@ -4,6 +4,7 @@ const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
 test {
     _ = @import("components.zig");
+    _ = @import("cache_retention_cli_test.zig");
 }
 // Mirror src/semantic_store.zig's directory format: this CLI test cannot
 // import files outside its Zig module root.

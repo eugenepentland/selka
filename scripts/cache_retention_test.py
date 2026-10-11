@@ -4,7 +4,9 @@ from contextlib import redirect_stdout, redirect_stderr
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 
@@ -61,6 +63,29 @@ class RetentionCLI(unittest.TestCase):
         self.assertEqual((code, output), (2, ''))
         self.assertIn('format', error)
         self.assertTrue((self.root / 'blobs' / self.blob).is_file())
+
+    def test_legacy_pruner_preserves_native_retention_in_scratch(self):
+        repo = self.root / 'checkout'
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        protected = repo / '.tmp-native' / 'shared-cache' / 'compiler-artifacts-v2'
+        protected.mkdir(parents=True)
+        (protected / '.retention.lock').write_bytes(b'')
+        artifact = protected / 'program.o'
+        artifact.write_bytes(b'retained')
+        expendable = repo / '.tmp-unmanaged' / 'build-cache'
+        expendable.mkdir(parents=True)
+        (expendable / 'object.o').write_bytes(b'disposable')
+        environment = dict(os.environ, MYLANG_CORE_RUNTIME_CACHE=str(self.root / 'objects'),
+                           XDG_CACHE_HOME=str(self.root / 'xdg'))
+        result = subprocess.run([
+            'bash', str(Path(__file__).with_name('prune-caches.sh')),
+            '--repo', str(repo), '--include-primary', '--idle-days', '0',
+            '--quiet-minutes', '0', '--apply',
+        ], env=environment, capture_output=True, text=True, check=True)
+        self.assertIn('retention-managed cache', result.stdout)
+        self.assertEqual(artifact.read_bytes(), b'retained')
+        self.assertTrue((protected / '.retention.lock').is_file())
+        self.assertFalse(expendable.exists())
 
 
 if __name__ == '__main__':

@@ -545,7 +545,7 @@ Directory runs forward the setting to their workers. With neither setting,
 receipts stay private. This option does not change build or run caches.
 
 Use a dedicated shared root, preferably outside the worktrees. Native test
-receipts live under `DIR/native-tests-v1`; `--cache-dir` still holds the private
+receipts live under `DIR/native-tests-v2`; `--cache-dir` still holds the private
 frontend, graph, executable and whole-report caches. Shared reuse requires a
 compatible compiler, toolchain, execution settings and the test's complete
 validated dependency closure. A different checkout location alone need not
@@ -571,9 +571,11 @@ External providers, native links, provider overlays, `function_digest` and
 error traces remain private. Project sources, configuration, cases and embedded
 assets must stay inside the project root. Configuration and cases bytes, embedded
 values and literal strings remain part of the identity. Fact verification, leak
-checks and loader overrides also run without shared receipts. The `native-tests-v1`
-namespace has its own format,
-separate from developer verification and fuzz evidence stores.
+checks and loader overrides also run without shared receipts. The `native-tests-v2`
+namespace has its own format, separate from developer verification and fuzz
+evidence stores. Native [retention policies](cache-retention.md#native-cache-retention)
+bound its disk use with LRU eviction and protect storage operations with leases.
+The JSON test report remains `native-tests-v1`.
 
 A receipt's identity (NEW-CORE-S4-TEST-3) is:
 

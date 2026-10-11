@@ -167,8 +167,8 @@ test "shared compiler artifacts restore frontend bodies and linked programs acro
     try sharedProgram(emitted);
     try t.expectEqual(@as(i64, 2), try number(try frontend(emitted), syntax_hits));
     try t.expect(try number(try frontend(emitted), "reused") > 0);
-    try t.expectError(error.FileNotFound, cwd.access(io, try projects.path(&.{ "shared", "compiler-artifacts-v1", "invalidation" }), .{}));
-    try t.expectError(error.FileNotFound, cwd.access(io, try projects.path(&.{ "shared", "compiler-artifacts-v1", "replay-v1" }), .{}));
+    try t.expectError(error.FileNotFound, cwd.access(io, try projects.path(&.{ "shared", "compiler-artifacts-v2", "invalidation" }), .{}));
+    try t.expectError(error.FileNotFound, cwd.access(io, try projects.path(&.{ "shared", "compiler-artifacts-v2", "replay-v1" }), .{}));
 }
 
 // spec-case: COMPILER-SHARED-CACHE-1
@@ -286,7 +286,7 @@ test "shared compiler artifacts preserve receiving diagnostic and trap paths" {
 }
 
 fn damage(projects: Projects, tier: []const u8) !void {
-    var directory = try cwd.openDir(io, try projects.path(&.{ "shared", "compiler-artifacts-v1", tier }), .{ .iterate = true });
+    var directory = try cwd.openDir(io, try projects.path(&.{ "shared", "compiler-artifacts-v2", tier }), .{ .iterate = true });
     defer directory.close(io);
     var iterator = directory.iterate();
     var count: usize = 0;
@@ -422,7 +422,7 @@ fn frontendCommands(projects: *Projects) !void {
     const private = try projects.check(.{ .project = "b" });
     try built(private);
     try t.expectEqual(@as(i64, 1), try number(private.report, "verdict_hits"));
-    const marker = "compiler-artifacts-v1/format";
+    const marker = "compiler-artifacts-v2/format";
     const marker_path = try projects.path(&.{ "shared", marker });
     const original = try cwd.readFileAlloc(io, marker_path, projects.arena, .limited(128));
     const invalid = "unknown compiler artifact format";

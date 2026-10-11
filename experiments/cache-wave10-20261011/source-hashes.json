@@ -1,0 +1,31 @@
+{
+  "base_commit": "19b9205244bf9d0d6ed5006afa1f3174913ede78",
+  "compiler_sha256": "6c99fae295f2a3464100c084837ef9dc365ddd4870004835feccf7b3919d4bb2",
+  "files": {
+    "CLAUDE.md": "e81dbad9371c1dddf844a658171a7ddbcc1e9dc083da7193e9b16fe3eae8a8ef",
+    "SPEC.md": "1c726aebc336830012f9d12c54ff7509f4c3eec28a0a9990610ea49156435c66",
+    "build_test_inputs.zig": "59423b00f9aea7ba4644fb40bbe8489779149dd3ac73c8514c6d2575d29f399c",
+    "docs/audits/selka-toolchain-cache-plan-2026-10-10.md": "1a30480c95cd1276cdba43c23d9fcc5aeaf3a42b1a4a07a18b410f9142c6978a",
+    "docs/tooling/cache-retention.md": "85eedf584122e7010948dfae6acb3e53bcff0468f2470e024ceb2360a6a22a97",
+    "docs/tooling/caches.md": "6442ff834ec854f0a858e3e58ea85435b4fc55d7d537ff9b2dbb2fd8269ac088",
+    "docs/tooling/guest-tests.md": "6d991ec6657ce276db9118514c24204420c56bc2ece4da03e6e38c1dcbd08abc",
+    "docs/tooling/native-build.md": "c93d81a2e438f5406cf765d2482dec12d41892120785fb7c0e38b3e585f23a52",
+    "experiments/cache-wave10-20261011/PLAN.md": "c991c77be4b41008e25fcf0e6938a0e6ee2b52f5655a085b1ae4bf4b2b517b91",
+    "scripts/cache_retention_test.py": "0f0ab0b3f2da855687adc8f5cb4a29b978276b739b06e13551044a22c73bf0ae",
+    "scripts/prune-caches.sh": "be05d318669036245d88ede2bcef6139c39addbd33fcda77b47c94faa3737358",
+    "src/cache_command.zig": "6e34d3204b8525c200a326b35bea6cb50e69c87a20b070e9b67819e5f036800a",
+    "src/compiler.zig": "b789c194e803d6b8bad318d800a8f8e628e3a974dbfd09bab56e84d5435e3932",
+    "src/core/compiler_shared_cache_test.zig": "3153414b4c1624beb33323a64111eb8ee3ead51f85aaa1bf0d273fffe96dfb68",
+    "src/core/test_runner_portable_test.zig": "3ae8cfa1cc899758166f47eb7f4afd89d4f9d41963c5a8de78d6164545e2e352",
+    "src/core/test_shared_store.zig": "174b25f7f4ba2d8a17cb9adffc58c8bb0aae43ce7fc7638a488c75d72854082d",
+    "src/features.json": "ba91710570c6f8eed9a9259be1ffcd841a92a9d99b73af6c4ec9cf518bc25964",
+    "src/infra/clock.zig": "ee56090b22e8d901320677c54d33b8e7803e2a66e1001536170d2d190d12955f",
+    "src/main.zig": "8076b8881a36670b91d598cb12a14039ef346a52a3b1daf39d3eeec95ee51780",
+    "src/native_cache_retention.zig": "62c339f4394cda7a7b7595b8804cb88d9987aa1b053197351d67231ada08fef8",
+    "src/root_test.zig": "4744824f335a87dff3d94184cba9c9d1542dbcfeaa4949257fd930056cef39e5",
+    "src/shared_artifact_store.zig": "cd53a62aefe90774c55e50e7cc6213710af2487e5955f66d48c0e2901dfd4be4",
+    "src/shared_artifact_store_test.zig": "ecce26db5f25de3437b56fdc4d14b6ed30cb5a8b20434031718e2381d7d5e117",
+    "test/cache_retention_cli_test.zig": "4d01e34ba935c71c7746bcc2fb9ff7381e81bb84ffd898439ba186b79a5807a8",
+    "test/integration.zig": "3ae3a8e33f656949a28e37a64dbfc793fa77fd5a143b72de16bbb32211285e5f"
+  }
+}

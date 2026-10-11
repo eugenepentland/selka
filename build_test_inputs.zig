@@ -170,6 +170,7 @@ pub const fuzz_campaign = [_][]const u8{
     "scripts/fuzz_campaign_store_test.py",
     "scripts/cache_retention.py",
     "scripts/cache_retention_test.py",
+    "scripts/prune-caches.sh",
     "scripts/fuzz_campaign_test.py",
     "scripts/fuzz_coverage.py",
     "scripts/fuzz_coverage_test.py",

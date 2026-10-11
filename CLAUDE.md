@@ -184,6 +184,12 @@ of stack under the ceiling); a test defaults to 1,000,000 steps, 1,024 frames an
   `ZIG_LOCAL_CACHE_DIR` in a staging directory removed when the build ends, so
   guest builds add nothing to `.zig-cache`. `scripts/prune-caches.sh` evicts the
   per-user store too. See `docs/tooling/native-build.md#the-caches`.
+- Optional shared compiler artifacts and native test receipts use v2 namespaces
+  with process leases and automatic hourly LRU retention (10 GiB compiler,
+  256 MiB tests, 100,000 entries each). Use `mylang cache gc` to preview,
+  `--apply` to collect, and `mylang cache configure` to persist policy. Old v1
+  namespaces remain separate and require idle-only manual cleanup. See
+  `docs/tooling/cache-retention.md#native-cache-retention`.
 
 ## Guardian rules that actually bite
 

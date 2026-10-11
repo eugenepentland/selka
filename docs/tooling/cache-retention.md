@@ -41,37 +41,96 @@ environment variable, described below; revision indexes stay private.
 `--shared-cache-dir` does not merge these formats or share Zig's local cache.
 Each worktree still requires its own `ZIG_LOCAL_CACHE_DIR`.
 
-The native `mylang test --shared-cache-dir DIR` command also accepts a shared
-root, using the independent `native-tests-v1` namespace for portable ordinary
-test successes. It does not use this developer store's blob/receipt or retention
-format. The Python collector below does not collect native test receipts. Remove
-that disposable namespace only while its users are stopped; never unlink its
-permanent `.lock` while a command may use it. See
-[guest tests](guest-tests.md#reusing-unaffected-results) for the supported subset
-and environment setup. Native tests, including shared lookup, require no Python.
+The native `mylang test --shared-cache-dir DIR` command accepts a shared root,
+using the independent `native-tests-v2` namespace for portable ordinary test
+successes. It uses the native retention policy below, separately from the
+Python developer evidence store. See [guest tests](guest-tests.md#reusing-unaffected-results)
+for eligibility. Native tests, shared lookup and collection require no Python.
 
 ## Native compiler artifacts
 
-`MYLANG_COMPILER_SHARED_CACHE=DIR` selects the independent
-`DIR/compiler-artifacts-v1` namespace for supported syntax, typed bodies and
-linked executables. Private mutable indexes and materialized executables remain
-in each requesting worktree. See [compiler caches](caches.md#shared-compiler-artifacts)
+`MYLANG_COMPILER_SHARED_CACHE=DIR` selects
+`DIR/compiler-artifacts-v2/{syntax,typed,program}` for supported syntax, typed
+bodies and linked executables. Private mutable indexes and materialized
+executables remain in each worktree. See [compiler caches](caches.md#shared-compiler-artifacts)
 for eligibility and [native builds](native-build.md#shared-compiler-artifacts)
-for usage. The same root may hold `native-tests-v1`; their formats stay separate.
+for usage. The same root may hold `native-tests-v2`; budgets are per namespace.
 
-Native artifacts are disposable, bounded to 128 MiB per payload and protected
-by checksummed records and atomic rename. Staging/hashing precedes a permanent
-per-key publication lock; no build work holds that lock. A conflicting valid
-same-key result raises `DeterminismMismatch` and preserves the existing record;
-this namespace does not implement the developer evidence store's conflict
-poisoning or pin/lease protocol. It is for trusted local producers.
+Native compiler artifacts are bounded to 128 MiB per payload and protected by
+checksummed records and atomic rename. Staging/hashing precedes a per-key
+publication lock, which covers comparison and replacement. A conflicting valid
+same-key result raises `DeterminismMismatch` and preserves the existing record.
+Retention does not implement the developer evidence store's conflict poisoning
+or pins. These are disposable caches for trusted local producers, with no
+application-journal or power-loss durability guarantee.
 
-The Python collector does **not** collect this namespace, and it has no total
-retention budget yet. Clear `compiler-artifacts-v1` only while all users of it
-are stopped. Never remove its `.lock` or per-key `.blob.lock` files while a
-command may hold or wait for them. An already materialized private executable
-does not depend on shared storage, and subsequent misses rebuild correctly.
-This cache makes no application-journal or power-loss durability guarantee.
+## Native cache retention
+
+The native stores automatically attempt least-recently-used collection when
+opened, at most once per hour by default. The policy is stored in each namespace
+and therefore applies to every participating worktree:
+
+| Policy | Compiler artifacts | Native test receipts |
+| --- | --- | --- |
+| Maximum record bytes | 10 GiB | 256 MiB |
+| Maximum retained entries | 100,000 | 100,000 |
+| Age expiry | Disabled | Disabled |
+| Automatic collection interval | 3,600 seconds | 3,600 seconds |
+
+Budgets are soft between collections. No background daemon runs while the cache
+is unused. A busy store is skipped and a later open can retry. Verified reads
+refresh modification time for eviction ordering; timestamps never establish
+content validity. Optional age expiry means time since publication or the last
+verified hit. Zero age disables expiry; zero byte or entry limits select all
+records for eviction. Format, policy and permanent-lock overhead is outside the
+record budget. Abandoned staging files and unused per-key lock files can be
+reclaimed while the collector has exclusive access.
+
+Every storage operation owns a shared process lease before it reads or stages
+records, including while waiting for a publication lock. Collection acquires an
+exclusive nonblocking lease and skips active users. Compilation and test
+execution hold no exclusive retention lock. The collector requires no server
+build/gate slot. Process termination releases its lease automatically. Permanent
+`.lock` and `.retention.lock` files are never removed by collection.
+
+Inspect the installed native command without requiring Python:
+
+```bash
+mylang cache --help
+```
+
+A first build or test initializes its namespace. Afterwards, preview its current
+policy, or preview a one-time budget override:
+
+```bash
+mylang cache gc --shared-cache-dir "$HOME/.cache/mylang/compiler-artifacts" --kind compiler
+mylang cache gc --shared-cache-dir "$HOME/.cache/mylang/compiler-artifacts" --kind compiler --max-bytes 10737418240
+```
+
+Add `--apply` to delete the proposed entries. Overrides on `gc` apply only to
+that collection. `configure` explicitly persists policy; omitted settings keep
+their current values:
+
+```bash
+mylang cache configure --shared-cache-dir "$HOME/.cache/mylang/compiler-artifacts" --kind compiler --max-bytes 21474836480 --max-entries 200000 --interval-seconds 3600
+mylang cache gc --shared-cache-dir "$HOME/.cache/mylang/compiler-artifacts" --kind compiler --apply
+```
+
+Use `--kind tests` for native test receipts. Add `--max-age-seconds 1209600` for
+an optional 14-day last-use limit, or `--max-age-seconds 0` to disable it again.
+Reports expose scanned, removed/proposed and retained record bytes and entries,
+active-store skips, incomplete inventories and unmet budgets. A bounded inventory
+and conservative filename handling preserve foreign files; unknown contents
+are not silently deleted to claim a satisfied budget. Automatic cleanup is
+best effort; explicit collection reports failures for inspection.
+
+The v2 namespaces isolate this lease protocol from older compiler binaries,
+which continue to use `compiler-artifacts-v1` and `native-tests-v1`. There is no
+automatic migration or deletion of v1 storage. Remove an old namespace only
+when every old user has stopped. Never manually unlink live coordination locks.
+The Python collector below does not collect either native namespace. Evicted
+records safely miss and refill; already materialized private executables remain
+usable. Reuse after an edit/revert requires that the old entry is still retained.
 
 ## Publication and compatibility
 
@@ -135,7 +194,7 @@ root. `clear-conflict ACTION_KEY` explicitly discards the poisoned receipt after
 investigation; it does not certify which old output was correct.
 
 The legacy `prune-caches.sh` no longer deletes an entire `.mylang-cache` and skips
-scratch directories containing evidence retention locks. Use the dedicated
+scratch directories containing evidence or native retention locks. Use the dedicated
 collector for these stores. Do not manually remove a store that workers are using.
 
 Pins are cache-retention roots. They do not establish durable application
