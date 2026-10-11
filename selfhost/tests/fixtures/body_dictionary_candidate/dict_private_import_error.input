@@ -1,0 +1,5 @@
+import collection_donor
+
+
+func main() -> int:
+    return collection_donor.hidden()["a"]

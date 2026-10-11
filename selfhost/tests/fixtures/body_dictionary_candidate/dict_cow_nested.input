@@ -1,0 +1,8 @@
+func main() -> int:
+    mut original = {"a": [1, 2], "b": [3]}
+    mut copied = original
+    copied["a"].append(4)
+    original["b"][0] = 9
+    assert copied["a"] == [1, 2, 4] and original["a"] == [1, 2]
+    assert copied["b"] == [3] and original["b"] == [9]
+    return 7

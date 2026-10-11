@@ -1,0 +1,8 @@
+func main() -> int:
+    mut value: int? = Some(7)
+    mut total = 0
+    while value is not None:
+        total += value
+        value = None
+    assert total == 7 and value is None
+    return 7

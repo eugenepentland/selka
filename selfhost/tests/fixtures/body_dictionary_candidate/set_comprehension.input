@@ -1,0 +1,8 @@
+func main() -> int:
+    const values = {x * 2 for x in range(6) if x % 2 == 0}
+    assert list(values) == [0, 4, 8]
+    const letters = set("banana")
+    assert list(letters) == ["b", "a", "n"]
+    const octets = set(b"abca")
+    assert list(octets) == [97, 98, 99]
+    return 7

@@ -1,0 +1,13 @@
+func main() -> int:
+    mut values: set[int] = set()
+    values.add(5)
+    values.add(7)
+    values.discard(42)
+    values.update({9, 5, 11})
+    values.remove(7)
+    values.discard(9)
+    assert values.pop() == 11
+    const snapshot = values.copy()
+    values.clear()
+    assert len(values) == 0 and list(snapshot) == [5]
+    return 7

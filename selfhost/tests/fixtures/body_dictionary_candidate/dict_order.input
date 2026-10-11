@@ -1,0 +1,6 @@
+func main() -> int:
+    mut mapping = {"b": 2, "a": 1, "b": 7}
+    assert list(mapping.keys()) == ["b", "a"]
+    assert list(mapping.values()) == [7, 1]
+    assert mapping["b"] == 7 and len(mapping) == 2
+    return 7

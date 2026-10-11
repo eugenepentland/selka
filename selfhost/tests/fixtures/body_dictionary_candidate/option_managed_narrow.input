@@ -1,0 +1,13 @@
+func grow(mut value: int[]?) -> Unit:
+    if value is None:
+        return
+    value.append(8)
+
+
+func main() -> int:
+    mut value: int[]? = Some([7])
+    const snapshot = value
+    grow(mut value)
+    assert value.unwrap_or([]) == [7, 8]
+    assert snapshot.unwrap_or([]) == [7]
+    return 7

@@ -1,0 +1,15 @@
+func receiver(mut trace: int[]) -> int?:
+    trace[0] = trace[0] * 10 + 1
+    return Some(7)
+
+
+func fallback(mut trace: int[]) -> int:
+    trace[0] = trace[0] * 10 + 2
+    return 9
+
+
+func main() -> int:
+    mut trace = [0]
+    const result = receiver(mut trace).unwrap_or(fallback(mut trace))
+    assert result == 7 and trace == [12]
+    return 7

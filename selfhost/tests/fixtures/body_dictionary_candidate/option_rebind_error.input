@@ -1,0 +1,6 @@
+func main() -> int:
+    mut value: int? = Some(7)
+    if value is None:
+        return 0
+    value = None
+    return value + 1
