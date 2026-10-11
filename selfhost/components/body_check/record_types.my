@@ -317,6 +317,17 @@ public func equality(pool: syntax_value.Pool, catalog: Catalog, elements: int[],
         return try equality(pool, catalog, elements, elements[ty], managed, path)
     if ty >= len(catalog.admitted) or not catalog.admitted[ty]:
         return False
+    const row = catalog.rows[ty - 19]
+    const collection = try graph.field(pool, row, "collection")
+    const kind_id = try graph.field(pool, collection, "kind")
+    const kind = try graph.get(pool, kind_id)
+    if kind.data == b"dictionary":
+        const set_id = try graph.field(pool, collection, "set")
+        const set = try graph.get(pool, set_id)
+        if set.integer != 0:
+            const key_id = try graph.field(pool, collection, "key")
+            const key = try graph.number(pool, key_id)
+            return try equality(pool, catalog, elements, key, managed, path)
     const children = try children_of(pool, catalog.rows, ty)
     for child in children:
         const supported = try equality(pool, catalog, elements, child, managed, path)

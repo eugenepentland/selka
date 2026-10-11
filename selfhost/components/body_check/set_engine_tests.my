@@ -3,6 +3,7 @@ import graph
 import engine
 import collection_types
 import list_types
+import record_types
 
 func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
     const data = try syntax_value.tagged(mut pool, tag, payload)
@@ -113,3 +114,13 @@ public func test_set_union_dispatch_uses_operator_span_and_preserves_loop_counte
     const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
     const data = try graph.get(state.batch.pool, data_id)
     return result.ty == 19 and data.data == b"block_value" and start == 11 and end == 12 and state.control.next == 9
+
+
+public func test_set_equality_checks_key_without_requiring_unit_storage_equality() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const set_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=1, key=1, value=15, owner=-1), span)
+    const dict_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=0, key=1, value=15, owner=-1), span)
+    const set_supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, set_type, [], [])
+    const dict_supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, dict_type, [], [])
+    return set_supported and not dict_supported
