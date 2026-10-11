@@ -42,10 +42,14 @@ hardware hashing. ReleaseSafe with Zig's native backend still exhibits the
 slowdown, so a custom Zig without LLVM cannot build the coordinator. This setting
 is independent of the host's optimization mode and the seed/component recipes;
 it does not change the Zig pin or the progressive self-hosting boundary.
-The current component recipe uses the seed's default guest build policy,
-independently of host optimization. That policy already optimizes each module;
-guest `--release` combines the program into one LLVM unit and changes debug
-metadata. A ReleaseFast host therefore does not imply a release-built producer.
+The body-check recipe explicitly passes guest `--release`, independently of host
+optimization. The other six components retain the seed's default optimized-debug
+guest policy, which already optimizes each module. Guest `--release` combines the
+program into one LLVM unit and changes debug metadata. The receipt binds the
+selected policy and exact `--release` argument; the same argument list drives
+compilation. A ReleaseFast host alone does not select the guest policy. Production
+component builds omit `--verify-facts`; qualification exercises runtime fact and
+leak checks separately.
 
 Host artifact verification uses a narrow LLVM ReleaseSafe SHA-256 object, while
 other host code retains its selected backend and optimization mode. Private

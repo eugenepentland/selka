@@ -195,7 +195,7 @@ fn snapshot(ctx: *Context, source: []const u8, destination: []const u8) !void {
     }
 }
 
-const Component = struct { source: []const u8, name: []const u8, entry: []const u8 = "main.my", protocol: i64 = 1, schema: i64 = 1 };
+const Component = struct { source: []const u8, name: []const u8, entry: []const u8 = "main.my", protocol: i64 = 1, schema: i64 = 1, release: bool = false };
 const components = [_]Component{
     .{ .source = "test_index", .name = "test-index" },
     .{ .source = "cache_plan", .name = "cache-plan", .protocol = 2, .schema = 2 },
@@ -203,14 +203,16 @@ const components = [_]Component{
     .{ .source = "parser_pilot", .name = "parser-pilot", .entry = "full_adapter.my", .schema = 2 },
     .{ .source = "declaration_index", .name = "declaration-index" },
     .{ .source = "type_interface", .name = "type-interface" },
-    .{ .source = "body_check", .name = "body-check", .schema = 3 },
+    .{ .source = "body_check", .name = "body-check", .schema = 3, .release = true },
 };
 
 fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {
     const sources = try ctx.path(&.{ config.root, "selfhost", "components", descriptor.source });
     const tool = try std.process.executablePathAlloc(ctx.io, ctx.a);
     var flags = std.json.Array.init(ctx.a);
-    try flags.append(files.string("debug"));
+    try flags.append(files.string(if (descriptor.release) "release" else "optimized-debug-default"));
+    const guest_args: []const []const u8 = if (descriptor.release) &.{"--release"} else &.{};
+    for (guest_args) |arg| try flags.append(files.string(arg));
     try flags.append(files.string("fresh-private-cache"));
     try flags.append(files.string("private-zig-global-v1"));
     const identity = try files.object(ctx.a, &.{
@@ -261,7 +263,10 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         // Shared Zig CRT objects retain the directory of their first compilation
         // in DWARF. A deterministic private cache makes every byte reproducible.
         try environment.put("ZIG_GLOBAL_CACHE_DIR", try ctx.path(&.{ work, "cache", "zig-global" }));
-        const compile_output = try ctx.checked(&.{ seed.binary, "build", try ctx.path(&.{ copied, descriptor.entry }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) }, work, &environment);
+        var command: std.ArrayList([]const u8) = .empty;
+        try command.appendSlice(ctx.a, &.{ seed.binary, "build", try ctx.path(&.{ copied, descriptor.entry }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) });
+        try command.appendSlice(ctx.a, guest_args);
+        const compile_output = try ctx.checked(command.items, work, &environment);
         if (compile_output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, compile_output);
         const fresh = try files.object(ctx.a, &.{ .{ .name = "identity", .value = identity }, .{ .name = "sha256", .value = try ctx.hashValue(output) } });
         if (has_receipt) {

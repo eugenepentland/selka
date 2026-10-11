@@ -62,6 +62,7 @@ class ComponentCacheTests(unittest.TestCase):
             "test \"$1\" = build && test -f \"$2\" || exit 13\n"
             "case \"$ZIG_GLOBAL_CACHE_DIR\" in */cache/zig-global) ;; *) exit 12;; esac\n"
             "printf 'component\\n' >> \"$COMPONENT_FIXTURE_LOG\"\n"
+            "printf '%s\\n' \"$*\" >> \"$COMPONENT_FIXTURE_ARGS\"\n"
             "test \"${COMPONENT_FIXTURE_FAIL:-0}\" = 0 || exit 7\n"
             "while test $# -gt 0; do\n"
             "  if test \"$1\" = -o; then shift; printf '%s' \"${COMPONENT_FIXTURE_OUTPUT:-native-component}\" > \"$1\"; exit 0; fi\n"
@@ -84,9 +85,11 @@ class ComponentCacheTests(unittest.TestCase):
         )
         self.zig.chmod(0o755)
         self.log = self.workspace / "calls.log"
+        self.arguments_log = self.workspace / "arguments.log"
         self.environment = {name: value for name, value in os.environ.items()
                             if not name.startswith("MYLANG_") and name != "ZIG"}
         self.environment["COMPONENT_FIXTURE_LOG"] = str(self.log)
+        self.environment["COMPONENT_FIXTURE_ARGS"] = str(self.arguments_log)
 
     def write_archive(self):
         (self.archive_source / "src/fake-seed").write_text(self.seed_script)
@@ -202,6 +205,33 @@ class ComponentCacheTests(unittest.TestCase):
             self.assertEqual((receipt["identity"]["protocol"], receipt["identity"]["schema"]),
                              (protocol, schema))
         self.invoke()
+        self.assertEqual(self.calls(), 7)
+
+    def test_only_body_guest_uses_release_and_receipt_binds_exact_flags(self):
+        self.invoke()
+        arguments = [shlex.split(line) for line in self.arguments_log.read_text().splitlines()]
+        self.assertEqual(len(arguments), 7)
+        self.assertEqual(["--release" in argv for argv in arguments], [False] * 6 + [True])
+        names = ("test-index", "cache-plan", "lexer-pilot", "parser-pilot",
+                 "declaration-index", "type-interface", "body-check")
+        for name in names:
+            manifest = json.loads((self.install / (name + ".json")).read_text())
+            receipt = json.loads((self.cache / "artifacts" / manifest["key"] / "receipt.json").read_text())
+            flags = receipt["identity"]["flags"]
+            self.assertEqual("--release" in flags, name == "body-check")
+            self.assertEqual(flags[0], "release" if name == "body-check" else "optimized-debug-default")
+        self.invoke("--uncached")
+        self.assertEqual(self.calls(), 14)
+
+    def test_body_receipt_with_default_guest_flags_cannot_be_reused(self):
+        self.invoke()
+        manifest = json.loads((self.install / "body-check.json").read_text())
+        receipt_path = self.cache / "artifacts" / manifest["key"] / "receipt.json"
+        receipt = json.loads(receipt_path.read_text())
+        receipt["identity"]["flags"] = ["optimized-debug-default", "fresh-private-cache",
+                                        "private-zig-global-v1"]
+        receipt_path.write_text(json.dumps(receipt))
+        self.invoke(success=False)
         self.assertEqual(self.calls(), 7)
 
     def test_identity_covers_embedded_input_bytes(self):
