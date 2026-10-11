@@ -33,6 +33,13 @@ class StrictPerformanceTests(unittest.TestCase):
             binary.write_bytes(b'replaced')
             with self.assertRaises(RuntimeError):P.inventory(prefix,3)
 
+    def test_warm_build_requires_replay_and_zero_new_processes(self):
+        import json
+        report=dict(version='cache-report-v1',program='replayed',units=0,reused=0,compiled=0,verified=0,processes=0)
+        self.assertEqual(P.warm_build(json.dumps(report)),report)
+        for key,value in [('program','built'),('compiled',1),('processes',1),('units',True)]:
+            with self.assertRaises(RuntimeError):P.warm_build(json.dumps(dict(report,**{key:value})))
+
     def test_modes_are_explicit_and_do_not_inherit_callers(self):
         from unittest.mock import patch
         with patch.dict(P.os.environ,{'MYLANG_BODY_CHECK_MODE':'component','MYLANG_PARSER_MODE':'component'}):

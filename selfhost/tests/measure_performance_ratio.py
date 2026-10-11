@@ -34,7 +34,7 @@ def verdict(baseline,candidate,budget=1.5):
 
 
 def environment(prefix,modes,empty):
-    env={k:v for k,v in os.environ.items() if not k.startswith(('MYLANG_','PILOT_','BODY_'))}
+    env={k:v for k,v in os.environ.items() if not k.startswith(('MYLANG_','MYL_CORE_','PILOT_','BODY_'))}
     env.update(PATH=str(empty),MYLANG_COMPONENT_DIR=str(prefix/'libexec/mylang/components'),MYL_CORE_LEAKCHECK='0')
     for name in MODES:env['MYLANG_'+name+'_MODE']=modes.get(name,'reference')
     return env
@@ -58,6 +58,15 @@ def inventory(prefix,body_schema):
 def tests(result,cached):
     F.test_counts(result,expected=2,allow_cached=cached)
     report=json.loads(result[1]);F.require(report.get('cached')==(2 if cached else 0),'wrong cold/warm test receipt state')
+    return report
+
+
+def warm_build(stderr):
+    report=json.loads(stderr)
+    F.require(report.get('version')=='cache-report-v1' and report.get('program')=='replayed','warm program receipt was not replayed')
+    for key in ('units','reused','compiled','verified','processes'):
+        F.require(type(report.get(key)) is int and report[key]>=0,'invalid warm work counter')
+    F.require(report['compiled']==0 and report['processes']==0,'warm build performed fresh compiler work')
     return report
 
 
@@ -130,7 +139,7 @@ def main():
                     for _ in range(args.iterations):
                         elapsed,result=measured(command,env,source,status,validator)
                         if phase=='compile-warm':
-                            receipt=json.loads(result[2]);F.require(receipt.get('compiled')==0,'warm build compiled fresh units')
+                            warm_build(result[2])
                         samples.append(elapsed);receipts.append({'stdout':result[1].decode(),'stderr':result[2].decode()})
                     rows[fixture.name+'/'+phase]={**summarize(samples),'receipts':receipts,'command':[str(x) for x in command]}
                 F.require(F.digest(compiler)==identity['host_sha256'] and inventory(prefix,body_schema)==identity['packages'],'measured deployment changed')
