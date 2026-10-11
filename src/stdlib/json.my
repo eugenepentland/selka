@@ -223,23 +223,43 @@ public func as_dict(value: Json) -> dict[str, Json]?:
 
 # The member of an object under a key, if both the object and the key exist.
 public func get(value: Json, key: str) -> Json?:
-    match as_dict(value):
-        case Some(fields):
+    match value:
+        case Json.object(value=fields):
             if key not in fields:
                 return None
             return Some(fields[key].copy())
-        case None:
+        case Json.null:
+            return None
+        case Json.boolean(value=_):
+            return None
+        case Json.integer(value=_):
+            return None
+        case Json.number(value=_):
+            return None
+        case Json.text(value=_):
+            return None
+        case Json.array(value=_):
             return None
 
 
 # The element of an array at an index, if both the array and the index exist.
 public func at(value: Json, index: int) -> Json?:
-    match as_list(value):
-        case Some(items):
+    match value:
+        case Json.array(value=items):
             if index < 0 or index >= len(items):
                 return None
             return Some(items[index].copy())
-        case None:
+        case Json.null:
+            return None
+        case Json.boolean(value=_):
+            return None
+        case Json.integer(value=_):
+            return None
+        case Json.number(value=_):
+            return None
+        case Json.text(value=_):
+            return None
+        case Json.object(value=_):
             return None
 
 

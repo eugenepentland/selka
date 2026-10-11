@@ -1238,3 +1238,38 @@ test "zero RC fresh match JSON decoding and rendering return owned strings" {
         \\    return 0
     , "\"item\"\n");
 }
+
+// spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+test "zero RC JSON lookup copies only selected values and preserves independent results" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const path = try std.fs.path.join(a, &.{ @import("core_test_options").fixtures, "zero_rc_json_lookup.my" });
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1 << 20));
+    try executes(a, source, json_lookup_output);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+test "RC JSON lookup keeps navigation and independent results compatible" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const path = try std.fs.path.join(a, &.{ @import("core_test_options").fixtures, "zero_rc_json_lookup.my" });
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1 << 20));
+    const program = try checked(a, source);
+    for ([_]bool{ false, true }) |optimized| {
+        var refusal: build.Refusal = .{};
+        var module = try build.buildExecutable(a, .{ .program = program }, &refusal);
+        const result = if (optimized) try passes.run(a, &module, .verify) else try passes.debug(a, &module);
+        const ran = try support.runOwned(a, &module, .{ .own = false, .release = optimized, .verify = optimized, .analysis = support.analysis(&result) });
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        try std.testing.expectEqualStrings(json_lookup_output, ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+    }
+}
+
+const json_lookup_output =
+    "null 2\n" ++
+    "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
+    "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
+    "{\"target\":\"changed\"} [\"changed\"]\n";
