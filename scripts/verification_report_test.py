@@ -95,6 +95,7 @@ class Reports(unittest.TestCase):
             result = report.execution_timings(path)
             self.assertFalse(result['additive'])
             self.assertEqual(result['status'], 'observed')
+            self.assertFalse(result['malformed'])
             self.assertEqual([x['elapsed_seconds'] for x in result['observations'][:2]], [2, .05])
             self.assertAlmostEqual(result['observations'][2]['elapsed_seconds'], .0001)
             self.assertEqual(result['observations'][1]['kind'], 'build')
@@ -132,6 +133,7 @@ class Reports(unittest.TestCase):
                             '+- run test 3 pass (3 total) -1s\n')
             result = report.execution_timings(path)
             self.assertEqual(len(result['observations']), 2)
+            self.assertTrue(result['malformed'])
             self.assertEqual(result['observations'][0]['state'], 'failure')
             self.assertEqual(result['observations'][0]['elapsed_seconds'], 90)
             self.assertEqual(result['observations'][1]['elapsed_seconds'], 3600)
@@ -148,6 +150,7 @@ class Reports(unittest.TestCase):
             result = report.execution_timings(path)
             self.assertEqual(len(result['observations']), 2)
             native, coverage = result['observations']
+            self.assertTrue(result['malformed'])
             self.assertEqual(native['node'], 'verification action unit member 3')
             self.assertEqual(native['kind'], 'test')
             self.assertEqual(native['test_counts'], {'pass': 7, 'skip': 2, 'total': 9})

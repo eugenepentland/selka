@@ -162,7 +162,7 @@ Bound bytes, line size and observations. Zig node names are observations, not
 inventory action IDs; the coordinator supplies the enclosing action identity.
 CPU time and aggregate concurrent RSS are unavailable from this format.
 """
-    result = dict(status='unknown', observations=[], truncated=False, additive=False,
+    result = dict(status='unknown', observations=[], truncated=False, malformed=False, additive=False,
                   cpu_seconds=None, aggregate_peak_rss_bytes=None)
     if not capture_available:
         result['reason'] = 'current execution log unavailable'
@@ -192,21 +192,33 @@ CPU time and aggregate concurrent RSS are unavailable from this format.
                     break
                 counts[verdict] = int(count)
             if counts is None or sum(counts.values()) != int(test_match['total']):
+                result['malformed'] = True
                 continue
             counts['total'] = int(test_match['total'])
         match = test_match or _DURATION.fullmatch(label)
         if not match:
+            # Ordinary command output and untimed cached/reused graph nodes are
+            # not timing records. A registered action with a duration-shaped
+            # suffix must not silently contribute a partially parsed sample.
+            if ('verification action ' in label
+                    and re.search(r' [0-9.]+(?:ns|us|µs|ms|s|m|h)(?: MaxRSS:\S+)?$', label)):
+                result['malformed'] = True
             continue
         if not test_match and match['name'].startswith('run test') and (match['name'] != 'run test' or match['state'] == 'cached'):
+            if match['state'] != 'cached':
+                result['malformed'] = True
             continue
         if (not test_match and match['name'].startswith('verification action ')
                 and re.fullmatch(_ACTION_NAME, match['name']) is None):
+            if match['state'] != 'cached':
+                result['malformed'] = True
             continue
         if len(result['observations']) >= MAX_OBSERVATIONS:
             result['truncated'] = True
             break
         seconds = float(match['value']) * {'ns': 1e-9, 'us': 1e-6, 'µs': 1e-6, 'ms': 1e-3, 's': 1, 'm': 60, 'h': 3600}[match['unit']]
         if not math.isfinite(seconds):
+            result['malformed'] = True
             continue
         result['observations'].append(dict(node=match['name'][:512], raw_label=label[:512],
                                            kind='test' if test_match else 'build' if match['name'].startswith('compile ') else 'unknown',
