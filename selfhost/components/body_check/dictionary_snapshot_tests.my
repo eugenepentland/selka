@@ -1,0 +1,110 @@
+import syntax_value
+import graph
+import engine
+import collection_types
+import list_types
+import locals
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh() -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const yes = try syntax_value.boolean(mut pool, True)
+    const no = try syntax_value.boolean(mut pool, False)
+    const first = try syntax_value.span(mut pool, 0, 4)
+    const second = try syntax_value.span(mut pool, 4, 5)
+    const third = try syntax_value.span(mut pool, 5, 10)
+    const fourth = try syntax_value.span(mut pool, 10, 11)
+    const span = try syntax_value.span(mut pool, 0, 11)
+    const a = try node(mut pool, first, b"boolean", yes)
+    const b = try node(mut pool, second, b"integer", second)
+    const c = try node(mut pool, third, b"boolean", no)
+    const d = try node(mut pool, fourth, b"integer", fourth)
+    mut indices: int[] = []
+    for index in range(4):
+        const id = try syntax_value.integer(mut pool, index)
+        indices.append(id)
+    const entries = try syntax_value.sequence(mut pool, indices)
+    const literal = try node(mut pool, span, b"dictionary_literal", entries)
+    const nodes = try syntax_value.sequence(mut pool, [a, b, c, d, literal])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    mut state = try engine.make(pool, b"True7False8", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    state.batch.facts.lists.available = True
+    for _ in range(19):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+func call(mut state: engine.State, method: bytes, arguments: int[], writable: bool) -> int fails syntax_value.Problem:
+    const dictionary = try engine.expression(mut state, 4)
+    state.syntax.source = b"d." + method
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const name = try syntax_value.span(mut state.syntax.pool, 2, len(state.syntax.source))
+    const span = try syntax_value.span(mut state.syntax.pool, 0, len(state.syntax.source))
+    const slot = try locals.add(mut state.scope, b"d", owner, dictionary.ty, writable, b"local")
+    mut inputs: int[] = []
+    for argument in arguments:
+        const value = try syntax_value.integer(mut state.syntax.pool, argument)
+        inputs.append(value)
+    const values = try syntax_value.sequence(mut state.syntax.pool, inputs)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, owner, values, empty, empty])
+    const raw = try node(mut state.syntax.pool, span, b"call", payload)
+    state.syntax.nodes.append(raw)
+    return slot
+
+
+func convert(mut state: engine.State, input: int) -> engine.Expression fails syntax_value.Problem:
+    state.syntax.source = b"list"
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 4)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const value = try syntax_value.integer(mut state.syntax.pool, input)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [value])
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, absent, arguments, empty, empty])
+    const raw = try node(mut state.syntax.pool, name, b"call", payload)
+    const index = len(state.syntax.nodes)
+    state.syntax.nodes.append(raw)
+    return try engine.expression(mut state, index)
+
+
+public func test_item_snapshot_interns_view_item_then_list_and_one_result_node() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try call(mut state, b"items", [], False)
+    _ = try engine.expression(mut state, 5)
+    state.control.next = 13
+    const result = try convert(mut state, 5)
+    const recipes = state.batch.facts.lists.recipes
+    return result.ty == 22 and len(recipes) == 4 and recipes[0].kind == "dict" and recipes[1].kind == "dict_items" and recipes[2].kind == "dict_item" and recipes[3].kind == "list" and recipes[3].element == 21 and len(state.scope.locals) == 5 and state.control.next == 14 and result.id == len(state.batch.nodes) - 1
+
+
+public func test_value_snapshot_retains_intermediate_final_node_in_native_order() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try call(mut state, b"values", [], False)
+    _ = try engine.expression(mut state, 5)
+    const result = try convert(mut state, 5)
+    const actual = state.batch.nodes[result.id]
+    const previous = state.batch.nodes[result.id - 1]
+    const actual_data = try graph.field(state.batch.pool, actual, "data")
+    const previous_data = try graph.field(state.batch.pool, previous, "data")
+    const actual_payload = try graph.payload(state.batch.pool, actual_data)
+    const previous_payload = try graph.payload(state.batch.pool, previous_data)
+    return result.ty == 21 and actual_payload == previous_payload and len(state.batch.facts.lists.recipes) == 3 and state.batch.facts.lists.recipes[2].kind == "list" and state.batch.facts.lists.recipes[2].element == 0 and len(state.scope.locals) == 5 and state.control.next == 1
+
+
+public func test_mapping_snapshot_uses_direct_keys_operation_without_view_recipe() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try engine.expression(mut state, 4)
+    const result = try convert(mut state, 4)
+    const recipes = state.batch.facts.lists.recipes
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 20 and data.data == b"block_value" and len(recipes) == 2 and recipes[1].kind == "list" and recipes[1].element == 1 and len(state.scope.locals) == 1 and state.control.next == 0

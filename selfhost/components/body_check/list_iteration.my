@@ -344,6 +344,39 @@ func initializer(batch: emission.Batch, scope: locals.Scope, slot: int) -> int f
     return -1
 
 
+func projected(batch: emission.Batch, input: int, index: int) -> int fails syntax_value.Problem:
+    mut value = input
+    for _ in range(64):
+        if value < 0 or value >= len(batch.nodes):
+            return -1
+        const data_id = try graph.field(batch.pool, batch.nodes[value], "data")
+        const data = try graph.get(batch.pool, data_id)
+        const payload = data.children[0]
+        if data.data == b"block_value":
+            const body = try field_number(batch.pool, payload, "body")
+            if body < 0 or body >= len(batch.statements):
+                return -1
+            const body_data_id = try graph.field(batch.pool, batch.statements[body], "data")
+            const body_data = try graph.get(batch.pool, body_data_id)
+            if body_data.data != b"block":
+                return -1
+            const statements = try graph.items(batch.pool, body_data.children[0])
+            if len(statements) != 0:
+                return -1
+            const child = try field_number(batch.pool, payload, "value")
+            value = child
+        elif data.data == b"record":
+            const fields = try graph.items(batch.pool, payload)
+            for field in fields:
+                const position = try field_number(batch.pool, field, "index")
+                if position == index:
+                    return try field_number(batch.pool, field, "value")
+            return -1
+        else:
+            return -1
+    return -1
+
+
 func typed_root(batch: emission.Batch, scope: locals.Scope, id: int) -> int fails syntax_value.Problem:
     mut at = id
     for _ in range(64):
@@ -366,7 +399,15 @@ func typed_root(batch: emission.Batch, scope: locals.Scope, id: int) -> int fail
         elif data.data == b"block_value":
             const extracted_30 = try field_number(batch.pool, payload, "value")
             at = extracted_30
-        elif data.data == b"index" or data.data == b"field":
+        elif data.data == b"field":
+            const base = try field_number(batch.pool, payload, "base")
+            const index = try field_number(batch.pool, payload, "index")
+            const selected = try projected(batch, base, index)
+            if selected >= 0:
+                at = selected
+            else:
+                at = base
+        elif data.data == b"index":
             at = try field_number(batch.pool, payload, "base")
         elif data.data == b"buffer_operation":
             const kind_id = try graph.field(batch.pool, payload, "kind")
@@ -427,6 +468,10 @@ func rebuild(mut batch: emission.Batch, mut scope: locals.Scope, context: list_l
         return try rebuild(mut batch, mut scope, context, mut path, value, depth + 1)
     if data.data == b"field":
         const base = try field_number(batch.pool, payload, "base")
+        const field_index = try field_number(batch.pool, payload, "index")
+        const selected = try projected(batch, base, field_index)
+        if selected >= 0:
+            return try rebuild(mut batch, mut scope, context, mut path, selected, depth + 1)
         const rebuilt = try rebuild(mut batch, mut scope, context, mut path, base, depth + 1)
         const index_id = try graph.field(batch.pool, payload, "index")
         const index = try graph.number(batch.pool, index_id)

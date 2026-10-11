@@ -4,6 +4,7 @@ import emission
 import locals
 import list_lower
 import list_iteration
+import dictionary_view_lower
 
 record Fixture:
     batch: emission.Batch
@@ -265,3 +266,17 @@ public func test_comprehension_mut_calls_in_output_filter_and_source_select_refr
         if parts != [1, 12, 13, 14] or fixture.scope.locals[0].usage.reads != 2:
             return False
     return True
+
+
+public func test_literal_view_projection_recovers_mutated_mapping_root_for_refresh() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(1)
+    const context = list_lower.Context(input=fixture.input, span=fixture.request.span)
+    const view = try dictionary_view_lower.construct(mut fixture.batch, context, 41, fixture.request.iterable)
+    const view_id = try list_lower.append(mut fixture.batch, context, view)
+    const mapping = try dictionary_view_lower.owner(mut fixture.batch, context, view_id, 40)
+    fixture.request.iterable = mapping
+    const plan = try list_iteration.prepare(mut fixture.batch, mut fixture.scope, fixture.input, fixture.request)
+    const walk = try list_iteration.source(mut fixture.batch, mut fixture.scope, fixture.input, plan, list_iteration.SourceBody(raw_statements=fixture.statements, raw_nodes=fixture.nodes, body_raw=0, expressions=[]))
+    const last_data_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[-1], "data")
+    const last_data = try graph.get(fixture.batch.pool, last_data_id)
+    return walk.growing and len(walk.refresh) == 1 and fixture.scope.locals[0].usage.reads == 2 and last_data.data == b"local"

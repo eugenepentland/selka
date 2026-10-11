@@ -1012,6 +1012,23 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             if len(state.syntax.modules) != 0 and (raw_callee == b"bytes" or raw_callee == b"byte_buffer"):
                 declared = False
             if not declared:
+                if raw_callee == b"list":
+                    const inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const inputs = try graph.items(state.syntax.pool, inputs_id)
+                    if len(inputs) == 1:
+                        const list_input_raw = try graph.number(state.syntax.pool, inputs[0])
+                        const value = try expression(mut state, list_input_raw)
+                        const labels_id = try graph.field(state.syntax.pool, payload, "argument_names")
+                        const labels = try graph.items(state.syntax.pool, labels_id)
+                        for label in labels:
+                            const label_value = try graph.get(state.syntax.pool, label)
+                            if label_value.kind != 0:
+                                const rejection = try problem(state, call_name, "E_CALL_ARGUMENT", "keyword arguments require a declared function or record constructor")
+                                fail rejection
+                        const result = try list_conversion(mut state, span, value)
+                        state.batch.resolved[raw_id] = result.id
+                        state.depth = state.depth - 1
+                        return result
                 if raw_callee == b"set":
                     _ = try io_arguments.positional(state.syntax.pool, payload)
                     const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
@@ -4251,3 +4268,42 @@ func dictionary_method(mut state: State, call: int, span: int, slot: int) -> Exp
                 fail rejection
     const id = try list_lower.operation(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), list_lower.Operation(owner=slot, kind=kind, arguments=values, ty=result_type))
     return Expression(id=id, ty=result_type)
+
+
+func list_conversion(mut state: State, span: int, value: Expression) -> Expression fails syntax_value.Problem:
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, value.ty)
+    if schema.kind == 0 or schema.kind == 1:
+        const ty = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=schema.key, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+        const lowered = try list_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=value.id, owner_type=value.ty, kind=b"keys", arguments=[], result_type=ty, signed_length=False))
+        _ = try list_lower.append(mut state.batch, context, lowered)
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        return Expression(id=id, ty=ty)
+    if schema.kind >= 3 and schema.kind <= 5:
+        mut element = schema.key
+        mut kind = b"keys"
+        mut item = -1
+        if schema.kind == 4:
+            element = schema.value
+            kind = b"values"
+        elif schema.kind == 5:
+            const item_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=2, key=schema.key, value=schema.value, owner=-1), span)
+            item = item_type
+            element = item_type
+            kind = b"items"
+        const ty = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=element, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+        const snapshot = try dictionary_view_lower.snapshot(mut state.batch, mut state.scope, context, dictionary_view_lower.Request(view=value.id, shape=dictionary_view_lower.Shape(mapping=schema.owner, key=schema.key, value=schema.value, item=item, list=ty, kind=kind), loop_id=state.control.next))
+        state.control.next = snapshot.next_loop
+        if schema.kind != 5:
+            _ = try list_lower.append(mut state.batch, context, snapshot.value)
+        const id = try list_lower.append(mut state.batch, context, snapshot.value)
+        return Expression(id=id, ty=ty)
+    const element = list_types.element_type(state.batch.facts.lists, value.ty)
+    if element >= 0:
+        const loop_id = state.control.next
+        state.control.next += 1
+        const lowered = try list_slice.slice(mut state.batch, mut state.scope, context, list_slice.Slice(base=value.id, owner_type=value.ty, element=element, start=-1, end=-1, loop_id=loop_id))
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        return Expression(id=id, ty=value.ty)
+    const rejection = try problem(state, span, "E_PRELUDE_TYPE", "list requires a list, range, reversed source or dictionary view")
+    fail rejection

@@ -227,11 +227,11 @@ lowering, direct dictionary indexing and length, and set literals, contextual
 empty construction, and native set combination/relation lowering. Named
 dictionary bindings support get, pop, setdefault, update, copy, clear, keys,
 values and items with source operand typing and receiver usage metadata. Collection recipes use the outer `collection` tag and six inner tags;
-views require their canonical dictionary to exist first. Ordinary record and
+views require their canonical dictionary to exist first. `list` snapshots of dictionaries, sets and live views preserve native temporary and recipe order, including the intermediate result rows retained for keys and values. Ordinary record and
 collection storage recursion remains bounded and does not change wire limits.
 
 This slice does not qualify the complete dictionary/set closure. Collection
-expression-receiver methods, live-view snapshots, dictionary/set iteration
+expression-receiver methods, dictionary/set iteration
 and comprehensions are still being connected and must pass the native-controlled corpus before
 selected-source admission is claimed. The previous B7 deployment and evidence
 remain separate from schema-8 development.
