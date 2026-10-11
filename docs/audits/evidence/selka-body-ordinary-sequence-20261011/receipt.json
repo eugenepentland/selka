@@ -268,7 +268,7 @@
   "normal_operations": 1338,
   "checks_operations": 378,
   "hostile_operations": 12,
-  "full_pure": "pending",
+  "full_pure": "pending corrected full inventory replay",
   "scope": "ordinary scalar sequence calls; no whole compiler/bootstrap/performance claim",
   "release_operations": 1338,
   "python_selftests": 5,
@@ -276,5 +276,25 @@
     "modules": 97,
     "normal": 567,
     "release": 567
+  },
+  "producer_commit": "a8ddcdf02ac3adbd497d85727de7e5b0c6cd70dc",
+  "failed_pure_v1": {
+    "successful_modules": 79,
+    "successful_module_tests": 466,
+    "failed_module": "sequence_tests.my",
+    "passed_in_failed_module": 15,
+    "failed_in_failed_module": 1,
+    "release_operations": 0,
+    "report": "failed-pure-v1.json.gz"
+  },
+  "pure_test_correction": {
+    "donor": "802ad1f69a6beed4dda6987dd736143696f5e15f",
+    "path": "selfhost/components/body_check/sequence_tests.my",
+    "sha256": "0b69bd291b3a84f5aa4eef03fb4fd5bdb1b5b81dae286bd9be42367e72892572",
+    "normal": 16,
+    "release": 16,
+    "failed": 0,
+    "skipped": 0,
+    "report": "sequence-pure-correction.json.gz"
   }
 }

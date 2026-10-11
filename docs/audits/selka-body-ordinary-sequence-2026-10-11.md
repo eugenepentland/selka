@@ -44,3 +44,11 @@ passed. The Debug host and source-matched package identities are archived in the
 receipt. The full pure suite of 97 modules and 567 tests per mode remains pending. Successful
 source fixtures must execute with the native tuple; source errors must retain their
 ordered diagnostic contract. Release executions include fact and leak checks.
+
+The initial full pure replay passed 79 modules containing 466 tests, then the
+sequence module passed 15 tests and failed one inherited stale assertion. That
+assertion expected a byte literal in a scalar context to refuse its unowned array
+schema; native instead demands the canonical fixed u8 array. The exact test-only
+correction from `802ad1f69` passed all 16 tests in normal and release modes, with
+facts and leak checks. Both the failed replay and correction are retained. The
+producer/helper bytes remain unchanged; the corrected full inventory is pending.
