@@ -1,0 +1,19 @@
+enum Failure:
+    bad
+    empty
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure.bad
+    if value == 0:
+        fail Failure.empty
+    return value
+
+func main() -> int:
+    match parse(-1):
+        case Ok(value):
+            return value
+        case Err(Failure.bad):
+            return 7
+        case Err(Failure.empty):
+            return 0

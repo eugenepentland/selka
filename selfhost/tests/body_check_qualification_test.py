@@ -15,26 +15,26 @@ class BodyQualificationTests(unittest.TestCase):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         n=len(manifest)+2*sum(bool(v.get('typed')) and not v.get('library') for v in manifest.values())+sum('result' in v for v in manifest.values())+16
         return (f'body_check qualification: {n} workflows, {n*2} comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
-                'body_check transport: 1 valid, 17 malformed; 0 failed, 0 skipped\n'
-                'body_check forged replies: 24 rejected; 0 failed, 0 skipped\n'
+                'body_check transport: 1 valid, 19 malformed; 0 failed, 0 skipped\n'
+                'body_check forged replies: 66 rejected; 0 failed, 0 skipped\n'
                 'body_check publication: 2 host failures; 0 failed, 0 skipped\n')
 
     def test_gate_rejects_incomplete_or_duplicate_verdicts(self):
         good=self.summary();G.require_summary(good)
-        for bad in (good+good,good.replace('30 warm','29 warm'),good.replace('4 live','0 live'),good.replace('17 malformed','16 malformed'),good.replace('24 rejected','8 rejected'),good.replace('2 host','1 host'),good.replace('0 skipped','1 skipped')):
+        for bad in (good+good,good.replace('30 warm','29 warm'),good.replace('4 live','0 live'),good.replace('19 malformed','18 malformed'),good.replace('66 rejected','8 rejected'),good.replace('2 host','1 host'),good.replace('0 skipped','1 skipped')):
             with self.assertRaises(RuntimeError):G.require_summary(bad)
 
     def test_frame_binds_whole_request(self):
         payload=b'raw body\x00'+ 'éλ'.encode();frame=D.frame(payload)
         self.assertEqual(frame[:8],b'SLKBCK01')
-        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,4,0,len(payload)))
+        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,5,0,len(payload)))
         self.assertEqual(frame[32:64],D.F.hashlib.sha256(payload).digest())
         self.assertEqual(frame[64:],payload)
 
     def test_package_authentication_requires_all_seven(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);artifact=root/'artifact';artifact.write_bytes(b'fixture')
-            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,4)]:
+            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,5)]:
                 (root/(name+'.json')).write_text(json.dumps(dict(format=1,component=name,protocol=protocol,schema=schema,artifact='artifact',sha256=D.F.digest(artifact))))
             self.assertEqual(len(D.packages(root)),7)
             manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=3;manifest.write_text(json.dumps(value))
@@ -88,7 +88,7 @@ class BodyQualificationTests(unittest.TestCase):
 
     def test_input_mutations_preserve_bounded_graph_and_corrupt_dto_kinds(self):
         rows=[(4,b'source',[],[]),(5,b'',[0],[b'source']),
-              (5,b'',[],[]),(5,b'',[1,2],[b'context',b'catalog'])]
+              (5,b'',[0],[b'templates']),(5,b'',[1,2],[b'context',b'catalog'])]
         payload=bytearray(b'SLKBKI01'+struct.pack('<II',4,3))
         for kind,data,children,names in rows:
             payload.extend(struct.pack('<BqI',kind,0,len(data))+data+struct.pack('<I',len(children)))
@@ -96,6 +96,7 @@ class BodyQualificationTests(unittest.TestCase):
             payload.extend(struct.pack('<I',len(names)))
             for name in names:payload.extend(struct.pack('<I',len(name))+name)
         variants=D.mutate_input(bytes(payload))
+        self.assertEqual(len(variants),3)
         self.assertEqual(len(set(variants)),2)
         for value in variants:
             self.assertEqual(len(value),len(payload))
@@ -113,7 +114,8 @@ class BodyQualificationTests(unittest.TestCase):
         start, end = add(1, 0), add(1, 4)
         span = record(start=start, end=end)
         recipe = record(id=identity, element=element, span=span)
-        output = record(lists=add(6, children=[recipe]))
+        tagged_recipe = add(7,data=b'list',children=[recipe])
+        output = record(recipes=add(6, children=[tagged_recipe]))
         root = add(7, data=b'success', children=[output])
         payload = bytearray(b'SLKBKR01' + struct.pack('<II', len(rows), root))
         for kind, value, data, children, names in rows:
@@ -182,6 +184,58 @@ class BodyQualificationTests(unittest.TestCase):
         self.assertNotIn('Box', (D.FIXTURES/'record_invariant_unused.input').read_text().split('func main', 1)[1])
         self.assertIn('@invariant', (D.FIXTURES/'record_invariant_dependency.input').read_text())
 
+    def test_variant_match_propagation_transfer_and_tagged_recipe_attacks(self):
+        rows=[]
+        def add(kind, integer=0, data=b'', children=(), names=()):
+            rows.append((kind,integer,data,children,names));return len(rows)-1
+        def integer(value):return add(1,value)
+        def record(**fields):return add(5,children=list(fields.values()),names=[key.encode() for key in fields])
+        def sequence(values):return add(6,children=values)
+        def tagged(tag,value):return add(7,data=tag,children=[value])
+        span=record(start=integer(0),end=integer(1))
+        scalar=record(ty=integer(0),span=span,data=tagged(b'integer',integer(7)))
+        variant=record(ty=integer(19),span=span,data=tagged(b'variant',record(tag=integer(0),value=integer(2))))
+        payload=record(ty=integer(20),span=span,data=tagged(b'record',sequence([])))
+        propagation=record(ty=integer(0),span=span,data=tagged(b'propagate',record(value=integer(1),output=integer(21))))
+        arms=[record(tag=integer(0),slot=integer(0),body=integer(0)),record(tag=integer(1),slot=add(0),body=integer(0))]
+        match=record(span=span,data=tagged(b'match',record(value=integer(1),arms=sequence(arms))))
+        ownership=record(transfer_span=span,transfer_available=add(2,0))
+        local=record(ty=integer(0),ownership=ownership)
+        function=record(scope=record(locals=sequence([local])))
+        batch=record(nodes=sequence([scalar,variant,payload,propagation]),statements=sequence([match]),functions=sequence([function]))
+        recipes=[tagged(b'result',record(id=integer(31),success=integer(0),failure=integer(19),span=span)),tagged(b'option',record(id=integer(32),element=integer(0),span=span))]
+        root=tagged(b'success',record(batch=batch,recipes=sequence(recipes)))
+        payload=bytearray(b'SLKBKR01'+struct.pack('<II',len(rows),root))
+        for kind,value,data,children,names in rows:
+            payload.extend(struct.pack('<BqI',kind,value,len(data))+data+struct.pack('<I',len(children)))
+            for child in children:payload.extend(struct.pack('<I',child))
+            payload.extend(struct.pack('<I',len(names)))
+            for name in names:payload.extend(struct.pack('<I',len(name))+name)
+        original=bytes(payload)
+        groups=[D.mutate_variants(original),D.mutate_matches(original),D.mutate_propagation(original),D.mutate_transfer(original),D.mutate_catalog_recipes(original,b'result'),D.mutate_catalog_recipes(original,b'option')]
+        self.assertEqual([len(group) for group in groups],[4,4,3,2,4,4])
+        before,_=D.graph_rows(original)
+        for changed in sum(groups,[]):
+            after,actual_root=D.graph_rows(changed)
+            self.assertEqual(len(changed),len(original))
+            self.assertEqual(actual_root,root)
+            differences=[index for index,(a,b) in enumerate(zip(before,after)) if a!=b]
+            self.assertEqual(len(differences),1)
+            index=differences[0]
+            self.assertEqual(after[index],dict(before[index],integer=after[index]['integer']))
+
+    def test_b5_manifest_preserves_every_proposal_case_and_promotes_union(self):
+        manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
+        names={path.with_suffix('.my').name for path in (D.FIXTURES.parent/'body_check_b5').glob('*.input')}
+        self.assertEqual(len(names),25)
+        self.assertEqual(names-set(manifest),{'variant_import_dep.my'})
+        self.assertEqual(manifest['record_union_profile.my']['result'],7)
+        self.assertEqual(manifest['variant_recursive_lists.my']['result'],7)
+        self.assertEqual(manifest['variant_boxed_recursive_profile.my']['status'],2)
+        self.assertEqual(manifest['variant_generic_profile.my']['status'],2)
+        self.assertEqual(sum(manifest[name]['status']==0 for name in names&set(manifest)),14)
+        self.assertEqual(sum(manifest[name]['status']==1 for name in names&set(manifest)),8)
+
     def test_managed_measurement_edits_preserve_text_and_change_byte_length(self):
         import measure_managed_body_adoption as M
         self.assertIn('é😀ab'.encode(),M.HELPER)
@@ -195,7 +249,7 @@ class BodyQualificationTests(unittest.TestCase):
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         refusals=[n for n,v in manifest.items() if v['status']==2]
-        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','profile_text_repeat.my','record_generic_profile.my','record_invariant_profile.my','record_union_profile.my','record_invariant_unused.my','record_invariant_imported.my'})
+        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','profile_text_repeat.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my'})
         self.assertEqual(manifest['profile_managed.my']['result'], 1)
         self.assertTrue(all((D.FIXTURES/Path(n).with_suffix('.input')).is_file() for n in manifest))
         self.assertTrue(manifest['library.my']['library'])

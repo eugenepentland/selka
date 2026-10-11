@@ -1,0 +1,13 @@
+enum Failure:
+    bad
+    empty
+
+func wrong() -> int fails Failure:
+    fail 7
+
+func main() -> int:
+    match wrong():
+        case Ok(value):
+            return value
+        case Err(_):
+            return 0
