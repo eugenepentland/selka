@@ -902,7 +902,7 @@ pub fn build(b: *std.Build) void {
     body_checks_step.dependOn(&body_checks_checks.step);
     test_step.dependOn(body_checks_step);
     const body_libraries_step = b.step("test-selfhost-body-libraries", "Require all compiler library fixtures, nine library roots and six test roots without profile skips");
-    const body_libraries_run = driver(b, "actual compiler library admission: 183 operations", rss.driver, "body_library_admission");
+    const body_libraries_run = driver(b, "actual compiler library admission: 213 operations", rss.driver, "body_library_admission");
     // External qualified seed receipts and installed package bytes must be
     // reauthenticated even when a previous action receipt is available.
     body_libraries_run.has_side_effects = true;

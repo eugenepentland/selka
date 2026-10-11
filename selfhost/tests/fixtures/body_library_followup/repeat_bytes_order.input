@@ -1,0 +1,8 @@
+func main() -> int:
+    const value: bytes = b"\x00\xff"
+    const left = value * 3
+    const right = 3 * value
+    assert left == right
+    assert len(left) == 6
+    assert int(left[5]) == 255
+    return 7

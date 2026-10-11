@@ -1,0 +1,11 @@
+func count(mut calls: int) -> int:
+    calls += 1
+    return 2
+func main() -> int:
+    mut calls = 0
+    const left = "é" * count(mut calls)
+    const right = count(mut calls) * "é"
+    assert left == right
+    assert len(left) == 2
+    assert calls == 2
+    return 7

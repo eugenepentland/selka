@@ -1,0 +1,12 @@
+func main() -> int:
+    mut text = "é"
+    const before = text
+    text *= 3
+    mut octets: bytes = b"\xff"
+    const snapshot = octets
+    octets *= 2
+    assert before == "é"
+    assert len(text) == 3
+    assert len(snapshot) == 1
+    assert len(octets) == 2
+    return 7
