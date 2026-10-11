@@ -63,7 +63,7 @@ scripts/build-slot.sh gate python3 selfhost/tests/run_body_entry_qualification.p
   --work-dir /private/new-b7-work --report /private/b7-report.json --release
 ```
 
-The work directory must be new; failed runs retain raw output, final exchanges,
+The work directory must be new; failed runs retain raw output, all 35 exchanges,
 generated binaries and incomplete JSON. The six adversarial selftests run with
 `python3 selfhost/tests/body_entry_qualification_test.py`. They validate strict
 selection, exact native contracts, request completeness, captured correlation,
@@ -76,3 +76,5 @@ body profile and two-million-value/wire/allocation bounds; and seven authentic
 successful replay requests must be supplied from the existing native qualification
 captures. No requirement can be silently omitted. Full-language compiler ownership
 and the 1.5x performance goal remain separate work.
+
+Capture completion requires the exact 35 distinct `(entry phase, mode)` pairs, not just a total. Each fresh request/reply is retained in deterministic gzip with original and archive hashes, so later captures cannot overwrite earlier proof. All CLI paths are resolved before private work changes the child cwd; the adversarial tests exercise relative full-gate arguments.

@@ -61,6 +61,26 @@ class BodyEntryTests(unittest.TestCase):
         outcome=b'SLKBKR01'+struct.pack('<II',1,0)
         reply=request[:16]+struct.pack('<II',1,len(outcome))+request[24:64]+outcome
         self.assertEqual(Q.bound_capture(request,reply)['request_values'],1)
+        import gzip
+        with tempfile.TemporaryDirectory() as temporary:
+            archives=Q.retained_capture(Path(temporary),0,request,reply)
+            self.assertEqual(gzip.decompress(Path(archives['request_path']).read_bytes()),request)
+            self.assertEqual(gzip.decompress(Path(archives['reply_path']).read_bytes()),reply)
+            self.assertEqual(Q.F.digest(Path(archives['reply_path'])),archives['reply_archive_sha256'])
+            with self.assertRaises(FileExistsError):Q.retained_capture(Path(temporary),0,request,reply)
+        expected=[{'phase':name+phase,'mode':mode} for name in Q.ENTRIES
+                  for phase,modes in (('-source-check',('shadow','component')),('-generation1',('shadow','component')),('-generation2',('component',))) for mode in modes]
+        Q.require_capture_inventory(expected)
+        for bad in (expected[:-1],expected[:-1]+[expected[0]],expected+[expected[0]]):
+            with self.assertRaises(RuntimeError):Q.require_capture_inventory(bad)
+        # CLI build graph paths are relative to the launch cwd, not private cwd.
+        paths=('compiler','builder','component_dir','zig','source_root','requests_dir','work_dir','report')
+        args=SimpleNamespace(**{name:Path('relative')/name for name in paths},release=False)
+        with patch.object(Q.argparse.ArgumentParser,'parse_args',return_value=args),patch.object(Q,'Qualification') as qualification:
+            Q.main()
+            qualification.return_value.run.assert_called_once()
+            self.assertTrue(all(getattr(qualification.call_args.args[0],name).is_absolute() for name in paths))
+
         for bad in (b'',reply[:12]+struct.pack('<I',6)+reply[16:],reply[:24]+b'wrong123'+reply[32:]):
             with self.assertRaises(RuntimeError):Q.bound_capture(request,bad)
         with self.assertRaises(RuntimeError):Q.bound_capture(request,reply+b'X')

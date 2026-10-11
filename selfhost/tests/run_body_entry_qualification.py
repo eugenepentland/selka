@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """B7 preparation: real entry-source compilation, not a compiler bootstrap claim."""
 import argparse
+import gzip
 import hashlib
 import json
 import os
@@ -75,6 +76,29 @@ def bound_capture(request, reply):
     require(request[32:64] == hashlib.sha256(request[64:]).digest() and request[24:64] == reply[24:64], 'unbound body capture')
     return {'request_sha256': hashlib.sha256(request).hexdigest(), 'reply_sha256': hashlib.sha256(reply).hexdigest(),
             'request_bytes': len(request), 'reply_bytes': len(reply), 'request_values': int.from_bytes(request[72:76], 'little')}
+
+
+
+def require_capture_inventory(captures):
+    expected = {(name + phase, mode) for name in ENTRIES
+                for phase, modes in (('-source-check', ('shadow', 'component')),
+                                     ('-generation1', ('shadow', 'component')),
+                                     ('-generation2', ('component',))) for mode in modes}
+    actual = [(capture['phase'], capture['mode']) for capture in captures]
+    require(len(actual) == 35 and len(set(actual)) == 35 and set(actual) == expected,
+            'incomplete/duplicate actual entry capture inventory')
+
+
+def retained_capture(work, ordinal, request, reply):
+    paths = {}
+    for name, payload in (('request', request), ('reply', reply)):
+        path = work / ('capture-' + str(ordinal).zfill(2) + '-' + name + '.bin.gz')
+        with path.open('xb') as stream:
+            with gzip.GzipFile(filename='', mode='wb', fileobj=stream, mtime=0, compresslevel=1) as compressed:
+                compressed.write(payload)
+        paths[name + '_path'] = str(path)
+        paths[name + '_archive_sha256'] = F.digest(path)
+    return paths
 
 
 def descriptor_limit():
@@ -158,7 +182,10 @@ class Qualification:
         result = self.record(phase, mode, [self.args.compiler, *command], F.execute([self.args.compiler, *command], env, cwd, 600))
         if capture:
             require(request.is_file() and reply.is_file(), 'selected body checker did not execute')
-            self.captures.append({'phase': phase, 'mode': mode, **bound_capture(request.read_bytes(), reply.read_bytes())})
+            request_bytes, reply_bytes = request.read_bytes(), reply.read_bytes()
+            capture = bound_capture(request_bytes, reply_bytes)
+            archives = retained_capture(self.work, len(self.captures), request_bytes, reply_bytes)
+            self.captures.append({'phase': phase, 'mode': mode, **capture, **archives})
             self.checkpoint()
         return result
 
@@ -251,6 +278,7 @@ class Qualification:
         require(compiled[0] == 0, 'bounded native capture fixture failed to compile')
         self.fixtures(); self.entries()
         require(len(self.records) == EXPECTED_OPERATIONS and len(self.captures) == 35 and len(self.generations) == 2, 'incomplete B7 operations/captures/generations')
+        require_capture_inventory(self.captures)
         require(F.digest(self.args.compiler) == self.identity['host'] and D.packages(self.args.component_dir, body_schema=SCHEMA) == self.identity['packages'], 'installed deployment changed')
         require(source_identity(self.args.source_root) == self.identity['sources'], 'component source changed')
         require(request_inventory(self.args.requests_dir) == self.requests, 'authentic replay inventory changed')
