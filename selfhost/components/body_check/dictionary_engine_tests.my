@@ -3,6 +3,7 @@ import graph
 import engine
 import collection_types
 import list_types
+import locals
 
 func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
     const data = try syntax_value.tagged(mut pool, tag, payload)
@@ -125,3 +126,32 @@ public func test_dictionary_length_keeps_single_length_node_without_collection_t
     const payload = try graph.payload(state.batch.pool, data_id)
     const actual = try graph.number(state.batch.pool, payload)
     return result.ty == 0 and result.id == 5 and data.data == b"length" and actual == 4 and len(state.scope.locals) == 0 and len(state.batch.statements) == 0
+
+
+public func test_plain_dictionary_write_preserves_key_and_snapshots_value_before_owner() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const dictionary = try engine.expression(mut state, 4)
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 4)
+    _ = try locals.add(mut state.scope, b"True", name, dictionary.ty, True, b"local")
+    const base = try node(mut state.syntax.pool, name, b"name", name)
+    state.syntax.nodes.append(base)
+    const base_id = try syntax_value.integer(mut state.syntax.pool, 5)
+    const key = try syntax_value.integer(mut state.syntax.pool, 0)
+    const value = try syntax_value.integer(mut state.syntax.pool, 1)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [key, value])
+    const kind = try syntax_value.enumeration(mut state.syntax.pool, b"write")
+    const payload = try syntax_value.object(mut state.syntax.pool, ["base", "kind", "arguments"], [base_id, kind, arguments])
+    const write = try node(mut state.syntax.pool, span, b"list_operation", payload)
+    state.syntax.nodes.append(write)
+    const result = try engine.expression(mut state, 6)
+    const block_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const block = try graph.payload(state.batch.pool, block_id)
+    const operation_id = try graph.field(state.batch.pool, block, "value")
+    const operation = try graph.number(state.batch.pool, operation_id)
+    const operation_data = try graph.field(state.batch.pool, state.batch.nodes[operation], "data")
+    const access = try graph.payload(state.batch.pool, operation_data)
+    const inputs_id = try graph.field(state.batch.pool, access, "arguments")
+    const inputs = try graph.items(state.batch.pool, inputs_id)
+    const actual_key = try graph.number(state.batch.pool, inputs[0])
+    return result.ty == 15 and actual_key == 0 and state.scope.locals[0].usage.writes == 1 and state.scope.locals[0].usage.reads == 1 and len(state.scope.locals) == 3

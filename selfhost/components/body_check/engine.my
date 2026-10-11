@@ -4016,6 +4016,21 @@ func option_method(mut state: State, span: int, name: int, base: Expression, inp
 
 
 func list_value_access(mut state: State, span: int, base: Expression, kind_name: bytes, inputs: int[]) -> Expression fails syntax_value.Problem:
+    const mapping = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
+    if mapping.id >= 0 and mapping.kind == 0 and kind_name == b"write":
+        if len(inputs) != 2:
+            const rejection = try problem(state, span, "P_BODY_TRANSPORT", "dictionary write requires key and value")
+            fail rejection
+        const key_raw = try graph.number(state.syntax.pool, inputs[0])
+        const value_raw = try graph.number(state.syntax.pool, inputs[1])
+        const key = try expression_expected(mut state, key_raw, mapping.key)
+        const value = try expression_expected(mut state, value_raw, mapping.value)
+        _ = try require(state, key.ty, mapping.key, span)
+        _ = try require(state, value.ty, mapping.value, span)
+        const context = list_lower.Context(input=state.syntax.pool, span=span)
+        const lowered = try mapping_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=b"write", arguments=[key.id, value.id], result_type=15, signed_length=False))
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        return Expression(id=id, ty=15)
     const element = list_types.element_type(state.batch.facts.lists, base.ty)
     if element < 0 and sequence_type(state, base.ty) and kind_name == b"write":
         const rejection = try problem(state, span, "E_COLLECTION_METHOD", "str and bytes are immutable")
