@@ -1,5 +1,6 @@
 //! Bounded structural validation of scalar body graphs, not a second checker.
 const std = @import("std");
+const prelude = @import("prelude.zig");
 const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -90,12 +91,12 @@ pub fn outcome(a: std.mem.Allocator, request: value.Input, result: value.Outcome
             defer arena.deinit();
             var expanded = request;
             expanded.catalog = try @import("body_check_recipe_validate.zig").expanded(arena.allocator(), request, output.recipes);
-            try batch(a, expanded, output.batch);
+            try batch(a, expanded, output.batch, integerOption(request.catalog, output.recipes));
         },
     }
 }
 const Work = union(enum) { node: usize, statement: usize, finish_node: usize, finish_statement: usize };
-const GraphContext = struct { source_len: usize, catalog: value.Catalog, accepted: []const bool };
+const GraphContext = struct { source_len: usize, catalog: value.Catalog, accepted: []const bool, integer_option: ?typed.Type };
 const Graph = struct {
     allocator: std.mem.Allocator,
     tables: value.Batch,
@@ -141,7 +142,7 @@ const Graph = struct {
         }
     }
 };
-fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch) Error!void {
+fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch, integer_option: ?typed.Type) Error!void {
     if (tables.nodes.len > table_limit or tables.statements.len > table_limit) return error.ComponentProtocol;
     if (tables.functions.len != request.program.functions.len or tables.ranges.len != tables.functions.len) return error.ComponentProtocol;
     try ranges(tables);
@@ -159,7 +160,7 @@ fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch) Error!
     @memset(statement_states, 0);
     const accepted = try record_validate.policy(a, request.catalog);
     defer a.free(accepted);
-    var graph: Graph = .{ .allocator = a, .tables = tables, .context = .{ .source_len = request.context.source.len, .catalog = request.catalog, .accepted = accepted }, .locals = 0 };
+    var graph: Graph = .{ .allocator = a, .tables = tables, .context = .{ .source_len = request.context.source.len, .catalog = request.catalog, .accepted = accepted, .integer_option = integer_option }, .locals = 0 };
     defer graph.pending.deinit(a);
     var locals: usize = 0;
     for (tables.functions, request.program.functions, 0..) |function, raw, id| {
@@ -448,6 +449,14 @@ fn binaryNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
 fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation")) Error!void {
     if (@backingInt(operation.owner) >= graph.locals) return error.ComponentProtocol;
     const owner = graph.tables.functions[graph.function].scope.locals[@backingInt(operation.owner)].ty;
+    if (operation.kind == .parse_int) {
+        const catalog = graph.context.catalog;
+        const text = if (catalog.string) |sequence| owner == sequence.id else false;
+        const bytes = if (catalog.bytes) |sequence| owner == sequence.id else false;
+        if (!text and !bytes) return error.ComponentProtocol;
+        if (operation.arguments.len != 0 or node.ty != (graph.context.integer_option orelse return error.ComponentProtocol)) return error.ComponentProtocol;
+        return;
+    }
     const element = list_validate.listElement(graph.context.catalog, owner) orelse return error.ComponentProtocol;
     if (operation.arguments.len != operation.kind.arity()) return error.ComponentProtocol;
     if (operation.kind == .sort and !sortableListElement(graph.context.catalog, element)) return error.ComponentProtocol;
@@ -472,6 +481,17 @@ fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
         };
         if (try nodeType(graph, argument) != wanted) return error.ComponentProtocol;
     }
+}
+
+fn integerOption(initial: value.Catalog, recipes: []const value.CatalogRecipe) ?typed.Type {
+    if (initial.templates.option == null) return null;
+    for (initial.records) |record| {
+        if (!std.mem.startsWith(u8, record.name, "Option<")) continue;
+        const shape = prelude.optionShape(record.id, initial.records) orelse continue;
+        if (shape.element == .i64) return record.id;
+    }
+    for (recipes) |recipe| if (recipe == .option and recipe.option.element == .i64) return recipe.option.id;
+    return null;
 }
 
 fn sortableListElement(catalog: value.Catalog, element: typed.Type) bool {
@@ -523,8 +543,8 @@ fn propagationNode(graph: *Graph, node: typed.Node, item: @FieldType(@FieldType(
         if (node.ty != input_shape.ok_type) return error.ComponentProtocol;
         if (input_shape.error_type != output_shape.error_type and typed.wrappingCase(schemas, output_shape.error_type, input_shape.error_type) == null) return error.ComponentProtocol;
     } else if (input_type.isAggregate() and input_type.recordIndex() < schemas.len) {
-        const shape = @import("prelude.zig").optionCases(try variantSchema(graph, input_type)) orelse return error.ComponentProtocol;
-        _ = @import("prelude.zig").optionCases(try variantSchema(graph, item.output)) orelse return error.ComponentProtocol;
+        const shape = prelude.optionCases(try variantSchema(graph, input_type)) orelse return error.ComponentProtocol;
+        _ = prelude.optionCases(try variantSchema(graph, item.output)) orelse return error.ComponentProtocol;
         if (node.ty != shape.element) return error.ComponentProtocol;
     } else return error.ComponentProtocol;
 }

@@ -90,7 +90,10 @@ const Sites = std.AutoHashMapUnmanaged(source.Span, void);
 fn sites(a: std.mem.Allocator, input: value.Input) Error!Sites {
     var output: Sites = .empty;
     errdefer output.deinit(a);
-    for (input.program.nodes.items) |node| try output.put(a, node.span, {});
+    for (input.program.nodes.items) |node| {
+        try output.put(a, node.span, {});
+        if (node.data == .call) if (node.data.call.owner) |owner| try output.put(a, owner, {});
+    }
     for (input.program.statements.items) |statement| try output.put(a, statement.span, {});
     for (input.program.functions) |function| {
         try output.put(a, function.name, {});

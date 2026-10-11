@@ -87,6 +87,94 @@ fn nativeOutput(a: std.mem.Allocator, f: Fixture) !value.Output {
     ranges[0] = .{ .nodes = .{ .start = 0, .end = program.nodes.len }, .statements = .{ .start = 0, .end = program.statements.len } };
     return .{ .batch = .{ .nodes = program.nodes, .statements = program.statements, .functions = program.functions, .ranges = ranges }, .import_used = &.{}, .diagnostics = &.{} };
 }
+
+fn parseSite(f: Fixture) source.Span {
+    for (f.input.program.nodes.items) |node| {
+        if (node.data == .call) {
+            const call = node.data.call;
+            if (std.mem.eql(u8, f.input.context.source[call.name.start..call.name.end], "parse_int")) return call.owner orelse node.span;
+        }
+        if (node.data == .method_call) return node.span;
+    }
+    unreachable;
+}
+fn parsedOutput(a: std.mem.Allocator, f: Fixture) !value.Output {
+    var output = try nativeOutput(a, f);
+    for (output.batch.nodes) |node| if (node.data == .buffer_operation and node.data.buffer_operation.kind == .parse_int) {
+        if (node.ty.recordIndex() >= f.input.catalog.base_count) {
+            const recipes = try a.alloc(value.CatalogRecipe, 1);
+            recipes[0] = .{ .option = .{ .id = node.ty, .element = .i64, .span = parseSite(f) } };
+            output.recipes = recipes;
+        }
+        return output;
+    };
+    try std.testing.expect(false);
+    unreachable;
+}
+const parse_text = "func value(text: str) -> int:\n    match parse_int(text):\n        case Some(number):\n            return number\n        case None:\n            return 0\n";
+// spec: SELFHOST-BODY-PARSE-INT-1
+test "body integer parsing validates native first-demand Option and retained identities" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const fresh = try fixture(a, parse_text);
+    const output = try parsedOutput(a, fresh);
+    try std.testing.expectEqual(@as(usize, 1), output.recipes.len);
+    try std.testing.expectEqual(typed.Type.i64, output.recipes[0].option.element);
+    try validate.outcome(a, fresh.input, .{ .success = output });
+    const retained = try fixture(a, "func value(text: str, prior: int?) -> int:\n    _ = prior\n    match parse_int(text):\n        case Some(number):\n            return number\n        case None:\n            return 0\n");
+    const existing = try parsedOutput(a, retained);
+    try std.testing.expectEqual(@as(usize, 0), existing.recipes.len);
+    try validate.outcome(a, retained.input, .{ .success = existing });
+}
+// spec-case: SELFHOST-BODY-PARSE-INT-1
+test "body integer parsing admits byte local owner sites and expression text receivers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const bytes = try fixture(a, "func value(text: bytes) -> int:\n    match text.parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 0\n");
+    const output = try parsedOutput(a, bytes);
+    try std.testing.expectEqualStrings("text", bytes.input.context.source[output.recipes[0].option.span.start..output.recipes[0].option.span.end]);
+    try validate.outcome(a, bytes.input, .{ .success = output });
+    const text = try fixture(a, "func value() -> int:\n    match \"7\".parse_int():\n        case Some(number):\n            return number\n        case None:\n            return 0\n");
+    const expression = try parsedOutput(a, text);
+    try std.testing.expectEqual(@as(usize, 1), expression.recipes.len);
+    try validate.outcome(a, text.input, .{ .success = expression });
+}
+fn corruptParse(a: std.mem.Allocator, f: Fixture, output: value.Output) !bool {
+    var bad = output;
+    const nodes = try a.dupe(typed.Node, output.batch.nodes);
+    bad.batch.nodes = nodes;
+    for (nodes, 0..) |*node, index| if (node.data == .buffer_operation and node.data.buffer_operation.kind == .parse_int) {
+        const original = node.*;
+        node.ty = .i64;
+        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = bad }));
+        node.* = original;
+        node.data.buffer_operation.arguments = try a.dupe(typed.NodeId, &.{@fromBackingInt(index)});
+        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = bad }));
+        node.* = original;
+        node.data.buffer_operation.owner = @fromBackingInt(output.batch.functions[0].scope.locals.len);
+        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = bad }));
+        node.* = original;
+        const functions = try a.dupe(typed.Function, output.batch.functions);
+        const locals = try a.dupe(typed.Local, functions[0].scope.locals);
+        functions[0].scope.locals = locals;
+        bad.batch.functions = functions;
+        locals[@backingInt(node.data.buffer_operation.owner)].ty = .i64;
+        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = bad }));
+        return true;
+    };
+    return false;
+}
+// spec-case: SELFHOST-BODY-PARSE-INT-1
+test "body integer parsing rejects forged arity result receiver and foreign owners" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, parse_text);
+    const output = try parsedOutput(a, f);
+    try std.testing.expect(try corruptParse(a, f, output));
+}
 const match_text = "result Value:\n    ok: int\n    err: bool\nfunc read(value: Value) -> int:\n    match value:\n        case Ok(item):\n            return item\n        case Err(_):\n            return 0\n";
 // spec-case: SELFHOST-BODY-VARIANTS-1
 test "body variants accept native exhaustive payload matches and reject duplicate tags and foreign slots" {
