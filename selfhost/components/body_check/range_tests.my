@@ -1,0 +1,72 @@
+import syntax_value
+import graph
+import emission
+import locals
+import range_lower
+
+public record Fixture:
+    input: syntax_value.Pool
+    batch: emission.Batch
+    scope: locals.Scope
+    plan: range_lower.Plan
+
+
+public func make() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const start = try syntax_value.integer(mut input, 0)
+    const end = try syntax_value.integer(mut input, 1)
+    const span = try syntax_value.object(mut input, ["start", "end"], [start, end])
+    mut batch = emission.empty()
+    const zero_value = try syntax_value.integer(mut batch.pool, 0)
+    const zero = try emission.node(mut batch, input, span, 0, b"integer", zero_value)
+    const ten_value = try syntax_value.integer(mut batch.pool, 10)
+    const ten = try emission.node(mut batch, input, span, 0, b"integer", ten_value)
+    mut scope = locals.empty()
+    const plan = try range_lower.prepare(mut batch, mut scope, input, range_lower.Input(source=b"x", name=span, span=span, start=zero, end=ten, loop_id=7))
+    return Fixture(input=input, batch=batch, scope=scope, plan=plan)
+
+
+public func test_range_prebody_native_append_order() -> bool fails syntax_value.Problem:
+    const fixture = try make()
+    const condition = fixture.batch.nodes[fixture.plan.condition]
+    const condition_data = try graph.field(fixture.batch.pool, condition, "data")
+    const condition_tag = try graph.get(fixture.batch.pool, condition_data)
+    const operation = try graph.payload(fixture.batch.pool, condition_data)
+    const op_id = try graph.field(fixture.batch.pool, operation, "op")
+    const op = try graph.get(fixture.batch.pool, op_id)
+    const left_id = try graph.field(fixture.batch.pool, operation, "left")
+    const right_id = try graph.field(fixture.batch.pool, operation, "right")
+    const left = try graph.number(fixture.batch.pool, left_id)
+    const right = try graph.number(fixture.batch.pool, right_id)
+    return len(fixture.batch.nodes) == 7 and fixture.plan.condition == 4 and fixture.plan.next == 6 and condition_tag.data == b"binary" and op.data == b"lt" and left == 2 and right == 3
+
+
+public func test_range_hidden_limit_metadata() -> bool fails syntax_value.Problem:
+    const fixture = try make()
+    const index = fixture.scope.locals[fixture.plan.index]
+    const limit = fixture.scope.locals[fixture.plan.limit]
+    return index.name == b"x" and index.initialized and index.origin == b"local" and index.usage.reads == 1 and not index.usage.temporary and limit.name == b"<range-limit>" and not limit.initialized and limit.usage.temporary and limit.usage.reads == 1 and fixture.scope.active == [fixture.plan.index]
+
+
+public func test_range_postbody_step_and_exact_one_plan() -> bool fails syntax_value.Problem:
+    mut fixture = try make()
+    const empty_body = try emission.ids(mut fixture.batch, [])
+    const body = try emission.statement(mut fixture.batch, fixture.input, fixture.plan.request.span, False, b"block", empty_body)
+    const result = try range_lower.finish(mut fixture.batch, fixture.input, fixture.plan, body)
+    const parts_id = try graph.field(fixture.batch.pool, result, "parts")
+    const parts = try graph.items(fixture.batch.pool, parts_id)
+    const part = parts[0]
+    const loop = try graph.field(fixture.batch.pool, part, "loop")
+    const loop_id_value = try graph.field(fixture.batch.pool, loop, "id")
+    const loop_id = try graph.number(fixture.batch.pool, loop_id_value)
+    const step_value = try graph.field(fixture.batch.pool, loop, "step")
+    const step = try graph.number(fixture.batch.pool, step_value)
+    const body_value = try graph.field(fixture.batch.pool, loop, "body")
+    const body_id = try graph.number(fixture.batch.pool, body_value)
+    const assignment = fixture.batch.statements[step]
+    const data = try graph.field(fixture.batch.pool, assignment, "data")
+    const tagged = try graph.get(fixture.batch.pool, data)
+    const store = try graph.payload(fixture.batch.pool, data)
+    const slot_id = try graph.field(fixture.batch.pool, store, "slot")
+    const slot = try graph.number(fixture.batch.pool, slot_id)
+    return len(parts) == 1 and len(fixture.batch.statements) == 2 and loop_id == 7 and body_id == body and step == 1 and tagged.data == b"assign" and slot == fixture.plan.index

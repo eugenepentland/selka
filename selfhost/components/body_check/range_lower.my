@@ -1,0 +1,69 @@
+import syntax_value
+import graph
+import emission
+import locals
+
+public record Input:
+    source: bytes
+    name: int
+    span: int
+    start: int
+    end: int
+    loop_id: int
+
+
+public record Plan:
+    request: Input
+    index: int
+    limit: int
+    condition: int
+    next: int
+
+
+public func binary(mut batch: emission.Batch, input: syntax_value.Pool, span: int, operation: bytes, left: int, right: int) -> int fails syntax_value.Problem:
+    const op = try syntax_value.enumeration(mut batch.pool, operation)
+    const lhs = try syntax_value.integer(mut batch.pool, left)
+    const rhs = try syntax_value.integer(mut batch.pool, right)
+    const location = try graph.clone(mut batch.pool, input, span, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["op", "left", "right", "op_span"], [op, lhs, rhs, location])
+    mut ty = 0
+    if operation == b"lt":
+        ty = 1
+    return try emission.node(mut batch, input, span, ty, b"binary", payload)
+
+
+public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, request: Input) -> Plan fails syntax_value.Problem:
+    const name = try graph.spelling(input, request.source, request.name)
+    const index = try locals.add(mut scope, name, request.name, 0, False, b"local")
+    scope.locals[index].usage.reads = 1
+    const limit = try locals.add(mut scope, b"<range-limit>", request.name, 0, False, b"local")
+    scope.locals[limit].initialized = False
+    scope.locals[limit].usage.reads = 1
+    scope.locals[limit].usage.temporary = True
+    scope.active = scope.active[:len(scope.active) - 1]
+    const index_value = try syntax_value.integer(mut batch.pool, index)
+    const index_node = try emission.node(mut batch, input, request.name, 0, b"local", index_value)
+    const limit_value = try syntax_value.integer(mut batch.pool, limit)
+    const limit_node = try emission.node(mut batch, input, request.name, 0, b"local", limit_value)
+    const condition = try binary(mut batch, input, request.span, b"lt", index_node, limit_node)
+    const one_value = try syntax_value.integer(mut batch.pool, 1)
+    const one = try emission.node(mut batch, input, request.name, 0, b"integer", one_value)
+    const next = try binary(mut batch, input, request.name, b"add", index_node, one)
+    return Plan(request=request, index=index, limit=limit, condition=condition, next=next)
+
+
+public func finish(mut batch: emission.Batch, input: syntax_value.Pool, plan: Plan, body: int) -> int fails syntax_value.Problem:
+    const advance = try emission.store(mut batch, plan.index, plan.next)
+    const step = try emission.statement(mut batch, input, plan.request.name, False, b"assign", advance)
+    const binding = try graph.clone(mut batch.pool, input, plan.request.name, 0)
+    const start = try emission.store(mut batch, plan.index, plan.request.start)
+    const end = try emission.store(mut batch, plan.limit, plan.request.end)
+    const setup = try emission.ids(mut batch, [])
+    const loop_id = try syntax_value.integer(mut batch.pool, plan.request.loop_id)
+    const condition = try syntax_value.integer(mut batch.pool, plan.condition)
+    const body_id = try syntax_value.integer(mut batch.pool, body)
+    const step_id = try syntax_value.integer(mut batch.pool, step)
+    const loop = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [loop_id, condition, body_id, step_id])
+    const part = try syntax_value.object(mut batch.pool, ["binding", "start", "end", "setup", "loop"], [binding, start, end, setup, loop])
+    const parts = try syntax_value.sequence(mut batch.pool, [part])
+    return try syntax_value.object(mut batch.pool, ["parts"], [parts])
