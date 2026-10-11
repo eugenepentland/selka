@@ -265,6 +265,23 @@ func effects(scan: Scan) -> Effects fails syntax_value.Problem:
             elif tag == b"index":
                 try append_number(mut nodes, scan.input, payload, "base")
                 try append_number(mut nodes, scan.input, payload, "index")
+            elif tag == b"slice":
+                try append_number(mut nodes, scan.input, payload, "base")
+                try append_optional(mut nodes, scan.input, payload, "start")
+                try append_optional(mut nodes, scan.input, payload, "end")
+                try append_optional(mut nodes, scan.input, payload, "step")
+            elif tag == b"comprehension":
+                try append_number(mut nodes, scan.input, payload, "output")
+                try append_optional(mut nodes, scan.input, payload, "filter")
+                const source_id = try graph.field(scan.input, payload, "source")
+                const source_value = try graph.get(scan.input, source_id)
+                if source_value.data == b"iterable":
+                    const iterable = try graph.number(scan.input, source_value.children[0])
+                    nodes.append(iterable)
+                elif source_value.data == b"range":
+                    try append_number(mut nodes, scan.input, source_value.children[0], "start")
+                    try append_number(mut nodes, scan.input, source_value.children[0], "end")
+                    try append_optional(mut nodes, scan.input, source_value.children[0], "step")
             elif tag == b"field":
                 try append_number(mut nodes, scan.input, payload, "base")
             elif tag == b"length" or tag == b"propagate" or tag == b"unwrap":
@@ -293,13 +310,12 @@ public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, input: s
     const limit = try list_lower.temporary(mut scope, context, 0)
     const binding = try list_lower.temporary(mut scope, context, request.element)
     const name = try graph.spelling(input, request.source, request.name)
-    if name != b"_":
-        scope.locals[binding].name = name
-        scope.locals[binding].declaration = request.name
-        scope.locals[binding].mutable = False
-        scope.locals[binding].origin = b"iteration"
-        scope.locals[binding].initialized = True
-        scope.active.append(binding)
+    scope.locals[binding].name = name
+    scope.locals[binding].declaration = request.name
+    scope.locals[binding].mutable = False
+    scope.locals[binding].origin = b"iteration"
+    scope.locals[binding].initialized = True
+    scope.active.append(binding)
     return Plan(request=request, owner=owner, index=index, limit=limit, binding=binding, before_active=before)
 
 

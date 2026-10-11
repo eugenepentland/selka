@@ -1337,21 +1337,32 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         if chained.integer != 0 or op.data == b"python_div" or (len(op.data) >= 3 and op.data[:3] == b"f64"):
             const rejection = try problem(state, span, "P_BODY_PROFILE", "binary operation is outside the B1 scalar profile")
             fail rejection
-        mut obvious = try obvious_type(state, left_raw, 0)
-        if obvious < 0:
-            obvious = try obvious_type(state, right_raw, 0)
-        if obvious < 0:
-            obvious = state.batch.facts.expected[raw_id]
-        if obvious == 0:
-            state.batch.facts.expected[left_raw] = 0
-            state.batch.facts.expected[right_raw] = 0
-        elif op.data == b"eq" or op.data == b"ne":
-            const left_hint = try obvious_type(state, left_raw, 0)
-            const right_hint = try obvious_type(state, right_raw, 0)
-            if left_hint >= 0:
-                state.batch.facts.expected[right_raw] = left_hint
-            if right_hint >= 0:
-                state.batch.facts.expected[left_raw] = right_hint
+        mut sequence_constructor = False
+        if op.data == b"mul":
+            for operand in [left_raw, right_raw]:
+                const operand_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[operand], "data")
+                const operand_data = try graph.get(state.syntax.pool, operand_data_id)
+                if operand_data.data == b"list_literal" or operand_data.data == b"comprehension":
+                    sequence_constructor = True
+                    const context_type = state.batch.facts.expected[raw_id]
+                    if list_types.element_type(state.batch.facts.lists, context_type) >= 0:
+                        state.batch.facts.expected[operand] = context_type
+        if not sequence_constructor:
+            mut obvious = try obvious_type(state, left_raw, 0)
+            if obvious < 0:
+                obvious = try obvious_type(state, right_raw, 0)
+            if obvious < 0:
+                obvious = state.batch.facts.expected[raw_id]
+            if obvious == 0:
+                state.batch.facts.expected[left_raw] = 0
+                state.batch.facts.expected[right_raw] = 0
+            elif op.data == b"eq" or op.data == b"ne":
+                const left_hint = try obvious_type(state, left_raw, 0)
+                const right_hint = try obvious_type(state, right_raw, 0)
+                if left_hint >= 0:
+                    state.batch.facts.expected[right_raw] = left_hint
+                if right_hint >= 0:
+                    state.batch.facts.expected[left_raw] = right_hint
         const left = try expression(mut state, left_raw)
         const pending_checkpoint = try pending_flow.snapshot(state.scope, len(state.scope.locals))
         const right = try expression(mut state, right_raw)

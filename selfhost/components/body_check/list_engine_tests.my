@@ -133,3 +133,32 @@ public func test_expression_method_checks_receiver_before_writable_root() -> boo
             return False
         case Err(problem):
             return problem.code == "E_TYPE" and problem.message == "collection index requires an integer"
+
+
+public func test_dynamic_count_does_not_hint_list_literal_as_integer() -> bool fails syntax_value.Problem:
+    for count_first in [False, True]:
+        mut state = fresh()
+        state.syntax.source = b"1 count"
+        const spelling = try syntax_value.span(mut state.syntax.pool, 0, 1)
+        const count_span = try syntax_value.span(mut state.syntax.pool, 2, 7)
+        _ = try locals.add(mut state.scope, b"count", count_span, 0, False, b"parameter")
+        const integer = try add(mut state, b"integer", spelling)
+        const integer_id = try syntax_value.integer(mut state.syntax.pool, integer)
+        const items = try syntax_value.sequence(mut state.syntax.pool, [integer_id])
+        const list = try add(mut state, b"list_literal", items)
+        const count = try add(mut state, b"name", count_span)
+        mut left = list
+        mut right = count
+        if count_first:
+            left = count
+            right = list
+        const left_ref = try syntax_value.integer(mut state.syntax.pool, left)
+        const right_ref = try syntax_value.integer(mut state.syntax.pool, right)
+        const op = try syntax_value.enumeration(mut state.syntax.pool, b"mul")
+        const chained = try syntax_value.boolean(mut state.syntax.pool, False)
+        const binary = try syntax_value.object(mut state.syntax.pool, ["op", "left", "right", "op_span", "chained"], [op, left_ref, right_ref, spelling, chained])
+        const raw = try add(mut state, b"binary", binary)
+        const result = try engine.expression(mut state, raw)
+        if result.ty != 19 or state.batch.facts.expected[list] != -1 or len(state.batch.facts.lists.recipes) != 1:
+            return False
+    return True
