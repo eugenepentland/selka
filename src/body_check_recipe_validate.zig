@@ -7,7 +7,7 @@ const lists = @import("body_check_list_validate.zig");
 const records = @import("body_check_record_validate.zig");
 /// Allocation failure or invalid catalog recipe/template authority.
 pub const Error = lists.Error;
-const Key = struct { kind: enum { list, result, option }, first: typed.Type, second: typed.Type = .unit };
+const Key = struct { kind: enum { list, result, option, byte_buffer }, first: typed.Type, second: typed.Type = .unit };
 /// Validate native template declaration authority without supplying annotation answers.
 pub fn bases(input: value.Input) Error!void {
     if (input.catalog.templates.result) |basis| _ = try basisCases(input, basis, true);
@@ -73,6 +73,7 @@ fn cases(a: std.mem.Allocator, input: value.Input, recipe: value.CatalogRecipe) 
 fn key(recipe: value.CatalogRecipe) Key {
     return switch (recipe) {
         .list => |item| .{ .kind = .list, .first = item.element },
+        .byte_buffer => .{ .kind = .byte_buffer, .first = .unit },
         .result => |item| .{ .kind = .result, .first = item.success, .second = item.failure },
         .option => |item| .{ .kind = .option, .first = item.element },
     };
@@ -113,6 +114,7 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
     if (recipes.len > lists.limit - input.catalog.base_count) return error.ComponentProtocol;
     var known: std.AutoHashMapUnmanaged(Key, void) = .empty;
     defer known.deinit(a);
+    if (input.catalog.templates.byte_buffer.identity != null) try known.put(a, .{ .kind = .byte_buffer, .first = .unit }, {});
     for (input.catalog.lists) |item| try known.put(a, .{ .kind = .list, .first = item.element }, {});
     for (input.catalog.records) |item| if (existing(input.catalog, item)) |item_key| try known.put(a, item_key, {});
     var allowed_sites = try sites(a, input);
@@ -140,11 +142,7 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
         if (duplicate.found_existing) return error.ComponentProtocol;
         try dependency(item_key.first, id);
         if (recipe == .result) try dependency(item_key.second, id);
-        var item_depth: usize = 2;
-        if (item_key.first.isAggregate()) item_depth = 1 + depths[item_key.first.recordIndex()];
-        if (recipe == .result and item_key.second.isAggregate()) item_depth = @max(item_depth, 1 + depths[item_key.second.recordIndex()]);
-        if (item_depth > 256) return error.ComponentProtocol;
-        depths[id.recordIndex()] = item_depth;
+        depths[id.recordIndex()] = try recipeDepth(recipe, item_key, depths);
         var schema: typed.Record = .{ .id = id, .name = "", .declaration = at, .fields = &.{} };
         if (recipe == .list) {
             if (!input.catalog.list_available) return error.ComponentProtocol;
@@ -152,6 +150,13 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
             schema.collection.kind = .list;
             schema.shape.buffer = recipe.list.element;
             try entries.append(a, .{ .id = id, .element = recipe.list.element });
+        } else if (recipe == .byte_buffer) {
+            if (!input.catalog.templates.byte_buffer.available) return error.ComponentProtocol;
+            schema.name = "byte_buffer";
+            schema.managed = true;
+            schema.collection.kind = .bytes;
+            schema.shape.buffer = .u8;
+            output.templates.byte_buffer.identity = .{ .id = id, .element = .u8 };
         } else {
             schema.shape.variants = .{ .fallible = recipe == .result, .is_union = true, .cases = try cases(a, input, recipe) };
             schema.contract.requires_handling = recipe == .result;
@@ -182,4 +187,12 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
 fn dependency(ty: typed.Type, id: typed.Type) Error!void {
     if (ty == .i64 or ty == .bool or ty == .unit) return;
     if (!ty.isAggregate() or @backingInt(ty) >= @backingInt(id)) return error.ComponentProtocol;
+}
+
+fn recipeDepth(recipe: value.CatalogRecipe, item_key: Key, depths: []const usize) Error!usize {
+    var result: usize = if (recipe == .byte_buffer) 1 else 2;
+    if (item_key.first.isAggregate()) result = 1 + depths[item_key.first.recordIndex()];
+    if (recipe == .result and item_key.second.isAggregate()) result = @max(result, 1 + depths[item_key.second.recordIndex()]);
+    if (result > 256) return error.ComponentProtocol;
+    return result;
 }

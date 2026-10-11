@@ -1,0 +1,99 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import buffer_lower
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 3, 9)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func node_tag(batch: emission.Batch, id: int) -> bytes fails syntax_value.Problem:
+    const data = try graph.field(batch.pool, batch.nodes[id], "data")
+    const checked_1 = try graph.get(batch.pool, data)
+    return checked_1.data
+
+
+func operation_kind(batch: emission.Batch, id: int) -> bytes fails syntax_value.Problem:
+    const data = try graph.field(batch.pool, batch.nodes[id], "data")
+    const payload = try graph.payload(batch.pool, data)
+    const kind = try graph.field(batch.pool, payload, "kind")
+    const checked_2 = try graph.get(batch.pool, kind)
+    return checked_2.data
+
+
+public func test_omitted_text_end_exact_tail_and_signed_length_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const base = try list_lower.integer(mut fixture.batch, fixture.context, 0, 40)
+    const lowered = try buffer_lower.slice(mut fixture.batch, mut fixture.scope, fixture.context, buffer_lower.Slice(base=base, owner_type=40, start=-1, end=-1, string=True))
+    const appended = try list_lower.append(mut fixture.batch, fixture.context, lowered)
+    const length_ty = try graph.field(fixture.batch.pool, fixture.batch.nodes[2], "ty")
+    const local = fixture.scope.locals[0]
+    const checked_3 = try graph.number(fixture.batch.pool, length_ty)
+    const checked_11 = try node_tag(fixture.batch, 1)
+    const checked_12 = try operation_kind(fixture.batch, 2)
+    const checked_13 = try node_tag(fixture.batch, 3)
+    const checked_14 = try operation_kind(fixture.batch, 4)
+    return appended == 5 and len(fixture.batch.statements) == 2 and len(fixture.scope.active) == 0 and local.usage.temporary and local.usage.reads == 1 and not local.initialized and checked_11 == b"integer" and checked_12 == b"length" and checked_3 == 0 and checked_13 == b"cast" and checked_14 == b"text_tail"
+
+
+public func test_explicit_end_preserves_nodes_without_normalization() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const base = try list_lower.integer(mut fixture.batch, fixture.context, 0, 40)
+    const first = try list_lower.integer(mut fixture.batch, fixture.context, -2, 0)
+    const last = try list_lower.integer(mut fixture.batch, fixture.context, 8, 0)
+    const lowered = try buffer_lower.slice(mut fixture.batch, mut fixture.scope, fixture.context, buffer_lower.Slice(base=base, owner_type=40, start=first, end=last, string=True))
+    const data = try graph.field(fixture.batch.pool, fixture.batch.nodes[3], "data")
+    const payload = try graph.payload(fixture.batch.pool, data)
+    const arguments = try graph.field(fixture.batch.pool, payload, "arguments")
+    const rows = try graph.items(fixture.batch.pool, arguments)
+    const checked_4 = try graph.number(fixture.batch.pool, rows[0])
+    const checked_5 = try graph.number(fixture.batch.pool, rows[1])
+    const checked_15 = try operation_kind(fixture.batch, 3)
+    return lowered.tag == b"block_value" and len(fixture.batch.nodes) == 4 and checked_15 == b"slice" and checked_4 == first and checked_5 == last
+
+
+public func test_bytes_omitted_end_uses_slice_not_text_tail() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const base = try list_lower.integer(mut fixture.batch, fixture.context, 0, 41)
+    const first = try list_lower.integer(mut fixture.batch, fixture.context, 1, 0)
+    const lowered = try buffer_lower.slice(mut fixture.batch, mut fixture.scope, fixture.context, buffer_lower.Slice(base=base, owner_type=41, start=first, end=-1, string=False))
+    const checked_16 = try operation_kind(fixture.batch, 4)
+    const checked_17 = try operation_kind(fixture.batch, 2)
+    return lowered.ty == 41 and len(fixture.batch.nodes) == 5 and checked_16 == b"slice" and checked_17 == b"length"
+
+
+public func test_conversion_cast_retains_operand_and_target_type() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const base = try list_lower.integer(mut fixture.batch, fixture.context, 0, 42)
+    const value = try buffer_lower.cast(mut fixture.batch, fixture.context, base, 41)
+    const data = try graph.field(fixture.batch.pool, fixture.batch.nodes[value], "data")
+    const payload = try graph.payload(fixture.batch.pool, data)
+    const ty = try graph.field(fixture.batch.pool, fixture.batch.nodes[value], "ty")
+    const checked_6 = try graph.number(fixture.batch.pool, payload)
+    const checked_7 = try graph.number(fixture.batch.pool, ty)
+    const checked_18 = try node_tag(fixture.batch, value)
+    return value == 1 and checked_18 == b"cast" and checked_6 == base and checked_7 == 41
+
+
+public func test_byte_read_preserves_negative_index_without_list_normalization() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const base = try list_lower.integer(mut fixture.batch, fixture.context, 0, 41)
+    const index = try list_lower.integer(mut fixture.batch, fixture.context, -1, 0)
+    const lowered = try buffer_lower.access(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Access(base=base, owner_type=41, kind=b"read", arguments=[index], result_type=5, signed_length=False))
+    const data = try graph.field(fixture.batch.pool, fixture.batch.nodes[2], "data")
+    const payload = try graph.payload(fixture.batch.pool, data)
+    const arguments = try graph.field(fixture.batch.pool, payload, "arguments")
+    const rows = try graph.items(fixture.batch.pool, arguments)
+    const argument = try graph.number(fixture.batch.pool, rows[0])
+    const kind = try operation_kind(fixture.batch, 2)
+    return lowered.ty == 5 and len(fixture.batch.nodes) == 3 and len(fixture.batch.statements) == 2 and len(fixture.scope.locals) == 1 and kind == b"read" and argument == index

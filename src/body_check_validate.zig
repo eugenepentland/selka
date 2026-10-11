@@ -241,7 +241,9 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
         .cast => |operand| {
             const input_type = try nodeType(graph, operand);
             const scalar_conversion = node.ty == .i64 and (input_type == .bool or input_type == .u8 or input_type == .u64);
-            if (node.ty != input_type and !scalar_conversion) return error.ComponentProtocol;
+            const sequence_conversion = @import("body_check_buffer_validate.zig").cast(graph.context.catalog, node.ty, input_type);
+            const valid = node.ty == input_type or scalar_conversion or sequence_conversion;
+            if (!valid) return error.ComponentProtocol;
         },
         .acquire_buffer => |operation| {
             if (list_validate.listElement(graph.context.catalog, node.ty) == null or try nodeType(graph, operation.capacity) != .i64) return error.ComponentProtocol;
@@ -404,6 +406,7 @@ fn controlFlow(a: std.mem.Allocator, tables: value.Batch, owned: @import("semant
 fn sequenceElement(item: value.Catalog, ty: typed.Type) ?typed.Type {
     if (item.string) |entry| if (ty == entry.id) return entry.element;
     if (item.bytes) |entry| if (ty == entry.id) return entry.element;
+    if (item.templates.byte_buffer.identity) |entry| if (ty == entry.id) return entry.element;
     return list_validate.listElement(item, ty);
 }
 fn admittedType(item: value.Catalog, accepted: []const bool, ty: typed.Type) bool {
@@ -457,7 +460,14 @@ fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
         if (operation.arguments.len != 0 or node.ty != (graph.context.integer_option orelse return error.ComponentProtocol)) return error.ComponentProtocol;
         return;
     }
-    const element = list_validate.listElement(graph.context.catalog, owner) orelse return error.ComponentProtocol;
+    const element = list_validate.listElement(graph.context.catalog, owner) orelse {
+        var storage: [3]typed.Type = undefined;
+        if (operation.arguments.len > storage.len) return error.ComponentProtocol;
+        const arguments = storage[0..operation.arguments.len];
+        for (operation.arguments, arguments) |argument, *ty| ty.* = try nodeType(graph, argument);
+        const writable = graph.tables.functions[graph.function].scope.locals[@backingInt(operation.owner)].mutable;
+        return @import("body_check_buffer_validate.zig").operation(graph.context.catalog, owner, node.ty, operation.kind, arguments, writable);
+    };
     if (operation.arguments.len != operation.kind.arity()) return error.ComponentProtocol;
     if (operation.kind == .sort and !sortableListElement(graph.context.catalog, element)) return error.ComponentProtocol;
     const expected: typed.Type = switch (operation.kind) {

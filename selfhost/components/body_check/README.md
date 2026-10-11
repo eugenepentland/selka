@@ -1,4 +1,4 @@
-# B5 scalar, sequence, record, variant, and checked-failure body checking
+# B6 scalar, sequence, buffer, record, variant, and checked-failure body checking
 
 This producer owns typing and lowering of ordinary nongeneric function bodies
 from raw ASTs. It emits complete native typed nodes, statements, functions, local
@@ -6,7 +6,7 @@ metadata, and per-function table ranges. It does not consume a native semantic
 worklist or native checked bodies. The producer extends scalar and sequence checking with ordinary nongeneric value records. Selka chooses inferred list types and emits bounded catalog recipes; native
 code materializes those recipes without choosing body types.
 
-Admitted types are `int`/`i64`, `bool`, `Unit`, `str`, `bytes`, and recursively
+Admitted types are `int`/`i64`, `bool`, `Unit`, `str`, `bytes`, `byte_buffer`, and recursively
 nested lists, ordinary records, and ordinary nongeneric variants whose payloads use those admitted types. Recursive record storage through a list is admitted; direct by-value layout cycles are rejected. Operations include
 literals, scalar unary and binary operations, UTF-8 text and arbitrary byte
 literals, managed length and indexing (including negative indices), concatenation,
@@ -34,8 +34,7 @@ integer types. Full typed tables retain native intermediate nodes and exact span
 Other collections, generic functions,
 lambdas, resources, invariant/contracts, generic or boxed records or variants, domains, non-i64 scalar suffixes,
 floating division, chained comparisons, dynamic assertion messages, explicit
-range strides, keyed/callback sorting, enumerated/unpacked iteration, non-list
-methods and slicing are outside this profile. Transparent aliases are resolved from raw declarations with module privacy and canonical re-export identities. Unsupported forms produce `P_BODY_PROFILE`; component
+range strides, keyed/callback sorting, enumerated/unpacked iteration, non-list methods outside the closed byte vocabulary, stepped text slices, and list slices are outside this profile. Transparent aliases are resolved from raw declarations with module privacy and canonical re-export identities. Unsupported forms produce `P_BODY_PROFILE`; component
 mode refuses without native body fallback. Malformed graph transport fails the
 exchange rather than becoming a source diagnostic. Source diagnostics preserve
 native messages, related sites, and edits within the admitted closure.
@@ -48,7 +47,7 @@ body batch, diagnostics, and import usage. Component mode adopts the validated
 batch at the body-checking seam. Reference mode remains available.
 
 `main.my` accepts `--exchange FILE` or unframed `--request FILE`. The normative
-wire contract is [WIRE.md](WIRE.md): protocol 1, schema 5, correlated `SLKBCK01`
+wire contract is [WIRE.md](WIRE.md): protocol 1, schema 6, correlated `SLKBCK01`
 envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Older body schemas and packages are refused. The request contains raw ASTs, sources, declaration facts,
 and the retained catalog descriptors. Batch fields remain
 `nodes`, `statements`, `functions`, and `ranges`.
@@ -123,3 +122,32 @@ Integer text parsing is admitted as `parse_int(str_value)` and zero-argument
 on its first body demand and emits native rooted or direct-local operation rows.
 Invalid text and overflow remain runtime None results. The free function retains
 the native str-only contract; parse_float and range parsing remain profile refusals.
+
+
+## B6 byte closure
+
+The schema 6 request authenticates `Templates.byte_buffer` using
+`BufferBasis{available, identity:?Sequence}`. Existing canonical buffer IDs are
+reused. First body demand emits one ordered `.byte_buffer{id,span}` recipe with
+leaf depth one; IDs follow all earlier list/result/option recipes. A declaration
+or alias that shadows the builtin disables its availability. Local shadowing remains a source decision. Standalone ordinary function names
+block byte constructor recognition; project functions use native qualified keys
+and therefore retain the current native bare-constructor precedence.
+
+The producer admits `byte_buffer(int[])`, `bytes(int[])`, and immutable
+`bytes(buffer)` snapshots; empty constructor lists receive native `int[]` hints.
+It lowers plain string, bytes, and buffer slices with omitted/negative endpoints,
+byte indexing with native u8-to-int widening, and canonical buffer `reserve`,
+`append_byte`, and `append_range` calls. Receiver reads/writes, parameter origins,
+COW aliases, and mutation markers retain native metadata. Byte `view` requires
+an immutable bytes receiver. Indexed buffer writes and `.write()` retain native
+source errors. UTF-8 scalar versus octet slicing and append-range runtime bounds
+remain runtime semantics rather than producer constant evaluation.
+
+Encoding/decoding, stepped text slicing, fused byte slice/view numeric parsing,
+and wider byte methods remain explicit profile refusals. This wave does not
+claim all compiler helper sources are admitted: text iteration, source-first
+comprehensions, `str(int)` formatting, and `ord` remain separate pure-library
+closure work. Filesystem/Stream/File capabilities remain outside this producer.
+B6 installed qualification and performance evidence are maintained by the
+integration lane; pure tests alone do not establish those claims.

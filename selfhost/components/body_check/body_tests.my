@@ -34,7 +34,8 @@ func input(value_tag: bytes, return_text: bytes) -> syntax_value.Pool fails synt
     const source = try syntax_value.octets(mut pool, source_text)
     const context = try syntax_value.object(mut pool, ["path", "source"], [path, source])
     const record_count = try syntax_value.integer(mut pool, 0)
-    const templates = try syntax_value.object(mut pool, ["result", "option"], [absent, absent])
+    const buffer_basis = try syntax_value.object(mut pool, ["available", "identity"], [no, absent])
+    const templates = try syntax_value.object(mut pool, ["result", "option", "byte_buffer"], [absent, absent, buffer_basis])
     const catalog = try syntax_value.object(mut pool, ["string", "bytes", "base_count", "lists", "list_available", "records", "templates"], [absent, absent, record_count, empty, no, empty, templates])
     _ = try syntax_value.object(mut pool, ["context", "program", "modules", "catalog"], [context, program, empty, catalog])
     return pool

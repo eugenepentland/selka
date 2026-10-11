@@ -32,7 +32,7 @@ class StrictPerformanceTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):P.inventory(prefix,2)
             body=directory/'body-check.json'
             identity=json.loads(body.read_text())
-            for schema in (1,2,3,4,5):
+            for schema in (1,2,3,4,5,6):
                 body.write_text(json.dumps(dict(identity,schema=schema)))
                 self.assertEqual(len(P.inventory(prefix,schema)),7)
             binary.write_bytes(b'replaced')

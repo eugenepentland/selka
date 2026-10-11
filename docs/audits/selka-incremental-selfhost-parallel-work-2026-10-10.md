@@ -259,7 +259,7 @@ nor a bootstrap fixed point is proven.
 
 | Remaining stage | Completion evidence |
 | --- | --- |
-| B6 pure compiler libraries | Byte/string and list slicing, conversions, byte-buffer construction/mutation/snapshots, iteration, comprehensions, conditional expressions and managed constant getters cover the actual compiler helper closures. Complete native typed metadata and diagnostics match; existing pure tests pass in debug and release with fact/leak checks. Synthetic fixtures alone do not qualify those sources or executable entrypoints. |
+| B6 pure compiler libraries | Byte/string and list slicing, conversions, byte-buffer construction/mutation/snapshots, iteration, comprehensions, conditional expressions and literal managed/scalar constants cover the actual compiler helper closures. Complete native typed metadata and diagnostics match; existing pure tests pass in debug and release with fact/leak checks. Synthetic fixtures alone do not qualify those sources or executable entrypoints. |
 | B7 capabilities and scoped resources | Filesystem/Stream signatures, file opening/reading, stream output and scoped file cleanup cover all seven component entrypoints. The selected Selka body checker checks and builds the actual component source closures without native body fallback, preserving capability, ownership and cleanup metadata. This is component-source bootstrap coverage, not a complete compiler bootstrap. |
 | Remaining body language | Other collections, generic specialization, callbacks, scalar widths, additional resources, contracts and all remaining forms cover the current language. Unsupported profile refusals cannot count as success. |
 | Remaining semantic ownership | Selka owns declaration/catalog construction, entry handling, effects/origins, contracts, codecs and warnings, with diagnostics and accepted/rejected programs matching the native reference. |
@@ -288,7 +288,7 @@ appear in `parser_pilot/syntax_codec.my`, `type_interface/codec.my`,
 `declaration_index/codec.my` and `cache_plan/incremental.my`. Actual source
 admission also exposes text/byte iteration, `ord`, integer-to-text conversion,
 range/iterable comprehensions, list slices, nested collection iteration,
-conditional expressions and the lexer's imported string constant getters.
+conditional expressions and the lexer's string and private integer literal constants.
 These require exact native parity before the pure-library milestone is complete;
 the byte/buffer fixture implementation alone is insufficient. Those libraries
 can be qualified before resource support. Executable adapters such as

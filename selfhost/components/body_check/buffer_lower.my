@@ -1,0 +1,48 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+
+public record Slice:
+    base: int
+    owner_type: int
+    start: int
+    end: int
+    string: bool
+
+
+public func cast(mut batch: emission.Batch, context: list_lower.Context, value: int, ty: int) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, ty, b"cast", payload)
+
+
+public func length(mut batch: emission.Batch, context: list_lower.Context, owner: int) -> int fails syntax_value.Problem:
+    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"length", arguments=[], ty=0))
+    return try cast(mut batch, context, value, 0)
+
+
+public func slice(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Slice) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.owner_type)
+    const initialize = try list_lower.store(mut batch, context, owner, request.base, True)
+    mut first = request.start
+    if first < 0:
+        first = try list_lower.integer(mut batch, context, 0, 0)
+    mut last = request.end
+    if last < 0:
+        last = try length(mut batch, context, owner)
+    mut kind = b"slice"
+    if request.end < 0 and request.string:
+        kind = b"text_tail"
+    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=kind, arguments=[first, last], ty=request.owner_type))
+    return try list_lower.block(mut batch, context, [initialize], value, request.owner_type)
+
+
+public func access(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: list_lower.Access) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.owner_type)
+    const initialize = try list_lower.store(mut batch, context, owner, request.base, True)
+    mut value = -1
+    if request.signed_length:
+        value = try length(mut batch, context, owner)
+    else:
+        value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=request.kind, arguments=request.arguments, ty=request.result_type))
+    return try list_lower.block(mut batch, context, [initialize], value, request.result_type)

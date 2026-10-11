@@ -25,7 +25,9 @@ pub const Catalog = struct {
     templates: Templates = .{},
 };
 /// Opaque retained builtin template authority, never per-use body answers.
-pub const Templates = struct { result: ?TemplateBasis = null, option: ?TemplateBasis = null };
+pub const Templates = struct { result: ?TemplateBasis = null, option: ?TemplateBasis = null, byte_buffer: BufferBasis = .{} };
+/// Authenticated optional octet-buffer identity and exact builtin addability.
+pub const BufferBasis = struct { available: bool = false, identity: ?Sequence = null };
 /// Exact common declaration authority; an empty span denotes the synthesized prelude.
 pub const TemplateBasis = struct { id: usize, declaration: source.Span };
 /// The exact managed identity and its internal scalar element representation.
@@ -35,13 +37,16 @@ pub const Batch = struct { nodes: []const typed.Node, statements: []const typed.
 /// Typed bodies and all ordered checker observations.
 pub const Output = struct { batch: Batch, import_used: []const []const bool, diagnostics: []const Diagnostic, recipes: []const CatalogRecipe = &.{} };
 /// One producer-selected canonical list identity, in native append order.
+/// First-demand canonical octet-buffer schema, without type arguments.
+pub const BufferRecipe = struct { id: typed.Type, span: source.Span };
+/// Producer-selected list schema with its original demand span.
 pub const ListRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
 /// One producer-selected canonical checked-result identity.
 pub const ResultRecipe = struct { id: typed.Type, success: typed.Type, failure: typed.Type, span: source.Span };
 /// One producer-selected canonical optional identity.
 pub const OptionRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
 /// All append decisions share one native first-demand order.
-pub const CatalogRecipe = union(enum) { list: ListRecipe, result: ResultRecipe, option: OptionRecipe };
+pub const CatalogRecipe = union(enum) { list: ListRecipe, result: ResultRecipe, option: OptionRecipe, byte_buffer: BufferRecipe };
 /// Located unsupported profile refusal; it never requests native fallback.
 pub const Profile = struct { code: []const u8, span: source.Span, message: []const u8 };
 /// Checked scalar bodies, source diagnostics, or explicit admission refusal.

@@ -1,0 +1,8 @@
+func main() -> int:
+    mut buffer = byte_buffer([65, 66, 67])
+    const before = bytes(buffer)
+    if not buffer.append_range(buffer, 0, 2):
+        return 0
+    if bytes(buffer) != b"ABCAB" or before != b"ABC":
+        return 0
+    return 7

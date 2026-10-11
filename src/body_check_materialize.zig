@@ -4,6 +4,7 @@ const typed = @import("typed.zig");
 const value = @import("body_check_value.zig");
 const lists = @import("body_check_list_validate.zig");
 const record_validate = @import("body_check_record_validate.zig");
+const buffer_name = @import("nominal_templates.zig").byte_buffer_name;
 const Native = @import("type_catalog.zig").Catalog;
 pub const Error = lists.Error;
 fn builtin(native: Native, ty: typed.Type, name: []const u8) bool {
@@ -40,6 +41,19 @@ fn available(native: Native) bool {
     const name = declaration.builtin_name orelse return false;
     return declaration.kind == .buffer and std.mem.eql(u8, name, "List") and declaration.parameters.len == 1;
 }
+fn bufferBasis(native: Native) value.BufferBasis {
+    var identity: ?value.Sequence = null;
+    for (native.records) |record| {
+        if (!builtin(native, record.id, buffer_name)) continue;
+        if (!record.managed or record.collection.kind != .bytes or record.shape.buffer != .u8) continue;
+        identity = .{ .id = record.id, .element = .u8 };
+        break;
+    }
+    const state = native.templates.store orelse return .{};
+    const existing = template(native, buffer_name, .buffer, 0) != null;
+    const addable = !state.index.names.contains(buffer_name) and !state.index.syntax.aliases.contains(buffer_name);
+    return .{ .available = existing or addable, .identity = identity };
+}
 fn canonicalList(native: Native, record: typed.Record) bool {
     return record.isCollection() and record.collection.kind == .list and builtin(native, record.id, "List");
 }
@@ -52,7 +66,7 @@ pub fn project(a: std.mem.Allocator, native: Native) Error!value.Catalog {
         .base_count = native.records.len,
         .records = try a.dupe(typed.Record, native.records),
         .list_available = available(native),
-        .templates = .{ .result = template(native, "Result", .result, 2), .option = template(native, "Option", .variants, 1) },
+        .templates = .{ .result = template(native, "Result", .result, 2), .option = template(native, "Option", .variants, 1), .byte_buffer = bufferBasis(native) },
     };
     errdefer a.free(output.records);
     var entries: std.ArrayList(value.Sequence) = .empty;
@@ -93,6 +107,8 @@ pub fn added(a: std.mem.Allocator, native: Native, base_count: usize) Error![]co
         } else if (builtin(native, record.id, "Option")) {
             const shape = @import("prelude.zig").optionCases(record.shape.variants orelse return error.ComponentProtocol) orelse return error.ComponentProtocol;
             item.* = .{ .option = .{ .id = record.id, .element = shape.element, .span = site } };
+        } else if (builtin(native, record.id, buffer_name)) {
+            item.* = .{ .byte_buffer = .{ .id = record.id, .span = site } };
         } else return error.ComponentProtocol;
     }
     return output;
@@ -112,6 +128,7 @@ pub fn apply(a: std.mem.Allocator, native: *Native, input: value.Input, recipes:
         const before = native.records.len;
         const id = switch (recipe) {
             .list => |item| @import("collection_lower.zig").listType(native, item.element, item.span),
+            .byte_buffer => |item| @import("collection_lower.zig").preludeType(native, buffer_name, item.span),
             .result => |item| @import("nominal_catalog.zig").instantiateLengths(native, (input.catalog.templates.result orelse return error.ComponentProtocol).id, &.{ item.success, item.failure }, &.{}, item.span),
             .option => |item| @import("nominal_catalog.zig").instantiateLengths(native, (input.catalog.templates.option orelse return error.ComponentProtocol).id, &.{item.element}, &.{}, item.span),
         } catch |err| return switch (err) {

@@ -1,0 +1,4 @@
+func main() -> int:
+    mut buffer = byte_buffer([65])
+    _ = buffer.append_range("a", 0, 1)
+    return 7

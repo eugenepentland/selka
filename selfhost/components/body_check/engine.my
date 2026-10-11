@@ -13,6 +13,7 @@ import call_repairs
 import mut_markers
 import list_types
 import list_lower
+import buffer_lower
 import list_repeat
 import list_places
 import list_iteration
@@ -382,6 +383,14 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             state.batch.resolved[raw_id] = result.id
             state.depth = state.depth - 1
             return result
+        if data.data == b"method_call":
+            const sequence_base = try expression(mut state, base_raw)
+            if sequence_type(state, sequence_base.ty):
+                const name_span = try graph.field(state.syntax.pool, payload, "name")
+                const result = try sequence_method(mut state, span, name_span, span, -1, sequence_base, kind_name, inputs)
+                state.batch.resolved[raw_id] = result.id
+                state.depth = state.depth - 1
+                return result
         if kind_name == b"pop" and len(inputs) == 1:
             kind_name = b"pop_at"
         mut base = Expression(id=-1, ty=15)
@@ -392,6 +401,9 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         if base.id < 0:
             base = try expression(mut state, base_raw)
         const element = list_types.element_type(state.batch.facts.lists, base.ty)
+        if element < 0 and sequence_type(state, base.ty) and kind_name == b"write":
+            const rejection = try problem(state, span, "E_COLLECTION_METHOD", "str and bytes are immutable")
+            fail rejection
         if element < 0:
             const rejection = try problem(state, span, "P_BODY_PROFILE", "list operation receiver is outside the admitted list closure")
             fail rejection
@@ -457,6 +469,48 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             fail rejection
         ty = 0
         result_payload = try syntax_value.integer(mut state.batch.pool, base.id)
+    elif data.data == b"slice":
+        const base_id = try graph.field(state.syntax.pool, payload, "base")
+        const base_raw = try graph.number(state.syntax.pool, base_id)
+        const base = try expression(mut state, base_raw)
+        if not sequence_type(state, base.ty):
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "slice receiver is outside the admitted byte and text closure")
+            fail rejection
+        const first_id = try graph.field(state.syntax.pool, payload, "start")
+        const last_id = try graph.field(state.syntax.pool, payload, "end")
+        const first = try graph.get(state.syntax.pool, first_id)
+        const last = try graph.get(state.syntax.pool, last_id)
+        mut start = -1
+        mut end = -1
+        mut start_type = 0
+        mut end_type = 0
+        if first.kind != 0:
+            const first_raw = try graph.number(state.syntax.pool, first_id)
+            const value = try expression(mut state, first_raw)
+            start = value.id
+            start_type = value.ty
+        if last.kind != 0:
+            const last_raw = try graph.number(state.syntax.pool, last_id)
+            const value = try expression(mut state, last_raw)
+            end = value.id
+            end_type = value.ty
+        if start_type != 0 or end_type != 0:
+            const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
+            fail rejection
+        const step_id = try graph.field(state.syntax.pool, payload, "step")
+        const step = try graph.get(state.syntax.pool, step_id)
+        if step.kind != 0:
+            if base.ty != state.batch.facts.string_type:
+                const rejection = try problem(state, span, "E_COLLECTION_METHOD", "byte strings do not support a slice step")
+                fail rejection
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "stepped text slices are outside the admitted byte closure")
+            fail rejection
+        const context = list_lower.Context(input=state.syntax.pool, span=span)
+        const lowered = try buffer_lower.slice(mut state.batch, mut state.scope, context, buffer_lower.Slice(base=base.id, owner_type=base.ty, start=start, end=end, string=base.ty == state.batch.facts.string_type))
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        state.batch.resolved[raw_id] = id
+        state.depth = state.depth - 1
+        return Expression(id=id, ty=base.ty)
     elif data.data == b"index":
         const base_id = try graph.field(state.syntax.pool, payload, "base")
         const index_id = try graph.field(state.syntax.pool, payload, "index")
@@ -486,7 +540,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const no = try syntax_value.boolean(mut state.batch.pool, False)
         result_payload = try syntax_value.object(mut state.batch.pool, ["base", "index", "from_end"], [typed_base, typed_index, no])
         ty = base.ty
-        if base.ty == state.batch.facts.bytes_type:
+        if base.ty == state.batch.facts.bytes_type or base.ty == state.batch.facts.lists.types.buffer.id:
             const narrow = try emission.node(mut state.batch, state.syntax.pool, span, 5, b"index", result_payload)
             result_payload = try syntax_value.integer(mut state.batch.pool, narrow)
             const id = try emission.node(mut state.batch, state.syntax.pool, span, 0, b"cast", result_payload)
@@ -622,6 +676,21 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 state.batch.resolved[raw_id] = result.id
                 state.depth = state.depth - 1
                 return result
+            if owner_slot >= 0 and sequence_type(state, state.scope.locals[owner_slot].ty) and raw_callee != b"parse_int":
+                const labels_id = try graph.field(state.syntax.pool, payload, "argument_names")
+                const labels = try graph.items(state.syntax.pool, labels_id)
+                if len(labels) != 0:
+                    const rejection = try problem(state, call_name, "E_CALL_ARGUMENT", "keyword arguments require a declared function or record constructor")
+                    fail rejection
+                if explicit_count != 0:
+                    const rejection = try problem(state, span, "P_BODY_PROFILE", "specialized sequence methods are outside the body profile")
+                    fail rejection
+                const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
+                const arguments = try graph.items(state.syntax.pool, arguments_id)
+                const result = try sequence_method(mut state, span, call_name, owner, owner_slot, Expression(id=-1, ty=state.scope.locals[owner_slot].ty), raw_callee, arguments)
+                state.batch.resolved[raw_id] = result.id
+                state.depth = state.depth - 1
+                return result
             if owner_slot >= 0 and raw_callee == b"parse_int" and (state.scope.locals[owner_slot].ty == state.batch.facts.string_type or state.scope.locals[owner_slot].ty == state.batch.facts.bytes_type):
                 const labels_id = try graph.field(state.syntax.pool, payload, "argument_names")
                 const labels = try graph.items(state.syntax.pool, labels_id)
@@ -720,7 +789,50 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 const candidate = try names.qualified(state.syntax.pool, state.syntax.source, state.syntax.modules, name_span)
                 if candidate == expected_name:
                     declared = True
+            # Native byte conversion probes unqualified function keys. Project
+            # functions have module-qualified keys and do not shadow this probe.
+            if len(state.syntax.modules) != 0 and (raw_callee == b"bytes" or raw_callee == b"byte_buffer"):
+                declared = False
             if not declared:
+                if (raw_callee == b"bytes" and state.batch.facts.bytes_type >= 0) or raw_callee == b"byte_buffer":
+                    if locals.find(state.scope, raw_callee) >= 0 or explicit_count != 0:
+                        const rejection = try problem(state, span, "P_BODY_PROFILE", "shadowed or specialized byte conversion is outside the body profile")
+                        fail rejection
+                    const labels_id = try graph.field(state.syntax.pool, payload, "argument_names")
+                    const labels = try graph.items(state.syntax.pool, labels_id)
+                    if len(labels) != 0:
+                        const rejection = try problem(state, call_name, "E_CALL_ARGUMENT", "keyword arguments require a declared function or record constructor")
+                        fail rejection
+                    const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const arguments = try graph.items(state.syntax.pool, arguments_id)
+                    if len(arguments) != 1:
+                        const rejection = try problem(state, span, "E_ARITY", "byte conversions require one argument")
+                        fail rejection
+                    const argument_raw = try graph.number(state.syntax.pool, arguments[0])
+                    const raw_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "data")
+                    const raw_data = try graph.get(state.syntax.pool, raw_data_id)
+                    if raw_data.data == b"list_literal":
+                        const items = try graph.items(state.syntax.pool, raw_data.children[0])
+                        if len(items) == 0:
+                            const literal_span = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "span")
+                            const hinted = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=0, span=literal_span), [state.batch.facts.string_type, state.batch.facts.bytes_type, state.batch.facts.lists.types.buffer.id])
+                            state.batch.facts.expected[argument_raw] = hinted
+                    const argument = try expression(mut state, argument_raw)
+                    const integer_list = list_types.element_type(state.batch.facts.lists, argument.ty) == 0
+                    mut result_type = state.batch.facts.bytes_type
+                    if raw_callee == b"byte_buffer":
+                        if not integer_list:
+                            const rejection = try problem(state, span, "E_BYTES_CONVERSION", "byte_buffer() requires an int[] argument")
+                            fail rejection
+                        result_type = try list_types.buffer_intern(mut state.batch.facts.lists, mut state.syntax.pool, span)
+                    elif not integer_list and (argument.ty < 19 or argument.ty != state.batch.facts.lists.types.buffer.id):
+                        const rejection = try problem(state, span, "E_BYTES_CONVERSION", "bytes() requires an int[] or byte_buffer argument")
+                        fail rejection
+                    const operand = try syntax_value.integer(mut state.batch.pool, argument.id)
+                    const id = try emission.node(mut state.batch, state.syntax.pool, span, result_type, b"cast", operand)
+                    state.batch.resolved[raw_id] = id
+                    state.depth = state.depth - 1
+                    return Expression(id=id, ty=result_type)
                 if raw_callee == b"parse_int":
                     if locals.find(state.scope, raw_callee) >= 0 or explicit_count != 0:
                         const rejection = try problem(state, span, "P_BODY_PROFILE", "shadowed or specialized numeric parsing is outside the body profile")
@@ -1109,7 +1221,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 fail rejection
         _ = try require(state, right.ty, left.ty, operator_span)
         if op.data == b"eq" or op.data == b"ne":
-            const supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, left.ty, [state.batch.facts.string_type, state.batch.facts.bytes_type], [])
+            const supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, left.ty, [state.batch.facts.string_type, state.batch.facts.bytes_type, state.batch.facts.lists.types.buffer.id], [])
             if not supported:
                 const rejection = try problem(state, operator_span, "E_TYPE", "aggregate equality is not defined; compare the relevant elements explicitly")
                 fail rejection
@@ -1618,7 +1730,7 @@ func require_readable(mut state: State, slot: int, span: int) -> bool fails synt
 
 
 public func managed(state: State, ty: int) -> bool:
-    return ty >= 19 and (ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or list_types.element_type(state.batch.facts.lists, ty) >= 0)
+    return ty >= 19 and (ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or ty == state.batch.facts.lists.types.buffer.id or list_types.element_type(state.batch.facts.lists, ty) >= 0)
 
 
 func type_name(state: State, ty: int) -> str:
@@ -1629,6 +1741,8 @@ func type_name(state: State, ty: int) -> str:
         return "str"
     if ty >= 19 and ty == state.batch.facts.bytes_type:
         return "bytes"
+    if ty >= 19 and ty == state.batch.facts.lists.types.buffer.id:
+        return "byte_buffer"
     const records = state.batch.facts.lists.types.records
     if ty >= 19 and ty < len(records.by_type):
         const declaration = records.by_type[ty]
@@ -1678,6 +1792,8 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
                     return ty
             const rejection = try problem(state, span, "P_BODY_PROFILE", "qualified or user generic type application is outside the body profile")
             fail rejection
+    if text == b"byte_buffer":
+        return try list_types.buffer_intern(mut state.batch.facts.lists, mut state.syntax.pool, span)
     if text == b"str" or text == b"bytes":
         mut ty = state.batch.facts.string_type
         if text == b"bytes":
@@ -2507,6 +2623,22 @@ func parse_integer_access(mut state: State, span: int, base: Expression, owner: 
     if base.ty != state.batch.facts.string_type and base.ty != state.batch.facts.bytes_type:
         const rejection = try problem(state, span, "P_BODY_PROFILE", "integer parsing receiver is outside the managed sequence profile")
         fail rejection
+    if owner < 0 and base.ty == state.batch.facts.bytes_type and base.id >= 0:
+        const node_data_id = try graph.field(state.batch.pool, state.batch.nodes[base.id], "data")
+        const node_data = try graph.get(state.batch.pool, node_data_id)
+        if node_data.data == b"block_value":
+            const block = try graph.payload(state.batch.pool, node_data_id)
+            const value_id = try graph.field(state.batch.pool, block, "value")
+            const value = try graph.number(state.batch.pool, value_id)
+            const operation_id = try graph.field(state.batch.pool, state.batch.nodes[value], "data")
+            const operation = try graph.get(state.batch.pool, operation_id)
+            if operation.data == b"buffer_operation":
+                const operation_payload = try graph.payload(state.batch.pool, operation_id)
+                const kind_id = try graph.field(state.batch.pool, operation_payload, "kind")
+                const kind = try graph.get(state.batch.pool, kind_id)
+                if kind.data == b"slice" or kind.data == b"view":
+                    const rejection = try problem(state, span, "P_BODY_PROFILE", "fused byte range parsing is outside the admitted byte closure")
+                    fail rejection
     if owner >= 0:
         _ = try require_readable(mut state, owner, site)
     mut receiver = "str"
@@ -2524,3 +2656,86 @@ func parse_integer_access(mut state: State, span: int, base: Expression, owner: 
     const lowered = try list_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=b"parse_int", arguments=[], result_type=ty, signed_length=False))
     const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=ty)
+
+
+func sequence_type(state: State, ty: int) -> bool:
+    return ty >= 19 and (ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or ty == state.batch.facts.lists.types.buffer.id)
+
+
+func sequence_method(mut state: State, span: int, name: int, owner_span: int, owner: int, base: Expression, spelling: bytes, inputs: int[]) -> Expression fails syntax_value.Problem:
+    mut kind = spelling
+    mut arity = 2
+    mut signature = "(start: int, end: int) -> " + type_name(state, base.ty)
+    mut mutates = False
+    mut result_type = base.ty
+    if spelling == b"reserve":
+        kind = b"buffer_reserve"
+        arity = 1
+        signature = "(extra: int) -> bool"
+        mutates = True
+        result_type = 1
+    elif spelling == b"append_byte":
+        kind = b"buffer_append_byte"
+        arity = 1
+        signature = "(value: int) -> bool"
+        mutates = True
+        result_type = 1
+    elif spelling == b"append_range":
+        kind = b"buffer_append_range"
+        arity = 3
+        signature = "(data: bytes, start: int, end: int) -> bool"
+        mutates = True
+        result_type = 1
+    elif spelling != b"view":
+        if spelling == b"write" or spelling == b"read":
+            const rejection = try problem(state, name, "E_LIST_METHOD", "unknown method for a byte_buffer receiver; accepted methods: append_byte, append_float, append_int, append_range, append_utf8, copy, count, decode, endswith, find, find_any, hex, index, join, lstrip, parse_float, parse_float_range, parse_int, parse_int_range, reserve, rfind, rindex, rstrip, scalar_count, scalar_count_range, split, startswith, strip, to_list, view")
+            fail rejection
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "sequence method is outside the admitted byte closure")
+        fail rejection
+    if owner >= 0:
+        _ = try require_readable(mut state, owner, owner_span)
+    if arity != len(inputs):
+        mut plural = "s"
+        if arity == 1:
+            plural = ""
+        const method_name = try suggestions.text(spelling)
+        const rejection = try problem(state, span, "E_ARITY", "`" + type_name(state, base.ty) + "." + method_name + signature + "` takes " + str(arity) + " argument" + plural + ", but this call passes " + str(len(inputs)))
+        fail rejection
+    mut arguments: int[] = []
+    mut types: int[] = []
+    for input in inputs:
+        const raw_id = try graph.number(state.syntax.pool, input)
+        const value = try expression(mut state, raw_id)
+        arguments.append(value.id)
+        types.append(value.ty)
+    if owner >= 0:
+        state.scope.locals[owner].usage.reads = state.scope.locals[owner].usage.reads + 1
+        if mutates:
+            if not state.scope.locals[owner].mutable:
+                const rejection = try problem(state, owner_span, "E_IMMUTABLE", "collection update requires a writable binding")
+                fail rejection
+            state.scope.locals[owner].usage.writes = state.scope.locals[owner].usage.writes + 1
+    elif mutates:
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "mutation through temporary sequence receivers is outside the body profile")
+        fail rejection
+    if mutates and base.ty != state.batch.facts.lists.types.buffer.id:
+        const rejection = try problem(state, owner_span, "E_COLLECTION_METHOD", "in-place buffer methods require a byte_buffer receiver")
+        fail rejection
+    for position in range(len(arguments)):
+        if spelling == b"append_range" and position == 0:
+            if types[position] != state.batch.facts.bytes_type and types[position] != state.batch.facts.lists.types.buffer.id:
+                const rejection = try problem(state, owner_span, "E_COLLECTION_METHOD", "append_range requires a bytes or byte_buffer source")
+                fail rejection
+        elif types[position] != 0 and types[position] != 5 and types[position] != 7 and types[position] != 8:
+            const rejection = try problem(state, owner_span, "E_TYPE", "operation requires an integer type")
+            fail rejection
+    if spelling == b"view" and base.ty != state.batch.facts.bytes_type:
+        const rejection = try problem(state, owner_span, "E_COLLECTION_METHOD", "view requires an immutable bytes receiver")
+        fail rejection
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    if owner >= 0:
+        const id = try list_lower.operation(mut state.batch, context, list_lower.Operation(owner=owner, kind=kind, arguments=arguments, ty=result_type))
+        return Expression(id=id, ty=result_type)
+    const lowered = try list_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base.id, owner_type=base.ty, kind=kind, arguments=arguments, result_type=result_type, signed_length=False))
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=result_type)

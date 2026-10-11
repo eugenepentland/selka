@@ -66,6 +66,7 @@ pub fn policy(a: std.mem.Allocator, item: value.Catalog) Error![]bool {
     for (item.records, 0..) |record, index| allowed[index] = valueRecord(record);
     if (item.string) |entry| try mark(allowed, entry.id);
     if (item.bytes) |entry| try mark(allowed, entry.id);
+    if (item.templates.byte_buffer.identity) |entry| try mark(allowed, entry.id);
     for (item.lists) |entry| try mark(allowed, entry.id);
     var builder: Builder = .{ .allocator = a, .allowed = allowed, .heads = heads, .edges = &edges };
     for (item.records, 0..) |record, index| {

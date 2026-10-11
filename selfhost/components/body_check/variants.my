@@ -277,3 +277,14 @@ public func list_semantic(mut pool: syntax_value.Pool, records: int[], id: int, 
     const contract = try syntax_value.object(mut pool, ["requires_handling"], [no])
     const id_value = try syntax_value.integer(mut pool, id)
     return try syntax_value.object(mut pool, ["id", "name", "declaration", "fields", "shape", "contract"], [id_value, name, span, empty_fields, list_shape, contract])
+
+
+public func buffer_semantic(mut pool: syntax_value.Pool, id: int, span: int) -> int fails syntax_value.Problem:
+    const name = try syntax_value.octets(mut pool, b"byte_buffer")
+    const absent = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    const empty_fields = try syntax_value.sequence(mut pool, [])
+    const shape_value = try syntax_value.object(mut pool, ["variants"], [absent])
+    const contract = try syntax_value.object(mut pool, ["requires_handling"], [no])
+    const id_value = try syntax_value.integer(mut pool, id)
+    return try syntax_value.object(mut pool, ["id", "name", "declaration", "fields", "shape", "contract"], [id_value, name, span, empty_fields, shape_value, contract])

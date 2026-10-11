@@ -130,7 +130,7 @@ public func request_payload(data: bytes) -> bytes fails syntax_value.Problem:
     const schema = try read_u32(mut reader)
     const direction = try read_u32(mut reader)
     const length = try read_u32(mut reader)
-    if protocol != 1 or schema != 5 or direction != 0 or length != len(data) - 64:
+    if protocol != 1 or schema != 6 or direction != 0 or length != len(data) - 64:
         fail bad()
     return data[64:]
 
@@ -153,7 +153,7 @@ public func framed_reply(request: bytes, reply: bytes) -> bytes fails syntax_val
     mut buffer = byte_buffer([])
     _ = buffer.append_range(b"SLKBCK01", 0, 8)
     _ = append_u32(mut buffer, 1)
-    _ = append_u32(mut buffer, 5)
+    _ = append_u32(mut buffer, 6)
     _ = append_u32(mut buffer, 1)
     _ = append_u32(mut buffer, len(reply))
     _ = buffer.append_range(request, 24, 64)

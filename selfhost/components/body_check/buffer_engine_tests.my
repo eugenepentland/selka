@@ -1,0 +1,166 @@
+import syntax_value
+import graph
+import engine
+import locals
+
+func fresh(mutable: bool, integer: bool) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const empty = try syntax_value.sequence(mut pool, [])
+    const absent = try syntax_value.absent(mut pool)
+    const span = try syntax_value.span(mut pool, 0, 21)
+    const owner = try syntax_value.span(mut pool, 0, 6)
+    const name = try syntax_value.span(mut pool, 7, 18)
+    const argument_span = try syntax_value.span(mut pool, 19, 20)
+    mut argument_payload = argument_span
+    mut argument_tag = b"integer"
+    if not integer:
+        argument_payload = try syntax_value.boolean(mut pool, True)
+        argument_tag = b"boolean"
+    const argument_data = try syntax_value.tagged(mut pool, argument_tag, argument_payload)
+    const argument_node = try syntax_value.object(mut pool, ["span", "data"], [argument_span, argument_data])
+    const zero = try syntax_value.integer(mut pool, 0)
+    const arguments = try syntax_value.sequence(mut pool, [zero])
+    const payload = try syntax_value.object(mut pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [owner, name, arguments, empty, empty])
+    const call = try syntax_value.tagged(mut pool, b"call", payload)
+    const call_node = try syntax_value.object(mut pool, ["span", "data"], [span, call])
+    const nodes = try syntax_value.sequence(mut pool, [argument_node, call_node])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    mut state = try engine.make(pool, b"buffer.append_byte(7)", program)
+    state.batch.facts.lists.types.buffer.id = 19
+    state.batch.facts.lists.types.buffer.available = True
+    _ = try locals.add(mut state.scope, b"buffer", owner, 19, mutable, b"parameter")
+    return state
+
+
+public func test_append_byte_preserves_parameter_origin_and_receiver_usage() -> bool fails syntax_value.Problem:
+    mut state = try fresh(True, True)
+    const result = try engine.expression(mut state, 1)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const payload = try graph.payload(state.batch.pool, data_id)
+    const kind_id = try graph.field(state.batch.pool, payload, "kind")
+    const kind = try graph.get(state.batch.pool, kind_id)
+    const owner_id = try graph.field(state.batch.pool, payload, "owner")
+    const owner = try graph.number(state.batch.pool, owner_id)
+    return result.ty == 1 and len(state.batch.nodes) == 2 and len(state.batch.statements) == 0 and data.data == b"buffer_operation" and kind.data == b"buffer_append_byte" and owner == 0 and state.scope.locals[0].usage.reads == 1 and state.scope.locals[0].usage.writes == 1 and state.scope.locals[0].origin == b"parameter"
+
+
+public func test_readonly_append_diagnostic_before_argument_type_error() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, False)
+    match engine.expression(mut state, 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_IMMUTABLE" and problem.start == 0 and problem.end == 6 and problem.message == "collection update requires a writable binding" and len(state.batch.nodes) == 1
+
+
+public func test_append_byte_argument_type_location_is_receiver() -> bool fails syntax_value.Problem:
+    mut state = try fresh(True, False)
+    match engine.expression(mut state, 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.start == 0 and problem.end == 6 and problem.message == "operation requires an integer type"
+
+
+func constructor(empty_literal: bool, buffer: bool) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const empty = try syntax_value.sequence(mut pool, [])
+    const absent = try syntax_value.absent(mut pool)
+    mut source = b"byte_buffer([7])"
+    mut argument_start = 12
+    mut argument_end = 15
+    mut number_start = 13
+    mut number_end = 14
+    mut name_end = 11
+    if not buffer:
+        source = b"bytes([7])"
+        argument_start = 6
+        argument_end = 9
+        number_start = 7
+        number_end = 8
+        name_end = 5
+    if empty_literal:
+        source = b"byte_buffer([])"
+        argument_end = 14
+    const span = try syntax_value.span(mut pool, 0, len(source))
+    const name = try syntax_value.span(mut pool, 0, name_end)
+    const literal_span = try syntax_value.span(mut pool, argument_start, argument_end)
+    const number_span = try syntax_value.span(mut pool, number_start, number_end)
+    const integer_data = try syntax_value.tagged(mut pool, b"integer", number_span)
+    const integer_node = try syntax_value.object(mut pool, ["span", "data"], [number_span, integer_data])
+    const zero = try syntax_value.integer(mut pool, 0)
+    mut values = try syntax_value.sequence(mut pool, [zero])
+    if empty_literal:
+        values = empty
+    const literal_data = try syntax_value.tagged(mut pool, b"list_literal", values)
+    const literal_node = try syntax_value.object(mut pool, ["span", "data"], [literal_span, literal_data])
+    const one = try syntax_value.integer(mut pool, 1)
+    const arguments = try syntax_value.sequence(mut pool, [one])
+    const payload = try syntax_value.object(mut pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name, arguments, empty, empty])
+    const call_data = try syntax_value.tagged(mut pool, b"call", payload)
+    const call_node = try syntax_value.object(mut pool, ["span", "data"], [span, call_data])
+    const nodes = try syntax_value.sequence(mut pool, [integer_node, literal_node, call_node])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    mut state = try engine.make(pool, source, program)
+    state.batch.facts.bytes_type = 19
+    state.batch.facts.lists.base_count = 1
+    state.batch.facts.lists.available = True
+    state.batch.facts.lists.types.buffer.available = True
+    const no = try syntax_value.boolean(mut state.syntax.pool, False)
+    const contract = try syntax_value.object(mut state.syntax.pool, ["requires_handling"], [no])
+    const bytes_name = try syntax_value.octets(mut state.syntax.pool, b"bytes")
+    const row = try syntax_value.object(mut state.syntax.pool, ["name", "contract"], [bytes_name, contract])
+    state.batch.facts.lists.types.records.rows = [row]
+    for unused in range(20):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+public func test_byte_buffer_constructor_interns_list_before_buffer_at_exact_sites() -> bool fails syntax_value.Problem:
+    mut state = try constructor(False, True)
+    const result = try engine.expression(mut state, 2)
+    const recipes = state.batch.facts.lists.recipes
+    const first_start_id = try graph.field(state.syntax.pool, recipes[0].span, "start")
+    const first_start = try graph.number(state.syntax.pool, first_start_id)
+    const second_start_id = try graph.field(state.syntax.pool, recipes[1].span, "start")
+    const second_start = try graph.number(state.syntax.pool, second_start_id)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 21 and len(recipes) == 2 and recipes[0].kind == "list" and first_start == 12 and recipes[1].kind == "byte_buffer" and second_start == 0 and data.data == b"cast"
+
+
+public func test_empty_buffer_constructor_hints_i64_list_without_extra_recipes() -> bool fails syntax_value.Problem:
+    mut state = try constructor(True, True)
+    const result = try engine.expression(mut state, 2)
+    return result.ty == 21 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[0].element == 0 and len(state.batch.nodes) == 5
+
+
+public func test_bytes_list_conversion_preserves_immutable_catalog_and_cast() -> bool fails syntax_value.Problem:
+    mut state = try constructor(False, False)
+    const result = try engine.expression(mut state, 2)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 19 and len(state.batch.facts.lists.recipes) == 1 and state.batch.facts.lists.types.buffer.id == -1 and data.data == b"cast"
+
+
+public func test_project_qualified_function_does_not_shadow_native_bare_constructor_probe() -> bool fails syntax_value.Problem:
+    mut state = try constructor(False, True)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 11)
+    const function = try syntax_value.object(mut state.syntax.pool, ["name"], [name])
+    state.syntax.functions = [function]
+    const module_name = try syntax_value.octets(mut state.syntax.pool, b"main")
+    const source = try syntax_value.octets(mut state.syntax.pool, state.syntax.source)
+    const context = try syntax_value.object(mut state.syntax.pool, ["name", "source"], [module_name, source])
+    const offset = try syntax_value.integer(mut state.syntax.pool, 0)
+    const module = try syntax_value.object(mut state.syntax.pool, ["context", "offset", "symbols", "imports"], [context, offset, empty, empty])
+    state.syntax.modules = [module]
+    state.syntax.usage = [[]]
+    const result = try engine.expression(mut state, 2)
+    return result.ty == 21 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[1].kind == "byte_buffer"

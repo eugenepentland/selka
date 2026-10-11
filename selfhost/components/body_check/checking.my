@@ -10,6 +10,7 @@ import sequences
 import list_types
 import record_types
 import variants
+import buffer_types
 
 func ascii(text: str) -> bytes fails syntax_value.Problem:
     const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -124,8 +125,12 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const aliases_id = try graph.field(pool, expressions, "aliases")
     const aliases = try graph.items(pool, aliases_id)
     _ = try record_types.bind_names(mut records, pool, source.data, modules, aliases)
-    mut lists = try list_types.prepare_records(pool, catalog, suffixes, [string_type, bytes_type], records)
-    match record_types.closure(mut records, pool, lists.elements, [string_type, bytes_type]):
+    const template_facts = try graph.field(pool, catalog, "templates")
+    _ = try graph.field(pool, template_facts, "byte_buffer")
+    const buffer_basis = try buffer_types.prepare(pool, catalog)
+    const managed_types = [string_type, bytes_type, buffer_basis.id]
+    mut lists = try list_types.prepare_records(pool, catalog, suffixes, managed_types, records)
+    match record_types.closure(mut records, pool, lists.elements, managed_types):
         case Ok(admitted):
             _ = admitted
         case Err(problem):

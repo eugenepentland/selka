@@ -1,0 +1,54 @@
+import syntax_value
+import graph
+
+public record Basis:
+    available: bool
+    id: int
+
+
+public func empty() -> Basis:
+    return Basis(available=False, id=-1)
+
+
+public func prepare(pool: syntax_value.Pool, catalog: int) -> Basis fails syntax_value.Problem:
+    const catalog_row = try graph.get(pool, catalog)
+    mut templates = -1
+    for position in range(len(catalog_row.names)):
+        if catalog_row.names[position] == "templates":
+            templates = catalog_row.children[position]
+    if templates < 0:
+        return empty()
+    const row = try graph.get(pool, templates)
+    mut value_id = -1
+    for position in range(len(row.names)):
+        if row.names[position] == "byte_buffer":
+            value_id = row.children[position]
+    # Pure legacy test catalogs omit the newly authenticated basis.
+    if value_id < 0:
+        return empty()
+    const available_id = try graph.field(pool, value_id, "available")
+    const available = try graph.get(pool, available_id)
+    if available.kind != 2:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid byte buffer basis")
+    const identity_id = try graph.field(pool, value_id, "identity")
+    const identity = try graph.get(pool, identity_id)
+    mut id = -1
+    if identity.kind != 0:
+        const type_id = try graph.field(pool, identity_id, "id")
+        const element_id = try graph.field(pool, identity_id, "element")
+        id = try graph.number(pool, type_id)
+        const element = try graph.number(pool, element_id)
+        const count_id = try graph.field(pool, catalog, "base_count")
+        const count = try graph.number(pool, count_id)
+        if available.integer == 0 or element != 5 or id < 19 or id >= 19 + count:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid byte buffer identity")
+    if id >= 0:
+        for family in ["string", "bytes"]:
+            const descriptor_id = try graph.field(pool, catalog, family)
+            const descriptor = try graph.get(pool, descriptor_id)
+            if descriptor.kind != 0:
+                const other_id = try graph.field(pool, descriptor_id, "id")
+                const other = try graph.number(pool, other_id)
+                if id == other:
+                    fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="byte buffer identity aliases an immutable sequence")
+    return Basis(available=available.integer != 0, id=id)
