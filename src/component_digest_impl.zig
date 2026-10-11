@@ -45,3 +45,8 @@ export fn mylang_component_sha_final(state: *State, digest: *[32]u8) callconv(.c
     clearUpperLanes();
     context(state).final(digest);
 }
+
+export fn mylang_component_sha_hash(bytes: [*]const u8, length: usize, digest: *[32]u8) callconv(.c) void {
+    clearUpperLanes();
+    Sha.hash(bytes[0..length], digest, .{});
+}

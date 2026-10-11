@@ -1,6 +1,7 @@
 //! Bounded artifact SHA-256 through the narrow LLVM helper object.
 const std = @import("std");
 const State = @import("component_digest_abi.zig").State;
+extern fn mylang_component_sha_hash(bytes: [*]const u8, length: usize, digest: *[32]u8) callconv(.c) void;
 extern fn mylang_component_sha_init(state: *State) callconv(.c) void;
 extern fn mylang_component_sha_update(state: *State, bytes: [*]const u8, length: usize) callconv(.c) void;
 extern fn mylang_component_sha_final(state: *State, digest: *[32]u8) callconv(.c) void;
@@ -26,9 +27,9 @@ pub const Hasher = struct {
 };
 /// Authenticate an immutable snapshot using the same implementation as streams.
 pub fn hash(bytes: []const u8) [32]u8 {
-    var hasher = Hasher.init();
-    hasher.update(bytes);
-    return hasher.final();
+    var digest: [32]u8 = undefined;
+    mylang_component_sha_hash(bytes.ptr, bytes.len, &digest);
+    return digest;
 }
 fn fillData(bytes: []u8) void {
     for (bytes, 0..) |*byte, index| byte.* = @truncate(index *% 137);
@@ -54,4 +55,24 @@ test "component SHA matches standard SHA across chunks and padding boundaries" {
             try std.testing.expectEqualSlices(u8, &expected, &stream.final());
         }
     }
+}
+fn unevenStream(data: []const u8) [32]u8 {
+    var stream = Hasher.init();
+    var at: usize = 0;
+    while (at < data.len) {
+        const end = @min(data.len, at + 8191);
+        stream.update(data[at..end]);
+        at = end;
+    }
+    return stream.final();
+}
+// spec-case: SELFHOST-FRONTEND-VERIFY-1
+test "component SHA one-shot authenticates large bytes like streaming and standard SHA" {
+    const data = try std.testing.allocator.alloc(u8, 1048577);
+    defer std.testing.allocator.free(data);
+    fillData(data);
+    var expected: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(data, &expected, .{});
+    try std.testing.expectEqualSlices(u8, &expected, &hash(data));
+    try std.testing.expectEqualSlices(u8, &expected, &unevenStream(data));
 }
