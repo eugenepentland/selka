@@ -152,6 +152,7 @@ pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
 
 /// Receipt admission and immutable-snapshot adversarial tests use fake actions.
 pub const verification_cache = [_][]const u8{
+    "scripts/cache_session.py",
     "scripts/fuzz_campaign_store.py",
     "scripts/verify_cache.py",
     "scripts/verification_snapshot.py",
@@ -162,8 +163,12 @@ pub const verification_cache = [_][]const u8{
     "tests/test_inputs_coverage.py",
 };
 
+/// Persistent coordinator startup watches the complete developer implementation.
+pub const verification_session = [_][]const u8{"scripts/"};
+
 /// Independent fuzz shards, concrete replay, evidence and native-worker lifecycle.
 pub const fuzz_campaign = [_][]const u8{
+    "scripts/cache_session.py",
     "scripts/fuzz_campaign.py",
     "scripts/fuzz_campaign_identity.py",
     "scripts/fuzz_campaign_store.py",
@@ -189,6 +194,7 @@ pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};
 
 /// Qualified Juice evidence and admission tests use isolated simulated collectors.
 pub const juice_cache = [_][]const u8{
+    "scripts/cache_session.py",
     "scripts/juice_cache.py",
     "scripts/juice_cache_test.py",
     "scripts/juice_evidence.py",

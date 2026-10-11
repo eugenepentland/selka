@@ -162,6 +162,16 @@ Two coordinators for one checkout serialize
 on a local lock before requesting shared server slots. Normal `zig build test`
 and `zig build fmt-check` remain supported.
 
+For repeated requests in one worktree, a supervisor can keep
+`python3 scripts/cache_session.py` open and submit JSON Lines requests for
+`verify`, `fuzz` or `perf`. The process retains bounded watched input inventories
+between requests and reports new hashing, discovery and snapshot reuse work.
+Requests execute sequentially, under the startup environment. Ordinary commands
+do not attach automatically. See [the session protocol](cache-retention.md#warm-validation).
+Native compile/link and eligible shared-test claims separately coalesce matching
+work across independent compiler processes and worktrees. Waiting on those
+claims requires no additional server admission.
+
 The coordinator is developer tooling; it adds no Python dependency to compiler
 installation or installed Selka commands. Run its lightweight adversarial tests
 with `python3 -B scripts/verify_cache_test.py` and

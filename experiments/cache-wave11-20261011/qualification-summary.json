@@ -1,0 +1,66 @@
+{
+  "baseline": "5c4d4235f",
+  "cold": {
+    "actions": {
+      "execute": 32,
+      "fresh": 11
+    },
+    "build_steps_passed": 127,
+    "shard_exclusions": 24819,
+    "snapshot_work": {
+      "bytes_hashed": 2214978034,
+      "digest_reuses": 0,
+      "directories_enumerated": 2261,
+      "files_hashed": 28525,
+      "metadata_observations": 1029221,
+      "snapshot_reuses": 0,
+      "validation_calls": 36
+    },
+    "zig_tests_passed": 2748
+  },
+  "fixture_regression": {
+    "passed": 1
+  },
+  "focused_python_tests": {
+    "fuzz_coordinator": 35,
+    "juice_cache": 39,
+    "retention": 5,
+    "session": 15,
+    "snapshot": 62,
+    "verification_coordinator": 46
+  },
+  "frozen_digests_match": true,
+  "frozen_file_count": 2532,
+  "guardian_checks_passed": 88,
+  "native_scenarios": [
+    "corrupt_receipt",
+    "edit_while_waiting",
+    "failure_retry",
+    "force_owner_killed",
+    "identical_builds",
+    "independent_test",
+    "mixed_program_sharing",
+    "reversed_sources",
+    "same_test"
+  ],
+  "passed": true,
+  "warm": {
+    "actions": {
+      "fresh": 11,
+      "reused": 32
+    },
+    "build_admissions": 0,
+    "build_steps_passed": 44,
+    "gate_admissions": 1,
+    "snapshot_work": {
+      "bytes_hashed": 0,
+      "digest_reuses": 0,
+      "directories_enumerated": 0,
+      "files_hashed": 0,
+      "metadata_observations": 174126,
+      "snapshot_reuses": 5,
+      "validation_calls": 26
+    }
+  },
+  "zig": "0.17.0-dev.1683+5ceec001b"
+}

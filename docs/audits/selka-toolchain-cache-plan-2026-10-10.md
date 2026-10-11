@@ -1013,12 +1013,33 @@ refill after eviction, and automatic throttling. Keep every installed command
 Python-free. The acceptance plan and results live under
 [`cache-wave10-20261011`](../../experiments/cache-wave10-20261011/PLAN.md).
 
-### Proposed follow-up — Wave 11
+### Wave 11 — Retained validation and duplicate-work coordination
 
-Reduce repeated warm validation and admission overhead through retained
-validated graph state and coordination of duplicate concurrent work. This
-requires its own qualification; sharing immutable artifacts does not eliminate
-discovery, validation, hashing or duplicate simultaneous computation.
+An explicit foreground developer session retains bounded live watched input
+inventories and their content identities across verification, fuzz and Juice
+requests. Identical scopes reuse their validated snapshots; edits rebuild the
+affected scopes, and every request retains path-identity and mutation checks.
+Restart, reset, lost watches and eviction remove reuse authority. Loaded
+coordinator/runtime changes require a session restart. One-shot commands remain
+supported, and every installed compiler command remains Python-free.
+
+Native compilation and linking use exact-key process claims and recheck entries
+after waiting. Sorted unique batches prevent deadlocks while keeping unit
+compilation parallel. Portable shared tests claim their exact execution keys,
+revalidate sources after waiting and retain ownership through publication or
+failure. Forced reruns invalidate under ownership. Existing developer
+coordinators retain their per-checkout or campaign locks outside server admission.
+
+Claims hold shared retention leases before opening lock inodes; the native
+driver also protects objects through linking. The legacy pruner respects these
+leases, reclaims idle key locks and preserves lease inodes. Process termination releases claims;
+missing, corrupt or failed results still require work.
+
+This completes the current eleven-wave roadmap. It reduces repeated hashing,
+discovery and duplicate execution, without claiming zero metadata validation,
+constant-time cold startup, a persistent compiler AST service or remote
+distributed execution. The acceptance matrix and evidence live under
+[`cache-wave11-20261011`](../../experiments/cache-wave11-20261011/PLAN.md).
 
 ## Qualification and observable success
 

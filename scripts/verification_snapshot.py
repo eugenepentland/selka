@@ -13,6 +13,9 @@ the coordinator must discard a publication if the final check fails.
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
+from contextvars import ContextVar
+from collections import OrderedDict
 from collections.abc import Iterable
 import ctypes
 from dataclasses import dataclass, field
@@ -27,6 +30,7 @@ import sys
 
 # Bind the code Python actually compiled, including its function bodies and
 # constants, rather than later source bytes read after module initialization.
+_LOADED_CODE_OBJECT = sys._getframe().f_code
 LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
 
 
@@ -207,7 +211,7 @@ class DigestSession:
         if entry is None:
             return None
         identity, result, owner = entry
-        if (owner._watcher is None or identity != _file_identity(metadata)
+        if (owner._pid != os.getpid() or owner._watcher is None or identity != _file_identity(metadata)
                 or not owner._watcher.drain()):
             self._entries.pop(path, None)
             return None
@@ -218,6 +222,172 @@ class DigestSession:
         self._current_process()
         if path in self._entries or len(self._entries) < self.max_entries:
             self._entries[path] = (_file_identity(metadata), result, owner)
+
+
+_ACTIVE_RETAINED = ContextVar("verification_retained_session", default=None)
+
+
+class RetainedSession:
+    """Bounded process-local ownership of live validated snapshots.
+
+    activate() admits leases from ordinary Snapshot contexts. Bounds account for
+    inventories, metadata paths, watches and watch selectors; oversized or busy
+    requests remain transient. No authority survives close, reset or fork.
+    """
+
+    def __init__(self, max_snapshots: int = 16, max_entries: int = 262144) -> None:
+        for value in (max_snapshots, max_entries):
+            if type(value) is not int or not 0 <= value <= 1048576:
+                raise ValueError("retained bounds must be integers between 0 and 1048576")
+        self.max_snapshots = max_snapshots
+        self.max_entries = max_entries
+        self._owners = OrderedDict()
+        self._retired = {}
+        self._transient = set()
+        self._pid = os.getpid()
+        self._closed = False
+        self._statistics = dict(files_hashed=0, bytes_hashed=0, digest_reuses=0,
+                                directories_enumerated=0, metadata_observations=0,
+                                validation_calls=0, snapshot_reuses=0)
+
+    @property
+    def statistics(self):
+        """Detached cumulative work counters; request boundaries use deltas."""
+        return dict(self._statistics)
+
+    def _record(self, work):
+        for key, value in work.items():
+            self._statistics[key] += value
+
+    def __enter__(self):
+        if self._closed:
+            raise SnapshotError("retained session is closed")
+        return self
+
+    def __exit__(self, *_args):
+        self.close()
+
+    @contextmanager
+    def activate(self):
+        if self._closed:
+            raise SnapshotError("retained session is closed")
+        token = _ACTIVE_RETAINED.set(self)
+        try:
+            yield self
+        finally:
+            _ACTIVE_RETAINED.reset(token)
+
+    def reset(self):
+        """Drop retained authority without rebasing any outstanding borrower."""
+        for owner, _borrowers, _cost in self._owners.values():
+            owner._close()
+        self._owners.clear()
+        for owner in self._retired:
+            owner._close()
+        self._retired.clear()
+        for owner in self._transient:
+            owner._close()
+        self._transient.clear()
+        self._pid = os.getpid()
+
+    def close(self):
+        self.reset()
+        self._closed = True
+
+    @staticmethod
+    def _cost(owner):
+        watcher = owner._watcher
+        identity = owner._identity
+        membership = identity.get("directory_membership", ())
+        # Declaration lists and key tuples also retain metadata, including
+        # duplicate declarations. One entry covers ordinary short text; long
+        # path/name payloads consume additional 256-byte units.
+        declarations = [owner._requested_root, *owner.recipes,
+                        *owner.extra_files, *owner.directory_membership]
+        texts = [*declarations, *owner._paths, *owner._missing,
+                 *owner._links, *owner._links.values(), *watcher.paths]
+        texts.extend(row["path"] for row in identity["files"])
+        texts.extend(entry["name"] for row in membership for entry in row.get("entries", ()))
+        texts.extend(name for watch in watcher.watches.values() for name in watch.names)
+        payload = sum(max(0, (len(value if isinstance(value, bytes)
+                                 else os.fsencode(str(value))) - 1) // 256) for value in texts)
+        return (2 * len(declarations) + payload
+                + len(owner._paths) + len(owner._missing) + len(owner._links)
+                + len(identity["files"]) + sum(len(row.get("entries", ())) for row in membership)
+                + len(watcher.paths) + len(watcher.watches)
+                + sum(len(w.names) + len(w.scopes) for w in watcher.watches.values()))
+
+    def _acquire(self, borrower):
+        if self._closed:
+            raise SnapshotError("retained session is closed")
+        if self._pid != os.getpid():
+            self.reset()
+        key = (str(borrower._requested_root), tuple(borrower.recipes),
+               tuple(str(borrower._input_path(p)) for p in borrower.extra_files),
+               borrower.include_hidden, tuple(map(str, borrower.directory_membership)))
+        entry = self._owners.get(key)
+        rejected_work = {}
+        if entry is not None:
+            owner, count, cost = entry
+            before = owner.statistics
+            try:
+                clean = owner.unchanged()
+            except SnapshotError:
+                clean = False
+            if clean:
+                self._owners.move_to_end(key)
+                self._owners[key] = (owner, count + 1, cost)
+                borrower._statistics = {k: owner._statistics[k] - before[k] for k in before}
+                borrower._statistics["snapshot_reuses"] = 1
+                self._record(borrower._statistics)
+                return owner, key
+            rejected_work = {k: owner._statistics[k] - before[k] for k in before}
+            # Existing borrowers stay attached to the dirty original revision.
+            self._owners.pop(key)
+            if count:
+                self._retired[owner] = (count, cost)
+            else:
+                owner._close()
+        owner = Snapshot(borrower._requested_root, borrower.recipes, borrower.extra_files,
+                         include_hidden=borrower.include_hidden,
+                         directory_membership=borrower.directory_membership,
+                         digest_session=borrower._digest_session)
+        owner._entered = True
+        owner._enter_fresh()
+        # Hash sharing is request scratch, not a retained owner dependency.
+        owner._digest_session = None
+        borrower._statistics = owner.statistics
+        for statistic, value in rejected_work.items():
+            borrower._statistics[statistic] += value
+        self._record(borrower._statistics)
+        cost = self._cost(owner)
+        while (len(self._owners) + len(self._retired) >= self.max_snapshots or
+               sum(item[2] for item in self._owners.values())
+               + sum(item[1] for item in self._retired.values()) + cost > self.max_entries):
+            idle = next((k for k, item in self._owners.items() if not item[1]), None)
+            if idle is None:
+                self._transient.add(owner)
+                return owner, None
+            self._owners.pop(idle)[0]._close()
+        self._owners[key] = (owner, 1, cost)
+        return owner, key
+
+    def _release(self, owner, key):
+        entry = self._owners.get(key)
+        if owner in self._transient:
+            self._transient.remove(owner)
+            owner._close()
+        elif owner in self._retired:
+            count, cost = self._retired[owner]
+            if count == 1:
+                self._retired.pop(owner)
+                owner._close()
+            else:
+                self._retired[owner] = (count - 1, cost)
+        elif entry is None or entry[0] is not owner:
+            owner._close()
+        else:
+            self._owners[key] = (owner, entry[1] - 1, entry[2])
 
 
 class Snapshot:
@@ -253,6 +423,8 @@ class Snapshot:
         self._links: dict[str, str] = {}
         self._identity: dict | None = None
         self._entered = False
+        self._pid = os.getpid()
+        self._lease = None
         self.include_hidden = include_hidden
         self.directory_membership = []
         for path in directory_membership:
@@ -263,7 +435,7 @@ class Snapshot:
         self._digest_session = digest_session
         self._statistics = dict(files_hashed=0, bytes_hashed=0, digest_reuses=0,
                                 directories_enumerated=0, metadata_observations=0,
-                                validation_calls=0)
+                                validation_calls=0, snapshot_reuses=0)
 
     @property
     def statistics(self) -> dict[str, int]:
@@ -272,6 +444,8 @@ class Snapshot:
 
     @property
     def identity(self) -> dict:
+        if self._lease is not None:
+            return self._lease[1].identity
         if self._identity is None or self._watcher is None:
             raise SnapshotError("snapshot identity is only available in an active context")
         return copy.deepcopy(self._identity)
@@ -280,6 +454,15 @@ class Snapshot:
         if self._entered:
             raise SnapshotError("a snapshot cannot be entered more than once")
         self._entered = True
+        session = _ACTIVE_RETAINED.get()
+        if session is not None:
+            owner, key = session._acquire(self)
+            self._lease = (session, owner, key)
+            self.root = owner.root
+            return self
+        return self._enter_fresh()
+
+    def _enter_fresh(self):
         self._watcher = _Inotify(self.include_hidden)
         try:
             self.root = self._resolve(self._requested_root)
@@ -333,7 +516,12 @@ class Snapshot:
 
     def close(self) -> None:
         """Release watches; subsequent identity or unchanged() access is an error."""
-        self._close()
+        if self._lease is not None:
+            session, owner, key = self._lease
+            self._lease = None
+            session._release(owner, key)
+        else:
+            self._close()
 
     def _close(self) -> None:
         if self._watcher is not None:
@@ -544,11 +732,25 @@ class Snapshot:
 
     def unchanged(self) -> bool:
         """Reject relevant events or changed path identities without rehashing files."""
+        if self._lease is not None:
+            owner = self._lease[1]
+            before = owner.statistics
+            try:
+                return owner.unchanged()
+            finally:
+                work = {key: value - before[key] for key, value in owner.statistics.items()}
+                for key, value in work.items():
+                    self._statistics[key] += value
+                self._lease[0]._record(work)
         if self._watcher is None or self._identity is None:
             raise SnapshotError("snapshot is not active")
+        if self._pid != os.getpid():
+            self._close()
+            raise SnapshotError("snapshot watcher belongs to another process")
         self._statistics["validation_calls"] += 1
         clean = self._watcher.drain()
         for path in self._missing:
+            self._statistics["metadata_observations"] += 1
             try:
                 path.lstat()
             except (FileNotFoundError, NotADirectoryError):
@@ -558,6 +760,7 @@ class Snapshot:
                 raise SnapshotError(f"cannot revalidate absent membership {path}: {error}") from error
             self._watcher.dirty = True
         for path, (directory, identity) in self._paths.items():
+            self._statistics["metadata_observations"] += 1
             try:
                 current = path.lstat()
             except (FileNotFoundError, NotADirectoryError):

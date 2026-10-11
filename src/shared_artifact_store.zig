@@ -2,6 +2,7 @@
 const std = @import("std");
 const storage = @import("shared_artifact_io.zig");
 const retention = @import("native_cache_retention.zig");
+const work = @import("native_cache_work.zig");
 
 /// Explicit opt-in, independent of private caches and shared test-success receipts.
 pub const environment_variable = "MYLANG_COMPILER_SHARED_CACHE";
@@ -23,7 +24,7 @@ pub fn selected(environment: *const std.process.Environ.Map) ?[]const u8 {
     return if (root.len == 0) null else root;
 }
 
-/// A bounded immutable store. No lock spans checking, code generation or linking.
+/// A bounded immutable store with independent exact-key work claims.
 pub const Store = struct {
     allocator: std.mem.Allocator,
     io: std.Io,
@@ -150,6 +151,16 @@ pub const Store = struct {
         keep = true;
         self.retentionContext().touch(entry.file);
         return true;
+    }
+
+    /// Coordinate expensive native work while retaining the namespace lease.
+    pub fn claim(self: *const Store, kind: Kind, key: Key) work.Error!work.Claim {
+        var hash = std.crypto.hash.Blake3.init(.{});
+        hash.update(@tagName(kind));
+        hash.update(&key);
+        var work_key: Key = undefined;
+        hash.final(&work_key);
+        return work.Claim.acquire(self.allocator, self.io, self.root, work_key);
     }
 
     /// The immutable record path, useful for storage inspection and corruption tests.

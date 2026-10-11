@@ -876,6 +876,9 @@ pub fn build(b: *std.Build) void {
         verification_tests.dependOn(&verification_run.step);
     }
     test_step.dependOn(verification_tests);
+    const session_tests = driver(b, "python3 scripts/cache_session_test.py", rss.script, "verification_session");
+    session_tests.addArgs(&.{ "python3", "scripts/cache_session_test.py" });
+    verification_tests.dependOn(&session_tests.step);
     const fuzz_tests = b.step("test-fuzz-campaign", "Verify independent fuzz shards, retained corpus replay and qualified completion");
     for ([_][]const u8{
         "scripts/fuzz_campaign_store_test.py", "scripts/fuzz_campaign_test.py",

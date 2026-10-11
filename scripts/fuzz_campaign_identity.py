@@ -16,7 +16,7 @@ LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdi
 
 COMMON_INPUTS = ["scripts/fuzz_campaign.py", "scripts/fuzz_campaign_identity.py",
                  "scripts/fuzz_campaign_store.py", "scripts/verify_cache.py",
-                 "scripts/verification_snapshot.py", "scripts/build-slot.sh"]
+                 "scripts/verification_snapshot.py", "scripts/cache_session.py", "scripts/build-slot.sh"]
 
 
 def executable(value: str, environment: dict[str, str]) -> Path:

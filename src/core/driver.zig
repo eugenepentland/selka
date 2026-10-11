@@ -30,6 +30,7 @@ const query_store = @import("stage_store.zig");
 const stage_metrics = @import("stage_metrics.zig");
 const language = @import("mylang");
 const shared_artifacts = language.shared_artifact_store;
+const work_claim = language.native_cache_work;
 
 /// The runtime C source, compiled into every program.
 pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
@@ -176,6 +177,10 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
         .staging = staging,
         .cacheable = guest.cacheable,
     };
+    const shared_lease = if (places.cacheable) try work_claim.lease(allocator, io, places.shared) else null;
+    defer if (shared_lease) |file| file.close(io);
+    const local_lease = if (places.cacheable and !std.mem.eql(u8, places.shared, places.local)) try work_claim.lease(allocator, io, places.local) else null;
+    defer if (local_lease) |file| file.close(io);
     var needs: Dependencies = .{};
     for (request.units) |unit| needs = .{ .number = needs.number or unit.dependencies.number, .math = needs.math or unit.dependencies.math, .counting = needs.counting or unit.dependencies.counting };
     const runtime = try runtimeFor(allocator, needs.counting, environ, log);
@@ -190,6 +195,11 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
     const programs: unit_cache.Store = .{ .directory = try std.fs.path.join(allocator, &.{ places.local, "programs-v1" }) };
     var shared = try SharedProgram.open(native, request, program_key);
     defer if (shared) |*store| store.store.deinit();
+    var program_claim: ?work_claim.Claim = if (!places.cacheable or request.verify) null else try work_claim.Claim.acquire(allocator, io, programs.directory, program_key);
+    defer if (program_claim) |*claim| claim.deinit();
+    var shared_claim = try SharedProgram.claim(shared, program_claim != null);
+    defer if (shared_claim) |*claim| claim.deinit();
+    if (program_claim != null) try native.guard.check(log);
     if (places.cacheable) if (try programs.lookup(allocator, io, program_key, "")) |found| {
         if (shared) |*store| try store.publish(native, found.path);
         try publishOutput(native, found.path, request.output);
@@ -237,6 +247,13 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
 const SharedProgram = struct {
     store: shared_artifacts.Store,
     key: Digest,
+
+    fn claim(self: ?SharedProgram, enabled: bool) Error!?work_claim.Claim {
+        if (!enabled) return null;
+        const present = self orelse return null;
+        const owned = try present.store.claim(.program, present.key);
+        return owned;
+    }
 
     fn open(native: Native, request: Request, exact: Digest) Error!?SharedProgram {
         if (!native.guard.identity.cacheable or request.verify or request.links.len != 0) return null;
@@ -555,6 +572,10 @@ const Pending = struct { unit: emit_units.Unit, key: Digest, object: []const u8,
 
 const UnitInput = struct { unit: emit_units.Unit, key: Digest };
 
+fn digestLess(_: void, left: Digest, right: Digest) bool {
+    return std.mem.order(u8, &left, &right) == .lt;
+}
+
 fn unitText(a: std.mem.Allocator, unit: emit_units.Unit) Error![]const u8 {
     if (unit.llvm.len != 0) return unit.llvm;
     const handle = unit.artifact orelse return unit.llvm;
@@ -581,14 +602,40 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
     var seen: std.AutoHashMapUnmanaged(Digest, void) = .empty;
     var pending: std.ArrayList(Pending) = .empty;
     var jobs: std.ArrayList(unit_cache.Job) = .empty;
-    for (request.units) |given| {
-        const input = try unitInput(a, settings, places.cacheable, given);
+    const inputs = try a.alloc(UnitInput, request.units.len);
+    defer a.free(inputs);
+    for (request.units, inputs) |given, *input| input.* = try unitInput(a, settings, places.cacheable, given);
+    var initial: std.AutoHashMapUnmanaged(Digest, ?unit_cache.Found) = .empty;
+    defer initial.deinit(a);
+    var missing: std.ArrayList(Digest) = .empty;
+    defer missing.deinit(a);
+    for (inputs) |input| {
+        const entry = try initial.getOrPut(a, input.key);
+        if (entry.found_existing) continue;
+        entry.value_ptr.* = if (places.cacheable) try store.lookup(a, native.io, input.key, ".o") else null;
+        if (entry.value_ptr.* == null) try missing.append(a, input.key);
+    }
+    var claims: std.ArrayList(work_claim.Claim) = .empty;
+    defer {
+        for (claims.items) |*claim| claim.deinit();
+        claims.deinit(a);
+    }
+    if (places.cacheable and !request.verify) {
+        std.mem.sort(Digest, missing.items, {}, digestLess);
+        try claims.ensureTotalCapacity(a, missing.items.len);
+        for (missing.items) |key| {
+            claims.appendAssumeCapacity(try work_claim.Claim.acquire(a, native.io, store.directory, key));
+        }
+    }
+    for (inputs) |input| {
         var unit = input.unit;
         const key = input.key;
         // Equal text is one object: linking it twice would define its symbols twice.
         if ((try seen.getOrPut(a, key)).found_existing) continue;
         native.counts.units += 1;
-        const served = if (places.cacheable) try store.lookup(a, native.io, key, ".o") else null;
+        const before_wait = initial.get(key).?;
+        const recheck = before_wait == null and places.cacheable and !request.verify;
+        const served = if (recheck) try store.lookup(a, native.io, key, ".o") else before_wait;
         if (served != null) native.counts.reused += 1;
         try objects.append(a, if (served) |hit| .{ .path = hit.path, .digest = hit.digest } else .{ .path = "", .digest = key });
         if (served != null and !request.verify) continue;
@@ -664,8 +711,26 @@ fn foreignObjects(native: Native, places: Places, settings: unit_cache.Settings,
     const marker = try std.fs.path.join(a, &.{ places.staging, "foreign-marker" });
     cwd.writeFile(native.io, .{ .sub_path = marker, .data = "" }) catch return error.WriteFailed;
     const started = cwd.statFile(native.io, marker, .{}) catch return error.WriteFailed;
+    const manifest_keys = try a.alloc(Digest, links.len);
+    defer a.free(manifest_keys);
+    for (links, manifest_keys) |source, *key| key.* = try foreignKey(native, settings, source);
+    var claims: std.ArrayList(work_claim.Claim) = .empty;
+    defer {
+        for (claims.items) |*claim| claim.deinit();
+        claims.deinit(a);
+    }
+    if (places.cacheable) {
+        const ordered = try a.dupe(Digest, manifest_keys);
+        defer a.free(ordered);
+        std.mem.sort(Digest, ordered, {}, digestLess);
+        try claims.ensureTotalCapacity(a, ordered.len);
+        for (ordered, 0..) |key, index| {
+            if (index != 0 and std.mem.eql(u8, &key, &ordered[index - 1])) continue;
+            claims.appendAssumeCapacity(try work_claim.Claim.acquire(a, native.io, store.directory, key));
+        }
+    }
     for (links, 0..) |source, index| {
-        const manifest_key = try foreignKey(native, settings, source);
+        const manifest_key = manifest_keys[index];
         const manifest = try store.path(a, manifest_key, ".deps");
         if (places.cacheable) if (try servedForeign(native, store, manifest_key, manifest)) |served| {
             try objects.append(a, served.object);
@@ -869,6 +934,8 @@ fn runtimeObject(native: Native, directory: []const u8, runtime: Runtime) Error!
     const stem = try std.fmt.allocPrint(allocator, "core_rt-{x}", .{digest});
     const object = try std.fs.path.join(allocator, &.{ directory, try std.fmt.allocPrint(allocator, "{s}.o", .{stem}) });
     const cwd = std.Io.Dir.cwd();
+    var claim = try work_claim.Claim.acquire(allocator, io, directory, digest);
+    defer claim.deinit();
     if (cwd.access(io, object, .{})) |_| return .{ .path = object, .digest = digest } else |_| {}
     const source = try std.fs.path.join(allocator, &.{ directory, try std.fmt.allocPrint(allocator, "{s}.c", .{stem}) });
     var nonce: [16]u8 = undefined;

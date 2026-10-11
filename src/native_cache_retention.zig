@@ -240,7 +240,8 @@ pub const Context = struct {
                 }
                 continue;
             }
-            if (!tier(self.kind, entry.name) or entry.kind != .directory) {
+            const known_directory = tier(self.kind, entry.name) or std.mem.eql(u8, entry.name, "work");
+            if (!known_directory or entry.kind != .directory) {
                 result.foreign = true;
                 continue;
             }
@@ -249,6 +250,10 @@ pub const Context = struct {
             try self.scanTier(path, result);
             if (!result.complete) return;
         }
+    }
+    fn knownTierEntry(self: Context, path: []const u8, name: []const u8) bool {
+        if (std.mem.eql(u8, std.fs.path.basename(path), "work")) return workLock(name);
+        return known(self.kind, name);
     }
     fn scanTier(self: Context, path: []const u8, result: *Inventory) Error!void {
         var dir = std.Io.Dir.cwd().openDir(self.io, path, .{ .iterate = true, .follow_symlinks = false }) catch return error.ReadFailed;
@@ -260,7 +265,7 @@ pub const Context = struct {
                 result.complete = false;
                 return;
             }
-            if (!known(self.kind, entry.name) or entry.kind != .file) {
+            if (!self.knownTierEntry(path, entry.name) or entry.kind != .file) {
                 result.foreign = true;
                 continue;
             }
@@ -462,4 +467,23 @@ test "native retention visited bound aborts inventory without deleting and previ
     try std.testing.expectError(error.ReadFailed, fixture.context.scanTier(missing, &inventory));
     const absent = Context.init(std.testing.allocator, std.testing.io, missing, .compiler);
     try std.testing.expectError(error.ReadFailed, absent.scan(&inventory));
+}
+
+fn workLock(name: []const u8) bool {
+    return name.len == 69 and std.mem.endsWith(u8, name, ".lock") and hexKey(name[0..64]);
+}
+
+// spec-case: NATIVE-WORK-CLAIM-1
+test "native retention reclaims idle exact work claim inodes" {
+    var fixture = try Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    try fixture.temporary.dir.createDir(std.testing.io, "work", .default_dir);
+    const path = try std.fmt.allocPrint(fixture.arena.allocator(), "work/{s}.lock", .{@as([64]u8, @splat('a'))});
+    try put(fixture.temporary.dir, path, "");
+    const preview = try fixture.context.collect(Policy.defaults(.compiler), true);
+    try std.testing.expectEqual(@as(usize, 1), preview.removed.entries);
+    try std.testing.expect(exists(fixture.temporary.dir, path));
+    const applied = try fixture.context.collect(Policy.defaults(.compiler), false);
+    try std.testing.expectEqual(@as(usize, 1), applied.removed.entries);
+    try std.testing.expect(!exists(fixture.temporary.dir, path));
 }

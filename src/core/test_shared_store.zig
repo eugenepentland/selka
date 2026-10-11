@@ -1,7 +1,11 @@
 //! Native cross-worktree success receipts. Records are disposable, bounded and
-//! published under a short process lock; checking and execution hold no store lock.
+//! published under a short process lock; execution holds no publication lock.
 const std = @import("std");
+const work = @import("mylang").native_cache_work;
 const retention = @import("mylang").native_cache_retention;
+
+/// A process-owned computation claim retaining the namespace until publication.
+pub const Claim = work.Claim;
 
 /// A complete portable test execution identity.
 pub const Digest = [32]u8;
@@ -59,6 +63,11 @@ pub const Store = struct {
     /// Address a receipt directly; lookup never enumerates the shared store.
     pub fn artifactPath(self: Store, key: Digest) Error![]const u8 {
         return std.fmt.allocPrint(self.arena, "{s}/receipts/{s}.pass", .{ self.root, std.fmt.bytesToHex(key, .lower) });
+    }
+
+    /// Serialize one exact portable test computation without holding the publication lock.
+    pub fn claim(self: Store, key: Digest) Error!Claim {
+        return work.Claim.acquire(self.arena, self.io, self.root, key) catch |err| return mapRetention(err);
     }
 
     /// Accept only an exact success envelope for this identity.
@@ -297,6 +306,40 @@ test "shared receipt collection misses refill and protects publication lock inod
     publication.close(io);
     lease_guard.close(io);
     try std.testing.expectEqual(@as(usize, 1), (try context.collect(policy, false)).removed.entries);
+    try std.testing.expect(!try store.hit(key));
+    try store.save(key);
+    try std.testing.expect(try store.hit(key));
+}
+
+// spec: NATIVE-TEST-COALESCE-1
+test "portable test claims retain storage and invalidate forced successes before followers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(io, ".", a);
+    const store = try Store.open(a, io, root);
+    const key: Digest = @splat(31);
+    try store.save(key);
+    var claim = try store.claim(key);
+    const path_name = try std.fmt.allocPrint(a, "{s}/work/{s}.lock", .{ store.root, std.fmt.bytesToHex(key, .lower) });
+    const contender = try std.Io.Dir.cwd().openFile(io, path_name, .{ .mode = .read_write });
+    defer contender.close(io);
+    try std.testing.expect(!try contender.tryLock(io, .exclusive));
+    var independent = try store.claim(@splat(32));
+    independent.deinit();
+    var policy = retention.Policy.defaults(.tests);
+    policy.max_entries = 0;
+    try std.testing.expect((try store.retentionContext().collect(policy, false)).skipped_active);
+    try store.invalidate(key);
+    try std.testing.expect(!try store.hit(key));
+    claim.deinit();
+    try std.testing.expect(try contender.tryLock(io, .exclusive));
+    contender.unlock(io);
+    var retry = try store.claim(key);
+    defer retry.deinit();
     try std.testing.expect(!try store.hit(key));
     try store.save(key);
     try std.testing.expect(try store.hit(key));

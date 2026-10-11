@@ -370,7 +370,8 @@ const GroupRun = struct {
             .guard = .{ .context = context, .inputs = out.before.items, .backing = init.gpa },
             .providers = group.providers.len != 0,
         };
-        try sharing.restore(items);
+        const claims = try sharing.restore(items);
+        defer claims.deinit();
         try execute(init, context.options, program, items, self.selection.permits, .{ .context = context, .inputs = out.before.items, .backing = init.gpa });
         try sharing.publish(items);
         if (identity) |known| for (items) |*item| {
@@ -393,6 +394,19 @@ fn validateShared(init: std.process.Init, options: Options) Error!void {
     };
 }
 
+const PortablePosition = struct { key: [32]u8, position: usize };
+const PortableClaims = struct {
+    claims: std.ArrayList(shared_store.Claim) = .empty,
+
+    fn deinit(self: PortableClaims) void {
+        for (self.claims.items) |*claim| claim.deinit();
+    }
+};
+
+fn portableBefore(_: void, left: PortablePosition, right: PortablePosition) bool {
+    return std.mem.order(u8, &left.key, &right.key) == .lt;
+}
+
 const PortableRun = struct {
     context: receipt.Context,
     checked: frontend.Checked,
@@ -412,26 +426,43 @@ const PortableRun = struct {
         return portable.key(context, self.checked, case);
     }
 
-    fn restore(self: PortableRun, items: []Selected) Error!void {
-        const shared = try self.store() orelse return;
-        if (!try self.guard.unchanged()) return error.SourceChanged;
-        for (items) |*item| {
+    fn restore(self: PortableRun, items: []Selected) Error!PortableClaims {
+        const shared = try self.store() orelse return .{};
+        const a = self.context.arena;
+        var keys: std.ArrayList(PortablePosition) = .empty;
+        for (items, 0..) |item, index| {
             if (!item.ready) continue;
             var scratch = std.heap.ArenaAllocator.init(self.guard.backing);
             defer scratch.deinit();
             const identity = try self.key(scratch.allocator(), item.case) orelse continue;
-            if (self.context.options.controls.force) {
-                try shared.invalidate(identity);
-                continue;
+            try keys.append(a, .{ .key = identity, .position = index });
+        }
+        std.mem.sort(PortablePosition, keys.items, {}, portableBefore);
+        var held: PortableClaims = .{};
+        errdefer held.deinit();
+        var previous: ?[32]u8 = null;
+        for (keys.items) |position| {
+            if (previous == null or !std.mem.eql(u8, &previous.?, &position.key)) {
+                var claim = try shared.claim(position.key);
+                held.claims.append(a, claim) catch {
+                    claim.deinit();
+                    return error.OutOfMemory;
+                };
+                previous = position.key;
+                // Waiting for another worktree must not admit an obsolete source snapshot.
+                if (!try self.guard.unchanged()) return error.SourceChanged;
+                if (self.context.options.controls.force) try shared.invalidate(position.key);
             }
-            if (!try shared.hit(identity)) continue;
+            if (self.context.options.controls.force or !try shared.hit(position.key)) continue;
+            const item = &items[position.position];
             item.verdict = .{ .name = item.case.name, .status = .cached };
             item.ready = false;
-            item.identity = identity;
+            item.identity = position.key;
             item.key_method = "portable-reachable-ir";
             item.cache_reason = "shared-receipt-hit";
         }
         if (!try self.guard.unchanged()) return error.SourceChanged;
+        return held;
     }
 
     fn publish(self: PortableRun, items: []const Selected) Error!void {
@@ -1659,4 +1690,15 @@ test "cacheExplanation reports execution after partial property reuse and unansw
     item.verdict.status = .failed;
     const failed = try cacheExplanation(a, item, context);
     try std.testing.expectEqualStrings("execute", failed.action);
+}
+
+// spec-case: NATIVE-TEST-COALESCE-1
+test "portable test claim ordering is stable across reversed overlapping suites" {
+    var left = [_]PortablePosition{ .{ .key = @splat(9), .position = 0 }, .{ .key = @splat(2), .position = 1 }, .{ .key = @splat(9), .position = 2 } };
+    var right = [_]PortablePosition{ .{ .key = @splat(2), .position = 0 }, .{ .key = @splat(9), .position = 1 } };
+    std.mem.sort(PortablePosition, &left, {}, portableBefore);
+    std.mem.sort(PortablePosition, &right, {}, portableBefore);
+    try std.testing.expectEqual(right[0].key, left[0].key);
+    try std.testing.expectEqual(right[1].key, left[1].key);
+    try std.testing.expectEqual(left[1].key, left[2].key);
 }

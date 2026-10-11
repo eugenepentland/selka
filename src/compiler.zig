@@ -276,3 +276,6 @@ pub const module_syntax = @import("module_syntax.zig");
 pub fn opensAsModule(source_bytes: []const u8) bool {
     return module_syntax.usesModuleSyntax(source_bytes);
 }
+
+/// Exact-key native compilation and link coordination.
+pub const native_cache_work = @import("native_cache_work.zig");

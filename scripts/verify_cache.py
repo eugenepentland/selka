@@ -44,6 +44,7 @@ CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
 PREPARE_INPUTS = ["src/", "test/", "tests/", "selfhost/",
                   "docs/", "README.md", "SPEC.md", "benchmarks/runtime/ports/native_clock.c"]
 COORDINATOR_INPUTS = ["scripts/verify_cache.py", "scripts/verification_snapshot.py",
+                      "scripts/cache_session.py",
                       "scripts/verification_artifacts.py", "scripts/fuzz_campaign_store.py", "scripts/build-slot.sh"]
 # These are the host tools used by the registered test adapters and admission.
 # An adapter needing another external provider must declare it here or stay fresh.

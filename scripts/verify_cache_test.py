@@ -20,7 +20,7 @@ import unittest
 from unittest.mock import patch
 
 import verify_cache as coordinator
-from verification_snapshot import Snapshot, SnapshotError
+from verification_snapshot import RetainedSession, Snapshot, SnapshotError
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 REAL_PREPARE_INPUTS = tuple(coordinator.PREPARE_INPUTS)
@@ -137,6 +137,43 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertTrue(report['evidence_store']['shared'])
         self.assertTrue((self.cache / 'inventory.json').is_file())
         self.assertFalse((shared / 'inventory.json').exists())
+
+    def test_retained_session_warm_request_avoids_hashing_discovery_and_admission(self):
+        with RetainedSession() as session, session.activate():
+            self.assertEqual(self.execute(), 0)
+            self.admissions.clear()
+            self.assertEqual(self.execute(), 0)
+            report = coordinator.read_record(self.cache / 'last-run.json')
+            self.assertEqual(self.admissions, [])
+            self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+            stats = report['snapshot_statistics']
+            self.assertEqual(stats['files_hashed'], 0)
+            self.assertEqual(stats['directories_enumerated'], 0)
+            self.assertGreaterEqual(stats['snapshot_reuses'], 5)
+            self.assertGreater(stats['metadata_observations'], 0)
+
+    def test_retained_session_edit_and_forced_failure_still_require_work(self):
+        with RetainedSession() as session, session.activate():
+            self.assertEqual(self.execute(), 0)
+            self.input.write_text('changed fixture')
+            self.admissions.clear()
+            self.assertEqual(self.execute(), 0)
+            self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+            self.assertEqual(len(self.admissions), 1)
+            self.gate_status = 17
+            self.assertEqual(self.execute(force=True), 17)
+            self.gate_status = None
+            self.assertEqual(self.execute(), 0)
+            self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+    def test_retained_session_does_not_publish_for_edit_after_admission(self):
+        with RetainedSession() as session, session.activate():
+            self.assertEqual(self.execute(), 0)
+            self.after_gate = lambda: self.input.write_text('changed during work')
+            self.assertEqual(self.execute(force=True), coordinator.RETRY)
+            self.after_gate = None
+            self.assertEqual(self.execute(), 0)
+            self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
 
     def test_shared_changed_tool_path_does_not_reuse_exact_receipt(self):
         shared = self.root / '.shared-evidence'

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Developer retention CLI contracts without compiler or timing admission."""
 from contextlib import redirect_stdout, redirect_stderr
+import fcntl
 import hashlib
 import io
 import json
@@ -86,6 +87,39 @@ class RetentionCLI(unittest.TestCase):
         self.assertEqual(artifact.read_bytes(), b'retained')
         self.assertTrue((protected / '.retention.lock').is_file())
         self.assertFalse(expendable.exists())
+
+    def test_legacy_object_pruner_skips_owners_and_waiters_then_reclaims_idle_claims(self):
+        repo = self.root / 'checkout'
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        objects = self.root / 'objects'
+        units = objects / 'units-v1'
+        work = units / 'work'
+        work.mkdir(parents=True)
+        artifact = units / ('a' * 64 + '.o')
+        artifact.write_bytes(b'object')
+        os.utime(artifact, (1, 1))
+        claim = work / ('a' * 64 + '.lock')
+        claim.touch()
+        inode = claim.stat().st_ino
+        foreign = work / 'foreign.lock'
+        foreign.touch()
+        command = ['bash', str(Path(__file__).with_name('prune-caches.sh')),
+                   '--repo', str(repo), '--store-days', '0', '--exclude', '*', '--apply']
+        environment = dict(os.environ, MYLANG_CORE_RUNTIME_CACHE=str(objects))
+        for directory in (objects, units):
+            with (directory / '.retention.lock').open('a') as lease:
+                fcntl.flock(lease.fileno(), fcntl.LOCK_SH)
+                result = subprocess.run(command, env=environment, capture_output=True,
+                                        text=True, check=True)
+                self.assertIn('native cache lease unavailable', result.stdout)
+                self.assertTrue(artifact.exists())
+                self.assertEqual(claim.stat().st_ino, inode)
+        subprocess.run(command, env=environment, capture_output=True, check=True)
+        self.assertFalse(artifact.exists())
+        self.assertFalse(claim.exists())
+        self.assertTrue(foreign.exists())
+        self.assertTrue((objects / '.retention.lock').exists())
+        self.assertTrue((units / '.retention.lock').exists())
 
 
 if __name__ == '__main__':

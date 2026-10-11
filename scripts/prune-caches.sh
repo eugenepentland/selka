@@ -210,10 +210,51 @@ report_bytes() {
     pruned_bytes=0
 }
 
+# Take cooperative namespace leases without waiting for a running compiler.
+# Lease locks are permanent; work locks are collectible only under these leases.
+with_native_leases() {
+    local operation="$1"; shift
+    local root="$1" directory descriptor ready=1
+    local descriptors=()
+    [ -d "$root" ] || return 0
+    for directory in "$@"; do
+        if ! mkdir -p -- "$directory"; then ready=0; break; fi
+        if [ -L "$directory/.retention.lock" ] ||
+           { [ -e "$directory/.retention.lock" ] && [ ! -f "$directory/.retention.lock" ]; }; then
+            ready=0; break
+        fi
+        if ! exec {descriptor}>>"$directory/.retention.lock"; then ready=0; break; fi
+        descriptors+=("$descriptor")
+        if ! flock -nx "$descriptor"; then ready=0; break; fi
+    done
+    if [ "$ready" = 1 ]; then
+        "$operation" "$root"
+    else
+        echo "busy      $root  (native cache lease unavailable)"
+    fi
+    for descriptor in "${descriptors[@]}"; do exec {descriptor}>&-; done
+}
+
+prune_store() {
+    with_native_leases prune_store_contents "$1" "$1/units-v1"
+}
+
+# Every owner/waiter leases its namespace before opening a work-lock inode.
+# The caller holds all named namespaces exclusively, so idle key locks can go.
+prune_native_claims() {
+    local namespace file
+    for namespace in "$@"; do
+        while IFS= read -r -d '' file; do
+            remove_file "$file"
+        done < <(find "$namespace/work" -regextype posix-extended -mindepth 1 -maxdepth 1 \
+            -type f -regex '.*/[0-9a-f]{64}\.lock' -print0 2>/dev/null)
+    done
+}
+
 # The new core's per-user object store: unread entries go, then the least
 # recently read ones until the store fits its cap. A unit object and its
 # `.sum` record go together.
-prune_store() {
+prune_store_contents() {
     local store="$1" days_ago=$((now - store_days * 86400)) kib atime file
     [ -d "$store" ] || return 0
     pruned_bytes=0
@@ -236,21 +277,30 @@ prune_store() {
         done < <(find "$store/units-v1" -name '*.o' -printf '%A@\t%p\n' 2>/dev/null | sort -n)
         report_bytes "$store" "over ${store_cap_gb} GiB cap"
     fi
+    prune_native_claims "$store" "$store/units-v1"
+    report_bytes "$store" "idle native work claims"
 }
 
 # One worktree's core cache directory: unread programs, foreign objects and
 # replay records, and staging directories no build still owns.
 prune_core() {
+    with_native_leases prune_core_contents "$1" "$1/programs-v1" "$1/foreign-v1"
+}
+
+prune_core_contents() {
     local core="$1" dir
     [ -d "$core" ] || return 0
     pruned_bytes=0
     while IFS= read -r -d '' file; do
         remove_file "$file"
-    done < <(find "$core/programs-v1" "$core/foreign-v1" "$core/replay-v1" -type f -atime +"$store_days" -print0 2>/dev/null)
+    done < <(find "$core/programs-v1" "$core/foreign-v1" "$core/replay-v1" \
+        \( -name .retention.lock -o -name work \) -prune -o -type f -atime +"$store_days" -print0 2>/dev/null)
     report_bytes "$core" "core caches unread for ${store_days}d"
     while IFS= read -r -d '' dir; do
         remove_dir "$dir" "stale core staging"
     done < <(find "$core" -mindepth 1 -maxdepth 1 -type d \( -name 'native-link-*' -o -name 'program-*' -o -name 'unproved-tool-*' \) -mmin +"$quiet_minutes" -print0 2>/dev/null)
+    prune_native_claims "$core" "$core/programs-v1" "$core/foreign-v1"
+    report_bytes "$core" "idle native work claims"
 }
 
 pruned_bytes=0

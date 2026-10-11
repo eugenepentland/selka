@@ -209,6 +209,56 @@ their own watches first. Watch closure, event loss, process change, mutations or
 metadata differences prevent reuse; restarting a command reads input contents
 again. This bounded session never persists a metadata-only digest claim.
 
+Wave 11 adds an optional persistent developer process:
+
+```sh
+python3 scripts/cache_session.py
+```
+
+Send one JSON object per line on stdin. For example, keep that process open and
+submit the same request again after the first completion:
+
+```json
+{"id":"gate-1","command":"verify","args":["--zig","/path/to/pinned/zig"]}
+{"id":"gate-2","command":"verify","args":["--zig","/path/to/pinned/zig"]}
+{"id":"reset-1","command":"reset"}
+{"id":"stop-1","command":"stop"}
+```
+
+Commands `fuzz` and `perf` take the ordinary arguments of `fuzz_campaign.py` and
+`juice_cache.py`. Each stdout line reports the request ID, exit status, whether
+restart is required, and actual snapshot work. Tool output, including child
+process output, goes to stderr. Requests run sequentially with the repository
+root and environment captured at startup; a supervisor can queue agent requests
+through this one stream. There is no background daemon, socket or automatic
+attachment from independent one-shot commands.
+
+The session retains live watches, inventories and hashes, bounded by
+`--max-snapshots` (default 16) and `--max-entries` (default 262144 metadata,
+inventory and watch entries). Oversized or busy scopes remain transient. Warm
+unchanged scopes skip hashing and enumeration but still revalidate path
+identities. Dirty scopes are reconstructed. Active requests never move to a
+new revision midway through work. Reset, EOF, cancellation or process exit
+releases retained state; restarting validates bytes again. Editing loaded
+coordinator or Python runtime code requires restarting the session. Its startup
+runtime watch is independent of the evictable snapshot pool. It assumes a
+trusted Python installation at launch, rejects preloaded coordinator helpers,
+and guards later changes; it does not reconstruct how Python itself bootstrapped.
+
+Native compiles, links and eligible shared tests also coordinate simultaneous
+requests by exact keys. Claims are process locks, not saved success evidence:
+followers recheck artifacts or receipts after acquiring them, and failure or
+process death releases ownership. Sorted batches avoid lock-order cycles.
+Different keys remain independent, and test/source checks still apply after a
+wait. Existing private test receipt hits keep their ordinary reuse semantics.
+
+Collection skips active owners and waiters. Shared v2 namespaces reclaim idle
+work locks only under exclusive retention ownership. The legacy pruner also
+reclaims recognized idle work locks under nonblocking exclusive leases and
+preserves permanent lease locks, while native builds retain shared leases
+through linking and output publication. No server admission is needed for
+retained validation, cache lookup, publication or collection.
+
 Reports expose hashing work separately from reused actions. Juice also uses an
 optimized native streaming SHA-256 implementation when the compiler is built in
 Debug mode. It still reads every byte, including the running compiler executable;
@@ -216,5 +266,6 @@ the optimization changes computation cost, not cache identity.
 
 Zero test or workload executions does not mean zero validation work. Discovery,
 provider resolution, hashing, locks and materialization remain part of the warm
-command. A persistent workspace service remains a possible later optimization;
-it is not required for correctness or for this storage interface.
+command. Retained developer sessions do not retain compiler ASTs across ordinary
+native command invocations, and do not change fuzz freshness or measurement
+validity policies. A fresh performance measurement still requires execution.

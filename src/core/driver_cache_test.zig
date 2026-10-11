@@ -59,13 +59,14 @@ const Project = struct {
         try cwd.deleteTree(io, try self.path("cache/replay-v1"));
     }
 
-    /// Rewrite every file in a store directory with `bytes`, records included or not.
+    /// Rewrite matching store artifact files with `bytes`, records included or not.
     fn damage(self: Project, relative: []const u8, suffix: []const u8, bytes: []const u8) !usize {
         var directory = try cwd.openDir(io, try self.path(relative), .{ .iterate = true });
         defer directory.close(io);
         var iterator = directory.iterate();
         var count: usize = 0;
         while (try iterator.next(io)) |entry| {
+            if (entry.kind != .file or std.mem.startsWith(u8, entry.name, ".")) continue;
             if (!std.mem.endsWith(u8, entry.name, suffix)) continue;
             try directory.writeFile(io, .{ .sub_path = entry.name, .data = bytes });
             count += 1;

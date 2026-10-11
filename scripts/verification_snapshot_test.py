@@ -6,10 +6,11 @@ import os
 from pathlib import Path
 import struct
 import tempfile
+from contextlib import ExitStack
 import unittest
 from unittest.mock import patch
 
-from verification_snapshot import DigestSession, Snapshot, SnapshotError
+from verification_snapshot import DigestSession, RetainedSession, Snapshot, SnapshotError
 
 
 class InputSnapshot(unittest.TestCase):
@@ -576,6 +577,205 @@ class InputSnapshot(unittest.TestCase):
         self.assertGreaterEqual(len(reads), 4)
         self.assertGreaterEqual(sum(reads), len(payload))
         self.assertEqual(sum(reads) % len(payload), 0)
+
+
+class RetainedSnapshots(unittest.TestCase):
+    setUp = InputSnapshot.setUp
+    file = InputSnapshot.file
+    def test_warm_request_keeps_watcher_identity_and_reports_only_new_work(self):
+        self.file('scope/input')
+        with RetainedSession() as session, session.activate():
+            with Snapshot(self.root, ['scope/']) as first:
+                expected = first.identity
+                owner = first._lease[1]
+                self.assertEqual(first.statistics['files_hashed'], 1)
+            with patch('verification_snapshot.os.scandir', side_effect=AssertionError('enumeration')):
+                with Snapshot(self.root, ['scope/']) as second:
+                    self.assertIs(second._lease[1], owner)
+                    self.assertEqual(second.identity, expected)
+                    self.assertEqual(second.statistics['files_hashed'], 0)
+                    self.assertEqual(second.statistics['directories_enumerated'], 0)
+                    self.assertEqual(second.statistics['snapshot_reuses'], 1)
+                    self.assertGreater(second.statistics['metadata_observations'], 0)
+                    second.identity['files'].clear()
+                    self.assertEqual(second.identity, expected)
+            self.assertIsNotNone(owner._watcher)
+        self.assertIsNone(owner._watcher)
+
+    def test_edit_invalidates_only_affected_scope(self):
+        changed = self.file('a/input')
+        self.file('b/input')
+        with RetainedSession() as session, session.activate():
+            with Snapshot(self.root, ['a/']), Snapshot(self.root, ['b/']):
+                pass
+            changed.write_bytes(b'new')
+            with Snapshot(self.root, ['a/']) as a, Snapshot(self.root, ['b/']) as b:
+                self.assertEqual(a.statistics['files_hashed'], 1)
+                self.assertEqual(a.statistics['snapshot_reuses'], 0)
+                self.assertEqual(b.statistics['files_hashed'], 0)
+                self.assertEqual(b.statistics['snapshot_reuses'], 1)
+
+    def test_nested_dirty_borrowers_never_rebase_or_close_each_other(self):
+        path = self.file('input')
+        with RetainedSession() as session, session.activate(), ExitStack() as stack:
+            first = stack.enter_context(Snapshot(self.root, ['input']))
+            second = stack.enter_context(Snapshot(self.root, ['input']))
+            original = first.identity
+            owner = first._lease[1]
+            path.write_bytes(b'new')
+            with Snapshot(self.root, ['input']) as fresh:
+                self.assertNotEqual(fresh.identity, original)
+                self.assertFalse(first.unchanged())
+                first.close()
+                self.assertIsNotNone(owner._watcher)
+                self.assertEqual(second.identity, original)
+                self.assertFalse(second.unchanged())
+            second.close()
+            self.assertIsNone(owner._watcher)
+
+    def test_membership_rename_alias_and_aba_rescan(self):
+        path = self.file('scope/input')
+        target = self.file('target')
+        alias = self.root / 'scope/alias'
+        alias.symlink_to(target)
+        with RetainedSession() as session, session.activate():
+            with Snapshot(self.root, ['scope/'], directory_membership=['scope']) as original:
+                identity = original.identity
+            old = path.stat()
+            path.write_bytes(b'modified')
+            path.write_bytes(b'original')
+            os.utime(path, ns=(old.st_atime_ns, old.st_mtime_ns))
+            with Snapshot(self.root, ['scope/'], directory_membership=['scope']) as aba:
+                self.assertEqual(aba.statistics['snapshot_reuses'], 0)
+            path.rename(path.with_name('renamed'))
+            alias.unlink()
+            alias.symlink_to(path.with_name('renamed'))
+            with Snapshot(self.root, ['scope/'], directory_membership=['scope']) as renamed:
+                self.assertEqual(renamed.statistics['snapshot_reuses'], 0)
+                self.assertNotEqual(renamed.identity, identity)
+            self.file('scope/new')
+            with Snapshot(self.root, ['scope/'], directory_membership=['scope']) as added:
+                self.assertEqual(added.statistics['snapshot_reuses'], 0)
+
+    def test_lost_closed_and_overflow_watchers_are_fresh(self):
+        self.file('input')
+        with RetainedSession() as session, session.activate():
+            with Snapshot(self.root, ['input']) as first:
+                owner = first._lease[1]
+            owner._watcher.failure = 'inotify queue overflow'
+            with Snapshot(self.root, ['input']) as overflow:
+                self.assertEqual(overflow.statistics['files_hashed'], 1)
+                owner = overflow._lease[1]
+            owner.close()
+            with Snapshot(self.root, ['input']) as closed:
+                self.assertEqual(closed.statistics['files_hashed'], 1)
+                owner = closed._lease[1]
+            owner._watcher.close()
+            with Snapshot(self.root, ['input']) as lost:
+                self.assertEqual(lost.statistics['snapshot_reuses'], 0)
+
+    def test_fork_rejects_inherited_borrower_and_reconstructs_session(self):
+        self.file('input')
+        actual_pid = os.getpid()
+        with RetainedSession() as session, session.activate():
+            with Snapshot(self.root, ['input']) as first:
+                with patch('verification_snapshot.os.getpid', return_value=actual_pid + 1):
+                    self.assertRaises(SnapshotError, first.unchanged)
+                    with Snapshot(self.root, ['input']) as child:
+                        self.assertEqual(child.statistics['files_hashed'], 1)
+                        self.assertEqual(child.statistics['snapshot_reuses'], 0)
+
+    def test_bounds_evict_idle_and_allow_transient_busy_or_oversized(self):
+        self.file('a')
+        self.file('b')
+        with RetainedSession(max_snapshots=1) as session, session.activate():
+            with Snapshot(self.root, ['a']) as a:
+                owner = a._lease[1]
+                with Snapshot(self.root, ['b']) as b:
+                    self.assertIsNone(b._lease[2])
+                    transient = b._lease[1]
+                    self.assertTrue(a.unchanged())
+                self.assertIsNone(transient._watcher)
+            with Snapshot(self.root, ['b']):
+                self.assertIsNone(owner._watcher)
+            self.assertEqual(len(session._owners), 1)
+        with RetainedSession(max_entries=1) as tiny, tiny.activate():
+            with Snapshot(self.root, ['a']) as oversized:
+                self.assertIsNone(oversized._lease[2])
+            self.assertEqual(len(tiny._owners), 0)
+        with RetainedSession(max_snapshots=0) as disabled, disabled.activate():
+            with Snapshot(self.root, ['a']) as transient:
+                self.assertIsNone(transient._lease[2])
+
+    def test_declaration_slots_and_long_payloads_are_bounded(self):
+        self.file('input')
+        with RetainedSession(max_entries=100) as pool, pool.activate():
+            with Snapshot(self.root, ['input'] * 1000) as repeated:
+                self.assertIsNone(repeated._lease[2])
+                self.assertGreater(pool._cost(repeated._lease[1]), 100)
+            self.assertEqual(len(pool._owners), 0)
+        with RetainedSession() as pool, pool.activate():
+            with Snapshot(self.root, ['input'], [self.root / 'input'] * 1000) as repeated:
+                self.assertGreaterEqual(pool._cost(repeated._lease[1]), 2000)
+                owner = repeated._lease[1]
+                before = pool._cost(owner)
+                owner.recipes = ['x' * 1025]
+                self.assertGreaterEqual(pool._cost(owner), before + 4)
+
+    def test_reset_and_close_invalidate_active_transient_borrowers(self):
+        self.file('input')
+        with RetainedSession(max_entries=0) as pool, pool.activate():
+            with Snapshot(self.root, ['input']) as transient:
+                owner = transient._lease[1]
+                self.assertIn(owner, pool._transient)
+                pool.reset()
+                self.assertIsNone(owner._watcher)
+                self.assertRaises(SnapshotError, transient.unchanged)
+                self.assertRaises(SnapshotError, lambda: transient.identity)
+                self.assertEqual(len(pool._transient), 0)
+            self.assertEqual(len(pool._owners), 0)
+            with Snapshot(self.root, ['input']) as transient:
+                owner = transient._lease[1]
+                pool.close()
+                self.assertIsNone(owner._watcher)
+                self.assertRaises(SnapshotError, transient.unchanged)
+            self.assertEqual(len(pool._retired), 0)
+            self.assertEqual(len(pool._transient), 0)
+
+    def test_busy_transient_release_and_reset_do_not_retain_it(self):
+        self.file('a')
+        self.file('b')
+        with RetainedSession(max_snapshots=1) as pool, pool.activate():
+            with Snapshot(self.root, ['a']) as retained:
+                with Snapshot(self.root, ['b']) as transient:
+                    owner = transient._lease[1]
+                    self.assertIn(owner, pool._transient)
+                self.assertIsNone(owner._watcher)
+                self.assertEqual(len(pool._transient), 0)
+                with Snapshot(self.root, ['b']) as transient:
+                    pool.reset()
+                    self.assertRaises(SnapshotError, transient.unchanged)
+                    self.assertRaises(SnapshotError, retained.unchanged)
+            self.assertEqual(len(pool._owners), 0)
+            self.assertEqual(len(pool._retired), 0)
+            self.assertEqual(len(pool._transient), 0)
+
+    def test_reset_close_and_nested_activation(self):
+        self.file('input')
+        with RetainedSession() as outer, outer.activate():
+            with Snapshot(self.root, ['input']) as first:
+                owner = first._lease[1]
+            with RetainedSession() as inner, inner.activate():
+                with Snapshot(self.root, ['input']) as nested:
+                    self.assertIsNot(nested._lease[1], owner)
+            with Snapshot(self.root, ['input']) as warm:
+                self.assertEqual(warm.statistics['snapshot_reuses'], 1)
+                outer.reset()
+                self.assertRaises(SnapshotError, warm.unchanged)
+            with Snapshot(self.root, ['input']) as cold:
+                self.assertEqual(cold.statistics['files_hashed'], 1)
+        self.assertRaises(SnapshotError, outer.__enter__)
+        self.assertRaises(ValueError, RetainedSession, max_entries=-1)
 
 
 if __name__ == '__main__':

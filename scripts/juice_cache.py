@@ -33,7 +33,7 @@ LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdi
 IMPLEMENTATION_INPUTS = ["scripts/juice_cache.py", "scripts/juice_evidence.py",
     "scripts/juice_worker.py", "scripts/juice_provider.py",
     "scripts/fuzz_campaign_identity.py", "scripts/fuzz_campaign_store.py",
-    "scripts/verification_snapshot.py", "scripts/verify_cache.py", "scripts/build-slot.sh",
+    "scripts/verification_snapshot.py", "scripts/cache_session.py", "scripts/verify_cache.py", "scripts/build-slot.sh",
     "scripts/juice_tool/__init__.py", "scripts/juice_tool/collectors.py", "scripts/juice_tool/common.py"]
 
 
