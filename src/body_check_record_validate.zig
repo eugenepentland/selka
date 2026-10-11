@@ -97,7 +97,7 @@ fn policyMode(a: std.mem.Allocator, item: value.Catalog, hashable: bool) Error![
         if (item.templates.byte_buffer.identity) |entry| try mark(allowed, entry.id);
         for (item.lists) |entry| try mark(allowed, entry.id);
     }
-    var builder: Builder = .{ .allocator = a, .allowed = allowed, .heads = heads, .edges = &edges };
+    var builder: Builder = .{ .allocator = a, .allowed = allowed, .heads = heads, .edges = &edges, .capabilities = !hashable };
     for (item.records, 0..) |record, index| {
         const collection = dictionaries.identify(item, record.id);
         if (!valueRecord(record) and collection == null) continue;
@@ -142,8 +142,10 @@ const Builder = struct {
     allowed: []bool,
     heads: []?usize,
     edges: *std.ArrayList(Edge),
+    capabilities: bool,
     fn dependency(self: *Builder, parent: usize, ty: typed.Type) Error!void {
         if (scalar(ty)) return;
+        if (self.capabilities and (ty == .filesystem_cap or ty == .stream_cap)) return;
         if (!ty.isAggregate()) {
             self.allowed[parent] = false;
             return;

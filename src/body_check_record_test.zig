@@ -170,10 +170,44 @@ test "body records admit finite record list recursion and reject unsupported mem
     catalog.records = schemas;
     const fields = try a.dupe(typed.Field, schemas[ordinary.recordIndex()].fields);
     schemas[ordinary.recordIndex()].fields = fields;
-    fields[0].ty = .filesystem_cap;
+    fields[0].ty = .file;
     const rejected = try records.policy(a, catalog);
     try std.testing.expect(!rejected[ordinary.recordIndex()]);
     for (catalog.lists) |entry| try std.testing.expect(!rejected[entry.id.recordIndex()]);
+}
+fn capabilityClosure(a: std.mem.Allocator, ty: typed.Type) !bool {
+    const f = try fixture(a, "record Tree:\n    value: int\n    children: Tree[]\nfunc value(tree: Tree) -> int:\n    return tree.value\n");
+    const id = try ordinaryId(f.input.catalog);
+    const schemas = try a.dupe(typed.Record, f.input.catalog.records);
+    var catalog = f.input.catalog;
+    catalog.records = schemas;
+    const fields = try a.dupe(typed.Field, schemas[id.recordIndex()].fields);
+    schemas[id.recordIndex()].fields = fields;
+    fields[0].ty = ty;
+    const accepted = try records.policy(a, catalog);
+    try std.testing.expect(accepted[id.recordIndex()]);
+    for (catalog.lists) |entry| try std.testing.expect(accepted[entry.id.recordIndex()]);
+    return accepted[id.recordIndex()];
+}
+// spec: SELFHOST-BODY-CAPABILITY-RECORDS-1
+test "body records admit filesystem and stream leaves through recursive value closures" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expect(try capabilityClosure(arena.allocator(), .filesystem_cap));
+    try std.testing.expect(try capabilityClosure(arena.allocator(), .stream_cap));
+}
+// spec-case: SELFHOST-BODY-CAPABILITY-RECORDS-1
+test "body records admit exact capability fields without making them hash keys" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "record Ports:\n    fs: Filesystem\n    out: Stream\nfunc value(fs: Filesystem, out: Stream) -> Ports:\n    return Ports(fs=fs, out=out)\n");
+    try check(a, f);
+    const id = try ordinaryId(f.input.catalog);
+    const accepted = try records.policy(a, f.input.catalog);
+    const hashable = try records.hashablePolicy(a, f.input.catalog);
+    try std.testing.expect(accepted[id.recordIndex()]);
+    try std.testing.expect(!hashable[id.recordIndex()]);
 }
 // spec-case: SELFHOST-BODY-RECORDS-1
 test "body records retain prefix authority while materializing producer selected record lists" {

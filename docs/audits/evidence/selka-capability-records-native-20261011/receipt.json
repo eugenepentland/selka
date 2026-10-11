@@ -1,0 +1,108 @@
+{
+  "format": 1,
+  "base": "ed562913ecbe58a89f65a3baeb03a66a91a6e611",
+  "source_sha256": {
+    "src/body_check_record_validate.zig": "536ccf0fd860380dc9384a013d8d85cc1d379d2897b53dc33081f92baaab976c",
+    "src/body_check_record_test.zig": "4db288767cdeb975380bdc4bde6d9102a9ddc39c306a2fc16cd7f11998e3538a",
+    "SPEC.md": "5e97f2c7612d6b0d87787a340ded2fcb497c6450fd44450cad07f7509eb8596f"
+  },
+  "scope": "Native capability-containing value-record closure; installed producer comparison pending",
+  "native_tests": {
+    "Debug": 24,
+    "ReleaseFast": 24
+  },
+  "guardian": 88,
+  "artifacts": [
+    {
+      "name": "filesystem-capability-native-focused.py.gz",
+      "bytes": 1624,
+      "sha256": "7082a95d3da73dc11e3d6a0a07bff93dfdf12001a83ee7a27e2d47c8451b3e5f",
+      "archive_bytes": 890,
+      "archive_sha256": "bf5511ba254934f9421abe11c277a4fb1d94d95a2aa7a8f532d3093ff76fba09"
+    },
+    {
+      "name": "filesystem-capability-native-focused.json.gz",
+      "bytes": 2408,
+      "sha256": "f1b0b28b9cf5223d09675cd9dad09f8973b2cc06c448a3c61d8d998401943b6f",
+      "archive_bytes": 672,
+      "archive_sha256": "c734443cdb068c7f56737b7760154dd0929537b3aebc39d0ec746784ab2741ba"
+    },
+    {
+      "name": "filesystem-capability-native-focused.log.gz",
+      "bytes": 406,
+      "sha256": "accfd5c2fe90c329024dab50c90548c1006c192df1af3918d1f5de4c052d1bb9",
+      "archive_bytes": 176,
+      "archive_sha256": "fffc1006820e1ac1e0386c78f0452f2179290687a2371df28b04e30923a8fca3"
+    },
+    {
+      "name": "filesystem-capability-native-format.log.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_bytes": 20,
+      "archive_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "name": "filesystem-capability-native-Debug.log.gz",
+      "bytes": 2799,
+      "sha256": "62a5027e93942ad2f4f75627e8e6305521586030889637b4185bd584fb3dfa45",
+      "archive_bytes": 1303,
+      "archive_sha256": "d035182a252374a5e16c4908819f99f2cad8a92e06d869c13cf19f21189cfe54"
+    },
+    {
+      "name": "filesystem-capability-native-ReleaseFast.log.gz",
+      "bytes": 2792,
+      "sha256": "cab8d1cd184de97ed32b60fd3d5115d4d98578cfd25c55b78214109de10c9bc8",
+      "archive_bytes": 1292,
+      "archive_sha256": "401504abdd5d7e9c3cddd51e40a35630b7589210e42119185262155eca82cb39"
+    },
+    {
+      "name": "filesystem-capability-native-guardian.log.gz",
+      "bytes": 404,
+      "sha256": "f7acaae7e140526aa5cbe0f2549ad14841677084c23942bd174abc6bdd48f1c5",
+      "archive_bytes": 183,
+      "archive_sha256": "5531bcfff4a635eae189e895f44fd1ccc85574b6e09bd0f8355c4922c67dc031"
+    },
+    {
+      "name": "filesystem-capability-native-diff.log.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_bytes": 20,
+      "archive_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "name": "filesystem-field-receiver-capture.json.gz",
+      "bytes": 27846,
+      "sha256": "f561ee37fcf6bb4407d796c351be986f5da0b29b951dee16b64432ef752440d2",
+      "archive_bytes": 10203,
+      "archive_sha256": "db1b8621bfa1a0cb18d0c3b1119c10b422d18ffa0fe39d19e84104b8ef484583"
+    },
+    {
+      "name": "filesystem-field-receiver-capture.log.gz",
+      "bytes": 739,
+      "sha256": "642906f61abb27dce3ae9718d5be891dd908a49ea160734b085709be8b00c327",
+      "archive_bytes": 203,
+      "archive_sha256": "3796c10534c401b6a626aad8ee8a2500e02b44202119dfbbfe319443b56228c1"
+    },
+    {
+      "name": "capture-request-component.bin.gz",
+      "bytes": 31579,
+      "sha256": "9a8fbe3d9777c946baca7c1a0b699255e49c4d30a90e50dbd20839363206e110",
+      "archive_bytes": 5386,
+      "archive_sha256": "72d0b323088a445e07f349bb4f338b0ab2d64ebadd864e66733fbf5dcc3d41ed"
+    },
+    {
+      "name": "capture-reply-component.bin.gz",
+      "bytes": 369,
+      "sha256": "37420eaccae60b936a8691c6f266566cec7f761e050b693b2df948464f95c8e7",
+      "archive_bytes": 247,
+      "archive_sha256": "172743f47282ac33b9e6d6f5e679c5789c57cf7678d35793d659ec6a65df012f"
+    },
+    {
+      "name": "main.my.gz",
+      "bytes": 522,
+      "sha256": "63bad5421cb29ca100cbe4afe4cc22477641ed65cbc96a398787ebf2201ea86e",
+      "archive_bytes": 257,
+      "archive_sha256": "c502b67a7a588251bd4f2b2881eca885999d2baaada768e14f26e40648fb7c16"
+    }
+  ]
+}
