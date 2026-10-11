@@ -1,0 +1,116 @@
+{
+  "format": 1,
+  "scope": "Native validation of filesystem helper and scoped file method graphs; Selka producer qualification pending",
+  "base_commit": "5d4f02b20d5ec95b6f789922bef460fdc858ea70",
+  "body_schema": 10,
+  "focused_tests": 28,
+  "guardian_checks": 88,
+  "failed": 0,
+  "skipped": 0,
+  "source_sha256": {
+    "src/body_check_resource_authority.zig": "111ce6ed6592c7f2de40f38a92e45390e1b4dc1ed1da11b901cc55577e564a3d",
+    "src/body_check_resource_validate.zig": "a23c5531ba53cc13b69d38e7358b6b0602d2881f38d95cb5f3b63c9cfdaac69a",
+    "src/body_check_resource_test.zig": "f5942d2d0a1c0c0f49d63ca9e9d66416423150f79daab90d1b4d33cb4c91493e",
+    "SPEC.md": "b82d387827b1c6f13debc4977ea31f3906914df8c5e011683ce7a5c0058a970a"
+  },
+  "retained_failure": "First run passed28tests but Guardian rejected two test-source lines over240characters; exact source,logs and report retained; literals split without changing values.",
+  "artifacts": [
+    {
+      "name": "filesystem-native-focused.py",
+      "sha256": "c0729b1d3db8f2ed3dde48e05edc34d9fdcc3cf753a601b711912129b7ffffcb",
+      "bytes": 1613,
+      "compressed": "filesystem-native-focused.py.gz",
+      "compressed_sha256": "1d59f12ae11ac33e9bc5c384fa72c9e1548d303c2ddb310e763dfafcacc9ae80"
+    },
+    {
+      "name": "filesystem-native-focused.json",
+      "sha256": "df65ac96fc54c733b3cbcd52cd942da78cd4600f965454bdef627fd790e63d3f",
+      "bytes": 2044,
+      "compressed": "filesystem-native-focused.json.gz",
+      "compressed_sha256": "274502e00fc83387f17f8179f8e46bb24675174fe2e925b1f60e570d65da234b"
+    },
+    {
+      "name": "filesystem-native-focused.log",
+      "sha256": "8c8058d1f295b08b0a841e19ba96546afbc342920b16b96170652190964e6d4f",
+      "bytes": 494,
+      "compressed": "filesystem-native-focused.log.gz",
+      "compressed_sha256": "fd75b87a0ad09ee6478776218b28a8e700802d290f8c20ae643b3056bf7fd6bb"
+    },
+    {
+      "name": "filesystem-native-debug.log",
+      "sha256": "777dcbee8f8a11ecb9d9ec3af2e64f33885d4598457484aab02a7764464e45bd",
+      "bytes": 2792,
+      "compressed": "filesystem-native-debug.log.gz",
+      "compressed_sha256": "308412e50f4e79b2f9c3605fa4d31fd3b8ae2696ceb07f326ee05fd9f9ba7f7a"
+    },
+    {
+      "name": "filesystem-native-guardian.log",
+      "sha256": "1a40fd6d593afc2403b1fbeb0e0d68fd0d54114c73f3a33f9e374fd0a07dfca4",
+      "bytes": 404,
+      "compressed": "filesystem-native-guardian.log.gz",
+      "compressed_sha256": "0e3201de79c605e7939e15867b8e6a6b47b790317300fc8c9bcd9d87cb9598cb"
+    },
+    {
+      "name": "filesystem-native-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "compressed": "filesystem-native-format.log.gz",
+      "compressed_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "name": "filesystem-native-diff.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "compressed": "filesystem-native-diff.log.gz",
+      "compressed_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "name": "filesystem-native-test-before-line-fix.zig",
+      "sha256": "514146b962d5ec48d92190ea18752a8b24f1367446e8602ff9e46569bffb0e8d",
+      "bytes": 28213,
+      "compressed": "filesystem-native-test-before-line-fix.zig.gz",
+      "compressed_sha256": "03b77c52389384abce67b7e41a194e8a31e8f3b99f9ae3ff9ff6c17548a00edb"
+    },
+    {
+      "name": "before-line-fix-filesystem-native-debug.log",
+      "sha256": "b053bd6dfbee3fe32b4e183258c62c1e3fc884c4e76b65fba1089ea58154be08",
+      "bytes": 2803,
+      "compressed": "before-line-fix-filesystem-native-debug.log.gz",
+      "compressed_sha256": "a63502468d2b198eae6754e25cc8bb09cb9b45e4e0183822427e03e1f9cb1cb8"
+    },
+    {
+      "name": "before-line-fix-filesystem-native-focused.json",
+      "sha256": "6123b23f1afa0ff99382154ebad5670dd38659e0dc592ad8ece7e8c84a8be714",
+      "bytes": 1773,
+      "compressed": "before-line-fix-filesystem-native-focused.json.gz",
+      "compressed_sha256": "50f8f54dd729f62337258cabc8179e871f8bae6ff43899237c0405f6aabc0477"
+    },
+    {
+      "name": "before-line-fix-filesystem-native-focused.log",
+      "sha256": "2c3c22e82bea4f1c10b5fea87c1c2e829ce13d0ecab87f9d1c96c22338ff6c7c",
+      "bytes": 1539,
+      "compressed": "before-line-fix-filesystem-native-focused.log.gz",
+      "compressed_sha256": "181234ebd360beaed0a53f4e0ecf6a9f022af8e468a2b08fd74fb020bdabc48b"
+    },
+    {
+      "name": "before-line-fix-filesystem-native-format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "compressed": "before-line-fix-filesystem-native-format.log.gz",
+      "compressed_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "name": "before-line-fix-filesystem-native-guardian.log",
+      "sha256": "f087c17b08ef170987f951fd7ff3fbc792e84cb8d2df6cf906cf44e57a1a1cbb",
+      "bytes": 745,
+      "compressed": "before-line-fix-filesystem-native-guardian.log.gz",
+      "compressed_sha256": "fa79608a8df0c10274da4542620e1827bafd0524c714d45803f1baaebb2b91e5"
+    }
+  ],
+  "remaining": [
+    "matching Selka producer qualification",
+    "plain installed native host build",
+    "final integration full gate",
+    "full bootstrap and <=1.5 performance acceptance"
+  ]
+}

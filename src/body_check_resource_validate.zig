@@ -17,28 +17,11 @@ fn shapes(catalog: value.Catalog, item: typed.FileShapes) Error!void {
     if (item.text != text.id or item.bytes != bytes.id) return error.ComponentProtocol;
     if (lists.listElement(catalog, item.list) != text.id) return error.ComponentProtocol;
 }
-/// Check native file/open/output operand widths and exact result identities.
+/// Check native filesystem/output operand widths and exact result identities.
 pub fn node(catalog: value.Catalog, nodes: []const typed.Node, locals: []const typed.Local, item: typed.Node) Error!void {
     switch (item.data) {
-        .file_access => |access| {
-            try shapes(catalog, access.shapes);
-            if (access.kind != .open or access.arguments.len != 3) return error.ComponentProtocol;
-            if (access.mode != 'r' or access.text) return error.ComponentProtocol;
-            if (try nodeType(nodes, access.arguments[0]) != .filesystem_cap) return error.ComponentProtocol;
-            for (access.arguments[1..]) |argument| if (try nodeType(nodes, argument) != access.shapes.text) return error.ComponentProtocol;
-            try mode(nodes, access);
-            const handle: typed.Type = if (access.text) .text_file else .file;
-            if (item.ty != handle and fileResult(catalog, item.ty) != handle) return error.ComponentProtocol;
-        },
-        .file_method => |method| {
-            try shapes(catalog, method.shapes);
-            if (@backingInt(method.owner) >= locals.len or method.kind != .read or method.text) return error.ComponentProtocol;
-            const owner = locals[@backingInt(method.owner)];
-            const handle: typed.Type = if (method.text) .text_file else .file;
-            if (owner.ty != handle or !owner.ownership.scoped_file) return error.ComponentProtocol;
-            if (method.argument) |argument| if (try nodeType(nodes, argument) != .i64) return error.ComponentProtocol;
-            if (item.ty != (if (method.text) method.shapes.text else method.shapes.bytes)) return error.ComponentProtocol;
-        },
+        .file_access => |access| try fileAccess(catalog, nodes, item.ty, access),
+        .file_method => |method| try fileMethod(catalog, nodes, locals, item.ty, method),
         .stream_write => |write| {
             if (item.ty != .i64 or try nodeType(nodes, write.stream) != .stream_cap) return error.ComponentProtocol;
             if (!octets(catalog, try nodeType(nodes, write.text))) return error.ComponentProtocol;
@@ -54,6 +37,53 @@ pub fn node(catalog: value.Catalog, nodes: []const typed.Node, locals: []const t
         },
         else => return error.ComponentProtocol,
     }
+}
+fn fileAccess(catalog: value.Catalog, nodes: []const typed.Node, ty: typed.Type, access: typed.FileAccess) Error!void {
+    try shapes(catalog, access.shapes);
+    if (access.arguments.len != access.kind.arity()) return error.ComponentProtocol;
+    if (try nodeType(nodes, access.arguments[0]) != .filesystem_cap) return error.ComponentProtocol;
+    if (try nodeType(nodes, access.arguments[1]) != access.shapes.text) return error.ComponentProtocol;
+    if (access.kind == .open) {
+        if (try nodeType(nodes, access.arguments[2]) != access.shapes.text) return error.ComponentProtocol;
+        try mode(nodes, access);
+    } else {
+        if (access.mode != 'r' or access.text != (access.kind == .read_text or access.kind == .write_text)) return error.ComponentProtocol;
+        if (access.kind == .write_file or access.kind == .write_text) {
+            const element = if (access.text) access.shapes.text else access.shapes.bytes;
+            if (try nodeType(nodes, access.arguments[2]) != element) return error.ComponentProtocol;
+        }
+    }
+    const payload: typed.Type = switch (access.kind) {
+        .open => if (access.text) .text_file else .file,
+        .read_file => access.shapes.bytes,
+        .read_text => access.shapes.text,
+        .listdir => access.shapes.list,
+        .exists => .bool,
+        .write_file, .write_text, .mkdir, .remove => .unit,
+    };
+    if (access.kind == .exists or (access.kind == .open and ty.isFile())) {
+        if (ty != payload) return error.ComponentProtocol;
+    } else if (@import("body_check_resource_authority.zig").resultPayload(catalog, ty) != payload) return error.ComponentProtocol;
+}
+fn fileMethod(catalog: value.Catalog, nodes: []const typed.Node, locals: []const typed.Local, ty: typed.Type, method: typed.FileMethod) Error!void {
+    try shapes(catalog, method.shapes);
+    if (@backingInt(method.owner) >= locals.len) return error.ComponentProtocol;
+    const owner = locals[@backingInt(method.owner)];
+    const handle: typed.Type = if (method.text) .text_file else .file;
+    if (owner.ty != handle or !owner.ownership.scoped_file) return error.ComponentProtocol;
+    const element = if (method.text) method.shapes.text else method.shapes.bytes;
+    if (method.argument) |argument| {
+        if (!method.kind.takesArgument()) return error.ComponentProtocol;
+        const expected: typed.Type = if (method.kind == .write) element else .i64;
+        if (try nodeType(nodes, argument) != expected) return error.ComponentProtocol;
+    } else if (method.kind.requiresArgument()) return error.ComponentProtocol;
+    const valid = switch (method.kind) {
+        .read, .readline => ty == element,
+        .readlines => lists.listElement(catalog, ty) == element,
+        .write => ty == .i64,
+        .flush, .close => ty == .unit,
+    };
+    if (!valid) return error.ComponentProtocol;
 }
 fn octets(catalog: value.Catalog, ty: typed.Type) bool {
     if (catalog.string) |entry| if (entry.id == ty) return true;

@@ -15,14 +15,9 @@ fn fixture(a: std.mem.Allocator, text: []const u8) !Fixture {
     const native = try @import("records.zig").collectWithNames(a, src, syntax, &sink, null);
     const catalog = try @import("body_check_materialize.zig").project(a, native);
     const program = try @import("sema.zig").checkLibraryProgram(a, src, syntax, &sink, null);
-    var site: ?source.Span = null;
-    for (program.nodes) |node| if (node.data == .file_access) {
-        site = node.span;
-        break;
-    };
     const recipes = try a.alloc(value.CatalogRecipe, program.records.len - catalog.base_count);
     for (program.records[catalog.base_count..], recipes) |record, *recipe| {
-        const at = site orelse return error.ComponentProtocol;
+        const at = try recipeSite(program.nodes, record.id);
         if (record.isCollection() and record.collection.kind == .list) {
             recipe.* = .{ .list = .{ .id = record.id, .element = record.shape.buffer.?, .span = at } };
         } else if (typed.resultShape(record.id, program.records)) |shape| {
@@ -35,6 +30,18 @@ fn fixture(a: std.mem.Allocator, text: []const u8) !Fixture {
         .input = .{ .context = .{ .path = src.path, .source = src.bytes, .trusted_intrinsics = false, .entry_required = false }, .program = syntax, .modules = &.{}, .catalog = catalog },
         .output = .{ .batch = .{ .nodes = program.nodes, .statements = program.statements, .functions = program.functions, .ranges = ranges }, .import_used = &.{}, .diagnostics = &.{}, .recipes = recipes },
     };
+}
+fn recipeSite(nodes: []const typed.Node, id: typed.Type) !source.Span {
+    for (nodes) |node| switch (node.data) {
+        .file_access => |access| {
+            if (node.ty == id or access.shapes.list == id) return node.span;
+        },
+        .file_method => |method| {
+            if (node.ty == id or method.shapes.list == id) return node.span;
+        },
+        else => {},
+    };
+    return error.TestUnexpectedResult;
 }
 const scoped = "func value(fs: Filesystem, out: Stream) -> int:\n    with fs.open(\"input.bin\", \"rb\") as input:\n        const data = input.read(8)\n        _ = out.write(data)\n        _ = out.print(len(data))\n    return 7\n";
 // spec: SELFHOST-BODY-ENTRY-1
@@ -278,15 +285,16 @@ test "body resources rawBindings rejects raw bodies shared by foreign functions"
     try std.testing.expectError(error.ComponentProtocol, @import("body_check_resource_scope.zig").batch(a, request, f.output.batch));
 }
 
-// spec-case: SELFHOST-BODY-ENTRY-1
-test "body resources refuse authentic text and writable open graphs outside binary read profile" {
+// spec: SELFHOST-BODY-FILESYSTEM-1
+test "body resources accept all authentic text and binary open modes" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    for ([_][]const u8{ "r", "rt", "wb", "ab" }) |mode| {
+    for ([_][]const u8{ "r", "rt", "rb", "w", "wt", "wb", "a", "at", "ab" }) |mode| {
         const text = try std.fmt.allocPrint(a, "func value(fs: Filesystem) -> int:\n    with fs.open(\"input.bin\", \"{s}\") as input:\n        _ = input.read(1)\n    return 7\n", .{mode});
         const f = try fixture(a, text);
-        try std.testing.expectError(error.ComponentProtocol, validate.outcome(a, f.input, .{ .success = f.output }));
+        try validate.outcome(a, f.input, .{ .success = f.output });
+        try std.testing.expectEqual(@as(usize, 1), f.output.recipes.len);
     }
 }
 
@@ -349,4 +357,150 @@ test "body resources refuse nonrenderable aggregate print contracts" {
     schema = original;
     schema.collection.contains_cell = true;
     try std.testing.expectError(error.ComponentProtocol, changedPrintContract(a, f, schema));
+}
+
+fn accessForms(a: std.mem.Allocator, name: []const u8, arguments: []const u8) !usize {
+    const text = try std.fmt.allocPrint(a, "func value(fs: Filesystem) -> int:\n    _ = fs.{s}({s})\n    _ = {s}(fs, {s})\n    return 7\n", .{ name, arguments, name, arguments });
+    const f = try fixture(a, text);
+    try validate.outcome(a, f.input, .{ .success = f.output });
+    try std.testing.expect(f.output.recipes.len >= 1);
+    var count: usize = 0;
+    for (f.output.batch.nodes) |item| if (item.data == .file_access) {
+        count += 1;
+    };
+    return count;
+}
+// spec-case: SELFHOST-BODY-FILESYSTEM-1
+test "body resources accept native whole path helpers in both spellings" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try std.testing.expectEqual(@as(usize, 2), try accessForms(a, "read_file", "\"path\""));
+    try std.testing.expectEqual(@as(usize, 2), try accessForms(a, "read_text", "\"path\""));
+    try std.testing.expectEqual(@as(usize, 2), try accessForms(a, "write_file", "\"path\", b\"data\""));
+    try std.testing.expectEqual(@as(usize, 2), try accessForms(a, "write_text", "\"path\", \"data\""));
+    try std.testing.expectEqual(@as(usize, 2), try accessForms(a, "exists", "\"path\""));
+    try std.testing.expectEqual(@as(usize, 2), try accessForms(a, "listdir", "\"path\""));
+    try std.testing.expectEqual(@as(usize, 2), try accessForms(a, "mkdir", "\"path\""));
+    try std.testing.expectEqual(@as(usize, 2), try accessForms(a, "remove", "\"path\""));
+}
+fn allFileMethods(a: std.mem.Allocator, mode_value: []const u8, data: []const u8) !usize {
+    const text = try std.fmt.allocPrint(a, "func value(fs: Filesystem) -> int:\n" ++
+        "    with fs.open(\"path\", \"{s}\") as file:\n" ++
+        "        _ = file.read()\n        _ = file.read(1)\n        _ = file.readline()\n" ++
+        "        _ = file.readlines()\n        _ = file.write({s})\n" ++
+        "        _ = file.flush()\n        _ = file.close()\n    return 7\n", .{ mode_value, data });
+    const f = try fixture(a, text);
+    try validate.outcome(a, f.input, .{ .success = f.output });
+    try std.testing.expectEqual(@as(usize, if (std.mem.eql(u8, mode_value, "rb")) 2 else 1), f.output.recipes.len);
+    var count: usize = 0;
+    for (f.output.batch.nodes) |item| if (item.data == .file_method) {
+        count += 1;
+    };
+    return count;
+}
+// spec-case: SELFHOST-BODY-FILESYSTEM-1
+test "body resources accept all scoped text and binary file methods" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try std.testing.expectEqual(@as(usize, 7), try allFileMethods(arena.allocator(), "rb", "b\"data\""));
+    try std.testing.expectEqual(@as(usize, 7), try allFileMethods(arena.allocator(), "r", "\"data\""));
+}
+fn accessIndex(nodes: []const typed.Node) !usize {
+    for (nodes, 0..) |node, index| if (node.data == .file_access) return index;
+    return error.TestUnexpectedResult;
+}
+fn primitive(a: std.mem.Allocator, f: Fixture, item: typed.Node) !void {
+    const catalog = try @import("body_check_recipe_validate.zig").expanded(a, f.input, f.output.recipes);
+    try @import("body_check_resource_validate.zig").node(catalog, f.output.batch.nodes, f.output.batch.functions[0].scope.locals, item);
+}
+// spec-case: SELFHOST-BODY-FILESYSTEM-1
+test "body resources reject forged whole path arity mode capability payload and result" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "func value(fs: Filesystem) -> int:\n    _ = fs.write_file(\"path\", b\"data\")\n    return 7\n");
+    const original = f.output.batch.nodes[try accessIndex(f.output.batch.nodes)];
+    var item = original;
+    item.data.file_access.arguments = original.data.file_access.arguments[0..2];
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    item = original;
+    item.data.file_access.mode = 'w';
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    item = original;
+    item.data.file_access.text = true;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    item = original;
+    item.data.file_access.arguments = &.{ original.data.file_access.arguments[1], original.data.file_access.arguments[0], original.data.file_access.arguments[2] };
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    item = original;
+    item.data.file_access.kind = .write_text;
+    item.data.file_access.text = true;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    item = original;
+    item.ty = .unit;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+}
+// spec-case: SELFHOST-BODY-FILESYSTEM-1
+test "body resources bind read helper Result payload and retained template authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "func value(fs: Filesystem) -> int:\n    _ = fs.read_file(\"path\")\n    return 7\n");
+    const original = f.output.batch.nodes[try accessIndex(f.output.batch.nodes)];
+    var item = original;
+    item.data.file_access.kind = .read_text;
+    item.data.file_access.text = true;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    var catalog = try @import("body_check_recipe_validate.zig").expanded(a, f.input, f.output.recipes);
+    try std.testing.expectEqual(@as(?typed.Type, null), @import("body_check_resource_authority.zig").fileResult(catalog, original.ty));
+    catalog.templates.result = null;
+    try std.testing.expectError(error.ComponentProtocol, @import("body_check_resource_validate.zig").node(catalog, f.output.batch.nodes, f.output.batch.functions[0].scope.locals, original));
+}
+// spec-case: SELFHOST-BODY-FILESYSTEM-1
+test "body resources reject missing write arguments and extraneous no argument method operands" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "func value(fs: Filesystem) -> int:\n    with fs.open(\"path\", \"wb\") as file:\n        _ = file.write(b\"data\")\n    return 7\n");
+    const original = f.output.batch.nodes[try methodIndex(f.output.batch.nodes)];
+    var item = original;
+    item.data.file_method.argument = null;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    item = original;
+    item.data.file_method.kind = .close;
+    item.ty = .unit;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    item = original;
+    item.data.file_method.text = true;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+    item = original;
+    item.ty = .unit;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+}
+// spec-case: SELFHOST-BODY-FILESYSTEM-1
+test "body resources bind binary readlines to the bytes list rather than the shared text list" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "func value(fs: Filesystem) -> int:\n    with fs.open(\"path\", \"rb\") as file:\n        _ = file.readlines()\n    return 7\n");
+    try validate.outcome(a, f.input, .{ .success = f.output });
+    var item = f.output.batch.nodes[try methodIndex(f.output.batch.nodes)];
+    try std.testing.expect(item.ty != item.data.file_method.shapes.list);
+    item.ty = item.data.file_method.shapes.list;
+    try std.testing.expectError(error.ComponentProtocol, primitive(a, f, item));
+}
+
+// spec-case: SELFHOST-BODY-FILESYSTEM-1
+test "body resources preserve Result text handles through matched lexical scopes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try fixture(a, "func value(fs: Filesystem) -> int:\n" ++
+        "    match fs.open(\"path\", \"r\"):\n        case Ok(file):\n" ++
+        "            with file as input:\n                _ = input.readlines()\n" ++
+        "            return 7\n        case Err(_):\n            return 0\n");
+    try validate.outcome(a, f.input, .{ .success = f.output });
+    try std.testing.expectEqual(@as(usize, 2), f.output.recipes.len);
+    try std.testing.expectEqual(typed.Type.text_file, f.output.recipes[1].result.success);
 }
