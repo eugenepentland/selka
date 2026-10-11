@@ -97,6 +97,13 @@ def require_deployment(args, expected):
     F.require(deployment_identity(args) == expected, 'compiler/component deployment changed during library admission')
 
 
+def join_evidence(report):
+    """Reserve fresh retained evidence for every invocation of the same gate."""
+    report.parent.mkdir(parents=True, exist_ok=True)
+    invocation = Path(tempfile.mkdtemp(prefix=report.stem + '-join-', dir=report.parent))
+    return invocation / 'exchanges'
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--compiler', type=Path, required=True)
@@ -189,8 +196,7 @@ def main():
                 args.report.write_text(json.dumps({'complete': False, 'selected_admission': 'pending',
                     **identity, 'records': records, 'join_forged_records': join_records,
                     'join_capture': join_capture}, indent=2) + '\n')
-            evidence = args.report.resolve().with_suffix('')
-            evidence = evidence.parent / (evidence.name + '-join-exchanges')
+            evidence = join_evidence(args.report)
             join_records, join_capture = J.run(args, evidence, empty, checkpoint_join)
             F.require(len(join_records) == 4, 'incomplete join forged acceptance')
     expected_fixture_runs = (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes)

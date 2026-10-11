@@ -8,6 +8,21 @@ import run_body_library_admission as D
 
 
 class LibraryAdmissionTests(unittest.TestCase):
+    def test_repeated_gate_preserves_previous_exchange_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            report = Path(temporary) / 'reports' / 'admission.json'
+            first = D.join_evidence(report)
+            first.mkdir()
+            (first / 'reply.bin').write_bytes(b'first authenticated reply')
+            second = D.join_evidence(report)
+            second.mkdir()
+            (second / 'reply.bin').write_bytes(b'second authenticated reply')
+            self.assertNotEqual(first, second)
+            self.assertEqual(first.parent.parent, report.parent)
+            self.assertEqual(second.parent.parent, report.parent)
+            self.assertEqual((first / 'reply.bin').read_bytes(), b'first authenticated reply')
+            self.assertEqual((second / 'reply.bin').read_bytes(), b'second authenticated reply')
+
     def test_corpus_pins_all_sources_and_ordered_native_errors(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         D.require_manifest(manifest)
