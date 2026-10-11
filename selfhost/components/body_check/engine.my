@@ -132,7 +132,7 @@ public func top_level(state: State, span: int) -> bool fails syntax_value.Proble
 
 
 func prelude_call(name: bytes) -> bool:
-    for builtin in [b"len", b"range", b"int", b"bool", b"str", b"bytes", b"byte_buffer", b"list", b"set", b"dict", b"tuple", b"print", b"sorted", b"min", b"max", b"abs", b"sum", b"all", b"any", b"enumerate", b"reversed", b"zip", b"Some", b"Ok", b"Err"]:
+    for builtin in [b"len", b"range", b"int", b"i64", b"bool", b"str", b"bytes", b"byte_buffer", b"list", b"set", b"dict", b"tuple", b"print", b"sorted", b"min", b"max", b"abs", b"sum", b"all", b"any", b"enumerate", b"reversed", b"zip", b"Some", b"Ok", b"Err"]:
         if name == builtin:
             return True
     return False
@@ -326,6 +326,26 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
                 if candidate == expected_name:
                     declared = True
             if not declared:
+                if raw_callee == b"int" or raw_callee == b"i64":
+                    const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const inputs = try graph.items(state.syntax.pool, arguments_id)
+                    const names_id = try graph.field(state.syntax.pool, payload, "argument_names")
+                    const labels = try graph.items(state.syntax.pool, names_id)
+                    const types_id = try graph.field(state.syntax.pool, payload, "type_arguments")
+                    const explicit_types = try graph.items(state.syntax.pool, types_id)
+                    if len(inputs) != 1 or len(labels) != 0 or len(explicit_types) != 0:
+                        const rejection = try problem(state, span, "P_BODY_PROFILE", "integer conversion requires one plain admitted integer argument")
+                        fail rejection
+                    const argument_raw = try graph.number(state.syntax.pool, inputs[0])
+                    const argument = try expression(mut state, argument_raw)
+                    if argument.ty != 0:
+                        const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
+                        fail rejection
+                    const operand = try syntax_value.integer(mut state.batch.pool, argument.id)
+                    const id = try emission.node(mut state.batch, state.syntax.pool, span, 0, b"cast", operand)
+                    state.batch.resolved[raw_id] = id
+                    state.depth = state.depth - 1
+                    return Expression(id=id, ty=0)
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "prelude call is outside the B1 ordinary-call profile")
                 fail rejection
         const resolution = try names.target(mut state.problems, state.syntax.pool, state.syntax.source, state.syntax.modules, span, owner, call_name)
@@ -343,7 +363,7 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
             target_index = target_index + 1
         if target < 0:
             const raw_spelling = try graph.spelling(state.syntax.pool, state.syntax.source, call_name)
-            for builtin in [b"len", b"range", b"int", b"bool", b"str", b"bytes", b"byte_buffer", b"list", b"set", b"dict", b"tuple", b"print", b"sorted", b"min", b"max", b"abs", b"sum", b"all", b"any", b"enumerate", b"reversed", b"zip", b"Some", b"Ok", b"Err"]:
+            for builtin in [b"len", b"range", b"int", b"i64", b"bool", b"str", b"bytes", b"byte_buffer", b"list", b"set", b"dict", b"tuple", b"print", b"sorted", b"min", b"max", b"abs", b"sum", b"all", b"any", b"enumerate", b"reversed", b"zip", b"Some", b"Ok", b"Err"]:
                 if raw_spelling == builtin:
                     const rejection = try problem(state, span, "P_BODY_PROFILE", "prelude call is outside the B1 ordinary-call profile")
                     fail rejection

@@ -9,7 +9,8 @@ immutable managed `str` and `bytes` values; it does not move catalog constructio
 Admitted types are `int`/`i64`, `bool`, `Unit`, `str`, and `bytes`. Operations include
 literals, scalar unary and binary operations, UTF-8 text and arbitrary byte
 literals, managed length and indexing (including negative indices), concatenation,
-equality and ordering, lexical locals and mutable reassignment, ordinary forward
+equality and ordering, explicit `int`/`i64` conversion of admitted integer values,
+lexical locals and mutable reassignment, ordinary forward
 and recursive calls, named/default arguments admitted by the parser, scalar and
 managed mutation markers, branches, while/basic integer range loops,
 break/continue, return, discard, and assertions with static messages. Managed

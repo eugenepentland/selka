@@ -241,3 +241,28 @@ public func test_scalar_context_byte_literal_refuses_unowned_array_schema() -> b
             return False
         case Err(problem):
             return problem.code == "P_BODY_PROFILE" and len(state.batch.nodes) == 0
+
+
+public func test_explicit_int_byte_index_conversion_retains_full_cast_chain() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    state.syntax.source = b"0 int"
+    const bytes = try literal(mut state, b"bytes", b"a")
+    const integer_span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const index = try node(mut state, b"integer", integer_span, 0, 1)
+    const base = try syntax_value.integer(mut state.syntax.pool, bytes)
+    const offset = try syntax_value.integer(mut state.syntax.pool, index)
+    const access = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [base, offset])
+    const indexed = try node(mut state, b"index", access, 0, 1)
+    const name = try syntax_value.span(mut state.syntax.pool, 2, 5)
+    const argument = try syntax_value.integer(mut state.syntax.pool, indexed)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [argument])
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const call = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, absent, arguments, empty, empty])
+    const cast_raw = try node(mut state, b"call", call, 0, 5)
+    const value = try engine.expression(mut state, cast_raw)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[value.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const operand_id = try graph.payload(state.batch.pool, data_id)
+    const operand = try graph.number(state.batch.pool, operand_id)
+    return value.ty == 0 and value.id == 5 and len(state.batch.nodes) == 6 and data.data == b"cast" and operand == 4
