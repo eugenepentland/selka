@@ -1,0 +1,12 @@
+func first(value: int) -> int:
+    if value == 0:
+        return 0
+    return second(value - 1) + 1
+
+func second(value: int) -> int:
+    if value == 0:
+        return 0
+    return first(value - 1) + 1
+
+func main() -> int:
+    return first(7)

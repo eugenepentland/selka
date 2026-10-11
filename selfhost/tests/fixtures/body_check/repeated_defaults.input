@@ -1,0 +1,5 @@
+func add(value: int, increment: int = 2) -> int:
+    return value + increment
+
+func main() -> int:
+    return add(1) + add(2)

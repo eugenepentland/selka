@@ -1,0 +1,12 @@
+func main() -> int:
+    mut total = 0
+    for outer in range(3):
+        mut index = 0
+        while index < 4:
+            index = index + 1
+            if index == 2:
+                continue
+            if outer == 1:
+                break
+            total = total + 1
+    return total + 1

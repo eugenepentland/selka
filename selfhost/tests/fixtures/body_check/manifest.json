@@ -186,5 +186,60 @@
     "boundary": "scalar-body",
     "typed": false,
     "library": false
+  },
+  "signed_boundaries.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "literal_overflow.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false
+  },
+  "repeated_defaults.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "named_argument_order.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "nested_loop_control.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "forward_call.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "recursive_call.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "mutual_recursion.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   }
 }

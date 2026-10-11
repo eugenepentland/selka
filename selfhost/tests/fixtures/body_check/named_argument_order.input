@@ -1,0 +1,5 @@
+func subtract(first: int, second: int) -> int:
+    return first - second
+
+func main() -> int:
+    return subtract(second=2, first=9)

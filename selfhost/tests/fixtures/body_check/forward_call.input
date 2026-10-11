@@ -1,0 +1,5 @@
+func main() -> int:
+    return later(6)
+
+func later(value: int) -> int:
+    return value + 1

@@ -1,0 +1,6 @@
+func main() -> int:
+    const minimum: int = -9223372036854775808
+    const maximum: int = 9223372036854775807
+    if minimum < 0 and maximum > 0:
+        return 7
+    return 0

@@ -1,0 +1,7 @@
+func count(value: int) -> int:
+    if value == 0:
+        return 0
+    return count(value - 1) + 1
+
+func main() -> int:
+    return count(7)
