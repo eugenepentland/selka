@@ -1,0 +1,79 @@
+import syntax_value
+import collection_types
+import recipe_index
+
+func input(mut pool: syntax_value.Pool) -> int fails syntax_value.Problem:
+    mut bases: int[] = []
+    const declaration = try syntax_value.span(mut pool, 0, 0)
+    for id in range(6):
+        const identity = try syntax_value.integer(mut pool, id)
+        const basis = try try_basis(mut pool, identity, declaration)
+        bases.append(basis)
+    const collections = try syntax_value.object(mut pool, ["dict", "set", "DictItem", "DictKeys", "DictValues", "DictItems"], bases)
+    const templates = try syntax_value.object(mut pool, ["collections"], [collections])
+    return try syntax_value.object(mut pool, ["templates"], [templates])
+
+
+func try_basis(mut pool: syntax_value.Pool, identity: int, declaration: int) -> int fails syntax_value.Problem:
+    return try syntax_value.object(mut pool, ["id", "declaration"], [identity, declaration])
+
+
+func mapping(mut pool: syntax_value.Pool) -> int fails syntax_value.Problem:
+    const declaration = try syntax_value.span(mut pool, 0, 0)
+    const label = try syntax_value.octets(mut pool, b"dict<i64,bool>")
+    const key = try syntax_value.integer(mut pool, 0)
+    const value = try syntax_value.integer(mut pool, 1)
+    const no = try syntax_value.boolean(mut pool, False)
+    const collection = try syntax_value.object(mut pool, ["key", "set"], [key, no])
+    const shape = try syntax_value.object(mut pool, ["buffer"], [value])
+    return try syntax_value.object(mut pool, ["declaration", "name", "collection", "shape"], [declaration, label, collection, shape])
+
+
+func view(mut pool: syntax_value.Pool, owner: int) -> int fails syntax_value.Problem:
+    const declaration = try syntax_value.span(mut pool, 0, 0)
+    const label = try syntax_value.octets(mut pool, b"DictKeys<i64,bool>")
+    const owner_id = try syntax_value.integer(mut pool, owner)
+    const member = try syntax_value.object(mut pool, ["ty"], [owner_id])
+    const members = try syntax_value.sequence(mut pool, [member])
+    const shape = try syntax_value.object(mut pool, [], [])
+    return try syntax_value.object(mut pool, ["declaration", "name", "fields", "shape"], [declaration, label, members, shape])
+
+
+public func test_retained_mapping_and_view_lookup() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const request = try input(mut pool)
+    const mapping_row = try mapping(mut pool)
+    const view_row = try view(mut pool, 19)
+    const catalog = try collection_types.prepare(pool, request, [mapping_row, view_row])
+    const projected = collection_types.schema(catalog, 20)
+    return collection_types.find(catalog, 0, 0, 1) == 19 and collection_types.find(catalog, 3, 0, 1) == 20 and projected.owner == 19 and projected.key == 0 and projected.value == 1
+
+
+public func test_view_without_prior_retained_mapping_is_malformed() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const request = try input(mut pool)
+    const view_row = try view(mut pool, 19)
+    match collection_types.prepare(pool, request, [view_row]):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_six_kinds_have_distinct_bounded_keys() -> bool fails syntax_value.Problem:
+    mut catalog = collection_types.empty()
+    for kind in range(6):
+        _ = try collection_types.add(mut catalog, collection_types.Schema(id=19 + kind, kind=kind, key=0, value=15, owner=-1))
+    for kind in range(6):
+        if collection_types.find(catalog, kind, 0, 15) != 19 + kind:
+            return False
+    return collection_types.tag(5) == "dict_items" and collection_types.label(2) == b"DictItem"
+
+
+public func test_recipe_kind_upper_bound_is_fail_closed() -> bool fails syntax_value.Problem:
+    mut index = recipe_index.empty()
+    match recipe_index.insert(mut index, recipe_index.Key(kind=9, first=0, second=-1, id=19)):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

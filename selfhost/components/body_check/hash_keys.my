@@ -1,0 +1,138 @@
+import syntax_value
+import graph
+
+public record Context:
+    pool: syntax_value.Pool
+    records: int[]
+    lists: int[]
+    text: int
+    bytes: int
+    buffer: int
+
+
+public record Refusal:
+    path: bytes
+    part: int
+    reason: str
+
+
+func decimal(value: int) -> bytes:
+    mut remaining = value
+    mut reversed = b""
+    while remaining > 0:
+        const digit = remaining % 10
+        reversed += b"0123456789"[digit:digit + 1]
+        remaining //= 10
+    if len(reversed) == 0:
+        return b"0"
+    mut result = b""
+    mut position = len(reversed)
+    while position > 0:
+        position -= 1
+        result += reversed[position:position + 1]
+    return result
+
+
+func rejected(path: bytes, part: int, reason: str) -> Refusal:
+    return Refusal(path=path, part=part, reason=reason)
+
+
+func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_value.Problem:
+    const id = try graph.field(pool, row, name)
+    const value = try graph.get(pool, id)
+    if value.kind != 2:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid hash-key catalog flag")
+    return value.integer != 0
+
+
+func walk(context: Context, ty: int, path: bytes, mut seen: bool[], depth: int) -> Refusal? fails syntax_value.Problem:
+    if (ty >= 0 and ty <= 8) or ty == 15:
+        return None
+    if ty < 19 or ty - 19 >= len(context.records):
+        return rejected(path, ty, "capability")
+    if ty == context.text or ty == context.bytes:
+        return None
+    if ty == context.buffer or (ty < len(context.lists) and context.lists[ty] >= 0):
+        return rejected(path, ty, "shared")
+    const row = context.records[ty - 19]
+    const shape = try graph.field(context.pool, row, "shape")
+    const contract = try graph.field(context.pool, row, "contract")
+    const callback_id = try graph.field(context.pool, contract, "callback")
+    const callback = try graph.get(context.pool, callback_id)
+    const domain_id = try graph.field(context.pool, shape, "domain")
+    const backing = try graph.get(context.pool, domain_id)
+    const name_id = try graph.field(context.pool, row, "name")
+    const name = try graph.get(context.pool, name_id)
+    const declaration = try graph.field(context.pool, row, "declaration")
+    const start_id = try graph.field(context.pool, declaration, "start")
+    const end_id = try graph.field(context.pool, declaration, "end")
+    const start = try graph.number(context.pool, start_id)
+    const end = try graph.number(context.pool, end_id)
+    if start == 0 and end == 0 and backing.kind == 1 and backing.integer == 8 and name.data == b"float":
+        return rejected(path, ty, "float")
+    if callback.kind != 0:
+        return rejected(path, ty, "callable")
+    const resource_id = try graph.field(context.pool, shape, "resource")
+    const resource = try graph.get(context.pool, resource_id)
+    if resource.kind != 0:
+        return rejected(path, ty, "capability")
+    const managed = try flag(context.pool, row, "managed")
+    if managed:
+        return rejected(path, ty, "shared")
+    const variant_id = try graph.field(context.pool, shape, "variants")
+    const variant = try graph.get(context.pool, variant_id)
+    if variant.kind != 0:
+        const is_union = try flag(context.pool, variant_id, "is_union")
+        if not is_union:
+            return None
+    if seen[ty - 19]:
+        return None
+    seen[ty - 19] = True
+    if depth == 64:
+        return rejected(path, ty, "shared")
+    if backing.kind == 1:
+        return try walk(context, backing.integer, path, mut seen, depth + 1)
+    const array_id = try graph.field(context.pool, shape, "array")
+    const array = try graph.get(context.pool, array_id)
+    if array.kind != 0:
+        const element_id = try graph.field(context.pool, array_id, "element")
+        const element = try graph.number(context.pool, element_id)
+        return try walk(context, element, path + b"[]", mut seen, depth + 1)
+    if variant.kind != 0:
+        const cases_id = try graph.field(context.pool, variant_id, "cases")
+        const cases = try graph.items(context.pool, cases_id)
+        for member in cases:
+            const payload_id = try graph.field(context.pool, member, "payload")
+            const payload = try graph.get(context.pool, payload_id)
+            if payload.kind == 1:
+                const case_name_id = try graph.field(context.pool, member, "name")
+                const case_name = try graph.get(context.pool, case_name_id)
+                const found = try walk(context, payload.integer, path + b"." + case_name.data, mut seen, depth + 1)
+                if found is not None:
+                    return found
+        return None
+    const tuple = try flag(context.pool, shape, "tuple")
+    const fields_id = try graph.field(context.pool, row, "fields")
+    const fields = try graph.items(context.pool, fields_id)
+    for index in range(len(fields)):
+        const field = fields[index]
+        const type_id = try graph.field(context.pool, field, "ty")
+        const child = try graph.number(context.pool, type_id)
+        const field_name_id = try graph.field(context.pool, field, "name")
+        const field_name = try graph.get(context.pool, field_name_id)
+        mut next = path + b"." + field_name.data
+        if tuple:
+            next = path + b"[" + decimal(index) + b"]"
+        const found = try walk(context, child, next, mut seen, depth + 1)
+        if found is not None:
+            return found
+    return None
+
+
+public func refusal(context: Context, ty: int) -> Refusal? fails syntax_value.Problem:
+    if len(context.records) > 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="hash-key catalog limit exceeded")
+    mut seen: bool[] = []
+    for unused in context.records:
+        seen.append(False)
+    return try walk(context, ty, b"", mut seen, 0)

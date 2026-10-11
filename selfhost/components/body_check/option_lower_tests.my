@@ -1,0 +1,115 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import option_lower
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+    shape: option_lower.Shape
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 2, 5)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span), shape=option_lower.Shape(owner_type=23, element=0, some=1, none=0))
+
+
+func receiver(mut fixture: Fixture) -> int fails syntax_value.Problem:
+    const tag = try syntax_value.integer(mut fixture.batch.pool, fixture.shape.none)
+    const absent = try syntax_value.absent(mut fixture.batch.pool)
+    const value = try syntax_value.object(mut fixture.batch.pool, ["tag", "value"], [tag, absent])
+    return try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, fixture.shape.owner_type, b"variant", value)
+
+
+func payload(batch: emission.Batch, row: int) -> int fails syntax_value.Problem:
+    const data = try graph.field(batch.pool, row, "data")
+    return try graph.payload(batch.pool, data)
+
+
+func number(batch: emission.Batch, row: int, name: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(batch.pool, row, name)
+    return try graph.number(batch.pool, value)
+
+
+func arms(batch: emission.Batch, statement: int) -> int[] fails syntax_value.Problem:
+    const record = try payload(batch, batch.statements[statement])
+    const values = try graph.field(batch.pool, record, "arms")
+    return try graph.items(batch.pool, values)
+
+
+public func test_default_roots_receiver_then_eager_fallback_then_match_with_native_row_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const value = try receiver(mut fixture)
+    const fallback = try list_lower.integer(mut fixture.batch, fixture.context, 9, 0)
+    const result = try option_lower.default_value(mut fixture.batch, mut fixture.scope, fixture.context, value, fixture.shape, fallback)
+    assert len(fixture.scope.locals) == 3
+    assert fixture.scope.active == []
+    assert fixture.scope.locals[0].ty == 23
+    assert fixture.scope.locals[1].ty == 0
+    assert fixture.scope.locals[2].ty == 0
+    assert fixture.scope.locals[0].usage.temporary and fixture.scope.locals[0].usage.reads == 1
+    assert not fixture.scope.locals[0].flags.initialized
+    assert len(fixture.batch.nodes) == 5
+    assert len(fixture.batch.statements) == 6
+    const body = try number(fixture.batch, result.payload, "body")
+    assert body == 5
+    const children_id = try payload(fixture.batch, fixture.batch.statements[body])
+    const children = try graph.items(fixture.batch.pool, children_id)
+    const first = try graph.number(fixture.batch.pool, children[0])
+    const second = try graph.number(fixture.batch.pool, children[1])
+    const third = try graph.number(fixture.batch.pool, children[2])
+    assert first == 0 and second == 1 and third == 4
+    const cases = try arms(fixture.batch, 4)
+    const tag = try number(fixture.batch, cases[0], "tag")
+    const slot = try number(fixture.batch, cases[0], "slot")
+    assert tag == 1 and slot == 2
+    const none_slot_id = try graph.field(fixture.batch.pool, cases[1], "slot")
+    const none_slot = try graph.get(fixture.batch.pool, none_slot_id)
+    assert none_slot.kind == 0
+    const eager = try payload(fixture.batch, fixture.batch.statements[1])
+    const eager_value = try number(fixture.batch, eager, "value")
+    assert eager_value == fallback
+    return True
+
+
+public func test_presence_uses_reordered_some_none_tags_without_payload_binding() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const value = try receiver(mut fixture)
+    const result = try option_lower.presence_value(mut fixture.batch, mut fixture.scope, fixture.context, value, fixture.shape)
+    assert result.ty == 1
+    assert len(fixture.batch.nodes) == 4 and len(fixture.batch.statements) == 4
+    const cases = try arms(fixture.batch, 2)
+    const some = try number(fixture.batch, cases[0], "tag")
+    const none = try number(fixture.batch, cases[1], "tag")
+    assert some == 1 and none == 0
+    const some_slot_id = try graph.field(fixture.batch.pool, cases[0], "slot")
+    const some_slot = try graph.get(fixture.batch.pool, some_slot_id)
+    assert some_slot.kind == 0
+    const first = try payload(fixture.batch, fixture.batch.nodes[1])
+    const second = try payload(fixture.batch, fixture.batch.nodes[2])
+    const no = try graph.get(fixture.batch.pool, first)
+    const yes = try graph.get(fixture.batch.pool, second)
+    assert no.integer == 0 and yes.integer == 1
+    return True
+
+
+public func test_narrowed_payload_binds_some_and_retains_defensive_none_assertion() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const value = try receiver(mut fixture)
+    const result = try option_lower.payload_value(mut fixture.batch, mut fixture.scope, fixture.context, value, fixture.shape)
+    assert result.ty == 0
+    const cases = try arms(fixture.batch, 2)
+    const slot = try number(fixture.batch, cases[0], "slot")
+    assert slot == 0
+    const assertion = try payload(fixture.batch, fixture.batch.statements[1])
+    const message_id = try graph.field(fixture.batch.pool, assertion, "message")
+    const message = try graph.get(fixture.batch.pool, message_id)
+    assert message.data == b"invalidated Option narrowing"
+    const absent_id = try graph.field(fixture.batch.pool, assertion, "message_value")
+    const absent = try graph.get(fixture.batch.pool, absent_id)
+    assert absent.kind == 0
+    return True
