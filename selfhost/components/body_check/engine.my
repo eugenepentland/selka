@@ -40,6 +40,7 @@ import option_flow
 import option_lower
 import collection_types
 import dictionary_view_lower
+import dictionary_iteration
 import hash_keys
 import set_lower
 
@@ -2102,13 +2103,20 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
         const index_name = try graph.get(state.syntax.pool, index_name_id)
         const enumerated_id = try graph.field(state.syntax.pool, payload, "enumerated")
         const enumerated = try graph.get(state.syntax.pool, enumerated_id)
-        if index_name.kind != 0 or enumerated.integer != 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "enumerated or unpacked iteration is outside the admitted list closure")
-            fail rejection
         const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
         const iterable_id = try graph.field(state.syntax.pool, payload, "iterable")
         const iterable_raw = try graph.number(state.syntax.pool, iterable_id)
         const iterable = try expression(mut state, iterable_raw)
+        const collection = collection_types.schema(state.batch.facts.lists.types.collections, iterable.ty)
+        if collection.kind == 0 or collection.kind == 1 or collection.kind >= 3:
+            result_payload = try dictionary_iteration_payload(mut state, payload, span, iterable, collection)
+            tag = b"block"
+            state.depth = state.depth - 1
+            const id = try emission.statement(mut state.batch, state.syntax.pool, span, False, tag, result_payload)
+            return Statement(id=id, terminates=False)
+        if index_name.kind != 0 or enumerated.integer != 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "enumerated or unpacked iteration is outside the admitted list closure")
+            fail rejection
         mut element = list_types.element_type(state.batch.facts.lists, iterable.ty)
         if iterable.ty == state.batch.facts.string_type:
             element = iterable.ty
@@ -4307,3 +4315,76 @@ func list_conversion(mut state: State, span: int, value: Expression) -> Expressi
         return Expression(id=id, ty=value.ty)
     const rejection = try problem(state, span, "E_PRELUDE_TYPE", "list requires a list, range, reversed source or dictionary view")
     fail rejection
+
+
+func dictionary_iteration_payload(mut state: State, each: int, span: int, iterable: Expression, schema: collection_types.Schema) -> int fails syntax_value.Problem:
+    const name_span = try graph.field(state.syntax.pool, each, "name")
+    const index_id = try graph.field(state.syntax.pool, each, "index_name")
+    const index_value = try graph.get(state.syntax.pool, index_id)
+    const enumerated_id = try graph.field(state.syntax.pool, each, "enumerated")
+    const enumerated_value = try graph.get(state.syntax.pool, enumerated_id)
+    const enumerated = enumerated_value.integer != 0
+    if enumerated:
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "enumerated collection iteration awaits source rebinding analysis")
+        fail rejection
+    mut second_name = -1
+    if index_value.kind != 0:
+        second_name = index_id
+    mut element = schema.key
+    mut item = -1
+    mut kind = b"dict"
+    mut mapping = schema.id
+    if schema.kind == 1:
+        kind = b"set"
+    elif schema.kind >= 3:
+        mapping = schema.owner
+        kind = b"keys"
+        if schema.kind == 4:
+            kind = b"values"
+            element = schema.value
+        elif schema.kind == 5:
+            kind = b"items"
+            const item_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=2, key=schema.key, value=schema.value, owner=-1), span)
+            item = item_type
+            element = item_type
+    if second_name >= 0 and kind != b"items":
+        const rejection = try problem(state, span, "E_ITERATION", "two iteration names require dictionary items, enumerate, zip or a list of two-value tuples")
+        fail rejection
+    mut names_to_check = [name_span]
+    if second_name >= 0:
+        names_to_check = [second_name, name_span]
+    for binding_span in names_to_check:
+        const binding_name = try graph.spelling(state.syntax.pool, state.syntax.source, binding_span)
+        const declared = try top_level(state, binding_span)
+        if binding_name != b"_" and (locals.find(state.scope, binding_name) >= 0 or declared):
+            const rejection = try problem(state, binding_span, "E_SHADOWING", "iteration binding shadows an active declaration")
+            fail rejection
+    if second_name >= 0:
+        const first = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+        const second = try graph.spelling(state.syntax.pool, state.syntax.source, second_name)
+        if second != b"_" and first == second:
+            const rejection = try problem(state, second_name, "E_SHADOWING", "iteration names must differ")
+            fail rejection
+    const loop_id = state.control.next
+    state.control.next += 1
+    const request = list_iteration.Input(source=state.syntax.source, name=name_span, span=span, iterable=iterable.id, owner_type=mapping, element=element, loop_id=loop_id)
+    const shape = dictionary_view_lower.Shape(mapping=mapping, key=schema.key, value=schema.value, item=item, list=-1, kind=kind)
+    const plan = try dictionary_iteration.prepare(mut state.batch, mut state.scope, state.syntax.pool, dictionary_iteration.Input(iteration=request, shape=shape, kind=kind, second_name=second_name, position=dictionary_iteration.Position(enumerated=False, rebound=False)))
+    state.control.active.append(loop_id)
+    state.control.exited.append(False)
+    const body_id = try graph.field(state.syntax.pool, each, "body")
+    const body_raw = try graph.number(state.syntax.pool, body_id)
+    const before = locals_flow.snapshot(state.scope)
+    const pending_before = try pending_flow.snapshot(state.scope, len(state.scope.locals))
+    const body = try statement(mut state, body_raw)
+    if not body.terminates:
+        const difference = try pending_flow.mismatch(state.scope, pending_before)
+        _ = try obligations.consistent(state.syntax.pool, state.scope, difference, span, True, mut state.problems)
+    try pending_flow.restore(mut state.scope, pending_before)
+    const lowered = try dictionary_iteration.finish(mut state.batch, mut state.scope, state.syntax.pool, plan, list_iteration.Finish(raw_statements=state.syntax.statements, raw_nodes=state.syntax.nodes, body_raw=body_raw, body=body.id))
+    locals_flow.restore(mut state.scope, before)
+    state.scope.active = plan.walk.before_active
+    const last = len(state.control.active) - 1
+    state.control.active = state.control.active[:last]
+    state.control.exited = state.control.exited[:last]
+    return lowered.payload
