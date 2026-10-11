@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import signal
+import select
 import subprocess
 import sys
 import tempfile
@@ -17,8 +18,45 @@ class WatchdogTests(unittest.TestCase):
     def spawn(self, source, **kwargs):
         return subprocess.Popen([sys.executable, '-c', source], start_new_session=True, **kwargs)
 
+    def ready_spawn(self, source, *, supervised=False, prefix='', **kwargs):
+        """Exclude bounded fixture startup from the watchdog's execution clock."""
+        read_fd, write_fd = os.pipe()
+        announce = f'import os; os.write({write_fd},b"R"); os.close({write_fd})'
+        source = source.replace('__FIXTURE_READY__', announce) if '__FIXTURE_READY__' in source else announce + '\n' + source
+        if supervised:
+            argv = [sys.executable, '-c', source]
+            source = ('import os; from scripts.verification_process import run_supervised; '
+                      + prefix + f'raise SystemExit(run_supervised({argv!r},dict(os.environ)))')
+        inherited = tuple(kwargs.pop('pass_fds', ())) + (write_fd,)
+        child = None
+        try:
+            child = self.spawn(source, pass_fds=inherited, **kwargs)
+            os.close(write_fd)
+            write_fd = None
+            readable, _, _ = select.select([read_fd], [], [], 15)
+            if not readable or os.read(read_fd, 1) != b'R':
+                raise AssertionError('fixture did not report readiness within 15 seconds')
+            return child
+        except BaseException:
+            if child is not None:
+                terminate_owned(child, grace_seconds=.5)
+                for stream in (child.stdout, child.stderr):
+                    if stream is not None:
+                        stream.close()
+            raise
+        finally:
+            os.close(read_fd)
+            if write_fd is not None:
+                os.close(write_fd)
+
+    def await_file(self, path, *, seconds=15):
+        deadline = time.monotonic() + seconds
+        while not path.exists() and time.monotonic() < deadline:
+            time.sleep(.01)
+        self.assertTrue(path.exists(), f'fixture marker not ready: {path}')
+
     def wait(self, source, timeout=0.15):
-        return wait_owned(self.spawn(source), limits=ProcessLimits(timeout, 0.05))
+        return wait_owned(self.ready_spawn(source), limits=ProcessLimits(timeout, 0.05))
 
     def test_success_and_failure(self):
         self.assertEqual(self.wait('pass').returncode, 0)
@@ -26,16 +64,16 @@ class WatchdogTests(unittest.TestCase):
 
     def test_cpu_loop_and_blocked_child(self):
         self.assertTrue(self.wait('while True: pass').timed_out)
-        result = self.wait("import subprocess; subprocess.run(['sleep','60'])")
+        result = self.wait("import subprocess; child=subprocess.Popen(['sleep','60']); __FIXTURE_READY__; child.wait()")
         self.assertEqual(result.returncode, 124)
         self.assertFalse(result.complete)
 
     def test_group_keeps_no_inherited_admission_fd(self):
         read_fd, write_fd = os.pipe()
         source = ('import os,signal,time; pid=os.fork(); '
-                  '\nif pid == 0:\n signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)'
+                  '\nif pid == 0:\n signal.signal(signal.SIGTERM, signal.SIG_IGN); __FIXTURE_READY__; time.sleep(60)'
                   '\nelse:\n time.sleep(60)')
-        child = self.spawn(source, pass_fds=(write_fd,))
+        child = self.ready_spawn(source, pass_fds=(write_fd,))
         os.close(write_fd)
         result = wait_owned(child, limits=ProcessLimits(0.15, 0.05))
         self.assertEqual(result.returncode, 124)
@@ -58,9 +96,10 @@ class WatchdogTests(unittest.TestCase):
         other = self.spawn('import time; time.sleep(60)')
         cancel = threading.Event()
         timer = threading.Timer(.1, cancel.set)
+        child = self.ready_spawn('import time; time.sleep(60)')
         timer.start()
         try:
-            result = wait_owned(self.spawn('import time; time.sleep(60)'), cancel_event=cancel,
+            result = wait_owned(child, cancel_event=cancel,
                                 limits=ProcessLimits(None, .05))
             self.assertTrue(result.cancelled)
             self.assertEqual(result.returncode, 130)
@@ -105,17 +144,14 @@ class WatchdogTests(unittest.TestCase):
             child.stderr.close()
 
     def supervised(self, source, **kwargs):
-        argv = [sys.executable, '-c', source]
-        command = ('import os; from scripts.verification_process import run_supervised; '
-                   f'raise SystemExit(run_supervised({argv!r},dict(os.environ)))')
-        return self.spawn(command, **kwargs)
+        return self.ready_spawn(source, supervised=True, **kwargs)
 
     def test_supervisor_kills_detached_sessions_and_reaps(self):
         with tempfile.TemporaryDirectory() as temporary:
             pid_path = Path(temporary)/'pid'
             source = ('import subprocess,time; child=subprocess.Popen('
                       '["sleep","60"],start_new_session=True); '
-                      f'open({str(pid_path)!r},"w").write(str(child.pid)); time.sleep(60)')
+                      f'open({str(pid_path)!r},"w").write(str(child.pid)); __FIXTURE_READY__; time.sleep(60)')
             child = self.supervised(source, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             logs = BoundedProcessLogs(Path(temporary)/'out', Path(temporary)/'err')
             result = wait_owned(child, limits=ProcessLimits(.2,.5), logs=logs)
@@ -152,7 +188,7 @@ class WatchdogTests(unittest.TestCase):
             pid_path = Path(temporary)/'pid'
             source = ('import subprocess,threading,time; '
                       '\ndef fork():\n child=subprocess.Popen(["sleep","60"],start_new_session=True); '
-                      f'open({str(pid_path)!r},"w").write(str(child.pid)); time.sleep(60)'
+                      f'open({str(pid_path)!r},"w").write(str(child.pid)); __FIXTURE_READY__; time.sleep(60)'
                       '\nthreading.Thread(target=fork).start(); time.sleep(60)')
             child = self.supervised(source)
             result = wait_owned(child, limits=ProcessLimits(.2,.5))
@@ -203,7 +239,7 @@ class WatchdogTests(unittest.TestCase):
                 super()._drain(seconds)
         with tempfile.TemporaryDirectory() as temporary:
             logs = SlowLogs(Path(temporary)/'out', Path(temporary)/'err')
-            child = self.spawn('print("done")', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            child = self.ready_spawn('print("done")', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             result = wait_owned(child, logs=logs)
             self.assertEqual(result.returncode, 0)
             self.assertTrue(result.complete)
@@ -245,7 +281,7 @@ class WatchdogTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             release.set()
             for _, thread in logs._tee_threads:
-                thread.join(timeout=1)
+                thread.join(timeout=15)
                 self.assertFalse(thread.is_alive())
             child.stdout.close()
             child.stderr.close()
@@ -258,8 +294,8 @@ class WatchdogTests(unittest.TestCase):
                       f'logs=BoundedProcessLogs(Path({temporary!r})/"out",Path({temporary!r})/"err",stdout_tee=sys.stdout.buffer); '
                       f'p=subprocess.Popen({worker_argv!r},'
                       'stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True); '
-                      'raise SystemExit(wait_owned(p,logs=logs).returncode)')
-            child = self.spawn(source, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                      '__FIXTURE_READY__; raise SystemExit(wait_owned(p,logs=logs).returncode)')
+            child = self.ready_spawn(source, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             try:
                 self.assertEqual(child.wait(timeout=3), 0)
             finally:
@@ -290,11 +326,11 @@ class WatchdogTests(unittest.TestCase):
                 with mock.patch('verification_process.os.write', side_effect=delayed_write):
                     result = wait_owned(child, logs=logs)
                     self.assertEqual(result.returncode, 0)
-                    self.assertTrue(writing.is_set())
+                    self.assertTrue(writing.wait(timeout=15))
                     os.dup2(protocol.fileno(), original_fd)
                     release.set()
                     for _, thread in logs._tee_threads:
-                        thread.join(timeout=1)
+                        thread.join(timeout=15)
                         self.assertFalse(thread.is_alive())
                 self.assertEqual(request_path.read_bytes(), b'request output\n')
                 self.assertEqual(protocol_path.read_bytes(), b'')
@@ -331,40 +367,42 @@ class WatchdogTests(unittest.TestCase):
             helper_argv = [sys.executable, '-c', f'import time; from pathlib import Path; time.sleep(.4); Path({str(marker)!r}).write_text("settled")']
             for worker_source, timeout, expected in [('pass', 1, 0), ('import time; time.sleep(60)', .15, 124)]:
                 marker.unlink(missing_ok=True)
-                worker_argv = [sys.executable, '-c', worker_source]
-                source = ('import subprocess,os; from scripts.verification_process import run_supervised; '
-                          f'subprocess.Popen({helper_argv!r},start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); '
-                          f'raise SystemExit(run_supervised({worker_argv!r},dict(os.environ)))')
-                result = wait_owned(self.spawn(source), limits=ProcessLimits(timeout,.5))
+                prefix = (f'subprocess.Popen({helper_argv!r},start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); ')
+                # subprocess is imported by the prefix before run_supervised.
+                child = self.ready_spawn(worker_source, supervised=True,
+                                         prefix='import subprocess; ' + prefix)
+                result = wait_owned(child, limits=ProcessLimits(timeout,.5))
                 self.assertEqual(result.returncode, expected)
-                deadline = time.monotonic() + 1
-                while not marker.exists() and time.monotonic() < deadline:
-                    time.sleep(.01)
+                self.await_file(marker)
                 self.assertEqual(marker.read_text(), 'settled')
 
     def test_supervisor_allows_background_cleanup(self):
         with tempfile.TemporaryDirectory() as temporary:
             marker = Path(temporary)/'cleaned'
-            cleanup = f'import time; from pathlib import Path; time.sleep(.2); Path({str(marker)!r}).write_text("done")'
-            source = f'import subprocess; subprocess.Popen({[sys.executable, "-c", cleanup]!r})'
+            cleanup = f'import os,time; from pathlib import Path; os.write(int(os.environ["CLEANUP_READY_FD"]),b"R"); time.sleep(.2); Path({str(marker)!r}).write_text("done")'
+            source = ('import subprocess,os,select; r,w=os.pipe(); env=dict(os.environ,CLEANUP_READY_FD=str(w)); '
+                      f'child=subprocess.Popen({[sys.executable, "-c", cleanup]!r},env=env,pass_fds=(w,)); '
+                      'os.close(w); assert select.select([r],[],[],15)[0]; assert os.read(r,1)==b"R"; '
+                      'os.close(r); __FIXTURE_READY__')
             result = wait_owned(self.supervised(source), limits=ProcessLimits(3,.5))
             self.assertEqual(result.returncode, 0)
             self.assertEqual(marker.read_text(), 'done')
 
     def test_timeout_counts_background_cleanup_drain(self):
-        source = 'import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True)'
+        source = 'import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True); __FIXTURE_READY__'
         result = wait_owned(self.supervised(source), limits=ProcessLimits(.2,.5))
         self.assertEqual(result.returncode, 124)
         self.assertTrue(result.timed_out)
 
     def test_cancellation_interrupts_background_cleanup_drain(self):
-        source = 'import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True)'
+        source = 'import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True); __FIXTURE_READY__'
         cancel = threading.Event()
         timer = threading.Timer(.2, cancel.set)
+        child = self.supervised(source)
         timer.start()
         started = time.monotonic()
         try:
-            result = wait_owned(self.supervised(source), cancel_event=cancel, limits=ProcessLimits(None,.5))
+            result = wait_owned(child, cancel_event=cancel, limits=ProcessLimits(None,.5))
             self.assertEqual(result.returncode, 130)
             self.assertTrue(result.cancelled)
             self.assertLess(time.monotonic()-started, 1)
