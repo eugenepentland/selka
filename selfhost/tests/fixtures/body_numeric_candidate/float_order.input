@@ -1,0 +1,15 @@
+func first(mut trace: int) -> float:
+    trace = trace * 10 + 1
+    return -2.5
+
+
+func second(mut trace: int) -> float:
+    trace = trace * 10 + 2
+    return 4.0
+
+
+func main() -> int:
+    mut trace = 0
+    assert first(mut trace) + second(mut trace) == 1.5
+    assert trace == 12
+    return 7

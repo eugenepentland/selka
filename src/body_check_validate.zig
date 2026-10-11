@@ -1,5 +1,7 @@
 //! Bounded structural validation of scalar body graphs, not a second checker.
 const std = @import("std");
+const numeric = @import("body_check_numeric_validate.zig");
+const dictionaries = @import("body_check_dictionary_validate.zig");
 const prelude = @import("prelude.zig");
 const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
@@ -92,12 +94,12 @@ pub fn outcome(a: std.mem.Allocator, request: value.Input, result: value.Outcome
             defer arena.deinit();
             var expanded = request;
             expanded.catalog = try @import("body_check_recipe_validate.zig").expanded(arena.allocator(), request, output.recipes);
-            try batch(a, expanded, output.batch, integerOption(request.catalog, output.recipes));
+            try batch(a, expanded, output.batch, integerOption(request.catalog, output.recipes), floatOption(request.catalog, output.recipes));
         },
     }
 }
 const Work = union(enum) { node: usize, statement: usize, finish_node: usize, finish_statement: usize };
-const GraphContext = struct { source_len: usize, catalog: value.Catalog, accepted: []const bool, integer_option: ?typed.Type };
+const GraphContext = struct { source_len: usize, catalog: value.Catalog, accepted: []const bool, integer_option: ?typed.Type, float_option: ?typed.Type };
 const Graph = struct {
     allocator: std.mem.Allocator,
     tables: value.Batch,
@@ -143,7 +145,7 @@ const Graph = struct {
         }
     }
 };
-fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch, integer_option: ?typed.Type) Error!void {
+fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch, integer_option: ?typed.Type, float_option: ?typed.Type) Error!void {
     if (tables.nodes.len > table_limit or tables.statements.len > table_limit) return error.ComponentProtocol;
     if (tables.functions.len != request.program.functions.len or tables.ranges.len != tables.functions.len) return error.ComponentProtocol;
     try ranges(tables);
@@ -161,7 +163,12 @@ fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch, intege
     @memset(statement_states, 0);
     const accepted = try record_validate.policy(a, request.catalog);
     defer a.free(accepted);
-    var graph: Graph = .{ .allocator = a, .tables = tables, .context = .{ .source_len = request.context.source.len, .catalog = request.catalog, .accepted = accepted, .integer_option = integer_option }, .locals = 0 };
+    var graph: Graph = .{
+        .allocator = a,
+        .tables = tables,
+        .context = .{ .source_len = request.context.source.len, .catalog = request.catalog, .accepted = accepted, .integer_option = integer_option, .float_option = float_option },
+        .locals = 0,
+    };
     defer graph.pending.deinit(a);
     var locals: usize = 0;
     for (tables.functions, request.program.functions, 0..) |function, raw, id| {
@@ -213,16 +220,7 @@ fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch, intege
 
 fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
     switch (node.data) {
-        .integer => |number| {
-            const valid = switch (node.ty) {
-                .i64 => std.math.cast(i64, number) != null,
-                .u8 => number >= 0 and number <= 255,
-                .u64 => number >= 0 and number <= std.math.maxInt(i64),
-                .u32 => number >= 0 and number <= 0x10ffff and !(number >= 0xd800 and number <= 0xdfff),
-                else => false,
-            };
-            if (!valid) return error.ComponentProtocol;
-        },
+        .integer => |number| if (!numeric.integer(node.ty, number)) return error.ComponentProtocol,
         .boolean => if (node.ty != .bool) return error.ComponentProtocol,
         .unit => if (node.ty != .unit) return error.ComponentProtocol,
         .local => |slot| {
@@ -243,16 +241,17 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
         .block_value => |block| if (node.ty != try nodeType(graph, block.value)) return error.ComponentProtocol,
         .cast => |operand| {
             const input_type = try nodeType(graph, operand);
-            const to_integer = node.ty == .i64 and (input_type == .bool or input_type == .u8 or input_type == .u64);
-            const capacity_conversion = node.ty == .u64 and input_type == .i64;
-            const scalar_conversion = to_integer or capacity_conversion;
+            const scalar_conversion = numeric.cast(node.ty, input_type);
             const sequence_conversion = @import("body_check_buffer_validate.zig").cast(graph.context.catalog, node.ty, input_type);
             const valid = node.ty == input_type or scalar_conversion or sequence_conversion;
             if (!valid) return error.ComponentProtocol;
         },
         .acquire_buffer => |operation| {
             const capacity = try nodeType(graph, operation.capacity);
-            if (list_validate.listElement(graph.context.catalog, node.ty) == null) return error.ComponentProtocol;
+            if (list_validate.listElement(graph.context.catalog, node.ty) == null) {
+                const entry = dictionaries.identify(graph.context.catalog, node.ty) orelse return error.ComponentProtocol;
+                if (entry.kind != .dict and entry.kind != .set) return error.ComponentProtocol;
+            }
             if (capacity != .i64 and capacity != .u64) return error.ComponentProtocol;
         },
         .buffer_operation => |operation| try bufferNode(graph, node, operation),
@@ -261,6 +260,9 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
         .propagate => |item| try propagationNode(graph, node, item),
         .record => |fields| try recordNode(graph, node.ty, fields, true),
         .update => |update| {
+            if (dictionaries.identify(graph.context.catalog, node.ty)) |entry| {
+                if (entry.kind != .dict_item) return error.ComponentProtocol;
+            }
             if (node.ty != try nodeType(graph, update.base)) return error.ComponentProtocol;
             try recordNode(graph, node.ty, update.fields, false);
         },
@@ -268,26 +270,17 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
             const record = try recordSchema(graph, try nodeType(graph, field.base));
             if (field.index >= record.fields.len or node.ty != record.fields[field.index].ty) return error.ComponentProtocol;
         },
-        .array => |items| {
-            const element = sequenceElement(graph.context.catalog, node.ty) orelse return error.ComponentProtocol;
-            for (items) |item| if (try nodeType(graph, item) != element) return error.ComponentProtocol;
+        .array => |items| try arrayNode(graph, node.ty, items),
+        .length => |operand| try lengthNode(graph, node.ty, operand),
+        .index => |operation| try indexNode(graph, node.ty, operation),
+        .wrap => |operand| {
+            if (!numeric.floating(graph.context.catalog, node.ty) or try nodeType(graph, operand) != .u64) return error.ComponentProtocol;
         },
-        .length => |operand| {
-            if (node.ty != .i64 or sequenceElement(graph.context.catalog, try nodeType(graph, operand)) == null) return error.ComponentProtocol;
-        },
-        .index => |operation| {
-            const owner = try nodeType(graph, operation.base);
-            const element = sequenceElement(graph.context.catalog, owner) orelse return error.ComponentProtocol;
-            const expected = if (element == .u32) owner else element;
-            if (node.ty != expected or try nodeType(graph, operation.index) != .i64 or operation.from_end) return error.ComponentProtocol;
+        .unwrap => |operand| {
+            if (node.ty != .u64 or !numeric.floating(graph.context.catalog, try nodeType(graph, operand))) return error.ComponentProtocol;
         },
         .unary => |operation| {
-            const expected: typed.Type = switch (operation.op) {
-                .neg => .i64,
-                .not => .bool,
-                else => return error.ComponentProtocol,
-            };
-            if (node.ty != expected or try nodeType(graph, operation.operand) != expected) return error.ComponentProtocol;
+            if (!numeric.unary(operation.op, node.ty, try nodeType(graph, operation.operand))) return error.ComponentProtocol;
         },
         .binary => |operation| try binaryNode(graph, node, operation),
         else => return error.ComponentProtocol,
@@ -422,8 +415,9 @@ fn sequenceElement(item: value.Catalog, ty: typed.Type) ?typed.Type {
 }
 fn admittedType(item: value.Catalog, accepted: []const bool, ty: typed.Type) bool {
     if (ty.isAggregate()) return ty.recordIndex() < accepted.len and accepted[ty.recordIndex()];
+    if (numeric.scalar(ty)) return true;
     return switch (ty) {
-        .i64, .bool, .unit, .u8, .u32, .u64, .filesystem_cap, .stream_cap, .file, .text_file => true,
+        .filesystem_cap, .stream_cap, .file, .text_file => true,
         else => sequenceElement(item, ty) != null,
     };
 }
@@ -450,30 +444,48 @@ fn binaryNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
         if (node.ty != result) return error.ComponentProtocol;
         return;
     }
-    if (left == .u64) {
-        if (operation.op != .add or node.ty != .u64) return error.ComponentProtocol;
+    if (numeric.floating(graph.context.catalog, left)) return error.ComponentProtocol;
+    if ((operation.op == .eq or operation.op == .ne) and !numeric.scalar(left)) {
+        if (node.ty != .bool) return error.ComponentProtocol;
         return;
     }
-    const result: typed.Type = switch (operation.op) {
-        .logical_and, .logical_or => if (left == .bool) .bool else return error.ComponentProtocol,
-        .eq, .ne => .bool,
-        .lt, .le, .gt, .ge => if (left == .i64) .bool else return error.ComponentProtocol,
-        .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => return error.ComponentProtocol,
-        else => if (left == .i64) .i64 else return error.ComponentProtocol,
-    };
-    if (node.ty != result) return error.ComponentProtocol;
+    if ((operation.op == .eq or operation.op == .ne) and (left == .bool or left == .unit)) {
+        if (node.ty != .bool) return error.ComponentProtocol;
+        return;
+    }
+    if (!numeric.binary(operation.op, node.ty, left)) return error.ComponentProtocol;
 }
 
+/// A set snapshot preserves its canonical key identity in an existing list schema.
+pub fn setKeySnapshot(catalog: value.Catalog, item: dictionaries.Descriptor, result: typed.Type, arguments: []const typed.NodeId) Error!void {
+    if (item.kind != .set or arguments.len != 0) return error.ComponentProtocol;
+    const element = list_validate.listElement(catalog, result) orelse return error.ComponentProtocol;
+    if (element != item.key) return error.ComponentProtocol;
+}
 fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(typed.Node, "data"), "buffer_operation")) Error!void {
     if (@backingInt(operation.owner) >= graph.locals) return error.ComponentProtocol;
     const owner = graph.tables.functions[graph.function].scope.locals[@backingInt(operation.owner)].ty;
-    if (operation.kind == .parse_int) {
+    const parse_float = operation.kind == .parse_float or operation.kind == .parse_float_range;
+    const parse_integer = operation.kind == .parse_int or operation.kind == .parse_int_range;
+    if (parse_float or parse_integer) {
         const catalog = graph.context.catalog;
-        const text = if (catalog.string) |sequence| owner == sequence.id else false;
-        const bytes = if (catalog.bytes) |sequence| owner == sequence.id else false;
-        if (!text and !bytes) return error.ComponentProtocol;
-        if (operation.arguments.len != 0 or node.ty != (graph.context.integer_option orelse return error.ComponentProtocol)) return error.ComponentProtocol;
+        const ordinary_text = (catalog.string != null and owner == catalog.string.?.id) or (catalog.bytes != null and owner == catalog.bytes.?.id);
+        if (!ordinary_text) return error.ComponentProtocol;
+        const expected = if (parse_float) graph.context.float_option else graph.context.integer_option;
+        if (node.ty != (expected orelse return error.ComponentProtocol)) return error.ComponentProtocol;
+        const range = operation.kind == .parse_float_range or operation.kind == .parse_int_range;
+        if (operation.arguments.len != (if (range) @as(usize, 2) else 0)) return error.ComponentProtocol;
+        for (operation.arguments) |argument| if (!(try nodeType(graph, argument)).isInteger()) return error.ComponentProtocol;
         return;
+    }
+    if (dictionaries.identify(graph.context.catalog, owner)) |entry| {
+        if (operation.kind == .keys) return setKeySnapshot(graph.context.catalog, entry, node.ty, operation.arguments);
+        var storage: [2]typed.Type = undefined;
+        if (operation.arguments.len > storage.len) return error.ComponentProtocol;
+        const arguments = storage[0..operation.arguments.len];
+        for (operation.arguments, arguments) |argument, *ty| ty.* = try nodeType(graph, argument);
+        const writable = graph.tables.functions[graph.function].scope.locals[@backingInt(operation.owner)].mutable;
+        return dictionaries.operation(entry, owner, node.ty, operation.kind, arguments, writable);
     }
     const element = list_validate.listElement(graph.context.catalog, owner) orelse {
         var storage: [3]typed.Type = undefined;
@@ -509,18 +521,26 @@ fn bufferNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
 }
 
 fn integerOption(initial: value.Catalog, recipes: []const value.CatalogRecipe) ?typed.Type {
+    return numericOption(initial, recipes, .i64);
+}
+fn floatOption(initial: value.Catalog, recipes: []const value.CatalogRecipe) ?typed.Type {
+    for (initial.records) |record| if (numeric.floating(initial, record.id)) return numericOption(initial, recipes, record.id);
+    return null;
+}
+fn numericOption(initial: value.Catalog, recipes: []const value.CatalogRecipe, element: typed.Type) ?typed.Type {
     if (initial.templates.option == null) return null;
     for (initial.records) |record| {
         if (!std.mem.startsWith(u8, record.name, "Option<")) continue;
         const shape = prelude.optionShape(record.id, initial.records) orelse continue;
-        if (shape.element == .i64) return record.id;
+        if (shape.element == element) return record.id;
     }
-    for (recipes) |recipe| if (recipe == .option and recipe.option.element == .i64) return recipe.option.id;
+    for (recipes) |recipe| if (recipe == .option and recipe.option.element == element) return recipe.option.id;
     return null;
 }
 
 fn sortableListElement(catalog: value.Catalog, element: typed.Type) bool {
-    if (element == .i64) return true;
+    if (element.isInteger()) return true;
+    if (numeric.floating(catalog, element)) return true;
     if (catalog.string) |sequence| if (sequence.id == element) return true;
     if (catalog.bytes) |sequence| if (sequence.id == element) return true;
     return false;
@@ -530,7 +550,10 @@ fn recordSchema(graph: *Graph, ty: typed.Type) Error!typed.Record {
     if (!ty.isAggregate() or ty.recordIndex() >= graph.context.catalog.records.len) return error.ComponentProtocol;
     if (!graph.context.accepted[ty.recordIndex()]) return error.ComponentProtocol;
     const record = graph.context.catalog.records[ty.recordIndex()];
-    if (!record_validate.ordinary(record)) return error.ComponentProtocol;
+    if (!record_validate.ordinary(record)) {
+        const entry = dictionaries.identify(graph.context.catalog, ty) orelse return error.ComponentProtocol;
+        if (entry.kind != .dict_keys and entry.kind != .dict_values and entry.kind != .dict_items) return error.ComponentProtocol;
+    }
     return record;
 }
 fn recordNode(graph: *Graph, ty: typed.Type, fields: []const typed.FieldInit, complete: bool) Error!void {
@@ -587,5 +610,48 @@ fn matchStatement(graph: *Graph, item: @FieldType(@FieldType(typed.Statement, "d
             if (@backingInt(slot) >= graph.locals) return error.ComponentProtocol;
             if (graph.tables.functions[graph.function].scope.locals[@backingInt(slot)].ty != payload) return error.ComponentProtocol;
         }
+    }
+}
+fn arrayNode(graph: *Graph, ty: typed.Type, items: []const typed.NodeId) Error!void {
+    if (dictionaries.identify(graph.context.catalog, ty)) |entry| {
+        if (entry.kind != .dict and entry.kind != .set) return error.ComponentProtocol;
+        if (items.len % 2 != 0) return error.ComponentProtocol;
+        for (items, 0..) |item, index| if (try nodeType(graph, item) != (if (index % 2 == 0) entry.key else entry.value)) return error.ComponentProtocol;
+        return;
+    }
+    const element = sequenceElement(graph.context.catalog, ty) orelse return error.ComponentProtocol;
+    for (items) |item| {
+        if (try nodeType(graph, item) != element) return error.ComponentProtocol;
+        if (graph.context.catalog.string) |string| if (ty == string.id) {
+            const node = graph.tables.nodes[@backingInt(item)];
+            if (node.data == .integer) {
+                const number = node.data.integer;
+                if (number > 0x10ffff or (number >= 0xd800 and number <= 0xdfff)) return error.ComponentProtocol;
+            }
+        };
+    }
+}
+
+fn lengthNode(graph: *Graph, ty: typed.Type, operand: typed.NodeId) Error!void {
+    const owner = try nodeType(graph, operand);
+    const dictionary = dictionaries.identify(graph.context.catalog, owner);
+    if (ty != .i64) return error.ComponentProtocol;
+    if (sequenceElement(graph.context.catalog, owner) == null) {
+        const entry = dictionary orelse return error.ComponentProtocol;
+        if (entry.kind != .dict and entry.kind != .set) return error.ComponentProtocol;
+    }
+}
+
+fn indexNode(graph: *Graph, ty: typed.Type, operation: @FieldType(@FieldType(typed.Node, "data"), "index")) Error!void {
+    const owner = try nodeType(graph, operation.base);
+    if (operation.from_end) return error.ComponentProtocol;
+    if (dictionaries.identify(graph.context.catalog, owner)) |entry| {
+        if (entry.kind != .dict) return error.ComponentProtocol;
+        if (ty != entry.value or try nodeType(graph, operation.index) != entry.key) return error.ComponentProtocol;
+    } else {
+        const element = sequenceElement(graph.context.catalog, owner) orelse return error.ComponentProtocol;
+        const text = graph.context.catalog.string;
+        const expected = if (text != null and owner == text.?.id) owner else element;
+        if (ty != expected or try nodeType(graph, operation.index) != .i64) return error.ComponentProtocol;
     }
 }

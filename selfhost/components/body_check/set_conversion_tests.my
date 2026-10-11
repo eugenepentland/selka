@@ -1,0 +1,56 @@
+import syntax_value
+import graph
+import engine
+import collection_types
+import list_types
+import locals
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh() -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const yes = try syntax_value.boolean(mut pool, True)
+    const no = try syntax_value.boolean(mut pool, False)
+    const first = try syntax_value.span(mut pool, 0, 4)
+    const second = try syntax_value.span(mut pool, 4, 5)
+    const third = try syntax_value.span(mut pool, 5, 10)
+    const fourth = try syntax_value.span(mut pool, 10, 11)
+    const span = try syntax_value.span(mut pool, 0, 11)
+    const a = try node(mut pool, first, b"boolean", yes)
+    const b = try node(mut pool, second, b"integer", second)
+    const c = try node(mut pool, third, b"boolean", no)
+    const d = try node(mut pool, fourth, b"integer", fourth)
+    mut indices: int[] = []
+    for index in range(4):
+        const id = try syntax_value.integer(mut pool, index)
+        indices.append(id)
+    const entries = try syntax_value.sequence(mut pool, indices)
+    const literal = try node(mut pool, span, b"dictionary_literal", entries)
+    const nodes = try syntax_value.sequence(mut pool, [a, b, c, d, literal])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    mut state = try engine.make(pool, b"True7False8", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    return state
+
+
+public func test_set_dictionary_conversion_gathers_keys_with_one_loop() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try engine.expression(mut state, 4)
+    state.syntax.source = b"set"
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 3)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const argument = try syntax_value.integer(mut state.syntax.pool, 4)
+    const inputs = try syntax_value.sequence(mut state.syntax.pool, [argument])
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [span, absent, inputs, empty, empty])
+    const call = try node(mut state.syntax.pool, span, b"call", payload)
+    state.syntax.nodes.append(call)
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, result.ty)
+    return result.ty == 20 and schema.kind == 1 and schema.key == 1 and len(state.scope.locals) == 5 and state.control.next == 1 and len(state.batch.facts.lists.recipes) == 2

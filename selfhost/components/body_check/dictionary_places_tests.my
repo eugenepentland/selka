@@ -1,0 +1,170 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import mapping_lower
+import dictionary_places
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+    assignment: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const target = try syntax_value.span(mut input, 3, 9)
+    const assignment = try syntax_value.span(mut input, 3, 21)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=target), assignment=list_lower.Context(input=input, span=assignment))
+
+
+func number(pool: syntax_value.Pool, row: int, field: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, field)
+    return try graph.number(pool, value)
+
+
+func data(batch: emission.Batch, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const field = try graph.field(batch.pool, row, "data")
+    return try graph.get(batch.pool, field)
+
+
+func ids(pool: syntax_value.Pool, sequence: int) -> int[] fails syntax_value.Problem:
+    const children = try graph.items(pool, sequence)
+    mut result: int[] = []
+    for child in children:
+        const value = try graph.number(pool, child)
+        result.append(value)
+    return result
+
+
+func arguments(batch: emission.Batch, operation: int) -> int[] fails syntax_value.Problem:
+    const field = try graph.field(batch.pool, operation, "arguments")
+    return try ids(batch.pool, field)
+
+
+public func test_negative_integer_key_is_saved_without_length_or_normalization() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const source = try locals.add(mut fixture.scope, b"mapping", fixture.context.span, 40, True, b"parameter")
+    const base = try list_lower.read(mut fixture.batch, fixture.context, source, 40)
+    const rooted = try dictionary_places.receiver(mut fixture.batch, mut fixture.scope, fixture.context, base, 40)
+    const key = try list_lower.integer(mut fixture.batch, fixture.context, -7, 0)
+    const plan = try dictionary_places.indexed(mut fixture.batch, mut fixture.scope, rooted, key, 0, 0)
+    const saved_key = try data(fixture.batch, fixture.batch.statements[plan.setup[1]])
+    const saved_value = try number(fixture.batch.pool, saved_key.children[0], "value")
+    const key_node = try data(fixture.batch, fixture.batch.nodes[saved_value])
+    const negative = try graph.number(fixture.batch.pool, key_node.children[0])
+    const read = try data(fixture.batch, fixture.batch.nodes[3])
+    const kind_id = try graph.field(fixture.batch.pool, read.children[0], "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    const read_arguments = try arguments(fixture.batch, read.children[0])
+    return rooted.owner == 1 and rooted.setup == [0] and plan.setup == [0, 1, 2] and saved_value == key and key_node.data == b"integer" and negative == -7 and read.data == b"buffer_operation" and kind.data == b"read" and read_arguments == [plan.index] and len(fixture.batch.nodes) == 5 and len(fixture.batch.statements) == 3 and len(fixture.scope.locals) == 4
+
+
+public func test_saved_key_preserves_scalar_text_and_structural_key_types() -> bool fails syntax_value.Problem:
+    for key_type in [0, 1, 5, 17, 41]:
+        mut fixture = try fresh()
+        const source = try locals.add(mut fixture.scope, b"mapping", fixture.context.span, 40, True, b"parameter")
+        const key_slot = try locals.add(mut fixture.scope, b"key", fixture.context.span, key_type, False, b"parameter")
+        const base = try list_lower.read(mut fixture.batch, fixture.context, source, 40)
+        const rooted = try dictionary_places.receiver(mut fixture.batch, mut fixture.scope, fixture.context, base, 40)
+        const key = try list_lower.read(mut fixture.batch, fixture.context, key_slot, key_type)
+        const plan = try dictionary_places.indexed(mut fixture.batch, mut fixture.scope, rooted, key, key_type, 42)
+        const key_read = try data(fixture.batch, fixture.batch.nodes[plan.index])
+        const hidden = try graph.number(fixture.batch.pool, key_read.children[0])
+        const ty = try number(fixture.batch.pool, fixture.batch.nodes[plan.index], "ty")
+        const value_ty = try number(fixture.batch.pool, fixture.batch.nodes[plan.current], "ty")
+        const initialize = try data(fixture.batch, fixture.batch.statements[plan.setup[1]])
+        const original = try number(fixture.batch.pool, initialize.children[0], "value")
+        if key_read.data != b"local" or hidden != 3 or ty != key_type or fixture.scope.locals[hidden].ty != key_type or original != key or value_ty != 42 or fixture.scope.active != [0, 1] or len(fixture.scope.locals) != 5:
+            return False
+    return True
+
+
+public func test_receiver_local_precedes_nested_key_expression_locals() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const source = try locals.add(mut fixture.scope, b"outer", fixture.context.span, 40, True, b"parameter")
+    const other = try locals.add(mut fixture.scope, b"inner", fixture.context.span, 41, False, b"parameter")
+    const base = try list_lower.read(mut fixture.batch, fixture.context, source, 40)
+    const rooted = try dictionary_places.receiver(mut fixture.batch, mut fixture.scope, fixture.context, base, 40)
+    const nested_base = try list_lower.read(mut fixture.batch, fixture.context, other, 41)
+    const inner_key = try list_lower.integer(mut fixture.batch, fixture.context, -2, 0)
+    const nested = try mapping_lower.access(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Access(base=nested_base, owner_type=41, kind=b"read", arguments=[inner_key], result_type=17, signed_length=False))
+    const selected = try list_lower.append(mut fixture.batch, fixture.context, nested)
+    const plan = try dictionary_places.indexed(mut fixture.batch, mut fixture.scope, rooted, selected, 17, 0)
+    const nested_value = try number(fixture.batch.pool, nested.payload, "value")
+    const nested_read = try data(fixture.batch, fixture.batch.nodes[nested_value])
+    const nested_owner = try number(fixture.batch.pool, nested_read.children[0], "owner")
+    const initialize = try data(fixture.batch, fixture.batch.statements[plan.setup[1]])
+    const saved = try number(fixture.batch.pool, initialize.children[0], "value")
+    const destination = try number(fixture.batch.pool, initialize.children[0], "slot")
+    return rooted.owner == 2 and nested_owner == 3 and plan.owner == 2 and destination == 4 and fixture.scope.locals[4].ty == 17 and saved == selected and plan.current > selected and plan.setup == [0, 3, 4] and len(fixture.scope.locals) == 6 and fixture.scope.active == [0, 1]
+
+
+public func test_rhs_rebinding_keeps_original_receiver_key_and_old_value() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const source = try locals.add(mut fixture.scope, b"mapping", fixture.context.span, 40, True, b"parameter")
+    const key_slot = try locals.add(mut fixture.scope, b"key", fixture.context.span, 0, True, b"parameter")
+    const base = try list_lower.read(mut fixture.batch, fixture.context, source, 40)
+    const rooted = try dictionary_places.receiver(mut fixture.batch, mut fixture.scope, fixture.context, base, 40)
+    const key = try list_lower.read(mut fixture.batch, fixture.context, key_slot, 0)
+    const plan = try dictionary_places.indexed(mut fixture.batch, mut fixture.scope, rooted, key, 0, 0)
+    const empty = try emission.ids(mut fixture.batch, [])
+    const replacement = try emission.node(mut fixture.batch, fixture.assignment.input, fixture.assignment.span, 40, b"array", empty)
+    const rebind = try list_lower.store(mut fixture.batch, fixture.assignment, source, replacement, False)
+    const new_key = try list_lower.integer(mut fixture.batch, fixture.assignment, 99, 0)
+    const change_key = try list_lower.store(mut fixture.batch, fixture.assignment, key_slot, new_key, False)
+    const nine = try list_lower.integer(mut fixture.batch, fixture.assignment, 9, 0)
+    const rhs = try list_lower.block(mut fixture.batch, fixture.assignment, [rebind, change_key], nine, 0)
+    const right = try list_lower.append(mut fixture.batch, fixture.assignment, rhs)
+    const combined = try list_lower.binary(mut fixture.batch, fixture.assignment, b"add", plan.current, right, 0)
+    const result = try dictionary_places.finish(mut fixture.batch, mut fixture.scope, fixture.assignment, plan, combined)
+    const body = try number(fixture.batch.pool, result.payload, "body")
+    const body_data = try data(fixture.batch, fixture.batch.statements[body])
+    const statements = try ids(fixture.batch.pool, body_data.children[0])
+    const evaluate = try data(fixture.batch, fixture.batch.statements[statements[3]])
+    const evaluated = try number(fixture.batch.pool, evaluate.children[0], "value")
+    const discard = try data(fixture.batch, fixture.batch.statements[statements[4]])
+    const written = try graph.number(fixture.batch.pool, discard.children[0])
+    const write = try data(fixture.batch, fixture.batch.nodes[written])
+    const owner = try number(fixture.batch.pool, write.children[0], "owner")
+    const written_arguments = try arguments(fixture.batch, write.children[0])
+    const saved_result = try data(fixture.batch, fixture.batch.nodes[written_arguments[1]])
+    const saved_slot = try graph.number(fixture.batch.pool, saved_result.children[0])
+    const kind_id = try graph.field(fixture.batch.pool, write.children[0], "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    return result.ty == 15 and result.tag == b"block_value" and statements == [0, 1, 2, 6, 7] and plan.setup == [0, 1, 2] and plan.current < right and evaluated == combined and owner == 2 and kind.data == b"write" and written_arguments[0] == plan.index and saved_slot == 5 and len(fixture.scope.locals) == 6 and len(fixture.batch.statements) == 9
+
+
+public func test_setup_and_writeback_keep_distinct_spans_and_hidden_local_usage() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const source = try locals.add(mut fixture.scope, b"mapping", fixture.context.span, 40, True, b"parameter")
+    fixture.scope.locals[source].usage.reads = 2
+    fixture.scope.locals[source].usage.writes = 1
+    const original = fixture.scope.locals[source]
+    const facts = fixture.batch.facts
+    const base = try list_lower.read(mut fixture.batch, fixture.context, source, 40)
+    const rooted = try dictionary_places.receiver(mut fixture.batch, mut fixture.scope, fixture.context, base, 40)
+    const key = try list_lower.integer(mut fixture.batch, fixture.context, -7, 0)
+    const plan = try dictionary_places.indexed(mut fixture.batch, mut fixture.scope, rooted, key, 0, 0)
+    const right = try list_lower.integer(mut fixture.batch, fixture.assignment, 2, 0)
+    const combined = try list_lower.binary(mut fixture.batch, fixture.assignment, b"add", plan.current, right, 0)
+    const result = try dictionary_places.finish(mut fixture.batch, mut fixture.scope, fixture.assignment, plan, combined)
+    for index in range(len(fixture.batch.statements)):
+        const span = try graph.field(fixture.batch.pool, fixture.batch.statements[index], "span")
+        const start = try number(fixture.batch.pool, span, "start")
+        const end = try number(fixture.batch.pool, span, "end")
+        mut expected_end = 21
+        if index < 3:
+            expected_end = 9
+        if start != 3 or end != expected_end:
+            return False
+    for index in range(1, len(fixture.scope.locals)):
+        const local = fixture.scope.locals[index]
+        mut declaration = fixture.context.span
+        if index == 4:
+            declaration = fixture.assignment.span
+        if local.declaration != declaration or local.name != b"<collection>" or not local.mutable or local.origin != b"local" or not local.usage.temporary or local.usage.reads != 1 or local.usage.writes != 0 or local.flags.initialized:
+            return False
+    return result.ty == 15 and fixture.scope.active == [0] and fixture.scope.locals[0] == original and len(fixture.scope.locals) == 5 and len(fixture.batch.statements) == 6 and fixture.batch.facts == facts

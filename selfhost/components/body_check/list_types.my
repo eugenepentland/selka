@@ -1,9 +1,11 @@
 import syntax_value
+import floating_types
 import graph
 import record_types
 import variants
 import recipe_index
 import buffer_types
+import collection_types
 
 public record Schema:
     id: int
@@ -24,6 +26,7 @@ public record TypeTables:
     records: record_types.Catalog
     variants: variants.Catalog
     buffer: buffer_types.Basis
+    collections: collection_types.Catalog
 
 
 public record Catalog:
@@ -37,7 +40,7 @@ public record Catalog:
 
 
 public func empty() -> Catalog:
-    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty(), buffer=buffer_types.empty()), by_element=[], elements=[])
+    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty(), buffer=buffer_types.empty(), collections=collection_types.empty()), by_element=[], elements=[])
 
 
 func bad() -> syntax_value.Problem:
@@ -60,6 +63,11 @@ public func prepare_records(pool: syntax_value.Pool, id: int, suffixes: int[], m
     catalog.available = available.integer != 0
     catalog.types.suffixes = suffixes
     catalog.types.records = records
+    const collections = try collection_types.prepare(pool, id, records.rows)
+    catalog.types.collections = collections
+    for schema in collections.schemas:
+        catalog.types.records.admitted[schema.id] = True
+        catalog.types.records.by_type[schema.id] = -3
     const prepared_buffer = try buffer_types.prepare(pool, id)
     catalog.types.buffer = prepared_buffer
     for unused in range(19 + count):
@@ -84,14 +92,19 @@ public func prepare_records(pool: syntax_value.Pool, id: int, suffixes: int[], m
         depths.append(0)
     depths[0] = 1
     depths[1] = 1
+    for ty in range(2, 9):
+        depths[ty] = 1
     depths[15] = 1
     for leaf in managed:
         if leaf >= 0:
             if leaf < 19 or leaf >= len(depths):
                 fail bad()
             depths[leaf] = 1
+    const floating = try floating_types.identity(pool, records.rows)
+    if floating >= 0:
+        depths[floating] = 1
     for ty in range(19, len(records.admitted)):
-        if records.admitted[ty]:
+        if catalog.types.records.admitted[ty]:
             depths[ty] = 1
     if catalog.types.buffer.id >= 0:
         depths[catalog.types.buffer.id] = 1
@@ -152,12 +165,13 @@ public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recip
     if not catalog.available:
         const problem = try refusal(pool, request.span, "builtin List is unavailable")
         fail problem
+    const floating = try floating_types.identity(pool, catalog.types.records.rows)
     mut current = request.element
     mut depth = 2
     mut slow = current
     mut steps = 0
     while current >= 19:
-        mut leaf = current == catalog.types.buffer.id
+        mut leaf = current == catalog.types.buffer.id or current == floating
         for id in managed:
             if current == id:
                 leaf = True
@@ -178,7 +192,7 @@ public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recip
         if depth > 256:
             const problem = try refusal(pool, request.span, "list type depth limit exceeded")
             fail problem
-    if current != 0 and current != 1 and current != 15 and current < 19:
+    if current != 0 and current != 1 and current != 15 and not (current >= 2 and current <= 8) and current < 19:
         const problem = try refusal(pool, request.span, "list element type is outside the admitted body profile")
         fail problem
     const existing = lookup(catalog, request.element)
@@ -214,7 +228,10 @@ public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, recipe
             value = try syntax_value.object(mut pool, ["id", "success", "failure", "span"], [id, element, failure, span])
         elif recipe.kind == "byte_buffer":
             value = try syntax_value.object(mut pool, ["id", "span"], [id, span])
-        elif recipe.kind == "list" or recipe.kind == "option":
+        elif recipe.kind == "dict" or recipe.kind == "dict_item" or recipe.kind == "dict_keys" or recipe.kind == "dict_values" or recipe.kind == "dict_items":
+            const second = try syntax_value.integer(mut pool, recipe.failure)
+            value = try syntax_value.object(mut pool, ["id", "key", "value", "span"], [id, element, second, span])
+        elif recipe.kind == "set" or recipe.kind == "list" or recipe.kind == "option":
             value = try syntax_value.object(mut pool, ["id", "element", "span"], [id, element, span])
         else:
             fail bad()
@@ -225,6 +242,20 @@ public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, recipe
             tag = b"option"
         elif recipe.kind == "byte_buffer":
             tag = b"byte_buffer"
+        if recipe.kind == "dict" or recipe.kind == "set" or recipe.kind == "dict_item" or recipe.kind == "dict_keys" or recipe.kind == "dict_values" or recipe.kind == "dict_items":
+            mut inner = b"dict"
+            if recipe.kind == "set":
+                inner = b"set"
+            elif recipe.kind == "dict_item":
+                inner = b"dict_item"
+            elif recipe.kind == "dict_keys":
+                inner = b"dict_keys"
+            elif recipe.kind == "dict_values":
+                inner = b"dict_values"
+            elif recipe.kind == "dict_items":
+                inner = b"dict_items"
+            value = try syntax_value.tagged(mut pool, inner, value)
+            tag = b"collection"
         const tagged = try syntax_value.tagged(mut pool, tag, value)
         values.append(tagged)
     return try syntax_value.sequence(mut pool, values)
@@ -328,4 +359,67 @@ public func buffer_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, spa
     catalog.recipes.append(Recipe(id=id, element=5, span=span, kind="byte_buffer", depth=1))
     catalog.by_element.append(-1)
     catalog.elements.append(-1)
+    return id
+
+
+public func collection_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, request: collection_types.Schema, span: int) -> int fails syntax_value.Problem:
+    if request.kind < 0 or request.kind > 5:
+        fail bad()
+    if catalog.types.collections.bases[request.kind] < 0:
+        const rejection = try refusal(pool, span, "builtin collection template is unavailable")
+        fail rejection
+    mut second = request.value
+    if request.kind == 1:
+        second = 15
+    const existing = collection_types.find(catalog.types.collections, request.kind, request.key, second)
+    if existing >= 0:
+        return existing
+    const id = 19 + catalog.base_count + len(catalog.recipes)
+    if id >= 65555:
+        const rejection = try refusal(pool, span, "collection schema limit exceeded")
+        fail rejection
+    if request.key < 0 or request.key >= id or second < 0 or second >= id:
+        fail bad()
+    mut owner = -1
+    if request.kind >= 3:
+        owner = collection_types.find(catalog.types.collections, 0, request.key, second)
+        if owner < 0:
+            fail bad()
+    mut depth = try recipe_depth(catalog, request.key)
+    if request.kind != 1:
+        const value_depth = try recipe_depth(catalog, second)
+        if value_depth > depth:
+            depth = value_depth
+    depth += 1
+    if depth > 256:
+        const rejection = try refusal(pool, span, "catalog recipe depth limit exceeded")
+        fail rejection
+    while len(catalog.types.records.rows) < id - 19:
+        const missing = 19 + len(catalog.types.records.rows)
+        const ordinal = missing - 19 - catalog.base_count
+        if ordinal < 0 or ordinal >= len(catalog.recipes):
+            fail bad()
+        const previous = catalog.recipes[ordinal]
+        mut semantic = -1
+        if previous.kind == "list":
+            semantic = try variants.list_semantic(mut pool, catalog.types.records.rows, missing, previous.element, previous.span)
+        elif previous.kind == "byte_buffer":
+            semantic = try variants.buffer_semantic(mut pool, missing, previous.span)
+        else:
+            fail bad()
+        catalog.types.records.rows.append(semantic)
+    if len(catalog.types.records.rows) != id - 19:
+        fail bad()
+    const schema = collection_types.Schema(id=id, kind=request.kind, key=request.key, value=second, owner=owner)
+    const row = try collection_types.materialize(mut pool, catalog.types.records.rows, schema)
+    catalog.types.records.rows.append(row)
+    while len(catalog.types.records.by_type) < id:
+        catalog.types.records.by_type.append(-1)
+        catalog.types.records.admitted.append(False)
+    catalog.types.records.by_type.append(-3)
+    catalog.types.records.admitted.append(True)
+    catalog.recipes.append(Recipe(id=id, element=request.key, failure=second, span=span, kind=collection_types.tag(request.kind), depth=depth))
+    catalog.by_element.append(-1)
+    catalog.elements.append(-1)
+    _ = try collection_types.add(mut catalog.types.collections, schema)
     return id

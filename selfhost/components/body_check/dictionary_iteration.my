@@ -1,0 +1,152 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import buffer_lower
+import list_iteration
+import dictionary_view_lower
+
+public record Position:
+    enumerated: bool
+    rebound: bool
+
+
+public record Input:
+    iteration: list_iteration.Input
+    shape: dictionary_view_lower.Shape
+    kind: bytes
+    second_name: int
+    position: Position
+
+
+public record Plan:
+    request: Input
+    walk: list_iteration.Plan
+    second: int
+    rebound: bool
+    unpack: bool
+
+
+func bind(mut scope: locals.Scope, input: syntax_value.Pool, source: bytes, slot: int, name: int) -> Unit fails syntax_value.Problem:
+    const extracted_1 = try graph.spelling(input, source, name)
+    scope.locals[slot].name = extracted_1
+    scope.locals[slot].declaration = name
+    scope.locals[slot].mutable = False
+    scope.locals[slot].origin = b"iteration"
+    scope.locals[slot].flags.initialized = True
+    scope.active.append(slot)
+
+
+public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, request: Input) -> Plan fails syntax_value.Problem:
+    mut iteration = request.iteration
+    const context = list_lower.Context(input=input, span=iteration.span)
+    const projected = request.kind == b"keys" or request.kind == b"values" or request.kind == b"items"
+    if projected:
+        const extracted_2 = try dictionary_view_lower.owner(mut batch, context, iteration.iterable, request.shape.mapping)
+        iteration.iterable = extracted_2
+    const unpack = request.second_name >= 0 and not request.position.enumerated
+    const before = scope.active
+    const owner = try list_lower.temporary(mut scope, context, iteration.owner_type)
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const limit = try list_lower.temporary(mut scope, context, 0)
+    mut first_type = iteration.element
+    if unpack:
+        first_type = request.shape.key
+    const binding = try list_lower.temporary(mut scope, context, first_type)
+    mut second = index
+    if request.position.enumerated:
+        if request.position.rebound:
+            const extracted_3 = try list_lower.temporary(mut scope, context, 0)
+            second = extracted_3
+        else:
+            scope.locals[index].mutable = False
+    elif unpack:
+        const extracted_4 = try list_lower.temporary(mut scope, context, request.shape.value)
+        second = extracted_4
+    mut first_name = iteration.name
+    mut second_name = request.second_name
+    if unpack:
+        first_name = request.second_name
+        second_name = iteration.name
+    try bind(mut scope, input, iteration.source, binding, first_name)
+    if second_name >= 0:
+        const first = try graph.spelling(input, iteration.source, first_name)
+        const other = try graph.spelling(input, iteration.source, second_name)
+        if first != b"_" or other != b"_":
+            try bind(mut scope, input, iteration.source, second, second_name)
+    const walk = list_iteration.Plan(request=iteration, owner=owner, index=index, limit=limit, binding=binding, before_active=before)
+    return Plan(request=request, walk=walk, second=second, rebound=request.position.enumerated and request.position.rebound, unpack=unpack)
+
+
+func block(mut batch: emission.Batch, context: list_lower.Context, statements: int[]) -> int fails syntax_value.Problem:
+    const payload = try emission.ids(mut batch, statements)
+    return try emission.statement(mut batch, context.input, context.span, False, b"block", payload)
+
+
+func field(mut batch: emission.Batch, context: list_lower.Context, base: int, index: int, ty: int) -> int fails syntax_value.Problem:
+    const first = try syntax_value.integer(mut batch.pool, base)
+    const second = try syntax_value.integer(mut batch.pool, index)
+    const payload = try syntax_value.object(mut batch.pool, ["base", "index"], [first, second])
+    return try emission.node(mut batch, context.input, context.span, ty, b"field", payload)
+
+
+public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: syntax_value.Pool, plan: Plan, body: list_iteration.Finish) -> list_lower.Lowered fails syntax_value.Problem:
+    const walk = plan.walk
+    const request = walk.request
+    const context = list_lower.Context(input=input, span=request.span)
+    const source = try list_iteration.source(mut batch, mut scope, input, walk, list_iteration.SourceBody(raw_statements=body.raw_statements, raw_nodes=body.raw_nodes, body_raw=body.body_raw, expressions=[]))
+    const index = try list_lower.read(mut batch, context, walk.index, 0)
+    const checked = try list_iteration.guard(mut batch, context, walk, source.refresh, False)
+    mut value = -1
+    if plan.request.kind == b"dict" or plan.request.kind == b"set":
+        const extracted_5 = try list_lower.operation(mut batch, context, list_lower.Operation(owner=walk.owner, kind=b"key_at", arguments=[index], ty=request.element))
+        value = extracted_5
+    else:
+        const extracted_6 = try dictionary_view_lower.at(mut batch, context, walk.owner, index, plan.request.shape)
+        value = extracted_6
+    mut statements = [checked]
+    if plan.unpack:
+        const pair = try list_lower.temporary(mut scope, context, request.element)
+        const stored = try list_lower.store(mut batch, context, pair, value, True)
+        statements.append(stored)
+        const first_base = try list_lower.read(mut batch, context, pair, request.element)
+        const first = try field(mut batch, context, first_base, 0, plan.request.shape.key)
+        const second_base = try list_lower.read(mut batch, context, pair, request.element)
+        const second = try field(mut batch, context, second_base, 1, plan.request.shape.value)
+        const first_store = try list_lower.store(mut batch, context, walk.binding, first, True)
+        const second_store = try list_lower.store(mut batch, context, plan.second, second, True)
+        statements.append(first_store)
+        statements.append(second_store)
+    else:
+        const stored = try list_lower.store(mut batch, context, walk.binding, value, True)
+        statements.append(stored)
+    if plan.rebound:
+        const position = try list_lower.store(mut batch, context, plan.second, index, True)
+        statements.append(position)
+    statements.append(body.body)
+    const iteration = try block(mut batch, context, statements)
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", index, one, 0)
+    const advance = try list_lower.store(mut batch, context, walk.index, next, False)
+    const step = try block(mut batch, context, [checked, advance])
+    const orphan = try list_lower.store(mut batch, context, walk.owner, request.iterable, True)
+    _ = orphan
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const setup_index = try list_lower.store(mut batch, context, walk.index, zero, True)
+    const length = try buffer_lower.length(mut batch, context, walk.owner)
+    const setup_limit = try list_lower.store(mut batch, context, walk.limit, length, True)
+    const bound = try list_lower.read(mut batch, context, walk.limit, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", index, bound, 1)
+    const id = try syntax_value.integer(mut batch.pool, request.loop_id)
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const body_id = try syntax_value.integer(mut batch.pool, iteration)
+    const step_id = try syntax_value.integer(mut batch.pool, step)
+    const payload = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [id, test, body_id, step_id])
+    const loop = try emission.statement(mut batch, input, request.span, False, b"loop", payload)
+    mut setup = source.setup
+    setup.append(setup_index)
+    setup.append(setup_limit)
+    setup.append(loop)
+    const result = try emission.ids(mut batch, setup)
+    return list_lower.Lowered(ty=15, tag=b"block", payload=result)

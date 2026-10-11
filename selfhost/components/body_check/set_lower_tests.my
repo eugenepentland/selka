@@ -1,0 +1,182 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import set_lower
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 3, 11)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func empty_node(mut fixture: Fixture) -> int fails syntax_value.Problem:
+    const payload = try emission.ids(mut fixture.batch, [])
+    const extracted_1 = try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 40, b"array", payload)
+    return extracted_1
+
+
+func tag(pool: syntax_value.Pool, row: int) -> bytes fails syntax_value.Problem:
+    const data = try graph.field(pool, row, "data")
+    const value = try graph.get(pool, data)
+    return value.data
+
+
+func number(pool: syntax_value.Pool, row: int, field: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, field)
+    const extracted_2 = try graph.number(pool, value)
+    return extracted_2
+
+
+func loop_identity(fixture: Fixture, statement: int) -> int fails syntax_value.Problem:
+    const data = try graph.field(fixture.batch.pool, fixture.batch.statements[statement], "data")
+    const payload = try graph.payload(fixture.batch.pool, data)
+    const extracted_3 = try number(fixture.batch.pool, payload, "id")
+    return extracted_3
+
+
+public func test_literal_roots_then_writes_unit_in_source_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const first = try list_lower.integer(mut fixture.batch, fixture.context, 9, 0)
+    const second = try list_lower.integer(mut fixture.batch, fixture.context, 2, 0)
+    const value = try set_lower.literal(mut fixture.batch, mut fixture.scope, fixture.context, set_lower.Literal(ty=40, values=[first, second]))
+    const write_data = try graph.field(fixture.batch.pool, fixture.batch.nodes[4], "data")
+    const write = try graph.payload(fixture.batch.pool, write_data)
+    const args_id = try graph.field(fixture.batch.pool, write, "arguments")
+    const args = try graph.items(fixture.batch.pool, args_id)
+    const key = try graph.number(fixture.batch.pool, args[0])
+    const unit = try graph.number(fixture.batch.pool, args[1])
+    const local = fixture.scope.locals[0]
+    const extracted_4 = try tag(fixture.batch.pool, fixture.batch.nodes[unit])
+    return value.tag == b"block_value" and len(fixture.batch.nodes) == 8 and len(fixture.batch.statements) == 4 and key == first and unit == 3 and extracted_4 == b"unit" and local.mutable and not local.flags.initialized and local.usage.temporary and local.usage.reads == 1 and len(fixture.scope.active) == 0
+
+
+public func test_empty_literal_retains_hidden_owner_and_fresh_array() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const value = try set_lower.literal(mut fixture.batch, mut fixture.scope, fixture.context, set_lower.Literal(ty=40, values=[]))
+    const extracted_5 = try tag(fixture.batch.pool, fixture.batch.nodes[0])
+    return value.ty == 40 and len(fixture.batch.nodes) == 2 and len(fixture.batch.statements) == 2 and extracted_5 == b"array" and fixture.scope.locals[0].ty == 40
+
+
+public func test_union_copies_left_then_updates_right_without_loop() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try empty_node(mut fixture)
+    const right = try empty_node(mut fixture)
+    const result = try set_lower.combine(mut fixture.batch, mut fixture.scope, fixture.context, set_lower.Binary(ty=40, element=0, left=left, right=right, kind=b"union", loop_id=17))
+    const copied_data = try graph.field(fixture.batch.pool, fixture.batch.nodes[2], "data")
+    const copied = try graph.payload(fixture.batch.pool, copied_data)
+    const copy_kind_id = try graph.field(fixture.batch.pool, copied, "kind")
+    const copy_kind = try graph.get(fixture.batch.pool, copy_kind_id)
+    const extracted_6 = try number(fixture.batch.pool, copied, "owner")
+    return result.next_loop == 17 and result.value.ty == 40 and len(fixture.scope.locals) == 3 and len(fixture.batch.nodes) == 6 and len(fixture.batch.statements) == 5 and copy_kind.data == b"copy" and extracted_6 == 0
+
+
+public func test_intersection_walk_keeps_native_body_before_index_locals_and_shared_guard() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try empty_node(mut fixture)
+    const right = try empty_node(mut fixture)
+    const result = try set_lower.combine(mut fixture.batch, mut fixture.scope, fixture.context, set_lower.Binary(ty=40, element=0, left=left, right=right, kind=b"intersection", loop_id=17))
+    const body_data = try graph.field(fixture.batch.pool, fixture.batch.statements[7], "data")
+    const body = try graph.payload(fixture.batch.pool, body_data)
+    const body_rows = try graph.items(fixture.batch.pool, body)
+    const step_data = try graph.field(fixture.batch.pool, fixture.batch.statements[9], "data")
+    const step = try graph.payload(fixture.batch.pool, step_data)
+    const step_rows = try graph.items(fixture.batch.pool, step)
+    const body_guard = try graph.number(fixture.batch.pool, body_rows[0])
+    const step_guard = try graph.number(fixture.batch.pool, step_rows[0])
+    const extracted_7 = try loop_identity(fixture, 12)
+    const signed_lengths = try lengths_are_signed(fixture.batch)
+    return signed_lengths and result.next_loop == 18 and len(fixture.scope.locals) == 6 and fixture.scope.locals[3].ty == 0 and fixture.scope.locals[4].ty == 0 and len(fixture.batch.nodes) == 20 and len(fixture.batch.statements) == 14 and body_guard == 5 and step_guard == body_guard and extracted_7 == 17
+
+
+public func test_symmetric_difference_allocates_two_ordered_walks() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try empty_node(mut fixture)
+    const right = try empty_node(mut fixture)
+    const result = try set_lower.combine(mut fixture.batch, mut fixture.scope, fixture.context, set_lower.Binary(ty=40, element=0, left=left, right=right, kind=b"symmetric_difference", loop_id=23))
+    const extracted_8 = try loop_identity(fixture, 12)
+    const extracted_9 = try loop_identity(fixture, 22)
+    return result.next_loop == 25 and len(fixture.scope.locals) == 9 and extracted_8 == 23 and extracted_9 == 24
+
+
+public func test_proper_superset_preserves_operand_initializers_and_running_short_circuit() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try empty_node(mut fixture)
+    const right = try empty_node(mut fixture)
+    const result = try set_lower.relation(mut fixture.batch, mut fixture.scope, fixture.context, set_lower.Binary(ty=40, element=0, left=left, right=right, kind=b"proper_superset", loop_id=31))
+    const body_id = try number(fixture.batch.pool, result.value.payload, "body")
+    const block_data = try graph.field(fixture.batch.pool, fixture.batch.statements[body_id], "data")
+    const block = try graph.payload(fixture.batch.pool, block_data)
+    const statements = try graph.items(fixture.batch.pool, block)
+    const first_id = try graph.number(fixture.batch.pool, statements[0])
+    const second_id = try graph.number(fixture.batch.pool, statements[1])
+    const first_data = try graph.field(fixture.batch.pool, fixture.batch.statements[first_id], "data")
+    const first = try graph.payload(fixture.batch.pool, first_data)
+    const second_data = try graph.field(fixture.batch.pool, fixture.batch.statements[second_id], "data")
+    const second = try graph.payload(fixture.batch.pool, second_data)
+    const extracted_10 = try number(fixture.batch.pool, first, "value")
+    const extracted_11 = try number(fixture.batch.pool, second, "value")
+    const extracted_12 = try tag(fixture.batch.pool, fixture.batch.nodes[len(fixture.batch.nodes) - 1])
+    return result.next_loop == 32 and result.value.ty == 1 and len(statements) == 6 and extracted_10 == left and extracted_11 == right and len(fixture.scope.locals) == 6 and extracted_12 == b"binary"
+
+
+public func test_difference_negates_membership_before_body_and_preserves_span() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try empty_node(mut fixture)
+    const right = try empty_node(mut fixture)
+    const result = try set_lower.combine(mut fixture.batch, mut fixture.scope, fixture.context, set_lower.Binary(ty=40, element=0, left=left, right=right, kind=b"difference", loop_id=42))
+    const data = try graph.field(fixture.batch.pool, fixture.batch.nodes[5], "data")
+    const unary = try graph.payload(fixture.batch.pool, data)
+    const operand = try number(fixture.batch.pool, unary, "operand")
+    const location = try graph.field(fixture.batch.pool, unary, "op_span")
+    const start = try number(fixture.batch.pool, location, "start")
+    const end = try number(fixture.batch.pool, location, "end")
+    return result.next_loop == 43 and operand == 4 and start == 3 and end == 11 and len(fixture.batch.nodes) == 21
+
+
+public func test_disjoint_starts_true_and_guards_walk_with_running_flag() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try empty_node(mut fixture)
+    const right = try empty_node(mut fixture)
+    const result = try set_lower.relation(mut fixture.batch, mut fixture.scope, fixture.context, set_lower.Binary(ty=40, element=0, left=left, right=right, kind=b"disjoint", loop_id=50))
+    const initial_data = try graph.field(fixture.batch.pool, fixture.batch.nodes[2], "data")
+    const initial_id = try graph.payload(fixture.batch.pool, initial_data)
+    const initial = try graph.get(fixture.batch.pool, initial_id)
+    const body_id = try number(fixture.batch.pool, result.value.payload, "body")
+    const body_data = try graph.field(fixture.batch.pool, fixture.batch.statements[body_id], "data")
+    const body = try graph.payload(fixture.batch.pool, body_data)
+    const rows = try graph.items(fixture.batch.pool, body)
+    const loop_id = try graph.number(fixture.batch.pool, rows[5])
+    const loop_data = try graph.field(fixture.batch.pool, fixture.batch.statements[loop_id], "data")
+    const loop = try graph.payload(fixture.batch.pool, loop_data)
+    const condition_id = try number(fixture.batch.pool, loop, "condition")
+    const condition_data = try graph.field(fixture.batch.pool, fixture.batch.nodes[condition_id], "data")
+    const condition = try graph.payload(fixture.batch.pool, condition_data)
+    const op_id = try graph.field(fixture.batch.pool, condition, "op")
+    const op = try graph.get(fixture.batch.pool, op_id)
+    return result.next_loop == 51 and initial.kind == 2 and initial.integer == 1 and op.data == b"logical_and" and len(rows) == 6
+
+
+func lengths_are_signed(batch: emission.Batch) -> bool fails syntax_value.Problem:
+    mut found = False
+    for row in batch.nodes:
+        const data_id = try graph.field(batch.pool, row, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(batch.pool, data_id)
+            const kind_id = try graph.field(batch.pool, operation, "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            if kind.data == b"length":
+                found = True
+                const type_id = try graph.field(batch.pool, row, "ty")
+                const ty = try graph.number(batch.pool, type_id)
+                if ty != 0:
+                    return False
+    return found

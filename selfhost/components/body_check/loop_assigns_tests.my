@@ -1,0 +1,80 @@
+import syntax_value
+import loop_assigns
+
+func tagged(mut pool: syntax_value.Pool, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["data"], [data])
+
+
+public func test_plain_binding_inside_with_branch_match_is_found() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 1)
+    const payload = try syntax_value.object(mut pool, ["name"], [span])
+    const binding = try tagged(mut pool, b"binding", payload)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const with_payload = try syntax_value.object(mut pool, ["body"], [zero])
+    const with_row = try tagged(mut pool, b"with_scope", with_payload)
+    const one = try syntax_value.integer(mut pool, 1)
+    const arm = try syntax_value.object(mut pool, ["body"], [one])
+    const arms = try syntax_value.sequence(mut pool, [arm])
+    const match_payload = try syntax_value.object(mut pool, ["arms"], [arms])
+    const match_row = try tagged(mut pool, b"match", match_payload)
+    const two = try syntax_value.integer(mut pool, 2)
+    const absent = try syntax_value.absent(mut pool)
+    const branch_payload = try syntax_value.object(mut pool, ["then_body", "else_body"], [two, absent])
+    const branch = try tagged(mut pool, b"branch", branch_payload)
+    const context = loop_assigns.Context(pool=pool, source=b"i", nodes=[], statements=[binding, with_row, match_row, branch])
+    const yes = try loop_assigns.assigns(context, 3, b"i")
+    const no = try loop_assigns.assigns(context, 3, b"j")
+    return yes and not no
+
+
+public func test_indexed_place_write_counts_but_method_read_does_not() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 1)
+    const name = try tagged(mut pool, b"name", span)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const index_payload = try syntax_value.object(mut pool, ["base"], [zero])
+    const index = try tagged(mut pool, b"index", index_payload)
+    const one = try syntax_value.integer(mut pool, 1)
+    const assignment_payload = try syntax_value.object(mut pool, ["target"], [one])
+    const assignment = try tagged(mut pool, b"index_assignment", assignment_payload)
+    const two = try syntax_value.integer(mut pool, 2)
+    const discard = try tagged(mut pool, b"discard", two)
+    const read_kind = try syntax_value.enumeration(mut pool, b"read")
+    const read_payload = try syntax_value.object(mut pool, ["kind", "base"], [read_kind, one])
+    const read = try tagged(mut pool, b"list_operation", read_payload)
+    const three = try syntax_value.integer(mut pool, 3)
+    const read_discard = try tagged(mut pool, b"discard", three)
+    const context = loop_assigns.Context(pool=pool, source=b"i", nodes=[name, index, assignment, read], statements=[discard, read_discard])
+    const yes = try loop_assigns.assigns(context, 0, b"i")
+    const no = try loop_assigns.assigns(context, 1, b"i")
+    return yes and not no
+
+
+public func test_tuple_place_checks_each_root() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const first = try syntax_value.span(mut pool, 0, 1)
+    const second = try syntax_value.span(mut pool, 1, 2)
+    const a = try tagged(mut pool, b"name", first)
+    const b = try tagged(mut pool, b"name", second)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const values = try syntax_value.sequence(mut pool, [zero, one])
+    const tuple = try tagged(mut pool, b"tuple", values)
+    const two = try syntax_value.integer(mut pool, 2)
+    const payload = try syntax_value.object(mut pool, ["target"], [two])
+    const assignment = try tagged(mut pool, b"field_assignment", payload)
+    const three = try syntax_value.integer(mut pool, 3)
+    const statement = try tagged(mut pool, b"discard", three)
+    const context = loop_assigns.Context(pool=pool, source=b"ij", nodes=[a, b, tuple, assignment], statements=[statement])
+    return try loop_assigns.assigns(context, 0, b"j")
+
+
+public func test_invalid_reference_is_transport_failure() -> bool:
+    const context = loop_assigns.Context(pool=syntax_value.empty(), source=b"", nodes=[], statements=[])
+    match loop_assigns.assigns(context, 0, b"i"):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

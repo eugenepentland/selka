@@ -1,0 +1,131 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import membership_lower
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 3, 21)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func number(pool: syntax_value.Pool, row: int, field: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, field)
+    return try graph.number(pool, value)
+
+
+func data(batch: emission.Batch, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const field = try graph.field(batch.pool, row, "data")
+    return try graph.get(batch.pool, field)
+
+
+func ids(pool: syntax_value.Pool, sequence: int) -> int[] fails syntax_value.Problem:
+    const children = try graph.items(pool, sequence)
+    mut result: int[] = []
+    for child in children:
+        const value = try graph.number(pool, child)
+        result.append(value)
+    return result
+
+
+public func test_membership_evaluates_needle_then_container_once() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const needle = try list_lower.integer(mut fixture.batch, fixture.context, -7, 0)
+    const empty = try emission.ids(mut fixture.batch, [])
+    const container = try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 40, b"array", empty)
+    const result = try membership_lower.contains(mut fixture.batch, mut fixture.scope, fixture.context, membership_lower.Input(needle=needle, needle_type=0, container=container, container_type=40, negate=False))
+    const first = try data(fixture.batch, fixture.batch.statements[0])
+    const second = try data(fixture.batch, fixture.batch.statements[1])
+    const first_input = try number(fixture.batch.pool, first.children[0], "value")
+    const second_input = try number(fixture.batch.pool, second.children[0], "value")
+    const first_slot = try number(fixture.batch.pool, first.children[0], "slot")
+    const second_slot = try number(fixture.batch.pool, second.children[0], "slot")
+    const body = try number(fixture.batch.pool, result.payload, "body")
+    const body_data = try data(fixture.batch, fixture.batch.statements[body])
+    const statements = try ids(fixture.batch.pool, body_data.children[0])
+    const value = try number(fixture.batch.pool, result.payload, "value")
+    const operation = try data(fixture.batch, fixture.batch.nodes[value])
+    const owner = try number(fixture.batch.pool, operation.children[0], "owner")
+    const arguments_id = try graph.field(fixture.batch.pool, operation.children[0], "arguments")
+    const arguments = try ids(fixture.batch.pool, arguments_id)
+    const kind_id = try graph.field(fixture.batch.pool, operation.children[0], "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    return result.ty == 1 and result.tag == b"block_value" and first.data == b"initialize" and second.data == b"initialize" and first_input == needle and second_input == container and first_slot == 0 and second_slot == 1 and statements == [0, 1] and value == 3 and owner == 1 and kind.data == b"contains" and arguments == [2] and len(fixture.batch.nodes) == 4 and len(fixture.batch.statements) == 3
+
+
+public func test_membership_temporaries_are_readonly_hidden_and_keep_native_flags() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const existing = try locals.add(mut fixture.scope, b"source", fixture.context.span, 40, True, b"parameter")
+    fixture.scope.locals[existing].usage.reads = 2
+    fixture.scope.locals[existing].usage.writes = 1
+    const original = fixture.scope.locals[existing]
+    const facts = fixture.batch.facts
+    const result = try membership_lower.contains(mut fixture.batch, mut fixture.scope, fixture.context, membership_lower.Input(needle=51, needle_type=17, container=52, container_type=40, negate=False))
+    for index in [1, 2]:
+        const local = fixture.scope.locals[index]
+        if local.name != b"<membership>" or local.declaration != fixture.context.span or local.mutable or local.origin != b"local" or local.flags.initialized or local.flags.scoped_file or not local.usage.temporary or local.usage.reads != 1 or local.usage.writes != 0 or local.usage.transfer_available or local.usage.transfer_span != -1:
+            return False
+    return result.ty == 1 and fixture.scope.locals[1].ty == 17 and fixture.scope.locals[2].ty == 40 and fixture.scope.locals[0] == original and fixture.scope.active == [0] and fixture.batch.facts == facts and len(fixture.scope.locals) == 3
+
+
+public func test_not_in_inverts_only_final_contains_and_preserves_operator_span() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const result = try membership_lower.contains(mut fixture.batch, mut fixture.scope, fixture.context, membership_lower.Input(needle=51, needle_type=0, container=52, container_type=40, negate=True))
+    const value = try number(fixture.batch.pool, result.payload, "value")
+    const unary = try data(fixture.batch, fixture.batch.nodes[value])
+    const operand = try number(fixture.batch.pool, unary.children[0], "operand")
+    const op_id = try graph.field(fixture.batch.pool, unary.children[0], "op")
+    const op = try graph.get(fixture.batch.pool, op_id)
+    const op_span = try graph.field(fixture.batch.pool, unary.children[0], "op_span")
+    const start = try number(fixture.batch.pool, op_span, "start")
+    const end = try number(fixture.batch.pool, op_span, "end")
+    const operation = try data(fixture.batch, fixture.batch.nodes[operand])
+    for row in fixture.batch.statements:
+        const span = try graph.field(fixture.batch.pool, row, "span")
+        const first = try number(fixture.batch.pool, span, "start")
+        const last = try number(fixture.batch.pool, span, "end")
+        const terminal_id = try graph.field(fixture.batch.pool, row, "terminates")
+        const terminal = try graph.get(fixture.batch.pool, terminal_id)
+        if first != 3 or last != 21 or terminal.integer != 0:
+            return False
+    return result.ty == 1 and value == 2 and unary.data == b"unary" and operand == 1 and op.data == b"not" and start == 3 and end == 21 and operation.data == b"buffer_operation" and len(fixture.batch.nodes) == 3 and len(fixture.batch.statements) == 3
+
+
+public func test_mixed_byte_sequence_needles_keep_actual_type_without_an_extra_cast() -> bool fails syntax_value.Problem:
+    for needle_type in [0, 17, 18, 19, 40]:
+        mut fixture = try fresh()
+        const result = try membership_lower.contains(mut fixture.batch, mut fixture.scope, fixture.context, membership_lower.Input(needle=51, needle_type=needle_type, container=52, container_type=41, negate=False))
+        const read = try data(fixture.batch, fixture.batch.nodes[0])
+        const ty = try number(fixture.batch.pool, fixture.batch.nodes[0], "ty")
+        const slot = try graph.number(fixture.batch.pool, read.children[0])
+        const contains_ty = try number(fixture.batch.pool, fixture.batch.nodes[1], "ty")
+        if result.ty != 1 or read.data != b"local" or slot != 0 or ty != needle_type or contains_ty != 1 or fixture.scope.locals[0].ty != needle_type or fixture.scope.locals[1].ty != 41 or len(fixture.batch.nodes) != 2 or len(fixture.batch.statements) != 3:
+            return False
+    return True
+
+
+public func test_nested_membership_keeps_independent_roots_and_expression_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const inner = try membership_lower.contains(mut fixture.batch, mut fixture.scope, fixture.context, membership_lower.Input(needle=51, needle_type=0, container=52, container_type=40, negate=True))
+    const inner_node = try list_lower.append(mut fixture.batch, fixture.context, inner)
+    const outer = try membership_lower.contains(mut fixture.batch, mut fixture.scope, fixture.context, membership_lower.Input(needle=inner_node, needle_type=1, container=53, container_type=41, negate=False))
+    const first = try data(fixture.batch, fixture.batch.statements[3])
+    const second = try data(fixture.batch, fixture.batch.statements[4])
+    const value = try number(fixture.batch.pool, first.children[0], "value")
+    const first_slot = try number(fixture.batch.pool, first.children[0], "slot")
+    const second_slot = try number(fixture.batch.pool, second.children[0], "slot")
+    const outer_value = try number(fixture.batch.pool, outer.payload, "value")
+    const operation = try data(fixture.batch, fixture.batch.nodes[outer_value])
+    const owner = try number(fixture.batch.pool, operation.children[0], "owner")
+    const body = try number(fixture.batch.pool, outer.payload, "body")
+    const block = try data(fixture.batch, fixture.batch.statements[body])
+    const statements = try ids(fixture.batch.pool, block.children[0])
+    return value == inner_node and first_slot == 2 and second_slot == 3 and owner == 3 and statements == [3, 4] and fixture.scope.locals[2].ty == 1 and len(fixture.scope.locals) == 4 and len(fixture.scope.active) == 0 and len(fixture.batch.nodes) == 6 and len(fixture.batch.statements) == 6

@@ -1,0 +1,50 @@
+import syntax_value
+import syntax_problem
+import graph
+import emission
+import locals
+import list_lower
+import collection_types
+import mapping_lower
+
+public record Input:
+    arguments: int[]
+    expected: int
+
+
+func rejection(context: list_lower.Context, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(context.input, context.span, "start")
+    const end_id = try graph.field(context.input, context.span, "end")
+    const start = try graph.number(context.input, start_id)
+    const end = try graph.number(context.input, end_id)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+# The caller selects the unshadowed builtin, rejects labels, and checks every
+# operand first. A consumed generator already owns its result and bypasses this.
+public func build(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Input, mut problems: syntax_problem.Diagnostic[]) -> list_lower.Lowered fails syntax_value.Problem:
+    if len(request.arguments) > 1:
+        const error = try rejection(context, "E_ARITY", "dict() takes at most one mapping or generator of (key, value) pairs")
+        fail error
+    if len(request.arguments) == 0:
+        if request.expected < 0:
+            const error = try rejection(context, "E_DICT_INFERENCE", "an empty dictionary needs its type from context: `counts: dict[str, int] = dict()`")
+            fail error
+        const shape = collection_types.schema(batch.facts.lists.types.collections, request.expected)
+        if shape.kind != 0:
+            const error = try rejection(context, "E_DICT_TYPE", "dict() builds a dictionary, but this position expects another type")
+            fail error
+        const entries = try emission.ids(mut batch, [])
+        const value = try emission.node(mut batch, context.input, context.span, request.expected, b"array", entries)
+        return try list_lower.block(mut batch, context, [], value, request.expected)
+    const argument = request.arguments[0]
+    if argument < 0 or argument >= len(batch.nodes):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid dictionary constructor operand")
+    const type_id = try graph.field(batch.pool, batch.nodes[argument], "ty")
+    const ty = try graph.number(batch.pool, type_id)
+    const shape = collection_types.schema(batch.facts.lists.types.collections, ty)
+    if shape.kind != 0:
+        const error = try rejection(context, "E_DICT_TYPE", "dict() copies a dictionary or collects a generator of (key, value) pairs")
+        problems.append(syntax_problem.alternative(error, "pair two lists with a dict comprehension: `{k: v for k, v in zip(keys, values)}`"))
+        fail error
+    return try mapping_lower.access(mut batch, mut scope, context, list_lower.Access(base=argument, owner_type=ty, kind=b"copy", arguments=[], result_type=ty, signed_length=False))

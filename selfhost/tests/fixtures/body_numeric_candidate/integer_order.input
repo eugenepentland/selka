@@ -1,0 +1,15 @@
+func first(mut trace: int) -> u64:
+    trace = trace * 10 + 1
+    return 9223372036854775808u64
+
+
+func second(mut trace: int) -> u64:
+    trace = trace * 10 + 2
+    return 1u64
+
+
+func main() -> int:
+    mut trace = 0
+    assert wrapping_add(first(mut trace), second(mut trace)) == 9223372036854775809u64
+    assert trace == 12
+    return 7

@@ -1,0 +1,158 @@
+import syntax_value
+import graph
+import locals
+import option_flow
+
+record Fixture:
+    context: option_flow.Context
+    scope: locals.Scope
+
+
+func raw(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func unary(mut pool: syntax_value.Pool, span: int, op: bytes, operand: int) -> int fails syntax_value.Problem:
+    const operation = try syntax_value.enumeration(mut pool, op)
+    const value = try syntax_value.integer(mut pool, operand)
+    const payload = try syntax_value.object(mut pool, ["op", "operand", "op_span"], [operation, value, span])
+    return try raw(mut pool, span, b"unary", payload)
+
+
+func fresh(op: bytes) -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const x = try syntax_value.span(mut pool, 0, 1)
+    const y = try syntax_value.span(mut pool, 2, 3)
+    const nx = try raw(mut pool, x, b"name", x)
+    const ny = try raw(mut pool, y, b"name", y)
+    const ux = try unary(mut pool, x, b"is_none", 0)
+    const uy = try unary(mut pool, y, b"is_none", 1)
+    const left = try syntax_value.integer(mut pool, 2)
+    const right = try syntax_value.integer(mut pool, 3)
+    const operation = try syntax_value.enumeration(mut pool, op)
+    const pair = try syntax_value.object(mut pool, ["op", "left", "right", "op_span"], [operation, left, right, x])
+    const binary = try raw(mut pool, x, b"binary", pair)
+    const negation = try unary(mut pool, x, b"not", 2)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const assignment = try syntax_value.object(mut pool, ["name", "value", "op"], [x, zero, operation])
+    const write = try raw(mut pool, x, b"assignment", assignment)
+    const children = try syntax_value.sequence(mut pool, [zero])
+    const block = try raw(mut pool, x, b"block", children)
+    mut scope = locals.empty()
+    _ = try locals.add(mut scope, b"x", x, 20, True, b"local")
+    _ = try locals.add(mut scope, b"y", y, 20, True, b"local")
+    return Fixture(context=option_flow.Context(pool=pool, source=b"x y", nodes=[nx, ny, ux, uy, binary, negation], statements=[write, block]), scope=scope)
+
+
+public func test_false_or_requires_both_present_and_snapshot_is_independent() -> bool fails syntax_value.Problem:
+    const fixture = try fresh(b"logical_or")
+    mut state = option_flow.State(present=[])
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=4, truth=False))
+    const saved = option_flow.snapshot(state)
+    option_flow.forget(mut state, 0)
+    assert state.present == [1]
+    assert saved == [0, 1]
+    option_flow.restore(mut state, saved)
+    assert state.present == [0, 1]
+    return True
+
+
+public func test_false_and_keeps_only_facts_shared_by_alternative_paths() -> bool fails syntax_value.Problem:
+    const fixture = try fresh(b"logical_and")
+    mut state = option_flow.State(present=[])
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=4, truth=False))
+    assert state.present == []
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=5, truth=True))
+    assert state.present == [0]
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=2, truth=True))
+    assert state.present == []
+    return True
+
+
+public func test_nested_loop_write_forgets_only_active_written_name() -> bool fails syntax_value.Problem:
+    const fixture = try fresh(b"logical_and")
+    mut state = option_flow.State(present=[0, 1])
+    try option_flow.invalidate_writes(mut state, fixture.context, fixture.scope, 1)
+    assert state.present == [1]
+    option_flow.end_scope(mut state, 1)
+    assert state.present == []
+    return True
+
+
+public func test_intersection_swap_order_and_clear() -> bool:
+    mut state = option_flow.State(present=[0, 1, 2, 3])
+    option_flow.intersect(mut state, [0, 2])
+    assert state.present == [0, 2]
+    option_flow.end_scope(mut state, 2)
+    assert state.present == [0]
+    option_flow.clear(mut state)
+    assert state.present == []
+    return True
+
+
+public func test_depth_boundary_stops_conservatively_without_inventing_presence() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"logical_and")
+    const span = try syntax_value.span(mut fixture.context.pool, 0, 1)
+    mut condition = 2
+    for index in range(128):
+        const node = try unary(mut fixture.context.pool, span, b"not", condition)
+        condition = len(fixture.context.nodes)
+        fixture.context.nodes.append(node)
+    mut state = option_flow.State(present=[])
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=condition, truth=False))
+    assert state.present == []
+    const previous = condition - 1
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=previous, truth=True))
+    assert state.present == [0]
+    return True
+
+
+public func test_out_of_scope_same_name_does_not_refine_old_slot() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"logical_and")
+    fixture.scope.active = [1]
+    mut state = option_flow.State(present=[])
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=2, truth=False))
+    assert state.present == []
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=3, truth=False))
+    assert state.present == [1]
+    return True
+
+
+public func test_loop_match_and_branch_traversal_invalidates_hidden_write() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"logical_and")
+    const span = try syntax_value.span(mut fixture.context.pool, 0, 1)
+    const body = try syntax_value.integer(mut fixture.context.pool, 1)
+    const arm = try syntax_value.object(mut fixture.context.pool, ["body"], [body])
+    const arms = try syntax_value.sequence(mut fixture.context.pool, [arm])
+    const matched = try syntax_value.object(mut fixture.context.pool, ["arms"], [arms])
+    const match_statement = try raw(mut fixture.context.pool, span, b"match", matched)
+    fixture.context.statements.append(match_statement)
+    const match_id = try syntax_value.integer(mut fixture.context.pool, 2)
+    const absent = try syntax_value.absent(mut fixture.context.pool)
+    const branch = try syntax_value.object(mut fixture.context.pool, ["then_body", "else_body"], [match_id, absent])
+    const branch_statement = try raw(mut fixture.context.pool, span, b"branch", branch)
+    fixture.context.statements.append(branch_statement)
+    const branch_id = try syntax_value.integer(mut fixture.context.pool, 3)
+    const loop = try syntax_value.object(mut fixture.context.pool, ["body"], [branch_id])
+    const loop_statement = try raw(mut fixture.context.pool, span, b"loop", loop)
+    fixture.context.statements.append(loop_statement)
+    mut state = option_flow.State(present=[0, 1])
+    try option_flow.invalidate_writes(mut state, fixture.context, fixture.scope, 4)
+    assert state.present == [1]
+    return True
+
+
+public func test_heap_field_none_guard_does_not_establish_local_presence() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"logical_and")
+    const span = try syntax_value.span(mut fixture.context.pool, 0, 1)
+    const base = try syntax_value.integer(mut fixture.context.pool, 0)
+    const field = try syntax_value.object(mut fixture.context.pool, ["base", "name"], [base, span])
+    const node = try raw(mut fixture.context.pool, span, b"field", field)
+    fixture.context.nodes.append(node)
+    const condition = try unary(mut fixture.context.pool, span, b"is_none", 6)
+    fixture.context.nodes.append(condition)
+    mut state = option_flow.State(present=[])
+    try option_flow.assume(mut state, fixture.context, fixture.scope, option_flow.Guard(condition=7, truth=False))
+    assert state.present == []
+    return True

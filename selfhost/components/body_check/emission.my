@@ -10,6 +10,7 @@ public record Facts:
     string_type: int
     bytes_type: int
     lists: list_types.Catalog
+    float_type: int = -1
 
 
 public record Batch:

@@ -1,0 +1,38 @@
+import syntax_value
+import graph
+import emission
+import list_lower
+import numeric_lower
+
+public func test_negative_zero_preserves_float_unary_lowering() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 4)
+    mut batch = emission.empty()
+    batch.facts.float_type = 19
+    const context = list_lower.Context(input=pool, span=span)
+    const zero_value = try numeric_lower.literal(mut batch, context, 0)
+    const zero = try list_lower.append(mut batch, context, zero_value)
+    const negated_value = try numeric_lower.floating_unary(mut batch, context, b"f64_neg", zero)
+    const negated = try list_lower.append(mut batch, context, negated_value)
+    const zero_data = try graph.field(batch.pool, batch.nodes[0], "data")
+    const zero_payload = try graph.payload(batch.pool, zero_data)
+    const encoded_zero = try graph.number(batch.pool, zero_payload)
+    const unary_data = try graph.field(batch.pool, batch.nodes[3], "data")
+    const unary_payload = try graph.payload(batch.pool, unary_data)
+    const op_id = try graph.field(batch.pool, unary_payload, "op")
+    const op = try graph.get(batch.pool, op_id)
+    const final_data = try graph.field(batch.pool, batch.nodes[negated], "data")
+    const final = try graph.get(batch.pool, final_data)
+    return len(batch.nodes) == 5 and encoded_zero == 0 and op.data == b"f64_neg" and final.data == b"wrap"
+
+
+public func test_signed_float_constant_uses_upper_unsigned_wire() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 4)
+    mut batch = emission.empty()
+    batch.facts.float_type = 19
+    const lowered = try numeric_lower.literal(mut batch, list_lower.Context(input=pool, span=span), -4616189618054758400)
+    const data_id = try graph.field(batch.pool, batch.nodes[0], "data")
+    const payload = try graph.payload(batch.pool, data_id)
+    const encoded = try graph.get(batch.pool, payload)
+    return lowered.ty == 19 and encoded.kind == 8 and encoded.integer == -4616189618054758400

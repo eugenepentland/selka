@@ -1,0 +1,113 @@
+import syntax_value
+import hash_keys
+import list_types
+
+func row(mut pool: syntax_value.Pool, managed: bool, tuple: bool, fields: int[], backing: int) -> int fails syntax_value.Problem:
+    const nil = try syntax_value.absent(mut pool)
+    const managed_id = try syntax_value.boolean(mut pool, managed)
+    const tuple_id = try syntax_value.boolean(mut pool, tuple)
+    const backing_id = try syntax_value.integer(mut pool, backing)
+    const shape = try syntax_value.object(mut pool, ["array", "domain", "variants", "resource", "tuple"], [nil, if backing >= 0 then backing_id else nil, nil, nil, tuple_id])
+    const contract = try syntax_value.object(mut pool, ["callback"], [nil])
+    const name = try syntax_value.octets(mut pool, b"Record")
+    const declaration = try syntax_value.span(mut pool, 1, 7)
+    const members = try syntax_value.sequence(mut pool, fields)
+    return try syntax_value.object(mut pool, ["managed", "shape", "contract", "name", "declaration", "fields"], [managed_id, shape, contract, name, declaration, members])
+
+
+func field(mut pool: syntax_value.Pool, name: bytes, ty: int) -> int fails syntax_value.Problem:
+    const label = try syntax_value.octets(mut pool, name)
+    const ty_id = try syntax_value.integer(mut pool, ty)
+    return try syntax_value.object(mut pool, ["name", "ty"], [label, ty_id])
+
+
+public func test_scalar_unit_and_capability_keys() -> bool fails syntax_value.Problem:
+    const pool = syntax_value.empty()
+    const context = hash_keys.Context(pool=pool, records=[], lists=[], text=-1, bytes=-1, buffer=-1)
+    for ty in [0, 1, 2, 3, 4, 5, 6, 7, 8, 15]:
+        const result = try hash_keys.refusal(context, ty)
+        if result is not None:
+            return False
+    const rejected = try hash_keys.refusal(context, 11)
+    if rejected is None:
+        return False
+    return rejected.part == 11 and rejected.path == b"" and rejected.reason == "capability"
+
+
+public func test_first_nested_field_and_tuple_path() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const good = try field(mut pool, b"good", 0)
+    const bad = try field(mut pool, b"bad", 11)
+    const ignored = try field(mut pool, b"later", 18)
+    const inner = try row(mut pool, False, True, [good, bad, ignored], -1)
+    const child = try field(mut pool, b"child", 19)
+    const outer = try row(mut pool, False, False, [child], -1)
+    const context = hash_keys.Context(pool=pool, records=[inner, outer], lists=[], text=-1, bytes=-1, buffer=-1)
+    const rejected = try hash_keys.refusal(context, 20)
+    if rejected is None:
+        return False
+    return rejected.part == 11 and rejected.path == b".child[1]" and rejected.reason == "capability"
+
+
+public func test_cycle_and_shared_storage() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const self_field = try field(mut pool, b"next", 19)
+    const cyclic = try row(mut pool, False, False, [self_field], -1)
+    const managed = try row(mut pool, True, False, [], -1)
+    const context = hash_keys.Context(pool=pool, records=[cyclic, managed], lists=[], text=-1, bytes=-1, buffer=-1)
+    const cycle_result = try hash_keys.refusal(context, 19)
+    if cycle_result is not None:
+        return False
+    const rejected = try hash_keys.refusal(context, 20)
+    if rejected is None:
+        return False
+    return rejected.reason == "shared" and rejected.part == 20
+
+
+public func test_depth_boundary_preserves_first_failure_path() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut records: int[] = []
+    for index in range(65):
+        const child = try field(mut pool, b"x", if index < 64 then index + 20 else 0)
+        const record_row = try row(mut pool, False, False, [child], -1)
+        records.append(record_row)
+    const context = hash_keys.Context(pool=pool, records=records, lists=[], text=-1, bytes=-1, buffer=-1)
+    const rejected = try hash_keys.refusal(context, 19)
+    if rejected is None:
+        return False
+    return rejected.part == 83 and rejected.reason == "shared" and len(rejected.path) == 128
+
+
+public func test_new_list_recipe_is_shared_before_record_materialization() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 3, 10)
+    mut catalog = list_types.empty()
+    catalog.available = True
+    for unused in range(19):
+        catalog.by_element.append(-1)
+        catalog.elements.append(-1)
+    const ty = try list_types.intern(mut catalog, pool, list_types.Recipe(id=-1, element=0, span=span), [])
+    const context = hash_keys.Context(pool=pool, records=catalog.types.records.rows, lists=catalog.elements, text=-1, bytes=-1, buffer=-1)
+    const rejected = try hash_keys.refusal(context, ty)
+    if rejected is None:
+        return False
+    const unknown = try hash_keys.refusal(context, ty + 1)
+    if unknown is None:
+        return False
+    return ty == 19 and len(catalog.types.records.rows) == 0 and len(catalog.recipes) == 1 and rejected.part == ty and rejected.path == b"" and rejected.reason == "shared" and unknown.reason == "capability" and unknown.part == ty + 1
+
+
+public func test_nested_pending_list_preserves_first_failure_path() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const member = try field(mut pool, b"items", 20)
+    const later = try field(mut pool, b"later", 11)
+    const record_row = try row(mut pool, False, False, [member, later], -1)
+    mut lists: int[] = []
+    for unused in range(20):
+        lists.append(-1)
+    lists.append(0)
+    const context = hash_keys.Context(pool=pool, records=[record_row], lists=lists, text=-1, bytes=-1, buffer=-1)
+    const rejected = try hash_keys.refusal(context, 19)
+    if rejected is None:
+        return False
+    return rejected.part == 20 and rejected.path == b".items" and rejected.reason == "shared"

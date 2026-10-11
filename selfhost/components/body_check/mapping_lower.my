@@ -1,0 +1,31 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import buffer_lower
+
+# Mapping keys are values, not list positions; preserve negative integer keys.
+public func access(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: list_lower.Access) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, request.owner_type)
+    const initialize = try list_lower.store(mut batch, context, owner, request.base, True)
+    mut arguments = request.arguments
+    mut statements: int[] = []
+    if request.kind == b"write":
+        const value_node = batch.nodes[arguments[1]]
+        const type_id = try graph.field(batch.pool, value_node, "ty")
+        const ty = try graph.number(batch.pool, type_id)
+        const slot = try list_lower.temporary(mut scope, context, ty)
+        const stored = try list_lower.store(mut batch, context, slot, arguments[1], True)
+        statements.append(stored)
+        const value = try list_lower.read(mut batch, context, slot, ty)
+        arguments[1] = value
+    statements.append(initialize)
+    mut value = -1
+    if request.signed_length:
+        const length = try buffer_lower.length(mut batch, context, owner)
+        value = length
+    else:
+        const operation = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=request.kind, arguments=arguments, ty=request.result_type))
+        value = operation
+    return try list_lower.block(mut batch, context, statements, value, request.result_type)

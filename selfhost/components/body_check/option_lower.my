@@ -1,0 +1,84 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+
+public record Shape:
+    owner_type: int
+    element: int
+    some: int
+    none: int
+
+
+func arm(mut batch: emission.Batch, tag: int, slot: int, body: int) -> int fails syntax_value.Problem:
+    const case_id = try syntax_value.integer(mut batch.pool, tag)
+    mut binding = try syntax_value.absent(mut batch.pool)
+    if slot >= 0:
+        binding = try syntax_value.integer(mut batch.pool, slot)
+    const statement = try syntax_value.integer(mut batch.pool, body)
+    return try syntax_value.object(mut batch.pool, ["tag", "slot", "body"], [case_id, binding, statement])
+
+
+func select(mut batch: emission.Batch, context: list_lower.Context, value: int, arms: int[]) -> int fails syntax_value.Problem:
+    const expression = try syntax_value.integer(mut batch.pool, value)
+    const cases = try syntax_value.sequence(mut batch.pool, arms)
+    const borrowed = try syntax_value.boolean(mut batch.pool, False)
+    const payload = try syntax_value.object(mut batch.pool, ["value", "arms", "borrowed"], [expression, cases, borrowed])
+    return try emission.statement(mut batch, context.input, context.span, False, b"match", payload)
+
+
+func boolean(mut batch: emission.Batch, context: list_lower.Context, value: bool) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.boolean(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, 1, b"boolean", payload)
+
+
+func empty_body(mut batch: emission.Batch, context: list_lower.Context) -> int fails syntax_value.Problem:
+    const children = try emission.ids(mut batch, [])
+    return try emission.statement(mut batch, context.input, context.span, False, b"block", children)
+
+
+public func presence_value(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, value: int, shape: Shape) -> list_lower.Lowered fails syntax_value.Problem:
+    const slot = try list_lower.temporary(mut scope, context, 1)
+    const false_id = try boolean(mut batch, context, False)
+    const some_body = try list_lower.store(mut batch, context, slot, false_id, True)
+    const true_id = try boolean(mut batch, context, True)
+    const none_body = try list_lower.store(mut batch, context, slot, true_id, True)
+    const some_arm = try arm(mut batch, shape.some, -1, some_body)
+    const none_arm = try arm(mut batch, shape.none, -1, none_body)
+    const match_id = try select(mut batch, context, value, [some_arm, none_arm])
+    const result = try list_lower.read(mut batch, context, slot, 1)
+    return try list_lower.block(mut batch, context, [match_id], result, 1)
+
+
+public func payload_value(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, value: int, shape: Shape) -> list_lower.Lowered fails syntax_value.Problem:
+    const slot = try list_lower.temporary(mut scope, context, shape.element)
+    const some_body = try empty_body(mut batch, context)
+    const false_id = try boolean(mut batch, context, False)
+    const condition = try syntax_value.integer(mut batch.pool, false_id)
+    const message = try syntax_value.octets(mut batch.pool, b"invalidated Option narrowing")
+    const absent = try syntax_value.absent(mut batch.pool)
+    const kind = try syntax_value.enumeration(mut batch.pool, b"statement")
+    const assertion = try syntax_value.object(mut batch.pool, ["condition", "message", "message_value", "kind"], [condition, message, absent, kind])
+    const none_body = try emission.statement(mut batch, context.input, context.span, False, b"assertion", assertion)
+    const some_arm = try arm(mut batch, shape.some, slot, some_body)
+    const none_arm = try arm(mut batch, shape.none, -1, none_body)
+    const match_id = try select(mut batch, context, value, [some_arm, none_arm])
+    const result = try list_lower.read(mut batch, context, slot, shape.element)
+    return try list_lower.block(mut batch, context, [match_id], result, shape.element)
+
+
+public func default_value(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, value: int, shape: Shape, fallback: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, shape.owner_type)
+    const rooted = try list_lower.store(mut batch, context, owner, value, True)
+    const absent = try list_lower.temporary(mut scope, context, shape.element)
+    const eager = try list_lower.store(mut batch, context, absent, fallback, True)
+    const slot = try list_lower.temporary(mut scope, context, shape.element)
+    const some_body = try empty_body(mut batch, context)
+    const default_id = try list_lower.read(mut batch, context, absent, shape.element)
+    const none_body = try list_lower.store(mut batch, context, slot, default_id, True)
+    const some_arm = try arm(mut batch, shape.some, slot, some_body)
+    const none_arm = try arm(mut batch, shape.none, -1, none_body)
+    const owner_id = try list_lower.read(mut batch, context, owner, shape.owner_type)
+    const match_id = try select(mut batch, context, owner_id, [some_arm, none_arm])
+    const result = try list_lower.read(mut batch, context, slot, shape.element)
+    return try list_lower.block(mut batch, context, [rooted, eager, match_id], result, shape.element)

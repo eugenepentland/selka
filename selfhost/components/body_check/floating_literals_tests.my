@@ -1,0 +1,62 @@
+import floating_literals
+import syntax_value
+
+public func test_float_literal_ieee_encodings() -> bool fails syntax_value.Problem:
+    const spellings = [b"0.0", b"0.125", b"2.5", b"1.7976931348623157e308", b"5e-324", b"2.2250738585072014e-308"]
+    const expected = [0, 4593671619917905920, 4612811918334230528, 9218868437227405311, 1, 4503599627370496]
+    for index in range(len(spellings)):
+        const actual = try floating_literals.parse(spellings[index], 0, len(spellings[index]))
+        if actual != expected[index]:
+            return False
+    return True
+
+
+public func test_float_halfway_and_underflow_rounding() -> bool fails syntax_value.Problem:
+    const tie = try floating_literals.parse(b"9007199254740993.0", 0, 18)
+    const down = try floating_literals.parse(b"2.4703282292062327e-324", 0, 23)
+    const up = try floating_literals.parse(b"2.4703282292062328e-324", 0, 23)
+    return tie == 4845873199050653696 and down == 0 and up == 1
+
+
+public func test_float_overflow_diagnostic() -> bool:
+    match floating_literals.parse(b"1e400", 2, 7):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_FLOAT_RANGE" and problem.start == 2 and problem.end == 7
+
+
+public func test_float_powers_of_two_neighbors() -> bool fails syntax_value.Problem:
+    const texts = [b"0.9999999999999999", b"1.0", b"1.0000000000000002", b"2.225073858507201e-308", b"2.2250738585072014e-308", b"2.225073858507202e-308"]
+    const expected = [4607182418800017407, 4607182418800017408, 4607182418800017409, 4503599627370495, 4503599627370496, 4503599627370497]
+    for index in range(len(texts)):
+        const actual = try floating_literals.parse(texts[index], 0, len(texts[index]))
+        if actual != expected[index]:
+            return False
+    return True
+
+
+public func test_float_long_decimal_ties() -> bool fails syntax_value.Problem:
+    const even = try floating_literals.parse(b"1.00000000000000011102230246251565404236316680908203125", 0, 55)
+    const above = try floating_literals.parse(b"1.000000000000000111022302462515654042363166809082031251", 0, 56)
+    return even == 4607182418800017408 and above == 4607182418800017409
+
+
+public func test_float_prefixed_integer_context() -> bool fails syntax_value.Problem:
+    const hexadecimal = try floating_literals.parse(b"0xFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF", 0, 41)
+    const decimal = try floating_literals.parse(b"340282366920938463463374607431768211455", 0, 39)
+    const binary = try floating_literals.parse(b"0b1_0000", 0, 8)
+    return hexadecimal == decimal and binary == 4625196817309499392
+
+
+public func test_float_malformed_grammar_diagnostic_precedence() -> bool:
+    const texts = [b"1__0.0", b"1_.0", b"1._0", b"1e+", b"1.0u8", b"1.0j", b"nan", b"0x1u8"]
+    const messages = ["doubled underscore in a number; a single underscore may separate digits", "an underscore in a number must be followed by a digit; a width suffix goes directly after the last digit (1_000u32)", "an underscore in a number must sit between two digits", "a floating-point exponent needs digits after e, as in 1e5 or 2.5e-3", "invalid decimal floating-point literal; a float literal takes no suffix", "imaginary literals such as 1j are not supported; mylang has no complex numbers", "invalid decimal floating-point literal", "a float literal takes no integer suffix"]
+    for index in range(len(texts)):
+        match floating_literals.parse(texts[index], 4, 4 + len(texts[index])):
+            case Ok(value):
+                return False
+            case Err(problem):
+                if problem.code != "E_FLOAT_LITERAL" or problem.message != messages[index] or problem.start != 4 or problem.end != 4 + len(texts[index]):
+                    return False
+    return True

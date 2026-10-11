@@ -91,3 +91,14 @@ public func test_existing_catalog_cycle_is_transport_not_profile() -> bool fails
             return False
         case Err(problem):
             return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_existing_catalog_admits_every_integer_width() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const widths = [0, 2, 3, 4, 5, 6, 7, 8]
+    const raw = try make_catalog(mut pool, widths)
+    const prepared = try list_types.prepare(pool, raw, [], [])
+    for index in range(len(widths)):
+        if list_types.lookup(prepared, widths[index]) != index + 19:
+            return False
+    return len(prepared.recipes) == 0

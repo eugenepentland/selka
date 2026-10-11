@@ -1,0 +1,170 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import dictionary_view_lower
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 3, 11)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func shape(kind: bytes) -> dictionary_view_lower.Shape:
+    return dictionary_view_lower.Shape(mapping=40, key=0, value=1, item=42, list=44, kind=kind)
+
+
+func number(pool: syntax_value.Pool, row: int, field: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, field)
+    return try graph.number(pool, value)
+
+
+func payload(pool: syntax_value.Pool, row: int) -> int fails syntax_value.Problem:
+    const data = try graph.field(pool, row, "data")
+    return try graph.payload(pool, data)
+
+
+func operation_kind(batch: emission.Batch, node: int) -> bytes fails syntax_value.Problem:
+    const data = try payload(batch.pool, batch.nodes[node])
+    const kind_id = try graph.field(batch.pool, data, "kind")
+    const kind = try graph.get(batch.pool, kind_id)
+    return kind.data
+
+
+func view(mut fixture: Fixture) -> int fails syntax_value.Problem:
+    const empty = try emission.ids(mut fixture.batch, [])
+    const mapping = try emission.node(mut fixture.batch, fixture.context.input, fixture.context.span, 40, b"array", empty)
+    const lowered = try dictionary_view_lower.construct(mut fixture.batch, fixture.context, 41, mapping)
+    return try list_lower.append(mut fixture.batch, fixture.context, lowered)
+
+
+public func test_construct_retains_one_mapping_without_hidden_locals() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const result = try view(mut fixture)
+    const record = try payload(fixture.batch.pool, fixture.batch.nodes[1])
+    const fields = try graph.items(fixture.batch.pool, record)
+    const index = try number(fixture.batch.pool, fields[0], "index")
+    const mapping = try number(fixture.batch.pool, fields[0], "value")
+    const block = try payload(fixture.batch.pool, fixture.batch.nodes[result])
+    const value = try number(fixture.batch.pool, block, "value")
+    const body = try number(fixture.batch.pool, block, "body")
+    const statements = try payload(fixture.batch.pool, fixture.batch.statements[body])
+    const rows = try graph.items(fixture.batch.pool, statements)
+    return result == 2 and len(fixture.batch.nodes) == 3 and len(fixture.scope.locals) == 0 and len(fields) == 1 and index == 0 and mapping == 0 and value == 1 and len(rows) == 0
+
+
+public func test_owner_extracts_mapping_field_and_keeps_source_span() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const wrapped = try view(mut fixture)
+    const result = try dictionary_view_lower.owner(mut fixture.batch, fixture.context, wrapped, 40)
+    const node = fixture.batch.nodes[result]
+    const data = try payload(fixture.batch.pool, node)
+    const base = try number(fixture.batch.pool, data, "base")
+    const index = try number(fixture.batch.pool, data, "index")
+    const ty = try number(fixture.batch.pool, node, "ty")
+    const span = try graph.field(fixture.batch.pool, node, "span")
+    const start = try number(fixture.batch.pool, span, "start")
+    const end = try number(fixture.batch.pool, span, "end")
+    return base == wrapped and index == 0 and ty == 40 and start == 3 and end == 11
+
+
+public func test_values_projection_retains_native_unused_key_node() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const position = try list_lower.integer(mut fixture.batch, fixture.context, 2, 0)
+    const result = try dictionary_view_lower.at(mut fixture.batch, fixture.context, 7, position, shape(b"values"))
+    const key_kind = try operation_kind(fixture.batch, 1)
+    const value_kind = try operation_kind(fixture.batch, 2)
+    const key = try payload(fixture.batch.pool, fixture.batch.nodes[1])
+    const owner = try number(fixture.batch.pool, key, "owner")
+    const ty = try number(fixture.batch.pool, fixture.batch.nodes[result], "ty")
+    return result == 2 and len(fixture.batch.nodes) == 3 and key_kind == b"key_at" and value_kind == b"value_at" and owner == 7 and ty == 1
+
+
+public func test_items_projection_keeps_key_value_field_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const position = try list_lower.integer(mut fixture.batch, fixture.context, 2, 0)
+    const result = try dictionary_view_lower.at(mut fixture.batch, fixture.context, 7, position, shape(b"items"))
+    const data = try payload(fixture.batch.pool, fixture.batch.nodes[result])
+    const fields = try graph.items(fixture.batch.pool, data)
+    const key_index = try number(fixture.batch.pool, fields[0], "index")
+    const key = try number(fixture.batch.pool, fields[0], "value")
+    const value_index = try number(fixture.batch.pool, fields[1], "index")
+    const value = try number(fixture.batch.pool, fields[1], "value")
+    const ty = try number(fixture.batch.pool, fixture.batch.nodes[result], "ty")
+    return result == 3 and len(fixture.batch.nodes) == 4 and len(fields) == 2 and key_index == 0 and key == 1 and value_index == 1 and value == 2 and ty == 42
+
+
+public func test_snapshot_roots_mapping_and_allocates_native_local_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const wrapped = try view(mut fixture)
+    const result = try dictionary_view_lower.snapshot(mut fixture.batch, mut fixture.scope, fixture.context, dictionary_view_lower.Request(view=wrapped, shape=shape(b"keys"), loop_id=17))
+    if len(fixture.scope.locals) != 4 or len(fixture.scope.active) != 0:
+        return False
+    for local in fixture.scope.locals:
+        if not local.mutable or local.flags.initialized or not local.usage.temporary or local.usage.reads != 1:
+            return False
+    const body = try number(fixture.batch.pool, result.value.payload, "body")
+    const block = try payload(fixture.batch.pool, fixture.batch.statements[body])
+    const rows = try graph.items(fixture.batch.pool, block)
+    mut indices: int[] = []
+    for row in rows:
+        const id = try graph.number(fixture.batch.pool, row)
+        indices.append(id)
+    const value = try number(fixture.batch.pool, result.value.payload, "value")
+    const signed_lengths = try lengths_are_signed(fixture.batch)
+    return signed_lengths and result.next_loop == 18 and result.value.ty == 44 and result.value.tag == b"block_value" and fixture.scope.locals[0].ty == 40 and fixture.scope.locals[1].ty == 44 and fixture.scope.locals[2].ty == 0 and fixture.scope.locals[3].ty == 0 and indices == [1, 2, 3, 4, 7] and value == 16 and len(fixture.batch.nodes) == 17 and len(fixture.batch.statements) == 9
+
+
+public func test_snapshot_capacity_and_loop_reuse_original_cursor_read() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const wrapped = try view(mut fixture)
+    const result = try dictionary_view_lower.snapshot(mut fixture.batch, mut fixture.scope, fixture.context, dictionary_view_lower.Request(view=wrapped, shape=shape(b"keys"), loop_id=23))
+    const acquire = try payload(fixture.batch.pool, fixture.batch.nodes[10])
+    const capacity = try number(fixture.batch.pool, acquire, "capacity")
+    const condition = try payload(fixture.batch.pool, fixture.batch.nodes[12])
+    const left = try number(fixture.batch.pool, condition, "left")
+    const advance = try payload(fixture.batch.pool, fixture.batch.nodes[15])
+    const cursor = try number(fixture.batch.pool, advance, "left")
+    const loop = try payload(fixture.batch.pool, fixture.batch.statements[7])
+    const id = try number(fixture.batch.pool, loop, "id")
+    const body = try number(fixture.batch.pool, loop, "body")
+    const step = try number(fixture.batch.pool, loop, "step")
+    return result.next_loop == 24 and capacity == 9 and left == 4 and cursor == 4 and id == 23 and body == 5 and step == 6
+
+
+public func test_snapshot_values_and_items_preserve_distinct_element_nodes() -> bool fails syntax_value.Problem:
+    mut values = try fresh()
+    const values_view = try view(mut values)
+    const projected = try dictionary_view_lower.snapshot(mut values.batch, mut values.scope, values.context, dictionary_view_lower.Request(view=values_view, shape=shape(b"values"), loop_id=31))
+    mut items = try fresh()
+    const items_view = try view(mut items)
+    const pairs = try dictionary_view_lower.snapshot(mut items.batch, mut items.scope, items.context, dictionary_view_lower.Request(view=items_view, shape=shape(b"items"), loop_id=32))
+    const key = try operation_kind(values.batch, 5)
+    const value = try operation_kind(values.batch, 6)
+    const pair_type = try number(items.batch.pool, items.batch.nodes[7], "ty")
+    return projected.next_loop == 32 and pairs.next_loop == 33 and len(values.batch.nodes) == 18 and len(items.batch.nodes) == 19 and key == b"key_at" and value == b"value_at" and pair_type == 42
+
+
+func lengths_are_signed(batch: emission.Batch) -> bool fails syntax_value.Problem:
+    mut found = False
+    for row in batch.nodes:
+        const data_id = try graph.field(batch.pool, row, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(batch.pool, data_id)
+            const kind_id = try graph.field(batch.pool, operation, "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            if kind.data == b"length":
+                found = True
+                const type_id = try graph.field(batch.pool, row, "ty")
+                const ty = try graph.number(batch.pool, type_id)
+                if ty != 0:
+                    return False
+    return found

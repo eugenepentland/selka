@@ -1,0 +1,119 @@
+import syntax_value
+import graph
+
+public record Context:
+    pool: syntax_value.Pool
+    source: bytes
+    nodes: int[]
+    statements: int[]
+
+
+func row(context: Context, id: int, statement: bool) -> int fails syntax_value.Problem:
+    const rows = if statement then context.statements else context.nodes
+    if id < 0 or id >= len(rows):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid loop assignment reference")
+    return rows[id]
+
+
+func named(context: Context, span: int, name: bytes) -> bool fails syntax_value.Problem:
+    const spelling = try graph.spelling(context.pool, context.source, span)
+    return spelling == name
+
+
+func rooted(context: Context, id: int, name: bytes) -> bool fails syntax_value.Problem:
+    mut at = id
+    for depth in range(64):
+        const node = try row(context, at, False)
+        const data_id = try graph.field(context.pool, node, "data")
+        const data = try graph.get(context.pool, data_id)
+        const payload = try graph.payload(context.pool, data_id)
+        if data.data == b"name":
+            return try named(context, payload, name)
+        if data.data != b"field" and data.data != b"index":
+            return False
+        const base = try graph.field(context.pool, payload, "base")
+        at = try graph.number(context.pool, base)
+    return True
+
+
+func writes(context: Context, id: int, name: bytes) -> bool fails syntax_value.Problem:
+    const node = try row(context, id, False)
+    const data_id = try graph.field(context.pool, node, "data")
+    const data = try graph.get(context.pool, data_id)
+    const payload = try graph.payload(context.pool, data_id)
+    mut target = -1
+    if data.data == b"field_assignment" or data.data == b"index_assignment":
+        const target_id = try graph.field(context.pool, payload, "target")
+        target = try graph.number(context.pool, target_id)
+    elif data.data == b"list_operation":
+        const kind_id = try graph.field(context.pool, payload, "kind")
+        const kind = try graph.get(context.pool, kind_id)
+        if kind.data != b"write":
+            return False
+        const base = try graph.field(context.pool, payload, "base")
+        target = try graph.number(context.pool, base)
+    else:
+        return False
+    const target_row = try row(context, target, False)
+    const target_data_id = try graph.field(context.pool, target_row, "data")
+    const target_data = try graph.get(context.pool, target_data_id)
+    if target_data.data == b"tuple":
+        const parts_id = try graph.payload(context.pool, target_data_id)
+        const parts = try graph.items(context.pool, parts_id)
+        for part in parts:
+            const raw = try graph.number(context.pool, part)
+            const found = try rooted(context, raw, name)
+            if found:
+                return True
+        return False
+    return try rooted(context, target, name)
+
+
+public func assigns(context: Context, body: int, name: bytes) -> bool fails syntax_value.Problem:
+    mut work = [body]
+    mut visits = 0
+    while len(work) > 0:
+        visits += 1
+        if visits > 4194304:
+            fail syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="loop assignment analysis exceeds the admitted work budget")
+        const at = work[len(work) - 1]
+        _ = work.pop()
+        const statement = try row(context, at, True)
+        const data_id = try graph.field(context.pool, statement, "data")
+        const data = try graph.get(context.pool, data_id)
+        const payload = try graph.payload(context.pool, data_id)
+        if data.data == b"assignment" or data.data == b"binding":
+            const binding = try graph.field(context.pool, payload, "name")
+            const found = try named(context, binding, name)
+            if found:
+                return True
+        elif data.data == b"discard":
+            const expression = try graph.number(context.pool, payload)
+            const found = try writes(context, expression, name)
+            if found:
+                return True
+        if data.data == b"block":
+            const children = try graph.items(context.pool, payload)
+            for child in children:
+                const raw = try graph.number(context.pool, child)
+                work.append(raw)
+        elif data.data == b"branch":
+            const then_id = try graph.field(context.pool, payload, "then_body")
+            const then_body = try graph.number(context.pool, then_id)
+            work.append(then_body)
+            const else_id = try graph.field(context.pool, payload, "else_body")
+            const other = try graph.get(context.pool, else_id)
+            if other.kind != 0:
+                work.append(other.integer)
+        elif data.data == b"match":
+            const arms_id = try graph.field(context.pool, payload, "arms")
+            const arms = try graph.items(context.pool, arms_id)
+            for arm in arms:
+                const body_id = try graph.field(context.pool, arm, "body")
+                const child = try graph.number(context.pool, body_id)
+                work.append(child)
+        elif data.data == b"loop" or data.data == b"for_each" or data.data == b"for_range" or data.data == b"with_scope":
+            const body_id = try graph.field(context.pool, payload, "body")
+            const child = try graph.number(context.pool, body_id)
+            work.append(child)
+    return False

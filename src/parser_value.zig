@@ -29,7 +29,7 @@ pub const ValueProfile = enum {
 const max_depth = 256;
 const magic = "SLKAST01";
 const error_magic = "SLKERR01";
-const Kind = enum(u8) { null, integer, boolean, bytes, enumeration, record, list, tagged };
+const Kind = enum(u8) { null, integer, boolean, bytes, enumeration, record, list, tagged, unsigned_integer };
 const Value = struct {
     kind: Kind,
     integer: i64 = 0,
@@ -80,7 +80,12 @@ const Encoder = struct {
         if (T == std.ArrayList(ast.Statement)) return self.sequence(ast.Statement, item.items, depth);
         switch (@typeInfo(T)) {
             .void => return self.append(.{ .kind = .null }),
-            .int => return self.append(.{ .kind = .integer, .integer = std.math.cast(i64, item) orelse return error.ComponentProtocol }),
+            .int => {
+                if (std.math.cast(i64, item)) |number| return self.append(.{ .kind = .integer, .integer = number });
+                if (T != i128 or self.profile != .body) return error.ComponentProtocol;
+                const number = std.math.cast(u64, item) orelse return error.ComponentProtocol;
+                return self.append(.{ .kind = .unsigned_integer, .integer = @bitCast(number) });
+            },
             .bool => return self.append(.{ .kind = .boolean, .integer = @intFromBool(item) }),
             .@"enum" => |info| {
                 if (info.mode == .nonexhaustive) return self.append(.{ .kind = .integer, .integer = std.math.cast(i64, @backingInt(item)) orelse return error.ComponentProtocol });
@@ -189,10 +194,11 @@ const Reader = struct {
             name.* = try self.blob();
             if (name.len == 0 or name.len > 64) return error.ComponentProtocol;
         }
-        if (kind != .integer and kind != .boolean and integer_value != 0) return error.ComponentProtocol;
+        if (kind != .integer and kind != .unsigned_integer and kind != .boolean and integer_value != 0) return error.ComponentProtocol;
         if (kind != .bytes and kind != .enumeration and kind != .tagged and data.len != 0) return error.ComponentProtocol;
         if (kind != .record and names.len != 0) return error.ComponentProtocol;
         switch (kind) {
+            .unsigned_integer => if (self.profile != .body or integer_value >= 0 or count != 0) return error.ComponentProtocol,
             .null, .integer, .bytes, .enumeration => if (count != 0) return error.ComponentProtocol,
             .boolean => if (count != 0 or (integer_value != 0 and integer_value != 1)) return error.ComponentProtocol,
             .tagged => if (count != 1 or data.len == 0) return error.ComponentProtocol,
@@ -241,6 +247,7 @@ const Decoder = struct {
                 return {};
             },
             .int => {
+                if (T == i128 and item.kind == .unsigned_integer) return @as(u64, @bitCast(item.integer));
                 if (item.kind != .integer) return error.ComponentProtocol;
                 return std.math.cast(T, item.integer) orelse error.ComponentProtocol;
             },

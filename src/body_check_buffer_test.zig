@@ -342,13 +342,13 @@ fn corruptUnsigned(a: std.mem.Allocator, f: GraphFixture, mixed: bool) !void {
     return error.MissingOperation;
 }
 
-// spec-case: SELFHOST-BODY-BUFFERS-1
-test "body pure closure rejects foreign unsigned capacity arithmetic" {
+// spec-case: SELFHOST-BODY-NUMERIC-1
+test "body pure closure accepts unsigned multiplication and rejects mixed capacity arithmetic" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
     const f = try graphFixture(a, "func value(items: int[]) -> int:\n    return len([for x in range(-2, 3) yield x])\n");
-    try std.testing.expectError(error.ComponentProtocol, corruptUnsigned(a, f, false));
+    try corruptUnsigned(a, f, false);
     try std.testing.expectError(error.ComponentProtocol, corruptUnsigned(a, f, true));
 }
 

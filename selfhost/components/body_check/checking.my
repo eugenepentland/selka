@@ -11,6 +11,7 @@ import list_types
 import record_types
 import variants
 import buffer_types
+import floating_types
 
 func ascii(text: str) -> bytes fails syntax_value.Problem:
     const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -90,6 +91,8 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const suffixes = try graph.items(pool, suffixes_id)
     const retained_id = try graph.field(pool, catalog, "records")
     const retained = try graph.items(pool, retained_id)
+    const floating = try floating_types.identity(pool, retained)
+    state.batch.facts.float_type = floating
     const raw_records_id = try graph.field(pool, type_tables, "records")
     const raw_records = try graph.items(pool, raw_records_id)
     mut records = record_types.empty()
@@ -130,13 +133,15 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const buffer_basis = try buffer_types.prepare(pool, catalog)
     const managed_types = [string_type, bytes_type, buffer_basis.id]
     mut lists = try list_types.prepare_records(pool, catalog, suffixes, managed_types, records)
-    match record_types.closure(mut records, pool, lists.elements, managed_types):
+    records = lists.types.records
+    match record_types.closure(mut records, pool, lists.elements, managed_types, floating):
         case Ok(admitted):
             _ = admitted
         case Err(problem):
             if problem.code == "P_BODY_PROFILE":
                 return try profile(problem)
             fail problem
+    lists.types.records = records
     lists.types.variants = variant_catalog
     _ = try list_types.seed_variants(mut lists, pool)
     state.batch.facts.lists = lists

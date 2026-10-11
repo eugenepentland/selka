@@ -1,0 +1,220 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import list_iteration
+import dictionary_view_lower
+import dictionary_iteration
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    input: syntax_value.Pool
+    request: dictionary_iteration.Input
+    nodes: int[]
+    statements: int[]
+
+
+func raw(mut input: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut input, tag, payload)
+    return try syntax_value.object(mut input, ["span", "data"], [span, data])
+
+
+func fresh(kind: bytes, effect: int) -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const root_span = try syntax_value.span(mut input, 0, 2)
+    const name = try syntax_value.span(mut input, 3, 7)
+    const span = try syntax_value.span(mut input, 0, 12)
+    const root = try raw(mut input, root_span, b"name", root_span)
+    mut nodes = [root]
+    const zero = try syntax_value.integer(mut input, 0)
+    mut payload = try syntax_value.sequence(mut input, [])
+    mut tag = b"block"
+    if effect == 1:
+        const argument = try raw(mut input, span, b"mut_argument", zero)
+        nodes.append(argument)
+        payload = try syntax_value.integer(mut input, 1)
+        tag = b"discard"
+    elif effect == 2:
+        const op = try syntax_value.enumeration(mut input, b"set")
+        payload = try syntax_value.object(mut input, ["name", "value", "op"], [root_span, zero, op])
+        tag = b"assignment"
+    const statement = try raw(mut input, span, tag, payload)
+    mut scope = locals.empty()
+    const slot = try locals.add(mut scope, b"xs", root_span, 40, True, b"local")
+    scope.locals[slot].usage.reads = 1
+    mut batch = emission.empty()
+    const context = list_lower.Context(input=input, span=span)
+    mut source = try list_lower.read(mut batch, context, slot, 40)
+    const shape = dictionary_view_lower.Shape(mapping=40, key=0, value=1, item=42, list=-1, kind=kind)
+    mut element = 0
+    if kind == b"values":
+        element = 1
+    elif kind == b"items":
+        element = 42
+    if kind != b"dict" and kind != b"set":
+        const view = try dictionary_view_lower.construct(mut batch, context, 41, source)
+        source = try list_lower.append(mut batch, context, view)
+    const iteration = list_iteration.Input(source=b"xs item pos ", name=name, span=span, iterable=source, owner_type=40, element=element, loop_id=9)
+    const request = dictionary_iteration.Input(iteration=iteration, shape=shape, kind=kind, second_name=-1, position=dictionary_iteration.Position(enumerated=False, rebound=False))
+    return Fixture(batch=batch, scope=scope, input=input, request=request, nodes=nodes, statements=[statement])
+
+
+func lower(mut fixture: Fixture) -> dictionary_iteration.Plan fails syntax_value.Problem:
+    const plan = try dictionary_iteration.prepare(mut fixture.batch, mut fixture.scope, fixture.input, fixture.request)
+    const children = try emission.ids(mut fixture.batch, [])
+    const body = try emission.statement(mut fixture.batch, fixture.input, fixture.request.iteration.span, False, b"block", children)
+    const finish = list_iteration.Finish(raw_statements=fixture.statements, raw_nodes=fixture.nodes, body_raw=0, body=body)
+    const result = try dictionary_iteration.finish(mut fixture.batch, mut fixture.scope, fixture.input, plan, finish)
+    const rows = try graph.items(fixture.batch.pool, result.payload)
+    assert len(rows) == 4
+    return plan
+
+
+func operation_names(batch: emission.Batch) -> bytes[] fails syntax_value.Problem:
+    mut result: bytes[] = []
+    for node in batch.nodes:
+        const data_id = try graph.field(batch.pool, node, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const kind_id = try graph.field(batch.pool, data.children[0], "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            result.append(kind.data)
+    return result
+
+
+public func test_dictionary_walk_hidden_local_order_and_key_read() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"dict", 0)
+    const plan = try lower(mut fixture)
+    const kinds = try operation_names(fixture.batch)
+    const binding = fixture.scope.locals[4]
+    const signed_lengths = try lengths_are_signed(fixture.batch)
+    return signed_lengths and plan.walk.owner == 1 and plan.walk.index == 2 and plan.walk.limit == 3 and plan.walk.binding == 4 and len(fixture.scope.locals) == 5 and kinds == [b"iteration_check", b"key_at", b"length"] and binding.name == b"item" and binding.origin == b"iteration" and not binding.mutable and binding.flags.initialized and binding.usage.temporary and len(fixture.batch.nodes) == 12 and len(fixture.batch.statements) == 12
+
+
+public func test_set_walk_uses_dictionary_keys_not_list_read() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"set", 0)
+    const plan = try lower(mut fixture)
+    const kinds = try operation_names(fixture.batch)
+    return kinds == [b"iteration_check", b"key_at", b"length"] and plan.walk.request.element == 0
+
+
+public func test_values_walk_retains_key_before_value_projection() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"values", 0)
+    const plan = try lower(mut fixture)
+    const kinds = try operation_names(fixture.batch)
+    return kinds == [b"iteration_check", b"key_at", b"value_at", b"length"] and fixture.scope.locals[plan.walk.binding].ty == 1 and len(fixture.scope.locals) == 5
+
+
+public func test_items_unpack_reserves_pair_after_body_and_binds_source_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"items", 0)
+    const second = try syntax_value.span(mut fixture.input, 8, 11)
+    fixture.request.second_name = second
+    const plan = try lower(mut fixture)
+    const kinds = try operation_names(fixture.batch)
+    return plan.unpack and plan.walk.binding == 4 and plan.second == 5 and len(fixture.scope.locals) == 7 and fixture.scope.locals[4].name == b"pos" and fixture.scope.locals[4].ty == 0 and fixture.scope.locals[5].name == b"item" and fixture.scope.locals[5].ty == 1 and fixture.scope.locals[6].ty == 42 and fixture.scope.locals[6].usage.temporary and kinds == [b"iteration_check", b"key_at", b"value_at", b"length"]
+
+
+public func test_enumerate_unassigned_position_reuses_immutable_counter() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"dict", 0)
+    const second = try syntax_value.span(mut fixture.input, 8, 11)
+    fixture.request.second_name = second
+    fixture.request.position = dictionary_iteration.Position(enumerated=True, rebound=False)
+    const plan = try lower(mut fixture)
+    return not plan.unpack and plan.second == 2 and len(fixture.scope.locals) == 5 and fixture.scope.locals[2].name == b"pos" and not fixture.scope.locals[2].mutable and fixture.scope.locals[2].origin == b"iteration" and fixture.scope.active == [0, 4, 2]
+
+
+public func test_enumerate_rebound_position_has_separate_local_and_initialize() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"dict", 0)
+    const second = try syntax_value.span(mut fixture.input, 8, 11)
+    fixture.request.second_name = second
+    fixture.request.position = dictionary_iteration.Position(enumerated=True, rebound=True)
+    const plan = try lower(mut fixture)
+    return plan.rebound and plan.second == 5 and len(fixture.scope.locals) == 6 and fixture.scope.locals[2].name == b"<collection>" and fixture.scope.locals[5].name == b"pos" and len(fixture.batch.statements) == 13
+
+
+public func test_live_view_mutation_refreshes_underlying_mapping_root() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"values", 1)
+    const plan = try lower(mut fixture)
+    const kinds = try operation_names(fixture.batch)
+    return kinds == [b"iteration_check", b"key_at", b"value_at", b"length"] and fixture.scope.locals[0].usage.reads == 2 and len(fixture.scope.locals) == 5 and plan.walk.request.iterable > fixture.request.iteration.iterable
+
+
+public func test_live_view_rebinding_takes_entry_snapshot() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"keys", 2)
+    const plan = try lower(mut fixture)
+    const kinds = try operation_names(fixture.batch)
+    return kinds == [b"copy", b"iteration_check", b"key_at", b"length"] and len(fixture.scope.locals) == 6 and fixture.scope.locals[0].usage.reads == 1 and plan.walk.before_active == [0]
+
+
+public func test_double_discard_unpack_keeps_second_slot_hidden() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"items", 0)
+    fixture.request.iteration.source = b"xs _    _   "
+    const first = try syntax_value.span(mut fixture.input, 3, 4)
+    const second = try syntax_value.span(mut fixture.input, 8, 9)
+    fixture.request.iteration.name = first
+    fixture.request.second_name = second
+    const plan = try lower(mut fixture)
+    return plan.unpack and fixture.scope.active == [0, 4] and fixture.scope.locals[4].name == b"_" and fixture.scope.locals[5].name == b"<collection>" and not fixture.scope.locals[4].mutable and fixture.scope.locals[5].mutable
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, name)
+    return try graph.number(pool, value)
+
+
+public func test_body_and_step_share_one_guard_with_orphan_owner_setup() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"dict", 0)
+    const plan = try lower(mut fixture)
+    const loop = fixture.batch.statements[-1]
+    const loop_tag = try graph.field(fixture.batch.pool, loop, "data")
+    const loop_data = try graph.payload(fixture.batch.pool, loop_tag)
+    const body = try number(fixture.batch.pool, loop_data, "body")
+    const step = try number(fixture.batch.pool, loop_data, "step")
+    const body_tag = try graph.field(fixture.batch.pool, fixture.batch.statements[body], "data")
+    const step_tag = try graph.field(fixture.batch.pool, fixture.batch.statements[step], "data")
+    const body_payload = try graph.payload(fixture.batch.pool, body_tag)
+    const step_payload = try graph.payload(fixture.batch.pool, step_tag)
+    const body_rows = try graph.items(fixture.batch.pool, body_payload)
+    const step_rows = try graph.items(fixture.batch.pool, step_payload)
+    const guard_body = try graph.number(fixture.batch.pool, body_rows[0])
+    const guard_step = try graph.number(fixture.batch.pool, step_rows[0])
+    const orphan_tag = try graph.field(fixture.batch.pool, fixture.batch.statements[8], "data")
+    const orphan = try graph.payload(fixture.batch.pool, orphan_tag)
+    const owner = try number(fixture.batch.pool, orphan, "slot")
+    const value = try number(fixture.batch.pool, orphan, "value")
+    return len(body_rows) == 3 and len(step_rows) == 2 and guard_body == guard_step and guard_body == 3 and owner == plan.walk.owner and value == plan.walk.request.iterable
+
+
+func lengths_are_signed(batch: emission.Batch) -> bool fails syntax_value.Problem:
+    mut found = False
+    for row in batch.nodes:
+        const data_id = try graph.field(batch.pool, row, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(batch.pool, data_id)
+            const kind_id = try graph.field(batch.pool, operation, "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            if kind.data == b"length":
+                found = True
+                const type_id = try graph.field(batch.pool, row, "ty")
+                const ty = try graph.number(batch.pool, type_id)
+                if ty != 0:
+                    return False
+    return found
+
+
+public func test_mutated_mapping_and_set_refresh_with_unconditional_iteration_guard() -> bool fails syntax_value.Problem:
+    for kind in [b"dict", b"set"]:
+        mut fixture = try fresh(kind, 1)
+        _ = try lower(mut fixture)
+        const operations = try operation_names(fixture.batch)
+        if operations != [b"iteration_check", b"key_at", b"length"] or fixture.scope.locals[0].usage.reads != 2:
+            return False
+        for statement in fixture.batch.statements:
+            const data_id = try graph.field(fixture.batch.pool, statement, "data")
+            const data = try graph.get(fixture.batch.pool, data_id)
+            if data.data == b"branch":
+                return False
+    return True

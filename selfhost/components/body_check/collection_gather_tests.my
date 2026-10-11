@@ -1,0 +1,167 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import dictionary_view_lower
+import collection_gather
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+    request: collection_gather.Input
+
+
+func number(pool: syntax_value.Pool, object: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, object, name)
+    return try graph.number(pool, field)
+
+
+func data(batch: emission.Batch, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const value = try graph.field(batch.pool, row, "data")
+    return try graph.get(batch.pool, value)
+
+
+func fresh(kind: bytes) -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 0, 6)
+    const context = list_lower.Context(input=input, span=span)
+    mut batch = emission.empty()
+    mut scope = locals.empty()
+    const slot = try locals.add(mut scope, b"source", span, 40, True, b"parameter")
+    mut iterable = try list_lower.read(mut batch, context, slot, 40)
+    mut element = 0
+    if kind == b"text":
+        element = 40
+    elif kind == b"values":
+        element = 1
+    elif kind == b"items":
+        element = 42
+    if kind == b"keys" or kind == b"values" or kind == b"items":
+        const view = try dictionary_view_lower.construct(mut batch, context, 41, iterable)
+        const value = try list_lower.append(mut batch, context, view)
+        iterable = value
+    const shape = dictionary_view_lower.Shape(mapping=40, key=0, value=1, item=42, list=-1, kind=kind)
+    const request = collection_gather.Input(iterable=iterable, owner_type=40, element=element, output_type=50, projection=shape, kind=kind, loop_id=17)
+    return Fixture(batch=batch, scope=scope, context=context, request=request)
+
+
+func operations(batch: emission.Batch) -> bytes[] fails syntax_value.Problem:
+    mut result: bytes[] = []
+    for node in batch.nodes:
+        const value = try data(batch, node)
+        if value.data == b"buffer_operation":
+            const kind_id = try graph.field(batch.pool, value.children[0], "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            result.append(kind.data)
+    return result
+
+
+public func test_gather_hidden_local_order_preserves_source_binding() -> bool fails syntax_value.Problem:
+    for kind in [b"list", b"text", b"bytes", b"dict", b"set", b"keys", b"values", b"items"]:
+        mut fixture = try fresh(kind)
+        const active = fixture.scope.active
+        const result = try collection_gather.set_from(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+        if result.value.ty != 50 or result.value.tag != b"block_value" or result.next_loop != 18 or fixture.scope.active != active or len(fixture.scope.locals) != 6:
+            return False
+        const expected = [40, 0, 0, fixture.request.element, 50]
+        for index in range(5):
+            const local = fixture.scope.locals[index + 1]
+            if local.ty != expected[index] or not local.usage.temporary or local.origin != b"local" or not local.mutable or local.usage.reads != 1:
+                return False
+    return True
+
+
+public func test_gather_uses_native_collection_specific_length_types() -> bool fails syntax_value.Problem:
+    for kind in [b"list", b"text", b"bytes", b"dict", b"set", b"keys", b"values", b"items"]:
+        mut fixture = try fresh(kind)
+        _ = try collection_gather.set_from(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+        mut found = 0
+        for node in fixture.batch.nodes:
+            const value = try data(fixture.batch, node)
+            if value.data == b"buffer_operation":
+                const method_id = try graph.field(fixture.batch.pool, value.children[0], "kind")
+                const method = try graph.get(fixture.batch.pool, method_id)
+                if method.data == b"length":
+                    mut expected = 0
+                    if kind == b"list":
+                        expected = 8
+                    const ty = try number(fixture.batch.pool, node, "ty")
+                    if ty != expected:
+                        return False
+                    found = found + 1
+        if found != 1:
+            return False
+    return True
+
+
+public func test_gather_mapping_projection_keeps_native_operation_order() -> bool fails syntax_value.Problem:
+    for kind in [b"dict", b"set", b"keys", b"values", b"items"]:
+        mut fixture = try fresh(kind)
+        _ = try collection_gather.set_from(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+        mut expected = [b"write", b"key_at", b"iteration_check", b"length"]
+        if kind == b"values" or kind == b"items":
+            expected = [b"write", b"key_at", b"value_at", b"iteration_check", b"length"]
+        const actual = try operations(fixture.batch)
+        if actual != expected:
+            return False
+    return True
+
+
+public func test_gather_bytes_widens_octets_before_element_binding() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"bytes")
+    _ = try collection_gather.set_from(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+    const read = try data(fixture.batch, fixture.batch.nodes[5])
+    const read_type = try number(fixture.batch.pool, fixture.batch.nodes[5], "ty")
+    const widened = try data(fixture.batch, fixture.batch.nodes[6])
+    const widened_type = try number(fixture.batch.pool, fixture.batch.nodes[6], "ty")
+    const source = try graph.number(fixture.batch.pool, widened.children[0])
+    return read.data == b"buffer_operation" and read_type == 5 and widened.data == b"cast" and widened_type == 0 and source == 5
+
+
+public func test_gather_shares_guard_and_roots_source_once() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"dict")
+    const result = try collection_gather.set_from(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+    const block = try number(fixture.batch.pool, result.value.payload, "body")
+    const outer = try data(fixture.batch, fixture.batch.statements[block])
+    const statements = try graph.items(fixture.batch.pool, outer.children[0])
+    if len(statements) != 5:
+        return False
+    const first_id = try graph.number(fixture.batch.pool, statements[0])
+    const first = try data(fixture.batch, fixture.batch.statements[first_id])
+    const source = try number(fixture.batch.pool, first.children[0], "value")
+    const owner = try number(fixture.batch.pool, first.children[0], "slot")
+    const loop_id = try graph.number(fixture.batch.pool, statements[4])
+    const loop = try data(fixture.batch, fixture.batch.statements[loop_id])
+    const body_id = try number(fixture.batch.pool, loop.children[0], "body")
+    const step_id = try number(fixture.batch.pool, loop.children[0], "step")
+    const body = try data(fixture.batch, fixture.batch.statements[body_id])
+    const step = try data(fixture.batch, fixture.batch.statements[step_id])
+    const body_rows = try graph.items(fixture.batch.pool, body.children[0])
+    const step_rows = try graph.items(fixture.batch.pool, step.children[0])
+    const body_guard = try graph.number(fixture.batch.pool, body_rows[0])
+    const step_guard = try graph.number(fixture.batch.pool, step_rows[0])
+    return first.data == b"initialize" and source == fixture.request.iterable and owner == 1 and loop.data == b"loop" and len(body_rows) == 3 and len(step_rows) == 2 and body_guard == step_guard
+
+
+public func test_gather_keeps_unused_capacity_and_fresh_set_allocation() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"dict")
+    const before = len(fixture.batch.nodes)
+    _ = try collection_gather.set_from(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+    const capacity = try data(fixture.batch, fixture.batch.nodes[before + 9])
+    const capacity_value = try graph.number(fixture.batch.pool, capacity.children[0])
+    const allocation = try data(fixture.batch, fixture.batch.nodes[before + 10])
+    const entries = try graph.items(fixture.batch.pool, allocation.children[0])
+    return capacity.data == b"integer" and capacity_value == 0 and allocation.data == b"array" and len(entries) == 0
+
+
+public func test_gather_rejects_unrecognized_source_before_emission() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"unknown")
+    const nodes = len(fixture.batch.nodes)
+    const slots = len(fixture.scope.locals)
+    match collection_gather.set_from(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and problem.message == "invalid set gather source kind" and len(fixture.batch.nodes) == nodes and len(fixture.scope.locals) == slots

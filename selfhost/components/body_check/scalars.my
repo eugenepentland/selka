@@ -5,6 +5,8 @@ public func name(ty: int) -> str:
         return "int"
     if ty == 1:
         return "bool"
+    if ty >= 2 and ty <= 8:
+        return ["i8", "i16", "i32", "u8", "u16", "u32", "u64"][ty - 2]
     if ty == 11:
         return "Filesystem"
     if ty == 16:
@@ -25,6 +27,10 @@ public func require(actual: int, expected: int, start: int, end: int) -> bool fa
 public func annotation(text: bytes, start: int, end: int) -> int fails syntax_value.Problem:
     if text == b"int" or text == b"i64":
         return 0
+    const widths = [b"i8", b"i16", b"i32", b"u8", b"u16", b"u32", b"u64"]
+    for index in range(len(widths)):
+        if text == widths[index]:
+            return index + 2
     if text == b"bool":
         return 1
     if text == b"Unit" or len(text) == 0:
@@ -82,3 +88,25 @@ public func integer(text: bytes, negative: bool, start: int, end: int) -> int fa
     if result == -9223372036854775807 - 1:
         fail syntax_value.Problem(code="E_INTEGER_RANGE", start=start, end=end, message="integer literal does not fit its type; signed minimum magnitudes must be directly negated")
     return -result
+
+
+public func is_integer(ty: int) -> bool:
+    return ty == 0 or (ty >= 2 and ty <= 8)
+
+
+public func fits(value: int, ty: int) -> bool:
+    if ty == 0:
+        return True
+    if ty == 2:
+        return value >= -128 and value <= 127
+    if ty == 3:
+        return value >= -32768 and value <= 32767
+    if ty == 4:
+        return value >= -2147483648 and value <= 2147483647
+    if ty == 5:
+        return value >= 0 and value <= 255
+    if ty == 6:
+        return value >= 0 and value <= 65535
+    if ty == 7:
+        return value >= 0 and value <= 4294967295
+    return ty == 8 and value >= 0

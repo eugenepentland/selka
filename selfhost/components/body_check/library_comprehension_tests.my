@@ -119,3 +119,37 @@ public func test_dynamic_count_does_not_hint_comprehension_as_integer() -> bool 
         if result.ty != 19 or state.batch.facts.expected[comprehension] != -1 or len(state.batch.facts.lists.recipes) != 1:
             return False
     return True
+
+
+public func test_range_set_comprehension_keeps_empty_storage_and_unit_writes() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, True)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    const row = state.syntax.nodes[len(state.syntax.nodes) - 1]
+    const data = try graph.field(state.syntax.pool, row, "data")
+    const payload = try graph.payload(state.syntax.pool, data)
+    const selected = try graph.field(state.syntax.pool, payload, "set")
+    state.syntax.pool.values[selected].integer = 1
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    if result.ty != 19 or len(state.scope.locals) != 3 or len(state.scope.active) != 0 or state.batch.facts.lists.recipes[0].kind != "set":
+        return False
+    mut write = False
+    mut empty = False
+    for node in state.batch.nodes:
+        const data_id = try graph.field(state.batch.pool, node, "data")
+        const value = try graph.get(state.batch.pool, data_id)
+        if value.data == b"acquire_buffer":
+            return False
+        elif value.data == b"array":
+            const entries = try graph.items(state.batch.pool, value.children[0])
+            empty = len(entries) == 0
+        elif value.data == b"buffer_operation":
+            const kind_id = try graph.field(state.batch.pool, value.children[0], "kind")
+            const kind = try graph.get(state.batch.pool, kind_id)
+            if kind.data == b"write":
+                const arguments_id = try graph.field(state.batch.pool, value.children[0], "arguments")
+                const arguments = try graph.items(state.batch.pool, arguments_id)
+                const unit_id = try graph.number(state.batch.pool, arguments[1])
+                const unit_data_id = try graph.field(state.batch.pool, state.batch.nodes[unit_id], "data")
+                const unit = try graph.get(state.batch.pool, unit_data_id)
+                write = unit.data == b"unit"
+    return write and empty

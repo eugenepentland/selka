@@ -34,7 +34,9 @@ const Budget = struct {
         switch (@typeInfo(T)) {
             .void, .bool => try self.row(0, 0, &.{}),
             .int => {
-                _ = std.math.cast(i64, item) orelse return error.ComponentProtocol;
+                if (std.math.cast(i64, item) == null) {
+                    if (T != i128 or std.math.cast(u64, item) == null) return error.ComponentProtocol;
+                }
                 try self.row(0, 0, &.{});
             },
             .@"enum" => |info| {

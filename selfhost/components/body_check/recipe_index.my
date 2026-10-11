@@ -55,7 +55,7 @@ func grow(mut index: Index) -> bool:
 
 
 public func insert(mut index: Index, key: Key) -> bool fails syntax_value.Problem:
-    if key.kind < 0 or key.kind > 2 or key.first < 0 or key.first >= 65555 or key.second < -1 or key.second >= 65555 or key.id < 19 or key.id >= 65555:
+    if key.kind < 0 or key.kind > 8 or key.first < 0 or key.first >= 65555 or key.second < -1 or key.second >= 65555 or key.id < 19 or key.id >= 65555:
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid catalog recipe key")
     const previous = lookup(index, key.kind, key.first, key.second)
     if previous >= 0:

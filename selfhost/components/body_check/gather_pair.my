@@ -1,0 +1,35 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+
+public record Input:
+    value: int
+    ty: int
+    key_type: int
+    value_type: int
+
+
+public record Pair:
+    key: int
+    value: int
+    initialize: int
+
+
+func field(mut batch: emission.Batch, context: list_lower.Context, owner: int, owner_type: int, index: int, ty: int) -> int fails syntax_value.Problem:
+    const read = try list_lower.read(mut batch, context, owner, owner_type)
+    const base = try syntax_value.integer(mut batch.pool, read)
+    const position = try syntax_value.integer(mut batch.pool, index)
+    const payload = try syntax_value.object(mut batch.pool, ["base", "index"], [base, position])
+    return try emission.node(mut batch, context.input, context.span, ty, b"field", payload)
+
+
+# The checker validates a true two-field tuple before calling this helper.
+# Snapshot it before allocating the gather accumulator, then prepend initialize
+# to the dictionary step's statements so an effectful pair is evaluated once.
+public func project(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Input) -> Pair fails syntax_value.Problem:
+    const slot = try list_lower.temporary(mut scope, context, request.ty)
+    const initialize = try list_lower.store(mut batch, context, slot, request.value, True)
+    const key = try field(mut batch, context, slot, request.ty, 0, request.key_type)
+    const value = try field(mut batch, context, slot, request.ty, 1, request.value_type)
+    return Pair(key=key, value=value, initialize=initialize)

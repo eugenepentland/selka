@@ -1,0 +1,168 @@
+import syntax_value
+import graph
+import engine
+import collection_types
+import list_types
+import locals
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh() -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const yes = try syntax_value.boolean(mut pool, True)
+    const no = try syntax_value.boolean(mut pool, False)
+    const first = try syntax_value.span(mut pool, 0, 4)
+    const second = try syntax_value.span(mut pool, 4, 5)
+    const third = try syntax_value.span(mut pool, 5, 10)
+    const fourth = try syntax_value.span(mut pool, 10, 11)
+    const span = try syntax_value.span(mut pool, 0, 11)
+    const a = try node(mut pool, first, b"boolean", yes)
+    const b = try node(mut pool, second, b"integer", second)
+    const c = try node(mut pool, third, b"boolean", no)
+    const d = try node(mut pool, fourth, b"integer", fourth)
+    mut indices: int[] = []
+    for index in range(4):
+        const id = try syntax_value.integer(mut pool, index)
+        indices.append(id)
+    const entries = try syntax_value.sequence(mut pool, indices)
+    const literal = try node(mut pool, span, b"dictionary_literal", entries)
+    const nodes = try syntax_value.sequence(mut pool, [a, b, c, d, literal])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    mut state = try engine.make(pool, b"True7False8", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    for _ in range(19):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+func call(mut state: engine.State, method: bytes, arguments: int[], writable: bool) -> int fails syntax_value.Problem:
+    const dictionary = try engine.expression(mut state, 4)
+    state.syntax.source = b"d." + method
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const name = try syntax_value.span(mut state.syntax.pool, 2, len(state.syntax.source))
+    const span = try syntax_value.span(mut state.syntax.pool, 0, len(state.syntax.source))
+    const slot = try locals.add(mut state.scope, b"d", owner, dictionary.ty, writable, b"local")
+    mut inputs: int[] = []
+    for argument in arguments:
+        const value = try syntax_value.integer(mut state.syntax.pool, argument)
+        inputs.append(value)
+    const values = try syntax_value.sequence(mut state.syntax.pool, inputs)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, owner, values, empty, empty])
+    const raw = try node(mut state.syntax.pool, span, b"call", payload)
+    state.syntax.nodes.append(raw)
+    return slot
+
+
+func walk(mut state: engine.State, iterable: int, name: int, second: int, enumerated: bool = False) -> engine.Statement fails syntax_value.Problem:
+    const span = try syntax_value.span(mut state.syntax.pool, 0, len(state.syntax.source))
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const block_data = try syntax_value.tagged(mut state.syntax.pool, b"block", empty)
+    const body = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, block_data])
+    state.syntax.statements.append(body)
+    const body_id = try syntax_value.integer(mut state.syntax.pool, len(state.syntax.statements) - 1)
+    const source_id = try syntax_value.integer(mut state.syntax.pool, iterable)
+    const no = try syntax_value.boolean(mut state.syntax.pool, enumerated)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const second_value = if second < 0 then absent else second
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "index_name", "enumerated", "iterable", "body"], [name, second_value, no, source_id, body_id])
+    const data = try syntax_value.tagged(mut state.syntax.pool, b"for_each", payload)
+    const statement = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, data])
+    state.syntax.statements.append(statement)
+    return try engine.statement(mut state, len(state.syntax.statements) - 1)
+
+
+public func test_dictionary_iteration_projects_keys_and_restores_visibility() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const key = try syntax_value.span(mut state.syntax.pool, 0, 4)
+    const result = try walk(mut state, 4, key, -1)
+    const row = try graph.field(state.batch.pool, state.batch.statements[result.id], "data")
+    const data = try graph.get(state.batch.pool, row)
+    return (not result.terminates) and (len(state.scope.active) == 0) and (len(state.scope.locals) == 4) and (state.scope.locals[3].ty == 1) and (state.scope.locals[3].origin == b"iteration") and (state.control.next == 1) and (data.data == b"block")
+
+
+public func test_items_iteration_unpacks_key_and_value_with_one_item_recipe() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try call(mut state, b"items", [], True)
+    const iterable = len(state.syntax.nodes) - 1
+    state.syntax.source = b"d.items kv"
+    const key = try syntax_value.span(mut state.syntax.pool, 8, 9)
+    const value = try syntax_value.span(mut state.syntax.pool, 9, 10)
+    const result = try walk(mut state, iterable, value, key)
+    return (not result.terminates) and (len(state.scope.active) == 1) and (len(state.scope.locals) == 7) and (state.scope.locals[4].ty == 1) and (state.scope.locals[5].ty == 0) and (state.scope.locals[4].name == b"k") and (state.scope.locals[5].name == b"v") and (len(state.batch.facts.lists.recipes) == 3) and (state.batch.facts.lists.recipes[2].kind == "dict_item")
+
+
+public func test_enumerated_dictionary_reuses_position_counter_and_restores_scope() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 4)
+    const position = try syntax_value.span(mut state.syntax.pool, 4, 5)
+    const result = try walk(mut state, 4, name, position, True)
+    return not result.terminates and len(state.scope.locals) == 4 and len(state.scope.active) == 0 and state.scope.locals[1].name == b"7" and state.scope.locals[1].ty == 0 and state.scope.locals[1].origin == b"iteration" and not state.scope.locals[1].mutable and state.scope.locals[3].ty == 1
+
+
+func comprehension(mut state: engine.State, iterable: int, set: bool) -> engine.Expression fails syntax_value.Problem:
+    state.batch.facts.lists.available = True
+    const start = len(state.syntax.source)
+    state.syntax.source = state.syntax.source + b"k"
+    const name = try syntax_value.span(mut state.syntax.pool, start, start + 1)
+    const span = try syntax_value.span(mut state.syntax.pool, 0, start + 1)
+    const output = try node(mut state.syntax.pool, name, b"name", name)
+    const output_id = try syntax_value.integer(mut state.syntax.pool, len(state.syntax.nodes))
+    state.syntax.nodes.append(output)
+    const iterable_id = try syntax_value.integer(mut state.syntax.pool, iterable)
+    const source = try syntax_value.tagged(mut state.syntax.pool, b"iterable", iterable_id)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const selected = try syntax_value.boolean(mut state.syntax.pool, set)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["output", "name", "source", "filter", "set"], [output_id, name, source, absent, selected])
+    const raw = try node(mut state.syntax.pool, span, b"comprehension", payload)
+    state.syntax.nodes.append(raw)
+    return try engine.expression(mut state, len(state.syntax.nodes) - 1)
+
+
+public func test_dictionary_key_comprehensions_keep_signed_length_and_set_storage() -> bool fails syntax_value.Problem:
+    for set in [False, True]:
+        mut state = try fresh()
+        const result = try comprehension(mut state, 4, set)
+        const mapping = collection_types.schema(state.batch.facts.lists.types.collections, result.ty)
+        if set:
+            if mapping.kind != 1 or mapping.key != 1 or mapping.value != 15:
+                return False
+        elif list_types.element_type(state.batch.facts.lists, result.ty) != 1:
+            return False
+        mut read = False
+        mut write = False
+        for row in state.batch.nodes:
+            const data_id = try graph.field(state.batch.pool, row, "data")
+            const data = try graph.get(state.batch.pool, data_id)
+            if data.data == b"buffer_operation":
+                const kind_id = try graph.field(state.batch.pool, data.children[0], "kind")
+                const kind = try graph.get(state.batch.pool, kind_id)
+                if kind.data == b"key_at":
+                    read = True
+                elif kind.data == b"write":
+                    write = True
+                elif kind.data == b"length":
+                    const ty_id = try graph.field(state.batch.pool, row, "ty")
+                    const ty = try graph.number(state.batch.pool, ty_id)
+                    if ty != 0:
+                        return False
+        if not read or write != set or len(state.scope.active) != 0 or state.control.next != 1:
+            return False
+    return True
+
+
+public func test_values_view_comprehension_projects_mapping_before_local_allocation() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try call(mut state, b"values", [], False)
+    const result = try comprehension(mut state, len(state.syntax.nodes) - 1, False)
+    if list_types.element_type(state.batch.facts.lists, result.ty) != 0 or len(state.scope.active) != 1:
+        return False
+    const mapping = collection_types.schema(state.batch.facts.lists.types.collections, state.scope.locals[1].ty)
+    return mapping.kind == 0 and state.scope.locals[4].ty == 0 and state.scope.locals[4].name == b"k" and not state.scope.locals[4].mutable

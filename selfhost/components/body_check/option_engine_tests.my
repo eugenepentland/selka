@@ -1,0 +1,129 @@
+import syntax_value
+import graph
+import engine
+import variants
+import locals
+import recipe_index
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh() -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 1)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const empty = try syntax_value.sequence(mut pool, [])
+    const nil = try syntax_value.absent(mut pool)
+    const local = try node(mut pool, span, b"name", span)
+    const op = try syntax_value.enumeration(mut pool, b"is_none")
+    const unary = try syntax_value.object(mut pool, ["op", "operand", "op_span"], [op, zero, span])
+    const guard = try node(mut pool, span, b"unary", unary)
+    const unit = try node(mut pool, span, b"unit", nil)
+    const another = try node(mut pool, span, b"name", span)
+    const nodes = try syntax_value.sequence(mut pool, [local, guard, unit, another])
+    const two = try syntax_value.integer(mut pool, 2)
+    const ret = try node(mut pool, span, b"ret", two)
+    const one = try syntax_value.integer(mut pool, 1)
+    const branch = try syntax_value.object(mut pool, ["condition", "then_body", "else_body"], [one, zero, nil])
+    const branch_statement = try node(mut pool, span, b"branch", branch)
+    const statements = try syntax_value.sequence(mut pool, [ret, branch_statement])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, statements, empty, types])
+    const declaration = try syntax_value.span(mut pool, 0, 0)
+    const template = variants.Template(id=0, declaration=declaration, raw=-1, cases=[variants.TemplateCase(name=b"none", declaration=declaration, parameter=-1), variants.TemplateCase(name=b"some", declaration=declaration, parameter=0)])
+    const optional = try variants.materialize(mut pool, [], template, 19, 0, -1, False)
+    mut state = try engine.make(pool, b"o", program)
+    state.batch.facts.lists.types.records.rows = [optional]
+    _ = try locals.add(mut state.scope, b"o", span, 19, False, b"parameter")
+    return state
+
+
+public func test_present_local_keeps_owner_and_defensive_payload_match() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.control.options.present = [0]
+    const result = try engine.expression(mut state, 3)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[0], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 0 and result.id == 3 and len(state.batch.nodes) == 4 and len(state.batch.statements) == 4 and data.data == b"local" and state.scope.locals[0].usage.reads == 1 and state.scope.locals[1].ty == 0
+
+
+public func test_repeated_none_guard_hints_original_option_before_projection() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.control.options.present = [0]
+    const result = try engine.expression(mut state, 1)
+    const type_id = try graph.field(state.batch.pool, state.batch.nodes[0], "ty")
+    const owner_type = try graph.number(state.batch.pool, type_id)
+    return result.ty == 1 and result.id == 4 and owner_type == 19 and len(state.batch.nodes) == 5 and len(state.scope.locals) == 2 and state.scope.locals[1].ty == 1
+
+
+public func test_terminating_none_branch_refines_only_continuing_path() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const checked = try engine.statement(mut state, 1)
+    const present = state.control.options.present == [0]
+    const result = try engine.expression(mut state, 3)
+    return not checked.terminates and present and result.ty == 0 and state.scope.locals[0].usage.reads == 2
+
+
+public func test_option_expected_context_preserves_original_value() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.control.options.present = [0]
+    const result = try engine.expression_expected(mut state, 3, 19)
+    return result.ty == 19 and result.id == 0 and len(state.batch.nodes) == 1 and len(state.scope.locals) == 1
+
+
+public func test_narrowed_list_append_reads_option_and_roots_payload_without_repacking() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"o.append7"
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const name = try syntax_value.span(mut state.syntax.pool, 2, 8)
+    const literal_span = try syntax_value.span(mut state.syntax.pool, 8, 9)
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 9)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const argument = try syntax_value.integer(mut state.syntax.pool, 4)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [argument])
+    const call = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, owner, arguments, empty, empty])
+    const literal = try node(mut state.syntax.pool, literal_span, b"integer", literal_span)
+    state.syntax.nodes.append(literal)
+    const call_node = try node(mut state.syntax.pool, span, b"call", call)
+    state.syntax.nodes.append(call_node)
+    const declaration = try syntax_value.span(mut state.syntax.pool, 0, 0)
+    const list = try variants.list_semantic(mut state.syntax.pool, [], 19, 0, declaration)
+    const template = variants.Template(id=0, declaration=declaration, raw=-1, cases=[variants.TemplateCase(name=b"none", declaration=declaration, parameter=-1), variants.TemplateCase(name=b"some", declaration=declaration, parameter=0)])
+    const optional = try variants.materialize(mut state.syntax.pool, [list], template, 20, 19, -1, False)
+    state.batch.facts.lists.types.records.rows = [list, optional]
+    for unused in range(21):
+        state.batch.facts.lists.elements.append(-1)
+    state.batch.facts.lists.elements[19] = 0
+    state.scope.locals[0].ty = 20
+    state.control.options.present = [0]
+    const result = try engine.expression(mut state, 5)
+    const final_data = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const final_tag = try graph.get(state.batch.pool, final_data)
+    const owner_type = try graph.field(state.batch.pool, state.batch.nodes[0], "ty")
+    const owner_ty = try graph.number(state.batch.pool, owner_type)
+    return result.ty == 15 and owner_ty == 20 and final_tag.data == b"block_value" and state.scope.locals[0].usage.reads == 1 and state.scope.locals[0].usage.writes == 0 and state.control.options.present == [0] and len(state.scope.locals) == 3
+
+
+public func test_synthetic_optional_type_error_uses_payload_surface_name() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try recipe_index.insert(mut state.batch.facts.lists.types.variants.index, recipe_index.Key(kind=2, first=0, second=-1, id=19))
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    match engine.require(state, 0, 19, span):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "expected int?, found int" and problem.start == 0 and problem.end == 1
+
+
+public func test_synthetic_checked_result_type_error_formats_both_payloads() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try recipe_index.insert(mut state.batch.facts.lists.types.variants.index, recipe_index.Key(kind=1, first=0, second=1, id=20))
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    match engine.require(state, 0, 20, span):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "expected Result[int, bool], found int"

@@ -1,0 +1,41 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+
+public record Input:
+    needle: int
+    needle_type: int
+    container: int
+    container_type: int
+    negate: bool
+
+
+func temporary(mut scope: locals.Scope, context: list_lower.Context, ty: int) -> int fails syntax_value.Problem:
+    const active = scope.active
+    const slot = try locals.add(mut scope, b"<membership>", context.span, ty, False, b"local")
+    scope.active = active
+    scope.locals[slot].flags.initialized = False
+    scope.locals[slot].usage.reads = 1
+    scope.locals[slot].usage.temporary = True
+    return slot
+
+
+# The caller checks collection/element equality and widens byte scalar needles.
+# View membership has a separate lowering; ordinary membership needs no loop.
+public func contains(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Input) -> list_lower.Lowered fails syntax_value.Problem:
+    const needle = try temporary(mut scope, context, request.needle_type)
+    const initialize_needle = try list_lower.store(mut batch, context, needle, request.needle, True)
+    const owner = try temporary(mut scope, context, request.container_type)
+    const initialize_container = try list_lower.store(mut batch, context, owner, request.container, True)
+    const member = try list_lower.read(mut batch, context, needle, request.needle_type)
+    mut result = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"contains", arguments=[member], ty=1))
+    if request.negate:
+        const op = try syntax_value.enumeration(mut batch.pool, b"not")
+        const operand = try syntax_value.integer(mut batch.pool, result)
+        const span = try graph.clone(mut batch.pool, context.input, context.span, 0)
+        const payload = try syntax_value.object(mut batch.pool, ["op", "operand", "op_span"], [op, operand, span])
+        const inverted = try emission.node(mut batch, context.input, context.span, 1, b"unary", payload)
+        result = inverted
+    return try list_lower.block(mut batch, context, [initialize_needle, initialize_container], result, 1)

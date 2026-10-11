@@ -1,4 +1,4 @@
-# B7 scalar, managed value, checked-failure, and scoped file body checking
+# B9 numeric, collection, managed value, and scoped file body checking
 
 This producer owns typing and lowering of ordinary nongeneric function bodies
 from raw ASTs. It emits complete native typed nodes, statements, functions, local
@@ -6,11 +6,12 @@ metadata, and per-function table ranges. It does not consume a native semantic
 worklist or native checked bodies. The producer extends scalar and sequence checking with ordinary nongeneric value records. Selka chooses inferred list types and emits bounded catalog recipes; native
 code materializes those recipes without choosing body types.
 
-Admitted types are `int`/`i64`, `bool`, `Unit`, `str`, `bytes`, `byte_buffer`, and recursively
+Admitted types are `int`/`i64`, `i8`/`i16`/`i32`, `u8`/`u16`/`u32`/`u64`, the
+retained synthetic `float`, `bool`, `Unit`, `str`, `bytes`, `byte_buffer`, and recursively
 nested lists, ordinary records, and ordinary nongeneric variants whose payloads use those admitted types. Recursive record storage through a list is admitted; direct by-value layout cycles are rejected. Operations include
 literals, scalar unary and binary operations, UTF-8 text and arbitrary byte
 literals, managed length and indexing (including negative indices), concatenation,
-equality and ordering, explicit `int`/`i64` conversion of admitted integer values,
+equality and ordering, explicit integer-width and `float` numeric conversions,
 lexical locals and mutable reassignment, ordinary forward
 and recursive calls, named/default arguments admitted by the parser, scalar and
 managed mutation markers, branches, while/basic integer range loops,
@@ -28,12 +29,12 @@ children. A byte literal expected as `str` follows native contextual UTF-8
 materialization. Byte literals in scalar expected-type contexts require native
 fixed-array schema interning and remain outside this profile. Byte indexing emits
 the native narrow `u8` index node followed
-by an `int` cast. These internal narrow types are not exposed as new source-level
-integer types. Full typed tables retain native intermediate nodes and exact spans.
+by an `int` cast. B9 also admits all eight source-level integer widths. Full typed
+tables retain native intermediate nodes and exact spans.
 
-Other collections, generic functions,
-lambdas, resources, invariant/contracts, generic or boxed records or variants, domains, non-i64 scalar suffixes,
-floating division, chained comparisons, dynamic assertion messages, explicit
+Collection forms beyond the B8 closure, generic functions,
+lambdas, resources, invariant/contracts, generic or boxed records or variants, source-defined domains,
+chained comparisons, dynamic assertion messages, explicit
 range strides, keyed/callback sorting, enumerated/unpacked iteration, non-list methods outside the closed byte vocabulary, stepped text slices, and list slices are outside this profile. Transparent aliases are resolved from raw declarations with module privacy and canonical re-export identities. Unsupported forms produce `P_BODY_PROFILE`; component
 mode refuses without native body fallback. Malformed graph transport fails the
 exchange rather than becoming a source diagnostic. Source diagnostics preserve
@@ -47,7 +48,7 @@ body batch, diagnostics, and import usage. Component mode adopts the validated
 batch at the body-checking seam. Reference mode remains available.
 
 `main.my` accepts `--exchange FILE` or unframed `--request FILE`. The normative
-wire contract is [WIRE.md](WIRE.md): protocol 1, schema 7, correlated `SLKBCK01`
+wire contract is [WIRE.md](WIRE.md): protocol 1, schema 9, correlated `SLKBCK01`
 envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Older body schemas and packages are refused. The request contains raw ASTs, sources, declaration facts,
 and the retained catalog descriptors. Batch fields remain
 `nodes`, `statements`, `functions`, and `ranges`.
@@ -217,3 +218,39 @@ request fields or widening the body graph, byte, edge, depth, or allocation limi
 Development replies from rewritten schema-6 captures are not schema-7
 qualification evidence. Whole-source shadow and runtime qualification is required
 before declaring the new entrypoint closure qualified.
+
+
+The schema-8 dictionary/set producer is being implemented in reviewable slices.
+The connected foundation adds authenticated collection templates, one globally
+ordered recipe stream, dictionary literal arrays in written key/value order,
+contextual narrow integer literals, structural Option facts and payload
+lowering, direct dictionary indexing and length, and set literals, contextual
+empty construction, `set(iterable)` gathering, and native set combination/relation lowering. Named
+dictionary bindings support get, pop, setdefault, update, copy, clear, keys,
+values and items with source operand typing and receiver usage metadata. Named set bindings support add, discard, remove, update, pop, clear, copy, combinations and relations, including iterable operands. Mapping access preserves key values without list-index normalization. Collection recipes use the outer `collection` tag and six inner tags;
+views require their canonical dictionary to exist first. `list` snapshots of dictionaries, sets and live views preserve native temporary and recipe order, including the intermediate result rows retained for keys and values. Ordinary dictionary/set and live-view iteration, including item unpacking and enumerated positions with native source rebinding analysis, is connected. Ordinary record and
+collection storage recursion remains bounded and does not change wire limits.
+
+This slice does not qualify the complete dictionary/set closure. Membership uses native hidden operands for ordinary collections and dedicated live-view traversal. List/set comprehensions over ranges and admitted collection families are connected with native projection, signed mapping lengths, source refresh and filter narrowing. Ordinary AST gathers for list, set and explicitly keyed dictionary comprehensions use a nested accumulator stack and preserve first-step interning and temporary order. `list(generator)` and `set(generator)` select the consuming accumulator before checking its loop and preserve the separate call-span result row. Dictionary generator-pair routing remains an explicit profile refusal: inferred tuple layouts need catalog recipe authority beyond schema 8; the separate pair projection helper is not dispatch admission. Collection
+expression-receiver methods remain under implementation; these slices must pass the native-controlled corpus before
+selected-source admission is claimed. The previous B7 deployment and evidence
+remain separate from schema-8 development.
+
+## B9 scalar numeric closure
+
+All eight integer widths preserve source contextual typing, exact suffix/range
+errors, directly negated signed minima, and canonical full-u64 wire kind 8.
+Decimal binary64 literals use the admitted numeric runtime parser and recover
+IEEE bits through exact public power-of-two arithmetic. Source negative zero
+retains unary negation. The synthetic float identity comes from the retained
+native u64 domain; private-domain access and source-defined replacement domains
+are not admitted.
+
+Float conversions, arithmetic, comparisons, floor/remainder, rounding and numeric
+text/byte-range parsing preserve complete native intermediate rows, evaluation
+order and Option identities. The selected B9 corpus has 40 sources and exactly
+366 operations; supplemental binary64 boundaries have 35 cases/168 comparisons.
+See [the numeric audit](../../../docs/audits/selka-body-numeric-producer-2026-10-11.md)
+for exact package receipts, scope and outstanding whole-language/bootstrap work.
+These counts require genuine installed native/component/shadow qualification;
+helpers and preparatory native controls alone do not establish source admission.

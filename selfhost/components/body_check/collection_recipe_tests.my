@@ -1,0 +1,74 @@
+import syntax_value
+import graph
+import list_types
+import collection_types
+import variants
+
+func fresh() -> list_types.Catalog:
+    mut catalog = list_types.empty()
+    catalog.available = True
+    catalog.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    for unused in range(19):
+        catalog.by_element.append(-1)
+        catalog.elements.append(-1)
+    return catalog
+
+
+func request(kind: int, key: int, value: int) -> collection_types.Schema:
+    return collection_types.Schema(id=-1, kind=kind, key=key, value=value, owner=-1)
+
+
+public func test_mapping_view_item_list_first_demand_global_order() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 1, 4)
+    mut catalog = fresh()
+    const mapping = try list_types.collection_intern(mut catalog, mut pool, request(0, 0, 1), span)
+    const view = try list_types.collection_intern(mut catalog, mut pool, request(5, 0, 1), span)
+    const item = try list_types.collection_intern(mut catalog, mut pool, request(2, 0, 1), span)
+    const snapshot = try list_types.intern(mut catalog, pool, list_types.Recipe(id=-1, element=item, span=span), [])
+    const duplicate = try list_types.collection_intern(mut catalog, mut pool, request(0, 0, 1), span)
+    const view_schema = collection_types.schema(catalog.types.collections, view)
+    return [mapping, view, item, snapshot, duplicate] == [19, 20, 21, 22, 19] and len(catalog.recipes) == 4 and view_schema.owner == mapping and catalog.recipes[1].kind == "dict_items" and catalog.recipes[2].kind == "dict_item"
+
+
+public func test_collection_wire_is_grouped_without_reordering_recipes() -> bool fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 5, 9)
+    mut catalog = fresh()
+    _ = try list_types.collection_intern(mut catalog, mut input, request(0, 0, 1), span)
+    _ = try list_types.collection_intern(mut catalog, mut input, request(1, 1, 15), span)
+    mut output = syntax_value.empty()
+    const encoded = try list_types.encode(mut output, input, catalog.recipes)
+    const rows = try graph.items(output, encoded)
+    const outer = try graph.get(output, rows[0])
+    const inner_id = try graph.payload(output, rows[0])
+    const inner = try graph.get(output, inner_id)
+    const body = try graph.payload(output, inner_id)
+    const id_id = try graph.field(output, body, "id")
+    const id = try graph.number(output, id_id)
+    const set_inner_id = try graph.payload(output, rows[1])
+    const set_inner = try graph.get(output, set_inner_id)
+    return outer.data == b"collection" and inner.data == b"dict" and set_inner.data == b"set" and id == 19 and len(rows) == 2
+
+
+public func test_views_cannot_create_missing_mapping_dependency() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    mut catalog = fresh()
+    match list_types.collection_intern(mut catalog, mut pool, request(3, 0, 1), span):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(catalog.recipes) == 0 and len(catalog.types.records.rows) == 0
+
+
+public func test_mixed_list_then_mapping_keeps_schema_and_recipe_ids() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    mut catalog = fresh()
+    const list = try list_types.intern(mut catalog, pool, list_types.Recipe(id=-1, element=0, span=span), [])
+    const mapping = try list_types.collection_intern(mut catalog, mut pool, request(0, 0, list), span)
+    const id_id = try graph.field(pool, catalog.types.records.rows[0], "id")
+    const padded = try graph.number(pool, id_id)
+    const shape = collection_types.schema(catalog.types.collections, mapping)
+    return list == 19 and mapping == 20 and padded == 19 and shape.value == 19 and catalog.recipes[1].depth == 3 and len(catalog.types.records.rows) == 2

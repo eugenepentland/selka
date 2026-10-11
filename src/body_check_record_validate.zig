@@ -1,5 +1,6 @@
 //! Structural retained-schema authority and bounded record/list policy closure.
 const std = @import("std");
+const dictionaries = @import("body_check_dictionary_validate.zig");
 const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -52,6 +53,13 @@ pub fn catalog(item: value.Catalog) Error!void {
 const Edge = struct { parent: usize, next: ?usize };
 /// Greatest fixed point: list-backed recursion is permitted; unsupported reachable members propagate backward.
 pub fn policy(a: std.mem.Allocator, item: value.Catalog) Error![]bool {
+    return policyMode(a, item, false);
+}
+/// Structural hash-key closure rejects mutable or pending members without rechecking source bodies.
+pub fn hashablePolicy(a: std.mem.Allocator, item: value.Catalog) Error![]bool {
+    return policyMode(a, item, true);
+}
+fn policyMode(a: std.mem.Allocator, item: value.Catalog, hashable: bool) Error![]bool {
     try catalog(item);
     const allowed = try a.alloc(bool, item.base_count);
     errdefer a.free(allowed);
@@ -63,14 +71,22 @@ pub fn policy(a: std.mem.Allocator, item: value.Catalog) Error![]bool {
     defer edges.deinit(a);
     var pending: std.ArrayList(usize) = .empty;
     defer pending.deinit(a);
-    for (item.records, 0..) |record, index| allowed[index] = valueRecord(record);
+    for (item.records, 0..) |record, index| {
+        allowed[index] = valueRecord(record) or @import("body_check_numeric_validate.zig").floating(item, record.id);
+        if (hashable and record.contract.requires_handling) allowed[index] = false;
+        if (!hashable and dictionaries.identify(item, record.id) != null) allowed[index] = true;
+    }
     if (item.string) |entry| try mark(allowed, entry.id);
     if (item.bytes) |entry| try mark(allowed, entry.id);
-    if (item.templates.byte_buffer.identity) |entry| try mark(allowed, entry.id);
-    for (item.lists) |entry| try mark(allowed, entry.id);
+    if (!hashable) {
+        if (item.templates.byte_buffer.identity) |entry| try mark(allowed, entry.id);
+        for (item.lists) |entry| try mark(allowed, entry.id);
+    }
     var builder: Builder = .{ .allocator = a, .allowed = allowed, .heads = heads, .edges = &edges };
     for (item.records, 0..) |record, index| {
-        if (!valueRecord(record)) continue;
+        const collection = dictionaries.identify(item, record.id);
+        if (!valueRecord(record) and collection == null) continue;
+        if (collection) |entry| try collectionDependencies(&builder, item, index, entry);
         for (record.fields) |field| try builder.dependency(index, field.ty);
         if (record.shape.variants) |shape| for (shape.cases) |item_case| {
             if (item_case.payload) |payload| {
@@ -111,7 +127,7 @@ const Builder = struct {
     heads: []?usize,
     edges: *std.ArrayList(Edge),
     fn dependency(self: *Builder, parent: usize, ty: typed.Type) Error!void {
-        if (ty == .i64 or ty == .bool or ty == .unit) return;
+        if (scalar(ty)) return;
         if (!ty.isAggregate()) {
             self.allowed[parent] = false;
             return;
@@ -291,4 +307,19 @@ fn variants(a: std.mem.Allocator, request: value.Input) Error!void {
             }
         }
     }
+}
+
+fn collectionDependencies(builder: *Builder, item: value.Catalog, index: usize, entry: dictionaries.Descriptor) Error!void {
+    if (entry.kind != .dict and entry.kind != .set) return;
+    try builder.dependency(index, entry.key);
+    try builder.dependency(index, entry.value);
+    for ([_]typed.Type{ entry.key, entry.value }) |member| if (member.isAggregate()) {
+        if (member.recordIndex() >= item.records.len) return error.ComponentProtocol;
+        const contract = item.records[member.recordIndex()].contract;
+        if (contract.requires_handling or contract.move_only or !contract.storable) builder.allowed[index] = false;
+    };
+}
+
+fn scalar(ty: typed.Type) bool {
+    return @import("body_check_numeric_validate.zig").scalar(ty);
 }

@@ -1,0 +1,174 @@
+import syntax_value
+import graph
+import locals
+
+public record Context:
+    pool: syntax_value.Pool
+    source: bytes
+    nodes: int[]
+    statements: int[]
+
+
+public record State:
+    present: int[]
+
+
+public record Guard:
+    condition: int
+    truth: bool
+
+
+record Walk:
+    remaining: int
+
+
+public func has(state: State, slot: int) -> bool:
+    for value in state.present:
+        if value == slot:
+            return True
+    return False
+
+
+public func forget(mut state: State, slot: int) -> Unit:
+    mut found = -1
+    for index in range(len(state.present)):
+        if state.present[index] == slot:
+            found = index
+            break
+    if found >= 0:
+        state.present[found] = state.present[len(state.present) - 1]
+        _ = state.present.pop()
+
+
+public func clear(mut state: State) -> Unit:
+    state.present = []
+
+
+public func snapshot(state: State) -> int[]:
+    return state.present
+
+
+public func restore(mut state: State, saved: int[]) -> Unit:
+    state.present = saved
+
+
+public func intersect(mut state: State, saved: int[]) -> Unit:
+    const other = State(present=saved)
+    mut index = len(state.present)
+    while index > 0:
+        index = index - 1
+        if not has(other, state.present[index]):
+            forget(mut state, state.present[index])
+
+
+public func end_scope(mut state: State, first: int) -> Unit:
+    mut index = len(state.present)
+    while index > 0:
+        index = index - 1
+        if state.present[index] >= first:
+            forget(mut state, state.present[index])
+
+
+func row(context: Context, id: int, statement: bool) -> int fails syntax_value.Problem:
+    const rows = if statement then context.statements else context.nodes
+    if id < 0 or id >= len(rows):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid Option flow reference")
+    return rows[id]
+
+
+func assume_depth(mut state: State, context: Context, scope: locals.Scope, guard: Guard, mut walk: Walk, depth: int) -> Unit fails syntax_value.Problem:
+    if depth == 128 or walk.remaining == 0:
+        return
+    walk.remaining = walk.remaining - 1
+    const node = try row(context, guard.condition, False)
+    const part_1 = try graph.field(context.pool, node, "data")
+    const data = try graph.get(context.pool, part_1)
+    const part_2 = try graph.field(context.pool, node, "data")
+    const payload = try graph.payload(context.pool, part_2)
+    if data.data == b"unary":
+        const part_3 = try graph.field(context.pool, payload, "op")
+        const op = try graph.get(context.pool, part_3)
+        const part_4 = try graph.field(context.pool, payload, "operand")
+        const operand = try graph.number(context.pool, part_4)
+        if op.data == b"not":
+            try assume_depth(mut state, context, scope, Guard(condition=operand, truth=not guard.truth), mut walk, depth + 1)
+        elif op.data == b"is_none":
+            const child = try row(context, operand, False)
+            const part_5 = try graph.field(context.pool, child, "data")
+            const child_data = try graph.get(context.pool, part_5)
+            if child_data.data == b"name":
+                const part_6 = try graph.field(context.pool, child, "data")
+                const name = try graph.payload(context.pool, part_6)
+                const part_7 = try graph.spelling(context.pool, context.source, name)
+                const slot = locals.find(scope, part_7)
+                if slot >= 0:
+                    if guard.truth:
+                        forget(mut state, slot)
+                    elif not has(state, slot):
+                        state.present.append(slot)
+    elif data.data == b"binary":
+        const part_8 = try graph.field(context.pool, payload, "op")
+        const op = try graph.get(context.pool, part_8)
+        if op.data != b"logical_and" and op.data != b"logical_or":
+            return
+        const part_9 = try graph.field(context.pool, payload, "left")
+        const left = try graph.number(context.pool, part_9)
+        const part_10 = try graph.field(context.pool, payload, "right")
+        const right = try graph.number(context.pool, part_10)
+        if (op.data == b"logical_and") == guard.truth:
+            try assume_depth(mut state, context, scope, Guard(condition=left, truth=guard.truth), mut walk, depth + 1)
+            try assume_depth(mut state, context, scope, Guard(condition=right, truth=guard.truth), mut walk, depth + 1)
+        else:
+            const before = snapshot(state)
+            try assume_depth(mut state, context, scope, Guard(condition=left, truth=guard.truth), mut walk, depth + 1)
+            const first = snapshot(state)
+            restore(mut state, before)
+            try assume_depth(mut state, context, scope, Guard(condition=left, truth=not guard.truth), mut walk, depth + 1)
+            try assume_depth(mut state, context, scope, Guard(condition=right, truth=guard.truth), mut walk, depth + 1)
+            intersect(mut state, first)
+
+
+public func assume(mut state: State, context: Context, scope: locals.Scope, guard: Guard) -> Unit fails syntax_value.Problem:
+    mut walk = Walk(remaining=1024)
+    try assume_depth(mut state, context, scope, guard, mut walk, 0)
+
+
+public func invalidate_writes(mut state: State, context: Context, scope: locals.Scope, body: int) -> Unit fails syntax_value.Problem:
+    mut work = [body]
+    while len(work) > 0:
+        const id = work[len(work) - 1]
+        _ = work.pop()
+        const statement = try row(context, id, True)
+        const data_id = try graph.field(context.pool, statement, "data")
+        const data = try graph.get(context.pool, data_id)
+        const payload = try graph.payload(context.pool, data_id)
+        if data.data == b"assignment" or data.data == b"binding":
+            const name = try graph.field(context.pool, payload, "name")
+            const part_11 = try graph.spelling(context.pool, context.source, name)
+            const slot = locals.find(scope, part_11)
+            if slot >= 0:
+                forget(mut state, slot)
+        elif data.data == b"block":
+            const part_12 = try graph.items(context.pool, payload)
+            for child in part_12:
+                const part_13 = try graph.number(context.pool, child)
+                work.append(part_13)
+        elif data.data == b"branch":
+            const part_14 = try graph.field(context.pool, payload, "then_body")
+            const part_15 = try graph.number(context.pool, part_14)
+            work.append(part_15)
+            const part_16 = try graph.field(context.pool, payload, "else_body")
+            const other = try graph.get(context.pool, part_16)
+            if other.kind != 0:
+                work.append(other.integer)
+        elif data.data == b"match":
+            const part_17 = try graph.field(context.pool, payload, "arms")
+            const part_18 = try graph.items(context.pool, part_17)
+            for arm in part_18:
+                const part_19 = try graph.field(context.pool, arm, "body")
+                const part_20 = try graph.number(context.pool, part_19)
+                work.append(part_20)
+        elif data.data == b"loop" or data.data == b"for_each" or data.data == b"for_range" or data.data == b"with_scope":
+            const part_21 = try graph.field(context.pool, payload, "body")
+            const part_22 = try graph.number(context.pool, part_21)
+            work.append(part_22)

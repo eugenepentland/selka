@@ -1,0 +1,146 @@
+import syntax_value
+import graph
+import engine
+import collection_types
+import list_types
+import record_types
+import locals
+import variants
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh() -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const yes = try syntax_value.boolean(mut pool, True)
+    const no = try syntax_value.boolean(mut pool, False)
+    const first = try syntax_value.span(mut pool, 0, 4)
+    const second = try syntax_value.span(mut pool, 4, 5)
+    const third = try syntax_value.span(mut pool, 5, 10)
+    const fourth = try syntax_value.span(mut pool, 10, 11)
+    const span = try syntax_value.span(mut pool, 0, 11)
+    const a = try node(mut pool, first, b"boolean", yes)
+    const b = try node(mut pool, second, b"integer", second)
+    const c = try node(mut pool, third, b"boolean", no)
+    const d = try node(mut pool, fourth, b"integer", fourth)
+    mut indices: int[] = []
+    for index in range(4):
+        const id = try syntax_value.integer(mut pool, index)
+        indices.append(id)
+    const entries = try syntax_value.sequence(mut pool, indices)
+    const literal = try node(mut pool, span, b"dictionary_literal", entries)
+    const nodes = try syntax_value.sequence(mut pool, [a, b, c, d, literal])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    mut state = try engine.make(pool, b"True7False8", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    return state
+
+
+func prepare(mut state: engine.State, method: bytes, arguments: int[], writable: bool) -> int fails syntax_value.Problem:
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const first = try syntax_value.integer(mut state.syntax.pool, 0)
+    const second = try syntax_value.integer(mut state.syntax.pool, 2)
+    const inputs = try syntax_value.sequence(mut state.syntax.pool, [first, second])
+    const literal = try node(mut state.syntax.pool, span, b"set_literal", inputs)
+    state.syntax.nodes[4] = literal
+    const set = try engine.expression(mut state, 4)
+    state.syntax.source = b"s." + method
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const name = try syntax_value.span(mut state.syntax.pool, 2, len(state.syntax.source))
+    const call_span = try syntax_value.span(mut state.syntax.pool, 0, len(state.syntax.source))
+    const slot = try locals.add(mut state.scope, b"s", owner, set.ty, writable, b"local")
+    mut raw_arguments: int[] = []
+    for argument in arguments:
+        const raw = try syntax_value.integer(mut state.syntax.pool, argument)
+        raw_arguments.append(raw)
+    const values = try syntax_value.sequence(mut state.syntax.pool, raw_arguments)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, owner, values, empty, empty])
+    const call = try node(mut state.syntax.pool, call_span, b"call", payload)
+    state.syntax.nodes.append(call)
+    return slot
+
+
+public func test_add_bool_key_keeps_key_and_roots_unit_before_owner_store() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const slot = try prepare(mut state, b"add", [0], True)
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    const operation_id = try graph.field(state.batch.pool, state.batch.nodes[12], "data")
+    const operation = try graph.payload(state.batch.pool, operation_id)
+    const arguments_id = try graph.field(state.batch.pool, operation, "arguments")
+    const arguments = try graph.items(state.batch.pool, arguments_id)
+    const key = try graph.number(state.batch.pool, arguments[0])
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 15 and result.id == 13 and data.data == b"block_value" and len(state.scope.locals) == 4 and key == 0 and state.scope.locals[slot].usage.reads == 1 and state.scope.locals[slot].usage.writes == 1
+
+
+public func test_set_pop_returns_key_and_keeps_mutable_receiver_usage() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const slot = try prepare(mut state, b"pop", [], True)
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    return result.ty == 1 and len(state.scope.locals) == 3 and state.scope.locals[slot].usage.writes == 1 and state.control.next == 0
+
+
+public func test_set_union_method_reuses_native_combination_without_loop() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const slot = try prepare(mut state, b"union", [4], True)
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    return result.ty == 19 and len(state.scope.locals) == 5 and state.scope.locals[slot].usage.writes == 0 and state.control.next == 0
+
+
+public func test_set_mutation_through_readonly_binding_preserves_owner_diagnostic() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try prepare(mut state, b"discard", [0], False)
+    match engine.expression(mut state, len(state.syntax.nodes) - 1):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_IMMUTABLE" and problem.start == 0 and problem.end == 1 and problem.message == "collection update requires a writable binding"
+
+
+public func test_expression_set_union_uses_checked_receiver_without_named_read() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const slot = try prepare(mut state, b"union", [4], False)
+    const raw = state.syntax.nodes[len(state.syntax.nodes) - 1]
+    const span = try graph.field(state.syntax.pool, raw, "span")
+    const data_id = try graph.field(state.syntax.pool, raw, "data")
+    const call = try graph.payload(state.syntax.pool, data_id)
+    const name = try graph.field(state.syntax.pool, call, "name")
+    const arguments = try graph.field(state.syntax.pool, call, "arguments")
+    const labels = try graph.field(state.syntax.pool, call, "argument_names")
+    const base = try syntax_value.integer(mut state.syntax.pool, 4)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["base", "name", "arguments", "argument_names"], [base, name, arguments, labels])
+    const expression_call = try node(mut state.syntax.pool, span, b"method_call", payload)
+    state.syntax.nodes.append(expression_call)
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    return result.ty == state.scope.locals[slot].ty and state.scope.locals[slot].usage.reads == 0 and state.scope.locals[slot].usage.writes == 0 and state.control.next == 0 and len(state.scope.locals) == 5
+
+
+public func test_narrowed_option_set_add_projects_payload_without_repacking() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const slot = try prepare(mut state, b"add", [0], True)
+    const element = state.scope.locals[slot].ty
+    const declaration = try syntax_value.span(mut state.syntax.pool, 0, 0)
+    const template = variants.Template(id=0, declaration=declaration, raw=-1, cases=[variants.TemplateCase(name=b"none", declaration=declaration, parameter=-1), variants.TemplateCase(name=b"some", declaration=declaration, parameter=0)])
+    const optional = try variants.materialize(mut state.syntax.pool, state.batch.facts.lists.types.records.rows, template, 20, element, -1, False)
+    state.batch.facts.lists.types.records.rows.append(optional)
+    state.scope.locals[slot].ty = 20
+    state.control.options.present = [slot]
+    const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
+    mut writes = 0
+    for row in state.batch.nodes:
+        const data_id = try graph.field(state.batch.pool, row, "data")
+        const data = try graph.get(state.batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(state.batch.pool, data_id)
+            const kind_id = try graph.field(state.batch.pool, operation, "kind")
+            const kind = try graph.get(state.batch.pool, kind_id)
+            if kind.data == b"write":
+                writes += 1
+    return result.ty == 15 and state.scope.locals[slot].usage.reads == 1 and state.scope.locals[slot].usage.writes == 0 and state.control.options.present == [slot] and writes == 3

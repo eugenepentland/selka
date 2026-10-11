@@ -1,0 +1,191 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+
+public func unary(mut batch: emission.Batch, context: list_lower.Context, op: bytes, operand: int, ty: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const operator = try syntax_value.enumeration(mut batch.pool, op)
+    const input = try syntax_value.integer(mut batch.pool, operand)
+    const span = try graph.clone(mut batch.pool, context.input, context.span, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["op", "operand", "op_span"], [operator, input, span])
+    return list_lower.Lowered(ty=ty, tag=b"unary", payload=payload)
+
+
+func reference(mut batch: emission.Batch, context: list_lower.Context, value: int, ty: int, tag: bytes) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, ty, tag, payload)
+
+
+func wrapped(mut batch: emission.Batch, value: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    return list_lower.Lowered(ty=batch.facts.float_type, tag=b"wrap", payload=payload)
+
+
+public func literal(mut batch: emission.Batch, context: list_lower.Context, bits: int) -> list_lower.Lowered fails syntax_value.Problem:
+    mut payload = -1
+    if bits < 0:
+        payload = try syntax_value.upper_integer(mut batch.pool, bits)
+    else:
+        payload = try syntax_value.integer(mut batch.pool, bits)
+    const input = try emission.node(mut batch, context.input, context.span, 8, b"integer", payload)
+    return try wrapped(mut batch, input)
+
+
+public func from_integer(mut batch: emission.Batch, context: list_lower.Context, value: int, ty: int) -> list_lower.Lowered fails syntax_value.Problem:
+    mut wide = 0
+    mut operand = value
+    mut op = b"f64_from_i64"
+    if ty == 8:
+        wide = 8
+        op = b"f64_from_u64"
+    if ty != wide:
+        operand = try reference(mut batch, context, operand, wide, b"cast")
+    const converted = try unary(mut batch, context, op, operand, 8)
+    const encoded = try list_lower.append(mut batch, context, converted)
+    return try wrapped(mut batch, encoded)
+
+
+public func to_integer(mut batch: emission.Batch, context: list_lower.Context, value: int, ty: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const input = try reference(mut batch, context, value, 8, b"unwrap")
+    const op = [b"f64_to_i64", b"", b"f64_to_i8", b"f64_to_i16", b"f64_to_i32", b"f64_to_u8", b"f64_to_u16", b"f64_to_u32", b"f64_to_u64"][ty]
+    return try unary(mut batch, context, op, input, ty)
+
+
+public func floating_unary(mut batch: emission.Batch, context: list_lower.Context, op: bytes, value: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const input = try reference(mut batch, context, value, 8, b"unwrap")
+    const operation = try unary(mut batch, context, op, input, 8)
+    const result = try list_lower.append(mut batch, context, operation)
+    return try wrapped(mut batch, result)
+
+
+public func binary_value(mut batch: emission.Batch, context: list_lower.Context, op: bytes, left: int, right: int) -> list_lower.Lowered fails syntax_value.Problem:
+    mut first = try reference(mut batch, context, left, 8, b"unwrap")
+    mut second = try reference(mut batch, context, right, 8, b"unwrap")
+    mut operation = b""
+    mut comparison = False
+    if op == b"add":
+        operation = b"f64_add"
+    elif op == b"sub":
+        operation = b"f64_sub"
+    elif op == b"mul":
+        operation = b"f64_mul"
+    elif op == b"python_div" or op == b"div" or op == b"floor_div" or op == b"floor_rem":
+        operation = b"f64_div"
+    elif op == b"eq" or op == b"ne":
+        operation = b"f64_eq"
+        comparison = True
+    elif op == b"lt" or op == b"gt":
+        operation = b"f64_lt"
+        comparison = True
+    elif op == b"le" or op == b"ge":
+        operation = b"f64_le"
+        comparison = True
+    else:
+        const start_id = try graph.field(context.input, context.span, "start")
+        const end_id = try graph.field(context.input, context.span, "end")
+        const start = try graph.number(context.input, start_id)
+        const end = try graph.number(context.input, end_id)
+        fail syntax_value.Problem(code="E_FLOAT_OPERATION", start=start, end=end, message="float supports arithmetic and numeric comparison")
+    if op == b"gt" or op == b"ge":
+        const swap = first
+        first = second
+        second = swap
+    mut result_type = 8
+    if comparison:
+        result_type = 1
+    const operator = try syntax_value.enumeration(mut batch.pool, operation)
+    const lhs = try syntax_value.integer(mut batch.pool, first)
+    const rhs = try syntax_value.integer(mut batch.pool, second)
+    const span = try graph.clone(mut batch.pool, context.input, context.span, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["op", "left", "right", "op_span"], [operator, lhs, rhs, span])
+    const result = list_lower.Lowered(ty=result_type, tag=b"binary", payload=payload)
+    if op == b"floor_div" or op == b"floor_rem":
+        const division = try list_lower.append(mut batch, context, result)
+        const floor = try unary(mut batch, context, b"f64_floor", division, 8)
+        const quotient = try list_lower.append(mut batch, context, floor)
+        if op == b"floor_div":
+            return try wrapped(mut batch, quotient)
+        const product = try list_lower.binary(mut batch, context, b"f64_mul", quotient, second, 8)
+        const remainder = try list_lower.binary(mut batch, context, b"f64_sub", first, product, 8)
+        return try wrapped(mut batch, remainder)
+    if op == b"ne":
+        const equal = try list_lower.append(mut batch, context, result)
+        return try unary(mut batch, context, b"not", equal, 1)
+    if comparison:
+        return result
+    const bits = try list_lower.append(mut batch, context, result)
+    return try wrapped(mut batch, bits)
+
+
+public func binary(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, op: bytes, left: int, right: int) -> list_lower.Lowered fails syntax_value.Problem:
+    mut values: int[] = []
+    mut statements: int[] = []
+    for input in [left, right]:
+        const slot = try list_lower.temporary(mut scope, context, batch.facts.float_type)
+        const initialized = try list_lower.store(mut batch, context, slot, input, True)
+        statements.append(initialized)
+        const value = try list_lower.read(mut batch, context, slot, batch.facts.float_type)
+        values.append(value)
+    const computed = try binary_value(mut batch, context, op, values[0], values[1])
+    const result = try list_lower.append(mut batch, context, computed)
+    return try list_lower.block(mut batch, context, statements, result, computed.ty)
+
+
+func floating_read(mut batch: emission.Batch, context: list_lower.Context, slot: int) -> int fails syntax_value.Problem:
+    return try list_lower.read(mut batch, context, slot, batch.facts.float_type)
+
+
+func appended_binary(mut batch: emission.Batch, context: list_lower.Context, op: bytes, left: int, right: int) -> int fails syntax_value.Problem:
+    const lowered = try binary_value(mut batch, context, op, left, right)
+    return try list_lower.append(mut batch, context, lowered)
+
+
+func branch(mut batch: emission.Batch, context: list_lower.Context, condition: int, yes: int, no: int) -> int fails syntax_value.Problem:
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const then_body = try syntax_value.integer(mut batch.pool, yes)
+    mut else_body = try syntax_value.absent(mut batch.pool)
+    if no >= 0:
+        else_body = try syntax_value.integer(mut batch.pool, no)
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [test, then_body, else_body])
+    return try emission.statement(mut batch, context.input, context.span, False, b"branch", payload)
+
+
+public func round_value(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, value: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const slot = try list_lower.temporary(mut scope, context, batch.facts.float_type)
+    const whole = try list_lower.temporary(mut scope, context, batch.facts.float_type)
+    const fraction = try list_lower.temporary(mut scope, context, batch.facts.float_type)
+    const result = try list_lower.temporary(mut scope, context, batch.facts.float_type)
+    const half_literal = try literal(mut batch, context, 4602678819172646912)
+    const half = try list_lower.append(mut batch, context, half_literal)
+    const one_literal = try literal(mut batch, context, 4607182418800017408)
+    const one = try list_lower.append(mut batch, context, one_literal)
+    const negative_literal = try literal(mut batch, context, -4616189618054758400)
+    const negative_one = try list_lower.append(mut batch, context, negative_literal)
+    const source = try floating_read(mut batch, context, slot)
+    const truncated_value = try floating_unary(mut batch, context, b"f64_trunc", source)
+    const truncated = try list_lower.append(mut batch, context, truncated_value)
+    const lhs = try floating_read(mut batch, context, slot)
+    const rhs = try floating_read(mut batch, context, whole)
+    const remainder = try appended_binary(mut batch, context, b"sub", lhs, rhs)
+    const up_input = try floating_read(mut batch, context, whole)
+    const up = try appended_binary(mut batch, context, b"add", up_input, one)
+    const down_input = try floating_read(mut batch, context, whole)
+    const down = try appended_binary(mut batch, context, b"add", down_input, negative_one)
+    const positive_fraction = try floating_read(mut batch, context, fraction)
+    const at_least_half = try appended_binary(mut batch, context, b"ge", positive_fraction, half)
+    const negative_fraction = try floating_read(mut batch, context, fraction)
+    const negated_half_value = try floating_unary(mut batch, context, b"f64_neg", half)
+    const negated_half = try list_lower.append(mut batch, context, negated_half_value)
+    const at_most_half = try appended_binary(mut batch, context, b"le", negative_fraction, negated_half)
+    const above = try list_lower.store(mut batch, context, result, up, False)
+    const below = try list_lower.store(mut batch, context, result, down, False)
+    const initial = try list_lower.store(mut batch, context, slot, value, True)
+    const integral = try list_lower.store(mut batch, context, whole, truncated, True)
+    const remainder_store = try list_lower.store(mut batch, context, fraction, remainder, True)
+    const initial_result = try floating_read(mut batch, context, whole)
+    const retained = try list_lower.store(mut batch, context, result, initial_result, True)
+    const negative_branch = try branch(mut batch, context, at_most_half, below, -1)
+    const selected = try branch(mut batch, context, at_least_half, above, negative_branch)
+    const answer = try floating_read(mut batch, context, result)
+    return try list_lower.block(mut batch, context, [initial, integral, remainder_store, retained, selected], answer, batch.facts.float_type)

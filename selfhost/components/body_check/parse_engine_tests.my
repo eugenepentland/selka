@@ -39,7 +39,8 @@ func fresh(method: bool, local: bool) -> engine.State fails syntax_value.Problem
     const no = try syntax_value.boolean(mut pool, False)
     const contract = try syntax_value.object(mut pool, ["requires_handling"], [no])
     const str_name = try syntax_value.octets(mut pool, b"str")
-    const str_schema = try syntax_value.object(mut pool, ["name", "contract"], [str_name, contract])
+    const shape = try syntax_value.object(mut pool, ["variants"], [absent])
+    const str_schema = try syntax_value.object(mut pool, ["name", "contract", "shape"], [str_name, contract, shape])
     mut source = b"parse_int(7)  "
     if method or local:
         source = b"s.parse_int()"
@@ -81,7 +82,7 @@ public func test_bound_parse_method_retains_owner_site_without_extra_read_node()
     return value.ty == 20 and value.id == 0 and len(state.batch.nodes) == 1 and len(state.batch.statements) == 0 and len(state.scope.locals) == 1 and state.scope.locals[0].usage.reads == 1 and end == 1
 
 
-public func test_option_receiver_method_refuses_before_import_resolution() -> bool fails syntax_value.Problem:
+public func test_option_receiver_arity_precedes_import_resolution() -> bool fails syntax_value.Problem:
     mut state = try fresh(False, True)
     state.syntax.source = b"s.unwrap_or()"
     const span = try graph.field(state.syntax.pool, state.syntax.nodes[1], "span")
@@ -91,4 +92,4 @@ public func test_option_receiver_method_refuses_before_import_resolution() -> bo
         case Ok(unused):
             return False
         case Err(problem):
-            return problem.code == "P_BODY_PROFILE" and problem.start == 0 and problem.end == 13 and len(state.batch.nodes) == 0
+            return problem.code == "E_ARITY" and problem.start == 0 and problem.end == 13 and len(state.batch.nodes) == 1

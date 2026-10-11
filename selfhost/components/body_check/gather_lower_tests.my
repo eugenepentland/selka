@@ -1,0 +1,200 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import gather_lower
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+    outer: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const inner = try syntax_value.span(mut input, 12, 18)
+    const outer = try syntax_value.span(mut input, 2, 30)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=inner), outer=list_lower.Context(input=input, span=outer))
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, row, name)
+    return try graph.number(pool, field)
+
+
+func data(batch: emission.Batch, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const field = try graph.field(batch.pool, row, "data")
+    return try graph.get(batch.pool, field)
+
+
+func ids(pool: syntax_value.Pool, sequence: int) -> int[] fails syntax_value.Problem:
+    const children = try graph.items(pool, sequence)
+    mut result: int[] = []
+    for child in children:
+        const value = try graph.number(pool, child)
+        result.append(value)
+    return result
+
+
+func arguments(batch: emission.Batch, operation: int) -> int[] fails syntax_value.Problem:
+    const field = try graph.field(batch.pool, operation, "arguments")
+    return try ids(batch.pool, field)
+
+
+public func test_dictionary_step_snapshots_key_then_value_before_write() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const source = try locals.add(mut fixture.scope, b"input", fixture.context.span, 41, False, b"parameter")
+    const key = try list_lower.read(mut fixture.batch, fixture.context, source, 41)
+    const value = try list_lower.integer(mut fixture.batch, fixture.context, -3, 0)
+    const owner = try list_lower.temporary(mut fixture.scope, fixture.context, 40)
+    const result = try gather_lower.step(mut fixture.batch, mut fixture.scope, fixture.context, gather_lower.Step(owner=owner, key=key, value=value, kind=b"dict"))
+    const statements = try ids(fixture.batch.pool, result.payload)
+    if statements != [0, 1, 2] or result.ty != 15 or result.tag != b"block" or len(fixture.batch.statements) != 3 or fixture.scope.active != [0]:
+        return False
+    const first = try data(fixture.batch, fixture.batch.statements[0])
+    const second = try data(fixture.batch, fixture.batch.statements[1])
+    const first_slot = try number(fixture.batch.pool, first.children[0], "slot")
+    const second_slot = try number(fixture.batch.pool, second.children[0], "slot")
+    const first_value = try number(fixture.batch.pool, first.children[0], "value")
+    const second_value = try number(fixture.batch.pool, second.children[0], "value")
+    const discard = try data(fixture.batch, fixture.batch.statements[2])
+    const write_id = try graph.number(fixture.batch.pool, discard.children[0])
+    const write = try data(fixture.batch, fixture.batch.nodes[write_id])
+    const target = try number(fixture.batch.pool, write.children[0], "owner")
+    const args = try arguments(fixture.batch, write.children[0])
+    const saved_key = try data(fixture.batch, fixture.batch.nodes[args[0]])
+    const saved_value = try data(fixture.batch, fixture.batch.nodes[args[1]])
+    const key_slot = try graph.number(fixture.batch.pool, saved_key.children[0])
+    const value_slot = try graph.number(fixture.batch.pool, saved_value.children[0])
+    const key_type = try number(fixture.batch.pool, fixture.batch.nodes[args[0]], "ty")
+    const value_type = try number(fixture.batch.pool, fixture.batch.nodes[args[1]], "ty")
+    return first.data == b"initialize" and second.data == b"initialize" and first_slot == 2 and second_slot == 3 and first_value == key and second_value == value and target == owner and saved_key.data == b"local" and saved_value.data == b"local" and key_slot == 2 and value_slot == 3 and key_type == 41 and value_type == 0 and len(fixture.scope.locals) == 4
+
+
+public func test_dictionary_hidden_slots_keep_native_usage_and_step_span() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const key = try list_lower.integer(mut fixture.batch, fixture.context, 7, 5)
+    const value = try list_lower.integer(mut fixture.batch, fixture.context, 9, 0)
+    const owner = try list_lower.temporary(mut fixture.scope, fixture.context, 40)
+    _ = try gather_lower.step(mut fixture.batch, mut fixture.scope, fixture.context, gather_lower.Step(owner=owner, key=key, value=value, kind=b"dict"))
+    for slot in fixture.scope.locals:
+        if slot.name != b"<collection>" or not slot.mutable or slot.origin != b"local" or slot.flags.initialized or not slot.usage.temporary or slot.usage.reads != 1 or slot.usage.writes != 0 or slot.declaration != fixture.context.span:
+            return False
+    for statement in fixture.batch.statements:
+        const span = try graph.field(fixture.batch.pool, statement, "span")
+        const start = try number(fixture.batch.pool, span, "start")
+        const end = try number(fixture.batch.pool, span, "end")
+        const terminates_id = try graph.field(fixture.batch.pool, statement, "terminates")
+        const terminates = try graph.get(fixture.batch.pool, terminates_id)
+        if start != 12 or end != 18 or terminates.integer != 0:
+            return False
+    return fixture.scope.active == [] and fixture.scope.locals[1].ty == 5 and fixture.scope.locals[2].ty == 0
+
+
+public func test_set_step_writes_unit_without_snapshot_slots_or_extra_block() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const value = try list_lower.integer(mut fixture.batch, fixture.context, 7, 0)
+    const owner = try list_lower.temporary(mut fixture.scope, fixture.context, 40)
+    const result = try gather_lower.step(mut fixture.batch, mut fixture.scope, fixture.context, gather_lower.Step(owner=owner, key=-1, value=value, kind=b"set"))
+    const statements = try ids(fixture.batch.pool, result.payload)
+    const discarded = try data(fixture.batch, fixture.batch.statements[0])
+    const write_id = try graph.number(fixture.batch.pool, discarded.children[0])
+    const write = try data(fixture.batch, fixture.batch.nodes[write_id])
+    const args = try arguments(fixture.batch, write.children[0])
+    const unit = try data(fixture.batch, fixture.batch.nodes[args[1]])
+    const unit_type = try number(fixture.batch.pool, fixture.batch.nodes[args[1]], "ty")
+    const kind_id = try graph.field(fixture.batch.pool, write.children[0], "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    return result.ty == 15 and result.tag == b"block" and statements == [0] and len(fixture.batch.statements) == 1 and len(fixture.scope.locals) == 1 and args[0] == value and unit.data == b"unit" and unit_type == 15 and kind.data == b"write" and write_id == 2
+
+
+public func test_list_step_returns_discard_without_appending_outer_statement() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const value = try list_lower.integer(mut fixture.batch, fixture.context, 4, 0)
+    const owner = try list_lower.temporary(mut fixture.scope, fixture.context, 40)
+    const result = try gather_lower.step(mut fixture.batch, mut fixture.scope, fixture.context, gather_lower.Step(owner=owner, key=-1, value=value, kind=b"list"))
+    const append_id = try graph.number(fixture.batch.pool, result.payload)
+    const append = try data(fixture.batch, fixture.batch.nodes[append_id])
+    const args = try arguments(fixture.batch, append.children[0])
+    const kind_id = try graph.field(fixture.batch.pool, append.children[0], "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    return result.ty == 15 and result.tag == b"discard" and append_id == 1 and args == [value] and kind.data == b"append" and len(fixture.batch.statements) == 0 and len(fixture.scope.locals) == 1
+
+
+public func test_finish_initializes_before_existing_loop_with_collection_specific_empty_value() -> bool fails syntax_value.Problem:
+    for kind in [b"dict", b"set", b"list"]:
+        mut fixture = try fresh()
+        const owner = try list_lower.temporary(mut fixture.scope, fixture.context, 40)
+        const empty = try emission.ids(mut fixture.batch, [])
+        const loop = try emission.statement(mut fixture.batch, fixture.context.input, fixture.context.span, False, b"block", empty)
+        const original = fixture.scope
+        const result = try gather_lower.finish(mut fixture.batch, fixture.scope, fixture.outer, owner, loop, kind)
+        const body_id = try number(fixture.batch.pool, result.payload, "body")
+        const body = try data(fixture.batch, fixture.batch.statements[body_id])
+        const statements = try ids(fixture.batch.pool, body.children[0])
+        const initialize = try data(fixture.batch, fixture.batch.statements[statements[0]])
+        const initial_id = try number(fixture.batch.pool, initialize.children[0], "value")
+        const initial = try data(fixture.batch, fixture.batch.nodes[initial_id])
+        const initial_type = try number(fixture.batch.pool, fixture.batch.nodes[initial_id], "ty")
+        const read_id = try number(fixture.batch.pool, result.payload, "value")
+        const read = try data(fixture.batch, fixture.batch.nodes[read_id])
+        const read_slot = try graph.number(fixture.batch.pool, read.children[0])
+        if result.tag != b"block_value" or result.ty != 40 or statements != [1, 0] or body_id != 2 or initial_type != 40 or read.data != b"local" or read_slot != owner or fixture.scope != original:
+            return False
+        if kind == b"list":
+            const capacity_id = try number(fixture.batch.pool, initial.children[0], "capacity")
+            const capacity = try data(fixture.batch, fixture.batch.nodes[capacity_id])
+            const zero = try graph.number(fixture.batch.pool, capacity.children[0])
+            const ty = try number(fixture.batch.pool, fixture.batch.nodes[capacity_id], "ty")
+            if initial.data != b"acquire_buffer" or initial_id != 1 or capacity_id != 0 or zero != 0 or ty != 0 or len(fixture.batch.nodes) != 3:
+                return False
+        else:
+            const entries = try graph.items(fixture.batch.pool, initial.children[0])
+            if initial.data != b"array" or len(entries) != 0 or initial_id != 0 or len(fixture.batch.nodes) != 2:
+                return False
+        for index in [1, 2]:
+            const span = try graph.field(fixture.batch.pool, fixture.batch.statements[index], "span")
+            const start = try number(fixture.batch.pool, span, "start")
+            const end = try number(fixture.batch.pool, span, "end")
+            if start != 2 or end != 30:
+                return False
+    return True
+
+
+public func test_nested_dictionary_steps_keep_distinct_accumulators_and_saved_values() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const inner_owner = try list_lower.temporary(mut fixture.scope, fixture.context, 40)
+    const key = try list_lower.integer(mut fixture.batch, fixture.context, 1, 0)
+    const value = try list_lower.integer(mut fixture.batch, fixture.context, 2, 0)
+    const inner_step = try gather_lower.step(mut fixture.batch, mut fixture.scope, fixture.context, gather_lower.Step(owner=inner_owner, key=key, value=value, kind=b"dict"))
+    const inner_loop = try emission.statement(mut fixture.batch, fixture.context.input, fixture.context.span, False, inner_step.tag, inner_step.payload)
+    const inner = try gather_lower.finish(mut fixture.batch, fixture.scope, fixture.context, inner_owner, inner_loop, b"dict")
+    const inner_value = try list_lower.append(mut fixture.batch, fixture.context, inner)
+    const outer_owner = try list_lower.temporary(mut fixture.scope, fixture.outer, 42)
+    const outer = try gather_lower.step(mut fixture.batch, mut fixture.scope, fixture.outer, gather_lower.Step(owner=outer_owner, key=key, value=inner_value, kind=b"dict"))
+    const statements = try ids(fixture.batch.pool, outer.payload)
+    const saved = try data(fixture.batch, fixture.batch.statements[statements[1]])
+    const saved_node = try number(fixture.batch.pool, saved.children[0], "value")
+    const saved_slot = try number(fixture.batch.pool, saved.children[0], "slot")
+    const discarded = try data(fixture.batch, fixture.batch.statements[statements[2]])
+    const write_id = try graph.number(fixture.batch.pool, discarded.children[0])
+    const write = try data(fixture.batch, fixture.batch.nodes[write_id])
+    const target = try number(fixture.batch.pool, write.children[0], "owner")
+    return inner_owner == 0 and outer_owner == 3 and saved_node == inner_value and saved_slot == 5 and fixture.scope.locals[saved_slot].ty == 40 and target == outer_owner and len(fixture.scope.locals) == 6 and fixture.scope.active == []
+
+
+public func test_unknown_collection_kind_is_rejected_before_emission() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    match gather_lower.step(mut fixture.batch, mut fixture.scope, fixture.context, gather_lower.Step(owner=-1, key=-1, value=-1, kind=b"invalid")):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "P_BODY_TRANSPORT" or problem.message != "invalid gather collection kind":
+                return False
+    match gather_lower.finish(mut fixture.batch, fixture.scope, fixture.context, -1, -1, b"invalid"):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and problem.message == "invalid gather collection kind" and len(fixture.batch.nodes) == 0 and len(fixture.batch.statements) == 0 and len(fixture.scope.locals) == 0

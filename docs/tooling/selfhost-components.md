@@ -244,3 +244,4 @@ Test-receipt and directory-discovery barriers also retain full authentication wh
 their callers do not carry a session; no cross-workflow/global session is installed.
 This optimization has native safety checks; no performance-budget success is
 claimed before isolated baseline/candidate qualification.
+Body-check schema 8 groups ordered dictionary/set/item/live-view recipes under the `collection` family and authenticates their six retained builtin template identities. Selected frontend identity v11 and body identity v8 partition cache and replay validity from previous profiles. Reference defaults and unrelated package protocols remain unchanged. Production body artifacts retain the qualified release build recipe; schema-7 and earlier body manifests are refused. This contract update alone is not installed producer qualification.
