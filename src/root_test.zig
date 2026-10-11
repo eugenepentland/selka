@@ -219,3 +219,7 @@ test {
     _ = @import("sets_test.zig");
     _ = @import("retired_features_test.zig");
 }
+
+comptime {
+    _ = @import("body_check_component_test.zig");
+}

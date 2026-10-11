@@ -104,8 +104,10 @@ pub fn encode(allocator: std.mem.Allocator, program: ast.Program) Error![]u8 {
     return encodeTree(allocator, ast.Program, program, magic);
 }
 
-fn encodeTree(allocator: std.mem.Allocator, comptime T: type, value: T, signature: []const u8) Error![]u8 {
+/// Encode a bounded logical named-field value under an eight-byte schema signature.
+pub fn encodeTree(allocator: std.mem.Allocator, comptime T: type, value: T, signature: []const u8) Error![]u8 {
     @setEvalBranchQuota(200000);
+    if (signature.len != 8) return error.ComponentProtocol;
     var scratch = std.heap.ArenaAllocator.init(allocator);
     defer scratch.deinit();
     var encoder: Encoder = .{ .writer = .init(allocator), .scratch = scratch.allocator() };
@@ -288,28 +290,40 @@ pub fn decode(allocator: std.mem.Allocator, bytes: []const u8, source_len: usize
     return .{ .arena = result.arena, .program = result.value };
 }
 
-fn Owned(comptime T: type) type {
+/// Arena-owned generic logical value returned by the bounded decoder.
+pub fn Owned(comptime T: type) type {
     return struct { arena: std.heap.ArenaAllocator, value: T };
 }
 
-fn decodeTree(comptime T: type, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8) Error!Owned(T) {
+/// Decode a bounded logical named-field value; callers validate domain invariants.
+pub fn decodeTree(comptime T: type, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8) Error!Owned(T) {
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const item = try decodeTarget(T, allocator, arena.allocator(), bytes, signature);
+    return .{ .arena = arena, .value = item };
+}
+
+/// Decode bounded logical values into caller-owned arena storage for adoption.
+/// The caller releases partial allocations with its arena if decoding fails.
+pub fn decodeInto(comptime T: type, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8) Error!T {
+    return decodeTarget(T, allocator, allocator, bytes, signature);
+}
+fn decodeTarget(comptime T: type, scratch_allocator: std.mem.Allocator, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8) Error!T {
     @setEvalBranchQuota(200000);
+    if (signature.len != 8) return error.ComponentProtocol;
     if (bytes.len < 16 or bytes.len > value_wire_limit or !std.mem.eql(u8, bytes[0..8], signature)) return error.ComponentProtocol;
     const count = std.mem.readInt(u32, bytes[8..12], .little);
     const root = std.mem.readInt(u32, bytes[12..16], .little);
     if (count == 0 or count > max_values or root != count - 1 or count > (bytes.len - 16) / 21) return error.ComponentProtocol;
-    var scratch = std.heap.ArenaAllocator.init(allocator);
+    var scratch = std.heap.ArenaAllocator.init(scratch_allocator);
     defer scratch.deinit();
     var budget: Budget = .{};
     const values = try budget.allocate(scratch.allocator(), Value, count);
     var reader: Reader = .{ .wire = .init(scratch.allocator(), bytes[16..]), .budget = &budget };
     for (values, 0..) |*value, index| value.* = try reader.value(index);
     if (!reader.wire.done()) return error.ComponentProtocol;
-    var arena = std.heap.ArenaAllocator.init(allocator);
-    errdefer arena.deinit();
-    var decoder: Decoder = .{ .allocator = arena.allocator(), .values = values, .budget = &budget };
-    const value = try decoder.value(T, root, 0);
-    return .{ .arena = arena, .value = value };
+    var decoder: Decoder = .{ .allocator = allocator, .values = values, .budget = &budget };
+    return decoder.value(T, root, 0);
 }
 
 /// Parser diagnostics retain prose, notes and fixes without runtime-only state.
