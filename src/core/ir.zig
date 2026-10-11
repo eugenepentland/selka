@@ -389,6 +389,8 @@ pub const Op = enum(u8) {
     /// needed and freeing only the box shell. Zero-RC only; the active tag must
     /// already be established. Unlike `union_payload`, the result is an owner.
     union_take,
+    /// Consume a zero-RC box, transferring its inner value before freeing its shell.
+    box_take,
 
     /// Whether this operation ends a block.
     pub fn terminates(self: Op) bool {

@@ -1008,6 +1008,10 @@ const FnBuilder = struct {
     fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, value_place: ?Place, owned: bool, span: u32) Error!void {
         if (arm.slot) |slot| {
             const payload = if (owned) try self.propagatedPayload(value, arm.tag, span) else try self.payloadOf(value, arm.tag, span);
+            if (owned) if (arm.unpack) |unpack| {
+                try self.unpackPayload(payload, unpack.fields, span);
+                return self.statement(unpack.body);
+            };
             try self.write(self.local(slot), self.current.?, payload);
             // A checker-hidden binding (the narrowing of `x is None`) names the payload in place:
             // a write through it must rebuild the union it came from.
@@ -1015,6 +1019,22 @@ const FnBuilder = struct {
             try self.noteAlias(slot, place);
         }
         try self.statement(arm.body);
+    }
+
+    /// Split every physical field once; ignored owners are dropped by ownership.
+    /// Keeping all reads in this block lets `takeFields` empty the whole record.
+    fn unpackPayload(self: *FnBuilder, payload: ir.Ref, slots: []const ?typed.LocalId, span: u32) Error!void {
+        const fields = self.module().compound(self.typeOfRef(payload)).record;
+        for (fields, slots, 0..) |field, slot, index| {
+            const value = try self.emit(.{ .op = .record_get, .ty = field, .a = payload, .data = index, .span = span });
+            if (slot) |binding| {
+                const inner = if (self.module().kind(field) == .box)
+                    try self.emit(.{ .op = .box_take, .ty = self.module().compound(field).box, .a = value, .span = span })
+                else
+                    value;
+                try self.write(self.local(binding), self.current.?, inner);
+            }
+        }
     }
 
     /// Recursively materialize an independent owner using the selected contract.

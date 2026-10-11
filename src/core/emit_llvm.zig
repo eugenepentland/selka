@@ -2151,6 +2151,7 @@ const FunctionEmitter = struct {
                 try self.storeOperand(out, inner, inst.a, try self.offsetPointer(out, name, data_offset));
             },
             .box_get => try self.loadValue(out, inst.ty, try self.offsetPointer(out, try self.value(inst.a), data_offset), name),
+            .box_take => try self.boxTake(out, name, inst.ty, try self.value(inst.a)),
             .retain, .release => {
                 const mode: Counting = if (inst.op == .retain) .retain else .release;
                 self.may_be_empty = inst.op == .release and inst.data == empty_release;
@@ -3078,9 +3079,15 @@ const FunctionEmitter = struct {
         const payload = if (boxed) try self.fresh("%takenbox") else name;
         try self.unionPayload(out, .{ .result = payload, .union_type = union_type, .value = try self.value(inst.a), .case = @intCast(inst.data) });
         if (!boxed) return;
-        try self.loadValue(out, inst.ty, try self.offsetPointer(out, payload, data_offset), name);
+        try self.boxTake(out, name, inst.ty, payload);
+    }
+
+    /// Load into independent storage before returning only the empty box shell.
+    fn boxTake(self: *FunctionEmitter, out: *Out, name: []const u8, inner: ir.Type, box: []const u8) Error!void {
+        if (!self.state.module.zero_rc) return error.UnsupportedInstruction;
+        try self.loadValue(out, inner, try self.offsetPointer(out, box, data_offset), name);
         _ = try self.countSite(out, .release_unique, "");
-        try out.print(self.a(), "  call void @myl_core_box_drop_shell(ptr {s})\n", .{payload});
+        try out.print(self.a(), "  call void @myl_core_box_drop_shell(ptr {s})\n", .{box});
     }
 
     /// Replace element `b` of list `a` in place with `extra[0]`; the element it

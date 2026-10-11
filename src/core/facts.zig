@@ -367,7 +367,7 @@ const Analysis = struct {
         return switch (i.op) {
             .iconst => if (typeRange(i.ty) != null) Interval.point(constantValue(i)) else null,
             .param => self.facts.ranges[ref.index()] orelse typeRange(i.ty),
-            .undef, .union_payload, .union_take => typeRange(i.ty),
+            .undef, .union_payload, .union_take, .box_take => typeRange(i.ty),
             .call => self.facts.ranges[ref.index()] orelse typeRange(i.ty),
             else => self.facts.ranges[ref.index()],
         };

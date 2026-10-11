@@ -569,6 +569,7 @@ const Verifier = struct {
             .record_set => if (self.compoundOf(s.a, .record)) |fields| inst.ty == s.a and inst.data < fields.len and fields[@intCast(inst.data)] == s.b else false,
             .box_make => if (self.compoundOf(inst.ty, .box)) |inner| s.a == inner else false,
             .box_get => if (self.compoundOf(s.a, .box)) |inner| inner == inst.ty else false,
+            .box_take => self.module.zero_rc and if (self.compoundOf(s.a, .box)) |inner| inner == inst.ty else false,
             .retain, .release => inst.ty == .void and self.module.managed(s.a),
             .is_unique => inst.ty == .bool and self.module.isBlock(s.a),
             // Mode 3 (`converted`) names the case in a `str` operand; the others take none.

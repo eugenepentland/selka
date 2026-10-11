@@ -173,7 +173,7 @@ const ArmBindings = struct {
     slot: ?typed.LocalId = null,
     prologue: []const typed.StatementId = &.{},
     names: []const []const u8 = &.{},
-    fielded: bool = false,
+    fields: []const ?typed.LocalId = &.{},
 };
 fn bindArmPayload(comptime Checker: type, self: *Checker, case_schema: typed.Variant, arm: ast.MatchArm) Error!ArmBindings {
     if (case_schema.fielded) return bindFieldedPayload(Checker, self, case_schema, arm);
@@ -272,6 +272,8 @@ fn bindOrderedFieldedPayload(comptime Checker: type, self: *Checker, case_schema
         .ty = payload,
         .mutable = false,
     });
+    const fields = try self.allocator.alloc(?typed.LocalId, record.fields.len);
+    @memset(fields, null);
     var prologue: std.ArrayList(typed.StatementId) = .empty;
     var names: std.ArrayList([]const u8) = .empty;
     for (arm.bindings, record.fields, 0..) |binding, field_info, index| {
@@ -288,6 +290,7 @@ fn bindOrderedFieldedPayload(comptime Checker: type, self: *Checker, case_schema
         const name = if (internal) arm.internal.names[index] else self.src.text(binding_span);
         if (!internal) if (try self.topLevel(binding_span) or self.active.contains(name)) return self.sink.fail(eShadowing, binding_span, "payload binding shadows an active binding or top-level name");
         const binding_slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        fields[index] = binding_slot;
         try self.locals.append(self.allocator, .{
             .ownership = .{ .initialized = true, .transfer_available = self.transfers(field_info.ty) },
             .name = name,
@@ -306,7 +309,7 @@ fn bindOrderedFieldedPayload(comptime Checker: type, self: *Checker, case_schema
         try prologue.append(self.allocator, @fromBackingInt(self.statements.items.len));
         try self.statements.append(self.allocator, .{ .span = binding_span, .terminates = false, .data = .{ .initialize = .{ .slot = binding_slot, .value = projected } } });
     }
-    return .{ .slot = slot, .prologue = try prologue.toOwnedSlice(self.allocator), .names = try names.toOwnedSlice(self.allocator), .fielded = true };
+    return .{ .slot = slot, .prologue = try prologue.toOwnedSlice(self.allocator), .names = try names.toOwnedSlice(self.allocator), .fields = fields };
 }
 fn statementYield(comptime Checker: type, self: *Checker, expression: ast.NodeId, span: source.Span) Error!@FieldType(typed.Statement, "data") {
     const context = self.match_yield orelse return self.sink.fail("E_YIELD_CONTEXT", span, "yield requires a match expression arm");
@@ -467,6 +470,7 @@ fn statementMatch(comptime Checker: type, self: *Checker, stmt: ast.Statement, m
             _ = self.active.remove(name);
         };
         var body = try statement(Checker, self, arm.body);
+        const unpack: ?typed.UnpackedArm = if (arm_bindings.fields.len != 0) .{ .fields = arm_bindings.fields, .body = body.id } else null;
         // The field-projection prologue must run on every path into the arm,
         // including one whose body returns immediately.
         if (arm_bindings.prologue.len != 0) {
@@ -482,7 +486,7 @@ fn statementMatch(comptime Checker: type, self: *Checker, stmt: ast.Statement, m
             if (continuation) |state| try self.samePending(state, stmt.span, eResultPath) else continuation = try self.pendingState(before.len);
         }
         flow.terminates = flow.terminates and body.terminates;
-        try arms.append(self.allocator, .{ .tag = tag, .slot = arm_bindings.slot, .body = body.id });
+        try arms.append(self.allocator, .{ .tag = tag, .slot = arm_bindings.slot, .body = body.id, .unpack = unpack });
     }
     for (seen, variants.cases) |covered, variant| if (covered == null) {
         const message = try std.fmt.allocPrint(self.allocator, "match does not handle variant `{s}`; every variant requires an explicit arm", .{variant.name});

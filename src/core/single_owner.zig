@@ -605,7 +605,16 @@ const Checker = struct {
         for (arms) |arm| {
             @memcpy(c.state, before);
             if (arm.slot) |slot| c.state[@backingInt(slot)] = .{ .available = true, .borrowed = !owned, .root = if (owned) none else source orelse none };
-            if (!try c.checkStatement(arm.body)) continue;
+            const body = if (owned and arm.unpack != null) unpacked: {
+                // This is the whole hidden payload, split before source statements.
+                // Each binding is now its own owner; the original is unavailable.
+                if (arm.slot) |slot| c.state[@backingInt(slot)].available = false;
+                for (arm.unpack.?.fields) |field| if (field) |slot| {
+                    c.state[@backingInt(slot)] = .{ .available = true };
+                };
+                break :unpacked arm.unpack.?.body;
+            } else arm.body;
+            if (!try c.checkStatement(body)) continue;
             if (joined) |previous| c.merge(previous, c.state);
             if (joined == null) joined = try c.a.alloc(State, c.state.len);
             @memcpy(joined.?, c.state);
