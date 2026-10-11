@@ -1,0 +1,8 @@
+func make() -> dict[int, int]:
+    return {1: 7}
+
+
+func main() -> int:
+    assert make().get(1, 0) == 7
+    assert list(make().keys()) == [1]
+    return 7

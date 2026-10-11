@@ -1,0 +1,11 @@
+func grow(mut value: set[int]?) -> Unit:
+    if value is None:
+        return
+    value.add(7)
+
+
+func main() -> int:
+    mut value: set[int]? = Some({1})
+    grow(mut value)
+    assert value.unwrap_or(set()) == {1, 7}
+    return 7

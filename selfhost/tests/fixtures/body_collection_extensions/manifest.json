@@ -1,0 +1,42 @@
+{
+  "dict_augmentation.my": {
+    "source_sha256": "fab3ec75a402c6cb05d673bbbec99fb46b72a9f933f2595474bf3da9a9be1531",
+    "status": 0
+  },
+  "dict_expression_receiver.my": {
+    "source_sha256": "8a20203a31d2812394622b4f708869bfd7e92947fb757dd00f07820e4b2e1e7b",
+    "status": 0
+  },
+  "dictionary_augmentation_nested.my": {
+    "source_sha256": "e02add8c22d01383c91e609797405f068a085f1709f980f7ab6b9a50fce10280",
+    "status": 0
+  },
+  "dictionary_generator_pairs.my": {
+    "source_sha256": "9bfeb55f38522f71fc1a784e26ad55be7316df56dfd4a2797b192580ad484dd3",
+    "status": 0
+  },
+  "dictionary_items_membership.my": {
+    "source_sha256": "ff5e17b2950040d40593b8b6b26a08482c9ea05ca3d936580348dd349c18273b",
+    "status": 0
+  },
+  "nested_dictionary_gather.my": {
+    "source_sha256": "a1f5b8ba0867179ee0fcc5a51f3576c23042e0a3f3b586a4fc367526c9479110",
+    "status": 0
+  },
+  "option_dictionary_mutation.my": {
+    "source_sha256": "a50906669e9b787cd304158001b56a5448cc6ea7e29c6951f527ce3d9f2e5226",
+    "status": 0
+  },
+  "option_set_mutation.my": {
+    "source_sha256": "fef77b275a3349cb1f6675232340b1498eab8d98d2b503c3c48a24e0a8527be8",
+    "status": 0
+  },
+  "set_expression_receiver.my": {
+    "source_sha256": "754c5e003cb7d1eeb6aba29c3725b8f8093ac8c2ffe7966820ac09af733a7a5a",
+    "status": 0
+  },
+  "set_generator.my": {
+    "source_sha256": "4b8f436d5982d2d436344cfe223d9d6060af8f63ad55bdf0b85018bb33a96ae8",
+    "status": 0
+  }
+}

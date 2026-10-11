@@ -1,0 +1,188 @@
+{
+  "scope": "Ten additional B8 collection cases; native controls and historical173a gap evidence only",
+  "native_complete": true,
+  "native_operations": 30,
+  "selected_admission": "pending",
+  "historical_producer": "173a154a2",
+  "historical_exact_cases": 1,
+  "historical_profile_cases": 9,
+  "host_sha256": "3d2691ca0798a1a8ecf9e8e8ae73d7e664a45868861cf3ef6831e8c5380d78d3",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-32c993e593707579fb8729e4f5dfed5c394d27ebd3327cdb4c56a36ebbcd6641",
+      "component": "test-index",
+      "format": 1,
+      "key": "1f66366141f788274981697642cd3c567b8c3903d49c44b52531467d8be702db",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "32c993e593707579fb8729e4f5dfed5c394d27ebd3327cdb4c56a36ebbcd6641"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-0c219c8a289cf4ca7843fbbaa9e60edea7d8a8f0895705db4dbc1947f9604465",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "59bb2a57d146be8e55a3fb3b7ac429730497096ea29ca5b1007d5bfe6c648c8d",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "0c219c8a289cf4ca7843fbbaa9e60edea7d8a8f0895705db4dbc1947f9604465"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-0ee6e56e8ef08164562af411765208057f4a191e64f56220e3cb3131f22e0786",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "67e8e859a6d618e8cf47c9ed5572ecdd4735247ef1f1bb2aeca58a1fae2edf8f",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "0ee6e56e8ef08164562af411765208057f4a191e64f56220e3cb3131f22e0786"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-399b338839c3146df6641694a8dc03f291d7eecdcefefffe6c2a6fe207b298da",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "70b4a0ed3eeabf596a269b427695c44ad26d97f517c3f816dd30b6b1df8acd52",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "399b338839c3146df6641694a8dc03f291d7eecdcefefffe6c2a6fe207b298da"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-ace0a005df6f0c1c787aeb19d9d6aec8080f41b8a07354f18f339089e8dd35ca",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "b7aa04abce841b0bd4b738e13cd1fc0eef342b7d94f4a28795fcabbfe0087e9c",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "ace0a005df6f0c1c787aeb19d9d6aec8080f41b8a07354f18f339089e8dd35ca"
+    },
+    "type-interface": {
+      "artifact": "type-interface-9ead7f36986332313ff4d80bbc9d563781795ae4b0b02b0eb98f727e1fc90d84",
+      "component": "type-interface",
+      "format": 1,
+      "key": "ebae9ea6c6bfd03e2966543fddd42fc4600e0dad33595f51c368b4a201896b34",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "9ead7f36986332313ff4d80bbc9d563781795ae4b0b02b0eb98f727e1fc90d84"
+    },
+    "body-check": {
+      "artifact": "body-check-a64d7afd992bacc01ce87d7815c8e53a9c5178c2c2ddb9e692f6df856bf7d641",
+      "component": "body-check",
+      "format": 1,
+      "key": "6c09b85bd0805209906397eea60de5e2eb67e8be5df33b7ee8c14148973e8e8d",
+      "protocol": 1,
+      "schema": 8,
+      "sha256": "a64d7afd992bacc01ce87d7815c8e53a9c5178c2c2ddb9e692f6df856bf7d641"
+    }
+  },
+  "source_fixture_directory": "selfhost/tests/fixtures/body_collection_extensions",
+  "historical_cases": [
+    {
+      "source": "dict_augmentation.my",
+      "source_sha256": "fab3ec75a402c6cb05d673bbbec99fb46b72a9f933f2595474bf3da9a9be1531",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "663b599419cb60740806a63749d7a1e61ad9ee6742ca8429fc2553ab19a3a889",
+      "reply_sha256": "68876c9efb3d35d0748ead7df7727ade015a3015148f21cd6fbdce989fb07088"
+    },
+    {
+      "source": "dict_expression_receiver.my",
+      "source_sha256": "8a20203a31d2812394622b4f708869bfd7e92947fb757dd00f07820e4b2e1e7b",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "f2e63f23500d28c8da7dfe6146f81cba02660e05d18173bec223b67b4693a3c8",
+      "reply_sha256": "5a9119e8ab3236e68cc2a40e39c6811a2b33bf1b175440d88d0cc8700471f93b"
+    },
+    {
+      "source": "set_expression_receiver.my",
+      "source_sha256": "754c5e003cb7d1eeb6aba29c3725b8f8093ac8c2ffe7966820ac09af733a7a5a",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "89f9cb6fcfa86ef1f2503fb691130379c6b1fd63b473938e494fdb0ecc53b8c3",
+      "reply_sha256": "f18af7531a86929f335290472f1f04664c27aeef32de15049312428c177a1246"
+    },
+    {
+      "source": "option_dictionary_mutation.my",
+      "source_sha256": "a50906669e9b787cd304158001b56a5448cc6ea7e29c6951f527ce3d9f2e5226",
+      "native_status": 0,
+      "component_status": 0,
+      "shadow_status": 0,
+      "component_exact": true,
+      "shadow_exact": true,
+      "request_sha256": "77b3406529711812be6ec479398b9435271c6b1f9f1efd14f2804b87fb245ec6",
+      "reply_sha256": "ee1b5b66f6798b6a5f875c7a57425f828c15c5d3d0db322f6c04769a139986ee"
+    },
+    {
+      "source": "option_set_mutation.my",
+      "source_sha256": "fef77b275a3349cb1f6675232340b1498eab8d98d2b503c3c48a24e0a8527be8",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "a639e7aec480aa2adad1f98de48c7b8bf51e37c1c364efb9f81f3926ee9784a0",
+      "reply_sha256": "0b5d993beae8c6ffa34a29b0366f60721263c785d1c8903011e0ae9a7ecec0d0"
+    },
+    {
+      "source": "dictionary_generator_pairs.my",
+      "source_sha256": "9bfeb55f38522f71fc1a784e26ad55be7316df56dfd4a2797b192580ad484dd3",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "c7058710df728011a297db761dd6e8ba195ca2e07e22f6a24fb3b9817acab6ac",
+      "reply_sha256": "5372ec7c47b91730d0e19363205955b97ab0c1b6839a97d6ec3210f202e44d27"
+    },
+    {
+      "source": "set_generator.my",
+      "source_sha256": "4b8f436d5982d2d436344cfe223d9d6060af8f63ad55bdf0b85018bb33a96ae8",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "b00992b33b99b05d266ab46bbf20e2dcd82dcc94fad44704cf2c310313a64a71",
+      "reply_sha256": "055e8c8b83f5d108099a5ef77fdeb5b50a9317447160400267799a2b2d0dbdd8"
+    },
+    {
+      "source": "nested_dictionary_gather.my",
+      "source_sha256": "a1f5b8ba0867179ee0fcc5a51f3576c23042e0a3f3b586a4fc367526c9479110",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "dbdd76d166e9a2f7345f30ef47b2662283830885d37f02c1fb283bea6cbc40d4",
+      "reply_sha256": "a56787719bb05f7d2e8adab6151ad0c27f710a1ff3955ba440a99a30d24b7d62"
+    },
+    {
+      "source": "dictionary_items_membership.my",
+      "source_sha256": "ff5e17b2950040d40593b8b6b26a08482c9ea05ca3d936580348dd349c18273b",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "bf3cb686fce46a4dadf1ab64b703072eb5356be0e583877cd7a710e05939a1ef",
+      "reply_sha256": "2a00854dec4b4b3d79bed114eae95b90a73f7acdfd265ddea58c5d1aec592793"
+    },
+    {
+      "source": "dictionary_augmentation_nested.my",
+      "source_sha256": "e02add8c22d01383c91e609797405f068a085f1709f980f7ab6b9a50fce10280",
+      "native_status": 0,
+      "component_status": 2,
+      "shadow_status": 2,
+      "component_exact": false,
+      "shadow_exact": false,
+      "request_sha256": "ccfe42de235b93ff5c2c5e9e365f2e70fbe438b495b61209418a97461c057072",
+      "reply_sha256": "2b5d4ca75789d0b9b2b002c5a71ce5e606669190e5f701791ab928b18d098db5"
+    }
+  ]
+}

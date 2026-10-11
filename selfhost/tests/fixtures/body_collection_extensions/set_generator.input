@@ -1,0 +1,4 @@
+func main() -> int:
+    const values = set(x % 2 for x in [1, 2, 3])
+    assert values == {1, 0}
+    return 7
