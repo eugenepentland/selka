@@ -81,7 +81,7 @@ def environment(mode, components, empty_path):
     env = {k: v for k, v in os.environ.items()
            if not k.startswith('PILOT_') and not k.startswith('MYLANG_')}
     env.update(PATH=str(empty_path), MYLANG_LEXER_MODE=mode,
-               MYLANG_PARSER_MODE=mode, MYLANG_DECLARATION_MODE='reference', MYLANG_TYPE_INTERFACE_MODE='reference', MYLANG_COMPONENT_DIR=str(components),
+               MYLANG_PARSER_MODE=mode, MYLANG_DECLARATION_MODE='reference', MYLANG_BODY_CHECK_MODE='reference', MYLANG_TYPE_INTERFACE_MODE='reference', MYLANG_COMPONENT_DIR=str(components),
                MYLANG_TEST_INDEX_MODE='reference', MYLANG_CACHE_PLAN_MODE='reference',
                MYL_CORE_LEAKCHECK='1')
     return env
@@ -423,7 +423,7 @@ def coordinator_edit(args, qualification):
     shutil.copytree(args.source_root / 'selfhost/components', root / 'selfhost/components', symlinks=True)
     installation = work / 'installation'
     command = [args.builder, '--root', root, '--zig', args.zig, '--install-dir', installation]
-    env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_PARSER_MODE='reference', MYLANG_DECLARATION_MODE='reference', MYLANG_TYPE_INTERFACE_MODE='reference')
+    env = dict(os.environ, MYLANG_LEXER_MODE='reference', MYLANG_PARSER_MODE='reference', MYLANG_DECLARATION_MODE='reference', MYLANG_BODY_CHECK_MODE='reference', MYLANG_TYPE_INTERFACE_MODE='reference')
     host_before = digest(args.compiler)
     require(execute(command, env, work, 600)[0] == 0, 'coordinator baseline private install failed')
     before = packages(installation)

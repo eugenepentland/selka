@@ -41,7 +41,7 @@ def main():
     ap.add_argument('--report-dir',type=Path)
     args=ap.parse_args()
     env={k:v for k,v in os.environ.items() if not k.startswith(('MYLANG_','PILOT_')) or k=='MYLANG_COMPONENT_CACHE'}
-    env.update(MYLANG_ZIG=str(args.zig),MYL_CORE_LEAKCHECK='1',MYLANG_LEXER_MODE='reference',MYLANG_PARSER_MODE='reference',MYLANG_DECLARATION_MODE='reference', MYLANG_TYPE_INTERFACE_MODE='reference',MYLANG_TEST_INDEX_MODE='reference',MYLANG_CACHE_PLAN_MODE='reference',MYLANG_COMPONENT_DIR=str(args.component_dir.resolve()))
+    env.update(MYLANG_ZIG=str(args.zig),MYL_CORE_LEAKCHECK='1',MYLANG_LEXER_MODE='reference',MYLANG_PARSER_MODE='reference',MYLANG_DECLARATION_MODE='reference', MYLANG_BODY_CHECK_MODE='reference', MYLANG_TYPE_INTERFACE_MODE='reference',MYLANG_TEST_INDEX_MODE='reference',MYLANG_CACHE_PLAN_MODE='reference',MYLANG_COMPONENT_DIR=str(args.component_dir.resolve()))
     provision=execute([args.builder.resolve(),'--root',ROOT,'--zig',args.zig,'--seed-only'],env).strip().splitlines()
     if len(provision)!=1 or not Path(provision[0]).is_file():raise RuntimeError('missing qualified seed receipt')
     seed=Path(provision[0]);print('declaration seed SHA256 '+hashlib.sha256(seed.read_bytes()).hexdigest())

@@ -14,8 +14,8 @@ from measure_frontend_adoption import execute, distribution
 
 def package_inventory(directory, baseline):
     if baseline:
-        return Historical.packages(directory, include_declaration=True, include_type_interface=False)
-    return D.packages(directory)
+        return Historical.packages(directory, include_declaration=True, include_type_interface=False, include_body=False)
+    return D.packages(directory, include_body=False)
 
 
 def cache_summary(stderr):

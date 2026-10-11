@@ -43,7 +43,7 @@ elif phase=='prepare':
         path.write_bytes(b'fake-native-'+name.encode()+values.get(name,'').encode()); artifacts[name]=str(path)
     (root/'zig-out/verification/artifacts.json').write_text(json.dumps({{'version':1,'artifacts':artifacts}}))
     package=root/'zig-out/libexec/mylang/components'; package.mkdir(parents=True,exist_ok=True)
-    for name in ['test-index','cache-plan','lexer-pilot','parser-pilot','declaration-index','type-interface']:
+    for name in ['test-index','cache-plan','lexer-pilot','parser-pilot','declaration-index','type-interface','body-check']:
         (package/name).write_bytes(b'fake-component'+values.get('component:'+name,'').encode())
         (package/(name+'.json')).write_text(json.dumps({{'artifact':name}}))
 elif (root/'.failure').exists():
@@ -212,7 +212,7 @@ class VerificationCoordinator(unittest.TestCase):
         self.save_plan()
         self.assertEqual(self.execute(), 0)
         values = {}
-        for name in ['lexer-pilot', 'parser-pilot', 'declaration-index', 'type-interface']:
+        for name in ['lexer-pilot', 'parser-pilot', 'declaration-index', 'type-interface', 'body-check']:
             with self.subTest(component=name):
                 values['component:' + name] = '-changed'
                 self.write('.artifact-values.json', json.dumps(values))
@@ -224,7 +224,7 @@ class VerificationCoordinator(unittest.TestCase):
 
     def test_missing_frontend_component_requires_preparation_before_reuse(self):
         self.assertEqual(self.execute(), 0)
-        for name in ['lexer-pilot', 'parser-pilot', 'declaration-index', 'type-interface']:
+        for name in ['lexer-pilot', 'parser-pilot', 'declaration-index', 'type-interface', 'body-check']:
             with self.subTest(component=name):
                 prepared = len(self.events('prepare'))
                 (self.root / 'zig-out/libexec/mylang/components' / name).unlink()

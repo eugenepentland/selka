@@ -37,7 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VERSION = 1
 RETRY = 75
 MAX_RECORD = 32 * 1024 * 1024
-COMPONENTS = ("test-index", "cache-plan", "lexer-pilot", "parser-pilot", "declaration-index", "type-interface")
+COMPONENTS = ("test-index", "cache-plan", "lexer-pilot", "parser-pilot", "declaration-index", "type-interface", "body-check")
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
                  "src/user_docs.zig", "selfhost/*.zig", "../guardian-zig/build.zig",
                  "../guardian-zig/build.zig.zon", "../guardian-zig/src/"]
