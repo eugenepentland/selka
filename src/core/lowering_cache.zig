@@ -744,10 +744,31 @@ const TreeHash = struct {
         return out;
     }
 
+    /// The unpack body is already present in the ordinary arm. Hash it once,
+    /// together with the selected body relationship, instead of revisiting each
+    /// nested match twice. Unrelated descriptors must never reuse that digest.
+    fn matchArm(self: *TreeHash, arm: typed.MatchArm) Error!void {
+        const selector: u8 = if (arm.unpack) |unpack| selected: {
+            if (unpack.body == arm.body) break :selected 1;
+            if (@backingInt(arm.body) >= self.program.statements.len) return error.InvalidSnapshot;
+            const statement = self.program.statements[@backingInt(arm.body)];
+            if (statement.data != .block or statement.data.block.len == 0) return error.InvalidSnapshot;
+            const children = statement.data.block;
+            if (children[children.len - 1] != unpack.body) return error.InvalidSnapshot;
+            break :selected 2;
+        } else 0;
+        try self.value(arm.tag);
+        try self.value(arm.slot);
+        try self.value(arm.body);
+        try self.value(selector);
+        if (arm.unpack) |unpack| try self.value(unpack.fields);
+    }
+
     fn value(self: *TreeHash, v: anytype) Error!void {
         const T = @TypeOf(v);
         if (T == typed.NodeId) return self.value(self.program.nodes[@backingInt(v)]);
         if (T == typed.StatementId) return self.value(self.program.statements[@backingInt(v)]);
+        if (T == typed.MatchArm) return self.matchArm(v);
         if (T == language.source.Span) {
             if (self.checked) |checked| {
                 const at = try position(self.context, self.program, checked, std.math.cast(u32, v.start) orelse return error.InvalidSnapshot);

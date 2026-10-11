@@ -893,3 +893,128 @@ test "demand raw payload rejects valid checksummed provenance spliced after head
     try std.testing.expect(try storage.save(handle.key, spliced));
     try std.testing.expectError(error.CacheMiss, deferred.context.ensure(0));
 }
+
+const unpack_source =
+    \\enum Parts:
+    \\    pair(left: str[], right: str[])
+    \\func main() -> int:
+    \\    match Parts.pair(left=["left"], right=["right"]):
+    \\        case Parts.pair(left=left, right=right):
+    \\            return 7 + len(left) + len(right)
+;
+
+fn unpackKey(a: std.mem.Allocator, store: *const stage.Store, program: language.typed.Program, source: language.source.Source) !stage.Digest {
+    var module: ir.Module = .{ .zero_rc = true, .single_owner = true };
+    var discovery: lowering.Discovery = .{};
+    var types: std.AutoHashMapUnmanaged(language.typed.Type, ir.Type) = .empty;
+    var cache = lowering.Cache.init(store);
+    const context: lowering.Context = .{ .arena = a, .input = .{ .program = program, .source = source, .drop_debug = false }, .module = &module, .discovery = &discovery, .types = &types };
+    var session = try lowering.Session.prepare(&cache, context);
+    return session.key(context, program.functions[@backingInt(program.main)]);
+}
+
+fn unpackStatement(program: language.typed.Program) !language.typed.Statement {
+    for (program.statements) |statement| if (statement.data == .match) {
+        for (statement.data.match.arms) |arm| if (arm.unpack != null) return statement;
+    };
+    return error.TestUnexpectedResult;
+}
+
+fn unpackInteger(program: language.typed.Program) !*language.typed.Node {
+    for (@constCast(program.nodes)) |*node| if (node.data == .integer) return node;
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: NEW-CORE-ZERO-RC-RECORD-UNPACK-1
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "lowering cache owned unpack hashes body selection bindings and source changes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var store = try stage.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer store.deinit();
+    var unit = try language.Compilation.init(a, source_name, unpack_source);
+    defer unit.deinit();
+    try unit.check();
+    const program = unit.program.?;
+    const statement = try unpackStatement(program);
+    const arm = &@constCast(statement.data.match.arms)[0];
+    const original = arm.*;
+    const baseline = try unpackKey(a, &store, program, unit.src);
+    const fields = try a.dupe(?language.typed.LocalId, original.unpack.?.fields);
+    std.mem.swap(?language.typed.LocalId, &fields[0], &fields[1]);
+    arm.unpack.?.fields = fields;
+    try std.testing.expect(!std.mem.eql(u8, &baseline, &try unpackKey(a, &store, program, unit.src)));
+    arm.* = original;
+    // An all-discard arm can select the entire body instead of its last child.
+    // Both selections are valid descriptors, but must have different keys.
+    arm.unpack.?.body = arm.body;
+    try std.testing.expect(!std.mem.eql(u8, &baseline, &try unpackKey(a, &store, program, unit.src)));
+    arm.* = original;
+    arm.unpack = null;
+    try std.testing.expect(!std.mem.eql(u8, &baseline, &try unpackKey(a, &store, program, unit.src)));
+    arm.* = original;
+    const integer = try unpackInteger(program);
+    integer.data.integer += 1;
+    try std.testing.expect(!std.mem.eql(u8, &baseline, &try unpackKey(a, &store, program, unit.src)));
+    integer.data.integer -= 1;
+    try std.testing.expectEqual(baseline, try unpackKey(a, &store, program, unit.src));
+    arm.unpack.?.body = @fromBackingInt(program.statements.len);
+    try std.testing.expectError(error.InvalidSnapshot, unpackKey(a, &store, program, unit.src));
+    arm.* = original;
+}
+
+/// Build a checked DAG with one more fielded match around the previous body.
+/// At 64 levels duplicate unpack.body recursion would visit 2^64 bodies.
+fn nestedUnpack(a: std.mem.Allocator, original: language.typed.Program, depth: usize) !language.typed.Program {
+    const typed = language.typed;
+    const statement = try unpackStatement(original);
+    const arm = statement.data.match.arms[0];
+    const prologue = original.statements[@backingInt(arm.body)].data.block;
+    var statements: std.ArrayList(typed.Statement) = .empty;
+    try statements.appendSlice(a, original.statements);
+    var body = arm.unpack.?.body;
+    for (0..depth) |_| {
+        const children = try a.dupe(typed.StatementId, prologue);
+        children[children.len - 1] = body;
+        const wrapper: typed.StatementId = @fromBackingInt(statements.items.len);
+        try statements.append(a, .{ .span = statement.span, .terminates = true, .data = .{ .block = children } });
+        var next = arm;
+        next.body = wrapper;
+        next.unpack.?.body = body;
+        var outer = statement;
+        outer.data.match.arms = try a.dupe(typed.MatchArm, &.{next});
+        body = @fromBackingInt(statements.items.len);
+        try statements.append(a, outer);
+    }
+    var program = original;
+    const functions = try a.dupe(typed.Function, original.functions);
+    functions[@backingInt(program.main)].scope.body = body;
+    program.functions = functions;
+    program.statements = statements.items;
+    return program;
+}
+
+// spec-case: NEW-CORE-ZERO-RC-RECORD-UNPACK-1
+// spec-case: NEW-CORE-STAGE-CACHE-3
+test "lowering cache owned unpack hashes deeply nested bodies without duplicate traversal" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var store = try stage.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer store.deinit();
+    var unit = try language.Compilation.init(a, source_name, unpack_source);
+    defer unit.deinit();
+    try unit.check();
+    const program = try nestedUnpack(a, unit.program.?, 64);
+    const baseline = try unpackKey(a, &store, program, unit.src);
+    const integer = try unpackInteger(program);
+    integer.data.integer += 1;
+    try std.testing.expect(!std.mem.eql(u8, &baseline, &try unpackKey(a, &store, program, unit.src)));
+    integer.data.integer -= 1;
+    try std.testing.expectEqual(baseline, try unpackKey(a, &store, program, unit.src));
+}
