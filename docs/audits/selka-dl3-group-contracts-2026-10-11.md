@@ -4,7 +4,9 @@ The inventory export uses version 2. Every original registered action receives
 one unique summary label, `verification action GROUP member ORDINAL`, after the
 configure graph is complete. Top-level `action_metadata` retains its final
 original label and Zig step kind. A cohort with several steps exports every
-reachable member; duplicate registration is rejected. The coordinator validates
+reachable member. Repeated registration of the same step and recipes in its own
+cohort may refine freshness without duplicating membership; conflicting cohort
+ownership is rejected. The coordinator validates
 unique group IDs and labels, complete metadata, and the agreement between member
 count and original-gate coverage before considering any reusable success.
 

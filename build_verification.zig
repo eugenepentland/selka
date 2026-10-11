@@ -40,8 +40,15 @@ pub const Registry = struct {
 
     /// Associate an original gate step with a named cohort and exact input recipes.
     pub fn register(self: *Registry, id: []const u8, step: *std.Build.Step, recipes: []const []const u8, cacheable: bool, reason: []const u8) void {
-        for (self.entries.items) |entry| {
-            for (entry.steps.items) |existing| if (existing == step) @panic("verification action registered more than once");
+        for (self.entries.items) |*entry| {
+            for (entry.steps.items) |existing| {
+                if (existing != step) continue;
+                if (!std.mem.eql(u8, entry.group.id, id)) @panic("verification action belongs to multiple cohorts");
+                if (!sameRecipes(entry.group.inputs, recipes)) @panic("verification cohort has inconsistent input recipes");
+                entry.group.cacheable = entry.group.cacheable and cacheable;
+                if (!cacheable) entry.group.reason = reason;
+                return; // An explicit freshness refinement retains one member.
+            }
         }
         for (self.entries.items) |*entry| if (std.mem.eql(u8, entry.group.id, id)) {
             if (!sameRecipes(entry.group.inputs, recipes)) @panic("verification cohort has inconsistent input recipes");
@@ -270,4 +277,23 @@ test "a new compile-only gate appended to install requires original-gate fallbac
     try std.testing.expect(!isAction(&identified, prepared));
     try std.testing.expect(isAction(&added_check, prepared));
     try std.testing.expect(!isAction(&install, prepared));
+}
+
+test "same-cohort freshness refinement retains one original member" {
+    var step = fixtureStep(.run);
+    var pointers = [_]*std.Build.Step{&step};
+    var members = [_]Member{.{ .label = "verification action juice member 0", .original_label = "run test", .kind = "run" }};
+    var entries = [_]Entry{.{
+        .group = .{ .id = "juice", .target = "verification-juice", .label = "run test", .inputs = &.{"src/"}, .cacheable = true, .reason = "declared" },
+        .steps = .{ .items = &pointers, .capacity = 1 },
+        .members = .{ .items = &members, .capacity = 1 },
+    }};
+    var registry: Registry = .{ .build = undefined, .entries = .{ .items = &entries, .capacity = 1 }, .controls = .{ .optimize = "Debug" } };
+    registry.register("juice", &step, &.{"src/"}, false, "requires freshness");
+    registry.register("juice", &step, &.{"src/"}, true, "declared again");
+    try std.testing.expectEqual(@as(usize, 1), registry.entries.items.len);
+    try std.testing.expectEqual(@as(usize, 1), registry.entries.items[0].steps.items.len);
+    try std.testing.expectEqual(@as(usize, 1), registry.entries.items[0].members.items.len);
+    try std.testing.expect(!registry.entries.items[0].group.cacheable);
+    try std.testing.expectEqualStrings("requires freshness", registry.entries.items[0].group.reason);
 }
