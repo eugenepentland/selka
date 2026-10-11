@@ -1,6 +1,6 @@
 # Standard library
 
-Nineteen modules ship inside the compiler. They are ordinary guest source
+Twenty modules ship inside the compiler. They are ordinary guest source
 built on the managed types described in the [language guide](python-syntax.md),
 [managed memory](managed-memory.md) and [managed byte strings](bytes.md): growable arrays (`T[]`),
 `dict`, `str`, `bytes`, value records, optional values (`T?`) and checked results. There is no
@@ -13,6 +13,7 @@ Import a module by name; projects do not copy these files.
 | [`math`](#math) | binary64 classification, rounding, roots, powers, integer extrema and divisors |
 | [`strings`](#strings) | the text operations `str` itself does not provide |
 | [`sort`](#sort) | stable ordering, binary search, extrema and duplicate removal |
+| [`parallel`](#parallel) | ordered, synchronous mapping with scoped workers in zero-RC mode |
 | [`path`](#path) | pure POSIX-style path text algebra |
 | [`hex`](#hex) | hexadecimal text for byte strings |
 | [`base64`](#base64) | RFC 4648 standard and URL-safe transcoding |
@@ -319,6 +320,43 @@ func main() -> int:
             return ranked[0].score + ranked[1].score * position // 2
         case None:
             return 2
+```
+
+## parallel
+
+```text
+# doc: not-mylang
+map[T: copy + storable, R: copy + storable](values: T[], function: func(T) -> R) -> R[]
+```
+
+`map` applies a function to every element and returns a new list in input order.
+The input remains available after the call. Ordinary builds execute the standard
+function sequentially; experimental zero-RC builds borrow distinct input elements
+for scoped workers and join all workers before returning their owned results.
+See [scoped parallel work](managed-memory.md#explicit-values-and-scoped-parallel-work-experimental-closeout).
+
+The callback takes one read-only input and returns a storable value. In zero-RC
+mode, a callback returning managed input data must explicitly `.copy()` it;
+returning newly constructed data transfers it to the output. The prototype has
+no closure captures, detached tasks or escaping handles, and does not support
+Unit elements. Scheduling and per-element storage have a cost, so a parallel
+speedup is not guaranteed for small callbacks.
+
+```mylang
+# doc: expect item-1! item-2!
+import parallel
+
+func transform(value: str) -> str:
+    return value + "!"
+
+func main(out: Stream) -> int:
+    mut source = ["item-" + str(1), "item-" + str(2)]
+    const result = parallel.map(source, transform)
+    if source[0] != "item-1":
+        return 1
+    source.clear()
+    out.print(result[0], result[1])
+    return 0
 ```
 
 ## path
