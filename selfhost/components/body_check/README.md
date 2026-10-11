@@ -226,7 +226,7 @@ contextual narrow integer literals, structural Option facts and payload
 lowering, direct dictionary indexing and length, and set literals, contextual
 empty construction, `set(iterable)` gathering, and native set combination/relation lowering. Named
 dictionary bindings support get, pop, setdefault, update, copy, clear, keys,
-values and items with source operand typing and receiver usage metadata. Collection recipes use the outer `collection` tag and six inner tags;
+values and items with source operand typing and receiver usage metadata. Named set bindings support add, discard, remove, update, pop, clear, copy, combinations and relations, including iterable operands. Mapping access preserves key values without list-index normalization. Collection recipes use the outer `collection` tag and six inner tags;
 views require their canonical dictionary to exist first. `list` snapshots of dictionaries, sets and live views preserve native temporary and recipe order, including the intermediate result rows retained for keys and values. Ordinary dictionary/set and live-view iteration, including item unpacking and enumerated positions with native source rebinding analysis, is connected. Ordinary record and
 collection storage recursion remains bounded and does not change wire limits.
 
