@@ -11,7 +11,7 @@ const Fixture = struct { shared: keys.Shared, identities: []const ?Digest, tests
 const Trial = struct { prepared: graph.Prepared, stats: graph.Statistics, reused: []const bool, derived: []const Digest };
 const Manifest = struct { nodes: []const Digest, tests: []const Digest, indexes: []const Digest, topology: Digest, node_count: u32, test_count: u32 };
 const Index = struct { group: u32, reverse: []const u32 };
-const Publication = struct { prepared: graph.Prepared, store: *const stage.Store, indexes: adapter.incremental_protocol.Indexes };
+const Publication = struct { parent: std.mem.Allocator, prepared: graph.Prepared, indexes: adapter.incremental_protocol.Indexes };
 
 fn fixture(a: std.mem.Allocator, shared: keys.Shared, identities: []const ?Digest, roots: []const []const u32) !Fixture {
     const tests = try a.alloc(keys.Test, roots.len);
@@ -66,9 +66,20 @@ fn replaceIndexes(a: std.mem.Allocator, store: *const stage.Store, slot: Digest,
 }
 
 fn publicationFailure(backing: std.mem.Allocator, input: Publication) !void {
+    // Faulted reads may change a store's retained cache state. Each injection
+    // must start with the same published records and its own store instance.
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var setup = std.heap.ArenaAllocator.init(input.parent);
+    defer setup.deinit();
+    const a = setup.allocator();
+    var store = try stage.Store.init(input.parent, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer store.deinit();
+    var seeded: graph.Statistics = .{};
+    try input.prepared.publish(a, &store, input.indexes, &seeded);
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
-    var constrained = input.store.*;
+    var constrained = store;
     constrained.backing = backing;
     var stats: graph.Statistics = .{};
     try input.prepared.publish(arena.allocator(), &constrained, input.indexes, &stats);
@@ -288,7 +299,7 @@ test "graph metadata saveChunks frees every earlier publication collection on Ou
     try std.testing.expectError(error.OutOfMemory, warm.prepared.publish(a, &constrained, warm.prepared.prior.?, &stats));
     try std.testing.expect(failing.has_induced_failure);
     try std.testing.expectEqual(failing.allocated_bytes, failing.freed_bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, publicationFailure, .{Publication{ .prepared = warm.prepared, .store = &store, .indexes = warm.prepared.prior.? }});
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, publicationFailure, .{Publication{ .parent = std.testing.allocator, .prepared = warm.prepared, .indexes = warm.prepared.prior.? }});
 }
 
 // spec-case: NEW-CORE-TEST-GRAPH-1

@@ -1,0 +1,39 @@
+{
+  "base_commit": "a97ef51bb",
+  "branch": "codex/zero-rc-owned-match-20261011",
+  "core_tests": 1016,
+  "focused_tests": 13,
+  "whole_tree_guardian_checks": 88,
+  "counted_zero_rc_executions": 51,
+  "ordinary_rc_controls": 5,
+  "boxed_shell_call_present_modes": [
+    "release",
+    "debug",
+    "verify",
+    "optimized_debug",
+    "no_facts"
+  ],
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-payload/candidate-v2/bin/mylang",
+      "sha256": "5789c7d7af87655b3ea517db54beefa33f6c5d17a6132ec97829ab3a48a136bf"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-match/candidate-v2/bin/mylang",
+      "sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269"
+    }
+  },
+  "source_manifest_sha256": "439aad9e7c3fe0756ba50aea3bbc5bd84e42348426e475677138db54991c7b86",
+  "results_sha256": "0f50461b4eec7b7da144d7cd06fbf3e16d03c811a605e402c64b033d469344ff",
+  "logs": {
+    ".tmp/owned-match/focused-v2-final.log": "c17a32e61cb5e86a39af5259b786ad5cc2e33aada71a30cb520bdcb1f0cf1369",
+    ".tmp/owned-match/core-v2.log": "c7d1b6e8892c22aeb43042c7a493d3dff379069db82fdaf0aad5eb7e592aa943",
+    ".tmp/owned-match/measure-final.log": "a394aced2d65b94918177d5adfaec97a5237df46bf927b5eb02eb16384099fdb",
+    ".tmp/owned-match/guardian-v2-final.log": "9b3e4d0eeeb1f6ed5eae79f52295777312f897c7b09fea0ce74425995f58be13"
+  },
+  "notes": [
+    "The full Core run passed all eight shards. The surrounding qualification script subsequently stopped on a misspelled baseline compiler path; measurement and whole-tree Guardian were then run successfully via .tmp/owned-match/measure-final.sh.",
+    "Initial qualification found that built-in decode results needed the same ownership classification as source calls. Final tests and measurements include that fix.",
+    "All 51 zero-RC executions passed output, managed-leak, counter, emitted LLVM and linked-symbol checks. All five ordinary RC controls passed output and managed-leak checks."
+  ]
+}

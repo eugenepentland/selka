@@ -76,6 +76,28 @@ cross calls under a single-input return contract. Mutation or moving that owner
 while a view is still used is rejected. Files and dependent capabilities use
 `with` scopes. Sharing and `.snapshot()` are refused in this mode.
 
+`try` transfers the active payload of an owned `Result` or `Option` directly.
+It does not make a deep copy. `match` on a fresh call result also transfers its
+payload, so `match load(): case Ok(value): return value` needs no copy. Matching
+a named value (`match saved`) or a field/index continues to borrow, even at its
+last use. A fresh constructor, `.copy()` or `.pop()` result follows the
+same transfer rule as a call, as do fresh results from text/byte decoding,
+validation and numeric parsing. A named-field pattern on a fresh owned match
+splits the whole payload: `case Pair.parts(left=a, right=b)` gives `a` and `b`
+independent ownership. Fields bound to `_` or unused in the arm are destroyed.
+The hidden payload is consumed as a whole; ordinary `record.field` access and
+patterns on named values still borrow. Nested patterns also borrow their inner
+intermediate value; this prototype only splits the immediate fresh payload.
+`.copy()` explicitly requests an independent owner.
+See the [owned-payload](../experiments/owned-payload-20261011/README.md) and
+[fresh-match](../experiments/owned-match-20261011/README.md) experiments.
+
+JSON `get` and `at` borrow the input container and copy only the selected value.
+Missing keys, wrong variants and out-of-range indices return `None` without
+copying the container. `as_list` and `as_dict` still return independent copies.
+See the [JSON lookup and field-transfer measurements](../experiments/zero-rc-batch-20261011/README.md)
+for examples, allocation counts, and runtime comparisons.
+
 The zero-RC runtime has no reference-count field, retain/release functions, or
 count-based uniqueness checks. Heap allocation and ordinary destruction still
 occur. The header remains 32 bytes because of alignment, and explicit copies can

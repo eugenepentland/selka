@@ -888,6 +888,11 @@ void myl_core_drop_owned(myl_block *block) {
         block_free(dying);
     }
 }
+/* The compiler has transferred the complete value out of this owned box. */
+void myl_core_box_drop_shell(myl_block *box) {
+    if (!box || kind_of(box) != MYL_KIND_BOX) abort();
+    block_free(box);
+}
 myl_block *myl_core_owned_octets_copy(myl_block *source) {
     myl_block *copy = str_from((const char *)block_data(source), (size_t)source->len);
     copy->kind = (copy->kind & ~MYL_KIND_MASK) | kind_of(source);

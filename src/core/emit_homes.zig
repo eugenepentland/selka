@@ -1135,8 +1135,8 @@ fn reachable(f: *const ir.Function, b: usize) bool {
 fn homable(m: *const ir.Module, f: *const ir.Function, inst: ir.Inst) bool {
     if (!m.passedInMemory(inst.ty)) return false;
     return switch (inst.op) {
-        .phi, .record_make, .union_make, .record_set, .record_get, .union_payload => true,
-        .list_get, .list_get_field, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .array_set => true,
+        .phi, .record_make, .union_make, .record_set, .record_get, .union_payload, .union_take => true,
+        .list_get, .list_get_field, .box_get, .box_take, .dict_entry_key, .dict_entry_value, .array_get, .array_set => true,
         .call => m.functions.items[inst.a.index()].signature.linkage == .internal,
         .call_indirect => m.compound(f.inst(f.resolve(inst.a)).ty).@"fn".linkage == .internal,
         else => false,

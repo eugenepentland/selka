@@ -137,7 +137,7 @@ pub const juice_pure = [_][]const u8{ "tests/test_juice.py", "scripts/juice_tool
 pub const juice = [_][]const u8{ "tests/test_juice.py", "tests/test_juice_native.py", "scripts/juice", "scripts/juice_tool/", "scripts/juice_validate.py", "examples/juice/" };
 
 /// Runtime collector experiments observe CPU, scheduler and current host state.
-pub const juice_runtime = [_][]const u8{ "tests/test_juice_runtime_bench.py", "scripts/juice_tool/", "scripts/juice_runtime_bench.py" };
+pub const juice_runtime = [_][]const u8{ "tests/test_juice_runtime_bench.py", "scripts/juice_tool/", "scripts/juice_runtime_bench.py", "scripts/build_admission.py", "scripts/build-slot.sh" };
 
 /// `mylang doctest .`: every page it walks.
 pub const doctest = [_][]const u8{ "README.md", "SPEC.md", "docs/**/*.md" };
@@ -179,6 +179,8 @@ pub const verification_cache = [_][]const u8{
     "scripts/verify_cache_test.py",
     "scripts/verification_snapshot_test.py",
     "scripts/build-slot.sh",
+    "scripts/build_admission.py",
+    "scripts/build_slot_test.py",
     "tests/test_inputs_coverage.py",
 };
 

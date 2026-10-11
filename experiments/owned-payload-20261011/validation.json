@@ -1,0 +1,65 @@
+{
+  "merge_commit": "9225adeb06cca3ab19a0f4437ec2065fbea34e2e",
+  "main_checkout": "/home/epentland/ai/canopy/mylang-debug-speedup-main",
+  "merge_checks": {
+    "core_tests": 1003,
+    "selected_frontend_tests": 108,
+    "guardian_checks": 88,
+    "counted_zero_rc_executions": 13,
+    "core_log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-integration-20261011/.tmp/zero-rc-merge/core.log",
+      "sha256": "96d5a856d887b81e202e7b237d32e60be88a96b299524a1823752b41a856f6a9"
+    },
+    "frontend_log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-integration-20261011/.tmp/zero-rc-merge/frontend.log",
+      "sha256": "d2fdcf4ae1a82205b5386f40e0f813ee0aac3b8ec751beaf067bd1a31d20f65a"
+    },
+    "guardian_log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-integration-20261011/.tmp/zero-rc-merge/guardian.log",
+      "sha256": "05d50ba2e6c35fbe19d63c04460dba1af08cdf9f2985c9495a221d042175b03d"
+    }
+  },
+  "prototype_focused_tests": 52,
+  "prototype_guardian_checks": 88,
+  "source_manifest": {
+    "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/experiments/owned-payload-20261011/source-sha256.json",
+    "sha256": "30db7bb831a867dd48529ec91d87ccbe4214b70af23409fadfec5f415411dd8a"
+  },
+  "prototype_full_core_tests": 1008,
+  "prototype_full_core_failures": 0,
+  "prototype_final_affected_tests": 20,
+  "counted_comparison_executions": 20,
+  "counted_boxed_executions": 5,
+  "cache_test_setup_fix": "2ad71ee0f",
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-integration-20261011/.tmp/zero-rc-merge/candidate/bin/mylang",
+      "sha256": "c3df38133a5fd66412389fe8515f9180d3dfcf44a996b5639be298054b80cc56"
+    },
+    "after": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-payload/candidate-v2/bin/mylang",
+      "sha256": "5789c7d7af87655b3ea517db54beefa33f6c5d17a6132ec97829ab3a48a136bf"
+    }
+  },
+  "core_log": {
+    "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-payload/core-v2.log",
+    "sha256": "5dc1c24dc85e58f0446ed58681e5be50561d01aff2b23d5b280db770f4444cbf"
+  },
+  "final_build_log": {
+    "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-payload/targeted-final.log",
+    "sha256": "b54d9ecb32a53132e90412c03ee450735de6cd585aa814d7177e53eeb1b41ccf"
+  },
+  "guardian_log": {
+    "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-payload/guardian-final.log",
+    "sha256": "cda39be4e606712246e4f6a7e7e8e8ebdeb8226b9bfeeef694d8052699b45ca7"
+  },
+  "measurement_log": {
+    "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-payload/measure-v2.log",
+    "sha256": "b84b371d13b2e1b90d5ac1e4988bc3b5bb6d22e9415fb42a66f1f1bbdffbf279"
+  },
+  "boxed_log": {
+    "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-payload/boxed-v2.log",
+    "sha256": "76a0b592bdfef8d92c2ce8472e55f21b77215c7019ec38151b608c8b767f7109"
+  },
+  "validation_note": "The full Core run passed 1008 tests; its install gate rejected test-only style issues. Those were corrected, all 88 whole-tree checks passed, and the final install plus 20 affected tests passed before final measurements."
+}

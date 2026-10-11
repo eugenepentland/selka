@@ -1,0 +1,120 @@
+{
+  "compiler_source_commit": "d57510b466ff798ec38b3719e44ee84b40f68e02",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-20261011/.tmp/zero-rc-batch/candidate-v2/bin/mylang",
+    "sha256": "76ef3ab199bfed73ad6e5ffb1e0ef8c11eb65afd65ac7826307d83e713b8d2d3"
+  },
+  "core": {
+    "passed": 1025,
+    "failed": 0,
+    "skipped": 0,
+    "process_results": 8,
+    "source_commit": "d57510b466ff798ec38b3719e44ee84b40f68e02",
+    "exit_code": 0,
+    "log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-20261011/.tmp/zero-rc-batch/core-v2.log",
+      "sha256": "08c0fe337de9e6d3f66f0ddfae559a03b17c5a6e8ee2d14b471bb9ad7690b645"
+    }
+  },
+  "frontend": {
+    "passed": 177,
+    "failed": 0,
+    "skipped": 0,
+    "process_results": 1,
+    "source_commit": "c07ca27fb2d8b6bb43854944bcc8df7f2cc09ec9",
+    "exit_code": 0,
+    "log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-20261011/.tmp/zero-rc-batch/frontend.log",
+      "sha256": "6de4ef843a1ee38c77b731a29675d76b24f990fe036a85fb6b1e9dad14abb4c2"
+    }
+  },
+  "cli_semantic_cache": {
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "process_results": 1,
+    "source_commit": "c07ca27fb2d8b6bb43854944bcc8df7f2cc09ec9",
+    "exit_code": 0,
+    "log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-20261011/.tmp/zero-rc-batch/cli-cache.log",
+      "sha256": "e741410cc023617d77143a9d287f34e2be0c65743f6ed0389ff6cce9731bc0eb"
+    }
+  },
+  "prior_validation_note": "Frontend and CLI semantic-cache tests ran before the final Core lowering-cache hashing follow-up; their tested frontend and semantic-cache implementation remained unchanged. The final Core suite and executable cache replay checks include that follow-up.",
+  "owned_record_cache_execution": {
+    "compiler_sha256": "76ef3ab199bfed73ad6e5ffb1e0ef8c11eb65afd65ac7826307d83e713b8d2d3",
+    "runs": [
+      {
+        "mode": "debug",
+        "phase": "cold",
+        "build_report": "mylang-core: cache: 2 units, 2 reused, 0 compiled, 0 verified; program linked; 1 processes\n",
+        "status": 0,
+        "stdout": "267560\n",
+        "stderr": ""
+      },
+      {
+        "mode": "debug",
+        "phase": "warm",
+        "build_report": "mylang-core: cache: replayed the last identical build\n",
+        "status": 0,
+        "stdout": "267560\n",
+        "stderr": ""
+      },
+      {
+        "mode": "debug",
+        "phase": "uncached",
+        "build_report": "mylang-core: cache: 2 units, 2 reused, 0 compiled, 0 verified; program linked; 1 processes\n",
+        "status": 0,
+        "stdout": "267560\n",
+        "stderr": ""
+      },
+      {
+        "mode": "release",
+        "phase": "cold",
+        "build_report": "mylang-core: cache: 1 units, 1 reused, 0 compiled, 0 verified; program linked; 1 processes\n",
+        "status": 0,
+        "stdout": "267560\n",
+        "stderr": ""
+      },
+      {
+        "mode": "release",
+        "phase": "warm",
+        "build_report": "mylang-core: cache: replayed the last identical build\n",
+        "status": 0,
+        "stdout": "267560\n",
+        "stderr": ""
+      },
+      {
+        "mode": "release",
+        "phase": "uncached",
+        "build_report": "mylang-core: cache: 1 units, 1 reused, 0 compiled, 0 verified; program linked; 1 processes\n",
+        "status": 0,
+        "stdout": "267560\n",
+        "stderr": ""
+      }
+    ],
+    "exit_code": 0,
+    "log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-20261011/.tmp/zero-rc-batch/warm-v2.log",
+      "sha256": "b8e658055f6fd360abe1ecfd1fa1e77ee618b55bb397473473d1a414842b78b0"
+    }
+  },
+  "guardian": {
+    "checks_passed": 88,
+    "whole_tree": true,
+    "exit_code": 0,
+    "log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-20261011/.tmp/zero-rc-batch/guardian-v2.log",
+      "sha256": "7e8fb0239c5516b2804c428c0f12c103a012dcae04f7651b4ce877abd066bbe5"
+    }
+  },
+  "install": {
+    "exit_code": 0,
+    "log": {
+      "path": "/home/epentland/ai/canopy/mylang-zero-rc-batch-20261011/.tmp/zero-rc-batch/install-v2.log",
+      "sha256": "cda6620f960e4f7d156ba021fc3edbfe089f946aa4891c1b30df916896d8a2db"
+    }
+  },
+  "measurement_source_manifest_verified": true,
+  "benchmark_evidence": "validation.json"
+}

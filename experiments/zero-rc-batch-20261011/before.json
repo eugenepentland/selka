@@ -1,0 +1,4227 @@
+{
+  "cases": {
+    "array_1_control": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "77e45594cedaafc4d72cc43a4d01cec48d4259f13155ced9680061d0f90b1407",
+        "binary_sha256": "1534111f472c2fc9b7bd5b2ead2bc5796371d16e69d7b505807cc45e87329c55",
+        "llvm_sha256": "a34fbc73c82109c0f21b14fcf1af3d8942370b50b9dbff345f43ea9709b9e869",
+        "build_ns": 1245183219,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_1_control/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2448021,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_1_control/release/counts-1.json",
+              "counter_sha256": "50979335442e53a1ec2223d57e548a964883f900a6cabde94e0ea53fc79f59af",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 15,
+              "memory": {
+                "allocs": 27,
+                "alloc_bytes": 2560,
+                "frees": 27,
+                "reallocs": 0,
+                "peak_live_bytes": 1536,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 84,
+              "allocs": 27,
+              "alloc_bytes": 2560,
+              "frees": 27,
+              "free_bytes": 2560,
+              "list_grows": 3,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 273,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 4,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 4,
+              "buffer_append_bytes": 256,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1536,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "array_1_hit": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "bc8a9ac45520546037cb8780b94ece0157cf3991629fe10e913081661b716095",
+        "binary_sha256": "c7bff339bef9967edce5d02bfae1112425cc057e455c30041597d68f10c76692",
+        "llvm_sha256": "e11452da149517e9de72e7ee62deeed6c4023ad058f7c1da54bea24c3fe1af6e",
+        "build_ns": 1187462618,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_1_hit/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2554112,
+            "stdout": "array 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_1_hit/release/counts-1.json",
+              "counter_sha256": "cb80a7845363dce4aa92922b77cfd532f59c20fde4945e41dabc77d483826dc9",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 79,
+              "memory": {
+                "allocs": 347,
+                "alloc_bytes": 35328,
+                "frees": 347,
+                "reallocs": 0,
+                "peak_live_bytes": 2016,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 180,
+              "allocs": 347,
+              "alloc_bytes": 35328,
+              "frees": 347,
+              "free_bytes": 35328,
+              "list_grows": 3,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 193,
+              "text_copy_bytes": 12561,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 4,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 4,
+              "buffer_append_bytes": 256,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 2016,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "array_1_miss": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "8b3b933907b57476b3667830a477fcd4671f364081b2d48bfaee94aa8d9b9ec6",
+        "binary_sha256": "dcbc02cea4cd75d83309a4001f8e764fd39f582fa8d936547a6acc03faa3c7ff",
+        "llvm_sha256": "7bd6b1b74986bae09d805296fc7fbdae00cb7b6962156c5145624fdc7af3b1ae",
+        "build_ns": 1050776486,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_1_miss/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 5099389,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_1_miss/release/counts-1.json",
+              "counter_sha256": "0418e1a19af7f8d4ebc7df4cacea2a32206601573d6a0f9e27bee71af192bad0",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 47,
+              "memory": {
+                "allocs": 251,
+                "alloc_bytes": 25088,
+                "frees": 251,
+                "reallocs": 0,
+                "peak_live_bytes": 1696,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 148,
+              "allocs": 251,
+              "alloc_bytes": 25088,
+              "frees": 251,
+              "free_bytes": 25088,
+              "list_grows": 3,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 129,
+              "text_copy_bytes": 8465,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 4,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 4,
+              "buffer_append_bytes": 256,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1696,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "array_16_control": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "57ddbb99836e74f2cb52970718a2c3c91dd0c78603140181726bdb64c5b30db4",
+        "binary_sha256": "cd773d016dc603e43bfd55ab060f4605285086548f118ae9d2344dda7a4e1800",
+        "llvm_sha256": "332433bc29a6bd9c6b736fd1596136e7636224b4816e291d35c45c26900e2b6b",
+        "build_ns": 1166670519,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_16_control/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1395067,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_16_control/release/counts-1.json",
+              "counter_sha256": "9482d5b1792d3b01edb8b8618fd0f415c559ed77fd06f7d3b2a1c6664fc7968c",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 105,
+              "memory": {
+                "allocs": 209,
+                "alloc_bytes": 20808,
+                "frees": 209,
+                "reallocs": 0,
+                "peak_live_bytes": 10280,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 609,
+              "allocs": 209,
+              "alloc_bytes": 20808,
+              "frees": 209,
+              "free_bytes": 20808,
+              "list_grows": 20,
+              "list_grow_bytes": 384,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 2313,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 34,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 34,
+              "buffer_append_bytes": 2176,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 10280,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "array_16_hit": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "35ca93b5b7d60fd3b3e9e760d294224ed85be94ce2a765d6112f9a19d44abcf3",
+        "binary_sha256": "c5ba5f17b04408345a41c5c7f1fadef9631fca82e98ef79d89af4a2a12526053",
+        "llvm_sha256": "1646f049b3ea76a9435f7ac982104387ec3b8540bbccaccfc9763b3467f6521a",
+        "build_ns": 1108594577,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_16_hit/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3118239,
+            "stdout": "array 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_16_hit/release/counts-1.json",
+              "counter_sha256": "054ca82d8064129871b1cb3bcaff2c47b9c138536a9af475317f7a0aad0f5657",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 169,
+              "memory": {
+                "allocs": 1969,
+                "alloc_bytes": 215368,
+                "frees": 1969,
+                "reallocs": 0,
+                "peak_live_bytes": 13696,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 705,
+              "allocs": 1969,
+              "alloc_bytes": 215368,
+              "frees": 1969,
+              "free_bytes": 215368,
+              "list_grows": 20,
+              "list_grow_bytes": 384,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1153,
+              "text_copy_bytes": 76041,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 34,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 34,
+              "buffer_append_bytes": 2176,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 13696,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "array_16_miss": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "baf6ce1f20de096ec32165517057cc7122ae4f4c9acac1fc936beacb7bf33003",
+        "binary_sha256": "13ecbd65350ed3d34d2474c179a8d784cfec78a4603a80a035352e5c47fef3a7",
+        "llvm_sha256": "f079cbb240a640c341936c79cb772f41faa24b3dda974d2f965018fae8a4772b",
+        "build_ns": 1028933548,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_16_miss/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3040644,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_16_miss/release/counts-1.json",
+              "counter_sha256": "64fb7cd0a0396064859445c2cfae9139369bb2888cdd15a43638e18fb599c65d",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 137,
+              "memory": {
+                "allocs": 1873,
+                "alloc_bytes": 205128,
+                "frees": 1873,
+                "reallocs": 0,
+                "peak_live_bytes": 13376,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 673,
+              "allocs": 1873,
+              "alloc_bytes": 205128,
+              "frees": 1873,
+              "free_bytes": 205128,
+              "list_grows": 20,
+              "list_grow_bytes": 384,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1089,
+              "text_copy_bytes": 71945,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 34,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 34,
+              "buffer_append_bytes": 2176,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 13376,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "array_128_control": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e1fd8cecc93e389c63b8db6bf77846477ba27ccdcdf229a8c76d1e64645aa9aa",
+        "binary_sha256": "509ee9b66cd8483c519779960aa3b67cd8108a84f36dbe89288c1704c312bedf",
+        "llvm_sha256": "c1e12cf5be9232b65467caed559af4b30e1d83e46dcd173e4ba36e0bc6656cc3",
+        "build_ns": 1367985710,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_control/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2798730,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_control/release/counts-1.json",
+              "counter_sha256": "6aaa993647cc4606e9421d6cf82bd6d07b6bdb96fb58b8abc98cde4a18b0dbfd",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 777,
+              "memory": {
+                "allocs": 1554,
+                "alloc_bytes": 151792,
+                "frees": 1554,
+                "reallocs": 2,
+                "peak_live_bytes": 75408,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4529,
+              "allocs": 1554,
+              "alloc_bytes": 151792,
+              "frees": 1554,
+              "free_bytes": 154864,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 17545,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 75408,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e1fd8cecc93e389c63b8db6bf77846477ba27ccdcdf229a8c76d1e64645aa9aa",
+        "binary_sha256": "cfe10db4c77b2cc3218bcb3dd712072f96a770f589b03d221186db2d03fdc416",
+        "llvm_sha256": "113d14f5921e6206bd750bdedb446d74632f34d4347fd0f895e20ebbb02a958a",
+        "build_ns": 642702059,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_control/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1786793,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_control/debug/counts-1.json",
+              "counter_sha256": "d1e326412763f8497a81c40f9780ea298ce83ce2995e0e1442ccfebf3295a5c2",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 777,
+              "memory": {
+                "allocs": 1554,
+                "alloc_bytes": 151792,
+                "frees": 1554,
+                "reallocs": 2,
+                "peak_live_bytes": 75408,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 8021,
+              "allocs": 1554,
+              "alloc_bytes": 151792,
+              "frees": 1554,
+              "free_bytes": 154864,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 17545,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 75408,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "verify": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e1fd8cecc93e389c63b8db6bf77846477ba27ccdcdf229a8c76d1e64645aa9aa",
+        "binary_sha256": "d488c65be7c8f8dcde7e61503d1a59a89151ca9df4cc1e15974f6923e55bb1c4",
+        "llvm_sha256": "f954d76233a39b73598c36e783a95f54a2dd6feab559a3a73fc288978fccd84d",
+        "build_ns": 746467097,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_control/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2172531,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_control/verify/counts-1.json",
+              "counter_sha256": "26d31ed41956dbffb940a6bd04f8cab5a839ba2f0f666d1e6cc87fa09ee39eb8",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 777,
+              "memory": {
+                "allocs": 1554,
+                "alloc_bytes": 151792,
+                "frees": 1554,
+                "reallocs": 2,
+                "peak_live_bytes": 75408,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4529,
+              "allocs": 1554,
+              "alloc_bytes": 151792,
+              "frees": 1554,
+              "free_bytes": 154864,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 17545,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 75408,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "optimized_debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e1fd8cecc93e389c63b8db6bf77846477ba27ccdcdf229a8c76d1e64645aa9aa",
+        "binary_sha256": "30f2bc8d69b61c9ea4e9354508e52261620001dbefa86b371faf7fac1f9eaf56",
+        "llvm_sha256": "c1e12cf5be9232b65467caed559af4b30e1d83e46dcd173e4ba36e0bc6656cc3",
+        "build_ns": 744437584,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_control/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1627192,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_control/optimized_debug/counts-1.json",
+              "counter_sha256": "0703de31bbde299cd5142f1a31211e49c2bac282505f700ace66e858a3e0c283",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 777,
+              "memory": {
+                "allocs": 1554,
+                "alloc_bytes": 151792,
+                "frees": 1554,
+                "reallocs": 2,
+                "peak_live_bytes": 75408,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4529,
+              "allocs": 1554,
+              "alloc_bytes": 151792,
+              "frees": 1554,
+              "free_bytes": 154864,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 17545,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 75408,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "no_facts": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e1fd8cecc93e389c63b8db6bf77846477ba27ccdcdf229a8c76d1e64645aa9aa",
+        "binary_sha256": "7d7fed0a1cef02c7131cf5d95f98c26cb811c6c4d2e275cd151047363e3a13e4",
+        "llvm_sha256": "b9aa2948b69f2deeca7bb5d0b4a85bb3d50be16db98e6a6b464497e0319be7bb",
+        "build_ns": 604676283,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_control/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1740165,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_control/no_facts/counts-1.json",
+              "counter_sha256": "f839ec95af2074c6859fe518c8a05b1e4e8e7af05d970d168f8bc80b494cf885",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 777,
+              "memory": {
+                "allocs": 1554,
+                "alloc_bytes": 151792,
+                "frees": 1554,
+                "reallocs": 2,
+                "peak_live_bytes": 75408,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4529,
+              "allocs": 1554,
+              "alloc_bytes": 151792,
+              "frees": 1554,
+              "free_bytes": 154864,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 17545,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 75408,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "array_128_hit": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a7b20576e9161623491f95563c3bf717e6e558dcca61bf2c864b6b1b8ce8c44a",
+        "binary_sha256": "d3f17a8262f7026fd4cd7bf93c361153cf474645d7804a51810891e25fd2ffaa",
+        "llvm_sha256": "878ad9ecd4bffd5f9dc45d80e0fbdc4a6182d6bf893a317e0192765f1ed32785",
+        "build_ns": 726610361,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_hit/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 5357465,
+            "stdout": "array 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_hit/release/counts-1.json",
+              "counter_sha256": "ffe272362faa8fac4380e667dc5ae937006818ade536c142f7b4a96100dea1db",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 841,
+              "memory": {
+                "allocs": 14066,
+                "alloc_bytes": 1550832,
+                "frees": 14066,
+                "reallocs": 2,
+                "peak_live_bytes": 101520,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4625,
+              "allocs": 14066,
+              "alloc_bytes": 1550832,
+              "frees": 14066,
+              "free_bytes": 1553904,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8321,
+              "text_copy_bytes": 550025,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101520,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a7b20576e9161623491f95563c3bf717e6e558dcca61bf2c864b6b1b8ce8c44a",
+        "binary_sha256": "e08e53cbe78250d5d7814a1ecef97ddccf33ecb179e3e5e514b333bf2690681e",
+        "llvm_sha256": "16a936540955fd96da4475109cf0141a0480286b9eb77551eb3f2c47432888eb",
+        "build_ns": 648128367,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_hit/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2636789,
+            "stdout": "array 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_hit/debug/counts-1.json",
+              "counter_sha256": "d5ea2b14cefa1f841cbb3c3576acd65a53d3513a004046a4a39540578201cb29",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 841,
+              "memory": {
+                "allocs": 14066,
+                "alloc_bytes": 1550832,
+                "frees": 14066,
+                "reallocs": 2,
+                "peak_live_bytes": 101520,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 8117,
+              "allocs": 14066,
+              "alloc_bytes": 1550832,
+              "frees": 14066,
+              "free_bytes": 1553904,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8321,
+              "text_copy_bytes": 550025,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101520,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "verify": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a7b20576e9161623491f95563c3bf717e6e558dcca61bf2c864b6b1b8ce8c44a",
+        "binary_sha256": "771bde80e10ab15f83647ed3886c5bbf48877b0608d0097d9b03a770e03920f3",
+        "llvm_sha256": "9d8deef97172f5fdf90757662bf1f357bca93a79b9d9c0ae7b03427ea91e691d",
+        "build_ns": 803113317,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_hit/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3173246,
+            "stdout": "array 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_hit/verify/counts-1.json",
+              "counter_sha256": "48eca9606743467bc0253a8b5df4704774e4f64b322dc399270bb20ed7a64f4d",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 841,
+              "memory": {
+                "allocs": 14066,
+                "alloc_bytes": 1550832,
+                "frees": 14066,
+                "reallocs": 2,
+                "peak_live_bytes": 101520,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4625,
+              "allocs": 14066,
+              "alloc_bytes": 1550832,
+              "frees": 14066,
+              "free_bytes": 1553904,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8321,
+              "text_copy_bytes": 550025,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101520,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "optimized_debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a7b20576e9161623491f95563c3bf717e6e558dcca61bf2c864b6b1b8ce8c44a",
+        "binary_sha256": "5f7aacc34aa7415f2915288aa9c1e963398f7ed4be711987db908adcc70f58c9",
+        "llvm_sha256": "878ad9ecd4bffd5f9dc45d80e0fbdc4a6182d6bf893a317e0192765f1ed32785",
+        "build_ns": 792027798,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_hit/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2322612,
+            "stdout": "array 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_hit/optimized_debug/counts-1.json",
+              "counter_sha256": "691c54079e598f4c3f8d186a5fb393ea167a45a606eea4269e993f8a56c2389e",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 841,
+              "memory": {
+                "allocs": 14066,
+                "alloc_bytes": 1550832,
+                "frees": 14066,
+                "reallocs": 2,
+                "peak_live_bytes": 101520,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4625,
+              "allocs": 14066,
+              "alloc_bytes": 1550832,
+              "frees": 14066,
+              "free_bytes": 1553904,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8321,
+              "text_copy_bytes": 550025,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101520,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "no_facts": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a7b20576e9161623491f95563c3bf717e6e558dcca61bf2c864b6b1b8ce8c44a",
+        "binary_sha256": "cc17cb20e4efed72a55d84eaa1f8a9797196e6b1bbc71279b8320fc59219cdb3",
+        "llvm_sha256": "351f8af2cc1d0e7922e5c91c48f991581087da2b9a381b43c860a03b2226389d",
+        "build_ns": 654603850,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_hit/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2346199,
+            "stdout": "array 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_hit/no_facts/counts-1.json",
+              "counter_sha256": "2a0e9772c0c013552ba728ccf2b6a1e22bf8c9c21e52a4e628ad58970f78bde6",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 841,
+              "memory": {
+                "allocs": 14066,
+                "alloc_bytes": 1550832,
+                "frees": 14066,
+                "reallocs": 2,
+                "peak_live_bytes": 101520,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4625,
+              "allocs": 14066,
+              "alloc_bytes": 1550832,
+              "frees": 14066,
+              "free_bytes": 1553904,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8321,
+              "text_copy_bytes": 550025,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101520,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "array_128_miss": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "8df977d894b00af5156bcf616fc2027f4c552f4d39e16b4f0b4f7f59609562e1",
+        "binary_sha256": "47c703ad22c0d871d6d248b9560ec1aaa5c22d5eb1ad955295a29e77f1b100a6",
+        "llvm_sha256": "f3b46fb52b5c7a153183fc358951cdc2f82764eda401ac1217b433bc52d6a6a4",
+        "build_ns": 654343421,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_miss/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2116159,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_miss/release/counts-1.json",
+              "counter_sha256": "eeb6021d69b2616f70f83577626a74b298ed3045d6ebb4f5e8af3ec37560f10c",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 809,
+              "memory": {
+                "allocs": 13970,
+                "alloc_bytes": 1540592,
+                "frees": 13970,
+                "reallocs": 2,
+                "peak_live_bytes": 101200,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4593,
+              "allocs": 13970,
+              "alloc_bytes": 1540592,
+              "frees": 13970,
+              "free_bytes": 1543664,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8257,
+              "text_copy_bytes": 545929,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101200,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "8df977d894b00af5156bcf616fc2027f4c552f4d39e16b4f0b4f7f59609562e1",
+        "binary_sha256": "43d78e1c7fbca1f10ca1b42753ed012c73a5d6d8efb91ac0e1015b8939bdfb76",
+        "llvm_sha256": "bd2348aaa3fa0cc708904787f848960faf77d8b000f649a4c5a466ac9f92a212",
+        "build_ns": 475712913,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_miss/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3135545,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_miss/debug/counts-1.json",
+              "counter_sha256": "4f272596aeb63d804c80b456958846ae48a8e597d6e028d8da1c840a524bd0dd",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 809,
+              "memory": {
+                "allocs": 13970,
+                "alloc_bytes": 1540592,
+                "frees": 13970,
+                "reallocs": 2,
+                "peak_live_bytes": 101200,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 8085,
+              "allocs": 13970,
+              "alloc_bytes": 1540592,
+              "frees": 13970,
+              "free_bytes": 1543664,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8257,
+              "text_copy_bytes": 545929,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101200,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "verify": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "8df977d894b00af5156bcf616fc2027f4c552f4d39e16b4f0b4f7f59609562e1",
+        "binary_sha256": "e2e6c21970e537ca5d6e105ca21363067bbc2f21fd87b9caa9cc159499b0b7a9",
+        "llvm_sha256": "603a9e8a19b2053109191c548d892742bce53677e4078200a6b5a204b2cd4a23",
+        "build_ns": 966556991,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_miss/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2915020,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_miss/verify/counts-1.json",
+              "counter_sha256": "bd2c1a62198b36a8b7b61a96e920af6b2c011a51466e140a4802916e09a612e0",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 809,
+              "memory": {
+                "allocs": 13970,
+                "alloc_bytes": 1540592,
+                "frees": 13970,
+                "reallocs": 2,
+                "peak_live_bytes": 101200,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4593,
+              "allocs": 13970,
+              "alloc_bytes": 1540592,
+              "frees": 13970,
+              "free_bytes": 1543664,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8257,
+              "text_copy_bytes": 545929,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101200,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "optimized_debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "8df977d894b00af5156bcf616fc2027f4c552f4d39e16b4f0b4f7f59609562e1",
+        "binary_sha256": "34340a829170b32c03fe921b4a93b8028982b558beec3f8a42767438ec75b484",
+        "llvm_sha256": "f3b46fb52b5c7a153183fc358951cdc2f82764eda401ac1217b433bc52d6a6a4",
+        "build_ns": 519751934,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_miss/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2346188,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_miss/optimized_debug/counts-1.json",
+              "counter_sha256": "f5f06ac157d337f9b8c45fd6d72c460331c55515f76263b24b6607addf4f6800",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 809,
+              "memory": {
+                "allocs": 13970,
+                "alloc_bytes": 1540592,
+                "frees": 13970,
+                "reallocs": 2,
+                "peak_live_bytes": 101200,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4593,
+              "allocs": 13970,
+              "alloc_bytes": 1540592,
+              "frees": 13970,
+              "free_bytes": 1543664,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8257,
+              "text_copy_bytes": 545929,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101200,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "no_facts": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "8df977d894b00af5156bcf616fc2027f4c552f4d39e16b4f0b4f7f59609562e1",
+        "binary_sha256": "e3f2d3ffc5e4119095a298bbaa835190258ee263f3abb50848f49ef933ba2d2b",
+        "llvm_sha256": "b300ca7dd0f5863fe2e0f995118ce065c9bf59c1bad4dec99bfdc7eebaab8a2a",
+        "build_ns": 726963069,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/array_128_miss/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 5632259,
+            "stdout": "array 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/array_128_miss/no_facts/counts-1.json",
+              "counter_sha256": "8687a2359d0586aa6ddcf0e962616a802424c78a6235f83d08d2adfa2c7f4e52",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 809,
+              "memory": {
+                "allocs": 13970,
+                "alloc_bytes": 1540592,
+                "frees": 13970,
+                "reallocs": 2,
+                "peak_live_bytes": 101200,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 4593,
+              "allocs": 13970,
+              "alloc_bytes": 1540592,
+              "frees": 13970,
+              "free_bytes": 1543664,
+              "list_grows": 133,
+              "list_grow_bytes": 896,
+              "reallocs": 2,
+              "realloc_added_bytes": 3072,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 8257,
+              "text_copy_bytes": 545929,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 258,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 258,
+              "buffer_append_bytes": 16512,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 101200,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_1_control": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "3b466217f11380a342e2ec0c43034a0b70e5f7b97c20a7586656bffa1548e50a",
+        "binary_sha256": "74b0a5fdedd2d5d8f11eb52ddf36189465aa9d70b5454f22fdf9960e3f3f3de0",
+        "llvm_sha256": "88a4daff43998cd4409556b5ec50f4d5da0158e939964f6e392a60dc6e54c659",
+        "build_ns": 567087953,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_1_control/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1209566,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_1_control/release/counts-1.json",
+              "counter_sha256": "fde0340e8e8906260ace9422d00481cba026196442f5d13c58b36b4c882fb69a",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 21,
+              "memory": {
+                "allocs": 36,
+                "alloc_bytes": 3136,
+                "frees": 36,
+                "reallocs": 0,
+                "peak_live_bytes": 1760,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 106,
+              "allocs": 36,
+              "alloc_bytes": 3136,
+              "frees": 36,
+              "free_bytes": 3136,
+              "list_grows": 2,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 292,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 6,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 6,
+              "buffer_append_bytes": 269,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1760,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_1_hit": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "5919d8c57dc351f62cee8f5579b56053e10bcb19c9065c0f9980693f5dc5718f",
+        "binary_sha256": "33d4a763a49914f7abf4452b2681fb8a0fd61437a4c9be7930c385fb88e728e1",
+        "llvm_sha256": "0ccc96763dfa77641785ba1ef39c0d45b74e9e2f51c1058ec86578ea080aeeb4",
+        "build_ns": 629839897,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_1_hit/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1247851,
+            "stdout": "object 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_1_hit/release/counts-1.json",
+              "counter_sha256": "f4d007f73dc2fbd80d854ff82fb6d5e7a90c756cdc3d5bb794912bea657b1267",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 85,
+              "memory": {
+                "allocs": 420,
+                "alloc_bytes": 45120,
+                "frees": 420,
+                "reallocs": 0,
+                "peak_live_bytes": 2496,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 202,
+              "allocs": 420,
+              "alloc_bytes": 45120,
+              "frees": 420,
+              "free_bytes": 45120,
+              "list_grows": 2,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 2048,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 257,
+              "text_copy_bytes": 12996,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 6,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 6,
+              "buffer_append_bytes": 269,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 2496,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_1_miss": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "eb59d1fca90fe87d8ec52842d268017bd64d709b0c61ab884371a522a6756311",
+        "binary_sha256": "093878efc9e476e6ef460e310ac161dfbd78bf67d085c5a4955a3217b53e7bd8",
+        "llvm_sha256": "990cce29c57d743f366f79a721589296b18a5500b0a7d601f104495d439505c2",
+        "build_ns": 623985256,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_1_miss/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1152452,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_1_miss/release/counts-1.json",
+              "counter_sha256": "ba121b2bd87f013c6b0e2d4a673b5f02e93189201a15e1e280e4a6512fe0a3cc",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 53,
+              "memory": {
+                "allocs": 324,
+                "alloc_bytes": 34880,
+                "frees": 324,
+                "reallocs": 0,
+                "peak_live_bytes": 2176,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 170,
+              "allocs": 324,
+              "alloc_bytes": 34880,
+              "frees": 324,
+              "free_bytes": 34880,
+              "list_grows": 2,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 2048,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 193,
+              "text_copy_bytes": 8900,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 6,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 6,
+              "buffer_append_bytes": 269,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 2176,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_16_control": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "1b57e5212f2f512892e1e5805a816653cb7e37e8c973f5f328cdb48fc2f90a15",
+        "binary_sha256": "c266e2a6004c5b58a9ca8415b141eeaff6e7c7b76d151d3b4ab426293e01847e",
+        "llvm_sha256": "cbf1a1b7bbd2c6256cd4c11339f958d455508e1953e86abebf31bd626db7ab66",
+        "build_ns": 566268740,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_16_control/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1160620,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_16_control/release/counts-1.json",
+              "counter_sha256": "86370f4b7bcd9a3c074c76b0e1aa0b24db8cdccdf05567a7f7be041ca43ffe29",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 156,
+              "memory": {
+                "allocs": 293,
+                "alloc_bytes": 25736,
+                "frees": 293,
+                "reallocs": 0,
+                "peak_live_bytes": 11912,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 796,
+              "allocs": 293,
+              "alloc_bytes": 25736,
+              "frees": 293,
+              "free_bytes": 25736,
+              "list_grows": 17,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 2488,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 2,
+              "dict_grow_bytes": 768,
+              "buffer_grows": 51,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 51,
+              "buffer_append_bytes": 2300,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 11912,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_16_hit": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "3a15a5879653b4a926e2c1c271782cdeeb223535b436d145b892099caf31d94a",
+        "binary_sha256": "b63c3b65941a85c1e4f91409203d80f9663879c300dee068c0fa37c681d071af",
+        "llvm_sha256": "efe1014bea1c796a46aebd6ae4e3ddd4d08bad7e0f2a0e2edc71a9e09920b1ed",
+        "build_ns": 593785389,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_16_hit/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1386156,
+            "stdout": "object 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_16_hit/release/counts-1.json",
+              "counter_sha256": "bb557e82c0dd51a7a7bc3983d6b993d16e18207be59d22eb144728a5c657c4fb",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 220,
+              "memory": {
+                "allocs": 2597,
+                "alloc_bytes": 270472,
+                "frees": 2597,
+                "reallocs": 0,
+                "peak_live_bytes": 16608,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 892,
+              "allocs": 2597,
+              "alloc_bytes": 270472,
+              "frees": 2597,
+              "free_bytes": 270472,
+              "list_grows": 17,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 17408,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1697,
+              "text_copy_bytes": 80184,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 2,
+              "dict_grow_bytes": 768,
+              "buffer_grows": 51,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 51,
+              "buffer_append_bytes": 2300,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 16608,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_16_miss": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "5519c4b12d7f81c2109024f300ac7dff2175fc672e8626df0a24235663987361",
+        "binary_sha256": "1a89b690c5f05f3dc1362878bf8f93f65bde23a7d494ca22ec30a467d012bec7",
+        "llvm_sha256": "3cfdb3c867a3d929b7df29c7deb2b27b8deef270b85af8a68d2530f0add9ac23",
+        "build_ns": 530109739,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_16_miss/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1415342,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_16_miss/release/counts-1.json",
+              "counter_sha256": "76b6ab67b2d5d659fa71b97c0e8ee174ec44a8202570b0ab703de4d18cf431f1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 188,
+              "memory": {
+                "allocs": 2501,
+                "alloc_bytes": 260232,
+                "frees": 2501,
+                "reallocs": 0,
+                "peak_live_bytes": 16288,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 860,
+              "allocs": 2501,
+              "alloc_bytes": 260232,
+              "frees": 2501,
+              "free_bytes": 260232,
+              "list_grows": 17,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 17408,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1633,
+              "text_copy_bytes": 76088,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 2,
+              "dict_grow_bytes": 768,
+              "buffer_grows": 51,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 51,
+              "buffer_append_bytes": 2300,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 16288,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_128_control": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a4d437dd658114bd68ce528d17f978bfafd03cf395f0b29571070f56ac8bbe8f",
+        "binary_sha256": "55698c685a305bc989bd9349252e839744a6a391dbacbf5abd2d0559d4e94ff6",
+        "llvm_sha256": "373cd66873b3175441d97d462feebc425d3d9b9c91e3a56fe79ee9c99c776a86",
+        "build_ns": 638959880,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_control/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1455212,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_control/release/counts-1.json",
+              "counter_sha256": "c5d88d23ad1f8c61f8c0b289f08960dc46056963733281983bc353a7ddd2601e",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1164,
+              "memory": {
+                "allocs": 2200,
+                "alloc_bytes": 196480,
+                "frees": 2200,
+                "reallocs": 0,
+                "peak_live_bytes": 90264,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 5948,
+              "allocs": 2200,
+              "alloc_bytes": 196480,
+              "frees": 2200,
+              "free_bytes": 196480,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 18980,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 90264,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a4d437dd658114bd68ce528d17f978bfafd03cf395f0b29571070f56ac8bbe8f",
+        "binary_sha256": "54adba25093d1dcf4284d277cb1462e2b938c7c80e5cf4c4a594fb36f5d54f56",
+        "llvm_sha256": "613c564249265622649a14b34d929c9f7d7e6c150de195252ad9b6f066345751",
+        "build_ns": 396214929,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_control/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1774235,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_control/debug/counts-1.json",
+              "counter_sha256": "a8a24b0c24ab3856fd5342bd247fe245f8dde9341271ab413e93bc5f7c466108",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1164,
+              "memory": {
+                "allocs": 2200,
+                "alloc_bytes": 196480,
+                "frees": 2200,
+                "reallocs": 0,
+                "peak_live_bytes": 90264,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 10214,
+              "allocs": 2200,
+              "alloc_bytes": 196480,
+              "frees": 2200,
+              "free_bytes": 196480,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 18980,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 90264,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "verify": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a4d437dd658114bd68ce528d17f978bfafd03cf395f0b29571070f56ac8bbe8f",
+        "binary_sha256": "1cb10e851137654ee49bdaad9758624ab4aae612ac095df0f6afa8169cf0884d",
+        "llvm_sha256": "ce46e4efbae61c9e04c7df24a68e84eb5e41de4615d10520202889d4d6ffb0f0",
+        "build_ns": 629130770,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_control/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3433567,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_control/verify/counts-1.json",
+              "counter_sha256": "d68697b3fce2562b7f7e35fdcb330a6f763ada5d0e6276d24ff2cfdc5b809510",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1164,
+              "memory": {
+                "allocs": 2200,
+                "alloc_bytes": 196480,
+                "frees": 2200,
+                "reallocs": 0,
+                "peak_live_bytes": 90264,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 5948,
+              "allocs": 2200,
+              "alloc_bytes": 196480,
+              "frees": 2200,
+              "free_bytes": 196480,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 18980,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 90264,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "optimized_debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a4d437dd658114bd68ce528d17f978bfafd03cf395f0b29571070f56ac8bbe8f",
+        "binary_sha256": "3fbe9e9cefdbb9b9bdbfa1187ddb3c4ce5f71af344faf8b2056e60e7f33bd3b3",
+        "llvm_sha256": "373cd66873b3175441d97d462feebc425d3d9b9c91e3a56fe79ee9c99c776a86",
+        "build_ns": 474481852,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_control/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1506900,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_control/optimized_debug/counts-1.json",
+              "counter_sha256": "ae26324908d1ba257cade22c626c7d6a37f6250fa9dd62e19ac6cd9d29206cbe",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1164,
+              "memory": {
+                "allocs": 2200,
+                "alloc_bytes": 196480,
+                "frees": 2200,
+                "reallocs": 0,
+                "peak_live_bytes": 90264,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 5948,
+              "allocs": 2200,
+              "alloc_bytes": 196480,
+              "frees": 2200,
+              "free_bytes": 196480,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 18980,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 90264,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "no_facts": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "a4d437dd658114bd68ce528d17f978bfafd03cf395f0b29571070f56ac8bbe8f",
+        "binary_sha256": "8a2aca62dc647bdd10c6acabbe69e89e314ca50f2972efca48cbc23ed52c6ddb",
+        "llvm_sha256": "b57c45173607e854f5c9dcdc32edc8008a5ac75e21e7ffc1d829b5f180d19436",
+        "build_ns": 532016651,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_control/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1461657,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_control/no_facts/counts-1.json",
+              "counter_sha256": "25abf8b930ee826876b978f7bdfb7da575303b38ecce07c3a3f914ef2150e1b7",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1164,
+              "memory": {
+                "allocs": 2200,
+                "alloc_bytes": 196480,
+                "frees": 2200,
+                "reallocs": 0,
+                "peak_live_bytes": 90264,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 5948,
+              "allocs": 2200,
+              "alloc_bytes": 196480,
+              "frees": 2200,
+              "free_bytes": 196480,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1,
+              "text_copy_bytes": 18980,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 90264,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_128_hit": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "85cfe71965bf2f5a940a1a091087ecfff261c3e44f30d65a71eb0f4ddd185fb8",
+        "binary_sha256": "26010a38c267abd23748e8890fad4f0fc8b95f502bf1348e6835721f4f5e3987",
+        "llvm_sha256": "beef66b2bd483acee3ca08ce744fda0c871139ebba7203b2b1dca3d38c13e314",
+        "build_ns": 670991753,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_hit/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2506950,
+            "stdout": "object 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_hit/release/counts-1.json",
+              "counter_sha256": "7544ec29cb7b7dde0d825205f530e24f0bb8ce6314afa1b6cfbdea7082de6311",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1228,
+              "memory": {
+                "allocs": 18840,
+                "alloc_bytes": 1989760,
+                "frees": 18840,
+                "reallocs": 0,
+                "peak_live_bytes": 124144,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 6044,
+              "allocs": 18840,
+              "alloc_bytes": 1989760,
+              "frees": 18840,
+              "free_bytes": 1989760,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12449,
+              "text_copy_bytes": 584996,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 124144,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "85cfe71965bf2f5a940a1a091087ecfff261c3e44f30d65a71eb0f4ddd185fb8",
+        "binary_sha256": "98305e9182e2e1a9c7e33830664409ae2e50e22639973b9ca5053a10ba31a897",
+        "llvm_sha256": "df733a4f7967ab8fafcf9009ed9f17573905b8c2cd48aecbc861af84a5a3884c",
+        "build_ns": 518230669,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_hit/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2787437,
+            "stdout": "object 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_hit/debug/counts-1.json",
+              "counter_sha256": "afe83698ebd489c516f9f32af5cdf839192543ce821d96896120d9081932780d",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1228,
+              "memory": {
+                "allocs": 18840,
+                "alloc_bytes": 1989760,
+                "frees": 18840,
+                "reallocs": 0,
+                "peak_live_bytes": 124144,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 10310,
+              "allocs": 18840,
+              "alloc_bytes": 1989760,
+              "frees": 18840,
+              "free_bytes": 1989760,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12449,
+              "text_copy_bytes": 584996,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 124144,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "verify": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "85cfe71965bf2f5a940a1a091087ecfff261c3e44f30d65a71eb0f4ddd185fb8",
+        "binary_sha256": "4081d91df99038154ba726accfab7786e20254efcb0512d72178ae58a23a78d3",
+        "llvm_sha256": "8eecdfec89781ffd0a40c058dd69ade8faf0cd4c9c39aab256c33ea2fde8ce28",
+        "build_ns": 711604585,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_hit/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3387903,
+            "stdout": "object 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_hit/verify/counts-1.json",
+              "counter_sha256": "b64da2e418328374ad3fbc41daa614a3729566a64606a58e81b996dbcc4daf7e",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1228,
+              "memory": {
+                "allocs": 18840,
+                "alloc_bytes": 1989760,
+                "frees": 18840,
+                "reallocs": 0,
+                "peak_live_bytes": 124144,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 6044,
+              "allocs": 18840,
+              "alloc_bytes": 1989760,
+              "frees": 18840,
+              "free_bytes": 1989760,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12449,
+              "text_copy_bytes": 584996,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 124144,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "optimized_debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "85cfe71965bf2f5a940a1a091087ecfff261c3e44f30d65a71eb0f4ddd185fb8",
+        "binary_sha256": "89753e7e319537523ff12880a523db83484c7789bd56609a6f536f69b924087f",
+        "llvm_sha256": "beef66b2bd483acee3ca08ce744fda0c871139ebba7203b2b1dca3d38c13e314",
+        "build_ns": 736282618,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_hit/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2913901,
+            "stdout": "object 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_hit/optimized_debug/counts-1.json",
+              "counter_sha256": "1bd1b7bfd44ea0ecf71a4c50163d01bdc219e976403db1af537eacbe2c33d65b",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1228,
+              "memory": {
+                "allocs": 18840,
+                "alloc_bytes": 1989760,
+                "frees": 18840,
+                "reallocs": 0,
+                "peak_live_bytes": 124144,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 6044,
+              "allocs": 18840,
+              "alloc_bytes": 1989760,
+              "frees": 18840,
+              "free_bytes": 1989760,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12449,
+              "text_copy_bytes": 584996,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 124144,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "no_facts": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "85cfe71965bf2f5a940a1a091087ecfff261c3e44f30d65a71eb0f4ddd185fb8",
+        "binary_sha256": "2bdbbac98979157b9c7b24c0668096313e8849e7f209441b4e2963dc2e1bd3da",
+        "llvm_sha256": "aae6ad63beb54d5805aae18719a8a5e145cc74f00148fe18cfe5367fb4264b9d",
+        "build_ns": 1084172533,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_hit/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3032758,
+            "stdout": "object 4096\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_hit/no_facts/counts-1.json",
+              "counter_sha256": "65f27e526820a88e4ef30551e12eea8be1c6968752f5b06e7e947e1872451e88",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1228,
+              "memory": {
+                "allocs": 18840,
+                "alloc_bytes": 1989760,
+                "frees": 18840,
+                "reallocs": 0,
+                "peak_live_bytes": 124144,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 6044,
+              "allocs": 18840,
+              "alloc_bytes": 1989760,
+              "frees": 18840,
+              "free_bytes": 1989760,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12449,
+              "text_copy_bytes": 584996,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 124144,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "object_128_miss": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e18728ab55e52f3b4a75381c32c1d8eac672aed6a9ea0e9295b85a5fc8db5bbc",
+        "binary_sha256": "a7b482946fe014cba8e41a6e557cccdfa96b089b55970f4a9984b73655572af5",
+        "llvm_sha256": "fad2c1545d85e19e1b12eeda963c8f4437baff18e9a8d29c35d0ab3b1970c515",
+        "build_ns": 767069787,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_miss/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2621719,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_miss/release/counts-1.json",
+              "counter_sha256": "92ce09ec3a8983f42c28b4b1efefc509641ee2707e5327943044b364ccdcd10e",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1196,
+              "memory": {
+                "allocs": 18744,
+                "alloc_bytes": 1979520,
+                "frees": 18744,
+                "reallocs": 0,
+                "peak_live_bytes": 123824,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 6012,
+              "allocs": 18744,
+              "alloc_bytes": 1979520,
+              "frees": 18744,
+              "free_bytes": 1979520,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12385,
+              "text_copy_bytes": 580900,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 123824,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e18728ab55e52f3b4a75381c32c1d8eac672aed6a9ea0e9295b85a5fc8db5bbc",
+        "binary_sha256": "21324494c4377b094ce8fd754ea07b318c22b3a5ae670c25836b447d6c2522c3",
+        "llvm_sha256": "f97e1241790ca54b4d122f251f672774cc747f46febc4b844241f85b0aaaaa8d",
+        "build_ns": 503841134,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_miss/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3257957,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_miss/debug/counts-1.json",
+              "counter_sha256": "7d7d69cff95658247a6a01fabf61b5a32053a5bec4fcb506130703e24f978034",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1196,
+              "memory": {
+                "allocs": 18744,
+                "alloc_bytes": 1979520,
+                "frees": 18744,
+                "reallocs": 0,
+                "peak_live_bytes": 123824,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 10278,
+              "allocs": 18744,
+              "alloc_bytes": 1979520,
+              "frees": 18744,
+              "free_bytes": 1979520,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12385,
+              "text_copy_bytes": 580900,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 123824,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "verify": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e18728ab55e52f3b4a75381c32c1d8eac672aed6a9ea0e9295b85a5fc8db5bbc",
+        "binary_sha256": "13cf763a6f62b29c15c8e01ddc66778fa2cd092b1881ddb4a8329841f3ec02cf",
+        "llvm_sha256": "fdb588accf9777f9a0c22bb9c68cca1afe69e4be4023c4d08c61618893673f3b",
+        "build_ns": 788513219,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_miss/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 3298308,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_miss/verify/counts-1.json",
+              "counter_sha256": "61149ba840d2f5a5b65799fbc0a0f60b327c1a8491212a9c7157c8f97ac6df29",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1196,
+              "memory": {
+                "allocs": 18744,
+                "alloc_bytes": 1979520,
+                "frees": 18744,
+                "reallocs": 0,
+                "peak_live_bytes": 123824,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 6012,
+              "allocs": 18744,
+              "alloc_bytes": 1979520,
+              "frees": 18744,
+              "free_bytes": 1979520,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12385,
+              "text_copy_bytes": 580900,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 123824,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "optimized_debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e18728ab55e52f3b4a75381c32c1d8eac672aed6a9ea0e9295b85a5fc8db5bbc",
+        "binary_sha256": "0197594c5b923e4d246551812e60430c9dd446f58c1eb3ccc004c87fb2f1eb08",
+        "llvm_sha256": "fad2c1545d85e19e1b12eeda963c8f4437baff18e9a8d29c35d0ab3b1970c515",
+        "build_ns": 552707922,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_miss/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2893148,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_miss/optimized_debug/counts-1.json",
+              "counter_sha256": "367eb370debcafc640ef45231a4a7c2ee0ab51595f7b5c4f8a85c885af40f77d",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1196,
+              "memory": {
+                "allocs": 18744,
+                "alloc_bytes": 1979520,
+                "frees": 18744,
+                "reallocs": 0,
+                "peak_live_bytes": 123824,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 6012,
+              "allocs": 18744,
+              "alloc_bytes": 1979520,
+              "frees": 18744,
+              "free_bytes": 1979520,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12385,
+              "text_copy_bytes": 580900,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 123824,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "no_facts": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "e18728ab55e52f3b4a75381c32c1d8eac672aed6a9ea0e9295b85a5fc8db5bbc",
+        "binary_sha256": "6f89981f57ca49b5f63ce154a55f20e885fe66b6c295a185e46c2d27e3897465",
+        "llvm_sha256": "d88c1c92b0607e84992693e2fcf5de01300e63831ea0f7ad236806f4fc42793c",
+        "build_ns": 889119086,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/object_128_miss/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2671956,
+            "stdout": "object 32\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/object_128_miss/no_facts/counts-1.json",
+              "counter_sha256": "a439b995ba954a46281dfe87e30f86e9550d14257dc50dea3fc161d7ab1b7dbb",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1196,
+              "memory": {
+                "allocs": 18744,
+                "alloc_bytes": 1979520,
+                "frees": 18744,
+                "reallocs": 0,
+                "peak_live_bytes": 123824,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 6012,
+              "allocs": 18744,
+              "alloc_bytes": 1979520,
+              "frees": 18744,
+              "free_bytes": 1979520,
+              "list_grows": 129,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 32,
+              "dict_copy_bytes": 132096,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 12385,
+              "text_copy_bytes": 580900,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 5,
+              "dict_grow_bytes": 7936,
+              "buffer_grows": 387,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 387,
+              "buffer_append_bytes": 17560,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 123824,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "record": {
+      "release": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "c025a2b7e8abefa2f2edae745ffa0e78f70977ff4b5508ee96e4736511b136f6",
+        "binary_sha256": "d2f4b1f1863dd1f540f2854fafec3766fb3a8bed282c75aa9d46b75bda300d40",
+        "llvm_sha256": "11eaa605b9f04b7d6b178822fb85a25448285c4eba30eb1c5ce78dcfbc818aac",
+        "build_ns": 194307863,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/record/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2229407,
+            "stdout": "267560\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/record/release/counts-1.json",
+              "counter_sha256": "181c35bfdc171e97c1de5750295f91616015f8b442ae348837efbb4179d0080b",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 11000,
+              "memory": {
+                "allocs": 27000,
+                "alloc_bytes": 3136000,
+                "frees": 27000,
+                "reallocs": 0,
+                "peak_live_bytes": 1984,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 3001,
+              "allocs": 27000,
+              "alloc_bytes": 3136000,
+              "frees": 27000,
+              "free_bytes": 3136000,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 10000,
+              "text_copy_bytes": 651560,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 6000,
+              "text_grow_bytes": 384000,
+              "text_appends": 6000,
+              "text_append_bytes": 17340,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1984,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "c025a2b7e8abefa2f2edae745ffa0e78f70977ff4b5508ee96e4736511b136f6",
+        "binary_sha256": "3f9cc2b16fef9c4b4b03e0ee79ce4a574892d4c961982dfb021d6921ac0d6aa0",
+        "llvm_sha256": "b4b50d847c8048f55469d8b676dfeab5b823111893b5079f9a3b1d15e0ff364a",
+        "build_ns": 175383065,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/record/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 5383835,
+            "stdout": "267560\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/record/debug/counts-1.json",
+              "counter_sha256": "1a5f39520f64b6007945a3aa83d0117dd86be31d701b16fc199b2e0300cd04c0",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 11000,
+              "memory": {
+                "allocs": 27000,
+                "alloc_bytes": 3136000,
+                "frees": 27000,
+                "reallocs": 0,
+                "peak_live_bytes": 1984,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 3001,
+              "allocs": 27000,
+              "alloc_bytes": 3136000,
+              "frees": 27000,
+              "free_bytes": 3136000,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 10000,
+              "text_copy_bytes": 651560,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 6000,
+              "text_grow_bytes": 384000,
+              "text_appends": 6000,
+              "text_append_bytes": 17340,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1984,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "verify": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "c025a2b7e8abefa2f2edae745ffa0e78f70977ff4b5508ee96e4736511b136f6",
+        "binary_sha256": "4dc148f47c5c0f5906e7a462f0c051adaa9d6edaedb83233de759d62bd4fb31c",
+        "llvm_sha256": "b96c639d1b22421a43c9c050afd5b1efab4a8666f7800cf54273a780d0c96ac5",
+        "build_ns": 198079808,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/record/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2234609,
+            "stdout": "267560\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/record/verify/counts-1.json",
+              "counter_sha256": "73f7ae39332ae7bc541c27a1e34caa0760164a474950b56a63fd70e35b2fe184",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 11000,
+              "memory": {
+                "allocs": 27000,
+                "alloc_bytes": 3136000,
+                "frees": 27000,
+                "reallocs": 0,
+                "peak_live_bytes": 1984,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 3001,
+              "allocs": 27000,
+              "alloc_bytes": 3136000,
+              "frees": 27000,
+              "free_bytes": 3136000,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 10000,
+              "text_copy_bytes": 651560,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 6000,
+              "text_grow_bytes": 384000,
+              "text_appends": 6000,
+              "text_append_bytes": 17340,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1984,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "optimized_debug": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "c025a2b7e8abefa2f2edae745ffa0e78f70977ff4b5508ee96e4736511b136f6",
+        "binary_sha256": "c0ed5eb4e4f64668cef024e7fe2281df6c0afa350e1c3c91bbd27e6c91e542d8",
+        "llvm_sha256": "a432d2880198103b492edb219eafdd55c39562fad4a799b3a5e18087f16f2b42",
+        "build_ns": 199755605,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/record/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2261612,
+            "stdout": "267560\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/record/optimized_debug/counts-1.json",
+              "counter_sha256": "02ae67c86b7ef17db84e5e1dbb5c87b36b6c3fa6c304b7797a3ae474f9af5517",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 11000,
+              "memory": {
+                "allocs": 27000,
+                "alloc_bytes": 3136000,
+                "frees": 27000,
+                "reallocs": 0,
+                "peak_live_bytes": 1984,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 3001,
+              "allocs": 27000,
+              "alloc_bytes": 3136000,
+              "frees": 27000,
+              "free_bytes": 3136000,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 10000,
+              "text_copy_bytes": 651560,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 6000,
+              "text_grow_bytes": 384000,
+              "text_appends": 6000,
+              "text_append_bytes": 17340,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1984,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      },
+      "no_facts": {
+        "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+        "source_sha256": "c025a2b7e8abefa2f2edae745ffa0e78f70977ff4b5508ee96e4736511b136f6",
+        "binary_sha256": "b76ee5a0ff06f1a00910cf337435d7ef498b287fc88b1db2c630d0fa58beec64",
+        "llvm_sha256": "1d84bb4da23ebcd58e74c019d22703120c8937ebbba4fb2572fa63b638bd1c5e",
+        "build_ns": 376536239,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/record/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2133981,
+            "stdout": "267560\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/batch-measure/before/record/no_facts/counts-1.json",
+              "counter_sha256": "14593e3709eba3ba4e63a4f6cb4bb072c4714b80b0d3bb67e1305a4af2f1e96e",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 11000,
+              "memory": {
+                "allocs": 27000,
+                "alloc_bytes": 3136000,
+                "frees": 27000,
+                "reallocs": 0,
+                "peak_live_bytes": 1984,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 3001,
+              "allocs": 27000,
+              "alloc_bytes": 3136000,
+              "frees": 27000,
+              "free_bytes": 3136000,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 10000,
+              "text_copy_bytes": 651560,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 6000,
+              "text_grow_bytes": 384000,
+              "text_appends": 6000,
+              "text_append_bytes": 17340,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1984,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "controls": {},
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.tmp/owned-match/candidate-v2/bin/mylang",
+    "sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269"
+  },
+  "allocation_note": "Managed counters only; peak_live_bytes is not total process RSS.",
+  "harness_sha256": "4e25fbd67019d7ea1916c2db673a7e78207651148d62799b22acd96b096947c1",
+  "anchors": {
+    "json_fixture": {
+      "compiler_sha256": "98f70fc9bfbfd1e48bfac4af0b1c0c8d7697004b1b6675f3614a8a8e299ef269",
+      "source_sha256": "e64f4fd7109a902bdc65936974e22b0125a8140081761b72fa0becbc6af81ba6",
+      "binary_sha256": "6d6d1ca81d6b72b155ef59f28221d54872c4bebd942349bed5fdc7c1358168cc",
+      "llvm_sha256": "47374211e45c380365b11ee36251cd611c9a896fd36db44d294533e7314d60c4",
+      "build_ns": 1118770885,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-zero-rc-batch-measure-20261011/.tmp/batch-measure/before/json_fixture/release/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1384456,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/batch-measure/before/json_fixture/release/counts-1.json",
+            "counter_sha256": "b3a36ed45b5bb2436eb3e8a78f6f20bcea33f95948a3afe65263f27c91a63bcd",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 341,
+            "memory": {
+              "allocs": 553,
+              "alloc_bytes": 40480,
+              "frees": 553,
+              "reallocs": 0,
+              "peak_live_bytes": 9952,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2770,
+            "allocs": 553,
+            "alloc_bytes": 40480,
+            "frees": 553,
+            "free_bytes": 40480,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 9,
+            "dict_copy_bytes": 480,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 131,
+            "text_copy_bytes": 1338,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9952,
+            "live_bytes_at_exit": 0
+          }
+        }
+      }
+    }
+  }
+}

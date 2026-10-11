@@ -939,3 +939,337 @@ test "zero RC copied records preserve function values without owning them" {
         \\    return 0
     , "item-7 42\n");
 }
+
+// spec: NEW-CORE-ZERO-RC-PAYLOAD-TRANSFER-1
+test "zero RC payload transfer preserves recursive success errors and mutable writebacks" {
+    try executes(std.testing.allocator,
+        \\enum Tree:
+        \\    leaf(items: dict[str, str[]])
+        \\    node(child: Tree)
+        \\func score(tree: Tree) -> int:
+        \\    match tree:
+        \\        case Tree.leaf(items=items):
+        \\            return len(items["key-1"][0])
+        \\        case Tree.node(child=child):
+        \\            return 1 + score(child)
+        \\func make(mut count: int, fail: bool) -> Result[Tree, str]:
+        \\    count += 1
+        \\    if fail:
+        \\        return Err("failure-" + str(count))
+        \\    mut tree = Tree.leaf(items={"key-" + str(1): ["value-" + str(1)]})
+        \\    for i in range(40):
+        \\        tree = Tree.node(child=tree)
+        \\    return Ok(tree)
+        \\func forward(mut count: int, fail: bool) -> Result[Tree, str]:
+        \\    const tree = try make(mut count, fail)
+        \\    return Ok(tree)
+        \\func run(mut count: int, fail: bool) -> Result[int, str]:
+        \\    const tree = try forward(mut count, fail)
+        \\    const saved = tree.copy()
+        \\    return Ok(score(tree) + score(saved))
+        \\func main(out: Stream) -> int:
+        \\    mut count = 0
+        \\    for i in range(3):
+        \\        match run(mut count, i == 1):
+        \\            case Ok(value):
+        \\                out.print(value)
+        \\            case Err(message):
+        \\                out.print(message)
+        \\    out.print(count)
+        \\    return 0
+    , "94\nfailure-2\n94\n3\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-PAYLOAD-TRANSFER-1
+test "zero RC payload transfer handles wide option values phis and discarded owners" {
+    try executes(std.testing.allocator,
+        \\record Wide:
+        \\    a: str
+        \\    b: str
+        \\    c: str
+        \\    d: str
+        \\    e: str
+        \\func make(n: int) -> Wide?:
+        \\    if n == 0:
+        \\        return None
+        \\    return Some(Wide(a="a-" + str(n), b="b-" + str(n), c="c-" + str(n), d="d-" + str(n), e="e-" + str(n)))
+        \\func forward(n: int) -> Wide?:
+        \\    mut result = make(n)
+        \\    if n > 2:
+        \\        result = make(n + 1)
+        \\    const value = try result
+        \\    return Some(value)
+        \\func discard(n: int) -> int?:
+        \\    _ = try make(n)
+        \\    return Some(7)
+        \\func main(out: Stream) -> int:
+        \\    for i in range(4):
+        \\        match forward(i):
+        \\            case Some(value):
+        \\                out.print(value.a, value.e)
+        \\            case None:
+        \\                out.print("none")
+        \\        match discard(i):
+        \\            case Some(value):
+        \\                out.print(value)
+        \\            case None:
+        \\                out.print("empty")
+        \\    return 0
+    , "none\nempty\na-1 e-1\n7\na-2 e-2\n7\na-4 e-4\n7\n");
+}
+
+// spec: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match transfers success errors callbacks and popped payloads" {
+    try executes(std.testing.allocator,
+        \\func make(mut count: int, fail: bool) -> Result[str[], str]:
+        \\    count += 1
+        \\    if fail:
+        \\        return Err("error-" + str(count))
+        \\    return Ok(["item-" + str(count)])
+        \\func forward(mut count: int, fail: bool) -> Result[str[], str]:
+        \\    match make(mut count, fail):
+        \\        case Ok(items):
+        \\            return Ok(items)
+        \\        case Err(message):
+        \\            return Err(message)
+        \\func text(n: int) -> str?:
+        \\    if n == 0:
+        \\        return None
+        \\    return Some("text-" + str(n))
+        \\func invoke(f: func(int) -> str?, n: int) -> str:
+        \\    match f(n):
+        \\        case Some(value):
+        \\            return value
+        \\        case None:
+        \\            return "none"
+        \\func main(out: Stream) -> int:
+        \\    mut count = 0
+        \\    mut saved: str[] = []
+        \\    for i in range(3):
+        \\        match forward(mut count, i == 1):
+        \\            case Ok(items):
+        \\                saved = items
+        \\            case Err(message):
+        \\                saved.append(message)
+        \\        out.print(saved[0], len(saved))
+        \\    mut values: str?[] = [text(7)]
+        \\    match values.pop():
+        \\        case Some(value):
+        \\            saved.append(value)
+        \\        case None:
+        \\            assert False
+        \\    out.print(saved[0], saved[1], invoke(text, 0), invoke(text, 8), count)
+        \\    return 0
+    , "item-1 1\nitem-1 2\nitem-3 1\nitem-3 text-7 none text-8 3\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match rejects repeated moves and keeps named matches borrowed" {
+    try refuses(std.testing.allocator,
+        \\func make() -> str?:
+        \\    return Some("item-" + str(1))
+        \\func main() -> int:
+        \\    match make():
+        \\        case Some(value):
+        \\            const saved = value
+        \\            return len(saved) + len(value)
+        \\        case None:
+        \\            return 0
+    , "E_SINGLE_OWNER_MOVED");
+    try refuses(std.testing.allocator,
+        \\func extract(value: str?) -> str:
+        \\    match value:
+        \\        case Some(text):
+        \\            return text
+        \\        case None:
+        \\            return "none"
+        \\func main() -> int:
+        \\    return len(extract(Some("value")))
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    const saved: str? = Some("item-" + str(1))
+        \\    match saved:
+        \\        case Some(value):
+        \\            const moved = value
+        \\            return len(moved)
+        \\        case None:
+        \\            return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match still borrows projected unions" {
+    try refuses(std.testing.allocator,
+        \\record Holder:
+        \\    value: str?
+        \\func make() -> Holder:
+        \\    return Holder(value=Some("item-" + str(1)))
+        \\func main() -> int:
+        \\    match make().value:
+        \\        case Some(value):
+        \\            const moved = value
+        \\            return len(moved)
+        \\        case None:
+        \\            return 0
+    , "E_SINGLE_OWNER_BORROW");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    const values: str?[] = [Some("item-" + str(1))]
+        \\    match values[0]:
+        \\        case Some(value):
+        \\            const moved = value
+        \\            return len(moved)
+        \\        case None:
+        \\            return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match moves explicit copies independently and discards unused cases" {
+    try executes(std.testing.allocator,
+        \\func make(n: int) -> str[]?:
+        \\    return Some(["item-" + str(n)])
+        \\func main(out: Stream) -> int:
+        \\    mut original = make(1)
+        \\    mut saved: str[] = []
+        \\    match original.copy():
+        \\        case Some(value):
+        \\            saved = value
+        \\        case None:
+        \\            assert False
+        \\    original = make(2)
+        \\    match make(3):
+        \\        case Some(_):
+        \\            out.print(saved[0], len(saved))
+        \\        case None:
+        \\            assert False
+        \\    match make(4):
+        \\        case Some(unused):
+        \\            out.print(saved[0], len(saved))
+        \\        case None:
+        \\            assert False
+        \\    match original:
+        \\        case Some(value):
+        \\            out.print(value[0])
+        \\        case None:
+        \\            assert False
+        \\    return 0
+    , "item-1 1\nitem-1 1\nitem-2\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match transfers constructed unions through loop exits" {
+    try executes(std.testing.allocator,
+        \\enum Item:
+        \\    text(value: str[])
+        \\func forward(n: int) -> Result[str[], str]:
+        \\    if n == 0:
+        \\        return Ok([])
+        \\    if n == 1:
+        \\        return Err("error-" + str(n))
+        \\    return Ok(["item-" + str(n)])
+        \\func main(out: Stream) -> int:
+        \\    mut saved: str[] = []
+        \\    for i in range(4):
+        \\        match forward(i):
+        \\            case Ok(items):
+        \\                if len(items) == 0:
+        \\                    continue
+        \\                saved = items
+        \\                break
+        \\            case Err(message):
+        \\                out.print(message)
+        \\    match Item.text(value=["extra-" + str(7)]):
+        \\        case Item.text(value=items):
+        \\            out.print(saved[0], items[0])
+        \\    return 0
+    , "error-1\nitem-2 extra-7\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match transfers decoded text bytes and validation errors" {
+    try executes(std.testing.allocator,
+        \\func decode(data: bytes) -> str:
+        \\    match data.decode():
+        \\        case Ok(text):
+        \\            return text
+        \\        case Err(message):
+        \\            return message
+        \\func hex(text: str) -> Result[bytes, str]:
+        \\    match bytes.fromhex(text):
+        \\        case Ok(data):
+        \\            return Ok(data)
+        \\        case Err(message):
+        \\            return Err(message)
+        \\func count(data: bytes) -> str:
+        \\    match data.scalar_count():
+        \\        case Ok(size):
+        \\            return str(size)
+        \\        case Err(message):
+        \\            return message
+        \\func main(out: Stream) -> int:
+        \\    out.print(decode(bytes([97, 98])), decode(bytes([255])))
+        \\    out.print(count(bytes([97, 98])), count(bytes([255])))
+        \\    match hex("6162"):
+        \\        case Ok(data):
+        \\            out.print(decode(data))
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match hex("z"):
+        \\        case Ok(data):
+        \\            out.print(decode(data))
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    return 0
+    , "ab invalid UTF-8 in byte string\n2 invalid UTF-8 in byte string\nab\nhexadecimal text requires an even number of hex digits\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match JSON decoding and rendering return owned strings" {
+    try executes(std.testing.allocator,
+        \\import json
+        \\func main(out: Stream) -> int:
+        \\    match json.loads("\"item\""):
+        \\        case Ok(value):
+        \\            out.print(json.dumps(value))
+        \\        case Err(_):
+        \\            assert False
+        \\    return 0
+    , "\"item\"\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+test "zero RC JSON lookup copies only selected values and preserves independent results" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const path = try std.fs.path.join(a, &.{ @import("core_test_options").fixtures, "zero_rc_json_lookup.my" });
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1 << 20));
+    try executes(a, source, json_lookup_output);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+test "RC JSON lookup keeps navigation and independent results compatible" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const path = try std.fs.path.join(a, &.{ @import("core_test_options").fixtures, "zero_rc_json_lookup.my" });
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1 << 20));
+    const program = try checked(a, source);
+    for ([_]bool{ false, true }) |optimized| {
+        var refusal: build.Refusal = .{};
+        var module = try build.buildExecutable(a, .{ .program = program }, &refusal);
+        const result = if (optimized) try passes.run(a, &module, .verify) else try passes.debug(a, &module);
+        const ran = try support.runOwned(a, &module, .{ .own = false, .release = optimized, .verify = optimized, .analysis = support.analysis(&result) });
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        try std.testing.expectEqualStrings(json_lookup_output, ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+    }
+}
+
+const json_lookup_output =
+    "null 2\n" ++
+    "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
+    "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
+    "{\"target\":\"changed\"} [\"changed\"]\n";

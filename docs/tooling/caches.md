@@ -267,7 +267,7 @@ checked program without summaries (above), and native-test preparation use the
 same checked-body query path. The durable store lives under
 `<cache-dir>/semantic/` when `--cache-dir` (or `MYLANG_FRONTEND_CACHE`) is given
 and `.mylang-cache/semantic/` otherwise; it is one contract-namespaced directory of
-versioned `semantic-cache-v6` files. Each file contains one stable declaration
+versioned `semantic-cache-v7` files. Each file contains one stable declaration
 key, the dependency context, the checked contract digest, the owned relocatable
 `typed.Function`/node/statement tree, referenced stable identities, source
 region/body bytes, the body-local binding-warning notes (code, severity, span and

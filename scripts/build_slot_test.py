@@ -9,6 +9,9 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
+
+from build_admission import admission
 
 ROOT = Path(__file__).resolve().parents[1]
 SLOT = ROOT / "scripts/build-slot.sh"
@@ -36,11 +39,12 @@ class Admission(unittest.TestCase):
         self.slots = self.root / "slots"
         self.slots.mkdir()
         self.env = dict(os.environ, MYLANG_SLOT_DIR=str(self.slots),
-                        MYLANG_BUILD_MEM="0", MYLANG_GATE_MEM="0",
+                        MYLANG_BUILD_MEM="0", MYLANG_GATE_MEM="0", MYLANG_TIMING_MEM="0",
                         MYLANG_BUILD_SLOTS="1", MYLANG_GATE_SLOTS="1",
                         MYLANG_SLOT_SETTLE="0", MYLANG_SLOT_POLL="1",
                         MYLANG_TIMING_CPUS="")
         self.jobs = []
+        self.holders = []
         self.files = []
 
     def tearDown(self):
@@ -48,6 +52,11 @@ class Admission(unittest.TestCase):
             if process.poll() is None:
                 os.killpg(process.pid, signal.SIGKILL)
             process.wait(timeout=5)
+        for pid in self.holders:
+            try:
+                os.killpg(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
         for stream in self.files:
             stream.close()
         self.temp.cleanup()
@@ -282,6 +291,172 @@ class Admission(unittest.TestCase):
         (self.root / "first.release").touch()
         self.finish(first, 37)
         self.finish(second)
+
+    def test_default_build_uses_all_allowed_cpus(self):
+        self.env.pop("MYLANG_TIMING_CPUS")
+        self.finish(self.start("all", kind="build"))
+        self.assertEqual((self.root / "all.affinity").read_text(),
+                         ",".join(map(str, sorted(os.sched_getaffinity(0)))))
+
+    def test_timing_drains_both_kinds_and_resumes_queued_work(self):
+        build = self.start("build", kind="build", hold=True)
+        gate = self.start("gate", hold=True)
+        self.started("build")
+        self.started("gate")
+        timing = self.start("timing", kind="timing", hold=True, status=37)
+        self.queued("timing")
+        later = self.start("later", kind="build")
+        self.queued("later")
+        (self.root / "build.release").touch()
+        self.finish(build)
+        self.assertFalse((self.root / "timing.started").exists())
+        self.assertFalse((self.root / "later.started").exists())
+        (self.root / "gate.release").touch()
+        self.finish(gate)
+        self.started("timing")
+        self.assertFalse((self.root / "later.started").exists())
+        report = subprocess.check_output([str(SLOT), "status"], env=self.env, text=True)
+        self.assertIn("timing1: busy", report)
+        (self.root / "timing.release").touch()
+        self.finish(timing, 37)
+        self.finish(later)
+        self.assertEqual((self.root / "events").read_text().splitlines()[-2:], ["timing", "later"])
+
+    def test_timing_drains_slots_above_its_configured_count(self):
+        lock = self.hold_slot("build", 5)
+        timing = self.start("timing", kind="timing")
+        self.queued("timing")
+        self.assertFalse((self.root / "timing.started").exists())
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        self.finish(timing)
+
+    def test_queued_timing_has_priority_even_when_it_polls_slowly(self):
+        lock = (self.slots / "admit.lock").open("w")
+        self.files.append(lock)
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        timing = self.start("timing", kind="timing", MYLANG_SLOT_POLL="3")
+        self.queued("timing")
+        build = self.start("build", kind="build")
+        self.queued("build")
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        self.finish(timing)
+        self.finish(build)
+        self.assertEqual((self.root / "events").read_text().splitlines(), ["timing", "build"])
+
+    def test_measurements_are_fifo_and_never_overlap(self):
+        first = self.start("first", kind="timing", hold=True)
+        self.started("first")
+        second = self.start("second", kind="timing", hold=True)
+        self.queued("second")
+        third = self.start("third", kind="timing")
+        self.queued("third")
+        build = self.start("build", kind="build")
+        self.queued("build")
+        self.assertFalse((self.root / "second.started").exists())
+        (self.root / "first.release").touch()
+        self.finish(first)
+        self.started("second")
+        self.assertFalse((self.root / "third.started").exists())
+        self.assertFalse((self.root / "build.started").exists())
+        (self.root / "second.release").touch()
+        for process in (second, third, build):
+            self.finish(process)
+        self.assertEqual((self.root / "events").read_text().splitlines(),
+                         ["first", "second", "third", "build"])
+
+    def test_cancelled_drain_resumes_work_without_stopping_active_job(self):
+        build = self.start("build", kind="build", hold=True)
+        self.started("build")
+        timing = self.start("timing", kind="timing")
+        self.queued("timing")
+        gate = self.start("gate")
+        self.queued("gate")
+        timing.terminate()
+        self.finish(timing, 143)
+        self.finish(gate)
+        self.assertIsNone(build.poll())
+        (self.root / "build.release").touch()
+        self.finish(build)
+
+    def test_killed_measurement_releases_admission(self):
+        timing = self.start("timing", kind="timing", hold=True)
+        self.started("timing")
+        build = self.start("build", kind="build")
+        self.queued("build")
+        os.kill(timing.pid, signal.SIGKILL)
+        self.finish(build)
+        self.finish(timing, -signal.SIGKILL)
+
+    def test_timing_retains_reserved_cpus(self):
+        cpus = sorted(os.sched_getaffinity(0))
+        self.finish(self.start("timing", kind="timing", MYLANG_TIMING_CPUS=str(cpus[0])))
+        self.assertEqual((self.root / "timing.affinity").read_text(), ",".join(map(str, cpus)))
+
+    def test_nested_wrapper_rejected_without_waiting(self):
+        job = self.start("nested", kind="timing", MYLANG_ADMISSION_DIR=str(self.slots),
+                         MYLANG_ADMISSION_KIND="build")
+        self.finish(job, 2)
+        self.assertIn("nested admission", (self.root / "nested.log").read_text())
+
+    def test_phase_admission_releases_on_exception_and_rejects_upgrade(self):
+        original = os.sched_getaffinity(0)
+        with mock.patch.dict(os.environ, self.env, clear=True):
+            with admission("build"):
+                with self.assertRaisesRegex(RuntimeError, "run this harness directly"):
+                    with admission("timing"):
+                        self.fail("upgraded active build to timing")
+            with self.assertRaisesRegex(RuntimeError, "measurement failed"):
+                with admission("timing"):
+                    with admission("timing"):
+                        build = self.start("build", kind="build")
+                        self.queued("build")
+                        self.assertFalse((self.root / "build.started").exists())
+                        raise RuntimeError("measurement failed")
+            self.finish(build)
+        self.assertEqual(os.sched_getaffinity(0), original)
+
+    def test_parent_death_cancels_phase_holder_even_before_admission(self):
+        for waiting in (False, True):
+            with self.subTest(waiting=waiting):
+                name = "parent-" + str(waiting)
+                log = (self.root / (name + ".log")).open("w")
+                self.files.append(log)
+                code = ("import sys, time\nfrom pathlib import Path\n"
+                        "sys.path.insert(0, sys.argv[1])\nfrom build_admission import admission\n"
+                        "with admission('timing'):\n"
+                        "    Path(sys.argv[2]).touch()\n    time.sleep(60)\n")
+                process = subprocess.Popen(
+                    [sys.executable, "-B", "-c", code, str(ROOT / "scripts"),
+                     str(self.root / (name + ".started"))],
+                    env=dict(self.env, MYLANG_TIMING_MEM="1000000G" if waiting else "0"),
+                    stdout=log, stderr=log, start_new_session=True)
+                self.jobs.append(process)
+                if waiting:
+                    self.queued(name)
+                    ticket = next((self.slots / "queue-timing").glob("*.wait"))
+                    self.holders.append(int(ticket.read_text().split()[0]))
+                else:
+                    self.started(name)
+                build = self.start("resume-" + str(waiting), kind="build")
+                self.queued("resume-" + str(waiting))
+                os.kill(process.pid, signal.SIGKILL)
+                self.finish(process, -signal.SIGKILL)
+                self.finish(build)
+
+    def test_timing_blocks_legacy_admission_lock_users(self):
+        timing = self.start("timing", kind="timing", hold=True)
+        self.started("timing")
+        legacy = subprocess.Popen(
+            ["flock", str(self.slots / "admit.lock"), sys.executable, "-c", JOB,
+             str(self.root), "legacy", "0", "0"], start_new_session=True)
+        self.jobs.append(legacy)
+        # A newer build waiter provides synchronization without a fixed sleep.
+        build = self.start("build", kind="build")
+        self.queued("build")
+        self.assertFalse((self.root / "legacy.started").exists())
+        (self.root / "timing.release").touch()
+        for process in (timing, legacy, build):
+            self.finish(process)
 
 
 if __name__ == "__main__":

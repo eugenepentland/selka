@@ -21,7 +21,11 @@ import shutil
 import signal
 import statistics
 import subprocess
+import sys
 import time
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_admission import admission
 
 
 def digest(path):
@@ -308,10 +312,11 @@ def main():
           counter_pairs=options.counter_pairs, timing_pairs=options.timing_pairs,
           scheduling_policy=scheduling_policy(options.cpu), controller_placement=controller,
           timing_diagnostics="Per-command RUSAGE_CHILDREN deltas; serial execution; not subtracted from elapsed labels or used to filter samples."))
-    # One bounded, nonblocking lease: never silently queue behind a long run.
+    # Keep the legacy collector lock for coexistence with older timing drivers.
+    # Acquire shared admission first so no build slot is held while waiting.
     lock_path = Path.home() / ".cache/mylang/runtime-parity-timing.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
-    with lock_path.open("a") as lock:
+    with admission("timing"), lock_path.open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         results = []
         for case in cases:

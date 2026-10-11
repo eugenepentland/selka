@@ -1,0 +1,66 @@
+{
+  "before": {
+    "binary": "/home/epentland/ai/canopy/mylang-zero-rc-integration-20261011/.zig-cache/o/87a38877bb77c3c7121c6c3e8841a42d/test",
+    "sha256": "d86a68a323575de09f5aa905d4c826e5a1275f0364dab34a2d7a0d31b98246cb",
+    "test": "test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory",
+    "runs": [
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 699/1003 of 1003]\nAll 1 tests passed.\nguardian/test: test wall 0.00s\nguardian/test: PASS \u2014 1 passed\nguardian/test: RESULT {\"passed\":1,\"failed\":0,\"skipped\":0}\n"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 699/1003 of 1003]\nAll 1 tests passed.\nguardian/test: test wall 0.00s\nguardian/test: PASS \u2014 1 passed\nguardian/test: RESULT {\"passed\":1,\"failed\":0,\"skipped\":0}\n"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 699/1003 of 1003]\nAll 1 tests passed.\nguardian/test: test wall 0.00s\nguardian/test: PASS \u2014 1 passed\nguardian/test: RESULT {\"passed\":1,\"failed\":0,\"skipped\":0}\n"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 699/1003 of 1003]\nAll 1 tests passed.\nguardian/test: test wall 0.00s\nguardian/test: PASS \u2014 1 passed\nguardian/test: RESULT {\"passed\":1,\"failed\":0,\"skipped\":0}\n"
+      },
+      {
+        "status": 0,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 699/1003 of 1003]\nAll 1 tests passed.\nguardian/test: test wall 0.00s\nguardian/test: PASS \u2014 1 passed\nguardian/test: RESULT {\"passed\":1,\"failed\":0,\"skipped\":0}\n"
+      }
+    ]
+  },
+  "after": {
+    "binary": "/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/.zig-cache/o/96d7846ea3306f8d90860741def18ef3/test",
+    "sha256": "be168626f1270f621b571542ee1dd80f2f921128d8fdcaa55e0008a6fe63b9ed",
+    "test": "test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory",
+    "runs": [
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 702/1006 of 1006]\n703 test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory...FAIL (NondeterministicMemoryUsage)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:1137:17: 0x2e5b787 in checkAllAllocationFailures__anon_327731 (std.zig)\n                return error.NondeterministicMemoryUsage;\n                ^\n/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/src/core/test_runner_graph_test.zig:291:5: 0x2e5cdd2 in test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory (root_test.zig)\n    try std.testing.checkAllAllocationFailures(std.testing.allocator, publicationFailure, .{Publication{ .prepared = warm.prepared, .store = &store, .indexes = warm.prepared.prior.? }});\n    ^\n0 passed; 0 skipped; 1 failed.\nguardian/test: test wall 0.90s; slowest over 50ms:\nguardian/test:   0.90s  test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory\nguardian/test: FAIL \u2014 1 failed of 1\nguardian/test: RESULT {\"passed\":0,\"failed\":1,\"skipped\":0}\n"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 702/1006 of 1006]\n703 test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory...FAIL (NondeterministicMemoryUsage)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:1137:17: 0x2e5b787 in checkAllAllocationFailures__anon_327731 (std.zig)\n                return error.NondeterministicMemoryUsage;\n                ^\n/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/src/core/test_runner_graph_test.zig:291:5: 0x2e5cdd2 in test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory (root_test.zig)\n    try std.testing.checkAllAllocationFailures(std.testing.allocator, publicationFailure, .{Publication{ .prepared = warm.prepared, .store = &store, .indexes = warm.prepared.prior.? }});\n    ^\n0 passed; 0 skipped; 1 failed.\nguardian/test: test wall 0.85s; slowest over 50ms:\nguardian/test:   0.85s  test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory\nguardian/test: FAIL \u2014 1 failed of 1\nguardian/test: RESULT {\"passed\":0,\"failed\":1,\"skipped\":0}\n"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 702/1006 of 1006]\n703 test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory...FAIL (NondeterministicMemoryUsage)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:1137:17: 0x2e5b787 in checkAllAllocationFailures__anon_327731 (std.zig)\n                return error.NondeterministicMemoryUsage;\n                ^\n/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/src/core/test_runner_graph_test.zig:291:5: 0x2e5cdd2 in test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory (root_test.zig)\n    try std.testing.checkAllAllocationFailures(std.testing.allocator, publicationFailure, .{Publication{ .prepared = warm.prepared, .store = &store, .indexes = warm.prepared.prior.? }});\n    ^\n0 passed; 0 skipped; 1 failed.\nguardian/test: test wall 0.87s; slowest over 50ms:\nguardian/test:   0.87s  test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory\nguardian/test: FAIL \u2014 1 failed of 1\nguardian/test: RESULT {\"passed\":0,\"failed\":1,\"skipped\":0}\n"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 702/1006 of 1006]\n703 test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory...FAIL (NondeterministicMemoryUsage)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:1137:17: 0x2e5b787 in checkAllAllocationFailures__anon_327731 (std.zig)\n                return error.NondeterministicMemoryUsage;\n                ^\n/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/src/core/test_runner_graph_test.zig:291:5: 0x2e5cdd2 in test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory (root_test.zig)\n    try std.testing.checkAllAllocationFailures(std.testing.allocator, publicationFailure, .{Publication{ .prepared = warm.prepared, .store = &store, .indexes = warm.prepared.prior.? }});\n    ^\n0 passed; 0 skipped; 1 failed.\nguardian/test: test wall 0.86s; slowest over 50ms:\nguardian/test:   0.86s  test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory\nguardian/test: FAIL \u2014 1 failed of 1\nguardian/test: RESULT {\"passed\":0,\"failed\":1,\"skipped\":0}\n"
+      },
+      {
+        "status": 1,
+        "stdout": "",
+        "stderr": "guardian/test: 1 test(s) selected [shard 702/1006 of 1006]\n703 test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory...FAIL (NondeterministicMemoryUsage)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:1137:17: 0x2e5b787 in checkAllAllocationFailures__anon_327731 (std.zig)\n                return error.NondeterministicMemoryUsage;\n                ^\n/home/epentland/ai/canopy/mylang-zero-rc-owned-payload-20261011/src/core/test_runner_graph_test.zig:291:5: 0x2e5cdd2 in test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory (root_test.zig)\n    try std.testing.checkAllAllocationFailures(std.testing.allocator, publicationFailure, .{Publication{ .prepared = warm.prepared, .store = &store, .indexes = warm.prepared.prior.? }});\n    ^\n0 passed; 0 skipped; 1 failed.\nguardian/test: test wall 0.88s; slowest over 50ms:\nguardian/test:   0.88s  test_runner_graph_test.test.graph metadata saveChunks frees every earlier publication collection on OutOfMemory\nguardian/test: FAIL \u2014 1 failed of 1\nguardian/test: RESULT {\"passed\":0,\"failed\":1,\"skipped\":0}\n"
+      }
+    ]
+  }
+}

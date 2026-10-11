@@ -16,6 +16,10 @@ zig build bench-parity -- --json /tmp/parity.json --arms my zig-safe
 
 Without `-Dbench-mylang` the step first installs this checkout's compiler (the
 ordinary `zig build`, so a Debug compiler unless `-Doptimize` says otherwise).
+On a shared machine, prepare that compiler with `scripts/build-slot.sh build zig
+build`, then pass `-Dbench-mylang=zig-out/bin/mylang` or run the Python harness
+directly. That keeps compiler preparation inside admission as well as the harness's
+arm builds and measurements. Do not put the whole benchmark inside a build slot.
 The compiler's own optimization changes only how long the builds take: the
 programs are built with `mylang build --release` (the whole program as one
 optimized LLVM unit; a compiler named by `-Dbench-mylang` must be a new-core one,
@@ -77,8 +81,13 @@ qualify is skipped with a notice. A mylang arm that fails either way, or a
    failure. `-- --no-confirm` fails on the first pass.
 
 Without `-Dbench-cpu` the timing CPU is the first of `MYLANG_TIMING_CPUS`
-(default `2,3,10,11`). `scripts/build-slot.sh` keeps builds and gates off those
-CPUs, and the harness builds its own arms with them masked off. Before timing, it
+(CPU 2 when unset). Run the harness directly: it admits arm builds and correctness
+checks as ordinary parallel work, then requests an exclusive timing window from
+`scripts/build-slot.sh`. The window pauses new admissions and waits for existing
+builds and gates to finish. Confirmation runs also request timing admission.
+Ordinary jobs can use all allowed CPUs when no measurement is pending; explicitly
+setting `MYLANG_TIMING_CPUS` still excludes those CPUs from ordinary work.
+Do not wrap the harness in a build/gate slot. Before timing, it
 warns when the timing CPU or its sibling is already busy
 ([many agents on one machine](../../docs/tooling/many-agents.md)). Otherwise,
 pick a performance core (`lscpu -e`: on a hybrid Intel part the E-cores are

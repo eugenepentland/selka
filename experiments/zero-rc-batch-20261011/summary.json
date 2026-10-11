@@ -1,0 +1,478 @@
+{
+  "whole_program": {
+    "array_1_control": {
+      "before": {
+        "allocs": 27,
+        "reallocs": 0,
+        "allocated_bytes": 2560,
+        "peak_live_bytes": 1536,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 27,
+        "reallocs": 0,
+        "allocated_bytes": 2560,
+        "peak_live_bytes": 1536,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "array_1_hit": {
+      "before": {
+        "allocs": 347,
+        "reallocs": 0,
+        "allocated_bytes": 35328,
+        "peak_live_bytes": 2016,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 123,
+        "reallocs": 0,
+        "allocated_bytes": 12800,
+        "peak_live_bytes": 1536,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "array_1_miss": {
+      "before": {
+        "allocs": 251,
+        "reallocs": 0,
+        "allocated_bytes": 25088,
+        "peak_live_bytes": 1696,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 27,
+        "reallocs": 0,
+        "allocated_bytes": 2560,
+        "peak_live_bytes": 1536,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "array_16_control": {
+      "before": {
+        "allocs": 209,
+        "reallocs": 0,
+        "allocated_bytes": 20808,
+        "peak_live_bytes": 10280,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 209,
+        "reallocs": 0,
+        "allocated_bytes": 20808,
+        "peak_live_bytes": 10280,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "array_16_hit": {
+      "before": {
+        "allocs": 1969,
+        "reallocs": 0,
+        "allocated_bytes": 215368,
+        "peak_live_bytes": 13696,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 305,
+        "reallocs": 0,
+        "allocated_bytes": 31048,
+        "peak_live_bytes": 10280,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "array_16_miss": {
+      "before": {
+        "allocs": 1873,
+        "reallocs": 0,
+        "allocated_bytes": 205128,
+        "peak_live_bytes": 13376,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 209,
+        "reallocs": 0,
+        "allocated_bytes": 20808,
+        "peak_live_bytes": 10280,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "array_128_control": {
+      "before": {
+        "allocs": 1554,
+        "reallocs": 2,
+        "allocated_bytes": 154864,
+        "peak_live_bytes": 75408,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 1554,
+        "reallocs": 2,
+        "allocated_bytes": 154864,
+        "peak_live_bytes": 75408,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "array_128_hit": {
+      "before": {
+        "allocs": 14066,
+        "reallocs": 2,
+        "allocated_bytes": 1553904,
+        "peak_live_bytes": 101520,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 1650,
+        "reallocs": 2,
+        "allocated_bytes": 165104,
+        "peak_live_bytes": 75408,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "array_128_miss": {
+      "before": {
+        "allocs": 13970,
+        "reallocs": 2,
+        "allocated_bytes": 1543664,
+        "peak_live_bytes": 101200,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 1554,
+        "reallocs": 2,
+        "allocated_bytes": 154864,
+        "peak_live_bytes": 75408,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_1_control": {
+      "before": {
+        "allocs": 36,
+        "reallocs": 0,
+        "allocated_bytes": 3136,
+        "peak_live_bytes": 1760,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 36,
+        "reallocs": 0,
+        "allocated_bytes": 3136,
+        "peak_live_bytes": 1760,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_1_hit": {
+      "before": {
+        "allocs": 420,
+        "reallocs": 0,
+        "allocated_bytes": 45120,
+        "peak_live_bytes": 2496,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 132,
+        "reallocs": 0,
+        "allocated_bytes": 13376,
+        "peak_live_bytes": 1760,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_1_miss": {
+      "before": {
+        "allocs": 324,
+        "reallocs": 0,
+        "allocated_bytes": 34880,
+        "peak_live_bytes": 2176,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 36,
+        "reallocs": 0,
+        "allocated_bytes": 3136,
+        "peak_live_bytes": 1760,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_16_control": {
+      "before": {
+        "allocs": 293,
+        "reallocs": 0,
+        "allocated_bytes": 25736,
+        "peak_live_bytes": 11912,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 293,
+        "reallocs": 0,
+        "allocated_bytes": 25736,
+        "peak_live_bytes": 11912,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_16_hit": {
+      "before": {
+        "allocs": 2597,
+        "reallocs": 0,
+        "allocated_bytes": 270472,
+        "peak_live_bytes": 16608,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 389,
+        "reallocs": 0,
+        "allocated_bytes": 35976,
+        "peak_live_bytes": 11912,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_16_miss": {
+      "before": {
+        "allocs": 2501,
+        "reallocs": 0,
+        "allocated_bytes": 260232,
+        "peak_live_bytes": 16288,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 293,
+        "reallocs": 0,
+        "allocated_bytes": 25736,
+        "peak_live_bytes": 11912,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_128_control": {
+      "before": {
+        "allocs": 2200,
+        "reallocs": 0,
+        "allocated_bytes": 196480,
+        "peak_live_bytes": 90264,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 2200,
+        "reallocs": 0,
+        "allocated_bytes": 196480,
+        "peak_live_bytes": 90264,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_128_hit": {
+      "before": {
+        "allocs": 18840,
+        "reallocs": 0,
+        "allocated_bytes": 1989760,
+        "peak_live_bytes": 124144,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 2296,
+        "reallocs": 0,
+        "allocated_bytes": 206720,
+        "peak_live_bytes": 90264,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "object_128_miss": {
+      "before": {
+        "allocs": 18744,
+        "reallocs": 0,
+        "allocated_bytes": 1979520,
+        "peak_live_bytes": 123824,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 2200,
+        "reallocs": 0,
+        "allocated_bytes": 196480,
+        "peak_live_bytes": 90264,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "record": {
+      "before": {
+        "allocs": 27000,
+        "reallocs": 0,
+        "allocated_bytes": 3136000,
+        "peak_live_bytes": 1984,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 21000,
+        "reallocs": 0,
+        "allocated_bytes": 2496000,
+        "peak_live_bytes": 1536,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "json_fixture": {
+      "before": {
+        "allocs": 553,
+        "reallocs": 0,
+        "allocated_bytes": 40480,
+        "peak_live_bytes": 9952,
+        "live_bytes_at_exit": 0
+      },
+      "after": {
+        "allocs": 538,
+        "reallocs": 0,
+        "allocated_bytes": 38720,
+        "peak_live_bytes": 9952,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "lookup_delta": {
+    "array_1_hit": {
+      "before": {
+        "allocs": 10.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 1024.0
+      },
+      "after": {
+        "allocs": 3.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 320.0
+      }
+    },
+    "array_1_miss": {
+      "before": {
+        "allocs": 7.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 704.0
+      },
+      "after": {
+        "allocs": 0.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 0.0
+      }
+    },
+    "array_16_hit": {
+      "before": {
+        "allocs": 55.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 6080.0
+      },
+      "after": {
+        "allocs": 3.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 320.0
+      }
+    },
+    "array_16_miss": {
+      "before": {
+        "allocs": 52.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 5760.0
+      },
+      "after": {
+        "allocs": 0.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 0.0
+      }
+    },
+    "array_128_hit": {
+      "before": {
+        "allocs": 391.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 43720.0
+      },
+      "after": {
+        "allocs": 3.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 320.0
+      }
+    },
+    "array_128_miss": {
+      "before": {
+        "allocs": 388.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 43400.0
+      },
+      "after": {
+        "allocs": 0.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 0.0
+      }
+    },
+    "object_1_hit": {
+      "before": {
+        "allocs": 12.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 1312.0
+      },
+      "after": {
+        "allocs": 3.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 320.0
+      }
+    },
+    "object_1_miss": {
+      "before": {
+        "allocs": 9.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 992.0
+      },
+      "after": {
+        "allocs": 0.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 0.0
+      }
+    },
+    "object_16_hit": {
+      "before": {
+        "allocs": 72.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 7648.0
+      },
+      "after": {
+        "allocs": 3.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 320.0
+      }
+    },
+    "object_16_miss": {
+      "before": {
+        "allocs": 69.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 7328.0
+      },
+      "after": {
+        "allocs": 0.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 0.0
+      }
+    },
+    "object_128_hit": {
+      "before": {
+        "allocs": 520.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 56040.0
+      },
+      "after": {
+        "allocs": 3.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 320.0
+      }
+    },
+    "object_128_miss": {
+      "before": {
+        "allocs": 517.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 55720.0
+      },
+      "after": {
+        "allocs": 0.0,
+        "reallocs": 0.0,
+        "allocated_bytes": 0.0
+      }
+    }
+  },
+  "lookup_delta_note": "Hit/miss minus matched construction-only control, divided by 32 lookups; peak is not subtracted.",
+  "explicit_record_copy_control": {
+    "allocs": 27000,
+    "reallocs": 0,
+    "allocated_bytes": 3136000,
+    "peak_live_bytes": 1536,
+    "live_bytes_at_exit": 0
+  }
+}

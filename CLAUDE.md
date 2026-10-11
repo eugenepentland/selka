@@ -31,8 +31,10 @@ build panics on any other toolchain.
   changes nothing.
 - Sharing the machine with other agents: run `zig build`, focused tests and gates
   through `scripts/build-slot.sh build|gate …`. It admits a job only when a slot
-  and enough memory are free, and keeps the timing CPUs (`MYLANG_TIMING_CPUS`,
-  default `2,3,10,11`) free of builds. Give every worktree its own
+  and enough memory are free. Ordinary jobs use all allowed CPUs by default;
+  `build-slot.sh timing …` stops new admissions, drains active jobs and runs an
+  exclusive measurement. `MYLANG_TIMING_CPUS` optionally excludes CPUs from
+  ordinary jobs. Give every worktree its own
   `ZIG_LOCAL_CACHE_DIR` and set `TMPDIR` on disk (`/tmp` has a per-user quota; a
   full quota makes test processes exit 70). See `docs/tooling/many-agents.md`.
 - Never point two source trees (a base checkout and a worktree) at one
@@ -47,7 +49,9 @@ debug edit-loop build (one unit per module, no optimizing passes). Time the
 binary, not `mylang run`, or use `mylang run prog.my --release --timings`
 (`timings: native_ns=N`, the build excluded). Build a ReleaseFast compiler only
 to time the compiler itself or to hand a compiler to other agents. Timing runs
-go on the reserved timing CPUs, never beside a gate.
+use `scripts/build-slot.sh timing …`, with any CPU pinning inside that command.
+The parity, Juice runtime and debug-runtime developer harnesses own admission;
+run them directly. Do not wrap a timing coordinator in a build/gate slot.
 
 ## Fast loops (use these while iterating)
 

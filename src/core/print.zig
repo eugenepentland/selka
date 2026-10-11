@@ -122,7 +122,7 @@ fn instruction(allocator: std.mem.Allocator, out: *std.ArrayList(u8), m: *const 
             try operand(allocator, out, m, f, inst.a);
             try out.print(allocator, ", b{d}, b{d}", .{ @backingInt(targets.then), @backingInt(targets.otherwise) });
         },
-        .union_make, .union_payload => {
+        .union_make, .union_payload, .union_take => {
             try out.print(allocator, " tag{d}", .{inst.data});
             if (inst.a != .none) {
                 try out.appendSlice(allocator, " ");

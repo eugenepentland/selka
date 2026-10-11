@@ -202,6 +202,9 @@ $ mylang test suite/ --jobs 4 --max-memory=256M
 That bounds one invocation. Several agents building and gating on one machine share
 it through `scripts/build-slot.sh`, which admits a job only when a slot and enough
 `MemAvailable` are free ([many agents on one machine](many-agents.md)).
+Ordinary jobs use all allowed CPUs by default. A `timing` request pauses new
+admissions, drains active builds/gates, then holds an exclusive measurement window;
+it does not increase the memory limit or the number of concurrent build slots.
 
 ## Sharded Zig test roots
 

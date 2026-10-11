@@ -8,7 +8,7 @@ test {
 }
 // Mirror src/semantic_store.zig's directory format: this CLI test cannot
 // import files outside its Zig module root.
-const semantic_cache_version = "semantic-cache-v6";
+const semantic_cache_version = "semantic-cache-v7";
 
 // spec: VALUE-SEMANTICS-11
 test "a scalar-only mut record parameter writes the caller" {

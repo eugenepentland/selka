@@ -680,7 +680,7 @@ fn consuming(instruction: ir.Inst, k: usize) bool {
         .list_push, .record_set => true,
         // a (the list), b (the index), then extra[0] (the value).
         .list_set, .list_set_field, .array_set, .dict_set_value, .dict_insert => k >= 2,
-        .list_pop, .union_make, .box_make, .ret, .release, .record_make => true,
+        .list_pop, .union_make, .union_take, .box_make, .box_take, .ret, .release, .record_make => true,
         else => false,
     };
 }
@@ -1816,7 +1816,7 @@ fn blockReachable(arena: std.mem.Allocator, f: *const ir.Function, from: u32, ta
 /// returned by a call, or a `mut` parameter.
 fn ownedRecord(f: *const ir.Function, record: ir.Inst) bool {
     return switch (record.op) {
-        .record_make, .record_set, .phi, .call => true,
+        .record_make, .record_set, .phi, .call, .union_take, .box_take => true,
         .param => ownedParameter(f.signature, record.data),
         else => false,
     };

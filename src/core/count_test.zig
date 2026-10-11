@@ -605,3 +605,47 @@ test "zero RC views repeated borrowing performs no managed allocations or RC" {
         }
     }
 }
+
+// spec-case: NEW-CORE-ZERO-RC-PAYLOAD-TRANSFER-1
+test "zero RC payload transfer counts boxed cleanup without retaining its children" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const result = try counted(a, root, "zero_rc_payload_box.my", &.{ "--experimental-zero-rc", "--release", "--counters" }, &.{});
+    try std.testing.expectEqual(@as(u8, 0), result.status);
+    try std.testing.expectEqualStrings("none\n15\n15\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
+    for ([_][]const []const u8{
+        &.{ "kinds", "retain", "count" },  &.{ "kinds", "release", "count" },    &.{ "kinds", "unique_test", "count" },
+        &.{ "totals", "runtime_retains" }, &.{ "totals", "runtime_releases" },   &.{ "totals", "shared_retains" },
+        &.{ "totals", "shared_releases" }, &.{ "totals", "live_bytes_at_exit" },
+    }) |path| try std.testing.expectEqual(@as(i64, 0), field(result.counts, path));
+    try std.testing.expect(field(result.counts, &.{ "kinds", "release_unique", "count" }) > 0);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-MATCH-TRANSFER-1
+test "zero RC fresh match transfers boxed payloads across allocation and return" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for ([_][]const []const u8{
+        &.{ "--experimental-zero-rc", "--unoptimized", "--counters" },
+        &.{ "--experimental-zero-rc", "--release", "--verify-facts", "--counters" },
+    }) |flags| {
+        const result = try counted(a, root, "zero_rc_match_box.my", flags, &.{});
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("62\n", result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        for ([_][]const []const u8{
+            &.{ "kinds", "retain", "count" },  &.{ "kinds", "release", "count" },    &.{ "kinds", "unique_test", "count" },
+            &.{ "totals", "runtime_retains" }, &.{ "totals", "runtime_releases" },   &.{ "totals", "shared_retains" },
+            &.{ "totals", "shared_releases" }, &.{ "totals", "live_bytes_at_exit" },
+        }) |path| try std.testing.expectEqual(@as(i64, 0), field(result.counts, path));
+    }
+}

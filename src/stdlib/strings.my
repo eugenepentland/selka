@@ -306,6 +306,6 @@ public func chr(code: int) -> Result[str, Error]:
         values.append(128 + code % 64)
     match bytes(values).decode():
         case Ok(text):
-            return Ok(text.copy())
+            return Ok(text)
         case Err(_):
             return Err(Error.Invalid(value="chr could not encode the code point"))

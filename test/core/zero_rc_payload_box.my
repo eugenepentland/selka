@@ -1,0 +1,42 @@
+enum Tree:
+    leaf(a: str, b: str, c: str, d: str, e: str)
+    next(child: Tree?)
+
+
+func score(tree: Tree) -> int:
+    match tree:
+        case Tree.leaf(a=a, b=b, c=c, d=d, e=e):
+            return len(a) + len(b) + len(c) + len(d) + len(e)
+        case Tree.next(child=child):
+            match child:
+                case Some(value):
+                    return score(value)
+                case None:
+                    return 0
+
+
+func make(n: int) -> Tree?:
+    if n == 0:
+        return None
+    return Some(Tree.leaf(a="a-" + str(n), b="b-" + str(n), c="c-" + str(n), d="d-" + str(n), e="e-" + str(n)))
+
+
+func forward(n: int) -> Tree?:
+    const value = try make(n)
+    const other = make(n + 1)
+    match other:
+        case Some(another):
+            assert score(another) == 15
+        case None:
+            assert False
+    return Some(value)
+
+
+func main(out: Stream) -> int:
+    for i in range(3):
+        match forward(i):
+            case Some(value):
+                out.print(score(value))
+            case None:
+                out.print("none")
+    return 0

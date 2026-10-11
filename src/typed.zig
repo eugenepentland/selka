@@ -679,7 +679,16 @@ pub const Assertion = struct { condition: NodeId, message: []const u8, message_v
 /// The clause one checked assertion enforces.
 pub const AssertionKind = enum { statement, requires, ensures, invariant };
 /// Resolved case tag, optional payload local, and checked arm body.
-pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
+pub const MatchArm = struct {
+    tag: usize,
+    slot: ?LocalId,
+    body: StatementId,
+    /// A fielded pattern can split an owned payload before its source body.
+    /// `body` above retains the ordinary borrowing projection prologue.
+    unpack: ?UnpackedArm = null,
+};
+/// Every payload field has one binding or is discarded; no partial owner remains.
+pub const UnpackedArm = struct { fields: []const ?LocalId, body: StatementId };
 /// Local type, declaration, usage counts, and tracked ownership/borrow state.
 pub const Local = struct {
     ownership: LocalOwnership = .{},

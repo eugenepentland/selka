@@ -972,6 +972,7 @@ const FnBuilder = struct {
     }
 
     fn matchStatement(self: *FnBuilder, value_node: typed.NodeId, arms: []const typed.MatchArm, span: u32) Error!void {
+        const owned = self.module().zero_rc and @import("single_owner.zig").matchOwnsTemporary(self.mb.input.program.nodes, value_node);
         var value_place: ?Place = null;
         const value = try self.expressionPlace(value_node, &value_place);
         if (self.current == null) return;
@@ -989,14 +990,14 @@ const FnBuilder = struct {
                 try self.seal(arm_block);
                 const resume_at = next;
                 self.current = arm_block;
-                try self.armBody(arm, value, value_place, span);
+                try self.armBody(arm, value, value_place, owned, span);
                 try self.jump(join);
                 self.current = resume_at;
             } else {
                 try self.jump(arm_block);
                 try self.seal(arm_block);
                 self.current = arm_block;
-                try self.armBody(arm, value, value_place, span);
+                try self.armBody(arm, value, value_place, owned, span);
                 try self.jump(join);
             }
         }
@@ -1004,9 +1005,13 @@ const FnBuilder = struct {
         self.enter(join);
     }
 
-    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, value_place: ?Place, span: u32) Error!void {
+    fn armBody(self: *FnBuilder, arm: typed.MatchArm, value: ir.Ref, value_place: ?Place, owned: bool, span: u32) Error!void {
         if (arm.slot) |slot| {
-            const payload = try self.payloadOf(value, arm.tag, span);
+            const payload = if (owned) try self.propagatedPayload(value, arm.tag, span) else try self.payloadOf(value, arm.tag, span);
+            if (owned) if (arm.unpack) |unpack| {
+                try self.unpackPayload(payload, unpack.fields, span);
+                return self.statement(unpack.body);
+            };
             try self.write(self.local(slot), self.current.?, payload);
             // A checker-hidden binding (the narrowing of `x is None`) names the payload in place:
             // a write through it must rebuild the union it came from.
@@ -1014,6 +1019,22 @@ const FnBuilder = struct {
             try self.noteAlias(slot, place);
         }
         try self.statement(arm.body);
+    }
+
+    /// Split every physical field once; ignored owners are dropped by ownership.
+    /// Keeping all reads in this block lets `takeFields` empty the whole record.
+    fn unpackPayload(self: *FnBuilder, payload: ir.Ref, slots: []const ?typed.LocalId, span: u32) Error!void {
+        const fields = self.module().compound(self.typeOfRef(payload)).record;
+        for (fields, slots, 0..) |field, slot, index| {
+            const value = try self.emit(.{ .op = .record_get, .ty = field, .a = payload, .data = index, .span = span });
+            if (slot) |binding| {
+                const inner = if (self.module().kind(field) == .box)
+                    try self.emit(.{ .op = .box_take, .ty = self.module().compound(field).box, .a = value, .span = span })
+                else
+                    value;
+                try self.write(self.local(binding), self.current.?, inner);
+            }
+        }
     }
 
     /// Recursively materialize an independent owner using the selected contract.
@@ -1613,12 +1634,14 @@ const FnBuilder = struct {
         return self.propagatedPayload(input, 1 - none_tag, span);
     }
 
-    // A propagated Result owns its active payload. Until union extraction has
-    // a consuming IR form, explicitly copy that payload before dropping the
-    // source wrapper; never synthesize a retained alias in zero-RC mode.
+    // The source contract consumes a propagated or freshly matched union. Preserve that
+    // transfer in IR, including the ownership of a recursive boxed payload.
     fn propagatedPayload(self: *FnBuilder, input: ir.Ref, tag: usize, span: u32) Error!ir.Ref {
-        const payload = try self.payloadOf(input, tag, span);
-        return if (self.module().zero_rc and payload != .none) self.copyOwned(payload, span) else payload;
+        if (!self.module().zero_rc) return self.payloadOf(input, tag, span);
+        const stored = self.module().compound(self.typeOfRef(input)).@"union"[tag];
+        if (stored == .void) return .none;
+        const payload = if (self.module().kind(stored) == .box) self.module().compound(stored).box else stored;
+        return self.emit(.{ .op = .union_take, .ty = payload, .a = input, .data = tag, .span = span });
     }
 
     /// A string constant `Union.case` naming case `case` of the union `ty`, as the old core spells it.
