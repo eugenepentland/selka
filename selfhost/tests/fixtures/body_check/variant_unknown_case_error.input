@@ -1,0 +1,7 @@
+enum Choice:
+    pair(left: int, right: int)
+    empty
+
+func main() -> int:
+    const value = Choice.missing
+    return 0

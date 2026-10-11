@@ -678,8 +678,11 @@
     "result": 7
   },
   "record_union_profile.my": {
-    "status": 2,
-    "boundary": "record-body"
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "record_unknown_field_error.my": {
     "status": 1,
@@ -704,5 +707,163 @@
   "record_invariant_imported.my": {
     "status": 2,
     "boundary": "global-invariant-preflight"
+  },
+  "checked_consumed_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_error_patterns.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_failure_list_payload.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_loop_consumption.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_managed_result.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_record_failure.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_try_context_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_try_fail.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_unhandled_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_wrong_failure_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "optional_try.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_boxed_recursive_profile.my": {
+    "status": 2,
+    "boundary": "explicit-profile-refusal",
+    "typed": false,
+    "library": false
+  },
+  "variant_duplicate_pattern_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "variant_generic_profile.my": {
+    "status": 2,
+    "boundary": "explicit-profile-refusal",
+    "typed": false,
+    "library": false
+  },
+  "variant_import_alias.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_incomplete_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "variant_loop_branch.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_match_expression.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_named_order.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_payload_defaults.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_payload_type_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "variant_record_list_snapshot.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_recursive_lists.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_unknown_case_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
   }
 }

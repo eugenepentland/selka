@@ -14,11 +14,14 @@ import run_frontend_qualification as F
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_check'
 COMPONENT = 'body-check'
+SCHEMA = 5
+FORGED_CHECKS = 66
+MALFORMED_CHECKS = 19
 
 
 def frame(payload):
     identity = b'bodytest' + F.hashlib.sha256(payload).digest()
-    return b'SLKBCK01' + struct.pack('<IIII', 1, 4, 0, len(payload)) + identity + payload
+    return b'SLKBCK01' + struct.pack('<IIII', 1, SCHEMA, 0, len(payload)) + identity + payload
 
 
 def blob(value):
@@ -36,9 +39,9 @@ def transport(binary, work, env, valid):
     request.write_bytes(valid)
     status, stdout, stderr = F.execute([binary, '--exchange', request], env, work, 30)
     F.require(status == 0 and not stderr and stdout[:8] == b'SLKBCK01' and stdout[24:64] == valid[24:64], 'valid body exchange failed')
-    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, 4, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
+    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, SCHEMA, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
     malformed = [b'', valid[:63], valid[:-1], valid+b'X', b'BADMAGIC'+valid[8:]]
-    for offset,value in ((8,2),(12,1),(12,2),(12,3),(16,1),(20,67108864)):
+    for offset,value in ((8,2),(12,1),(12,2),(12,3),(12,4),(16,1),(20,67108864)):
         changed=bytearray(valid);struct.pack_into('<I',changed,offset,value);malformed.append(bytes(changed))
     payload=valid[64:]
     malformed.extend([frame(b'BADMAGIC'+payload[8:]), frame(payload[:-1])])
@@ -49,6 +52,7 @@ def transport(binary, work, env, valid):
         request.write_bytes(value)
         status,out,err=F.execute([binary,'--exchange',request],env,work,30)
         F.require(status==2 and not out and err, f'malformed body request {index} escaped refusal')
+    F.require(len(malformed) == MALFORMED_CHECKS, 'incomplete malformed transport selection')
     return {'valid':1,'malformed':len(malformed),'request_sha256':F.hashlib.sha256(valid).hexdigest(),'request_bytes':len(valid),'failed':0,'skipped':0}
 
 
@@ -84,7 +88,8 @@ def mutate_input(payload):
         F.require(row['kind']==5 and name in row['names'],'missing projected input field')
         return row['children'][row['names'].index(name)]
     # Keep a complete, bounded graph while refusing wrong DTO kinds before typing.
-    targets=[field(root,b'catalog'),field(field(root,b'context'),b'source')]
+    catalog = field(root, b'catalog')
+    targets=[catalog,field(field(root,b'context'),b'source'),field(catalog,b'templates')]
     variants=[]
     for target in targets:
         changed=bytearray(payload)
@@ -136,9 +141,11 @@ def mutate_lists(payload):
         F.require(row['kind'] == 5 and name in row['names'], 'missing list recipe field')
         return row['children'][row['names'].index(name)]
     output = rows[root]['children'][0]
-    recipes = rows[field(output, b'lists')]['children']
+    recipes = rows[field(output, b'recipes')]['children']
     F.require(len(recipes) == 1, 'capture must contain one inferred list recipe')
-    recipe = recipes[0]
+    recipe_tag = rows[recipes[0]]
+    F.require(recipe_tag['kind'] == 7 and recipe_tag['data'] == b'list', 'capture recipe is not a tagged list')
+    recipe = recipe_tag['children'][0]
     identity, element = field(recipe, b'id'), field(recipe, b'element')
     targets = [(identity, rows[identity]['integer'] + 1),
                (element, rows[identity]['integer']), (element, 7),
@@ -190,7 +197,7 @@ def mutate_records(payload):
     return variants
 
 
-def packages(directory, body_schema=4):
+def packages(directory, body_schema=SCHEMA):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
                 'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), 'type-interface': (1, 1), COMPONENT: (1, body_schema)}
@@ -359,6 +366,106 @@ def coordinator_edit(args, q):
     return {'before': before[COMPONENT], 'after': after[COMPONENT], 'other_packages_unchanged': 6}
 
 
+class CapturedGraph:
+    """Fail-closed developer view of a fully authenticated captured success."""
+    def __init__(self, payload):
+        self.payload = payload
+        self.rows, root = graph_rows(payload)
+        F.require(self.rows[root]['kind'] == 7 and self.rows[root]['data'] == b'success', 'capture is not success')
+        self.output = self.rows[root]['children'][0]
+        self.batch = self.field(self.output, b'batch')
+        self.nodes = self.items(self.field(self.batch, b'nodes'))
+        self.statements = self.items(self.field(self.batch, b'statements'))
+        self.functions = self.items(self.field(self.batch, b'functions'))
+
+    def field(self, node, name):
+        row = self.rows[node]
+        F.require(row['kind'] == 5 and name in row['names'], 'missing captured field ' + repr(name))
+        return row['children'][row['names'].index(name)]
+
+    def items(self, node):
+        F.require(self.rows[node]['kind'] == 6, 'captured list expected')
+        return self.rows[node]['children']
+
+    def tagged(self, tables, tag):
+        for item in tables:
+            data = self.rows[self.field(item, b'data')]
+            if data['kind'] == 7 and data['data'] == tag:
+                return item, data['children'][0]
+        raise RuntimeError('capture missing typed ' + repr(tag))
+
+    def integer_node(self):
+        return self.nodes.index(self.tagged(self.nodes, b'integer')[0])
+
+    def mutations(self, targets):
+        changed = []
+        for target, value in targets:
+            F.require(self.rows[target]['kind'] in (1, 2), 'mutation target is not integer/boolean')
+            result = bytearray(self.payload)
+            struct.pack_into('<q', result, self.rows[target]['integer_at'], value)
+            F.require(bytes(result) != self.payload, 'mutation did not change authentic payload')
+            changed.append(bytes(result))
+        return changed
+
+
+def mutate_variants(payload):
+    graph = CapturedGraph(payload)
+    node, variant = graph.tagged(graph.nodes, b'variant')
+    tag = graph.field(variant, b'tag')
+    value = graph.field(variant, b'value')
+    F.require(graph.rows[value]['kind'] == 1, 'capture requires a payload-bearing variant')
+    return graph.mutations([(tag, 2147483647), (value, graph.integer_node()),
+                            (graph.field(node, b'ty'), 0), (tag, 1)])
+
+
+def mutate_matches(payload):
+    graph = CapturedGraph(payload)
+    _, match = graph.tagged(graph.statements, b'match')
+    arms = graph.items(graph.field(match, b'arms'))
+    F.require(len(arms) >= 2, 'capture needs multiple match arms')
+    tag = graph.field(arms[0], b'tag')
+    other = graph.field(arms[1], b'tag')
+    slot = graph.field(arms[0], b'slot')
+    F.require(graph.rows[slot]['kind'] == 1, 'capture needs a bound payload')
+    return graph.mutations([(tag, 2147483647), (other, graph.rows[tag]['integer']),
+                            (slot, 2147483647), (graph.field(match, b'value'), graph.integer_node())])
+
+
+def mutate_propagation(payload):
+    graph = CapturedGraph(payload)
+    node, propagation = graph.tagged(graph.nodes, b'propagate')
+    return graph.mutations([(graph.field(propagation, b'value'), graph.integer_node()),
+                            (graph.field(propagation, b'output'), 0), (graph.field(node, b'ty'), 1)])
+
+
+def mutate_transfer(payload):
+    graph = CapturedGraph(payload)
+    end, available = None, None
+    for function in graph.functions:
+        scope = graph.field(function, b'scope')
+        for local in graph.items(graph.field(scope, b'locals')):
+            ownership = graph.field(local, b'ownership')
+            span = graph.field(ownership, b'transfer_span')
+            if graph.rows[span]['kind'] == 5:
+                end = graph.field(span, b'end')
+            if graph.rows[graph.field(local, b'ty')]['integer'] == 0:
+                available = graph.field(ownership, b'transfer_available')
+    F.require(end is not None and available is not None, 'capture lacks pending transfer/scalar metadata')
+    return graph.mutations([(end, 2147483647), (available, 1)])
+
+
+def mutate_catalog_recipes(payload, tag):
+    graph = CapturedGraph(payload)
+    recipes = graph.items(graph.field(graph.output, b'recipes'))
+    recipe = next((graph.rows[row]['children'][0] for row in recipes
+                   if graph.rows[row]['kind'] == 7 and graph.rows[row]['data'] == tag), None)
+    F.require(recipe is not None, 'capture has no ' + repr(tag) + ' append recipe')
+    identity = graph.field(recipe, b'id')
+    argument = graph.field(recipe, b'success' if tag == b'result' else b'element')
+    return graph.mutations([(identity, graph.rows[identity]['integer'] + 1),
+                            (argument, graph.rows[identity]['integer']), (argument, 7),
+                            (graph.field(graph.field(recipe, b'span'), b'end'), 2147483647)])
+
 def private_fixture(args,q):
     binary=q.work/'exchange-fixture'
     compiled=F.execute([args.zig,'cc',FIXTURES/'exchange_fixture.c','-O2','-o',binary],coordinator_environment(),q.work,180)
@@ -382,11 +489,18 @@ def capture_exchange(args,q,private,real,source,mode='component',mutate=False):
     return result,request.read_bytes(),reply.read_bytes()
 
 
-def forged_replies(args,q,private,success,list_success,record_success):
+def forged_replies(args,q,private,success,list_success,record_success,b5):
     checked=0
     cases = [('main.my', payload) for payload in mutate_success(success[64:])]
     cases.extend(('profile_managed.my', payload) for payload in mutate_lists(list_success[64:]))
     cases.extend(('record_nested_snapshot.my', payload) for payload in mutate_records(record_success[64:]))
+    cases.extend(('variant_named_order.my', payload) for payload in mutate_variants(b5['variant_named_order.my'][64:]))
+    cases.extend(('variant_named_order.my', payload) for payload in mutate_matches(b5['variant_named_order.my'][64:]))
+    cases.extend(('checked_try_fail.my', payload) for payload in mutate_propagation(b5['checked_try_fail.my'][64:]))
+    cases.extend(('checked_loop_consumption.my', payload) for payload in mutate_transfer(b5['checked_loop_consumption.my'][64:]))
+    cases.extend(('checked_try_fail.my', payload) for payload in mutate_catalog_recipes(b5['checked_try_fail.my'][64:], b'result'))
+    cases.extend(('optional_try.my', payload) for payload in mutate_catalog_recipes(b5['optional_try.my'][64:], b'option'))
+    F.require(len(cases) * len(q.modes) == FORGED_CHECKS, 'incomplete forged body selection')
     for case,(source,payload) in enumerate(cases):
         path=q.work/f'forged-body-{case}.bin';path.write_bytes(payload)
         for mode in q.modes:
@@ -444,7 +558,12 @@ def main():
         F.require(list_captured == (0, b'', b''), 'authentic inferred list capture failed')
         record_captured, _, record_reply = capture_exchange(args, q, private, real, 'record_nested_snapshot.my')
         F.require(record_captured == (0, b'', b''), 'authentic nested record capture failed')
-        forged = forged_replies(args, q,private,reply,list_reply,record_reply)
+        b5 = {}
+        for source in ('variant_named_order.my', 'checked_try_fail.my', 'checked_loop_consumption.my', 'optional_try.my'):
+            captured, _, body_reply = capture_exchange(args, q, private, real, source)
+            F.require(captured == (0, b'', b''), 'authentic B5 capture failed: ' + source)
+            b5[source] = body_reply
+        forged = forged_replies(args, q,private,reply,list_reply,record_reply,b5)
         publication = publication_checks(args, q)
         edit = coordinator_edit(args, q) if args.edit_check else None
         report = {'host_sha256': host, 'packages': manifests, 'workflows': workflows,

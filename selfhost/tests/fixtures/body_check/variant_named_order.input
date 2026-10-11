@@ -1,0 +1,16 @@
+enum Choice:
+    pair(left: int, right: int)
+    empty
+
+func next(mut count: int) -> int:
+    count += 1
+    return count
+
+func main() -> int:
+    mut count = 1
+    const choice = Choice.pair(right=next(mut count), left=next(mut count))
+    match choice:
+        case Choice.pair(right=right, left=left):
+            return left * 2 + right - 1
+        case Choice.empty:
+            return 0

@@ -1,0 +1,15 @@
+enum Choice:
+    pair(left: int, right: int)
+    empty
+
+func main() -> int:
+    const values = [Choice.empty, Choice.pair(left=3, right=4)]
+    mut total = 0
+    for value in values:
+        match value:
+            case Choice.pair(left=left, right=right):
+                if left > 0:
+                    total += left + right
+            case Choice.empty:
+                continue
+    return total

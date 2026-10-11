@@ -1,0 +1,15 @@
+record Failure:
+    values: int[]
+
+func parse() -> int fails Failure:
+    fail Failure(values=[3, 4])
+
+func forward() -> int fails Failure:
+    return try parse()
+
+func main() -> int:
+    match forward():
+        case Ok(value):
+            return value
+        case Err(error):
+            return error.values[0] + error.values[1]

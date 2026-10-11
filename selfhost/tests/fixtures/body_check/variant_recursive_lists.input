@@ -1,0 +1,20 @@
+enum Tree:
+    leaf(value: int)
+    branch(children: Tree[])
+
+func main() -> int:
+    mut children = [Tree.leaf(value=3), Tree.leaf(value=4)]
+    const saved = Tree.branch(children=children)
+    children[0] = Tree.leaf(value=9)
+    match saved:
+        case Tree.leaf(value=value):
+            return value
+        case Tree.branch(children=items):
+            mut total = 0
+            for item in items:
+                match item:
+                    case Tree.leaf(value=value):
+                        total += value
+                    case Tree.branch(children=nested):
+                        total += len(nested)
+            return total

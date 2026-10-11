@@ -1,0 +1,6 @@
+public enum Choice:
+    value(item: int)
+    empty
+
+public func seven() -> Choice:
+    return Choice.value(item=7)
