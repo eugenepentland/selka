@@ -1,0 +1,14 @@
+record Box:
+    values: int[]
+
+record Outer:
+    box: Box
+
+func main() -> int:
+    mut rows = [Outer(box=Box(values=[3, 4]))]
+    const saved = rows
+    rows[0].box.values[0] = 9
+    rows[0].box.values.append(5)
+    assert saved[0].box.values == [3, 4]
+    assert rows[0].box.values == [9, 4, 5]
+    return saved[0].box.values[0] + saved[0].box.values[1]

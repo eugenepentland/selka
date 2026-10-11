@@ -1,0 +1,7 @@
+record Node:
+    value: int
+    children: Node[]
+
+func main() -> int:
+    const node = Node(value=7, children=[])
+    return node.value

@@ -1,0 +1,6 @@
+public record Pair:
+    left: int
+    right: int
+
+public func make() -> Pair:
+    return Pair(left=3, right=4)

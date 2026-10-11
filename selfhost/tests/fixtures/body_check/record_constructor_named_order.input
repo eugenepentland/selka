@@ -1,0 +1,12 @@
+record Pair:
+    left: int
+    right: int
+
+func next(mut value: int) -> int:
+    value += 1
+    return value
+
+func main() -> int:
+    mut value = 1
+    const pair = Pair(right=next(mut value), left=next(mut value))
+    return pair.left * 2 + pair.right - 1

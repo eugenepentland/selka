@@ -1,0 +1,13 @@
+record Pair:
+    left: int
+    right: int
+
+func make(left: int) -> Pair:
+    return Pair(left=left, right=4)
+
+func identity(value: Pair) -> Pair:
+    return value
+
+func main() -> int:
+    const rows: Pair[] = [identity(make(3))]
+    return rows[0].left + rows[0].right

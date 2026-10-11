@@ -1,0 +1,14 @@
+record Box:
+    values: int[]
+
+func replace(mut box: Box) -> int:
+    box = Box(values=[3, 4])
+    return 0
+
+func main() -> int:
+    mut box = Box(values=[1])
+    const saved = box
+    box.values[replace(mut box)] = 7
+    assert saved.values == [1]
+    assert box.values == [7, 4]
+    return box.values[0]

@@ -1,0 +1,5 @@
+record Box[T]:
+    value: T
+
+func main() -> int:
+    return Box[int](value=7).value

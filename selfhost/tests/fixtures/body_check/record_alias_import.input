@@ -1,0 +1,7 @@
+import record_alias_dep as data
+
+type Pair = data.Pair
+
+func main() -> int:
+    const pair: Pair = data.make()
+    return pair.left + pair.right

@@ -1,0 +1,13 @@
+record Inner:
+    value: int
+
+record Outer:
+    inner: Inner
+    tag: int
+
+func main() -> int:
+    mut value = Outer(inner=Inner(value=3), tag=4)
+    const saved = value
+    value.inner.value = 9
+    assert saved.inner.value == 3 and value.inner.value == 9
+    return saved.inner.value + saved.tag

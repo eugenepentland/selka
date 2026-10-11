@@ -1,0 +1,5 @@
+record Hidden:
+    value: int
+
+public func seven() -> int:
+    return 7

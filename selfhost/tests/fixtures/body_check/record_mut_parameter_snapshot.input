@@ -1,0 +1,15 @@
+record Box:
+    values: int[]
+    tag: int
+
+func update(mut box: Box):
+    box.values.append(9)
+    box.tag += 1
+
+func main() -> int:
+    mut box = Box(values=[3], tag=4)
+    const saved = box
+    update(mut box)
+    assert saved.values == [3] and saved.tag == 4
+    assert box.values == [3, 9] and box.tag == 5
+    return saved.values[0] + saved.tag

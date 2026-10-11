@@ -1,0 +1,14 @@
+record Box:
+    value: int
+
+enum Choice:
+    full(value: Box)
+    empty
+
+func main() -> int:
+    const value = Choice.full(value=Box(value=7))
+    match value:
+        case Choice.full(value=box):
+            return box.value
+        case Choice.empty:
+            return 0

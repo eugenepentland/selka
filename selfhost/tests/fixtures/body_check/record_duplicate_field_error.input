@@ -1,0 +1,7 @@
+record Pair:
+    left: int
+    right: int
+
+func main() -> int:
+    const pair = Pair(left=3, left=4)
+    return pair.left

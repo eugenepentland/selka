@@ -1,0 +1,6 @@
+record Pair:
+    left: int
+
+func main() -> int:
+    const pair = Pair(wrong=7)
+    return pair.left

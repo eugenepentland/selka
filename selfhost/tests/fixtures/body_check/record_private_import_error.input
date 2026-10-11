@@ -1,0 +1,5 @@
+import record_private_dep as data
+
+func main() -> int:
+    const value = data.Hidden(value=7)
+    return value.value
