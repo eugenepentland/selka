@@ -1,0 +1,7 @@
+build-slot: build slot 1, FIFO ticket 2216 after 0s
+B7 runtime requests: 7 captured, 7 native comparisons, 7 real replays; 0 failed, 0 skipped
+body entry resource forgeries: 15 rejected; 0 failed, 0 skipped
+body entry qualification: 24 fixtures, 7 actual entries, 2 generations, 349 operations; 0 failed, 0 skipped
+body entry resource forgeries: 15 rejected; 0 failed, 0 skipped
+body entry qualification: 24 fixtures, 7 actual entries, 2 generations, 349 operations; 0 failed, 0 skipped
+body entry gate: normal and release 349 operations/35 captures/15 resource attacks each; 0 failed, 0 skipped
