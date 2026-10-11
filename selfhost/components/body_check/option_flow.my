@@ -30,11 +30,14 @@ public func has(state: State, slot: int) -> bool:
 
 
 public func forget(mut state: State, slot: int) -> Unit:
+    mut found = -1
     for index in range(len(state.present)):
         if state.present[index] == slot:
-            state.present[index] = state.present[len(state.present) - 1]
-            _ = state.present.pop()
-            return
+            found = index
+            break
+    if found >= 0:
+        state.present[found] = state.present[len(state.present) - 1]
+        _ = state.present.pop()
 
 
 public func clear(mut state: State) -> Unit:
