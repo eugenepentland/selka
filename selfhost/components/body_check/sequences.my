@@ -1,0 +1,81 @@
+import syntax_value
+import graph
+import emission
+
+public func descriptor(pool: syntax_value.Pool, catalog: int, field: str, element: int) -> int fails syntax_value.Problem:
+    const value_id = try graph.field(pool, catalog, field)
+    const value = try graph.get(pool, value_id)
+    if value.kind == 0:
+        return -1
+    const id_value = try graph.field(pool, value_id, "id")
+    const element_value = try graph.field(pool, value_id, "element")
+    const id = try graph.number(pool, id_value)
+    const actual_element = try graph.number(pool, element_value)
+    if id < 19 or id >= 65555 or actual_element != element:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid managed sequence catalog descriptor")
+    return id
+
+
+func utf8_error(pool: syntax_value.Pool, span: int) -> syntax_value.Problem fails syntax_value.Problem:
+    const begin = try graph.field(pool, span, "start")
+    const finish = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, begin)
+    const end = try graph.number(pool, finish)
+    return syntax_value.Problem(code="E_TEXT_UTF8", start=start, end=end, message="str literals require valid UTF-8")
+
+
+public func points(raw: bytes, pool: syntax_value.Pool, span: int) -> int[] fails syntax_value.Problem:
+    mut values: int[] = []
+    mut index = 0
+    while index < len(raw):
+        const first = raw[index]
+        mut width = 1
+        mut point = first
+        mut minimum = 0
+        if first >= 194 and first <= 223:
+            width = 2
+            point = first - 192
+            minimum = 128
+        elif first >= 224 and first <= 239:
+            width = 3
+            point = first - 224
+            minimum = 2048
+        elif first >= 240 and first <= 244:
+            width = 4
+            point = first - 240
+            minimum = 65536
+        elif first >= 128:
+            const error = try utf8_error(pool, span)
+            fail error
+        if width > len(raw) - index:
+            const error = try utf8_error(pool, span)
+            fail error
+        for offset in range(1, width):
+            const next = raw[index + offset]
+            if next < 128 or next > 191:
+                const error = try utf8_error(pool, span)
+                fail error
+            point = point * 64 + next - 128
+        if point < minimum or point > 1114111 or (point >= 55296 and point <= 57343):
+            const error = try utf8_error(pool, span)
+            fail error
+        values.append(point)
+        index = index + width
+    return values
+
+
+public func literal(mut batch: emission.Batch, input: syntax_value.Pool, span: int, raw: bytes, text: bool) -> int fails syntax_value.Problem:
+    mut values: int[] = []
+    mut element = 5
+    mut integers: int[] = []
+    if text:
+        element = 7
+        integers = try points(raw, input, span)
+    else:
+        for octet in raw:
+            integers.append(octet)
+    for integer in integers:
+        const value = try syntax_value.integer(mut batch.pool, integer)
+        const node = try emission.node(mut batch, input, span, element, b"integer", value)
+        values.append(node)
+    return try emission.ids(mut batch, values)

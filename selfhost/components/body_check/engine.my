@@ -1,6 +1,7 @@
 import syntax_value
 import graph
 import scalars
+import sequences
 import emission
 import locals
 import syntax_problem
@@ -91,7 +92,7 @@ public func problem(state: State, span: int, code: str, message: str) -> syntax_
 
 public func require(state: State, actual: int, expected: int, span: int) -> bool fails syntax_value.Problem:
     if actual != expected:
-        const rejection = try problem(state, span, "E_TYPE", "expected " + scalars.name(expected) + ", found " + scalars.name(actual))
+        const rejection = try problem(state, span, "E_TYPE", "expected " + type_name(state, expected) + ", found " + type_name(state, actual))
         fail rejection
     return True
 
@@ -178,6 +179,61 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
         ty = 1
     elif data.data == b"unit":
         result_payload = try syntax_value.absent(mut state.batch.pool)
+    elif data.data == b"text" or data.data == b"bytes":
+        const value = try graph.get(state.syntax.pool, payload)
+        if value.kind != 3:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid sequence literal payload")
+        ty = state.batch.facts.bytes_type
+        if data.data == b"bytes" and state.batch.facts.expected[raw_id] >= 0 and state.batch.facts.expected[raw_id] < 19:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "byte literals in scalar contexts require an additional fixed-array catalog schema")
+            fail rejection
+        mut text_literal = data.data == b"text"
+        if data.data == b"bytes" and state.batch.facts.expected[raw_id] >= 19:
+            ty = state.batch.facts.expected[raw_id]
+            text_literal = ty == state.batch.facts.string_type
+        if text_literal:
+            ty = state.batch.facts.string_type
+        if ty < 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "managed sequence builtin is unavailable")
+            fail rejection
+        result_payload = try sequences.literal(mut state.batch, state.syntax.pool, span, value.data, text_literal)
+        const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, b"array", result_payload)
+        state.batch.resolved[raw_id] = id
+        state.depth = state.depth - 1
+        return Expression(id=id, ty=ty)
+    elif data.data == b"length":
+        const input = try graph.number(state.syntax.pool, payload)
+        const base = try expression(mut state, input)
+        if not managed(state, base.ty):
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "length receiver is outside the managed sequence profile")
+            fail rejection
+        ty = 0
+        result_payload = try syntax_value.integer(mut state.batch.pool, base.id)
+    elif data.data == b"index":
+        const base_id = try graph.field(state.syntax.pool, payload, "base")
+        const index_id = try graph.field(state.syntax.pool, payload, "index")
+        const base_raw = try graph.number(state.syntax.pool, base_id)
+        const index_raw = try graph.number(state.syntax.pool, index_id)
+        const base = try expression(mut state, base_raw)
+        const index = try expression(mut state, index_raw)
+        if not managed(state, base.ty):
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "indexed receiver is outside the managed sequence profile")
+            fail rejection
+        if index.ty != 0:
+            const rejection = try problem(state, span, "E_TYPE", "operation requires an integer type")
+            fail rejection
+        const typed_base = try syntax_value.integer(mut state.batch.pool, base.id)
+        const typed_index = try syntax_value.integer(mut state.batch.pool, index.id)
+        const no = try syntax_value.boolean(mut state.batch.pool, False)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["base", "index", "from_end"], [typed_base, typed_index, no])
+        ty = base.ty
+        if base.ty == state.batch.facts.bytes_type:
+            const narrow = try emission.node(mut state.batch, state.syntax.pool, span, 5, b"index", result_payload)
+            result_payload = try syntax_value.integer(mut state.batch.pool, narrow)
+            const id = try emission.node(mut state.batch, state.syntax.pool, span, 0, b"cast", result_payload)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=0)
     elif data.data == b"name":
         const name = try graph.spelling(state.syntax.pool, state.syntax.source, payload)
         const slot = locals.find(state.scope, name)
@@ -355,9 +411,7 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
                 fail rejection
             const argument_raw = try graph.number(state.syntax.pool, argument)
             const type_span = try graph.field(state.syntax.pool, parameters[position], "ty")
-            const type_text = try graph.spelling(state.syntax.pool, state.syntax.source, type_span)
-            const location = try problem(state, type_span, "", "")
-            const expected = try scalars.annotation(type_text, location.start, location.end)
+            const expected = try type_at(state, type_span)
             const checked = try expression_expected(mut state, argument_raw, expected)
             const argument_span = try graph.field(state.syntax.pool, state.syntax.nodes[argument_raw], "span")
             _ = try require(state, checked.ty, expected, argument_span)
@@ -389,9 +443,7 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
         if len(arguments) == len(parameters) and len(argument_names) == 0:
             order = []
         const result_span = try graph.field(state.syntax.pool, target_signature, "return_type")
-        const result_text = try graph.spelling(state.syntax.pool, state.syntax.source, result_span)
-        const result_location = try problem(state, result_span, "", "")
-        ty = try scalars.annotation(result_text, result_location.start, result_location.end)
+        ty = try type_at(state, result_span)
         const argument_values = try emission.ids(mut state.batch, slots)
         const evaluation_order = try emission.ids(mut state.batch, order)
         const evaluation = try syntax_value.absent(mut state.batch.pool)
@@ -415,9 +467,33 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
             state.batch.facts.expected[right_raw] = 0
         const left = try expression(mut state, left_raw)
         const right = try expression(mut state, right_raw)
+        if managed(state, left.ty):
+            const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, operator_span)
+            mut builtin = ""
+            mut operator = ""
+            if spelling == b"|":
+                builtin = "bit_or"
+                operator = "|"
+            elif spelling == b"&":
+                builtin = "bit_and"
+                operator = "&"
+            elif spelling == b"^":
+                builtin = "bit_xor"
+                operator = "^"
+            if len(builtin) != 0:
+                const rejection = try problem(state, operator_span, "E_SET_OPERATOR", "`" + operator + "` combines two sets or two integers (`" + builtin + "(a, b)`)")
+                fail rejection
         _ = try require(state, right.ty, left.ty, operator_span)
         ty = left.ty
-        if op.data == b"logical_and" or op.data == b"logical_or":
+        if managed(state, left.ty):
+            if op.data == b"add":
+                ty = left.ty
+            elif op.data == b"eq" or op.data == b"ne" or op.data == b"lt" or op.data == b"le" or op.data == b"gt" or op.data == b"ge":
+                ty = 1
+            else:
+                const rejection = try problem(state, operator_span, "E_TEXT_OPERATOR", "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`")
+                fail rejection
+        elif op.data == b"logical_and" or op.data == b"logical_or":
             _ = try require(state, left.ty, 1, operator_span)
             ty = 1
         elif op.data == b"eq" or op.data == b"ne":
@@ -509,9 +585,7 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
         const annotation = try graph.get(state.syntax.pool, annotation_id)
         mut value = Expression(id=-1, ty=15)
         if annotation.kind != 0:
-            const text = try graph.spelling(state.syntax.pool, state.syntax.source, annotation_id)
-            const location = try problem(state, annotation_id, "", "")
-            const ty = try scalars.annotation(text, location.start, location.end)
+            const ty = try type_at(state, annotation_id)
             value = try expression_expected(mut state, value_raw, ty)
             _ = try require(state, value.ty, ty, annotation_id)
         else:
@@ -577,7 +651,11 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
             _ = try require_readable(mut state, slot, name_span)
             const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
             _ = try require(state, value.ty, state.scope.locals[slot].ty, operator_span)
-            if value.ty != 0:
+            if managed(state, value.ty):
+                if op.data != b"add":
+                    const rejection = try problem(state, operator_span, "E_TEXT_OPERATOR", "a managed collection augments with `+=` only, and str, bytes and list are the types that support it")
+                    fail rejection
+            elif value.ty != 0:
                 const rejection = try problem(state, operator_span, "E_TYPE", "operation requires an integer type")
                 fail rejection
             state.scope.locals[slot].usage.reads = state.scope.locals[slot].usage.reads + 1
@@ -729,3 +807,29 @@ func require_readable(mut state: State, slot: int, span: int) -> bool fails synt
         state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
         fail rejection
     return True
+
+
+public func managed(state: State, ty: int) -> bool:
+    return ty >= 19 and (ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type)
+
+
+func type_name(state: State, ty: int) -> str:
+    if ty >= 19 and ty == state.batch.facts.string_type:
+        return "str"
+    if ty >= 19 and ty == state.batch.facts.bytes_type:
+        return "bytes"
+    return scalars.name(ty)
+
+
+public func type_at(state: State, span: int) -> int fails syntax_value.Problem:
+    const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    if text == b"str" or text == b"bytes":
+        mut ty = state.batch.facts.string_type
+        if text == b"bytes":
+            ty = state.batch.facts.bytes_type
+        if ty < 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "managed sequence builtin is unavailable")
+            fail rejection
+        return ty
+    const location = try problem(state, span, "", "")
+    return try scalars.annotation(text, location.start, location.end)

@@ -6,6 +6,8 @@ public record Facts:
     top_names: bytes[]
     expected: int[]
     local_count: int
+    string_type: int
+    bytes_type: int
 
 
 public record Batch:
@@ -19,7 +21,7 @@ public record Batch:
 
 
 public func empty() -> Batch:
-    return Batch(pool=syntax_value.empty(), nodes=[], statements=[], functions=[], ranges=[], resolved=[], facts=Facts(applications=[], top_names=[], expected=[], local_count=0))
+    return Batch(pool=syntax_value.empty(), nodes=[], statements=[], functions=[], ranges=[], resolved=[], facts=Facts(applications=[], top_names=[], expected=[], local_count=0, string_type=-1, bytes_type=-1))
 
 
 public func node(mut batch: Batch, input: syntax_value.Pool, span: int, ty: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:

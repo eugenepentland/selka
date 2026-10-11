@@ -1,0 +1,243 @@
+import syntax_value
+import sequences
+import engine
+import emission
+import locals
+import graph
+
+func fresh_state() -> engine.State:
+    mut batch = emission.empty()
+    batch.facts.string_type = 83
+    batch.facts.bytes_type = 42
+    return engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"0 str bytes", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=engine.Control(next=0, active=[], exited=[]), problems=[])
+
+
+func node(mut state: engine.State, tag: bytes, payload: int, start: int, end: int) -> int fails syntax_value.Problem:
+    const span = try syntax_value.span(mut state.syntax.pool, start, end)
+    const data = try syntax_value.tagged(mut state.syntax.pool, tag, payload)
+    const value = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, data])
+    const id = len(state.syntax.nodes)
+    state.syntax.nodes.append(value)
+    return id
+
+
+func literal(mut state: engine.State, tag: bytes, raw: bytes) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.octets(mut state.syntax.pool, raw)
+    return try node(mut state, tag, payload, 0, 1)
+
+
+public func test_utf8_codepoints_and_empty_text() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 2, 8)
+    const values = try sequences.points(b"A\xc3\xa9\xf0\x9f\x98\x80\n", pool, span)
+    const empty = try sequences.points(b"", pool, span)
+    return values == [65, 233, 128512, 10] and len(empty) == 0
+
+
+func invalid_utf8(raw: bytes) -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 2, 8)
+    match sequences.points(raw, pool, span):
+        case Ok(values):
+            return False
+        case Err(problem):
+            return problem.code == "E_TEXT_UTF8" and problem.start == 2 and problem.end == 8 and problem.message == "str literals require valid UTF-8"
+
+
+public func test_utf8_overlong_surrogate_truncated_and_out_of_range() -> bool fails syntax_value.Problem:
+    const overlong = try invalid_utf8(b"\xc0\x80")
+    const surrogate = try invalid_utf8(b"\xed\xa0\x80")
+    const truncated = try invalid_utf8(b"\xf0\x9f\x98")
+    const high = try invalid_utf8(b"\xf4\x90\x80\x80")
+    return overlong and surrogate and truncated and high
+
+
+public func test_text_literal_dynamic_catalog_and_scalar_children() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const raw = try literal(mut state, b"text", b"\xc3\xa9\xf0\x9f\x98\x80")
+    const result = try engine.expression(mut state, raw)
+    const first = state.batch.nodes[0]
+    const child_type_id = try graph.field(state.batch.pool, first, "ty")
+    const child_type = try graph.number(state.batch.pool, child_type_id)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const payload = try graph.payload(state.batch.pool, data_id)
+    const children = try graph.items(state.batch.pool, payload)
+    return result.ty == 83 and result.id == 2 and child_type == 7 and data.data == b"array" and len(children) == 2
+
+
+public func test_bytes_literal_and_index_cast_append_order() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const bytes = try literal(mut state, b"bytes", b"\xff")
+    const integer_span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const index = try node(mut state, b"integer", integer_span, 0, 1)
+    const base = try syntax_value.integer(mut state.syntax.pool, bytes)
+    const offset = try syntax_value.integer(mut state.syntax.pool, index)
+    const access = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [base, offset])
+    const indexed = try node(mut state, b"index", access, 0, 1)
+    const result = try engine.expression(mut state, indexed)
+    const narrow = state.batch.nodes[3]
+    const narrow_type_id = try graph.field(state.batch.pool, narrow, "ty")
+    const narrow_type = try graph.number(state.batch.pool, narrow_type_id)
+    const cast_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const cast = try graph.get(state.batch.pool, cast_id)
+    const target_id = try graph.payload(state.batch.pool, cast_id)
+    const target = try graph.number(state.batch.pool, target_id)
+    return result.ty == 0 and result.id == 4 and narrow_type == 5 and cast.data == b"cast" and target == 3
+
+
+public func test_text_length_and_index_keep_managed_identity() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const text = try literal(mut state, b"text", b"x")
+    const base = try syntax_value.integer(mut state.syntax.pool, text)
+    const length_raw = try node(mut state, b"length", base, 0, 1)
+    const length = try engine.expression(mut state, length_raw)
+    const integer_span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const index = try node(mut state, b"integer", integer_span, 0, 1)
+    const offset = try syntax_value.integer(mut state.syntax.pool, index)
+    const access = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [base, offset])
+    const indexed = try node(mut state, b"index", access, 0, 1)
+    const result = try engine.expression(mut state, indexed)
+    return length.ty == 0 and result.ty == 83
+
+
+public func test_absent_sequence_descriptor_refuses_only_managed_use() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    state.batch.facts.string_type = -1
+    const raw = try literal(mut state, b"text", b"x")
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE"
+
+
+public func test_catalog_shape_validation_and_nonfixed_ids() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const id = try syntax_value.integer(mut pool, 83)
+    const element = try syntax_value.integer(mut pool, 7)
+    const descriptor = try syntax_value.object(mut pool, ["id", "element"], [id, element])
+    const absent = try syntax_value.absent(mut pool)
+    const catalog = try syntax_value.object(mut pool, ["string", "bytes"], [descriptor, absent])
+    const text = try sequences.descriptor(pool, catalog, "string", 7)
+    const bytes = try sequences.descriptor(pool, catalog, "bytes", 5)
+    return text == 83 and bytes == -1
+
+
+func binary(mut state: engine.State, left: int, right: int, op: bytes) -> int fails syntax_value.Problem:
+    const first = try syntax_value.integer(mut state.syntax.pool, left)
+    const second = try syntax_value.integer(mut state.syntax.pool, right)
+    const operator = try syntax_value.enumeration(mut state.syntax.pool, op)
+    const span = try syntax_value.span(mut state.syntax.pool, 2, 3)
+    const no = try syntax_value.boolean(mut state.syntax.pool, False)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["left", "right", "op", "op_span", "chained"], [first, second, operator, span, no])
+    return try node(mut state, b"binary", payload, 0, 1)
+
+
+public func test_managed_concat_order_and_equality_types() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const first = try literal(mut state, b"text", b"a")
+    const second = try literal(mut state, b"text", b"b")
+    const concat_raw = try binary(mut state, first, second, b"add")
+    const order_raw = try binary(mut state, first, second, b"lt")
+    const equality_raw = try binary(mut state, first, second, b"eq")
+    const concat = try engine.expression(mut state, concat_raw)
+    const order = try engine.expression(mut state, order_raw)
+    const equality = try engine.expression(mut state, equality_raw)
+    return concat.ty == 83 and order.ty == 1 and equality.ty == 1 and len(state.batch.nodes) == 7
+
+
+public func test_contextual_byte_literal_materializes_utf8_string() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const raw = try literal(mut state, b"bytes", b"\xc3\xa9")
+    const value = try engine.expression_expected(mut state, raw, 83)
+    const integer_type_id = try graph.field(state.batch.pool, state.batch.nodes[0], "ty")
+    const integer_type = try graph.number(state.batch.pool, integer_type_id)
+    return value.ty == 83 and value.id == 1 and integer_type == 7
+
+
+public func test_managed_binary_type_mismatch_names() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const first = try literal(mut state, b"text", b"a")
+    const second = try literal(mut state, b"bytes", b"b")
+    const raw = try binary(mut state, first, second, b"add")
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.start == 2 and problem.end == 3 and problem.message == "expected str, found bytes"
+
+
+public func test_managed_invalid_operator_exact_diagnostic() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const first = try literal(mut state, b"bytes", b"a")
+    const second = try literal(mut state, b"bytes", b"b")
+    const raw = try binary(mut state, first, second, b"sub")
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_TEXT_OPERATOR" and problem.start == 2 and problem.end == 3 and problem.message == "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`"
+
+
+func assign(mut state: engine.State, raw: int, op: bytes) -> int fails syntax_value.Problem:
+    const name = try syntax_value.span(mut state.syntax.pool, 2, 5)
+    const operator = try syntax_value.enumeration(mut state.syntax.pool, op)
+    const value = try syntax_value.integer(mut state.syntax.pool, raw)
+    const op_span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "value", "op", "op_span"], [name, value, operator, op_span])
+    const data = try syntax_value.tagged(mut state.syntax.pool, b"assignment", payload)
+    const statement = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [op_span, data])
+    state.syntax.statements.append(statement)
+    return len(state.syntax.statements) - 1
+
+
+public func test_managed_augmented_assignment_preserves_full_local_metadata() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const declaration = try syntax_value.span(mut state.syntax.pool, 2, 5)
+    _ = try locals.add(mut state.scope, b"str", declaration, 83, True, b"parameter")
+    const raw = try literal(mut state, b"text", b"x")
+    const statement = try assign(mut state, raw, b"add")
+    _ = try engine.statement(mut state, statement)
+    const local = state.scope.locals[0]
+    const encoded = try locals.encode(mut state.batch.pool, state.syntax.pool, local)
+    const ownership_id = try graph.field(state.batch.pool, encoded, "ownership")
+    const transfer_id = try graph.field(state.batch.pool, ownership_id, "transfer_available")
+    const transfer = try graph.get(state.batch.pool, transfer_id)
+    return local.ty == 83 and local.mutable and local.initialized and local.origin == b"parameter" and local.usage.reads == 1 and local.usage.writes == 1 and not local.usage.temporary and transfer.integer == 0
+
+
+public func test_managed_nonadd_augmentation_exact_error() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const declaration = try syntax_value.span(mut state.syntax.pool, 2, 5)
+    _ = try locals.add(mut state.scope, b"str", declaration, 83, True, b"local")
+    const raw = try literal(mut state, b"text", b"x")
+    const statement = try assign(mut state, raw, b"sub")
+    match engine.statement(mut state, statement):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_TEXT_OPERATOR" and problem.start == 0 and problem.end == 1 and problem.message == "a managed collection augments with `+=` only, and str, bytes and list are the types that support it"
+
+
+public func test_managed_bitwise_source_operator_has_native_alternative() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    state.syntax.source = b"0 | bytes"
+    const first = try literal(mut state, b"bytes", b"a")
+    const second = try literal(mut state, b"bytes", b"b")
+    const raw = try binary(mut state, first, second, b"bit_or")
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_SET_OPERATOR" and problem.start == 2 and problem.end == 3 and problem.message == "`|` combines two sets or two integers (`bit_or(a, b)`)"
+
+
+public func test_scalar_context_byte_literal_refuses_unowned_array_schema() -> bool fails syntax_value.Problem:
+    mut state = fresh_state()
+    const raw = try literal(mut state, b"bytes", b"a")
+    match engine.expression_expected(mut state, raw, 0):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and len(state.batch.nodes) == 0

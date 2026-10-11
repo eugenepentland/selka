@@ -1,15 +1,12 @@
 import engine
 import graph
 import locals
-import scalars
 import syntax_value
 import emission
 import syntax_problem
 
 public func type_at(state: engine.State, span: int) -> int fails syntax_value.Problem:
-    const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, span)
-    const location = try engine.problem(state, span, "", "")
-    return try scalars.annotation(spelling, location.start, location.end)
+    return try engine.type_at(state, span)
 
 
 public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bool fails syntax_value.Problem:
