@@ -1,0 +1,11 @@
+func grow(mut values: set[int]) -> Unit:
+    values.add(3)
+
+
+func main() -> int:
+    mut values = {1}
+    mut snapshot = values
+    grow(mut values)
+    snapshot.add(2)
+    assert list(values) == [1, 3] and list(snapshot) == [1, 2]
+    return 7

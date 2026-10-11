@@ -1,0 +1,9 @@
+func sum(first: int?, second: int?) -> int:
+    if first is None or second is None:
+        return 0
+    return first + second
+
+
+func main() -> int:
+    assert sum(Some(3), Some(4)) == 7 and sum(None, Some(4)) == 0
+    return 7

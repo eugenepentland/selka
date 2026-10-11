@@ -1,0 +1,34 @@
+func foreign() -> int:
+    return 91
+
+
+func option_value(value: int?) -> int:
+    return value.unwrap_or(0)
+
+
+func main() -> int:
+    const prior_list = [1, 2]
+    assert len(prior_list) == 2
+    mut mapping = {"a": 1, "b": 2}
+    const readonly = mapping.copy()
+    mut numeric = {1: 2}
+    mut members = {3, 1}
+    mapping["a"] = 7
+    numeric[1] = 8
+    members.add(9)
+    const keys = list(mapping.keys())
+    const values = list(mapping.values())
+    const items = list(mapping.items())
+    assert keys == ["a", "b"] and values == [7, 2]
+    assert items[0].key == "a" and items[0].value == 7
+    assert mapping.get("missing", 4) == 4
+    assert mapping.setdefault("b", 5) == 2
+    assert "a" in mapping and 3 in members
+    assert len(mapping) == 2 and readonly["a"] == 1
+    const present: int? = Some(7)
+    const absent: int? = None
+    assert present.is_some() and absent.is_none()
+    assert option_value(present) == 7 and option_value(absent) == 0
+    assert True
+    assert foreign() == 91
+    return 7

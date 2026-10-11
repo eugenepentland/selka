@@ -1,0 +1,12 @@
+func grow(mut mapping: dict[str, int], key: str) -> Unit:
+    mapping[key] = mapping.get(key, 0) + 1
+
+
+func main() -> int:
+    mut mapping = {"a": 1}
+    const snapshot = mapping
+    grow(mut mapping, "a")
+    grow(mut mapping, "b")
+    assert mapping["a"] == 2 and mapping["b"] == 1
+    assert snapshot == {"a": 1}
+    return 7

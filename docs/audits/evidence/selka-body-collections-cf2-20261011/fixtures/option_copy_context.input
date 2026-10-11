@@ -1,0 +1,7 @@
+func main() -> int:
+    const value: int? = Some(7)
+    if value is None:
+        return 1
+    const copied: int? = value
+    assert copied.is_some() and copied.unwrap_or(0) == 7
+    return value

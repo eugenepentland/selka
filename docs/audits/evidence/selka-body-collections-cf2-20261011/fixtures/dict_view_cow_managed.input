@@ -1,0 +1,8 @@
+func main() -> int:
+    mut mapping = {1: [7, 8], 2: [9]}
+    mut snapshot = list(mapping.values())
+    mapping[1].append(11)
+    snapshot[1].append(13)
+    assert snapshot == [[7, 8], [9, 13]]
+    assert mapping[1] == [7, 8, 11] and mapping[2] == [9]
+    return 7
