@@ -43,7 +43,7 @@ class BodyEntryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);request=root/'input.bin';request.write_bytes(b'authentic')
             spec={'file':'input.bin','sha256':Q.F.digest(request),'arguments':['--exchange'],'provenance':'authentic-native-request'}
-            inventory={'schema':1,'packages':{name:dict(spec) for name in Q.ENTRIES}}
+            inventory={'schema':1,'complete':True,'packages':{name:dict(spec) for name in Q.ENTRIES}}
             (root/'requests.json').write_text(json.dumps(inventory))
             self.assertEqual(len(Q.request_inventory(root)['packages']),7)
             inventory['packages'].pop('body-check');(root/'requests.json').write_text(json.dumps(inventory))

@@ -56,7 +56,7 @@ def source_identity(root):
 
 def request_inventory(directory):
     inventory = json.loads((directory / 'requests.json').read_text())
-    require(inventory.get('schema') == 1 and set(inventory.get('packages', {})) == set(ENTRIES), 'seven authentic requests required')
+    require(inventory.get('complete') is True and inventory.get('schema') == 1 and set(inventory.get('packages', {})) == set(ENTRIES), 'seven authentic requests required')
     for name, spec in inventory['packages'].items():
         path = Path(spec['file'])
         require(not path.is_absolute() and '..' not in path.parts and spec['arguments'] in (['--request'], ['--exchange']), 'unsafe replay request')
