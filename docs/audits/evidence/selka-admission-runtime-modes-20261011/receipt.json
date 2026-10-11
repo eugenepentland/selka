@@ -1,0 +1,28 @@
+{
+  "passed": [
+    {
+      "name": "text_methods",
+      "operations": 117,
+      "report_sha256": "821c829f97fcc71fb897acbe28131723b052d388c5bf85da5e6674c5280670c7",
+      "runtime_operations": 33
+    },
+    {
+      "name": "comprehension",
+      "operations": 294,
+      "report_sha256": "1135cf613988d26565a22bae7f7eecb6d26b7eaab1dcff5e770ba29b890290f2",
+      "runtime_operations": 93
+    },
+    {
+      "name": "iteration",
+      "operations": 228,
+      "report_sha256": "05c896cf976b0a110636c8909565ed372fe7b9ce415b4fa7395708f205db9996",
+      "runtime_operations": 69
+    }
+  ],
+  "failed": 0,
+  "skipped": 0,
+  "prior_release_evidence": "../selka-text-methods-20261011",
+  "leak_check": "MYL_CORE_LEAKCHECK=1 in D.environment",
+  "repeated_actual_utf8_release_wrapper_operations": 9,
+  "note": "Repeated wrapper uses prior release commands; excluded from new default coverage."
+}
