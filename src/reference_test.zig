@@ -420,7 +420,7 @@ test "the embedded project reads exactly one in-memory path and no checkout file
     try t.expectEqualStrings("", served);
     try t.expect(try standardModulesMatchCheckout(&reference.standard_modules));
     // Stand-ins and application memoization are part of the reference project.
-    try t.expectEqual(@as(usize, 19), reference.standard_modules.len);
+    try t.expectEqual(@as(usize, 20), reference.standard_modules.len);
 }
 
 // spec: REFERENCE-10

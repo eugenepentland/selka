@@ -64,6 +64,7 @@ pub const standard_modules = [_][]const u8{
     "math.my",
     "memo.my",
     "network.my",
+    "parallel.my",
     "path.my",
     "persistent_memo.my",
     "pool.my",
