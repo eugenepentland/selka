@@ -1,0 +1,136 @@
+import syntax_value
+import syntax_problem
+import graph
+import emission
+import locals
+import list_lower
+import collection_types
+import dictionary_construct
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+    problems: syntax_problem.Diagnostic[]
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 4, 16)
+    mut batch = emission.empty()
+    mut catalog = collection_types.empty()
+    _ = try collection_types.add(mut catalog, collection_types.Schema(id=40, kind=0, key=0, value=1, owner=-1))
+    _ = try collection_types.add(mut catalog, collection_types.Schema(id=41, kind=1, key=0, value=15, owner=-1))
+    _ = try collection_types.add(mut catalog, collection_types.Schema(id=42, kind=3, key=0, value=1, owner=40))
+    _ = try collection_types.add(mut catalog, collection_types.Schema(id=43, kind=0, key=1, value=0, owner=-1))
+    batch.facts.lists.types.collections = catalog
+    return Fixture(batch=batch, scope=locals.empty(), context=list_lower.Context(input=input, span=span), problems=[])
+
+
+func number(pool: syntax_value.Pool, object: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, object, name)
+    return try graph.number(pool, field)
+
+
+func data(batch: emission.Batch, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const field = try graph.field(batch.pool, row, "data")
+    return try graph.get(batch.pool, field)
+
+
+public func test_empty_constructor_keeps_array_and_empty_block_without_locals_or_recipes() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const facts = fixture.batch.facts
+    const result = try dictionary_construct.build(mut fixture.batch, mut fixture.scope, fixture.context, dictionary_construct.Input(arguments=[], expected=40), mut fixture.problems)
+    const value = try number(fixture.batch.pool, result.payload, "value")
+    const body = try number(fixture.batch.pool, result.payload, "body")
+    const allocated = try data(fixture.batch, fixture.batch.nodes[value])
+    const block = try data(fixture.batch, fixture.batch.statements[body])
+    const entries = try graph.items(fixture.batch.pool, allocated.children[0])
+    const statements = try graph.items(fixture.batch.pool, block.children[0])
+    return result.ty == 40 and result.tag == b"block_value" and value == 0 and body == 0 and allocated.data == b"array" and block.data == b"block" and len(entries) == 0 and len(statements) == 0 and len(fixture.scope.locals) == 0 and len(fixture.batch.nodes) == 1 and len(fixture.batch.statements) == 1 and fixture.batch.facts == facts and len(fixture.problems) == 0
+
+
+public func test_copy_roots_mapping_once_and_keeps_operand_type_over_context() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const slot = try locals.add(mut fixture.scope, b"mapping", fixture.context.span, 40, False, b"parameter")
+    fixture.scope.locals[slot].usage.reads = 1
+    const argument = try list_lower.read(mut fixture.batch, fixture.context, slot, 40)
+    const facts = fixture.batch.facts
+    const result = try dictionary_construct.build(mut fixture.batch, mut fixture.scope, fixture.context, dictionary_construct.Input(arguments=[argument], expected=43), mut fixture.problems)
+    const value = try number(fixture.batch.pool, result.payload, "value")
+    const copied = try data(fixture.batch, fixture.batch.nodes[value])
+    const owner = try number(fixture.batch.pool, copied.children[0], "owner")
+    const kind_id = try graph.field(fixture.batch.pool, copied.children[0], "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    const arguments_id = try graph.field(fixture.batch.pool, copied.children[0], "arguments")
+    const arguments = try graph.items(fixture.batch.pool, arguments_id)
+    const initial = try data(fixture.batch, fixture.batch.statements[0])
+    const rooted = try number(fixture.batch.pool, initial.children[0], "value")
+    const destination = try number(fixture.batch.pool, initial.children[0], "slot")
+    const body = try data(fixture.batch, fixture.batch.statements[1])
+    const statements = try graph.items(fixture.batch.pool, body.children[0])
+    const local = fixture.scope.locals[1]
+    return result.ty == 40 and result.tag == b"block_value" and value == 1 and copied.data == b"buffer_operation" and owner == 1 and kind.data == b"copy" and len(arguments) == 0 and initial.data == b"initialize" and rooted == argument and destination == owner and body.data == b"block" and len(statements) == 1 and len(fixture.batch.nodes) == 2 and len(fixture.batch.statements) == 2 and len(fixture.scope.locals) == 2 and fixture.scope.active == [0] and local.ty == 40 and local.usage.temporary and local.usage.reads == 1 and not local.flags.initialized and fixture.scope.locals[0].usage.reads == 1 and fixture.batch.facts == facts and len(fixture.problems) == 0
+
+
+public func test_empty_constructor_reports_missing_and_wrong_context_at_call_span() -> bool fails syntax_value.Problem:
+    for expected in [-1, 0, 41, 42, 44]:
+        mut fixture = try fresh()
+        match dictionary_construct.build(mut fixture.batch, mut fixture.scope, fixture.context, dictionary_construct.Input(arguments=[], expected=expected), mut fixture.problems):
+            case Ok(unused):
+                return False
+            case Err(problem):
+                mut code = "E_DICT_TYPE"
+                mut message = "dict() builds a dictionary, but this position expects another type"
+                if expected == -1:
+                    code = "E_DICT_INFERENCE"
+                    message = "an empty dictionary needs its type from context: `counts: dict[str, int] = dict()`"
+                if problem.code != code or problem.message != message or problem.start != 4 or problem.end != 16 or len(fixture.batch.nodes) != 0 or len(fixture.batch.statements) != 0 or len(fixture.scope.locals) != 0 or len(fixture.problems) != 0:
+                    return False
+    return True
+
+
+public func test_nondictionary_operand_preserves_native_alternative_note() -> bool fails syntax_value.Problem:
+    for ty in [0, 41, 42, 44]:
+        mut fixture = try fresh()
+        const slot = try locals.add(mut fixture.scope, b"source", fixture.context.span, ty, False, b"parameter")
+        const value = try list_lower.read(mut fixture.batch, fixture.context, slot, ty)
+        const earlier = syntax_problem.plain(syntax_value.Problem(code="E_EARLIER", start=0, end=1, message="retained earlier diagnostic"))
+        fixture.problems.append(earlier)
+        match dictionary_construct.build(mut fixture.batch, mut fixture.scope, fixture.context, dictionary_construct.Input(arguments=[value], expected=40), mut fixture.problems):
+            case Ok(unused):
+                return False
+            case Err(problem):
+                if problem.code != "E_DICT_TYPE" or problem.message != "dict() copies a dictionary or collects a generator of (key, value) pairs" or problem.start != 4 or problem.end != 16 or len(fixture.problems) != 2:
+                    return False
+                const diagnostic = fixture.problems[1]
+                if fixture.problems[0] != earlier or diagnostic.problem != problem or diagnostic.severity != "err" or len(diagnostic.notes.related) != 1 or len(diagnostic.notes.origin) != 0 or len(diagnostic.notes.requirement) != 0 or len(diagnostic.notes.edits) != 0:
+                    return False
+                const related = diagnostic.notes.related[0]
+                if related.start != 4 or related.end != 16 or related.role != "alternative" or related.message != "pair two lists with a dict comprehension: `{k: v for k, v in zip(keys, values)}`":
+                    return False
+                if len(fixture.batch.nodes) != 1 or len(fixture.batch.statements) != 0 or len(fixture.scope.locals) != 1:
+                    return False
+    return True
+
+
+public func test_constructor_arity_precedes_mapping_requirement_without_emission() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const argument = try list_lower.integer(mut fixture.batch, fixture.context, 7, 0)
+    match dictionary_construct.build(mut fixture.batch, mut fixture.scope, fixture.context, dictionary_construct.Input(arguments=[argument, argument], expected=40), mut fixture.problems):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_ARITY" and problem.message == "dict() takes at most one mapping or generator of (key, value) pairs" and problem.start == 4 and problem.end == 16 and len(fixture.batch.nodes) == 1 and len(fixture.batch.statements) == 0 and len(fixture.scope.locals) == 0 and len(fixture.problems) == 0
+
+
+public func test_invalid_checked_operand_fails_before_table_access() -> bool fails syntax_value.Problem:
+    for argument in [-1, 0, 99]:
+        mut fixture = try fresh()
+        match dictionary_construct.build(mut fixture.batch, mut fixture.scope, fixture.context, dictionary_construct.Input(arguments=[argument], expected=40), mut fixture.problems):
+            case Ok(unused):
+                return False
+            case Err(problem):
+                if problem.code != "P_BODY_TRANSPORT" or problem.message != "invalid dictionary constructor operand" or len(fixture.batch.nodes) != 0 or len(fixture.batch.statements) != 0 or len(fixture.scope.locals) != 0 or len(fixture.problems) != 0:
+                    return False
+    return True
