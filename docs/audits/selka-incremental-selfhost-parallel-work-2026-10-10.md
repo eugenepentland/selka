@@ -258,9 +258,15 @@ rejections. Complete typed metadata and catalog schemas match native checking.
 now rebuild all seven component entries through two normal and two release
 generations, then two further release generations with all frontend boundaries
 selected together. Binaries are byte-identical across corresponding generations.
-B7 still needs root integration and qualification. The native catalog, later
-semantic passes, backend and compiler driver remain in use; a complete Selka
-compiler and full-compiler bootstrap fixed point remain unproven.
+B7 is now integrated at `ed8f72c8c`. Its [first root gate](evidence/selka-body-entry-generations-root-20261011/README.md)
+passes 281 pure tests per mode, all three 443-workflow matrices, library admission,
+and both 349-operation entry-generation lanes. All seven generated binaries are
+byte-identical between generations in each lane. The full gate still exits 1:
+its sole failed action is a packaging test expecting schema 6 instead of 7.
+The assertion is corrected separately; complete qualification must be rerun.
+The native catalog, later semantic passes, backend and compiler driver remain
+in use; a complete Selka compiler and full-compiler bootstrap fixed point remain
+unproven.
 
 | Stage | Completion evidence |
 | --- | --- |

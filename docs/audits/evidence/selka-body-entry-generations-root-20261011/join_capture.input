@@ -1,0 +1,9 @@
+func main() -> int:
+    const text = "é" * 2
+    const octets: bytes = b"\xff"
+    const repeated = octets * 2
+    mut buffer = byte_buffer([65])
+    assert len(text) == 2
+    assert len(repeated) == 2
+    assert len(buffer) == 1
+    return 7
