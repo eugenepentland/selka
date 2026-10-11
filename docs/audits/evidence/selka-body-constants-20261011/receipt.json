@@ -84,10 +84,16 @@
     "profiles": 0
   },
   "pure_suite": {
-    "status": "queued",
+    "status": "complete",
     "modules": 88,
     "tests_per_mode": 532,
-    "session": 83126
+    "normal_tests": 532,
+    "release_tests": 532,
+    "failed": 0,
+    "skipped": 0,
+    "session": 83126,
+    "source_commit": "3a75ed2916e67d8c133848497c6d25f46571329c",
+    "source_files_verified": 175
   },
   "limitations": [
     "Selected source functionality only; no entire compiler/bootstrap or performance completion claim.",
@@ -128,6 +134,9 @@
     "range_unsigned_dynamic.my.prior-reply.bin.gz": "515ef6684a447bfca8629a0884e0452b58141c3b5727e0141961e550a7766d36",
     "range_unsigned_dynamic.my.prior-native.bin.gz": "13216de3848c955ba61a89b91afc06a099e02b453469cbb83b622feb424dd946",
     "range_unsigned_dynamic.my.prior-canonical-diff.json.gz": "e1798b77e736d0447a5abf9e00cccd1973f1fe29ba959f76239125bb9d7f1580",
-    "canonical-final.json.gz": "2fe16c4db90d30f65fec154f460dffa1a59bfd3875f9ab3a1d0310745b19d3f7"
+    "canonical-final.json.gz": "2fe16c4db90d30f65fec154f460dffa1a59bfd3875f9ab3a1d0310745b19d3f7",
+    "producer-suites-bounded-lookup.json.gz": "ede798999708457de5bf19855847e6224be9d35b9060c3073c9c35b082f24f5a",
+    "pure-lookup-final.log.gz": "35dbea4fc10da1d4be767563a3b1999b9f304d4c422a152f73d1ba35957030e3",
+    "archive_pure.py.gz": "57b73d388d064e029a549a96f23d448ef9425adeadea43bd28392c463e60c60e"
   }
 }
