@@ -172,7 +172,7 @@ class WatchdogTests(unittest.TestCase):
 
     def test_supervisor_leader_exit_is_incomplete(self):
         result = wait_owned(self.supervised('import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True)'),
-                            limits=ProcessLimits(1,.5))
+                            limits=ProcessLimits(4,.5))
         self.assertEqual(result.returncode, 125)
         self.assertFalse(result.complete)
 
@@ -341,6 +341,35 @@ class WatchdogTests(unittest.TestCase):
                 while not marker.exists() and time.monotonic() < deadline:
                     time.sleep(.01)
                 self.assertEqual(marker.read_text(), 'settled')
+
+    def test_supervisor_allows_background_cleanup(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary)/'cleaned'
+            cleanup = f'import time; from pathlib import Path; time.sleep(.2); Path({str(marker)!r}).write_text("done")'
+            source = f'import subprocess; subprocess.Popen({[sys.executable, "-c", cleanup]!r})'
+            result = wait_owned(self.supervised(source), limits=ProcessLimits(3,.5))
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(marker.read_text(), 'done')
+
+    def test_timeout_counts_background_cleanup_drain(self):
+        source = 'import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True)'
+        result = wait_owned(self.supervised(source), limits=ProcessLimits(.2,.5))
+        self.assertEqual(result.returncode, 124)
+        self.assertTrue(result.timed_out)
+
+    def test_cancellation_interrupts_background_cleanup_drain(self):
+        source = 'import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True)'
+        cancel = threading.Event()
+        timer = threading.Timer(.2, cancel.set)
+        timer.start()
+        started = time.monotonic()
+        try:
+            result = wait_owned(self.supervised(source), cancel_event=cancel, limits=ProcessLimits(None,.5))
+            self.assertEqual(result.returncode, 130)
+            self.assertTrue(result.cancelled)
+            self.assertLess(time.monotonic()-started, 1)
+        finally:
+            timer.join()
 
     def test_interrupt_cleans_and_propagates(self):
         class Interrupt:

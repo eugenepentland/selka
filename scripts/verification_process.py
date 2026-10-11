@@ -370,7 +370,8 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
 
     Linux subreaping is enabled here only, never in the shared coordinator.
     Detached sessions remain descendants of this supervisor. A leftover child
-    after the command exits makes the action incomplete (125). SIGTERM/SIGINT
+    after the two-second natural closeout window makes a successful action
+    incomplete (125). The closeout window counts against execution deadlines. SIGTERM/SIGINT
     cancellation yields 130. Parent watchdog grace must be at least 0.5 seconds.
     """
     import ctypes
@@ -395,6 +396,13 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
         status = worker.poll()
         _reap_adopted()
         leftovers = owned_descendants()
+        # Known build cleanup helpers poll their former parent once per second.
+        # Their closeout is execution: the outer watchdog remains active here.
+        natural_drain_until = time.monotonic() + 2.0
+        while leftovers and not interrupted and time.monotonic() < natural_drain_until:
+            time.sleep(0.01)
+            _reap_adopted()
+            leftovers = owned_descendants()
         incomplete = status is not None and bool(leftovers)
         # Stop before kill so descendants cannot keep forking during shutdown.
         deadline = time.monotonic() + 0.3
