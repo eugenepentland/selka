@@ -65,7 +65,7 @@ class LibraryAdmissionTests(unittest.TestCase):
         from unittest.mock import patch
         from types import SimpleNamespace
         request=D.D.frame(b'authentic-input')
-        reply=b'SLKBCK01'+struct.pack('<IIII',1,6,1,len(payload))+request[24:64]+payload
+        reply=b'SLKBCK01'+struct.pack('<IIII',1,7,1,len(payload))+request[24:64]+payload
         checkpoints=[]
         def save(records,capture):checkpoints.append((list(records),dict(capture)))
         with tempfile.TemporaryDirectory() as temporary:

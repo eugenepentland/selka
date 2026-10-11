@@ -34,10 +34,10 @@ class TypeInterfaceQualificationTests(unittest.TestCase):
                 D.packages(root)
             for name in ('type-interface', 'body-check'):
                 (root / f'{name}.json').write_text(json.dumps({'format': 1, 'protocol': 1,
-                    'schema': 6 if name == 'body-check' else 1, 'component': name, 'artifact': 'producer', 'sha256': D.F.digest(binary)}))
+                    'schema': 7 if name == 'body-check' else 1, 'component': name, 'artifact': 'producer', 'sha256': D.F.digest(binary)}))
             self.assertEqual(len(D.packages(root)), 7)
             old = json.loads((root / 'body-check.json').read_text())
-            old['schema'] = 5
+            old['schema'] = 6
             (root / 'body-check.json').write_text(json.dumps(old))
             with self.assertRaisesRegex(RuntimeError, 'body-check: invalid qualified identity'):
                 D.packages(root)
