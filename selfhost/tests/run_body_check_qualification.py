@@ -128,10 +128,10 @@ def environment(mode, components, empty):
     return env
 
 
-def packages(directory):
+def packages(directory, body_schema=2):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
-                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), 'type-interface': (1, 1), COMPONENT: (1, 2)}
+                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), 'type-interface': (1, 1), COMPONENT: (1, body_schema)}
     for name, (protocol, schema) in versions.items():
         value = json.loads((directory / f'{name}.json').read_text())
         F.require(all(type(value.get(k)) is int for k in ('format', 'protocol', 'schema')), 'noninteger package identity')

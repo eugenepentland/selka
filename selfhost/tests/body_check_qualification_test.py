@@ -38,6 +38,7 @@ class BodyQualificationTests(unittest.TestCase):
                 (root/(name+'.json')).write_text(json.dumps(dict(format=1,component=name,protocol=protocol,schema=schema,artifact='artifact',sha256=D.F.digest(artifact))))
             self.assertEqual(len(D.packages(root)),7)
             manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=1;manifest.write_text(json.dumps(value))
+            self.assertEqual(len(D.packages(root,body_schema=1)),7)
             with self.assertRaisesRegex(RuntimeError,'invalid qualified identity'):D.packages(root)
             value['schema']=True;manifest.write_text(json.dumps(value))
             with self.assertRaisesRegex(RuntimeError,'noninteger'):D.packages(root)
@@ -98,6 +99,16 @@ class BodyQualificationTests(unittest.TestCase):
             self.assertEqual(len(value),len(payload))
             self.assertNotEqual(value,payload)
             D.graph_rows(value,b'SLKBKI01')
+
+    def test_managed_measurement_edits_preserve_text_and_change_byte_length(self):
+        import measure_managed_body_adoption as M
+        self.assertIn('é😀ab'.encode(),M.HELPER)
+        values=[M.edited(M.HELPER,index) for index in range(6)]
+        self.assertEqual(len(set(values)),6)
+        self.assertEqual(values[0],M.HELPER)
+        for index,value in enumerate(values):
+            self.assertIn(b'b"xyz'+b'!'*index+b'"',value)
+            self.assertIn('é😀ab'.encode(),value)
 
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
