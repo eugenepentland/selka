@@ -164,5 +164,19 @@ class BodyEntryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'exact refusal'):
             Q.malformed_contract('body-check', (2, b'', b'ComponentMissing'))
 
+    def test_only_explicit_build_gets_compiler_file_and_address_allowances(self):
+        q = object.__new__(Q.Qualification)
+        q.args = SimpleNamespace(compiler=Path('/installed-host'))
+        q.empty = Path('/empty')
+        q.record = lambda phase, mode, command, result: result
+        with patch.object(Q.F, 'execute', return_value=(0, b'', b'')) as execute:
+            q.host('component', ['build', 'entry.my', '--no-cache'], Path('/packages'), Path('/private'), 'build')
+            self.assertEqual(execute.call_args.kwargs,
+                             {'address_space_budget': 4 << 30, 'file_size_budget': 128 << 20})
+            q.host('component', ['check', 'entry.my', '--no-cache'], Path('/packages'), Path('/private'), 'check')
+            self.assertEqual(execute.call_args.kwargs, {})
+        self.assertEqual(Q.F.ADDRESS_SPACE_BUDGET, 2 << 30)
+        self.assertEqual(Q.F.OUTPUT_LIMIT, (64 << 20) + 4096)
+
 
 if __name__=='__main__':unittest.main()

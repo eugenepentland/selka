@@ -45,6 +45,10 @@ const rss = struct {
     /// Drivers that run the compiler a few programs at a time. Observed on a
     /// clean cache: the idiom probes 0.69G, parser hints 0.47G.
     const driver: u64 = 1024 * mib;
+    /// Qualification drivers that rebuild the optimized body component. A body
+    /// test's seed plus clang tree was sampled at 1,304,895,488 bytes (2026-10-11),
+    /// before clang's peak. Reserve 2.5 GiB across both live processes.
+    const component_driver: u64 = 2560 * mib;
     /// Drivers that compile and link many native programs at once: the parity
     /// benchmark. Observed (the retired boundary matrix): 1.29G-1.45G.
     const parity: u64 = 2048 * mib;
@@ -927,7 +931,7 @@ pub fn build(b: *std.Build) void {
     b.step("test-selfhost-body-libraries-self", "Check fail-closed compiler library admission accounting independently").dependOn(&body_libraries_checks.step);
     test_step.dependOn(body_libraries_step);
     const body_entries_step = b.step("test-selfhost-body-entries", "Require seven actual component entry sources and two selected generations in both guest modes");
-    const body_entries_run = driver(b, "B7 source generations: 349 operations, 35 captures and 15 resource attacks per mode", rss.driver, "body_entry_admission");
+    const body_entries_run = driver(b, "B7 source generations: 349 operations, 35 captures and 15 resource attacks per mode", rss.component_driver, "body_entry_admission");
     body_entries_run.has_side_effects = true;
     body_entries_run.addArgs(&.{ "python3", "selfhost/test_body_entries.py", "--zig", b.graph.zig_exe, "--builder" });
     body_entries_run.addArtifactArg(component_tool);

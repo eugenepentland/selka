@@ -22,6 +22,8 @@ ENTRIES = {
     'body-check': 'body_check/main.my',
 }
 EXPECTED_OPERATIONS = 349
+BUILD_ADDRESS_SPACE_BUDGET = 4 << 30
+BUILD_FILE_SIZE_BUDGET = 128 << 20
 
 
 def require(value, message):
@@ -174,6 +176,9 @@ class Qualification:
                   'selected_admission': 'passed' if complete else 'pending', 'identity': self.identity,
                   'guest_release': getattr(self.args, 'release', False), 'guest_facts': getattr(self.args, 'release', False),
                   'guest_leaks': True, 'other_six_boundary_modes': 'reference',
+                  'compiler_build_limits': {'address_space': BUILD_ADDRESS_SPACE_BUDGET, 'file_size': BUILD_FILE_SIZE_BUDGET},
+                  'other_execute_limits': {'address_space': F.ADDRESS_SPACE_BUDGET, 'file_size': F.OUTPUT_LIMIT},
+                  'captured_output_limit': F.OUTPUT_LIMIT,
                   'cases': 24, 'success': 14, 'diagnostics': 8, 'profile': 2,
                   'operations': len(self.records), 'expected_operations': EXPECTED_OPERATIONS,
                   'records': self.records, 'captures': self.captures, 'generations': self.generations,
@@ -200,7 +205,10 @@ class Qualification:
             env = D.environment(mode, wrapped, self.empty)
             env.update(BODY_REAL=str(real), BODY_REQUEST=str(request), BODY_CAPTURE=str(reply))
         require('--no-cache' in command, 'claimed host operation may reuse a verdict')
-        result = self.record(phase, mode, [self.args.compiler, *command], F.execute([self.args.compiler, *command], env, cwd, 600))
+        limits = {'address_space_budget': BUILD_ADDRESS_SPACE_BUDGET,
+                  'file_size_budget': BUILD_FILE_SIZE_BUDGET} if command[0] == 'build' else {}
+        result = self.record(phase, mode, [self.args.compiler, *command],
+                             F.execute([self.args.compiler, *command], env, cwd, 600, **limits))
         if capture:
             require(request.is_file() and reply.is_file(), 'selected body checker did not execute')
             request_bytes, reply_bytes = request.read_bytes(), reply.read_bytes()
