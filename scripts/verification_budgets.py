@@ -122,6 +122,24 @@ def collect_report(report, inventory):
     if report.get('success') is not True or type(report.get('status')) is not int or report['status'] != 0:
         reject('report failed or incomplete')
         return result
+    if report.get('inputs_stable') is not True:
+        reject('execution inputs were not proven stable')
+        return result
+    report_metadata = report.get('action_metadata')
+    if not isinstance(report_metadata, list) or len(report_metadata) > MAX_ACTIONS:
+        reject('report member mapping unavailable')
+        return result
+    recorded = {}
+    ambiguous = set()
+    for metadata in report_metadata:
+        if not isinstance(metadata, dict) or not isinstance(metadata.get('id'), str):
+            continue
+        identifier = metadata['id']
+        if identifier in recorded:
+            ambiguous.add(identifier)
+        recorded[identifier] = metadata
+    matching = {metadata['id'] for metadata in inventory.get('action_metadata', [])
+                if metadata['id'] not in ambiguous and recorded.get(metadata['id']) == metadata}
     context = report.get('budget_context')
     if not _digest(context):
         reject('execution compatibility context unavailable')
@@ -142,6 +160,9 @@ def collect_report(report, inventory):
         if identifier in action_seen:
             duplicates.add(identifier)
         action_seen.add(identifier)
+        if identifier not in matching:
+            reject('report member mapping differs from current inventory')
+            continue
         if identifier in members and action.get('state') in ('execute', 'fresh') and _digest(action.get('action_key')):
             fresh[identifier] = action['action_key']
     for identifier in duplicates:
@@ -280,6 +301,15 @@ def calibrate_observations(observations, inventory, *, policy=None, context=None
                 recommendation={'expected_seconds': statistics.median(values) if enough else None,
                                 'regression_seconds': regression,
                                 'hard_deadline_seconds': None},
+                regression_evaluation={
+                    'scope': 'named member elapsed observations',
+                    'status': 'not_configured' if targets['regression_seconds'] is None else
+                              'unknown' if not values else
+                              'exceeded' if max(values) > targets['regression_seconds'] else 'within_observed_samples',
+                    'threshold_seconds': targets['regression_seconds'],
+                    'samples_exceeding': sum(value > targets['regression_seconds'] for value in values)
+                                        if targets['regression_seconds'] is not None else None,
+                    'enforced': False},
                 provenance=samples))
         actions.append(dict(id=identifier, targets=targets, members=member_reports,
                             action_elapsed_seconds=None,

@@ -27,6 +27,8 @@ selected action evidence, and complete available untruncated logs whose parser
 reports no malformed summary rows. Exact unique inventory member labels identify
 the action. Cached summary rows, reused actions, duplicate labels or rows,
 timeouts, cancellation, missing provenance and capture errors remain unknown.
+Reports must prove `inputs_stable: true` and carry `action_metadata` matching the
+provided inventory; changed membership or original member meaning remains unknown.
 Reports need `budget_context` and action `action_key` SHA256 identities. The
 inventory declares unique member labels in its top-level `action_metadata`.
 Provenance retains the report digest, action contract, execution context, source
@@ -49,8 +51,9 @@ isolated performance acceptance. No percentile estimate is produced, regardless
 of sample count; hard deadline recommendations stay `null`.
 
 Member execution durations can overlap or nest. They are never summed, and full
-action elapsed time remains explicitly unknown. Action-level policy targets
-therefore cannot be judged from these member measurements alone. Missing CPU,
+action elapsed time remains explicitly unknown. Regression policy thresholds are evaluated against each named member
+separately, with observed exceedance counts and an explicitly advisory status.
+This does not evaluate whole action elapsed time. Missing CPU,
 aggregate memory or work-count measurements are not inferred from elapsed time.
 
 Input files and outputs are bounded to 2 MiB; at most 128 reports, 1,024 actions,

@@ -15,7 +15,7 @@ LABEL = 'verification action units member 0'
 
 
 def report(seconds=1, sequence=0):
-    return {'success': True, 'status': 0, 'budget_context': A, 'sequence': sequence,
+    return {'success': True, 'status': 0, 'inputs_stable': True, 'action_metadata': copy.deepcopy(INVENTORY['action_metadata']), 'budget_context': A, 'sequence': sequence,
             'actions': [{'id': 'units', 'state': 'execute', 'action_key': B}],
             'admissions': [{'kind': 'gate', 'admitted': True, 'status': 0,
                             'timed_out': False, 'cancelled': False, 'incomplete': False,
@@ -56,7 +56,9 @@ class BudgetTests(unittest.TestCase):
         samples = collect_report(report(), INVENTORY)['observations']
         before = calibrate_observations(samples, INVENTORY)
         after = calibrate_observations(samples, INVENTORY, policy={'units': {'regression_seconds': 4}})
-        self.assertEqual(member(before), member(after))
+        self.assertEqual(member(before)['provenance'], member(after)['provenance'])
+        self.assertEqual(member(before)['recommendation'], member(after)['recommendation'])
+        self.assertEqual(member(after)['regression_evaluation']['status'], 'within_observed_samples')
         self.assertEqual(after['actions'][0]['targets']['regression_seconds'], 4)
         self.assertFalse(after['enforced'])
 
@@ -138,11 +140,33 @@ class BudgetTests(unittest.TestCase):
         second = LABEL + ' second'
         inventory['action_metadata'][0]['steps'].append({'label': second})
         sample = report()
+        sample['action_metadata'] = copy.deepcopy(inventory['action_metadata'])
         rows = sample['admissions'][0]['logs'][0]['observed_steps']['observations']
         rows.append(dict(node=second, source='zig-summary', state='success', elapsed_seconds=2))
         result = calibrate([sample], inventory)
         self.assertEqual(len(result['actions'][0]['members']), 2)
         self.assertIsNone(result['actions'][0]['action_elapsed_seconds'])
+
+    def test_unstable_inputs_and_changed_member_meaning_rejected(self):
+        sample = report()
+        sample['inputs_stable'] = False
+        self.assertEqual(collect_report(sample, INVENTORY)['observations'], [])
+        changed = copy.deepcopy(INVENTORY)
+        changed['action_metadata'][0]['steps'][0]['original_label'] = 'another executable'
+        self.assertEqual(collect_report(report(), changed)['observations'], [])
+        changed['action_metadata'][0]['steps'].append({'label': 'another member'})
+        self.assertEqual(collect_report(report(), changed)['observations'], [])
+        ordered_report = report()
+        ordered_report['action_metadata'] = copy.deepcopy(changed['action_metadata'])
+        changed['action_metadata'][0]['steps'].reverse()
+        self.assertEqual(collect_report(ordered_report, changed)['observations'], [])
+
+    def test_regression_threshold_is_advisory_with_small_samples(self):
+        result = calibrate([report(2)], INVENTORY, policy={'units': {'regression_seconds': 1}})
+        self.assertEqual(member(result)['regression_evaluation']['status'], 'exceeded')
+        self.assertEqual(member(result)['regression_evaluation']['samples_exceeding'], 1)
+        self.assertEqual(member(result)['status'], 'insufficient_samples')
+        self.assertFalse(member(result)['regression_evaluation']['enforced'])
 
     def test_strict_input_and_limits(self):
         with tempfile.TemporaryDirectory() as temporary:
