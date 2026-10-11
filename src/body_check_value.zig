@@ -93,9 +93,7 @@ pub fn diagnostics(a: std.mem.Allocator, items: []const diagnostic.Diagnostic) l
 }
 /// Adopt independent body tables into caller-owned arena storage.
 pub fn cloneBatch(a: std.mem.Allocator, batch: Batch) logical.Error!Batch {
-    const bytes = try logical.encodeTreeProfile(a, Batch, batch, "SLKBTB01", .body);
-    defer a.free(bytes);
-    return logical.decodeIntoProfile(Batch, a, bytes, "SLKBTB01", .body);
+    return @import("body_owned_copy.zig").clone(a, Batch, batch);
 }
 /// Publish complete decoded source diagnostics into a sink-owned arena.
 pub fn publish(sink: *diagnostic.Sink, items: []const Diagnostic) logical.Error!void {

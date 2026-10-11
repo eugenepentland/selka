@@ -248,6 +248,7 @@ const Context = struct {
     friction: ?*language.friction_log.Recorder = null,
     /// Original process services for an opt-in Core cost analysis.
     process: ?*const std.process.Init = null,
+    artifacts: ?*language.frontend_runtime.ArtifactSession = null,
     fn text(self: Context, bytes: []const u8) !void {
         if (self.diagnostics == .text) return std.Io.File.stderr().writeStreamingAll(self.io, bytes);
         const rendered = try diagnostic_output.message(self.gpa, bytes, self.diagnostics);
@@ -257,6 +258,8 @@ const Context = struct {
 };
 
 fn dispatch(process: std.process.Init) !u8 {
+    var artifacts: language.frontend_runtime.ArtifactSession = .{ .allocator = process.gpa };
+    defer artifacts.deinit();
     const args = try process.minimal.args.toSlice(process.arena.allocator());
     // Building, running and testing go to the new core, which also refuses the
     // retired commands and flags by name.
@@ -310,6 +313,7 @@ fn dispatch(process: std.process.Init) !u8 {
         .arena = process.arena,
         .io = process.io,
         .environ = process.environ_map,
+        .artifacts = &artifacts,
         .diagnostics = parsed.reporting.diagnostics orelse .text,
     };
     const status = run(init, parsed) catch |err| status: {
@@ -480,7 +484,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
     }
     init.timings.begin(frontend_label, false);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
-    compilation.configureFrontend(.{ .io = init.io, .environ = init.environ });
+    compilation.configureFrontend(.{ .io = init.io, .environ = init.environ, .session = init.artifacts });
     defer compilation.deinit();
     if (parsed.command == .fmt or parsed.command == .@"fmt-module") {
         init.timings.begin("format_inclusive", true);
@@ -677,7 +681,7 @@ fn dumpTokens(init: Context, parsed: Parsed, bytes: []const u8) !u8 {
     const src = try language.source.Source.init(init.arena.allocator(), parsed.path, bytes);
     var sink: language.diagnostic.Sink = .{ .allocator = init.gpa };
     defer sink.deinit();
-    const tokens = language.lexer_component.lex(init.gpa, src, &sink, .{ .io = init.io, .environ = init.environ }) catch |err| switch (err) {
+    const tokens = language.lexer_component.lex(init.gpa, src, &sink, .{ .io = init.io, .environ = init.environ, .session = init.artifacts }) catch |err| switch (err) {
         error.SourceError => {
             for (sink.items.items) |item| {
                 const rendered = try language.diagnostic_output.render(init.gpa, item, src, init.diagnostics);
@@ -705,7 +709,7 @@ fn dumpTokens(init: Context, parsed: Parsed, bytes: []const u8) !u8 {
 fn dumpSyntax(init: Context, parsed: Parsed, bytes: []const u8) !u8 {
     const src = try language.source.Source.init(init.arena.allocator(), parsed.path, bytes);
     var sink: language.diagnostic.Sink = .{ .allocator = init.arena.allocator() };
-    const document = language.syntax_dump.render(init.gpa, src, &sink, .{ .io = init.io, .environ = init.environ }) catch |err| switch (err) {
+    const document = language.syntax_dump.render(init.gpa, src, &sink, .{ .io = init.io, .environ = init.environ, .session = init.artifacts }) catch |err| switch (err) {
         error.SourceError => {
             for (sink.items.items) |item| {
                 const rendered = try language.diagnostic_output.render(init.gpa, item, src, init.diagnostics);
@@ -1933,7 +1937,7 @@ const Lifetime = enum {
 };
 
 fn bindFrontendCaches(init: Context, syntax: ?*language.syntax_cache.Cache, frontend: ?*language.frontend_cache.Cache, functions: ?*language.semantic_cache.Cache, verdict: ?*language.check_cache.Cache) !void {
-    const boundary = try language.frontend_runtime.verify(init.gpa, .{ .io = init.io, .environ = init.environ });
+    const boundary = try language.frontend_runtime.verify(init.gpa, .{ .io = init.io, .environ = init.environ, .session = init.artifacts });
     if (syntax) |opened| opened.setFrontend(boundary);
     if (frontend) |opened| opened.setFrontend(boundary);
     if (functions) |opened| try opened.setFrontend(boundary);
@@ -1956,7 +1960,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     var files: ModuleFiles = .{ .io = init.io, .root = location.root, .embed_root = try embedRoot(init, path) };
     files.inputs = (try prepareInputs(init, parsed, location.name)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
-    project.configureFrontend(.{ .io = init.io, .environ = init.environ });
+    project.configureFrontend(.{ .io = init.io, .environ = init.environ, .session = init.artifacts });
     defer if (lifetime == .session or std.debug.runtime_safety) project.deinit();
     if (try loadModules(init, &project, &files, location.name, try projectLimits(init, parsed))) |status| return status;
     init.timings.counts.modules = project.modules.items.len;

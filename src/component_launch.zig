@@ -150,7 +150,8 @@ pub fn artifactSnapshot(a: std.mem.Allocator, io: std.Io, directory: []const u8,
     if (!std.mem.eql(u8, &digest, &deployment.digest)) return error.ComponentDigest;
     return .{ .verified = .{ .path = deployment.path, .digest = digest }, .contents = contents };
 }
-fn manifestDeployment(a: std.mem.Allocator, io: std.Io, directory: []const u8, component: []const u8) Error!Verified {
+/// Parse and validate the bounded deployment manifest, returning owned path and claimed digest.
+pub fn manifestDeployment(a: std.mem.Allocator, io: std.Io, directory: []const u8, component: []const u8) Error!Verified {
     const filename = try std.fmt.allocPrint(a, "{s}.json", .{component});
     defer a.free(filename);
     const path = try std.fs.path.join(a, &.{ directory, filename });
@@ -189,6 +190,25 @@ fn digestFile(io: std.Io, path: []const u8, limit: usize) Error![32]u8 {
         hash.update(buffer[0..n]);
     }
     return hash.final();
+}
+
+/// Authenticate live bytes by exact equality with a previously SHA-authenticated snapshot.
+pub fn compareFile(io: std.Io, path: []const u8, expected: []const u8) Error!void {
+    const file = std.Io.Dir.cwd().openFile(io, path, .{}) catch return error.ComponentMissing;
+    defer file.close(io);
+    var buffer: [65536]u8 = undefined;
+    var offset: usize = 0;
+    while (true) {
+        const n = file.readStreaming(io, &.{&buffer}) catch |err| switch (err) {
+            error.EndOfStream => break,
+            else => return error.ComponentMissing,
+        };
+        if (n == 0) break;
+        if (n > expected.len - offset) return error.ComponentDigest;
+        if (!std.mem.eql(u8, buffer[0..n], expected[offset..][0..n])) return error.ComponentDigest;
+        offset += n;
+    }
+    if (offset != expected.len) return error.ComponentDigest;
 }
 
 fn mapFailure(err: anyerror, fallback: Error) Error {

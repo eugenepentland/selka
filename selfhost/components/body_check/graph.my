@@ -7,16 +7,17 @@ public func get(pool: syntax_value.Pool, id: int) -> syntax_value.Value fails sy
 
 
 public func field(pool: syntax_value.Pool, id: int, name: str) -> int fails syntax_value.Problem:
-    const value = try get(pool, id)
-    if value.kind != 5 or len(value.names) != len(value.children):
+    if id < 0 or id >= len(pool.values):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid value reference")
+    if pool.values[id].kind != 5 or len(pool.values[id].names) != len(pool.values[id].children):
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="expected named record")
     mut found = -1
     mut position = 0
-    for label in value.names:
+    for label in pool.values[id].names:
         if label == name:
             if found != -1:
                 fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="duplicate record field")
-            found = value.children[position]
+            found = pool.values[id].children[position]
         position = position + 1
     if found == -1:
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="missing record field")

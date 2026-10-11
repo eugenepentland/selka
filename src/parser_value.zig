@@ -38,6 +38,9 @@ const Value = struct {
     names: []const []const u8 = &.{},
 };
 
+/// Storage charged per decoded logical row by the shared 512 MiB policy.
+pub const value_table_row_size = @sizeOf(Value);
+
 const Encoder = struct {
     writer: codec.Writer,
     scratch: std.mem.Allocator,

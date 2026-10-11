@@ -28,7 +28,7 @@ const Digest = unit_cache.Digest;
 pub const Context = struct {
     arena: std.mem.Allocator,
     io: std.Io,
-    environment: *const std.process.Environ.Map,
+    authority: struct { environment: *const std.process.Environ.Map, session: ?*language.frontend_runtime.ArtifactSession = null },
     /// The build's cache directory (`--cache-dir`).
     cache: []const u8,
     /// The `zig` the command named (`--zig`, `ZIG`, or `zig` on `PATH`).
@@ -142,7 +142,7 @@ pub fn settingsKey(context: Context, tool: tool_identity.Identity) Error!Digest 
             unit_cache.field(&hash, policy.bytes);
         }
     } else unit_cache.field(&hash, "no configuration");
-    try environmentInto(context.arena, &hash, context.environment);
+    try environmentInto(context.arena, &hash, context.authority.environment);
     var digest: Digest = undefined;
     hash.final(&digest);
     return digest;
@@ -160,7 +160,7 @@ pub fn bindFlags(a: std.mem.Allocator, bytes: []const u8, runtime: language.fron
 }
 
 fn boundary(context: Context) Error!language.frontend_runtime.Verified {
-    const verified = try language.frontend_runtime.verify(context.arena, .{ .io = context.io, .environ = context.environment });
+    const verified = try language.frontend_runtime.verify(context.arena, .{ .io = context.io, .environ = context.authority.environment, .session = context.authority.session });
     if (std.mem.startsWith(u8, context.flags, flags_magic)) {
         if (context.flags.len < 40) return error.ComponentProtocol;
         if (!std.mem.eql(u8, context.flags[8..40], &verified.identity)) return error.ComponentChanged;
@@ -273,7 +273,7 @@ fn recordPath(context: Context, key: Digest) Error![]const u8 {
 }
 
 fn toolRequest(context: Context) tool_identity.Request {
-    return .{ .arena = context.arena, .io = context.io, .environment = context.environment, .executable = context.zig, .cache = context.cache };
+    return .{ .arena = context.arena, .io = context.io, .environment = context.authority.environment, .executable = context.zig, .cache = context.cache };
 }
 
 fn hex(a: std.mem.Allocator, digest: Digest) Error![]const u8 {
@@ -312,7 +312,15 @@ test "replay keys cover flags, the tool, configuration and the environment" {
     try environment.put("B", "2");
     try environment.put("A", "1");
     const tool: tool_identity.Identity = .{ .path = "/zig", .digest = @splat(1), .generation = @splat(2), .native_target = @splat(3), .inputs = 0, .memo_hit = true, .cacheable = true };
-    const context: Context = .{ .arena = a, .io = std.testing.io, .environment = &environment, .cache = "cache", .zig = "zig", .flags = "{\"release\":false}", .entry = .{ .path = "/p/main.my", .root = "/p", .name = "main" } };
+    const context: Context = .{
+        .arena = a,
+        .io = std.testing.io,
+        .authority = .{ .environment = &environment },
+        .cache = "cache",
+        .zig = "zig",
+        .flags = "{\"release\":false}",
+        .entry = .{ .path = "/p/main.my", .root = "/p", .name = "main" },
+    };
     const original = try settingsKey(context, tool);
     var changed = context;
     changed.flags = "{\"release\":true}";
@@ -341,8 +349,18 @@ test "bindFlags captures producer authority and boundary rejects changed authori
     const a = arena.allocator();
     var environment: std.process.Environ.Map = .init(a);
     defer environment.deinit();
-    const flags_snapshot = try bindFlags(a, "flags", .{ .io = std.testing.io, .environ = &environment });
-    const context: Context = .{ .arena = a, .io = std.testing.io, .environment = &environment, .cache = "cache", .zig = "unused", .flags = flags_snapshot, .entry = .{ .path = "fixture", .root = ".", .name = "fixture" } };
+    var artifacts: language.frontend_runtime.ArtifactSession = .{ .allocator = a };
+    defer artifacts.deinit();
+    const flags_snapshot = try bindFlags(a, "flags", .{ .io = std.testing.io, .environ = &environment, .session = &artifacts });
+    const context: Context = .{
+        .arena = a,
+        .io = std.testing.io,
+        .authority = .{ .environment = &environment, .session = &artifacts },
+        .cache = "cache",
+        .zig = "unused",
+        .flags = flags_snapshot,
+        .entry = .{ .path = "fixture", .root = ".", .name = "fixture" },
+    };
     try std.testing.expect((try boundary(context)).reuse);
     @constCast(flags_snapshot)[8] ^= 1;
     try std.testing.expectError(error.ComponentChanged, boundary(context));

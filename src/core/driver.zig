@@ -98,10 +98,15 @@ const Guard = struct {
     identity: tool_identity.Identity,
     frontend: ?frontend_runtime.Verified = null,
     frontend_environment: ?*const std.process.Environ.Map = null,
+    artifacts: ?*frontend_runtime.ArtifactSession = null,
 
     /// Validate the captured tool before publishing a native object or accepting a link.
     pub fn check(self: Guard, log: *std.ArrayList(u8)) Error!void {
-        if (self.frontend) |captured_frontend| try frontend_runtime.revalidate(self.resources.arena, .{ .io = self.resources.io, .environ = self.frontend_environment orelse self.resources.environment }, captured_frontend);
+        if (self.frontend) |captured_frontend| try frontend_runtime.revalidate(self.resources.arena, .{
+            .io = self.resources.io,
+            .environ = self.frontend_environment orelse self.resources.environment,
+            .session = self.artifacts,
+        }, captured_frontend);
         const stable = tool_identity.unchanged(self.resources, self.identity) catch |err| changed: {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             break :changed false;
@@ -153,14 +158,15 @@ pub const FrontendLink = struct {
     io: std.Io,
     environ: *const std.process.Environ.Map,
     frontend: ?frontend_runtime.Verified,
+    artifacts: ?*frontend_runtime.ArtifactSession = null,
 };
 /// Link checked frontend output while reauthenticating its producer before native publication.
 pub fn linkVerified(context: FrontendLink, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
-    return linkConfigured(context.arena, .{ .backing = context.backing, .frontend = context.frontend }, context.io, context.environ, request, log);
+    return linkConfigured(context.arena, .{ .backing = context.backing, .frontend = context.frontend, .artifacts = context.artifacts }, context.io, context.environ, request, log);
 }
-const Publication = struct { backing: ?std.mem.Allocator = null, frontend: ?frontend_runtime.Verified = null };
+const Publication = struct { backing: ?std.mem.Allocator = null, frontend: ?frontend_runtime.Verified = null, artifacts: ?*frontend_runtime.ArtifactSession = null };
 fn linkConfigured(allocator: std.mem.Allocator, publication: Publication, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
-    if (publication.frontend) |captured_frontend| try frontend_runtime.revalidate(allocator, .{ .io = io, .environ = environ }, captured_frontend);
+    if (publication.frontend) |captured_frontend| try frontend_runtime.revalidate(allocator, .{ .io = io, .environ = environ, .session = publication.artifacts }, captured_frontend);
     try validateLayout(allocator, environ, log);
     try validateSanitize(allocator, environ, log);
     const cwd = std.Io.Dir.cwd();
@@ -187,7 +193,7 @@ fn linkConfigured(allocator: std.mem.Allocator, publication: Publication, io: st
         .environment = &environment,
         .zig = guest.path,
         .log = log,
-        .guard = .{ .resources = resources, .identity = guest, .frontend = publication.frontend, .frontend_environment = environ },
+        .guard = .{ .resources = resources, .identity = guest, .frontend = publication.frontend, .frontend_environment = environ, .artifacts = publication.artifacts },
         .counts = &outcome.counts,
         .backing = publication.backing,
     };
@@ -949,7 +955,10 @@ test "Guard.check rejects changed frontend authority before output publication" 
     defer environment.deinit();
     var log: std.ArrayList(u8) = .empty;
     defer log.deinit(std.testing.allocator);
+    var artifacts: frontend_runtime.ArtifactSession = .{ .allocator = std.testing.allocator };
+    defer artifacts.deinit();
     const guard: Guard = .{
+        .artifacts = &artifacts,
         .resources = .{ .arena = std.testing.allocator, .io = std.testing.io, .environment = &environment, .executable = "unused", .cache = "unused" },
         .identity = undefined,
         .frontend = .{ .identity = @splat(1) },
