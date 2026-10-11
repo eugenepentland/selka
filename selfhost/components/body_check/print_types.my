@@ -1,0 +1,50 @@
+import syntax_value
+import graph
+import scalars
+import list_types
+
+func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_value.Problem:
+    const id = try graph.field(pool, row, name)
+    const value = try graph.get(pool, id)
+    if value.kind != 2:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid output type contract")
+    return value.integer != 0
+
+
+public func renderable(pool: syntax_value.Pool, catalog: list_types.Catalog, ty: int) -> bool fails syntax_value.Problem:
+    if scalars.is_integer(ty) or ty == 1 or ty == 15:
+        return True
+    if ty < 19:
+        return False
+    const ordinal = ty - 19 - catalog.base_count
+    if ordinal >= 0 and ordinal < len(catalog.recipes):
+        const recipe = catalog.recipes[ordinal]
+        if recipe.id != ty:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid output recipe identity")
+        # These two recipes have fixed rendering contracts. Their lightweight
+        # semantic rows are materialized lazily and do not carry every flag.
+        if recipe.kind == "list" or recipe.kind == "byte_buffer":
+            return True
+    const rows = catalog.types.records.rows
+    if ty - 19 >= len(rows):
+        return False
+    const row = rows[ty - 19]
+    const collection = try graph.field(pool, row, "collection")
+    const contains_cell = try flag(pool, collection, "contains_cell")
+    if contains_cell:
+        return False
+    const shape = try graph.field(pool, row, "shape")
+    const resource_id = try graph.field(pool, shape, "resource")
+    const resource = try graph.get(pool, resource_id)
+    if resource.kind != 0:
+        return False
+    const builtin_id = try graph.field(pool, shape, "builtin")
+    const builtin = try graph.get(pool, builtin_id)
+    const managed = try flag(pool, row, "managed")
+    if managed and builtin.data == b"cell":
+        return False
+    const contract = try graph.field(pool, row, "contract")
+    const owned = try flag(pool, contract, "move_only")
+    const callback_id = try graph.field(pool, contract, "callback")
+    const callback = try graph.get(pool, callback_id)
+    return not owned and callback.kind == 0

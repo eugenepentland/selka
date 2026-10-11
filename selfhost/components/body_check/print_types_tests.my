@@ -1,0 +1,94 @@
+import syntax_value
+import list_types
+import print_types
+
+func row(mut pool: syntax_value.Pool, owned: bool = False, callback: bool = False, resource: bool = False, contains: bool = False, cell: bool = False) -> int fails syntax_value.Problem:
+    const absent = try syntax_value.absent(mut pool)
+    const yes = try syntax_value.boolean(mut pool, True)
+    const move = try syntax_value.boolean(mut pool, owned)
+    const cells = try syntax_value.boolean(mut pool, contains)
+    const managed = try syntax_value.boolean(mut pool, cell)
+    const builtin = try syntax_value.enumeration(mut pool, if cell then b"cell" else b"none")
+    const shape = try syntax_value.object(mut pool, ["resource", "builtin"], [if resource then yes else absent, builtin])
+    const contract = try syntax_value.object(mut pool, ["move_only", "callback"], [move, if callback then yes else absent])
+    const collection = try syntax_value.object(mut pool, ["contains_cell"], [cells])
+    return try syntax_value.object(mut pool, ["shape", "contract", "collection", "managed"], [shape, contract, collection, managed])
+
+
+public func test_scalars_render_but_capabilities_handles_and_unknown_ids_do_not() -> bool fails syntax_value.Problem:
+    const pool = syntax_value.empty()
+    const catalog = list_types.empty()
+    for ty in [0, 1, 2, 3, 4, 5, 6, 7, 8, 15]:
+        const allowed = try print_types.renderable(pool, catalog, ty)
+        if not allowed:
+            return False
+    for ty in [-1, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19]:
+        const allowed = try print_types.renderable(pool, catalog, ty)
+        if allowed:
+            return False
+    return True
+
+
+public func test_retained_aggregate_contract_rejects_every_nonrenderable_family() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut catalog = list_types.empty()
+    const plain = try row(mut pool)
+    const owned = try row(mut pool, owned=True)
+    const callback = try row(mut pool, callback=True)
+    const resource = try row(mut pool, resource=True)
+    const containing = try row(mut pool, contains=True)
+    const cell = try row(mut pool, cell=True)
+    catalog.types.records.rows = [plain, owned, callback, resource, containing, cell]
+    catalog.base_count = 6
+    const accepted = try print_types.renderable(pool, catalog, 19)
+    if not accepted:
+        return False
+    for ty in range(20, 25):
+        const refused = try print_types.renderable(pool, catalog, ty)
+        if refused:
+            return False
+    return True
+
+
+public func test_retained_list_identity_does_not_bypass_cell_contract() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut catalog = list_types.empty()
+    const containing = try row(mut pool, contains=True)
+    catalog.base_count = 1
+    catalog.types.records.rows = [containing]
+    for unused in range(20):
+        catalog.elements.append(-1)
+    catalog.elements[19] = 0
+    const accepted = try print_types.renderable(pool, catalog, 19)
+    return not accepted
+
+
+public func test_new_list_and_buffer_recipes_render_without_retained_rows() -> bool fails syntax_value.Problem:
+    const pool = syntax_value.empty()
+    mut catalog = list_types.empty()
+    catalog.recipes = [list_types.Recipe(id=19, element=0, span=-1), list_types.Recipe(id=20, element=5, span=-1, kind="byte_buffer")]
+    const list = try print_types.renderable(pool, catalog, 19)
+    const buffer = try print_types.renderable(pool, catalog, 20)
+    const unknown = try print_types.renderable(pool, catalog, 21)
+    return list and buffer and not unknown
+
+
+public func test_other_fresh_aggregate_contracts_remain_authoritative() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut catalog = list_types.empty()
+    const owned = try row(mut pool, owned=True)
+    catalog.types.records.rows = [owned]
+    catalog.recipes = [list_types.Recipe(id=19, element=0, span=-1, kind="array", members=1)]
+    const accepted = try print_types.renderable(pool, catalog, 19)
+    return not accepted
+
+
+public func test_recipe_identity_mismatch_is_transport_failure() -> bool fails syntax_value.Problem:
+    const pool = syntax_value.empty()
+    mut catalog = list_types.empty()
+    catalog.recipes = [list_types.Recipe(id=20, element=0, span=-1)]
+    match print_types.renderable(pool, catalog, 19):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

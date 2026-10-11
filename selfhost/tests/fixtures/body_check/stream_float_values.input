@@ -1,0 +1,4 @@
+func main(out: Stream) -> int:
+    const infinite: float = 1e308 * 1e308
+    out.print(1.25, -0.0, infinite, infinite - infinite)
+    return 7

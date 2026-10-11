@@ -90,9 +90,12 @@ inputs; every field in the resulting complete canonical output now matches.
 Original nonce-bearing request/reply headers are preserved unchanged for each
 exchange. The immutable package receipt, all producer source bytes, both final
 reports, earlier failed reports and authentic captures are archived under
-`docs/audits/evidence/selka-body-constants-20261011`. The bounded full producer
-suite selects 88 files with 532 exact public tests per normal/release mode;
-its gate is still pending. No broader completion is claimed.
+`docs/audits/evidence/selka-body-constants-20261011`. The frozen bounded producer
+suite passed all 88 modules: 532 public tests in normal mode and 532 in
+release/facts/leak-check mode, with zero failures or skips. The final archive
+verifies all 175 producer source files against the installed body-package
+source receipt and retains every per-file command, public-count assertion,
+output and source hash. No broader completion is claimed.
 
 Integration coverage must retain valid chained constant expressions after the
 f47 runtime-chain merge, and aggregate array/capability type resolution in

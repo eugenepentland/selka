@@ -1,0 +1,11 @@
+record Item:
+    count: int
+    values: int[]
+
+
+func main(out: Stream) -> int:
+    mut item = Item(count=2, values=[3, 4])
+    const saved = item
+    item.values[0] = 8
+    out.print(saved, item)
+    return 7

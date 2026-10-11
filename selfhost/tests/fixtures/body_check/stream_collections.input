@@ -1,0 +1,7 @@
+func main(out: Stream) -> int:
+    mut values: dict[str, int[]] = {"left": [1, 2], "right": [3]}
+    const saved = values
+    values["left"] = [9]
+    const keys: set[int] = {3, 1, 2}
+    out.print(saved, values, keys)
+    return 7

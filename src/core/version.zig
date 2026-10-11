@@ -157,12 +157,27 @@ fn version(arena: std.mem.Allocator, f: *ir.Function, counted: facts.Counted, li
 /// holds in order, and `condition`, the one of them the guard branches on.
 const Guard = struct { insts: []const ir.Ref, condition: ir.Ref };
 
+/// Only the header may have incoming edges from outside a cloned region.
+/// An inner loop's break can reach an outer exit and its continuation; cloning
+/// that shared code would give its phis external predecessors that never branch
+/// to the copy. Leave such a loop's original CFG unchanged.
+fn closedRegion(f: *const ir.Function, header: ir.BlockId, inside: []const bool) bool {
+    for (inside, 0..) |member, b| {
+        if (!member or b == header.index()) continue;
+        for (f.blocks.items[b].preds.items) |pred| {
+            if (!inside[pred.index()]) return false;
+        }
+    }
+    return true;
+}
+
 /// Clone `loop` behind a guard block that evaluates `condition` and enters the clone
 /// when it holds, the original otherwise. Returns the maps from original to clone,
 /// or null (nothing changed) when the loop's shape does not allow it.
 fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, guard_insts: Guard, provenance: origins.Context, frame: ?u32) Error!?Copies {
     const preheader = preheaderOf(f, loop) orelse return null;
     const inside = try members(arena, f, loop);
+    if (!closedRegion(f, loop.header, inside)) return null;
     // A body that always returns can leave an unreachable recorded latch.
     // Such a loop has no complete cycle to clone.
     if (!inside[loop.latch.index()]) return null;

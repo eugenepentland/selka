@@ -1,0 +1,12 @@
+enum Status:
+    ok
+    missing
+    failed
+
+
+func main(out: Stream) -> int:
+    mut values: [Status]int = {Status.failed: 3, Status.ok: 1, Status.missing: 2}
+    const saved = values
+    values[Status.ok] = 9
+    out.print(saved, values, Status.ok)
+    return 7

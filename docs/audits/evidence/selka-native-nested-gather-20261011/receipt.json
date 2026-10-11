@@ -1,0 +1,162 @@
+{
+  "native_source_commit": "93a4f2bc8562b61501cb486a4b6de251e2598fca",
+  "native_source_parent": "aa152f8dd",
+  "host_sha256": "4ce5f9ab80f5829973aceed8645b1edb122af048348a1ca62d3e4cb968cce5fc",
+  "coordinator_sha256": "d0ea4c4afa0ffa9c48162f182c9bc72c7d2cd968bacb1dbb4181514ef39781ab",
+  "seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "body_package": {
+    "artifact": "body-check-d0a43425c0c7cea795e8233d815f62a270e3727662673a0f33f9c78d6ca6800f",
+    "component": "body-check",
+    "format": 1,
+    "key": "8c8a9ba7faf5260b29e948490b33390853f1d8d1276a9cab232ebf4e5c070e24",
+    "protocol": 1,
+    "schema": 10,
+    "sha256": "d0a43425c0c7cea795e8233d815f62a270e3727662673a0f33f9c78d6ca6800f"
+  },
+  "terminal_statuses": {
+    "missing_guardian_setup": 1,
+    "prefixed_native_regression_before_fix": 1,
+    "corrected_two_tests": 0,
+    "expanded_tests_with_guardian_findings": 1,
+    "final_three_tests_and_format": 0,
+    "guardian_commit_helper_intentionally_stopped": 143,
+    "git_commit_with_hook": 0,
+    "releasefast_host_install": 0,
+    "comprehension_294": 0,
+    "statement_regression_228": 0
+  },
+  "native_tests": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_guardian_checks": 88,
+  "install_steps": 14,
+  "comprehension": {
+    "fixtures": 36,
+    "operations": 294,
+    "failed": 0,
+    "skipped": 0
+  },
+  "statement": {
+    "fixtures": 30,
+    "operations": 228,
+    "failed": 0,
+    "skipped": 0
+  },
+  "files": [
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/native-tmp/native-commit.log",
+      "archive": "native-commit.log.gz",
+      "bytes": 1175,
+      "source_sha256": "a734385ef8b1245cdea1f9d7064766090d874a9db6d08ab69cd0376c7abd8bab",
+      "archive_sha256": "0bdb643bd64a9b54a32fa0c944f7cc8c94306f584662cdacf92b4008a0cd2e04"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/native-tmp/regression-before-linked.log",
+      "archive": "regression-before-linked.log.gz",
+      "bytes": 9021,
+      "source_sha256": "ef1bb78929851781be9496831681cb199395910d4922e7ed030f37fa5b558d54",
+      "archive_sha256": "39c45463f4582e3c5049802dae6f9016963fd6d76b89343ddbfba2629cde0cef"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/native-tmp/regression-final-refactor.log",
+      "archive": "regression-final-refactor.log.gz",
+      "bytes": 7728,
+      "source_sha256": "5f91f97f452e2618e2b5cfa587f75b7f7eb3cf5b6e5d598937e92e06bd2608d2",
+      "archive_sha256": "4196e3b3276ecf643230c2664a044f07f1d9a6e8de93828e787a2ee2bb36fc56"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/native-tmp/native-commit-final.log",
+      "archive": "native-commit-final.log.gz",
+      "bytes": 344,
+      "source_sha256": "4f00cf96acce68277aaba92247138c287845d2250d7ccc0e795bc49a6a965045",
+      "archive_sha256": "a156915f768dcdefd97b0c88821fa726345fde4c1ceaabbbf9c14be05b98cdf9"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/native-tmp/regression-after.log",
+      "archive": "regression-after.log.gz",
+      "bytes": 2036,
+      "source_sha256": "dcc9e88619bf200a25c2b03921a8a982f90c865a2703415395fe01f97d81bcfd",
+      "archive_sha256": "388b20aee486703f22d7e538d485df03279bd774f9d03f5ba1a7c5734869ee2b"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/native-tmp/regression-before.log",
+      "archive": "regression-before.log.gz",
+      "bytes": 650,
+      "source_sha256": "10c3f832d1e1058af16c5aec1ba40c540d5b85899eef9a98a1bb008d1dc6f450",
+      "archive_sha256": "a295181e7466dd9adb9986929c5cbdb392f575665e0825c8114a63112849062f"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/native-tmp/regression-final.log",
+      "archive": "regression-final.log.gz",
+      "bytes": 6370,
+      "source_sha256": "f84e7b90dfc5580861329e1a491f5369aac5a28f75b9e49b8bfbc9c775eba2de",
+      "archive_sha256": "8f287f48d5580b73684ea8e034882abc6a30ac6faad01f5ac884771fdafef065"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/native-tmp/native-host-install.log",
+      "archive": "native-host-install.log.gz",
+      "bytes": 2754,
+      "source_sha256": "758b36e206460f2d8d03ccc8e859fbf8bb204eeb1b3347b58af5092797832abe",
+      "archive_sha256": "4ddfabb14232902948e70844d8cff912715cb46b56163a1efb80606cfda4dde7"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/comprehension-selected-direct.json",
+      "archive": "comprehension-selected-direct.json.gz",
+      "bytes": 553756,
+      "source_sha256": "467588e0f6608c2d93a91b87e3ef76426bcc809f769a31199b44f265ee80f6bf",
+      "archive_sha256": "8ae858d8fb22709b096e7dc160b1a431c530465667bd57e4d211f4b8b62e9d6a"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/comprehension-selected-corrected.json",
+      "archive": "comprehension-selected-corrected.json.gz",
+      "bytes": 786023,
+      "source_sha256": "f50737c9514a1ba0a3368565b8dc40f48fc7d1e76d35f437054cf15b1933dcb0",
+      "archive_sha256": "023506c414c69d471cd902baa764cdceb649155f2a982a12cabe885879605c54"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/comprehension-iteration-regression-corrected.json",
+      "archive": "comprehension-iteration-regression-corrected.json.gz",
+      "bytes": 536666,
+      "source_sha256": "8ea004646dc102085d5ac4cfcb74067fa30eef160365b19d7d475998f1d93d61",
+      "archive_sha256": "9c0bd96e57d26d6c6f9368b3e496385c7c2456f096d136a0e24d824d5aa95c54"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/tmp/comprehension-selected-direct.log",
+      "archive": "comprehension-selected-direct.log.gz",
+      "bytes": 854,
+      "source_sha256": "c8338c94e0ef840eb098b320ecda19f2f576bcffdf81815deb56278e9813cd3e",
+      "archive_sha256": "498a6760684e76aaf8f22468fc134d18863c4def988f83cbe96cba395fa3742f"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/tmp/comprehension-selected-corrected.log",
+      "archive": "comprehension-selected-corrected.log.gz",
+      "bytes": 123,
+      "source_sha256": "b4d6924dd2f533a16a29c5df5e819fa21a65c90b661d273ef975a146224ba19d",
+      "archive_sha256": "6e0fd33f240511fa3c48d095ca4eba7a505358094d2ae41039b755b8dcfa29e6"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/tmp/comprehension-iteration-regression-corrected.log",
+      "archive": "comprehension-iteration-regression-corrected.log.gz",
+      "bytes": 119,
+      "source_sha256": "9aa31b83246130422a0ce87e116257d41245e5f2442a10430a07b7012f8188bd",
+      "archive_sha256": "095a5bd4a81ccfce5a68171fdbae801831c95b706080d5d36bf6ed4ded1c461c"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/tmp/9a9b7850c1da57a2acf1053af12db2aff382cacedae00cc8d2ebf8079902335b-1970f5.ll",
+      "archive": "9a9b7850c1da57a2acf1053af12db2aff382cacedae00cc8d2ebf8079902335b-1970f5.ll.gz",
+      "bytes": 101830,
+      "source_sha256": "c9538a31088effdc7fab1db57ab72dc44d1b348960de90962e6df55d6d809b12",
+      "archive_sha256": "58db8614bd4250a06032ea336013fd2ad98f796b6870c9789a09a1ff5efb404e"
+    },
+    {
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/loops/tmp/9a9b7850c1da57a2acf1053af12db2aff382cacedae00cc8d2ebf8079902335b-1970f5.sh",
+      "archive": "9a9b7850c1da57a2acf1053af12db2aff382cacedae00cc8d2ebf8079902335b-1970f5.sh.gz",
+      "bytes": 26102,
+      "source_sha256": "6044c70497fe7103d1805b4a2a91b39a024381c18ab0861195b482fa65dee509",
+      "archive_sha256": "40709b094e7248c74de36982e8c47d5192751fdceb42fab9fb0b2db525bd0775"
+    }
+  ],
+  "limits": "Focused native regression and exact selected producers only; no full bootstrap or performance acceptance."
+}

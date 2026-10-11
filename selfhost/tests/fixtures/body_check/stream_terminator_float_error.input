@@ -1,0 +1,3 @@
+func main(out: Stream) -> int:
+    out.print(1.25, end=3.0)
+    return 7

@@ -23,6 +23,7 @@ import list_types
 import list_lower
 import buffer_lower
 import resource_lower
+import print_types
 import io_arguments
 import list_repeat
 import list_places
@@ -4605,11 +4606,6 @@ func stream_call(mut state: State, span: int, call: int, slot: int) -> Expressio
             const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
             const rejection = try problem(state, copied_span, "E_IO_ARGUMENT", "print cannot render this value; capabilities, files, owned resources and callbacks have no Python spelling")
             fail rejection
-        if ty != 0 and ty != 1 and ty != 15 and ty != state.batch.facts.string_type and ty != state.batch.facts.bytes_type and ty != state.batch.facts.lists.types.buffer.id:
-            const value_span = try graph.field(state.batch.pool, state.batch.nodes[value], "span")
-            const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
-            const rejection = try problem(state, copied_span, "P_BODY_PROFILE", "aggregate or narrow integer output is outside the closed Stream print profile")
-            fail rejection
         values.append(value)
     mut separator = -1
     mut terminator = -1
@@ -4630,20 +4626,7 @@ func stream_call(mut state: State, span: int, call: int, slot: int) -> Expressio
 
 
 func printable(state: State, ty: int) -> bool fails syntax_value.Problem:
-    if ty == 0 or ty == 1 or (ty >= 2 and ty <= 8) or ty == 15:
-        return True
-    if ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or ty == state.batch.facts.lists.types.buffer.id or list_types.element_type(state.batch.facts.lists, ty) >= 0:
-        return True
-    const rows = state.batch.facts.lists.types.records.rows
-    if ty < 19 or ty - 19 >= len(rows):
-        return False
-    const row = rows[ty - 19]
-    const contract = try graph.field(state.syntax.pool, row, "contract")
-    const owned_id = try graph.field(state.syntax.pool, contract, "move_only")
-    const owned = try graph.get(state.syntax.pool, owned_id)
-    const callback_id = try graph.field(state.syntax.pool, contract, "callback")
-    const callback = try graph.get(state.syntax.pool, callback_id)
-    return owned.integer == 0 and callback.kind == 0
+    return try print_types.renderable(state.syntax.pool, state.batch.facts.lists, ty)
 
 
 func same_span(pool: syntax_value.Pool, first: int, second: int) -> bool fails syntax_value.Problem:

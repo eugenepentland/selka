@@ -341,3 +341,26 @@ test "equal string and byte literals preserve shared raw metadata across physica
     try std.testing.expectEqualStrings(shared, separate);
     try std.testing.expect(std.mem.indexOf(u8, separate, "@myl.str.1") == null);
 }
+
+// Regression: an inner gather exits its outer loop before the inner exit.
+// spec-case: NEW-CORE-F2-VERSION-1
+test "nested any gather preserves predecessor edges through release loop versioning" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const source =
+        \\func noted(mut seen: int[], value: int) -> bool:
+        \\    seen.append(value)
+        \\    return value == 4
+        \\
+        \\
+        \\func main() -> int:
+        \\    const source = FixedArray[int, 3]([3, 4, 5])
+        \\    const inner = FixedArray[int, 1]([1])
+        \\    mut seen: int[] = []
+        \\    if any(noted(mut seen, value * factor) for value in source for factor in inner):
+        \\        return seen[0] + seen[1]
+        \\    return 1
+    ;
+    const text = try support.verifyLlvmText(arena.allocator(), source);
+    try std.testing.expect(std.mem.indexOf(u8, text, "define internal fastcc i64 @\"my.main\"") != null);
+}

@@ -1,0 +1,3 @@
+func main(out: Stream) -> int:
+    out.print(sep="|", end="done\n")
+    return 7

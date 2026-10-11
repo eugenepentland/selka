@@ -372,7 +372,7 @@ class BodyQualificationTests(unittest.TestCase):
     def test_b6_inventory_preserves_history_and_pins_native_diagnostics(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         inventory=json.loads((D.FIXTURES/'b6_inventory.json').read_text())
-        self.assertEqual(len(manifest),169)
+        self.assertEqual(len(manifest),190)
         self.assertEqual(len(set(inventory['cases'])),21)
         self.assertEqual(inventory['counts'],{'success':10,'diagnostic':9,'profile':2})
         self.assertTrue(all(name in manifest for name in inventory['cases']))

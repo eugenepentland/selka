@@ -1262,5 +1262,152 @@
         "edits": []
       }
     ]
+  },
+  "stream_signed_widths.my": {
+    "status": 0,
+    "boundary": "scalar-stream-output",
+    "typed": true,
+    "library": false,
+    "result": 7,
+    "stdout": "-128 -32768 -2147483648 -9223372036854775808\n7\n"
+  },
+  "stream_unsigned_widths.my": {
+    "status": 0,
+    "boundary": "scalar-stream-output",
+    "typed": true,
+    "library": false,
+    "result": 7,
+    "stdout": "255 65535 4294967295 18446744073709551615\n7\n"
+  },
+  "stream_float_values.my": {
+    "status": 0,
+    "boundary": "scalar-stream-output",
+    "typed": true,
+    "library": false,
+    "result": 7,
+    "stdout": "1.25 -0.0 inf nan\n7\n"
+  },
+  "stream_mixed_scalars.my": {
+    "status": 0,
+    "boundary": "scalar-stream-output",
+    "typed": true,
+    "library": false,
+    "result": 7,
+    "stdout": "v|-3|18446744073709551615|True|None|2.5!\n7\n"
+  },
+  "stream_capability_error.my": {
+    "status": 1,
+    "boundary": "scalar-stream-output",
+    "typed": false,
+    "library": false,
+    "code": "E_IO_ARGUMENT"
+  },
+  "stream_separator_width_error.my": {
+    "status": 1,
+    "boundary": "scalar-stream-output",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "stream_terminator_float_error.my": {
+    "status": 1,
+    "boundary": "scalar-stream-output",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "profile_stream_aggregate.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "[1, 2]\n7\n"
+  },
+  "stream_aggregate_separator_error.my": {
+    "status": 1,
+    "boundary": "aggregate-stream-output",
+    "code": "E_LIST_TYPE"
+  },
+  "stream_aggregate_terminator_error.my": {
+    "status": 1,
+    "boundary": "aggregate-stream-output",
+    "code": "E_LIST_TYPE"
+  },
+  "stream_collections.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "{'left': [1, 2], 'right': [3]} {'left': [9], 'right': [3]} {3, 1, 2}\n7\n"
+  },
+  "stream_empty_arguments.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "done\n7\n"
+  },
+  "stream_fixed_arrays.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "[3, 4] [8, 4] []\n7\n"
+  },
+  "stream_lists.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "[[1, 2], [3]] [[9, 2], [3]] []\n7\n"
+  },
+  "stream_operand_snapshot.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "[1, 2] [9, 2] [9, 2]\n7\n"
+  },
+  "stream_options.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "Some(7) None\n7\n"
+  },
+  "stream_record_snapshot.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "Item(count=2, values=[3, 4]) Item(count=2, values=[8, 4])\n7\n"
+  },
+  "stream_separator_snapshot.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "[1, 2]|tail!\n[9, 2]\n7\n"
+  },
+  "stream_table.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "[1, 2, 3] [9, 2, 3] Status.ok\n7\n"
+  },
+  "stream_tuple.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "(3, 'four') (True, [5, 6])\n7\n"
+  },
+  "stream_variants.my": {
+    "status": 0,
+    "boundary": "aggregate-stream-output",
+    "typed": true,
+    "result": 7,
+    "stdout": "Choice.box(values=[3, 4]) Choice.empty\n7\n"
   }
 }

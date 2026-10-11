@@ -1,0 +1,7 @@
+func main(out: Stream) -> int:
+    mut values: FixedArray[int, 2] = FixedArray[int, 2]([3, 4])
+    const saved = values
+    values[0] = 8
+    const empty: FixedArray[int, 0] = FixedArray[int, 0]([])
+    out.print(saved, values, empty)
+    return 7

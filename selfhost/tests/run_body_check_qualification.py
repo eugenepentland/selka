@@ -344,9 +344,12 @@ class Qualification(F.Qualification):
                 self.compare(name+'-ir', ['dump-ir', self.source / name])
             if 'result' in spec:
                 flags = ['--release', '--verify-facts'] if self.release else []
-                self.compare(name+'-run', ['run-project', self.source / name, '--print-result',
+                result = self.compare(name+'-run', ['run-project', self.source / name, '--print-result',
                                           '--cache-dir', self.work / ('fixture-'+name),
                                           f'--zig={self.zig}', *flags], spec['result'])
+                if 'stdout' in spec:
+                    F.require(result == (spec['result'], spec['stdout'].encode(), b''),
+                              f'{name}: generated output changed')
         helper = self.source / 'helper.my'
         original = helper.read_bytes()
         try:

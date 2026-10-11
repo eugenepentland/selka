@@ -1,0 +1,19 @@
+func noted(mut seen: int[], value: int) -> bool:
+    seen.append(value)
+    return value == 4
+
+
+public func test_nested_any_stops_outer_loop() -> bool:
+    const source = FixedArray[int, 3]([3, 4, 5])
+    const inner = FixedArray[int, 1]([1])
+    mut seen: int[] = []
+    const found = any(noted(mut seen, value * factor) for value in source for factor in inner)
+    return found and seen == [3, 4]
+
+
+public func test_nested_all_stops_outer_loop() -> bool:
+    const source = FixedArray[int, 3]([3, 4, 5])
+    const inner = FixedArray[int, 1]([1])
+    mut seen: int[] = []
+    const every = all(not noted(mut seen, value * factor) for value in source for factor in inner)
+    return not every and seen == [3, 4]
