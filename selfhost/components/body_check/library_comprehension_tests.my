@@ -93,3 +93,29 @@ public func test_noninteger_range_start_uses_native_integer_requirement_site() -
             return False
         case Err(problem):
             return problem.code == "E_TYPE" and problem.start == 1 and problem.end == 2 and problem.message == "operation requires an integer type" and len(state.scope.locals) == 0 and len(state.batch.facts.lists.recipes) == 0
+
+
+public func test_dynamic_count_does_not_hint_comprehension_as_integer() -> bool fails syntax_value.Problem:
+    for count_first in [False, True]:
+        mut state = try fresh(False, True)
+        state.syntax.source = b"2i count"
+        const comprehension = len(state.syntax.nodes) - 1
+        const count_span = try syntax_value.span(mut state.syntax.pool, 3, 8)
+        _ = try locals.add(mut state.scope, b"count", count_span, 0, False, b"parameter")
+        const count = try add(mut state, b"name", count_span)
+        mut left = comprehension
+        mut right = count
+        if count_first:
+            left = count
+            right = comprehension
+        const left_ref = try syntax_value.integer(mut state.syntax.pool, left)
+        const right_ref = try syntax_value.integer(mut state.syntax.pool, right)
+        const op = try syntax_value.enumeration(mut state.syntax.pool, b"mul")
+        const chained = try syntax_value.boolean(mut state.syntax.pool, False)
+        const span = try syntax_value.span(mut state.syntax.pool, 0, 8)
+        const binary = try syntax_value.object(mut state.syntax.pool, ["op", "left", "right", "op_span", "chained"], [op, left_ref, right_ref, span, chained])
+        const raw = try add(mut state, b"binary", binary)
+        const result = try engine.expression(mut state, raw)
+        if result.ty != 19 or state.batch.facts.expected[comprehension] != -1 or len(state.batch.facts.lists.recipes) != 1:
+            return False
+    return True

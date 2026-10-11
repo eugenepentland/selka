@@ -88,14 +88,14 @@ public func test_root_reassignment_copies_entry_and_retains_original_bound() -> 
     return parts == [3, 11, 12, 13] and len(fixture.batch.nodes) == 14 and len(fixture.batch.statements) == 14 and len(fixture.scope.locals) == 6 and fixture.scope.locals[0].usage.reads == 1 and fixture.scope.locals[5].usage.temporary
 
 
-public func test_discard_iteration_name_does_not_bind_or_change_hidden_metadata() -> bool fails syntax_value.Problem:
+public func test_discard_iteration_keeps_native_initialized_binder_metadata() -> bool fails syntax_value.Problem:
     mut fixture = try fresh(0)
     fixture.request.source = b"xs _   "
     const name = try syntax_value.span(mut fixture.input, 3, 4)
     fixture.request.name = name
     const plan = try list_iteration.prepare(mut fixture.batch, mut fixture.scope, fixture.input, fixture.request)
     const binding = fixture.scope.locals[plan.binding]
-    return plan.before_active == [0] and fixture.scope.active == [0] and binding.name == b"<collection>" and binding.mutable and binding.origin == b"local" and not binding.initialized and binding.usage.temporary
+    return plan.before_active == [0] and fixture.scope.active == [0, plan.binding] and binding.name == b"_" and not binding.mutable and binding.origin == b"iteration" and binding.initialized and binding.usage.temporary
 
 
 public func test_nested_list_place_refreshes_ancestor_and_spills_index_once() -> bool fails syntax_value.Problem:
@@ -220,3 +220,48 @@ public func test_mut_argument_in_match_discriminator_selects_live_iteration_refr
     const lowered = try lower(mut fixture)
     const parts = try slots(fixture.batch.pool, lowered)
     return parts == [1, 12, 13, 14] and fixture.scope.locals[0].usage.reads == 2 and len(fixture.batch.nodes) == 17
+
+
+public func test_mut_argument_in_slice_bound_selects_live_iteration_refresh() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(1)
+    const base = try syntax_value.integer(mut fixture.input, 0)
+    const bound = try syntax_value.integer(mut fixture.input, 1)
+    const absent = try syntax_value.absent(mut fixture.input)
+    const payload = try syntax_value.object(mut fixture.input, ["base", "start", "end", "step"], [base, bound, absent, absent])
+    const sliced = try raw(mut fixture.input, fixture.request.span, b"slice", payload)
+    fixture.nodes.append(sliced)
+    const value = try syntax_value.integer(mut fixture.input, 2)
+    const statement = try raw(mut fixture.input, fixture.request.span, b"discard", value)
+    fixture.statements = [statement]
+    const lowered = try lower(mut fixture)
+    const parts = try slots(fixture.batch.pool, lowered)
+    return parts == [1, 12, 13, 14] and fixture.scope.locals[0].usage.reads == 2
+
+
+public func test_comprehension_mut_calls_in_output_filter_and_source_select_refresh() -> bool fails syntax_value.Problem:
+    for position in range(3):
+        mut fixture = try fresh(1)
+        const root = try syntax_value.integer(mut fixture.input, 0)
+        const marked = try syntax_value.integer(mut fixture.input, 1)
+        const absent = try syntax_value.absent(mut fixture.input)
+        mut output = root
+        mut filter = absent
+        mut iterable = root
+        if position == 0:
+            output = marked
+        elif position == 1:
+            filter = marked
+        else:
+            iterable = marked
+        const source = try syntax_value.tagged(mut fixture.input, b"iterable", iterable)
+        const payload = try syntax_value.object(mut fixture.input, ["output", "filter", "source"], [output, filter, source])
+        const comprehension = try raw(mut fixture.input, fixture.request.span, b"comprehension", payload)
+        fixture.nodes.append(comprehension)
+        const value = try syntax_value.integer(mut fixture.input, 2)
+        const statement = try raw(mut fixture.input, fixture.request.span, b"discard", value)
+        fixture.statements = [statement]
+        const lowered = try lower(mut fixture)
+        const parts = try slots(fixture.batch.pool, lowered)
+        if parts != [1, 12, 13, 14] or fixture.scope.locals[0].usage.reads != 2:
+            return False
+    return True
