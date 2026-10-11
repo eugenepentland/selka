@@ -53,7 +53,7 @@ public func collect(mut batch: emission.Batch, mut scope: locals.Scope, context:
     const next = try list_lower.binary(mut batch, context, b"add", index, one, 0)
     const advance = try list_lower.store(mut batch, context, plan.index, next, False)
     # A changed mapping refreshes its root, but never accepts list-style growth.
-    const growing = request.kind == b"list" and prepared.growing
+    const growing = (request.kind == b"list" or request.kind == b"bytes") and prepared.growing
     const guard = try list_iteration.guard(mut batch, context, plan, prepared.refresh, growing)
     const body = try comprehension_lower.block_statement(mut batch, context, [guard, initialize, output.body])
     const step = try comprehension_lower.block_statement(mut batch, context, [guard, advance])

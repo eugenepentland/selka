@@ -295,3 +295,37 @@ public func test_list_u8_comprehension_keeps_element_width_without_bytes_cast() 
             if operand == read and read >= 0:
                 return False
     return read >= 0
+
+
+public func test_mutable_buffer_refresh_allows_growth_with_signed_length_and_shared_guard() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"bytes", False, 1)
+    fixture.batch.facts.bytes_type = 46
+    fixture.batch.facts.lists.types.buffer.id = 45
+    _ = try collection_comprehension.collect(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+    const guard_id = try loop_guard(fixture.batch)
+    const guard = try data(fixture.batch, fixture.batch.statements[guard_id])
+    const rows = try graph.items(fixture.batch.pool, guard.children[0])
+    if len(rows) != 3 or fixture.scope.locals[0].usage.reads != 2:
+        return False
+    const first_id = try graph.number(fixture.batch.pool, rows[0])
+    const branch_id = try graph.number(fixture.batch.pool, rows[1])
+    const last_id = try graph.number(fixture.batch.pool, rows[2])
+    const refresh = try data(fixture.batch, fixture.batch.statements[first_id])
+    const branch = try data(fixture.batch, fixture.batch.statements[branch_id])
+    const remember = try data(fixture.batch, fixture.batch.statements[last_id])
+    const refreshed = try number(fixture.batch.pool, refresh.children[0], "slot")
+    const remembered = try number(fixture.batch.pool, remember.children[0], "slot")
+    if refresh.data != b"assign" or branch.data != b"branch" or remember.data != b"assign" or refreshed != fixture.request.plan.owner or remembered != fixture.request.plan.limit:
+        return False
+    mut lengths = 0
+    for row in fixture.batch.nodes:
+        const value = try data(fixture.batch, row)
+        if value.data == b"buffer_operation":
+            const kind_id = try graph.field(fixture.batch.pool, value.children[0], "kind")
+            const kind = try graph.get(fixture.batch.pool, kind_id)
+            if kind.data == b"length":
+                const ty = try number(fixture.batch.pool, row, "ty")
+                if ty != 0:
+                    return False
+                lengths += 1
+    return lengths == 2

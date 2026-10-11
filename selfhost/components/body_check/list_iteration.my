@@ -510,7 +510,13 @@ public func guard(mut batch: emission.Batch, context: list_lower.Context, plan: 
     const checked_payload = try syntax_value.integer(mut batch.pool, checked)
     const check = try emission.statement(mut batch, context.input, context.span, False, b"discard", checked_payload)
     if growing:
-        const actual = try list_lower.length(mut batch, context, plan.owner)
+        mut actual = -1
+        if plan.request.owner_type == batch.facts.lists.types.buffer.id:
+            const count = try buffer_lower.length(mut batch, context, plan.owner)
+            actual = count
+        else:
+            const count = try list_lower.length(mut batch, context, plan.owner)
+            actual = count
         const bound = try list_lower.read(mut batch, context, plan.limit, 0)
         const condition = try list_lower.binary(mut batch, context, b"lt", actual, bound, 1)
         const condition_id = try syntax_value.integer(mut batch.pool, condition)
