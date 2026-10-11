@@ -145,8 +145,7 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
         const item_key = key(recipe);
         const duplicate = try known.getOrPut(a, item_key);
         if (duplicate.found_existing) return error.ComponentProtocol;
-        try dependency(item_key.first, id);
-        if (recipe == .result) try dependency(item_key.second, id);
+        try dependencies(input.catalog, recipe, item_key, id);
         depths[id.recordIndex()] = try recipeDepth(recipe, item_key, depths);
         var schema: typed.Record = .{ .id = id, .name = "", .declaration = at, .fields = &.{} };
         if (recipe == .list) {
@@ -200,4 +199,12 @@ fn recipeDepth(recipe: value.CatalogRecipe, item_key: Key, depths: []const usize
     if (recipe == .result and item_key.second.isAggregate()) result = @max(result, 1 + depths[item_key.second.recordIndex()]);
     if (result > 256) return error.ComponentProtocol;
     return result;
+}
+
+fn dependencies(catalog: value.Catalog, recipe: value.CatalogRecipe, item: Key, id: typed.Type) Error!void {
+    if (recipe == .result and item.first.isFile()) {
+        const string = catalog.string orelse return error.ComponentProtocol;
+        if (item.second != string.id) return error.ComponentProtocol;
+    } else try dependency(item.first, id);
+    if (recipe == .result) try dependency(item.second, id);
 }

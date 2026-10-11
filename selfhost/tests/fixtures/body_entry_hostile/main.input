@@ -1,0 +1,15 @@
+func read(fs: Filesystem) -> bytes fails str:
+    mut data: bytes = b""
+    with try fs.open("blob.bin", "rb") as first:
+        data = first.read(1)
+    with try fs.open("blob.bin", "rb") as second:
+        data = data + second.read(1)
+    return data
+func main(fs: Filesystem, out: Stream) -> int:
+    match read(fs):
+        case Ok(data):
+            _ = out.write(data)
+            out.print("done")
+            return 7
+        case Err(_):
+            return 0

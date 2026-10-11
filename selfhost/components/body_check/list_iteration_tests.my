@@ -71,7 +71,7 @@ public func test_inert_list_walk_native_hidden_local_metadata_and_orphan_order()
     const lowered = try lower(mut fixture)
     const parts = try slots(fixture.batch.pool, lowered)
     const binding = fixture.scope.locals[4]
-    return lowered.tag == b"block" and parts == [1, 9, 10, 11] and len(fixture.batch.nodes) == 12 and len(fixture.batch.statements) == 12 and len(fixture.scope.locals) == 5 and fixture.scope.active == [0, 4] and binding.name == b"item" and not binding.mutable and binding.origin == b"iteration" and binding.initialized and binding.usage.temporary and binding.usage.reads == 1
+    return lowered.tag == b"block" and parts == [1, 9, 10, 11] and len(fixture.batch.nodes) == 12 and len(fixture.batch.statements) == 12 and len(fixture.scope.locals) == 5 and fixture.scope.active == [0, 4] and binding.name == b"item" and not binding.mutable and binding.origin == b"iteration" and binding.flags.initialized and binding.usage.temporary and binding.usage.reads == 1
 
 
 public func test_live_mut_argument_refresh_growth_guard_and_root_read_count() -> bool fails syntax_value.Problem:
@@ -95,7 +95,7 @@ public func test_discard_iteration_keeps_native_initialized_binder_metadata() ->
     fixture.request.name = name
     const plan = try list_iteration.prepare(mut fixture.batch, mut fixture.scope, fixture.input, fixture.request)
     const binding = fixture.scope.locals[plan.binding]
-    return plan.before_active == [0] and fixture.scope.active == [0, plan.binding] and binding.name == b"_" and not binding.mutable and binding.origin == b"iteration" and binding.initialized and binding.usage.temporary
+    return plan.before_active == [0] and fixture.scope.active == [0, plan.binding] and binding.name == b"_" and not binding.mutable and binding.origin == b"iteration" and binding.flags.initialized and binding.usage.temporary
 
 
 public func test_nested_list_place_refreshes_ancestor_and_spills_index_once() -> bool fails syntax_value.Problem:

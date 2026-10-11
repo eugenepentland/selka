@@ -314,7 +314,7 @@ public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, input: s
     scope.locals[binding].declaration = request.name
     scope.locals[binding].mutable = False
     scope.locals[binding].origin = b"iteration"
-    scope.locals[binding].initialized = True
+    scope.locals[binding].flags.initialized = True
     scope.active.append(binding)
     return Plan(request=request, owner=owner, index=index, limit=limit, binding=binding, before_active=before)
 

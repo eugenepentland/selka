@@ -14,6 +14,8 @@ import mut_markers
 import list_types
 import list_lower
 import buffer_lower
+import resource_lower
+import io_arguments
 import list_repeat
 import list_places
 import list_iteration
@@ -65,6 +67,7 @@ public record Values:
     yield_slot: int
     depth: int
     temporaries: int[]
+    trapping_open: int = -1
 
 
 public record Control:
@@ -128,6 +131,26 @@ public func require(state: State, actual: int, expected: int, span: int) -> bool
         const rejection = try problem(state, span, "E_TYPE", "expected " + type_name(state, expected) + ", found " + type_name(state, actual))
         fail rejection
     return True
+
+
+public func declared_symbol(state: State, span: int) -> bool fails syntax_value.Problem:
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    if len(state.syntax.modules) == 0:
+        const ty = try record_types.named(state.batch.facts.lists.types.records, name)
+        return ty != -1
+    const start_id = try graph.field(state.syntax.pool, span, "start")
+    const start = try graph.number(state.syntax.pool, start_id)
+    const module = try names.module_at(state.syntax.pool, state.syntax.modules, start)
+    if module < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="binding has no source module")
+    const symbols_id = try graph.field(state.syntax.pool, state.syntax.modules[module], "symbols")
+    const symbols = try graph.items(state.syntax.pool, symbols_id)
+    for symbol in symbols:
+        const name_id = try graph.field(state.syntax.pool, symbol, "name")
+        const candidate = try graph.get(state.syntax.pool, name_id)
+        if candidate.data == name:
+            return True
+    return False
 
 
 public func top_level(state: State, span: int) -> bool fails syntax_value.Problem:
@@ -693,6 +716,9 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         mut read_span = payload
         if data.data == b"synthetic_name":
             read_span = span
+        if state.scope.locals[slot].flags.scoped_file:
+            const rejection = try problem(state, read_span, "E_WITH_RESOURCE", "an open file binding cannot be stored, passed or returned; call its methods instead, and iterate lines with `for line in name.readlines():`")
+            fail rejection
         _ = try require_readable(mut state, slot, read_span)
         const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, state.scope.locals[slot].ty)
         if pending:
@@ -772,6 +798,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         if owner_value.kind != 0:
             const owner_name = try graph.spelling(state.syntax.pool, state.syntax.source, owner)
             const owner_slot = locals.find(state.scope, owner_name)
+            if owner_slot >= 0 and (state.scope.locals[owner_slot].ty == 11 or state.scope.locals[owner_slot].ty == 18 or state.scope.locals[owner_slot].ty == 16 or state.scope.locals[owner_slot].ty == 17):
+                const result = try resource_call(mut state, raw_id, span, payload, owner_slot)
+                state.batch.resolved[raw_id] = result.id
+                state.depth = state.depth - 1
+                return result
             if owner_slot >= 0 and list_types.element_type(state.batch.facts.lists, state.scope.locals[owner_slot].ty) >= 0:
                 const result = try list_method(mut state, payload, span, owner_slot)
                 state.batch.resolved[raw_id] = result.id
@@ -811,6 +842,24 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             if owner_slot >= 0:
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "receiver method is outside the admitted body closure")
                 fail rejection
+            if owner_name == b"file" or owner_name == b"text_file" or owner_name == b"Filesystem" or owner_name == b"Stream":
+                const declared_owner = try declared_symbol(state, owner)
+                if not declared_owner:
+                    const rejection = try problem(state, owner, "E_TYPE", "operation requires a nominal scalar domain")
+                    fail rejection
+        if owner_value.kind == 0 and explicit_count == 0 and (raw_callee == b"print" or raw_callee == b"eprint"):
+            const declared = try top_level(state, call_name)
+            if locals.find(state.scope, raw_callee) < 0 and not declared:
+                const diagnostic = try io_arguments.ambient(state.syntax.pool, payload)
+                state.problems.append(diagnostic)
+                fail diagnostic.problem
+        if owner_value.kind == 0 and raw_callee == b"open":
+            const declared = try top_level(state, call_name)
+            if locals.find(state.scope, raw_callee) < 0 and not declared:
+                const result = try resource_call(mut state, raw_id, span, payload, -1)
+                state.batch.resolved[raw_id] = result.id
+                state.depth = state.depth - 1
+                return result
         if owner_value.kind != 0 and explicit_count == 0:
             const owner_name = try graph.spelling(state.syntax.pool, state.syntax.source, owner)
             if locals.find(state.scope, owner_name) < 0:
@@ -1271,7 +1320,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             initial_type = 15
         const slot = try locals.add(mut state.scope, b"", span, initial_type, True, b"local")
         state.scope.active = state.scope.active[:len(state.scope.active) - 1]
-        state.scope.locals[slot].initialized = False
+        state.scope.locals[slot].flags.initialized = False
         state.scope.locals[slot].usage.temporary = True
         state.scope.locals[slot].usage.reads = 1
         state.control.values = Values(yield_type=expected, yield_slot=slot, depth=0, temporaries=[])
@@ -1503,6 +1552,49 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
             _ = try obligations.handled(state.syntax.pool, state.batch.facts.lists.types.records.rows, state.scope, first_local, span, mut state.problems)
         state.scope.active = active
         result_payload = try emission.ids(mut state.batch, checked)
+    elif tag == b"with_scope":
+        const resource_id = try graph.field(state.syntax.pool, payload, "resource")
+        const resource = try graph.get(state.syntax.pool, resource_id)
+        if resource.kind == 0:
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "arena scopes are outside the file resource profile")
+            fail rejection
+        const resource_raw = try graph.number(state.syntax.pool, resource_id)
+        const previous_open = state.control.values.trapping_open
+        state.control.values.trapping_open = resource_raw
+        const value = try expression(mut state, resource_raw)
+        state.control.values.trapping_open = previous_open
+        if value.ty != 16 and value.ty != 17:
+            const value_span = try graph.field(state.batch.pool, state.batch.nodes[value.id], "span")
+            const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
+            mut message = "`with` opens `arena()` or a file handle; no other value can be used as a resource"
+            const result = try variants.result_shape(state.syntax.pool, state.batch.facts.lists.types.records.rows, value.ty)
+            if result.valid:
+                message = "`with` opens an arena or a file; `open` returns a Result, so propagate it with `open(...)?` or match it first"
+            const rejection = try problem(state, copied_span, "E_WITH_RESOURCE", message)
+            fail rejection
+        const declared = try graph.field(state.syntax.pool, payload, "name")
+        const declaration = try graph.get(state.syntax.pool, declared)
+        if declaration.kind == 0:
+            const rejection = try problem(state, span, "E_WITH_RESOURCE", "a file `with` scope requires a binding, as in `with open(fs, path, \"rb\")? as f:`")
+            fail rejection
+        const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, declared)
+        const shadows = try top_level(state, declared)
+        if spelling != b"_" and (locals.find(state.scope, spelling) >= 0 or shadows):
+            const rejection = try problem(state, declared, "E_SHADOWING", "file name shadows an active name")
+            fail rejection
+        const active = state.scope.active
+        const slot = try locals.add(mut state.scope, spelling, declared, value.ty, False, b"local")
+        state.scope.locals[slot].flags.scoped_file = True
+        state.scope.locals[slot].usage.reads = 1
+        const body_id = try graph.field(state.syntax.pool, payload, "body")
+        const body_raw = try graph.number(state.syntax.pool, body_id)
+        const body = try statement(mut state, body_raw)
+        state.scope.active = active
+        terminates = body.terminates
+        const typed_slot = try syntax_value.integer(mut state.batch.pool, slot)
+        const typed_resource = try syntax_value.integer(mut state.batch.pool, value.id)
+        const typed_body = try syntax_value.integer(mut state.batch.pool, body.id)
+        result_payload = try syntax_value.object(mut state.batch.pool, ["slot", "resource", "body"], [typed_slot, typed_resource, typed_body])
     elif tag == b"ret" or tag == b"discard" or tag == b"fail":
         const expression_id = try graph.number(state.syntax.pool, payload)
         mut result = Expression(id=-1, ty=15)
@@ -1556,7 +1648,7 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
             value = try expression(mut state, expression_id)
         state.control.values.yield_type = value.ty
         state.scope.locals[slot].ty = value.ty
-        state.scope.locals[slot].initialized = True
+        state.scope.locals[slot].flags.initialized = True
         const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, value.ty)
         state.scope.locals[slot].usage.transfer_available = pending
         result_payload = try emission.store(mut state.batch, slot, value.id)
@@ -1579,6 +1671,9 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
             _ = try require(state, value.ty, ty, annotation_id)
         else:
             value = try expression(mut state, value_raw)
+        if value.ty == 16 or value.ty == 17:
+            const rejection = try problem(state, name_span, "P_BODY_PROFILE", "ordinary file storage is outside the lexical resource profile")
+            fail rejection
         const mutable_id = try graph.field(state.syntax.pool, payload, "mutable")
         const mutable = try graph.get(state.syntax.pool, mutable_id)
         const slot = try locals.add(mut state.scope, name, name_span, value.ty, mutable.integer != 0, b"local")
@@ -1732,7 +1827,7 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
             state.scope.locals[slot].origin = b"local"
             if assigned_data.data == b"index":
                 state.scope.locals[slot].origin = b"collection_copy"
-        state.scope.locals[slot].initialized = True
+        state.scope.locals[slot].flags.initialized = True
         state.scope.locals[slot].usage.transfer_available = pending_target
         state.scope.locals[slot].usage.transfer_span = -1
         result_payload = try emission.store(mut state.batch, slot, value.id)
@@ -1919,7 +2014,7 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
 
 
 func require_readable(mut state: State, slot: int, span: int) -> bool fails syntax_value.Problem:
-    if not state.scope.locals[slot].initialized:
+    if not state.scope.locals[slot].flags.initialized:
         const rejection = try problem(state, span, "E_UNBOUND", "name may be read before it is assigned; some control-flow path reaching here leaves it unbound")
         const previous = try problem(state, state.scope.locals[slot].declaration, "", "")
         const related = syntax_problem.Related(start=previous.start, end=previous.end, message="binding first assigned here", role="related")
@@ -1954,8 +2049,8 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
     const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
     for suffix in state.batch.facts.lists.types.suffixes:
         const suffix_span = try graph.field(state.syntax.pool, suffix, "span")
-        const suffix_text = try graph.spelling(state.syntax.pool, state.syntax.source, suffix_span)
-        if suffix_text == text:
+        const matches = try same_span(state.syntax.pool, suffix_span, span)
+        if matches:
             const kind_id = try graph.field(state.syntax.pool, suffix, "kind")
             const kind = try graph.get(state.syntax.pool, kind_id)
             const base = try graph.field(state.syntax.pool, suffix, "base")
@@ -1972,8 +2067,8 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
             return ty
     for application in state.batch.facts.applications:
         const application_span = try graph.field(state.syntax.pool, application, "span")
-        const application_text = try graph.spelling(state.syntax.pool, state.syntax.source, application_span)
-        if application_text == text:
+        const matches = try same_span(state.syntax.pool, application_span, span)
+        if matches:
             const name_span = try graph.field(state.syntax.pool, application, "name")
             const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
             const arguments_id = try graph.field(state.syntax.pool, application, "arguments")
@@ -1991,6 +2086,12 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
                     return ty
             const rejection = try problem(state, span, "P_BODY_PROFILE", "qualified or user generic type application is outside the body profile")
             fail rejection
+    if text == b"Filesystem" or text == b"Stream":
+        const declared = try declared_symbol(state, span)
+        if not declared:
+            if text == b"Filesystem":
+                return 11
+            return 18
     if text == b"byte_buffer":
         return try list_types.buffer_intern(mut state.batch.facts.lists, mut state.syntax.pool, span)
     if text == b"str" or text == b"bytes":
@@ -3021,7 +3122,7 @@ func comprehension(mut state: State, payload: int, span: int) -> Expression fail
     state.scope.locals[binding].name = name
     state.scope.locals[binding].declaration = name_span
     state.scope.locals[binding].mutable = False
-    state.scope.locals[binding].initialized = True
+    state.scope.locals[binding].flags.initialized = True
     state.scope.active.append(binding)
     const filter_id = try graph.field(state.syntax.pool, payload, "filter")
     const filter = try graph.get(state.syntax.pool, filter_id)
@@ -3276,3 +3377,239 @@ func constant_read(mut state: State, target: int, span: int) -> Expression fails
     const payload = try syntax_value.object(mut state.batch.pool, ["evaluation_order", "evaluation", "function", "arguments"], [order, evaluation, function, arguments])
     const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, b"call", payload)
     return Expression(id=id, ty=ty)
+
+
+func resource_shapes(mut state: State, span: int) -> resource_lower.Shapes fails syntax_value.Problem:
+    const text = state.batch.facts.string_type
+    const bytes_type = state.batch.facts.bytes_type
+    if text < 0 or bytes_type < 0:
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "file operations require the canonical str and bytes builtins")
+        fail rejection
+    const list = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=text, span=span), [text, bytes_type])
+    return resource_lower.Shapes(text=text, bytes=bytes_type, list=list)
+
+
+func resource_positional(state: State, call: int) -> bool fails syntax_value.Problem:
+    const labels_id = try graph.field(state.syntax.pool, call, "argument_names")
+    const labels = try graph.items(state.syntax.pool, labels_id)
+    for label in labels:
+        const value = try graph.get(state.syntax.pool, label)
+        if value.kind != 0:
+            const rejection = try problem(state, label, "E_CALL_ARGUMENT", "keyword arguments require a declared function or record constructor")
+            fail rejection
+    return True
+
+
+func resource_call(mut state: State, raw_id: int, span: int, call: int, slot: int) -> Expression fails syntax_value.Problem:
+    const name_span = try graph.field(state.syntax.pool, call, "name")
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+    const arguments_id = try graph.field(state.syntax.pool, call, "arguments")
+    const arguments = try graph.items(state.syntax.pool, arguments_id)
+    const types_id = try graph.field(state.syntax.pool, call, "type_arguments")
+    const types = try graph.items(state.syntax.pool, types_id)
+    mut owner_type = 11
+    if slot >= 0:
+        owner_type = state.scope.locals[slot].ty
+    if owner_type == 16 or owner_type == 17:
+        if not state.scope.locals[slot].flags.scoped_file:
+            const rejection = try problem(state, name_span, "P_BODY_PROFILE", "file methods require a lexical with scope in the resource profile")
+            fail rejection
+        _ = try require_readable(mut state, slot, name_span)
+        _ = try resource_positional(state, call)
+        if name != b"read":
+            if name == b"readline" or name == b"readlines" or name == b"write" or name == b"flush" or name == b"close":
+                const rejection = try problem(state, name_span, "P_BODY_PROFILE", "file method is outside the bounded read profile")
+                fail rejection
+            const rejection = try problem(state, name_span, "E_FILE_ARGUMENT", "unknown file method; open handles support read, readline, readlines, write, flush and close")
+            fail rejection
+        if len(types) != 0 or len(arguments) > 1:
+            const count = len(arguments)
+            mut suffix = "s"
+            if count == 1:
+                suffix = ""
+            const rejection = try problem(state, name_span, "E_ARITY", "`read() -> str, or read(size: int) -> str` does not take " + str(count) + " argument" + suffix)
+            fail rejection
+        mut argument = -1
+        if len(arguments) == 1:
+            const raw = try graph.number(state.syntax.pool, arguments[0])
+            const checked = try expression(mut state, raw)
+            argument = checked.id
+        const shapes = try resource_shapes(mut state, span)
+        if argument >= 0:
+            const ty_id = try graph.field(state.batch.pool, state.batch.nodes[argument], "ty")
+            const ty = try graph.number(state.batch.pool, ty_id)
+            _ = try require(state, ty, 0, span)
+        mut ty = shapes.bytes
+        if owner_type == 17:
+            ty = shapes.text
+        const id = try resource_lower.read(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), resource_lower.Read(owner=slot, text=owner_type == 17, argument=argument, shapes=shapes, ty=ty))
+        return Expression(id=id, ty=ty)
+    if owner_type == 18:
+        return try stream_call(mut state, span, call, slot)
+    if name != b"open":
+        const rejection = try problem(state, name_span, "P_BODY_PROFILE", "filesystem operation is outside the bounded open profile")
+        fail rejection
+    if slot < 0:
+        _ = try io_arguments.positional(state.syntax.pool, call)
+    mut checked: int[] = []
+    for argument in arguments:
+        const raw = try graph.number(state.syntax.pool, argument)
+        const value = try expression(mut state, raw)
+        checked.append(value.id)
+    _ = try io_arguments.positional(state.syntax.pool, call)
+    mut expected = 2
+    if slot < 0:
+        expected = 3
+    if len(types) != 0 or len(arguments) != expected:
+        const signature = "open(fs: Filesystem, path: str, mode: str) -> Result[File, str]"
+        const rejection = try problem(state, span, "E_ARITY", "`" + signature + "` takes " + str(expected) + " arguments, but this call passes " + str(len(arguments)))
+        if slot < 0:
+            const location = try problem(state, span, "", "")
+            const related = syntax_problem.Related(start=location.start, end=location.end, message="a free file helper takes the Filesystem capability first: `open(fs, path, mode)` or `read_text(fs, path)`; `fs.open(path, mode)` is the method spelling", role="alternative")
+            state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+        fail rejection
+    if slot >= 0:
+        const owner_span = try graph.field(state.syntax.pool, call, "owner")
+        _ = try require_readable(mut state, slot, owner_span)
+        state.scope.locals[slot].usage.reads = state.scope.locals[slot].usage.reads + 1
+        const local = try syntax_value.integer(mut state.batch.pool, slot)
+        const receiver = try emission.node(mut state.batch, state.syntax.pool, owner_span, 11, b"local", local)
+        mut operands = [receiver]
+        for value in checked:
+            operands.append(value)
+        checked = operands
+    const shapes = try resource_shapes(mut state, span)
+    const receiver_type_id = try graph.field(state.batch.pool, state.batch.nodes[checked[0]], "ty")
+    const receiver_type = try graph.number(state.batch.pool, receiver_type_id)
+    _ = try require(state, receiver_type, 11, span)
+    const path_type_id = try graph.field(state.batch.pool, state.batch.nodes[checked[1]], "ty")
+    const path_type = try graph.number(state.batch.pool, path_type_id)
+    const path_span = try graph.field(state.batch.pool, state.batch.nodes[checked[1]], "span")
+    const copied_path_span = try graph.clone(mut state.syntax.pool, state.batch.pool, path_span, 0)
+    _ = try require(state, path_type, shapes.text, copied_path_span)
+    const mode_position = len(arguments) - 1
+    const mode_raw = try graph.number(state.syntax.pool, arguments[mode_position])
+    const mode_node = state.syntax.nodes[mode_raw]
+    const mode_span = try graph.field(state.syntax.pool, mode_node, "span")
+    const mode_data_id = try graph.field(state.syntax.pool, mode_node, "data")
+    const mode_data = try graph.get(state.syntax.pool, mode_data_id)
+    if mode_data.data != b"text":
+        const rejection = try problem(state, mode_span, "E_FILE_ARGUMENT", "open requires a literal mode such as \"rb\", \"r\", \"wb\", \"w\", \"ab\" or \"a\"")
+        fail rejection
+    const mode_value_id = try graph.payload(state.syntax.pool, mode_data_id)
+    const mode_value = try graph.get(state.syntax.pool, mode_value_id)
+    const mode = mode_value.data
+    if len(mode) < 1 or len(mode) > 2 or (mode[0] != 114 and mode[0] != 119 and mode[0] != 97) or (len(mode) == 2 and mode[1] != 98 and mode[1] != 116):
+        const rejection = try problem(state, mode_span, "E_FILE_ARGUMENT", "unsupported open mode; use \"r\", \"w\", \"a\" with an optional \"b\" or \"t\"")
+        fail rejection
+    if mode != b"rb":
+        const rejection = try problem(state, mode_span, "P_BODY_PROFILE", "text or writable file modes are outside the bounded binary read profile")
+        fail rejection
+    mut ty = 16
+    if state.control.values.trapping_open != raw_id:
+        ty = try list_types.union_intern(mut state.batch.facts.lists, mut state.syntax.pool, 16, shapes.text, span, True)
+    const id = try resource_lower.open(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), resource_lower.Open(mode=114, text=False, arguments=checked, shapes=shapes, ty=ty))
+    return Expression(id=id, ty=ty)
+
+
+func stream_call(mut state: State, span: int, call: int, slot: int) -> Expression fails syntax_value.Problem:
+    const name_span = try graph.field(state.syntax.pool, call, "name")
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+    if name != b"write" and name != b"print":
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "stream method is outside the print and write profile")
+        fail rejection
+    const arguments_id = try graph.field(state.syntax.pool, call, "arguments")
+    const arguments = try graph.items(state.syntax.pool, arguments_id)
+    mut split = io_arguments.Arguments(values=[], separator=-1, terminator=-1)
+    if name == b"print":
+        split = try io_arguments.split(state.syntax.pool, state.syntax.source, call)
+    else:
+        _ = try io_arguments.positional(state.syntax.pool, call)
+        if len(arguments) != 1:
+            const rejection = try problem(state, span, "E_ARITY", "stream.write takes one str or bytes argument")
+            fail rejection
+    mut checked: int[] = []
+    for argument in arguments:
+        const raw = try graph.number(state.syntax.pool, argument)
+        mut value = Expression(id=-1, ty=15)
+        if name == b"print" and (raw == split.separator or raw == split.terminator):
+            value = try expression_expected(mut state, raw, state.batch.facts.string_type)
+        else:
+            value = try expression(mut state, raw)
+        checked.append(value.id)
+    const owner_span = try graph.field(state.syntax.pool, call, "owner")
+    state.scope.locals[slot].usage.reads = state.scope.locals[slot].usage.reads + 1
+    const local = try syntax_value.integer(mut state.batch.pool, slot)
+    const receiver = try emission.node(mut state.batch, state.syntax.pool, owner_span, 18, b"local", local)
+    if name == b"write":
+        const value = checked[0]
+        const ty_id = try graph.field(state.batch.pool, state.batch.nodes[value], "ty")
+        const ty = try graph.number(state.batch.pool, ty_id)
+        if ty != state.batch.facts.string_type and ty != state.batch.facts.bytes_type and ty != state.batch.facts.lists.types.buffer.id:
+            const value_span = try graph.field(state.batch.pool, state.batch.nodes[value], "span")
+            const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
+            const rejection = try problem(state, copied_span, "E_TYPE", "stream.write requires str or bytes")
+            fail rejection
+        const id = try resource_lower.write(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), receiver, value)
+        return Expression(id=id, ty=0)
+    mut values: int[] = []
+    for raw in split.values:
+        const value = state.batch.resolved[raw]
+        const ty_id = try graph.field(state.batch.pool, state.batch.nodes[value], "ty")
+        const ty = try graph.number(state.batch.pool, ty_id)
+        const renderable = try printable(state, ty)
+        if not renderable:
+            const value_span = try graph.field(state.batch.pool, state.batch.nodes[value], "span")
+            const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
+            const rejection = try problem(state, copied_span, "E_IO_ARGUMENT", "print cannot render this value; capabilities, files, owned resources and callbacks have no Python spelling")
+            fail rejection
+        if ty != 0 and ty != 1 and ty != 15 and ty != state.batch.facts.string_type and ty != state.batch.facts.bytes_type and ty != state.batch.facts.lists.types.buffer.id:
+            const value_span = try graph.field(state.batch.pool, state.batch.nodes[value], "span")
+            const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
+            const rejection = try problem(state, copied_span, "P_BODY_PROFILE", "aggregate or narrow integer output is outside the closed Stream print profile")
+            fail rejection
+        values.append(value)
+    mut separator = -1
+    mut terminator = -1
+    for raw in [split.separator, split.terminator]:
+        if raw >= 0:
+            const value = state.batch.resolved[raw]
+            const ty_id = try graph.field(state.batch.pool, state.batch.nodes[value], "ty")
+            const ty = try graph.number(state.batch.pool, ty_id)
+            const value_span = try graph.field(state.batch.pool, state.batch.nodes[value], "span")
+            const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
+            _ = try require(state, ty, state.batch.facts.string_type, copied_span)
+            if raw == split.separator:
+                separator = value
+            if raw == split.terminator:
+                terminator = value
+    const id = try resource_lower.print(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), resource_lower.Print(arguments=values, separator=separator, terminator=terminator, stream=receiver))
+    return Expression(id=id, ty=15)
+
+
+func printable(state: State, ty: int) -> bool fails syntax_value.Problem:
+    if ty == 0 or ty == 1 or (ty >= 2 and ty <= 8) or ty == 15:
+        return True
+    if ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or ty == state.batch.facts.lists.types.buffer.id or list_types.element_type(state.batch.facts.lists, ty) >= 0:
+        return True
+    const rows = state.batch.facts.lists.types.records.rows
+    if ty < 19 or ty - 19 >= len(rows):
+        return False
+    const row = rows[ty - 19]
+    const contract = try graph.field(state.syntax.pool, row, "contract")
+    const owned_id = try graph.field(state.syntax.pool, contract, "move_only")
+    const owned = try graph.get(state.syntax.pool, owned_id)
+    const callback_id = try graph.field(state.syntax.pool, contract, "callback")
+    const callback = try graph.get(state.syntax.pool, callback_id)
+    return owned.integer == 0 and callback.kind == 0
+
+
+func same_span(pool: syntax_value.Pool, first: int, second: int) -> bool fails syntax_value.Problem:
+    for field in ["start", "end"]:
+        const first_id = try graph.field(pool, first, field)
+        const second_id = try graph.field(pool, second, field)
+        const first_value = try graph.number(pool, first_id)
+        const second_value = try graph.number(pool, second_id)
+        if first_value != second_value:
+            return False
+    return True

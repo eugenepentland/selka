@@ -1,0 +1,351 @@
+import engine
+import locals
+import emission
+import graph
+import syntax_value
+import record_name_index
+
+func fresh() -> engine.State fails syntax_value.Problem:
+    mut batch = emission.empty()
+    batch.facts.string_type = 19
+    batch.facts.bytes_type = 20
+    batch.facts.lists.base_count = 2
+    batch.facts.lists.available = True
+    for unused in range(21):
+        batch.facts.lists.by_element.append(-1)
+        batch.facts.lists.elements.append(-1)
+    mut state = engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"fs open file read Stream Filesystem", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=engine.fresh_control(), problems=[])
+    const declaration = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    _ = try locals.add(mut state.scope, b"fs", declaration, 11, False, b"parameter")
+    return state
+
+
+func node(mut state: engine.State, tag: bytes, payload: int, start: int, end: int) -> int fails syntax_value.Problem:
+    const span = try syntax_value.span(mut state.syntax.pool, start, end)
+    const data = try syntax_value.tagged(mut state.syntax.pool, tag, payload)
+    const row = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [span, data])
+    const id = len(state.syntax.nodes)
+    state.syntax.nodes.append(row)
+    return id
+
+
+func call(mut state: engine.State, owner: int, name: int, arguments: int[]) -> int fails syntax_value.Problem:
+    mut ids: int[] = []
+    for argument in arguments:
+        const id = try syntax_value.integer(mut state.syntax.pool, argument)
+        ids.append(id)
+    const args = try syntax_value.sequence(mut state.syntax.pool, ids)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    return try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, owner, args, empty, empty])
+
+
+func statement(mut state: engine.State, tag: bytes, payload: int, start: int, end: int) -> int fails syntax_value.Problem:
+    const span = try syntax_value.span(mut state.syntax.pool, start, end)
+    const data = try syntax_value.tagged(mut state.syntax.pool, tag, payload)
+    const no = try syntax_value.boolean(mut state.syntax.pool, False)
+    const row = try syntax_value.object(mut state.syntax.pool, ["span", "data", "implicit_discard"], [span, data, no])
+    const id = len(state.syntax.statements)
+    state.syntax.statements.append(row)
+    return id
+
+
+func scoped(discard_name: bool = False) -> engine.State fails syntax_value.Problem:
+    mut state = try fresh()
+    const path = try syntax_value.octets(mut state.syntax.pool, b"blob.bin")
+    const mode = try syntax_value.octets(mut state.syntax.pool, b"rb")
+    const path_id = try node(mut state, b"text", path, 3, 7)
+    const mode_id = try node(mut state, b"text", mode, 3, 7)
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const open_name = try syntax_value.span(mut state.syntax.pool, 3, 7)
+    const open_call = try call(mut state, owner, open_name, [path_id, mode_id])
+    const open_id = try node(mut state, b"call", open_call, 0, 7)
+    mut binding_end = 12
+    if discard_name:
+        state.syntax.source = b"fs open _    read Stream Filesystem"
+        binding_end = 9
+        const previous = try syntax_value.span(mut state.syntax.pool, 8, 9)
+        _ = try locals.add(mut state.scope, b"_", previous, 0, False, b"local")
+    const file_name = try syntax_value.span(mut state.syntax.pool, 8, binding_end)
+    const read_name = try syntax_value.span(mut state.syntax.pool, 13, 17)
+    const read_call = try call(mut state, file_name, read_name, [])
+    const read_id = try node(mut state, b"call", read_call, 8, 17)
+    const discard_value = try syntax_value.integer(mut state.syntax.pool, read_id)
+    const discard = try statement(mut state, b"discard", discard_value, 8, 17)
+    const resource = try syntax_value.integer(mut state.syntax.pool, open_id)
+    const body = try syntax_value.integer(mut state.syntax.pool, discard)
+    const scope = try syntax_value.object(mut state.syntax.pool, ["name", "resource", "body"], [file_name, resource, body])
+    const scope_id = try statement(mut state, b"with_scope", scope, 0, 17)
+    _ = try engine.statement(mut state, scope_id)
+    return state
+
+
+public func test_binary_scope_owns_read_and_preserves_operands_and_recipe_order() -> bool fails syntax_value.Problem:
+    const state = try scoped()
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[13], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const payload = try graph.payload(state.batch.pool, data_id)
+    const args_id = try graph.field(state.batch.pool, payload, "arguments")
+    const args = try graph.items(state.batch.pool, args_id)
+    const first = try graph.number(state.batch.pool, args[0])
+    const path = try graph.number(state.batch.pool, args[1])
+    const mode = try graph.number(state.batch.pool, args[2])
+    const read_data_id = try graph.field(state.batch.pool, state.batch.nodes[14], "data")
+    const read_data = try graph.get(state.batch.pool, read_data_id)
+    const read_payload = try graph.payload(state.batch.pool, read_data_id)
+    const read_owner_id = try graph.field(state.batch.pool, read_payload, "owner")
+    const read_owner = try graph.number(state.batch.pool, read_owner_id)
+    const read_argument_id = try graph.field(state.batch.pool, read_payload, "argument")
+    const read_argument = try graph.get(state.batch.pool, read_argument_id)
+    return data.data == b"file_access" and [first, path, mode] == [12, 8, 11] and read_data.data == b"file_method" and read_owner == 1 and read_argument.kind == 0 and len(state.batch.facts.lists.recipes) == 1 and state.batch.facts.lists.recipes[0].element == 19 and state.scope.active == [0] and state.scope.locals[0].usage.reads == 1 and state.scope.locals[1].flags.scoped_file and state.scope.locals[1].flags.initialized and not state.scope.locals[1].mutable and state.scope.locals[1].usage.reads == 1
+
+
+public func test_scoped_file_name_cannot_escape_as_value() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const declaration = try syntax_value.span(mut state.syntax.pool, 8, 12)
+    const slot = try locals.add(mut state.scope, b"file", declaration, 16, False, b"local")
+    state.scope.locals[slot].flags.scoped_file = True
+    const raw = try node(mut state, b"name", declaration, 8, 12)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_WITH_RESOURCE" and problem.start == 8 and problem.end == 12 and state.scope.locals[slot].usage.reads == 0
+
+
+public func test_reserved_capabilities_have_distinct_primitive_identity() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const stream_span = try syntax_value.span(mut state.syntax.pool, 18, 24)
+    const fs_span = try syntax_value.span(mut state.syntax.pool, 25, 35)
+    const stream = try engine.type_at(mut state, stream_span)
+    const fs = try engine.type_at(mut state, fs_span)
+    return stream == 18 and fs == 11
+
+
+func token_module(mut pool: syntax_value.Pool, name: bytes, offset: int) -> int fails syntax_value.Problem:
+    const module_name = try syntax_value.octets(mut pool, name)
+    const source = try syntax_value.octets(mut pool, b"Token[]")
+    const context = try syntax_value.object(mut pool, ["name", "source"], [module_name, source])
+    const token = try syntax_value.octets(mut pool, b"Token")
+    const span = try syntax_value.span(mut pool, 0, 5)
+    const kind = try syntax_value.enumeration(mut pool, b"type")
+    const yes = try syntax_value.boolean(mut pool, True)
+    const absent = try syntax_value.absent(mut pool)
+    const symbol = try syntax_value.object(mut pool, ["name", "span", "kind", "exported", "re_export"], [token, span, kind, yes, absent])
+    const symbols = try syntax_value.sequence(mut pool, [symbol])
+    const imports = try syntax_value.sequence(mut pool, [])
+    const start = try syntax_value.integer(mut pool, offset)
+    return try syntax_value.object(mut pool, ["context", "offset", "symbols", "imports"], [context, start, symbols, imports])
+
+
+public func test_identically_spelled_module_local_suffixes_keep_nominal_identity() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"Token[] Token[]"
+    const first_module = try token_module(mut state.syntax.pool, b"first", 0)
+    const second_module = try token_module(mut state.syntax.pool, b"second", 8)
+    state.syntax.modules = [first_module, second_module]
+    state.syntax.usage = [[], []]
+    match record_name_index.make([b"first::Token", b"second::Token"]):
+        case Ok(table):
+            state.batch.facts.lists.types.records.bindings.table = table
+        case Err(problem):
+            fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message=problem.message)
+    state.batch.facts.lists.types.records.bindings.types = [19, 20]
+    state.batch.facts.lists.by_element[19] = 21
+    state.batch.facts.lists.by_element[20] = 22
+    const growable = try syntax_value.enumeration(mut state.syntax.pool, b"growable")
+    const first_span = try syntax_value.span(mut state.syntax.pool, 0, 7)
+    const first_base = try syntax_value.span(mut state.syntax.pool, 0, 5)
+    const first = try syntax_value.object(mut state.syntax.pool, ["span", "base", "kind"], [first_span, first_base, growable])
+    const second_span = try syntax_value.span(mut state.syntax.pool, 8, 15)
+    const second_base = try syntax_value.span(mut state.syntax.pool, 8, 13)
+    const second = try syntax_value.object(mut state.syntax.pool, ["span", "base", "kind"], [second_span, second_base, growable])
+    state.batch.facts.lists.types.suffixes = [first, second]
+    const first_type = try engine.type_at(mut state, first_span)
+    const second_type = try engine.type_at(mut state, second_span)
+    return first_type == 21 and second_type == 22
+
+
+public func test_unscoped_file_method_is_an_explicit_resource_profile_refusal() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const declaration = try syntax_value.span(mut state.syntax.pool, 8, 12)
+    _ = try locals.add(mut state.scope, b"file", declaration, 16, False, b"local")
+    const read_name = try syntax_value.span(mut state.syntax.pool, 13, 17)
+    const read_call = try call(mut state, declaration, read_name, [])
+    const raw = try node(mut state, b"call", read_call, 8, 17)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and problem.start == 13 and problem.end == 17 and len(state.batch.nodes) == 0
+
+
+public func test_inactive_file_owner_resolves_reserved_type_after_scope() -> bool fails syntax_value.Problem:
+    mut state = try scoped()
+    const owner = try syntax_value.span(mut state.syntax.pool, 8, 12)
+    const method = try syntax_value.span(mut state.syntax.pool, 13, 17)
+    const payload = try call(mut state, owner, method, [])
+    const raw = try node(mut state, b"call", payload, 8, 17)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "operation requires a nominal scalar domain" and problem.start == 8 and problem.end == 12
+
+
+public func test_discard_file_binding_restores_previous_discard_local() -> bool fails syntax_value.Problem:
+    const state = try scoped(True)
+    return state.scope.active == [0, 1] and len(state.scope.locals) == 3 and state.scope.locals[2].name == b"_" and state.scope.locals[2].flags.scoped_file and state.scope.locals[2].usage.reads == 1
+
+
+func capability_module(mut pool: syntax_value.Pool, declared: bool) -> int fails syntax_value.Problem:
+    const module_name = try syntax_value.octets(mut pool, b"main")
+    const source = try syntax_value.octets(mut pool, b"Filesystem Stream")
+    const context = try syntax_value.object(mut pool, ["name", "source"], [module_name, source])
+    const helper = try syntax_value.octets(mut pool, b"helper")
+    const fs = try syntax_value.octets(mut pool, b"Filesystem")
+    const stream = try syntax_value.octets(mut pool, b"Stream")
+    const fs_import = try syntax_value.object(mut pool, ["name", "alias"], [helper, fs])
+    const stream_import = try syntax_value.object(mut pool, ["name", "alias"], [helper, stream])
+    const imports = try syntax_value.sequence(mut pool, [fs_import, stream_import])
+    mut rows: int[] = []
+    if declared:
+        const kind = try syntax_value.enumeration(mut pool, b"type")
+        const symbol = try syntax_value.object(mut pool, ["name", "kind"], [fs, kind])
+        rows.append(symbol)
+    const symbols = try syntax_value.sequence(mut pool, rows)
+    const offset = try syntax_value.integer(mut pool, 0)
+    return try syntax_value.object(mut pool, ["context", "offset", "symbols", "imports"], [context, offset, symbols, imports])
+
+
+public func test_module_aliases_do_not_shadow_capability_annotations() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"Filesystem Stream"
+    const module = try capability_module(mut state.syntax.pool, False)
+    state.syntax.modules = [module]
+    const fs = try syntax_value.span(mut state.syntax.pool, 0, 10)
+    const stream = try syntax_value.span(mut state.syntax.pool, 11, 17)
+    const fs_type = try engine.type_at(mut state, fs)
+    const stream_type = try engine.type_at(mut state, stream)
+    const fs_active = try engine.top_level(state, fs)
+    const stream_active = try engine.top_level(state, stream)
+    const fs_declared = try engine.declared_symbol(state, fs)
+    const stream_declared = try engine.declared_symbol(state, stream)
+    return fs_type == 11 and stream_type == 18 and fs_active and stream_active and not fs_declared and not stream_declared
+
+
+public func test_declared_symbol_still_shadows_reserved_type_authority() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"Filesystem Stream"
+    const module = try capability_module(mut state.syntax.pool, True)
+    state.syntax.modules = [module]
+    const fs = try syntax_value.span(mut state.syntax.pool, 0, 10)
+    const stream = try syntax_value.span(mut state.syntax.pool, 11, 17)
+    const fs_declared = try engine.declared_symbol(state, fs)
+    const stream_declared = try engine.declared_symbol(state, stream)
+    return fs_declared and not stream_declared
+
+
+public func test_standalone_function_name_does_not_shadow_capability_type() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.batch.facts.top_names = [b"Filesystem", b"Stream"]
+    const fs = try syntax_value.span(mut state.syntax.pool, 25, 35)
+    const stream = try syntax_value.span(mut state.syntax.pool, 18, 24)
+    const fs_type = try engine.type_at(mut state, fs)
+    const stream_type = try engine.type_at(mut state, stream)
+    return fs_type == 11 and stream_type == 18
+
+
+func stream_rejection(keyword: bool) -> syntax_value.Problem fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"out write unknown label"
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 3)
+    const slot = try locals.add(mut state.scope, b"out", owner, 18, False, b"parameter")
+    const method = try syntax_value.span(mut state.syntax.pool, 4, 9)
+    const unknown = try syntax_value.span(mut state.syntax.pool, 10, 17)
+    const operand = try node(mut state, b"name", unknown, 10, 17)
+    const argument = try syntax_value.integer(mut state.syntax.pool, operand)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [argument, argument])
+    mut labels: int[] = []
+    if keyword:
+        const label = try syntax_value.span(mut state.syntax.pool, 18, 23)
+        labels.append(label)
+    const argument_names = try syntax_value.sequence(mut state.syntax.pool, labels)
+    const types = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [method, owner, arguments, argument_names, types])
+    const raw = try node(mut state, b"call", payload, 0, 23)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            fail syntax_value.Problem(code="P_TEST", start=0, end=0, message="stream diagnostic was not emitted")
+        case Err(problem):
+            if len(state.batch.nodes) != 0 or state.scope.locals[slot].usage.reads != 0:
+                fail syntax_value.Problem(code="P_TEST", start=0, end=0, message="stream receiver or operand checked before call validation")
+            return problem
+
+
+public func test_stream_write_arity_precedes_unknown_operands_and_receiver_read() -> bool fails syntax_value.Problem:
+    const problem = try stream_rejection(False)
+    return problem.code == "E_ARITY" and problem.start == 0 and problem.end == 23 and problem.message == "stream.write takes one str or bytes argument"
+
+
+public func test_stream_write_keyword_precedes_arity_and_uses_call_name() -> bool fails syntax_value.Problem:
+    const problem = try stream_rejection(True)
+    return problem.code == "E_CALL_ARGUMENT" and problem.start == 4 and problem.end == 9 and problem.message == "keyword arguments require a declared function or record constructor"
+
+
+func open_rejection(method: bool, keyword: bool, unknown_value: bool) -> syntax_value.Problem fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"fs open unknown path"
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const name = try syntax_value.span(mut state.syntax.pool, 3, 7)
+    const unknown = try syntax_value.span(mut state.syntax.pool, 8, 15)
+    const label = try syntax_value.span(mut state.syntax.pool, 16, 20)
+    mut operand = -1
+    if unknown_value:
+        operand = try node(mut state, b"name", unknown, 8, 15)
+    else:
+        const text = try syntax_value.octets(mut state.syntax.pool, b"blob.bin")
+        operand = try node(mut state, b"text", text, 8, 15)
+    mut operands: int[] = []
+    mut labels: int[] = []
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    mut receiver = owner
+    if not method:
+        receiver = absent
+        const fs = try node(mut state, b"name", owner, 0, 2)
+        const fs_id = try syntax_value.integer(mut state.syntax.pool, fs)
+        operands.append(fs_id)
+        if keyword:
+            labels.append(absent)
+    const id = try syntax_value.integer(mut state.syntax.pool, operand)
+    operands.append(id)
+    if keyword:
+        operands.append(id)
+        labels.append(label)
+        labels.append(absent)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, operands)
+    const argument_names = try syntax_value.sequence(mut state.syntax.pool, labels)
+    const types = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [name, receiver, arguments, argument_names, types])
+    const raw = try node(mut state, b"call", payload, 0, 20)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            fail syntax_value.Problem(code="P_TEST", start=0, end=0, message="open diagnostic was not emitted")
+        case Err(problem):
+            return problem
+
+
+public func test_free_and_method_open_operands_precede_arity() -> bool fails syntax_value.Problem:
+    const free = try open_rejection(False, False, True)
+    const method = try open_rejection(True, False, True)
+    return free.code == "E_UNKNOWN_NAME" and free.start == 8 and free.end == 15 and method.code == "E_UNKNOWN_NAME" and method.start == 8 and method.end == 15
+
+
+public func test_free_open_keywords_precede_operands_but_method_keywords_follow() -> bool fails syntax_value.Problem:
+    const free = try open_rejection(False, True, True)
+    const method = try open_rejection(True, True, True)
+    return free.code == "E_CALL_ARGUMENT" and free.start == 3 and free.end == 7 and method.code == "E_UNKNOWN_NAME" and method.start == 8 and method.end == 15
+
+
+public func test_method_open_known_operands_then_rejects_keyword_at_call_name() -> bool fails syntax_value.Problem:
+    const method = try open_rejection(True, True, False)
+    return method.code == "E_CALL_ARGUMENT" and method.start == 3 and method.end == 7 and method.message == "keyword arguments require a declared function or record constructor"

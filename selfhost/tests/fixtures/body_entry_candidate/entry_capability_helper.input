@@ -1,0 +1,8 @@
+import helper
+func main(fs: Filesystem, out: Stream) -> int:
+    match helper.read(fs):
+        case Ok(data):
+            _ = out.write(data)
+            return 7
+        case Err(_):
+            return 0

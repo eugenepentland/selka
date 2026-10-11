@@ -1,0 +1,84 @@
+import syntax_value
+import emission
+import list_lower
+
+# These helpers serialize choices already checked by the body engine. They do
+# not resolve capabilities, select modes, intern schemas, or establish scopes.
+public record Shapes:
+    text: int
+    bytes: int
+    list: int
+
+
+public record Open:
+    mode: int
+    text: bool
+    arguments: int[]
+    shapes: Shapes
+    ty: int
+
+
+public record Read:
+    owner: int
+    text: bool
+    argument: int
+    shapes: Shapes
+    ty: int
+
+
+public record Print:
+    arguments: int[]
+    separator: int
+    terminator: int
+    stream: int
+
+
+func optional(mut batch: emission.Batch, id: int) -> int fails syntax_value.Problem:
+    if id < 0:
+        return try syntax_value.absent(mut batch.pool)
+    return try syntax_value.integer(mut batch.pool, id)
+
+
+func shapes(mut batch: emission.Batch, request: Shapes) -> int fails syntax_value.Problem:
+    const text = try syntax_value.integer(mut batch.pool, request.text)
+    const bytes = try syntax_value.integer(mut batch.pool, request.bytes)
+    const list = try syntax_value.integer(mut batch.pool, request.list)
+    return try syntax_value.object(mut batch.pool, ["text", "bytes", "list"], [text, bytes, list])
+
+
+public func open(mut batch: emission.Batch, context: list_lower.Context, request: Open) -> int fails syntax_value.Problem:
+    const kind = try syntax_value.enumeration(mut batch.pool, b"open")
+    const mode = try syntax_value.integer(mut batch.pool, request.mode)
+    const text = try syntax_value.boolean(mut batch.pool, request.text)
+    const arguments = try emission.ids(mut batch, request.arguments)
+    const schemas = try shapes(mut batch, request.shapes)
+    const payload = try syntax_value.object(mut batch.pool, ["kind", "mode", "text", "arguments", "shapes"], [kind, mode, text, arguments, schemas])
+    return try emission.node(mut batch, context.input, context.span, request.ty, b"file_access", payload)
+
+
+public func read(mut batch: emission.Batch, context: list_lower.Context, request: Read) -> int fails syntax_value.Problem:
+    const kind = try syntax_value.enumeration(mut batch.pool, b"read")
+    const owner = try syntax_value.integer(mut batch.pool, request.owner)
+    const text = try syntax_value.boolean(mut batch.pool, request.text)
+    const argument = try optional(mut batch, request.argument)
+    const schemas = try shapes(mut batch, request.shapes)
+    const payload = try syntax_value.object(mut batch.pool, ["kind", "owner", "text", "argument", "shapes"], [kind, owner, text, argument, schemas])
+    return try emission.node(mut batch, context.input, context.span, request.ty, b"file_method", payload)
+
+
+public func write(mut batch: emission.Batch, context: list_lower.Context, stream: int, text: int) -> int fails syntax_value.Problem:
+    const stream_id = try syntax_value.integer(mut batch.pool, stream)
+    const text_id = try syntax_value.integer(mut batch.pool, text)
+    const payload = try syntax_value.object(mut batch.pool, ["stream", "text"], [stream_id, text_id])
+    return try emission.node(mut batch, context.input, context.span, 0, b"stream_write", payload)
+
+
+public func print(mut batch: emission.Batch, context: list_lower.Context, request: Print) -> int fails syntax_value.Problem:
+    const sink = try syntax_value.enumeration(mut batch.pool, b"stdout")
+    const arguments = try emission.ids(mut batch, request.arguments)
+    const separator = try optional(mut batch, request.separator)
+    const terminator = try optional(mut batch, request.terminator)
+    const stream = try optional(mut batch, request.stream)
+    const debug = try syntax_value.boolean(mut batch.pool, False)
+    const payload = try syntax_value.object(mut batch.pool, ["sink", "arguments", "separator", "terminator", "stream", "debug"], [sink, arguments, separator, terminator, stream, debug])
+    return try emission.node(mut batch, context.input, context.span, 15, b"print", payload)

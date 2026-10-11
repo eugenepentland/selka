@@ -14,7 +14,7 @@ import run_frontend_qualification as F
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_check'
 COMPONENT = 'body-check'
-SCHEMA = 6
+SCHEMA = 7
 BODY_VALUE_LIMIT = 2097152
 FORGED_CHECKS = 92
 MALFORMED_CHECKS = 22
@@ -49,7 +49,7 @@ def transport(binary, work, env, valid):
     F.require(status == 0 and not stderr and stdout[:8] == b'SLKBCK01' and stdout[24:64] == valid[24:64], 'valid body exchange failed')
     F.require(struct.unpack('<IIII', stdout[8:24]) == (1, SCHEMA, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
     malformed = [b'', valid[:63], valid[:-1], valid+b'X', b'BADMAGIC'+valid[8:]]
-    for offset,value in ((8,2),(12,1),(12,2),(12,3),(12,4),(12,5),(16,1),(20,67108864)):
+    for offset,value in ((8,2),(12,1),(12,2),(12,3),(12,4),(12,6),(16,1),(20,67108864)):
         changed=bytearray(valid);struct.pack_into('<I',changed,offset,value);malformed.append(bytes(changed))
     payload=valid[64:]
     malformed.extend([frame(b'BADMAGIC'+payload[8:]), frame(payload[:-1])])

@@ -227,6 +227,7 @@ comptime {
     _ = @import("body_check_record_test.zig");
     _ = @import("body_check_variant_test.zig");
     _ = @import("body_check_buffer_test.zig");
+    _ = @import("body_check_resource_test.zig");
 }
 
 comptime {

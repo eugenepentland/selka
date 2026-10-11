@@ -51,7 +51,7 @@ public func test_counted_range_capacity_is_unsigned_and_binding_does_not_escape(
     const result = try engine.expression(mut state, len(state.syntax.nodes) - 1)
     if result.ty != 19 or len(state.scope.locals) != 4 or len(state.scope.active) != 0:
         return False
-    if state.scope.locals[0].mutable or not state.scope.locals[0].initialized or state.scope.locals[0].origin != b"local" or state.scope.locals[3].ty != 8:
+    if state.scope.locals[0].mutable or not state.scope.locals[0].flags.initialized or state.scope.locals[0].origin != b"local" or state.scope.locals[3].ty != 8:
         return False
     mut found = False
     for node in state.batch.nodes:

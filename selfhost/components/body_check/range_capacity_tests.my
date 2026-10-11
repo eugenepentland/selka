@@ -33,7 +33,7 @@ public func test_signed_capacity_exact_native_append_order_and_temporary() -> bo
     const unary = try graph.payload(fixture.batch.pool, data)
     const operand = try graph.field(fixture.batch.pool, unary, "operand")
     const adjusted = try graph.number(fixture.batch.pool, operand)
-    return result == 18 and len(fixture.batch.nodes) == 19 and len(fixture.batch.statements) == 7 and len(before.nodes) == 2 and adjusted == 10 and local.ty == 8 and local.mutable and not local.initialized and local.usage.temporary and local.usage.reads == 1 and len(fixture.scope.active) == 0
+    return result == 18 and len(fixture.batch.nodes) == 19 and len(fixture.batch.statements) == 7 and len(before.nodes) == 2 and adjusted == 10 and local.ty == 8 and local.mutable and not local.flags.initialized and local.usage.temporary and local.usage.reads == 1 and len(fixture.scope.active) == 0
 
 
 public func test_unsigned_capacity_uses_direct_branch_without_signed_expansion() -> bool fails syntax_value.Problem:

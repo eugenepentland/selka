@@ -22,12 +22,12 @@ public func test_snapshot_is_bounded_prefix_with_independent_storage() -> bool f
 public func test_restore_does_not_change_init_usage_or_new_locals() -> bool fails syntax_value.Problem:
     mut scope = try fresh()
     const state = try pending_flow.snapshot(scope, 1)
-    scope.locals[0].initialized = False
+    scope.locals[0].flags.initialized = False
     scope.locals[0].usage.reads = 5
     scope.locals[0].usage.transfer_available = False
     scope.locals[1].usage.transfer_span = 77
     try pending_flow.restore(mut scope, state)
-    return scope.locals[0].usage.transfer_available and scope.locals[0].usage.transfer_span == 30 and not scope.locals[0].initialized and scope.locals[0].usage.reads == 5 and scope.locals[1].usage.transfer_span == 77
+    return scope.locals[0].usage.transfer_available and scope.locals[0].usage.transfer_span == 30 and not scope.locals[0].flags.initialized and scope.locals[0].usage.reads == 5 and scope.locals[1].usage.transfer_span == 77
 
 
 public func test_transfer_site_difference_is_not_path_disagreement() -> bool fails syntax_value.Problem:

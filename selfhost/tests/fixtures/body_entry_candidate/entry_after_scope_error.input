@@ -1,0 +1,6 @@
+func read(fs: Filesystem) -> bytes fails str:
+    with try fs.open("blob.bin", "rb") as file:
+        _ = file.read(1)
+    return file.read(1)
+func main() -> int:
+    return 7

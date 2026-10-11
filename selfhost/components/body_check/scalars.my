@@ -5,6 +5,14 @@ public func name(ty: int) -> str:
         return "int"
     if ty == 1:
         return "bool"
+    if ty == 11:
+        return "Filesystem"
+    if ty == 16:
+        return "file"
+    if ty == 17:
+        return "text_file"
+    if ty == 18:
+        return "Stream"
     return "Unit"
 
 

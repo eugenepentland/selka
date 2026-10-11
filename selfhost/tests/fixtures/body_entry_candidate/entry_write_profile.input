@@ -1,0 +1,9 @@
+func write(fs: Filesystem) -> int fails str:
+    with try fs.open("written.bin", "wb") as file:
+        return file.write(b"seven!!")
+func main(fs: Filesystem) -> int:
+    match write(fs):
+        case Ok(value):
+            return value
+        case Err(_):
+            return 0

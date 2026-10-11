@@ -1,0 +1,374 @@
+{
+  "schema": 7,
+  "scope": "strict B7 installed preparation; qualification pending",
+  "cases": {
+    "entry_binary_try.my": {
+      "source": "entry_binary_try.input",
+      "source_sha256": "abf13618e0232b68dca7551b8e16084e9b11259152933de77a08ca707bb1a287",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "00ffc3a96162",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": null
+    },
+    "entry_binary_match.my": {
+      "source": "entry_binary_match.input",
+      "source_sha256": "d6d08b9d44650b6d64d3ecb91e977eb4032ea4914e776665cccdc750279cc1ef",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "00ffc3a96162",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": null
+    },
+    "entry_return_snapshot.my": {
+      "source": "entry_return_snapshot.input",
+      "source_sha256": "cd28fa582a06a6b263db2dee9ec3728f1e1209015b7eec9b89043dc3f0e1aa09",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": 32
+    },
+    "entry_scoped_failure.my": {
+      "source": "entry_scoped_failure.input",
+      "source_sha256": "18cfcce367eb7597932db486de8970b22741931afcf7826d0959976d5ed421a0",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "636865636b6564206661696c7572650a",
+      "descriptor_limit": null
+    },
+    "entry_repeat_return.my": {
+      "source": "entry_repeat_return.input",
+      "source_sha256": "d8efb9b24ae04e104153ec331b9947e0a29e11f717b68cb9a0c4303dd710c5b1",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": 32
+    },
+    "entry_repeat_failure.my": {
+      "source": "entry_repeat_failure.input",
+      "source_sha256": "a8e0c90dfd3b578128fa2394d0f32f34131c5898a9d0b6b75c3f58f88f578df8",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": 32
+    },
+    "entry_repeat_break.my": {
+      "source": "entry_repeat_break.input",
+      "source_sha256": "5e0962cf368999ee08397f57fd7b598c31a092429466de8b4365d3dcf2b50906",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": 32
+    },
+    "entry_repeat_continue.my": {
+      "source": "entry_repeat_continue.input",
+      "source_sha256": "473bab3b965a55b12f28aed8bda922d18b9827f38f425ef98aaddc5cacfcaf01",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": 32
+    },
+    "entry_nested_return.my": {
+      "source": "entry_nested_return.input",
+      "source_sha256": "5b4530f4832f03872a9e6512efa114fe92d4b96993c77d82ccf9ad05013ee5e3",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": 32
+    },
+    "entry_read_boundaries.my": {
+      "source": "entry_read_boundaries.input",
+      "source_sha256": "462e0cf5be7e239881d2dcf55d25584ccf118ee5bb223cea55b6f64e626b5a4f",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": null
+    },
+    "entry_stream_destinations.my": {
+      "source": "entry_stream_destinations.input",
+      "source_sha256": "d0a137d7b344c1cdb1ab4a049905f0e3c81ff54f145478ba64813370d0c6ff86",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "00ff",
+      "runtime_stderr_hex": "6572720a",
+      "descriptor_limit": null
+    },
+    "entry_print_values.my": {
+      "source": "entry_print_values.input",
+      "source_sha256": "97823a1535353e7a1a47468122babf63818b43bfbcbb93ecff055d2f798aa51e",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "c3a9203720547275650a",
+      "runtime_stderr_hex": "6572726f722062276279746573270a",
+      "descriptor_limit": null
+    },
+    "entry_capability_helper.my": {
+      "source": "entry_capability_helper.input",
+      "source_sha256": "80cbaf5dcf201a8c9aac8045e651d1ed011c55b89ed382fa515939c6caefd7a1",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "00ffc3a96162",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": null
+    },
+    "entry_missing_match.my": {
+      "source": "entry_missing_match.input",
+      "source_sha256": "12f1b6dc0ba70734daa722b72bd3bdfbfaeaf8cb269f1574519bd46ee74c1a74",
+      "class": "success",
+      "native_status": 0,
+      "selected_status": 0,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "6d697373696e670a",
+      "descriptor_limit": null
+    },
+    "entry_escape_error.my": {
+      "source": "entry_escape_error.input",
+      "source_sha256": "694ebd7e8a6c2800b2d57bcd6df85a13a40477143434e69665cffb91fadffb35",
+      "class": "diagnostic",
+      "native_status": 1,
+      "selected_status": 1,
+      "runtime_status": null,
+      "descriptor_limit": null,
+      "diagnostics": [
+        {
+          "code": "E_WITH_RESOURCE",
+          "message": "an open file binding cannot be stored, passed or returned; call its methods instead, and iterate lines with `for line in name.readlines():`",
+          "bytes": {
+            "start": 117,
+            "end": 121
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "entry_binding_error.my": {
+      "source": "entry_binding_error.input",
+      "source_sha256": "9369760fb2c1ba246ca36ed8e997540a85d49b23c64d14508fa1dc0b099d27cc",
+      "class": "diagnostic",
+      "native_status": 1,
+      "selected_status": 1,
+      "runtime_status": null,
+      "descriptor_limit": null,
+      "diagnostics": [
+        {
+          "code": "E_WITH_RESOURCE",
+          "message": "a file `with` scope requires a binding, as in `with open(fs, path, \"rb\")? as f:`",
+          "bytes": {
+            "start": 50,
+            "end": 104
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "entry_shadow_error.my": {
+      "source": "entry_shadow_error.input",
+      "source_sha256": "a67e2c11b666ad70f804c72371e2c93252b6c98abae5ca17d909ca2c913cb13e",
+      "class": "diagnostic",
+      "native_status": 1,
+      "selected_status": 1,
+      "runtime_status": null,
+      "descriptor_limit": null,
+      "diagnostics": [
+        {
+          "code": "E_SHADOWING",
+          "message": "file name shadows an active name",
+          "bytes": {
+            "start": 107,
+            "end": 111
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "entry_after_scope_error.my": {
+      "source": "entry_after_scope_error.input",
+      "source_sha256": "39e90c35763ddeb206f13f16e3ecebb214444cc810adee93f7be3b63b3b966f6",
+      "class": "diagnostic",
+      "native_status": 1,
+      "selected_status": 1,
+      "runtime_status": null,
+      "descriptor_limit": null,
+      "diagnostics": [
+        {
+          "code": "E_TYPE",
+          "message": "operation requires a nominal scalar domain",
+          "bytes": {
+            "start": 130,
+            "end": 134
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "entry_read_type_error.my": {
+      "source": "entry_read_type_error.input",
+      "source_sha256": "560e180cac16086cfe43d223cca85f3def38d9c4456436cb54460e39472385e6",
+      "class": "diagnostic",
+      "native_status": 1,
+      "selected_status": 1,
+      "runtime_status": null,
+      "descriptor_limit": null,
+      "diagnostics": [
+        {
+          "code": "E_TYPE",
+          "message": "expected int, found bool",
+          "bytes": {
+            "start": 109,
+            "end": 124
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "entry_stream_arity_error.my": {
+      "source": "entry_stream_arity_error.input",
+      "source_sha256": "bbaba1a8a396be6dabc9f9cc18574309e492f894bf61f44fd61dcd968249683a",
+      "class": "diagnostic",
+      "native_status": 1,
+      "selected_status": 1,
+      "runtime_status": null,
+      "descriptor_limit": null,
+      "diagnostics": [
+        {
+          "code": "E_ARITY",
+          "message": "stream.write takes one str or bytes argument",
+          "bytes": {
+            "start": 39,
+            "end": 54
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "entry_ambient_error.my": {
+      "source": "entry_ambient_error.input",
+      "source_sha256": "d0c08a1c3a7f17ed3b13a48cb1c003d0467bb494f6910af4cbc7d0d3e7df5705",
+      "class": "diagnostic",
+      "native_status": 1,
+      "selected_status": 1,
+      "runtime_status": null,
+      "descriptor_limit": null,
+      "diagnostics": [
+        {
+          "code": "E_OUTPUT_CAPABILITY",
+          "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+          "bytes": {
+            "start": 24,
+            "end": 29
+          },
+          "notes": [
+            {
+              "role": "alternative",
+              "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+              "bytes": {
+                "start": 24,
+                "end": 29
+              }
+            },
+            {
+              "role": "signature",
+              "message": "stream.print(values..., sep: str, end: str) -> None",
+              "bytes": {
+                "start": 24,
+                "end": 29
+              }
+            }
+          ],
+          "edits": []
+        }
+      ]
+    },
+    "entry_mode_error.my": {
+      "source": "entry_mode_error.input",
+      "source_sha256": "c3ede1751af28e4c9ef2e744a19b9cf339a2e31ae79fd09412528be02dfa28d0",
+      "class": "diagnostic",
+      "native_status": 1,
+      "selected_status": 1,
+      "runtime_status": null,
+      "descriptor_limit": null,
+      "diagnostics": [
+        {
+          "code": "E_FILE_ARGUMENT",
+          "message": "open requires a literal mode such as \"rb\", \"r\", \"wb\", \"w\", \"ab\" or \"a\"",
+          "bytes": {
+            "start": 90,
+            "end": 94
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "entry_write_profile.my": {
+      "source": "entry_write_profile.input",
+      "source_sha256": "c8cb1bc4e6144938e555a55cfb251ed4ff85d67fd2b1717df869e7fa7b13955c",
+      "class": "profile",
+      "native_status": 0,
+      "selected_status": 2,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": null
+    },
+    "entry_text_profile.my": {
+      "source": "entry_text_profile.input",
+      "source_sha256": "40ba90b7f64339f41ecef9b998c2068a68f356e683d5f8b42fb458040601bd63",
+      "class": "profile",
+      "native_status": 0,
+      "selected_status": 2,
+      "runtime_status": 7,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "descriptor_limit": null
+    }
+  },
+  "donors": {
+    "helper.my": "e296defc662c532bd5bd530cb07e2964e273b8781b46c5c3ba1934af712677ca"
+  },
+  "data_files": {
+    "blob.bin": "00ffc3a96162",
+    "text.txt": "736576656e21210a"
+  }
+}

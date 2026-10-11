@@ -1,0 +1,97 @@
+import syntax_value
+import io_arguments
+
+record Fixture:
+    pool: syntax_value.Pool
+    call: int
+
+
+func fixture(labels: int[], generic: bool) -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const absent = try syntax_value.absent(mut pool)
+    const name = try syntax_value.span(mut pool, 0, 5)
+    const sep = try syntax_value.span(mut pool, 6, 9)
+    const end = try syntax_value.span(mut pool, 10, 13)
+    const unknown = try syntax_value.span(mut pool, 14, 19)
+    mut names: int[] = []
+    mut arguments: int[] = []
+    mut next = 40
+    for label in labels:
+        mut span = absent
+        if label == 1:
+            span = sep
+        elif label == 2:
+            span = end
+        elif label == 3:
+            span = unknown
+        names.append(span)
+        const argument = try syntax_value.integer(mut pool, next)
+        arguments.append(argument)
+        next = next + 1
+    mut types: int[] = []
+    if generic:
+        types.append(name)
+    const arguments_id = try syntax_value.sequence(mut pool, arguments)
+    const names_id = try syntax_value.sequence(mut pool, names)
+    const types_id = try syntax_value.sequence(mut pool, types)
+    const call = try syntax_value.object(mut pool, ["name", "arguments", "argument_names", "type_arguments"], [name, arguments_id, names_id, types_id])
+    return Fixture(pool=pool, call=call)
+
+
+public func test_print_source_order_and_end_before_separator() -> bool fails syntax_value.Problem:
+    const f = try fixture([0, 0, 2, 1], False)
+    const result = try io_arguments.split(f.pool, b"print sep end bogus", f.call)
+    return result.values == [40, 41] and result.separator == 43 and result.terminator == 42
+
+
+public func test_print_positional_after_keyword_reports_call_before_value_check() -> bool fails syntax_value.Problem:
+    const f = try fixture([1, 0], False)
+    match io_arguments.split(f.pool, b"print sep end bogus", f.call):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_IO_ARGUMENT" and problem.start == 0 and problem.end == 5 and problem.message == "positional print arguments must precede `sep=` and `end=`"
+
+
+public func test_print_duplicate_keyword_uses_keyword_span() -> bool fails syntax_value.Problem:
+    const f = try fixture([2, 2], False)
+    match io_arguments.split(f.pool, b"print sep end bogus", f.call):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_IO_ARGUMENT" and problem.start == 10 and problem.end == 13 and problem.message == "print received this keyword argument more than once"
+
+
+public func test_print_generic_precedes_unknown_keyword_and_unknown_precedes_later_positional() -> bool fails syntax_value.Problem:
+    const generic = try fixture([3, 0], True)
+    match io_arguments.split(generic.pool, b"print sep end bogus", generic.call):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "E_ARITY" or problem.start != 0 or problem.end != 5 or problem.message != "print takes no type arguments":
+                return False
+    const unknown = try fixture([3, 0], False)
+    match io_arguments.split(unknown.pool, b"print sep end bogus", unknown.call):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_IO_ARGUMENT" and problem.start == 14 and problem.end == 19 and problem.message == "print accepts only the `sep=` and `end=` keyword arguments"
+
+
+public func test_positional_gate_rejects_even_all_absent_label_vector() -> bool fails syntax_value.Problem:
+    const empty = try fixture([], False)
+    const accepted = try io_arguments.positional(empty.pool, empty.call)
+    if not accepted:
+        return False
+    const labeled = try fixture([0], False)
+    match io_arguments.positional(labeled.pool, labeled.call):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_CALL_ARGUMENT" and problem.start == 0 and problem.end == 5 and problem.message == "keyword arguments require a declared function or record constructor"
+
+
+public func test_ambient_output_preserves_alternative_and_signature_without_edits() -> bool fails syntax_value.Problem:
+    const f = try fixture([], False)
+    const result = try io_arguments.ambient(f.pool, f.call)
+    return result.problem.code == "E_OUTPUT_CAPABILITY" and result.problem.start == 0 and result.problem.end == 5 and result.severity == "err" and len(result.notes.related) == 1 and result.notes.related[0].role == "alternative" and result.notes.related[0].message == result.problem.message and result.notes.related[0].start == 0 and result.notes.related[0].end == 5 and len(result.notes.requirement) == 1 and result.notes.requirement[0].role == "signature" and result.notes.requirement[0].message == "stream.print(values..., sep: str, end: str) -> None" and result.notes.requirement[0].start == 0 and result.notes.requirement[0].end == 5 and len(result.notes.origin) == 0 and len(result.notes.edits) == 0

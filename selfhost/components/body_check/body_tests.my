@@ -205,7 +205,7 @@ public func test_augmented_unbound_after_rhs_before_operator_with_related_site()
     mut state = try assignment_state(b"div", True)
     const declaration = try syntax_value.span(mut state.syntax.pool, 2, 3)
     state.scope.locals[0].declaration = declaration
-    state.scope.locals[0].initialized = False
+    state.scope.locals[0].flags.initialized = False
     match engine.statement(mut state, 0):
         case Ok(value):
             _ = value

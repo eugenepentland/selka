@@ -73,7 +73,10 @@ pub fn policy(a: std.mem.Allocator, item: value.Catalog) Error![]bool {
         if (!valueRecord(record)) continue;
         for (record.fields) |field| try builder.dependency(index, field.ty);
         if (record.shape.variants) |shape| for (shape.cases) |item_case| {
-            if (item_case.payload) |payload| try builder.dependency(index, payload);
+            if (item_case.payload) |payload| {
+                const file_result = @import("body_check_resource_authority.zig").fileResult(item, record.id);
+                if (file_result != payload) try builder.dependency(index, payload);
+            }
         };
     }
     for (item.lists) |entry| {

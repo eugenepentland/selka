@@ -6,6 +6,7 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const list_validate = @import("body_check_list_validate.zig");
 const record_validate = @import("body_check_record_validate.zig");
+const resources = @import("body_check_resource_validate.zig");
 /// Invalid producer values and allocation failures remain host failures.
 pub const Error = error{ ComponentProtocol, OutOfMemory };
 /// Maximum scalar expression or statement table length.
@@ -205,6 +206,7 @@ fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch, intege
             .finish_statement => |index| statement_states[index] = 2,
         };
     }
+    try @import("body_check_resource_scope.zig").batch(a, request, tables);
     for (node_owners) |owner| if (owner == std.math.maxInt(usize)) return error.ComponentProtocol;
     for (statement_owners) |owner| if (owner == std.math.maxInt(usize)) return error.ComponentProtocol;
 }
@@ -225,7 +227,8 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
         .unit => if (node.ty != .unit) return error.ComponentProtocol,
         .local => |slot| {
             if (@backingInt(slot) >= graph.locals) return error.ComponentProtocol;
-            if (node.ty != graph.tables.functions[graph.function].scope.locals[@backingInt(slot)].ty) return error.ComponentProtocol;
+            const local = graph.tables.functions[graph.function].scope.locals[@backingInt(slot)];
+            if (node.ty != local.ty or local.ownership.scoped_file) return error.ComponentProtocol;
         },
         .call => |call| {
             if (@backingInt(call.function) >= graph.tables.functions.len) return error.ComponentProtocol;
@@ -253,6 +256,7 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
             if (capacity != .i64 and capacity != .u64) return error.ComponentProtocol;
         },
         .buffer_operation => |operation| try bufferNode(graph, node, operation),
+        .file_access, .file_method, .stream_write, .print => try resources.node(graph.context.catalog, graph.tables.nodes, graph.tables.functions[graph.function].scope.locals, node),
         .variant => |item| try variantNode(graph, node, item),
         .propagate => |item| try propagationNode(graph, node, item),
         .record => |fields| try recordNode(graph, node.ty, fields, true),
@@ -304,6 +308,7 @@ fn ranges(tables: value.Batch) Error!void {
 }
 
 fn functionMetadata(request: value.Input, function: typed.Function, raw: @import("ast.zig").Function) Error!void {
+    if (function.signature.return_type.isFile() or resources.fileResult(request.catalog, function.signature.return_type) != null) return error.ComponentProtocol;
     if (function.signature.parameter_count != raw.signature.parameters.len) return error.ComponentProtocol;
     if (function.scope.parameter_labels.len != function.signature.parameter_count) return error.ComponentProtocol;
     if (function.policy.c_abi or function.policy.owner != null or function.policy.host != null) return error.ComponentProtocol;
@@ -313,6 +318,7 @@ fn functionMetadata(request: value.Input, function: typed.Function, raw: @import
         const expected = if (parameter.named) request.context.source[parameter.name.start..parameter.name.end] else "";
         if (!std.mem.eql(u8, label, expected)) return error.ComponentProtocol;
         const local = function.scope.locals[index];
+        if (local.ty.isFile() or resources.fileResult(request.catalog, local.ty) != null) return error.ComponentProtocol;
         if (!std.meta.eql(local.declaration, parameter.name) or local.mutable != parameter.mut) return error.ComponentProtocol;
         const parameter_origin = local.origin == .parameter or (parameter.mut and local.origin == .local);
         if (!parameter_origin) return error.ComponentProtocol;
@@ -320,7 +326,7 @@ fn functionMetadata(request: value.Input, function: typed.Function, raw: @import
     }
     if (!std.mem.eql(u16, function.signature.declared_mutates, raw.signature.mut_positions)) return error.ComponentProtocol;
     for (function.scope.locals) |local| {
-        if (local.ownership.scoped_file) return error.ComponentProtocol;
+        if (local.ownership.scoped_file and !local.ty.isFile()) return error.ComponentProtocol;
         if (local.ownership.transfer_span) |at| try span(at, request.context.source.len);
         if ((local.ownership.transfer_span != null or local.ownership.transfer_available) and !typed.requiresHandling(local.ty, request.catalog.records)) return error.ComponentProtocol;
     }
@@ -356,12 +362,13 @@ fn scalarStatement(graph: *Graph, statement: typed.Statement) Error!void {
         .assertion => |assertion| if (try nodeType(graph, assertion.condition) != .bool) return error.ComponentProtocol,
         .initialize, .assign => |store| {
             if (store.element or @backingInt(store.slot) >= graph.locals) return error.ComponentProtocol;
-            if (try nodeType(graph, store.value) != graph.tables.functions[graph.function].scope.locals[@backingInt(store.slot)].ty) return error.ComponentProtocol;
+            const local = graph.tables.functions[graph.function].scope.locals[@backingInt(store.slot)];
+            if (local.ty.isFile() or try nodeType(graph, store.value) != local.ty) return error.ComponentProtocol;
         },
+        .with_scope => {},
         .match => |item| try matchStatement(graph, item),
         .range_loop => |loop| if (loop.parts.len != 1) return error.ComponentProtocol,
         .block, .discard, .loop_exit => {},
-        else => return error.ComponentProtocol,
     }
 }
 
@@ -416,7 +423,7 @@ fn sequenceElement(item: value.Catalog, ty: typed.Type) ?typed.Type {
 fn admittedType(item: value.Catalog, accepted: []const bool, ty: typed.Type) bool {
     if (ty.isAggregate()) return ty.recordIndex() < accepted.len and accepted[ty.recordIndex()];
     return switch (ty) {
-        .i64, .bool, .unit, .u8, .u32, .u64 => true,
+        .i64, .bool, .unit, .u8, .u32, .u64, .filesystem_cap, .stream_cap, .file, .text_file => true,
         else => sequenceElement(item, ty) != null,
     };
 }

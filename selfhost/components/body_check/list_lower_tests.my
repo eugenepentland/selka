@@ -27,7 +27,7 @@ public func test_small_list_literal_exact_native_append_order_and_hidden_root() 
     const body = try graph.number(fixture.batch.pool, body_id)
     const read_id = try graph.field(fixture.batch.pool, lowered.payload, "value")
     const read = try graph.number(fixture.batch.pool, read_id)
-    return lowered.tag == b"block_value" and value == 7 and read == 6 and body == 3 and len(fixture.batch.nodes) == 8 and len(fixture.batch.statements) == 4 and len(fixture.scope.active) == 0 and local.name == b"<collection>" and local.ty == 40 and local.mutable and not local.initialized and local.usage.reads == 1 and local.usage.temporary
+    return lowered.tag == b"block_value" and value == 7 and read == 6 and body == 3 and len(fixture.batch.nodes) == 8 and len(fixture.batch.statements) == 4 and len(fixture.scope.active) == 0 and local.name == b"<collection>" and local.ty == 40 and local.mutable and not local.flags.initialized and local.usage.reads == 1 and local.usage.temporary
 
 
 public func test_empty_list_has_capacity_acquisition_and_root_read() -> bool fails syntax_value.Problem:

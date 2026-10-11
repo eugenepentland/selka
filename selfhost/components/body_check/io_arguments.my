@@ -1,0 +1,81 @@
+import syntax_value
+import graph
+import syntax_problem
+
+public record Arguments:
+    values: int[]
+    separator: int = -1
+    terminator: int = -1
+
+
+func problem(pool: syntax_value.Pool, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+public func split(pool: syntax_value.Pool, source: bytes, call: int) -> Arguments fails syntax_value.Problem:
+    const name = try graph.field(pool, call, "name")
+    const types_id = try graph.field(pool, call, "type_arguments")
+    const types = try graph.items(pool, types_id)
+    if len(types) != 0:
+        const rejected = try problem(pool, name, "E_ARITY", "print takes no type arguments")
+        fail rejected
+    const arguments_id = try graph.field(pool, call, "arguments")
+    const arguments = try graph.items(pool, arguments_id)
+    mut values: int[] = []
+    for argument in arguments:
+        const value = try graph.number(pool, argument)
+        values.append(value)
+    mut result = Arguments(values=values)
+    const names_id = try graph.field(pool, call, "argument_names")
+    const names = try graph.items(pool, names_id)
+    if len(names) == 0:
+        return result
+    if len(names) != len(values):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="print argument label count mismatch")
+    mut positional_count = 0
+    mut index = 0
+    for keyword in names:
+        const label = try graph.get(pool, keyword)
+        if label.kind == 0:
+            if result.separator >= 0 or result.terminator >= 0:
+                const rejected = try problem(pool, name, "E_IO_ARGUMENT", "positional print arguments must precede `sep=` and `end=`")
+                fail rejected
+            positional_count = positional_count + 1
+        else:
+            const spelling = try graph.spelling(pool, source, keyword)
+            if spelling != b"sep" and spelling != b"end":
+                const rejected = try problem(pool, keyword, "E_IO_ARGUMENT", "print accepts only the `sep=` and `end=` keyword arguments")
+                fail rejected
+            if (spelling == b"sep" and result.separator >= 0) or (spelling == b"end" and result.terminator >= 0):
+                const rejected = try problem(pool, keyword, "E_IO_ARGUMENT", "print received this keyword argument more than once")
+                fail rejected
+            if spelling == b"sep":
+                result.separator = values[index]
+            else:
+                result.terminator = values[index]
+        index = index + 1
+    result.values = values[:positional_count]
+    return result
+
+
+public func positional(pool: syntax_value.Pool, call: int) -> bool fails syntax_value.Problem:
+    const names_id = try graph.field(pool, call, "argument_names")
+    const names = try graph.items(pool, names_id)
+    if len(names) != 0:
+        const name = try graph.field(pool, call, "name")
+        const rejected = try problem(pool, name, "E_CALL_ARGUMENT", "keyword arguments require a declared function or record constructor")
+        fail rejected
+    return True
+
+
+public func ambient(pool: syntax_value.Pool, call: int) -> syntax_problem.Diagnostic fails syntax_value.Problem:
+    const name = try graph.field(pool, call, "name")
+    const message = "print needs a Stream; add `out: Stream` to this function and pass one from main"
+    const rejected = try problem(pool, name, "E_OUTPUT_CAPABILITY", message)
+    const alternative = syntax_problem.Related(start=rejected.start, end=rejected.end, message=message, role="alternative")
+    const requirement = syntax_problem.Related(start=rejected.start, end=rejected.end, message="stream.print(values..., sep: str, end: str) -> None", role="signature")
+    return syntax_problem.Diagnostic(problem=rejected, severity="err", notes=syntax_problem.Notes(related=[alternative], origin=[], requirement=[requirement], edits=[]))

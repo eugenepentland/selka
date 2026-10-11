@@ -1,0 +1,101 @@
+import syntax_value
+import graph
+import emission
+import list_lower
+import resource_lower
+
+record Fixture:
+    batch: emission.Batch
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const site = try syntax_value.span(mut input, 7, 19)
+    return Fixture(batch=emission.empty(), context=list_lower.Context(input=input, span=site))
+
+
+func data(fixture: Fixture, node: int) -> int fails syntax_value.Problem:
+    const tagged = try graph.field(fixture.batch.pool, fixture.batch.nodes[node], "data")
+    return try graph.payload(fixture.batch.pool, tagged)
+
+
+func number(fixture: Fixture, row: int, name: str) -> int fails syntax_value.Problem:
+    const id = try graph.field(fixture.batch.pool, row, name)
+    return try graph.number(fixture.batch.pool, id)
+
+
+public func test_open_preserves_selected_result_shapes_mode_and_argument_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const request = resource_lower.Open(mode=1, text=False, arguments=[8, 3, 5], shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=41)
+    const node = try resource_lower.open(mut fixture.batch, fixture.context, request)
+    const payload = try data(fixture, node)
+    const mode = try number(fixture, payload, "mode")
+    const ty = try number(fixture, fixture.batch.nodes[node], "ty")
+    const shapes = try graph.field(fixture.batch.pool, payload, "shapes")
+    const list = try number(fixture, shapes, "list")
+    const arguments = try graph.field(fixture.batch.pool, payload, "arguments")
+    const ids = try graph.items(fixture.batch.pool, arguments)
+    const first = try graph.number(fixture.batch.pool, ids[0])
+    const last = try graph.number(fixture.batch.pool, ids[2])
+    const location = try graph.field(fixture.batch.pool, fixture.batch.nodes[node], "span")
+    const start = try number(fixture, location, "start")
+    const end = try number(fixture, location, "end")
+    return node == 0 and len(fixture.batch.nodes) == 1 and len(fixture.batch.statements) == 0 and mode == 1 and ty == 41 and list == 40 and first == 8 and last == 5 and start == 7 and end == 19
+
+
+public func test_scoped_read_preserves_owner_and_absent_count() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const node = try resource_lower.read(mut fixture.batch, fixture.context, resource_lower.Read(owner=4, text=False, argument=-1, shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=25))
+    const payload = try data(fixture, node)
+    const owner = try number(fixture, payload, "owner")
+    const argument = try graph.field(fixture.batch.pool, payload, "argument")
+    const count = try graph.get(fixture.batch.pool, argument)
+    const ty = try number(fixture, fixture.batch.nodes[node], "ty")
+    return owner == 4 and count.kind == 0 and ty == 25 and len(fixture.batch.nodes) == 1
+
+
+public func test_text_read_preserves_explicit_count_and_text_flag() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const node = try resource_lower.read(mut fixture.batch, fixture.context, resource_lower.Read(owner=2, text=True, argument=9, shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=24))
+    const payload = try data(fixture, node)
+    const count = try number(fixture, payload, "argument")
+    const flag = try graph.field(fixture.batch.pool, payload, "text")
+    const text = try graph.get(fixture.batch.pool, flag)
+    return count == 9 and text.kind == 2 and text.integer == 1
+
+
+public func test_stream_write_preserves_operand_order_and_integer_result() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const node = try resource_lower.write(mut fixture.batch, fixture.context, 6, 2)
+    const payload = try data(fixture, node)
+    const stream = try number(fixture, payload, "stream")
+    const text = try number(fixture, payload, "text")
+    const ty = try number(fixture, fixture.batch.nodes[node], "ty")
+    return stream == 6 and text == 2 and ty == 0 and len(fixture.batch.nodes) == 1
+
+
+public func test_print_retains_explicit_stream_null_defaults_and_no_debug() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const node = try resource_lower.print(mut fixture.batch, fixture.context, resource_lower.Print(arguments=[4, 1], separator=-1, terminator=-1, stream=3))
+    const payload = try data(fixture, node)
+    const stream = try number(fixture, payload, "stream")
+    const separator_id = try graph.field(fixture.batch.pool, payload, "separator")
+    const separator = try graph.get(fixture.batch.pool, separator_id)
+    const end_id = try graph.field(fixture.batch.pool, payload, "terminator")
+    const end = try graph.get(fixture.batch.pool, end_id)
+    const debug_id = try graph.field(fixture.batch.pool, payload, "debug")
+    const debug = try graph.get(fixture.batch.pool, debug_id)
+    const ty = try number(fixture, fixture.batch.nodes[node], "ty")
+    return stream == 3 and separator.kind == 0 and end.kind == 0 and debug.integer == 0 and ty == 15
+
+
+public func test_print_preserves_explicit_separator_and_terminator() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const node = try resource_lower.print(mut fixture.batch, fixture.context, resource_lower.Print(arguments=[], separator=2, terminator=5, stream=7))
+    const payload = try data(fixture, node)
+    const separator = try number(fixture, payload, "separator")
+    const end = try number(fixture, payload, "terminator")
+    const arguments_id = try graph.field(fixture.batch.pool, payload, "arguments")
+    const arguments = try graph.items(fixture.batch.pool, arguments_id)
+    return separator == 2 and end == 5 and len(arguments) == 0

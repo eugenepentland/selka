@@ -142,4 +142,4 @@ public func test_ord_nonconstant_uses_snapshot_temporary_and_exact_block_referen
     if initialize.data != b"initialize" or slot != 1 or input_node != 0 or body_data.data != b"block" or len(children) != 1 or first_statement != 0:
         return False
     const temporary = state.scope.locals[1]
-    return temporary.name == b"<collection>" and temporary.ty == 19 and temporary.mutable and temporary.origin == b"local" and not temporary.initialized and temporary.usage.temporary and temporary.usage.reads == 1 and temporary.usage.writes == 0 and len(state.scope.active) == 1 and state.scope.active[0] == 0 and state.scope.locals[0].usage.reads == 1
+    return temporary.name == b"<collection>" and temporary.ty == 19 and temporary.mutable and temporary.origin == b"local" and not temporary.flags.initialized and temporary.usage.temporary and temporary.usage.reads == 1 and temporary.usage.writes == 0 and len(state.scope.active) == 1 and state.scope.active[0] == 0 and state.scope.locals[0].usage.reads == 1

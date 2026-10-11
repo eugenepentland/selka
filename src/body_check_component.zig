@@ -34,7 +34,7 @@ fn directory(a: std.mem.Allocator, runtime: Runtime) Error![]u8 {
 pub fn identity(a: std.mem.Allocator, runtime: Runtime) Error![32]u8 {
     const selected = runtime.environ.get("MYLANG_BODY_CHECK_MODE") orelse reference_mode;
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("selka-body-check-v6/bytes-buffer-bodies-v1/schema6/");
+    hash.update("selka-body-check-v7/entry-resource-bodies-v1/schema7/");
     hash.update(selected);
     if (std.mem.eql(u8, selected, "shadow") or std.mem.eql(u8, selected, component_mode)) {
         const dir = try directory(a, runtime);

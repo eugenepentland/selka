@@ -263,3 +263,22 @@ pub const body_library_admission_self = [_][]const u8{
 
 /// Adversarial verdict accounting for body check qualification.
 pub const body_check_qualification_self = [_][]const u8{ "selfhost/test_body_checks.py", "selfhost/test_pilots.py", "selfhost/tests/run_body_check_qualification.py", "selfhost/tests/run_declaration_qualification.py", "selfhost/tests/run_type_interface_qualification.py", "selfhost/tests/run_parser_pilot.py", "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/measure_managed_body_adoption.py", "selfhost/tests/measure_frontend_adoption.py", "selfhost/tests/body_check_qualification_test.py", "selfhost/tests/fixtures/body_check/", "selfhost/tests/measure_performance_ratio.py", "selfhost/tests/performance_ratio_test.py", "selfhost/tests/fixtures/performance_ratio/" };
+
+/// Fresh installed B7 captures, all source closures, seed verification and strict two-generation admission.
+pub const body_entry_admission = [_][]const u8{"selfhost/"};
+
+/// B7 accounting and protocol adversarial tests without compiler installation.
+pub const body_entry_admission_self = [_][]const u8{
+    "selfhost/test_body_entries.py",
+    "selfhost/tests/run_body_entry_qualification.py",
+    "selfhost/tests/generate_body_entry_requests.py",
+    "selfhost/tests/run_body_entry_hostile.py",
+    "selfhost/tests/run_body_library_join.py",
+    "selfhost/tests/run_body_check_qualification.py",
+    "selfhost/tests/run_frontend_qualification.py",
+    "selfhost/tests/body_entry_qualification_test.py",
+    "selfhost/tests/body_entry_requests_test.py",
+    "selfhost/tests/body_entry_hostile_test.py",
+    "selfhost/tests/fixtures/body_entry_candidate/",
+    "selfhost/tests/fixtures/body_entry_hostile/",
+};

@@ -1,0 +1,8 @@
+func main(fs: Filesystem, out: Stream) -> int:
+    match fs.open("blob.bin", "rb"):
+        case Ok(file):
+            with file as input:
+                _ = out.write(input.read(6))
+            return 7
+        case Err(_):
+            return 0

@@ -85,7 +85,7 @@ public func test_text_and_byte_iteration_bindings_guards_and_element_types() -> 
         if lowered.tag != b"block" or len(parts) != 4 or len(fixture.scope.locals) != 5 or len(fixture.batch.statements) != 12:
             return False
         const binding = fixture.scope.locals[4]
-        if binding.name != b"item" or binding.ty != fixture.request.element or binding.mutable or binding.origin != b"iteration" or not binding.initialized or not binding.usage.temporary or binding.usage.reads != 1:
+        if binding.name != b"item" or binding.ty != fixture.request.element or binding.mutable or binding.origin != b"iteration" or not binding.flags.initialized or not binding.usage.temporary or binding.usage.reads != 1:
             return False
         mut reads = 0
         mut guards = 0

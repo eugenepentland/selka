@@ -1,0 +1,13 @@
+func read(fs: Filesystem) -> int fails str:
+    with try fs.open("blob.bin", "rb") as first:
+        with try fs.open("blob.bin", "rb") as second:
+            return len(first.read(1)) + len(second.read(1))
+func main(fs: Filesystem) -> int:
+    for item in range(128):
+        match read(fs):
+            case Ok(value):
+                if value != 2:
+                    return 0
+            case Err(_):
+                return 0
+    return 7
