@@ -22,15 +22,26 @@ pub const Catalog = struct {
     lists: []const Sequence = &.{},
     list_available: bool = false,
     records: []const typed.Record = &.{},
+    templates: Templates = .{},
 };
+/// Opaque retained builtin template authority, never per-use body answers.
+pub const Templates = struct { result: ?TemplateBasis = null, option: ?TemplateBasis = null };
+/// Exact common declaration authority; an empty span denotes the synthesized prelude.
+pub const TemplateBasis = struct { id: usize, declaration: source.Span };
 /// The exact managed identity and its internal scalar element representation.
 pub const Sequence = struct { id: typed.Type, element: typed.Type };
 /// Complete typed tables before entry adaptation and native postpasses.
 pub const Batch = struct { nodes: []const typed.Node, statements: []const typed.Statement, functions: []const typed.Function, ranges: []const @import("semantic_copy.zig").Range };
 /// Typed bodies and all ordered checker observations.
-pub const Output = struct { batch: Batch, import_used: []const []const bool, diagnostics: []const Diagnostic, lists: []const ListRecipe = &.{} };
+pub const Output = struct { batch: Batch, import_used: []const []const bool, diagnostics: []const Diagnostic, recipes: []const CatalogRecipe = &.{} };
 /// One producer-selected canonical list identity, in native append order.
 pub const ListRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
+/// One producer-selected canonical checked-result identity.
+pub const ResultRecipe = struct { id: typed.Type, success: typed.Type, failure: typed.Type, span: source.Span };
+/// One producer-selected canonical optional identity.
+pub const OptionRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
+/// All append decisions share one native first-demand order.
+pub const CatalogRecipe = union(enum) { list: ListRecipe, result: ResultRecipe, option: OptionRecipe };
 /// Located unsupported profile refusal; it never requests native fallback.
 pub const Profile = struct { code: []const u8, span: source.Span, message: []const u8 };
 /// Checked scalar bodies, source diagnostics, or explicit admission refusal.

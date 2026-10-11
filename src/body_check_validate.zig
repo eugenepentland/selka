@@ -57,6 +57,7 @@ pub fn input(a: std.mem.Allocator, item: value.Input) Error!void {
     }
     if (item.modules.len != 0 and offset != item.context.source.len) return error.ComponentProtocol;
     try record_validate.input(a, item);
+    try @import("body_check_recipe_validate.zig").bases(item);
 }
 fn diagnostics(items: []const value.Diagnostic, size: usize, rejecting: bool) Error!void {
     if (items.len > local_limit or (rejecting and items.len == 0)) return error.ComponentProtocol;
@@ -85,10 +86,10 @@ pub fn outcome(a: std.mem.Allocator, request: value.Input, result: value.Outcome
                 if (flags.len != module.import_used.len) return error.ComponentProtocol;
                 for (flags, module.import_used) |used, initial| if (initial and !used) return error.ComponentProtocol;
             }
-            try list_validate.recipes(a, request, output.lists);
+            var arena = std.heap.ArenaAllocator.init(a);
+            defer arena.deinit();
             var expanded = request;
-            expanded.catalog = try list_validate.expanded(a, request.catalog, output.lists);
-            defer a.free(expanded.catalog.lists);
+            expanded.catalog = try @import("body_check_recipe_validate.zig").expanded(arena.allocator(), request, output.recipes);
             try batch(a, expanded, output.batch);
         },
     }
@@ -245,6 +246,8 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
             if (list_validate.listElement(graph.context.catalog, node.ty) == null or try nodeType(graph, operation.capacity) != .i64) return error.ComponentProtocol;
         },
         .buffer_operation => |operation| try bufferNode(graph, node, operation),
+        .variant => |item| try variantNode(graph, node, item),
+        .propagate => |item| try propagationNode(graph, node, item),
         .record => |fields| try recordNode(graph, node.ty, fields, true),
         .update => |update| {
             if (node.ty != try nodeType(graph, update.base)) return error.ComponentProtocol;
@@ -310,7 +313,9 @@ fn functionMetadata(request: value.Input, function: typed.Function, raw: @import
     }
     if (!std.mem.eql(u16, function.signature.declared_mutates, raw.signature.mut_positions)) return error.ComponentProtocol;
     for (function.scope.locals) |local| {
-        if (local.ownership.scoped_file or local.ownership.transfer_span != null or local.ownership.transfer_available) return error.ComponentProtocol;
+        if (local.ownership.scoped_file) return error.ComponentProtocol;
+        if (local.ownership.transfer_span) |at| try span(at, request.context.source.len);
+        if ((local.ownership.transfer_span != null or local.ownership.transfer_available) and !typed.requiresHandling(local.ty, request.catalog.records)) return error.ComponentProtocol;
     }
     if (function.signature.return_origin == .params) {
         var prior: ?u16 = null;
@@ -346,6 +351,7 @@ fn scalarStatement(graph: *Graph, statement: typed.Statement) Error!void {
             if (store.element or @backingInt(store.slot) >= graph.locals) return error.ComponentProtocol;
             if (try nodeType(graph, store.value) != graph.tables.functions[graph.function].scope.locals[@backingInt(store.slot)].ty) return error.ComponentProtocol;
         },
+        .match => |item| try matchStatement(graph, item),
         .range_loop => |loop| if (loop.parts.len != 1) return error.ComponentProtocol,
         .block, .discard, .loop_exit => {},
         else => return error.ComponentProtocol,
@@ -492,5 +498,49 @@ fn recordNode(graph: *Graph, ty: typed.Type, fields: []const typed.FieldInit, co
         if (field.index >= record.fields.len) return error.ComponentProtocol;
         if (seen[field.index] or try nodeType(graph, field.value) != record.fields[field.index].ty) return error.ComponentProtocol;
         seen[field.index] = true;
+    }
+}
+
+fn variantSchema(graph: *Graph, ty: typed.Type) Error!typed.Variants {
+    if (!ty.isAggregate() or ty.recordIndex() >= graph.context.catalog.records.len) return error.ComponentProtocol;
+    const record = graph.context.catalog.records[ty.recordIndex()];
+    if (!record_validate.variant(record)) return error.ComponentProtocol;
+    return record.shape.variants orelse return error.ComponentProtocol;
+}
+fn variantNode(graph: *Graph, node: typed.Node, item: @FieldType(@FieldType(typed.Node, "data"), "variant")) Error!void {
+    const schema = try variantSchema(graph, node.ty);
+    if (item.tag >= schema.cases.len) return error.ComponentProtocol;
+    const payload = schema.cases[item.tag].payload;
+    if ((payload != null) != (item.value != null)) return error.ComponentProtocol;
+    if (item.value) |operand| if (try nodeType(graph, operand) != payload.?) return error.ComponentProtocol;
+}
+fn propagationNode(graph: *Graph, node: typed.Node, item: @FieldType(@FieldType(typed.Node, "data"), "propagate")) Error!void {
+    const schemas = graph.context.catalog.records;
+    const input_type = try nodeType(graph, item.value);
+    if (item.output != graph.tables.functions[graph.function].signature.return_type) return error.ComponentProtocol;
+    if (typed.resultShape(input_type, schemas)) |input_shape| {
+        const output_shape = typed.resultShape(item.output, schemas) orelse return error.ComponentProtocol;
+        if (node.ty != input_shape.ok_type) return error.ComponentProtocol;
+        if (input_shape.error_type != output_shape.error_type and typed.wrappingCase(schemas, output_shape.error_type, input_shape.error_type) == null) return error.ComponentProtocol;
+    } else if (input_type.isAggregate() and input_type.recordIndex() < schemas.len) {
+        const shape = @import("prelude.zig").optionCases(try variantSchema(graph, input_type)) orelse return error.ComponentProtocol;
+        _ = @import("prelude.zig").optionCases(try variantSchema(graph, item.output)) orelse return error.ComponentProtocol;
+        if (node.ty != shape.element) return error.ComponentProtocol;
+    } else return error.ComponentProtocol;
+}
+fn matchStatement(graph: *Graph, item: @FieldType(@FieldType(typed.Statement, "data"), "match")) Error!void {
+    const schema = try variantSchema(graph, try nodeType(graph, item.value));
+    if (item.arms.len != schema.cases.len) return error.ComponentProtocol;
+    const seen = try graph.allocator.alloc(bool, item.arms.len);
+    defer graph.allocator.free(seen);
+    @memset(seen, false);
+    for (item.arms) |arm| {
+        if (arm.tag >= schema.cases.len or seen[arm.tag]) return error.ComponentProtocol;
+        seen[arm.tag] = true;
+        if (arm.slot) |slot| {
+            const payload = schema.cases[arm.tag].payload orelse return error.ComponentProtocol;
+            if (@backingInt(slot) >= graph.locals) return error.ComponentProtocol;
+            if (graph.tables.functions[graph.function].scope.locals[@backingInt(slot)].ty != payload) return error.ComponentProtocol;
+        }
     }
 }

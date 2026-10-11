@@ -23,7 +23,7 @@ fn leaf(initial: value.Catalog, ty: typed.Type) bool {
     if (ty == .i64 or ty == .bool or ty == .unit) return true;
     if (initial.string) |item| if (item.id == ty) return true;
     if (initial.bytes) |item| if (item.id == ty) return true;
-    if (ty.isAggregate() and ty.recordIndex() < initial.records.len) return records.ordinary(initial.records[ty.recordIndex()]);
+    if (ty.isAggregate() and ty.recordIndex() < initial.records.len) return records.ordinary(initial.records[ty.recordIndex()]) or records.variant(initial.records[ty.recordIndex()]);
     return false;
 }
 fn descriptor(initial: value.Catalog, item: value.Sequence, expected: typed.Type) Error!void {

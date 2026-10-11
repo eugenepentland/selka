@@ -1661,15 +1661,15 @@ fn selectedBodies(step: InstanceStep, contracts_failed: bool, prior_failure: boo
         .batch = .{ .nodes = step.checker.nodes.items, .statements = step.checker.statements.items, .functions = functions, .ranges = step.checker.spec_ranges.items },
         .import_used = try body_projection.importUsage(step.allocator, selection.names),
         .diagnostics = diagnostics,
-        .lists = try body_materialize.added(step.allocator, step.checker.catalog, input.catalog.base_count),
+        .recipes = try body_materialize.added(step.allocator, step.checker.catalog, input.catalog.base_count),
     } };
     try body_check.compare(step.allocator, actual, expected);
     if (failed) return error.SourceError;
-    try compareBodyCatalog(step, selection, actual.success.lists);
+    try compareBodyCatalog(step, selection, actual.success.recipes);
     return functions;
 }
 
-fn compareBodyCatalog(step: InstanceStep, selection: BodySelection, recipes: []const body_value.ListRecipe) FrontendError!void {
+fn compareBodyCatalog(step: InstanceStep, selection: BodySelection, recipes: []const body_value.CatalogRecipe) FrontendError!void {
     // Reconstruct the common catalog independently. Applying producer recipes
     // before native checking would conceal a wrong interning order in shadow.
     var sink: diagnostic.Sink = .{ .allocator = step.allocator };
@@ -1686,7 +1686,7 @@ fn adoptBodies(step: InstanceStep, names: ?*Names, input: body_value.Input, outc
             return error.SourceError;
         },
         .success => |output| {
-            try body_materialize.apply(step.allocator, &step.checker.catalog, input, output.lists);
+            try body_materialize.apply(step.allocator, &step.checker.catalog, input, output.recipes);
             const batch = try body_value.cloneBatch(step.allocator, output.batch);
             if (step.checker.nodes.items.len != 0 or step.checker.statements.items.len != 0) return error.ComponentProtocol;
             try step.checker.nodes.appendSlice(step.allocator, batch.nodes);

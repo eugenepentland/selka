@@ -27,7 +27,7 @@ pub fn request(a: std.mem.Allocator, input: Input, nonce: [8]u8) Error!Request {
 pub fn reply(a: std.mem.Allocator, bytes: []const u8, identity: [40]u8, input: Input) Error!value.Decoded {
     if (bytes.len < 80 or bytes.len > reply_limit) return error.ComponentProtocol;
     if (!std.mem.eql(u8, bytes[0..8], "SLKBCK01")) return error.ComponentProtocol;
-    if (get(bytes, 8) != 1 or get(bytes, 12) != 4 or get(bytes, 16) != 1) return error.ComponentProtocol;
+    if (get(bytes, 8) != 1 or get(bytes, 12) != 5 or get(bytes, 16) != 1) return error.ComponentProtocol;
     if (get(bytes, 20) != bytes.len - 64 or !std.mem.eql(u8, bytes[24..64], &identity)) return error.ComponentProtocol;
     var decoded = try wire.decode(a, value.Outcome, bytes[64..], "SLKBKR01");
     errdefer decoded.arena.deinit();
@@ -47,7 +47,7 @@ fn frame(a: std.mem.Allocator, payload: []const u8, direction: u32, identity: [4
     @memset(bytes[0..64], 0);
     @memcpy(bytes[0..8], "SLKBCK01");
     put(bytes, 8, 1);
-    put(bytes, 12, 4);
+    put(bytes, 12, 5);
     put(bytes, 16, direction);
     put(bytes, 20, @intCast(payload.len));
     @memcpy(bytes[24..64], &identity);
