@@ -1,0 +1,106 @@
+import syntax_value
+import graph
+import tuple_types
+import variants
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const id = try graph.field(pool, row, name)
+    return try graph.number(pool, id)
+
+
+func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_value.Problem:
+    const id = try graph.field(pool, row, name)
+    const value = try graph.get(pool, id)
+    return value.kind == 2 and value.integer != 0
+
+
+public func test_index_preserves_ordered_element_identity_through_growth_and_collisions() -> bool fails syntax_value.Problem:
+    mut catalog = tuple_types.empty()
+    for index in range(80):
+        const inserted = try tuple_types.add(mut catalog, tuple_types.Tuple(id=19 + index, elements=[index % 19, index // 19]))
+        if not inserted:
+            return False
+    for index in range(80):
+        const found = tuple_types.find(catalog, [index % 19, index // 19])
+        if found != 19 + index:
+            return False
+    const repeated = try tuple_types.add(mut catalog, tuple_types.Tuple(id=20, elements=[1, 0]))
+    const schema = tuple_types.schema(catalog, 20)
+    return not repeated and schema.id == 20 and schema.elements == [1, 0] and tuple_types.find(catalog, [18, 18]) == -1 and len(catalog.tuples) == 80 and len(catalog.slots) == 256
+
+
+public func test_synthetic_tuple_schema_has_exact_name_zero_spans_and_positional_fields() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const row = try tuple_types.materialize(mut pool, [], tuple_types.Recipe(id=19, elements=[0, 1]))
+    const name_id = try graph.field(pool, row, "name")
+    const name = try graph.get(pool, name_id)
+    const declaration = try graph.field(pool, row, "declaration")
+    const fields_id = try graph.field(pool, row, "fields")
+    const fields = try graph.items(pool, fields_id)
+    const first = try graph.field(pool, fields[0], "declaration")
+    const first_name_id = try graph.field(pool, fields[0], "name")
+    const first_name = try graph.get(pool, first_name_id)
+    const shape = try graph.field(pool, row, "shape")
+    const contract = try graph.field(pool, row, "contract")
+    const catalog = try tuple_types.prepare(pool, [row])
+    const start = try number(pool, declaration, "start")
+    const end = try number(pool, declaration, "end")
+    const field_start = try number(pool, first, "start")
+    const marker = try flag(pool, shape, "tuple")
+    const public_arguments = try flag(pool, contract, "public_arguments")
+    const storable = try flag(pool, contract, "storable")
+    const pending = try flag(pool, contract, "requires_handling")
+    return name.data == b"tuple<i64,bool>" and first_name.data == b"$0" and len(fields) == 2 and start == 0 and end == 0 and field_start == 0 and marker and public_arguments and storable and not pending and tuple_types.find(catalog, [0, 1]) == 19
+
+
+public func test_nested_tuple_uses_prior_schema_name_and_unit_stays_storable() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const first = try tuple_types.materialize(mut pool, [], tuple_types.Recipe(id=19, elements=[0, 1]))
+    const nested = try tuple_types.materialize(mut pool, [first], tuple_types.Recipe(id=20, elements=[19, 15]))
+    const name_id = try graph.field(pool, nested, "name")
+    const name = try graph.get(pool, name_id)
+    const catalog = try tuple_types.prepare(pool, [first, nested])
+    return name.data == b"tuple<tuple<i64,bool>,unit>" and tuple_types.find(catalog, [19, 15]) == 20 and tuple_types.find(catalog, [15, 19]) == -1
+
+
+public func test_tuple_contract_inherits_pending_result_and_disallows_storage() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    const template = variants.Template(id=0, declaration=span, raw=-1, cases=[variants.TemplateCase(name=b"ok", declaration=span, parameter=0), variants.TemplateCase(name=b"err", declaration=span, parameter=1)])
+    const result = try variants.materialize(mut pool, [], template, 19, 0, 1, True)
+    const tuple = try tuple_types.materialize(mut pool, [result], tuple_types.Recipe(id=20, elements=[19, 0]))
+    const contract = try graph.field(pool, tuple, "contract")
+    const pending = try flag(pool, contract, "requires_handling")
+    const storable = try flag(pool, contract, "storable")
+    const move = try flag(pool, contract, "move_only")
+    return pending and not storable and not move
+
+
+public func test_wire_recipe_has_structural_wrapper_and_no_fabricated_span() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const value = try tuple_types.encode(mut pool, tuple_types.Recipe(id=19, elements=[0, 1]))
+    const outer = try graph.get(pool, value)
+    const inner_id = try graph.payload(pool, value)
+    const inner = try graph.get(pool, inner_id)
+    const payload_id = try graph.payload(pool, inner_id)
+    const payload = try graph.get(pool, payload_id)
+    return outer.data == b"structural" and inner.data == b"tuple" and payload.names == ["id", "elements"] and len(payload.children) == 2
+
+
+public func test_tuple_recipe_rejects_forward_element_without_mutating_pool() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    match tuple_types.materialize(mut pool, [], tuple_types.Recipe(id=19, elements=[19, 0])):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(pool.values) == 0
+
+
+public func test_duplicate_ordered_elements_cannot_claim_a_second_identity() -> bool fails syntax_value.Problem:
+    mut catalog = tuple_types.empty()
+    _ = try tuple_types.add(mut catalog, tuple_types.Tuple(id=19, elements=[0, 1]))
+    match tuple_types.add(mut catalog, tuple_types.Tuple(id=20, elements=[0, 1])):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(catalog.tuples) == 1

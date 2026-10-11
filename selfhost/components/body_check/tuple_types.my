@@ -1,0 +1,250 @@
+import syntax_value
+import graph
+
+public record Tuple:
+    id: int
+    elements: int[]
+
+
+public record Catalog:
+    tuples: Tuple[]
+    slots: int[]
+    by_type: int[]
+
+
+public record Recipe:
+    id: int
+    elements: int[]
+
+
+public func empty() -> Catalog:
+    return Catalog(tuples=[], slots=[], by_type=[])
+
+
+func invalid() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid tuple catalog authority")
+
+
+func same(left: int[], right: int[]) -> bool:
+    if len(left) != len(right):
+        return False
+    for index in range(len(left)):
+        if left[index] != right[index]:
+            return False
+    return True
+
+
+func bucket(elements: int[], capacity: int) -> int:
+    mut hash = len(elements) % capacity
+    for element in elements:
+        hash = (hash * 1000003 + element + 1) % capacity
+    return hash
+
+
+public func find(catalog: Catalog, elements: int[]) -> int:
+    if len(catalog.slots) == 0:
+        return -1
+    mut position = bucket(elements, len(catalog.slots))
+    mut visited = 0
+    while visited < len(catalog.slots):
+        const entry = catalog.slots[position]
+        if entry < 0:
+            return -1
+        const tuple = catalog.tuples[entry]
+        if same(tuple.elements, elements):
+            return tuple.id
+        position = (position + 1) % len(catalog.slots)
+        visited += 1
+    return -1
+
+
+func grow(mut catalog: Catalog) -> Unit:
+    mut capacity = len(catalog.slots) * 2
+    if capacity == 0:
+        capacity = 16
+    catalog.slots = []
+    for unused in range(capacity):
+        catalog.slots.append(-1)
+    for entry in range(len(catalog.tuples)):
+        const tuple = catalog.tuples[entry]
+        mut position = bucket(tuple.elements, capacity)
+        while catalog.slots[position] >= 0:
+            position = (position + 1) % capacity
+        catalog.slots[position] = entry
+
+
+public func add(mut catalog: Catalog, tuple: Tuple) -> bool fails syntax_value.Problem:
+    if tuple.id < 19 or tuple.id >= 65555 or len(tuple.elements) < 2 or len(tuple.elements) > 8:
+        fail invalid()
+    for element in tuple.elements:
+        if element < 0 or element >= 65555:
+            fail invalid()
+    const previous = find(catalog, tuple.elements)
+    if previous >= 0:
+        if previous != tuple.id:
+            fail invalid()
+        return False
+    if len(catalog.tuples) >= 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="tuple catalog limit exceeded")
+    while len(catalog.by_type) <= tuple.id:
+        catalog.by_type.append(-1)
+    if catalog.by_type[tuple.id] >= 0:
+        fail invalid()
+    if len(catalog.slots) == 0 or (len(catalog.tuples) + 1) * 2 > len(catalog.slots):
+        grow(mut catalog)
+    const entry = len(catalog.tuples)
+    catalog.tuples.append(tuple)
+    catalog.by_type[tuple.id] = entry
+    mut position = bucket(tuple.elements, len(catalog.slots))
+    while catalog.slots[position] >= 0:
+        position = (position + 1) % len(catalog.slots)
+    catalog.slots[position] = entry
+    return True
+
+
+public func schema(catalog: Catalog, ty: int) -> Tuple:
+    if ty < 0 or ty >= len(catalog.by_type) or catalog.by_type[ty] < 0:
+        return Tuple(id=-1, elements=[])
+    return catalog.tuples[catalog.by_type[ty]]
+
+
+func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_value.Problem:
+    const id = try graph.field(pool, row, name)
+    const value = try graph.get(pool, id)
+    if value.kind != 2:
+        fail invalid()
+    return value.integer != 0
+
+
+public func prepare(pool: syntax_value.Pool, records: int[]) -> Catalog fails syntax_value.Problem:
+    mut catalog = empty()
+    if len(records) > 65536:
+        fail invalid()
+    for ordinal in range(len(records)):
+        const row = records[ordinal]
+        const shape = try graph.field(pool, row, "shape")
+        const tuple = try flag(pool, shape, "tuple")
+        if not tuple:
+            continue
+        for name in ["array", "domain", "variants", "buffer", "resource"]:
+            const component_id = try graph.field(pool, shape, name)
+            const component = try graph.get(pool, component_id)
+            if component.kind != 0:
+                fail invalid()
+        const builtin_id = try graph.field(pool, shape, "builtin")
+        const builtin = try graph.get(pool, builtin_id)
+        if builtin.kind != 4 or builtin.data != b"none":
+            fail invalid()
+        const id_value = try graph.field(pool, row, "id")
+        const id = try graph.number(pool, id_value)
+        if id != 19 + ordinal:
+            fail invalid()
+        const managed = try flag(pool, row, "managed")
+        if managed:
+            fail invalid()
+        const fields_id = try graph.field(pool, row, "fields")
+        const fields = try graph.items(pool, fields_id)
+        if len(fields) < 2 or len(fields) > 8:
+            fail invalid()
+        mut elements: int[] = []
+        for position in range(len(fields)):
+            const field = fields[position]
+            const name_id = try graph.field(pool, field, "name")
+            const name = try graph.get(pool, name_id)
+            const expected = positional_name(position)
+            if name.kind != 3 or name.data != expected:
+                fail invalid()
+            const element_id = try graph.field(pool, field, "ty")
+            const element = try graph.number(pool, element_id)
+            if element < 0 or element >= 19 + len(records):
+                fail invalid()
+            const default_id = try graph.field(pool, field, "default_value")
+            const default = try graph.get(pool, default_id)
+            const boxed = try flag(pool, field, "boxed")
+            if default.kind != 0 or boxed:
+                fail invalid()
+            elements.append(element)
+        _ = try add(mut catalog, Tuple(id=id, elements=elements))
+    return catalog
+
+
+func positional_name(index: int) -> bytes:
+    return [b"$0", b"$1", b"$2", b"$3", b"$4", b"$5", b"$6", b"$7"][index]
+
+
+func internal_name(pool: syntax_value.Pool, records: int[], ty: int) -> bytes fails syntax_value.Problem:
+    if ty >= 0 and ty < 19:
+        return [b"i64", b"bool", b"i8", b"i16", b"i32", b"u8", b"u16", b"u32", b"u64", b"clock_cap", b"random_cap", b"filesystem_cap", b"network_cap", b"environment_cap", b"host_cap", b"unit", b"file", b"text_file", b"stream_cap"][ty]
+    if ty < 19 or ty - 19 >= len(records):
+        fail invalid()
+    const name_id = try graph.field(pool, records[ty - 19], "name")
+    const name = try graph.get(pool, name_id)
+    if name.kind != 3:
+        fail invalid()
+    return name.data
+
+
+# Synthetic tupleType schemas have canonical zero declaration/field spans.
+# Source provenance is deliberately absent from the tuple recipe.
+public func materialize(mut pool: syntax_value.Pool, records: int[], recipe: Recipe) -> int fails syntax_value.Problem:
+    if recipe.id != 19 + len(records) or recipe.id >= 65555 or len(recipe.elements) < 2 or len(recipe.elements) > 8:
+        fail invalid()
+    mut name = b"tuple<"
+    mut storable = True
+    mut move = False
+    mut pending = False
+    for position in range(len(recipe.elements)):
+        const element = recipe.elements[position]
+        if element < 0 or element >= recipe.id:
+            fail invalid()
+        const element_name = try internal_name(pool, records, element)
+        if position != 0:
+            name = name + b","
+        name = name + element_name
+        if element >= 19:
+            const contract = try graph.field(pool, records[element - 19], "contract")
+            const child_storable = try flag(pool, contract, "storable")
+            const child_move = try flag(pool, contract, "move_only")
+            const child_pending = try flag(pool, contract, "requires_handling")
+            storable = storable and child_storable
+            move = move or child_move
+            pending = pending or child_pending
+    name = name + b">"
+    const zero_span = try syntax_value.span(mut pool, 0, 0)
+    const absent = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    const yes = try syntax_value.boolean(mut pool, True)
+    mut fields: int[] = []
+    for position in range(len(recipe.elements)):
+        const field_name = try syntax_value.octets(mut pool, positional_name(position))
+        const element = try syntax_value.integer(mut pool, recipe.elements[position])
+        const field = try syntax_value.object(mut pool, ["name", "declaration", "ty", "default_value", "boxed"], [field_name, zero_span, element, absent, no])
+        fields.append(field)
+    const field_rows = try syntax_value.sequence(mut pool, fields)
+    const collection_kind = try syntax_value.enumeration(mut pool, b"list")
+    const collection = try syntax_value.object(mut pool, ["kind", "key", "contains_cell", "set", "box"], [collection_kind, absent, no, no, no])
+    const builtin = try syntax_value.enumeration(mut pool, b"none")
+    const shape = try syntax_value.object(mut pool, ["array", "domain", "variants", "buffer", "resource", "builtin", "tuple"], [absent, absent, absent, absent, absent, builtin, yes])
+    const move_value = try syntax_value.boolean(mut pool, move)
+    const pending_value = try syntax_value.boolean(mut pool, pending)
+    const storable_value = try syntax_value.boolean(mut pool, storable and not pending)
+    const contract = try syntax_value.object(mut pool, ["callback", "public_arguments", "codec", "codec_declared", "move_only", "storable", "requires_handling"], [absent, yes, absent, no, move_value, storable_value, pending_value])
+    const id_value = try syntax_value.integer(mut pool, recipe.id)
+    const name_value = try syntax_value.octets(mut pool, name)
+    return try syntax_value.object(mut pool, ["collection", "managed", "id", "name", "declaration", "fields", "shape", "contract"], [collection, no, id_value, name_value, zero_span, field_rows, shape, contract])
+
+
+public func encode(mut pool: syntax_value.Pool, recipe: Recipe) -> int fails syntax_value.Problem:
+    if recipe.id < 19 or recipe.id >= 65555 or len(recipe.elements) < 2 or len(recipe.elements) > 8:
+        fail invalid()
+    mut values: int[] = []
+    for element in recipe.elements:
+        if element < 0 or element >= recipe.id:
+            fail invalid()
+        const value = try syntax_value.integer(mut pool, element)
+        values.append(value)
+    const elements = try syntax_value.sequence(mut pool, values)
+    const id_value = try syntax_value.integer(mut pool, recipe.id)
+    const payload = try syntax_value.object(mut pool, ["id", "elements"], [id_value, elements])
+    const tuple = try syntax_value.tagged(mut pool, b"tuple", payload)
+    return try syntax_value.tagged(mut pool, b"structural", tuple)
