@@ -8,6 +8,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 
 from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned, _kill_identity, _process_starttime
 
@@ -264,6 +265,41 @@ class WatchdogTests(unittest.TestCase):
             finally:
                 if child.poll() is None:
                     terminate_owned(child)
+                child.stdout.close()
+                child.stderr.close()
+
+    def test_delayed_tee_keeps_request_destination_after_fd_restore(self):
+        release = threading.Event()
+        writing = threading.Event()
+        real_write = os.write
+        with tempfile.TemporaryDirectory() as temporary:
+            request_path = Path(temporary)/'request'
+            protocol_path = Path(temporary)/'protocol'
+            with request_path.open('wb') as request, protocol_path.open('wb') as protocol:
+                original_fd = request.fileno()
+                seen_fds = []
+                def delayed_write(fd, data):
+                    seen_fds.append(fd)
+                    self.assertNotEqual(fd, original_fd)
+                    self.assertFalse(os.get_inheritable(fd))
+                    writing.set()
+                    release.wait(timeout=2)
+                    return real_write(fd, data)
+                logs = BoundedProcessLogs(Path(temporary)/'out', Path(temporary)/'err', stdout_tee=request)
+                child = self.spawn('print("request output")', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                with mock.patch('verification_process.os.write', side_effect=delayed_write):
+                    result = wait_owned(child, logs=logs)
+                    self.assertEqual(result.returncode, 0)
+                    self.assertTrue(writing.is_set())
+                    os.dup2(protocol.fileno(), original_fd)
+                    release.set()
+                    for _, thread in logs._tee_threads:
+                        thread.join(timeout=1)
+                        self.assertFalse(thread.is_alive())
+                self.assertEqual(request_path.read_bytes(), b'request output\n')
+                self.assertEqual(protocol_path.read_bytes(), b'')
+                with self.assertRaises(OSError):
+                    os.fstat(seen_fds[0])
                 child.stdout.close()
                 child.stderr.close()
 

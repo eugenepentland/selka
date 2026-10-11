@@ -100,12 +100,22 @@ class BoundedProcessLogs:
         self.attach(process)
         for index, tee in enumerate(self.tees):
             if tee is not None:
-                def tee_pump(index=index, tee=tee):
+                try:
+                    original_fd = tee.fileno()
+                except (AttributeError, OSError, ValueError):
+                    tee_fd = None
+                else:
                     try:
-                        try:
-                            tee_fd = tee.fileno()
-                        except (AttributeError, OSError, ValueError):
-                            tee_fd = None
+                        # Snapshot the request destination before a retained session
+                        # restores stdout to its JSONL protocol descriptor.
+                        tee_fd = os.dup(original_fd)
+                        os.set_inheritable(tee_fd, False)
+                    except OSError as error:
+                        self.capture_errors.append(str(error))
+                        self.tees = tuple(None if item == index else sink for item, sink in enumerate(self.tees))
+                        continue
+                def tee_pump(index=index, tee=tee, tee_fd=tee_fd):
+                    try:
                         while not self._stop.is_set() or not self._tee_queues[index].empty():
                             try:
                                 chunk = self._tee_queues[index].get(timeout=0.02)
@@ -122,6 +132,9 @@ class BoundedProcessLogs:
                                     view = view[os.write(tee_fd, view):]
                     except OSError as error:
                         self.capture_errors.append(str(error))
+                    finally:
+                        if tee_fd is not None:
+                            os.close(tee_fd)
                 thread = threading.Thread(target=tee_pump, daemon=True)
                 thread.start()
                 self._tee_threads.append((index, thread))
