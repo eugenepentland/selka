@@ -291,7 +291,7 @@ self-hosting requires Selka ownership of the compiler, not rewriting those
 dependencies. The native implementation remains an independent qualification
 oracle during migration; selected production paths must not silently fall back.
 
-The latest completed [B6 performance measurements](selka-body-bytes-buffer-contract-2026-10-11.md)
+The completed [B6 performance measurements](selka-body-bytes-buffer-contract-2026-10-11.md)
 fail 30 of 36 strict median/p95 rows. Compile/check/test medians are approximately
 6.1–10.4 times native; the six short generated-runtime rows pass. Both sides use
 the same B6 ReleaseFast host, with only the candidate body checker selected as a
@@ -299,6 +299,13 @@ component. These are component measurements with warm shared native units, not
 whole-compiler or cold-toolchain benchmarks. Performance work therefore runs
 alongside feature coverage, with exact mode/cache provenance and behavior checks.
 Intermediate subset benchmarks cannot establish full-language acceptance.
+
+The later [optimized B7 matched run](evidence/selka-body-optimized-performance-20261011/README.md)
+completes 20 samples per side for 36 workflows and fails 34 strict median/p95
+verdicts. Although compiler build/gate slots were reserved, sampled external
+project activity overlapped the benchmark CPU affinity throughout the observed
+intervals. The retained data are diagnostic; they neither establish the size of
+an optimization gain nor satisfy the 1.5-times performance requirement.
 
 The proposed B6/B7 split follows actual compiler source dependencies. Byte slices
 appear in `body_check/graph.my` and the codecs; buffer construction and writes
