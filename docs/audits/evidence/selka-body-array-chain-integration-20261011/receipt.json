@@ -21,7 +21,8 @@
     "skipped": 0,
     "python_body_selftests": 93,
     "main_source_check": "passed",
-    "formatting": "passed"
+    "formatting": "passed",
+    "promoted_manifest_python_selftests": 93
   },
   "depth_boundary": {
     "accepted_block_count": 254,
@@ -33,7 +34,8 @@
     "The initial integration crashed in the original 256-block Debug test.",
     "The extracted dispatcher fixed the crash; a new boundary case exposed a shared synthetic zero node for function body and return expression.",
     "The fixture now assigns a distinct body index and both sides of the boundary pass.",
-    "A formatter CLI usage error, transient merge markers and one extraction-local shadowing diagnostic are retained separately."
+    "A formatter CLI usage error, transient merge markers and one extraction-local shadowing diagnostic are retained separately.",
+    "The closed profile inventory initially still named the promoted chain fixture; it now requires that fixture to succeed, and all 93 selftests pass."
   ],
   "original_chain_transition": {
     "schema": 9,
@@ -273,6 +275,14 @@
     "body-package-receipt.json.gz": {
       "sha256": "966f4d0977588aa9d7e2b35131e94d62f6953af83f81e2031584b846b3d5d08e",
       "uncompressed_sha256": "eecce837aa3c493f0a738ceaa66d2dc9a0e22e456f23e040d7383189ce212ba1"
+    },
+    "b10-chain-promoted-harness-selftests.log.gz": {
+      "sha256": "07b73c13006f4243bbe2754862336b370ea05307225e92d9348ef3577e4b7460",
+      "uncompressed_sha256": "9a9e0dda2dea2d6ce20918b3f653d97fc27dded6e563c293b350fdc002341b16"
+    },
+    "b10-chain-promoted-harness-stale-inventory.log.gz": {
+      "sha256": "d4c2fe55ece203b95a081c5bf7fbdc6ae72f5e424c4fea01fe6bbe4f58bb6e44",
+      "uncompressed_sha256": "f3b01fa59b9b3db1e25e9d7ea1f732ba44cf532ff5238247ccab09a6b09929ff"
     }
   }
 }
