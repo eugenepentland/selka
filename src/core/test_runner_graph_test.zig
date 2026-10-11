@@ -66,10 +66,15 @@ fn replaceIndexes(a: std.mem.Allocator, store: *const stage.Store, slot: Digest,
 }
 
 fn publicationFailure(backing: std.mem.Allocator, input: Publication) !void {
-    var arena = std.heap.ArenaAllocator.init(backing);
+    // In-place growth depends on the backing allocator's bucket occupancy.
+    // Force each growth through allocation so every failure trial visits the
+    // same allocation sites, including in optimized tests.
+    var growth = std.testing.FailingAllocator.init(backing, .{ .resize_fail_index = 0 });
+    const stable = growth.allocator();
+    var arena = std.heap.ArenaAllocator.init(stable);
     defer arena.deinit();
     var constrained = input.store.*;
-    constrained.backing = backing;
+    constrained.backing = stable;
     var stats: graph.Statistics = .{};
     try input.prepared.publish(arena.allocator(), &constrained, input.indexes, &stats);
 }
@@ -269,8 +274,8 @@ test "graph metadata loadChunks malformed canonical schema discards all prior au
     try std.testing.expectEqualSlices(Digest, cold.derived, recovered.derived);
 }
 
-// spec-case: NEW-CORE-TEST-GRAPH-1
-test "graph metadata saveChunks frees every earlier publication collection on OutOfMemory" {
+// spec: NEW-CORE-TEST-GRAPH-OOM-1
+test "graph metadata saveChunks frees earlier publications under deterministic allocation failures" {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

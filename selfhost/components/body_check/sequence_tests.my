@@ -233,14 +233,18 @@ public func test_managed_bitwise_source_operator_has_native_alternative() -> boo
             return problem.code == "E_SET_OPERATOR" and problem.start == 2 and problem.end == 3 and problem.message == "`|` combines two sets or two integers (`bit_or(a, b)`)"
 
 
-public func test_scalar_context_byte_literal_refuses_unowned_array_schema() -> bool fails syntax_value.Problem:
+public func test_scalar_context_byte_literal_demands_canonical_u8_array() -> bool fails syntax_value.Problem:
     mut state = fresh_state()
     const raw = try literal(mut state, b"bytes", b"a")
-    match engine.expression_expected(mut state, raw, 0):
-        case Ok(value):
-            return False
-        case Err(problem):
-            return problem.code == "P_BODY_PROFILE" and len(state.batch.nodes) == 0
+    const value = try engine.expression_expected(mut state, raw, 0)
+    const second_raw = try literal(mut state, b"bytes", b"b")
+    const second = try engine.expression_expected(mut state, second_raw, 0)
+    if len(state.batch.facts.lists.recipes) != 1:
+        return False
+    const recipe = state.batch.facts.lists.recipes[0]
+    const child_type_id = try graph.field(state.batch.pool, state.batch.nodes[0], "ty")
+    const child_type = try graph.number(state.batch.pool, child_type_id)
+    return value.ty == 19 and second.ty == value.ty and recipe.id == value.ty and recipe.kind == "array" and recipe.element == 5 and recipe.members == 1 and child_type == 5 and value.id == 1 and second.id == 3
 
 
 public func test_explicit_int_byte_index_conversion_retains_full_cast_chain() -> bool fails syntax_value.Problem:

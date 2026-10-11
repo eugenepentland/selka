@@ -74,6 +74,9 @@ const rss = struct {
     /// over the 3G bound, so the install graph failed after writing the binary.
     /// Observed again (ReleaseFast, 2026-09-24, with per-module tests): 4.26G.
     const compile: u64 = 4608 * mib;
+    /// The full Core test root peaked at 5,222,174,720 bytes in the 2026-10-11
+    /// ReleaseFast gate. Reserve 6 GiB for that root's optimized compilation.
+    const core_fast: u64 = 6144 * mib;
     /// The B2 ReleaseFast compiler peaked at 5,226,618,880 bytes (2026-09-30).
     /// Reserve 5.5 GiB for that artifact, retaining about 13% measured headroom.
     const compiler_fast: u64 = 5632 * mib;
@@ -411,13 +414,14 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
     options.addOption([]const u8, "fixtures", b.pathJoin(&.{ root, "test", "core" }));
     options.addOption([]const u8, "lang_tests", b.pathJoin(&.{ root, "tests", "lang" }));
-    const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .test_runner = inputs.test_runner, .root_module = b.createModule(.{
+    const unit = b.addTest(.{ .max_rss = if (inputs.optimize == .fast) rss.core_fast else rss.compile, .filters = inputs.filters, .test_runner = inputs.test_runner, .root_module = b.createModule(.{
         .root_source_file = b.path("src/core/root_test.zig"),
         .target = inputs.target,
         .optimize = inputs.optimize,
         .imports = &.{.{ .name = "mylang", .module = inputs.front_end }},
     }) });
     verification_core_binary = unit;
+    guardian.enableTestDiagnostics(unit.root_module);
     unit.root_module.addImport("core_tool_platform", platform);
     unit.root_module.addImport("build_identity", inputs.identity);
     unit.root_module.addImport("memory_budget", budget);

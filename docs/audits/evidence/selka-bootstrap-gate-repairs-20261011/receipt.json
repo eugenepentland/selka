@@ -1,0 +1,135 @@
+{
+  "format": 1,
+  "base": "8aae33ef38207492c80fbf36c96908afdfa65907",
+  "scope": "Focused full-gate repairs; not a passing integrated gate or bootstrap/performance proof",
+  "core_tests": {
+    "Debug": 15,
+    "ReleaseFast": 15
+  },
+  "sequence_tests": {
+    "normal": 16,
+    "release_facts_leaks": 16
+  },
+  "guardian": 88,
+  "artifacts": [
+    {
+      "name": "wave-full-gate-8aae.json.gz",
+      "bytes": 1072,
+      "sha256": "7b88013aad8e64a0c49d193af1ba0b02ae47b6a34dd11a1cced401aebc6684ce",
+      "archive_bytes": 574,
+      "archive_sha256": "8718d929343d46034663ef16768649c0cfa93e03aeb9896e4ebf69b2b0b06806"
+    },
+    {
+      "name": "wave-full-gate-8aae.log.gz",
+      "bytes": 713787,
+      "sha256": "424273dfb29b1f68dcf2d0b2d2833c136de5676039ffbcf4245dfc0ab02ee1fa",
+      "archive_bytes": 128114,
+      "archive_sha256": "eda935efc93e1f9d8eed388990a9eec82d731a76c8a842cda6cd8dd266963bd3"
+    },
+    {
+      "name": "gate-regressions-focused.json.gz",
+      "bytes": 2646,
+      "sha256": "cd56ef73e25dadf3129ece609a50f8a9b1390c3c9ff346093f2b4d056e089fdc",
+      "archive_bytes": 803,
+      "archive_sha256": "1e9c03126e0a483c2c3259dae34ea5eb9a7816e6dee7a3eed199dbe9eeb34c9b"
+    },
+    {
+      "name": "gate-regressions-focused.log.gz",
+      "bytes": 324,
+      "sha256": "8e5ed7610f627b546bcda21cb21668e2c7d17ce3834b7efc9fb3a8c3f3e63881",
+      "archive_bytes": 172,
+      "archive_sha256": "c41ddd8be53448e09bc4cf49a8a8682bf0d0b026999f7cf4d4887051314eb506"
+    },
+    {
+      "name": "gate-regressions-release.json.gz",
+      "bytes": 1059,
+      "sha256": "747d275e9dbe98797c40f046bbd197ac97e032c9d7a66eb8215464391524bb15",
+      "archive_bytes": 608,
+      "archive_sha256": "c4ef9fb60c6e6d1baddb77ffec8eea5952f352801604a04bab8e71b7787417b8"
+    },
+    {
+      "name": "gate-regressions-release.log.gz",
+      "bytes": 4407,
+      "sha256": "cf441ae6a0f1cafacd09c704435566edee55d374e63a87590fb9ac1428df2d78",
+      "archive_bytes": 1663,
+      "archive_sha256": "ed2fbdd493f256f05d343dcb470ac3b63e9fd73b58dd98d4de687efba0a81533"
+    },
+    {
+      "name": "gate-regressions-publication-release.log.gz",
+      "bytes": 3619,
+      "sha256": "266eee1ca0f5560157a65102d243d094da93d96eda3d796fd9442a927f6dc2a2",
+      "archive_bytes": 1539,
+      "archive_sha256": "54fc0759130c40ec49922ef51c4890dcdf3ca8624faadb3b62ea20135e061413"
+    },
+    {
+      "name": "gate-regressions-publication-cli.log.gz",
+      "bytes": 1071,
+      "sha256": "759b8976621f40f25c6a27316d102d82e0a71e90ba491c0c35e672751fd0152f",
+      "archive_bytes": 538,
+      "archive_sha256": "d879eb9ae4af3a1ae50bf0b69ca31204d0b60737a9f9b80b5edb9f29b351b28b"
+    },
+    {
+      "name": "gate-regressions-stable-growth.json.gz",
+      "bytes": 2252,
+      "sha256": "7263ae782a119ef675aca807193cda7b7b6fba53358f1644895fd6238bdd51ed",
+      "archive_bytes": 682,
+      "archive_sha256": "e78e71d32b703f42728d4bbf201b7ae5dce3257f48949ff661b8bac18779bb66"
+    },
+    {
+      "name": "gate-regressions-stable-growth.log.gz",
+      "bytes": 1088,
+      "sha256": "4f75e00a53dd8628781b3f34e5dd9d5c42a4c0ed631985a8caf6bd9754e8a233",
+      "archive_bytes": 542,
+      "archive_sha256": "1eac41badbad8ebf91ebe230cc54645f3ee57e3278f0904fcdb07efc6b7c86a0"
+    },
+    {
+      "name": "gate-regressions-stable-growth.py.gz",
+      "bytes": 2028,
+      "sha256": "c4ca9c2718f4a6f431b98fbc9830dde63c16031dcaf37930e10945b2b2a7cbfd",
+      "archive_bytes": 967,
+      "archive_sha256": "7238f5d2e613f025206dc2b941b84d15a0425e38e226066bd70a5e3f279ce1d8"
+    },
+    {
+      "name": "gate-regressions-stable-growth-Debug.log.gz",
+      "bytes": 2815,
+      "sha256": "cdb510758db2822d389f96d01ca64b1a189a5d9579922ae2d28377a5ae0ff251",
+      "archive_bytes": 1275,
+      "archive_sha256": "94af8d822f9aead2c194a4c737afaa32c4ea91412bdbdcc42bec8bf200e6aff7"
+    },
+    {
+      "name": "gate-regressions-stable-growth-ReleaseFast.log.gz",
+      "bytes": 2810,
+      "sha256": "25f87312f490c6677fbc22ca24986e61ddd221d93ed424776e332887e51f04cb",
+      "archive_bytes": 1271,
+      "archive_sha256": "6506f06ccd1fb78210b946a12d1e0da4952bed01c341fc895699386298c43bc9"
+    },
+    {
+      "name": "gate-regressions-stable-growth-guardian.log.gz",
+      "bytes": 836,
+      "sha256": "73a23b7757db9cb114864377727ac635523ed12a849dea7c1c1419dabfaf1249",
+      "archive_bytes": 426,
+      "archive_sha256": "7b5e29f8b6955b3a785bf74687f643738a632f1112b3c56acad26031b88f8da4"
+    },
+    {
+      "name": "gate-regressions-final-guardian.log.gz",
+      "bytes": 1373,
+      "sha256": "1330012ca4861f9d0af364e24fef5ac4dcb573cd14156e51597a7d03797c0cc5",
+      "archive_bytes": 304,
+      "archive_sha256": "420adaf12fb2bcb3e0ff2a72df4b82c29e05780e26cc744e145de079e5b82137"
+    },
+    {
+      "name": "graph-publication-test-before-stable-growth.zig.gz",
+      "bytes": 25891,
+      "sha256": "3f8bd5a9430c7cecb2cef2862a32af0bfee3cb648ce3e737a79a1850b2c24a3d",
+      "archive_bytes": 3919,
+      "archive_sha256": "79f218fc6ff35925535fd7e2f626a97790a68f9f28691dd91a190478f21e67c2"
+    }
+  ],
+  "source_sha256": {
+    "SPEC.md": "a6c1b40ea59e7e4efa114ef5316476526d4445d768ba475dbf8e2bb1f240d739",
+    "build.zig": "860ce8fddb003343857775c831d389cf62f4f2e0ab4b58bc77b0293ec8457adb",
+    "selfhost/components/body_check/sequence_tests.my": "0b69bd291b3a84f5aa4eef03fb4fd5bdb1b5b81dae286bd9be42367e72892572",
+    "src/core/test_runner_graph.zig": "5fc36ff85fb4fafed7e67cfde6665623c2064cdffcde4b487f95cbb8aaec6f89",
+    "src/core/test_runner_graph_test.zig": "9c72b23ca85cd0a9871b939a55c3113331b87c4faec49bd129e171728f52a3ff"
+  }
+}
