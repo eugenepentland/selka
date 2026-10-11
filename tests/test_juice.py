@@ -412,5 +412,24 @@ class Calibration(Directory):
             fit(path)
 
 
+# New test classes default to the fresh native cohort until reviewed. Keep the
+# ordinary invocation as the independent complete test inventory.
+PURE_CLASSES = (Contracts, Parsers, Reports, Calibration)
+
+
+def cohort_suite(loader, pure):
+    suite = unittest.TestSuite()
+    for name in sorted(globals()):
+        candidate = globals()[name]
+        if (isinstance(candidate, type) and issubclass(candidate, unittest.TestCase)
+                and candidate.__module__ == __name__
+                and (candidate in PURE_CLASSES) == pure):
+            suite.addTests(loader.loadTestsFromTestCase(candidate))
+    return suite
+
+
 if __name__ == "__main__":
+    if len(sys.argv) == 2 and sys.argv[1] in ("--pure", "--native"):
+        result = unittest.TextTestRunner().run(cohort_suite(unittest.defaultTestLoader, sys.argv[1] == "--pure"))
+        sys.exit(0 if result.wasSuccessful() else 1)
     unittest.main()

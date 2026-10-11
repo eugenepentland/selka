@@ -823,8 +823,13 @@ pub fn build(b: *std.Build) void {
     // Work-based performance comparisons have no PMU/Valgrind dependency in
     // the gate; real collector qualification is an explicit developer run.
     const juice_step = b.step("test-juice", "Verify performance proxy contracts, collectors and comparison integrity");
-    const juice_run = driver(b, "python3 tests/test_juice.py", rss.script, "juice");
-    juice_run.addArgs(&.{ "python3", "tests/test_juice.py" });
+    // These classes exercise synthetic records and private temporary fixtures.
+    // Runner also compiles/executes C and observes host tools: keep it fresh.
+    const juice_pure_run = driver(b, "Juice synthetic contracts and reports", rss.script, "juice_pure");
+    juice_pure_run.addArgs(&.{ "python3", "tests/test_juice.py", "--pure" });
+    juice_step.dependOn(&juice_pure_run.step);
+    const juice_run = driver(b, "Juice native runner integration", rss.script, "juice");
+    juice_run.addArgs(&.{ "python3", "tests/test_juice.py", "--native" });
     juice_step.dependOn(&juice_run.step);
     const juice_native_run = driver(b, "python3 tests/test_juice_native.py", rss.script, "juice");
     juice_native_run.addArgs(&.{ "python3", "tests/test_juice_native.py" });
@@ -1012,7 +1017,7 @@ pub fn build(b: *std.Build) void {
     // These scripts use declared source fixtures and isolated stand-ins, and
     // never execute a prepared native compiler or test binary. Unknown/new
     // cohorts retain the complete artifact identity until explicitly reviewed.
-    for ([_][]const u8{ "idioms_self", "friction", "affected", "coverage_self", "manifest_self", "verification_cache", "fuzz_campaign", "juice_cache", "embedded_migration" }) |id| {
+    for ([_][]const u8{ "idioms_self", "friction", "affected", "coverage_self", "manifest_self", "verification_cache", "fuzz_campaign", "juice_cache", "juice_pure", "embedded_migration" }) |id| {
         verification_registry.?.artifactDependencies(id, &.{});
     }
     verification_registry.?.artifactDependencies("memory_budget", &.{ "memory-budget", "components" });

@@ -121,7 +121,11 @@ pub const parser_hints = [_][]const u8{
 /// `tests/test_friction_harvest.py`: the harvester and its replay fixture.
 pub const friction = [_][]const u8{ "tests/test_friction_harvest.py", "velocity/friction/" };
 
-/// Juice's isolated runner, format, comparison and calibration tests.
+/// Synthetic contracts, parsers, reports and calibration; retain the complete
+/// imported package closure and its membership, including CLI/engine imports.
+pub const juice_pure = [_][]const u8{ "tests/test_juice.py", "scripts/juice_tool/" };
+
+/// Juice's live runner and native collector integration tests.
 pub const juice = [_][]const u8{ "tests/test_juice.py", "tests/test_juice_native.py", "scripts/juice", "scripts/juice_tool/", "scripts/juice_validate.py", "examples/juice/" };
 
 /// Runtime collector experiments observe CPU, scheduler and current host state.
