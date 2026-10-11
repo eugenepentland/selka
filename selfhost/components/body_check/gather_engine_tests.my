@@ -82,3 +82,45 @@ public func test_nested_dictionary_gather_restores_outer_sink_and_recipe_order()
     state.syntax.nodes.append(gather)
     const result = try engine.expression(mut state, 3)
     return result.ty == 20 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[0].failure == 0 and state.batch.facts.lists.recipes[1].failure == 19 and len(state.scope.locals) == 6 and state.scope.locals[0].ty == 19 and state.scope.locals[3].ty == 20 and len(state.control.values.gathers) == 0
+
+
+func generator_call(mut state: engine.State, name: bytes) -> int fails syntax_value.Problem:
+    state.syntax.source = b"07" + name
+    const gather_span = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const loop = try syntax_value.integer(mut state.syntax.pool, 1)
+    const shape = try syntax_value.enumeration(mut state.syntax.pool, b"generator")
+    const payload = try syntax_value.object(mut state.syntax.pool, ["shape", "loop", "open"], [shape, loop, gather_span])
+    const generator = try node(mut state.syntax.pool, gather_span, b"gather", payload)
+    state.syntax.nodes[2] = generator
+    const name_span = try syntax_value.span(mut state.syntax.pool, 2, len(state.syntax.source))
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const argument = try syntax_value.integer(mut state.syntax.pool, 2)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [argument])
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const call = try syntax_value.object(mut state.syntax.pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name_span, arguments, empty, empty])
+    const call_node = try node(mut state.syntax.pool, name_span, b"call", call)
+    state.syntax.nodes.append(call_node)
+    state.batch.resolved.append(-1)
+    state.batch.facts.expected.append(-1)
+    return 3
+
+
+public func test_set_generator_consumer_preserves_gather_then_call_copy_spans() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"set")
+    const raw = try generator_call(mut state, b"set")
+    const result = try engine.expression(mut state, raw)
+    const gathered = state.batch.resolved[2]
+    const gather_span = try graph.field(state.batch.pool, state.batch.nodes[gathered], "span")
+    const call_span = try graph.field(state.batch.pool, state.batch.nodes[result.id], "span")
+    const first_id = try graph.field(state.batch.pool, gather_span, "start")
+    const last_id = try graph.field(state.batch.pool, call_span, "start")
+    const first = try graph.number(state.batch.pool, first_id)
+    const last = try graph.number(state.batch.pool, last_id)
+    return result.ty == 19 and result.id == gathered + 1 and first == 0 and last == 2 and len(state.batch.facts.lists.recipes) == 1 and len(state.control.values.gathers) == 0
+
+
+public func test_list_generator_consumer_selects_list_accumulator_without_set_recipe() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"list")
+    const raw = try generator_call(mut state, b"list")
+    const result = try engine.expression(mut state, raw)
+    return result.ty == 19 and state.batch.facts.lists.recipes[0].kind == "list" and len(state.control.values.gathers) == 0

@@ -1065,6 +1065,29 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             if len(state.syntax.modules) != 0 and (raw_callee == b"bytes" or raw_callee == b"byte_buffer"):
                 declared = False
             if not declared:
+                if raw_callee == b"list" or raw_callee == b"set" or raw_callee == b"dict":
+                    _ = try io_arguments.positional(state.syntax.pool, payload)
+                    const generator_inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const generator_inputs = try graph.items(state.syntax.pool, generator_inputs_id)
+                    if len(generator_inputs) == 1:
+                        const generator_raw = try graph.number(state.syntax.pool, generator_inputs[0])
+                        const generator_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[generator_raw], "data")
+                        const generator_data = try graph.get(state.syntax.pool, generator_data_id)
+                        if generator_data.data == b"gather":
+                            const generator_payload = try graph.payload(state.syntax.pool, generator_data_id)
+                            const generator_shape_id = try graph.field(state.syntax.pool, generator_payload, "shape")
+                            const generator_shape = try graph.get(state.syntax.pool, generator_shape_id)
+                            if generator_shape.data == b"generator":
+                                const generator_span = try graph.field(state.syntax.pool, state.syntax.nodes[generator_raw], "span")
+                                const gathered = try gather_value_as(mut state, generator_payload, generator_span, state.batch.facts.expected[generator_raw], raw_callee)
+                                state.batch.resolved[generator_raw] = gathered.id
+                                const gathered_data_id = try graph.field(state.batch.pool, state.batch.nodes[gathered.id], "data")
+                                const gathered_data = try graph.get(state.batch.pool, gathered_data_id)
+                                const gathered_payload = try graph.payload(state.batch.pool, gathered_data_id)
+                                const id = try emission.node(mut state.batch, state.syntax.pool, span, gathered.ty, gathered_data.data, gathered_payload)
+                                state.batch.resolved[raw_id] = id
+                                state.depth = state.depth - 1
+                                return Expression(id=id, ty=gathered.ty)
                 if raw_callee == b"list":
                     const inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
                     const inputs = try graph.items(state.syntax.pool, inputs_id)
@@ -4779,12 +4802,20 @@ func membership_value(mut state: State, payload: int, span: int) -> Expression f
 func gather_value(mut state: State, payload: int, span: int, expected: int) -> Expression fails syntax_value.Problem:
     const shape_id = try graph.field(state.syntax.pool, payload, "shape")
     const shape = try graph.get(state.syntax.pool, shape_id)
-    if shape.data != b"dict" and shape.data != b"set" and shape.data != b"list":
-        const rejection = try problem(state, span, "P_BODY_PROFILE", "generator gather requires an admitted consuming call")
+    if shape.data == b"generator":
+        const rejection = try problem(state, span, "E_GENERATOR", "a generator expression is accepted only as the argument of sum, any, all, min, max, sorted, list, set, dict or str.join")
+        state.problems.append(syntax_problem.alternative(rejection, "build a list with a comprehension instead: `values = [x * x for x in xs]`"))
         fail rejection
+    if shape.data != b"dict" and shape.data != b"set" and shape.data != b"list":
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "gather shape is outside the collection body profile")
+        fail rejection
+    return try gather_value_as(mut state, payload, span, expected, shape.data)
+
+
+func gather_value_as(mut state: State, payload: int, span: int, expected: int, kind: bytes) -> Expression fails syntax_value.Problem:
     const loop_id = try graph.field(state.syntax.pool, payload, "loop")
     const raw_loop = try graph.number(state.syntax.pool, loop_id)
-    state.control.values.gathers.append(GatherSink(kind=shape.data, expected=expected, owner=-1))
+    state.control.values.gathers.append(GatherSink(kind=kind, expected=expected, owner=-1))
     mut loop = Statement(id=-1, terminates=False)
     match statement(mut state, raw_loop):
         case Ok(checked):
