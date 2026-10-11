@@ -103,6 +103,71 @@ class WatchdogTests(unittest.TestCase):
             child.stdout.close()
             child.stderr.close()
 
+    def supervised(self, source, **kwargs):
+        argv = [sys.executable, '-c', source]
+        command = ('import os; from scripts.verification_process import run_supervised; '
+                   f'raise SystemExit(run_supervised({argv!r},dict(os.environ)))')
+        return self.spawn(command, **kwargs)
+
+    def test_supervisor_kills_detached_sessions_and_reaps(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pid_path = Path(temporary)/'pid'
+            source = ('import subprocess,time; child=subprocess.Popen('
+                      '["sleep","60"],start_new_session=True); '
+                      f'open({str(pid_path)!r},"w").write(str(child.pid)); time.sleep(60)')
+            child = self.supervised(source, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            logs = BoundedProcessLogs(Path(temporary)/'out', Path(temporary)/'err')
+            result = wait_owned(child, limits=ProcessLimits(.2,.5), logs=logs)
+            self.assertTrue(result.timed_out)
+            self.assertTrue(logs.capture_complete)
+            with self.assertRaises(ProcessLookupError):
+                os.kill(int(pid_path.read_text()), 0)
+            child.stdout.close()
+            child.stderr.close()
+
+    def test_supervisor_leader_exit_is_incomplete(self):
+        result = wait_owned(self.supervised('import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True)'),
+                            limits=ProcessLimits(1,.5))
+        self.assertEqual(result.returncode, 125)
+        self.assertFalse(result.complete)
+
+    def test_unsupervised_escaped_writer_is_bounded_incomplete(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pid_path = Path(temporary)/'pid'
+            source = ('import subprocess; child=subprocess.Popen(["sleep","60"],start_new_session=True); '
+                      f'open({str(pid_path)!r},"w").write(str(child.pid))')
+            child = self.spawn(source, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            logs = BoundedProcessLogs(Path(temporary)/'out', Path(temporary)/'err')
+            try:
+                started = time.monotonic()
+                result = wait_owned(child, logs=logs)
+                self.assertLess(time.monotonic()-started, 1)
+                self.assertFalse(result.complete)
+                self.assertEqual(result.returncode, 125)
+            finally:
+                os.kill(int(pid_path.read_text()), signal.SIGKILL)
+                child.stdout.close()
+                child.stderr.close()
+
+    def test_stuck_console_tee_does_not_block(self):
+        release = threading.Event()
+        class Tee:
+            def write(self, data):
+                release.wait()
+            def flush(self):
+                pass
+        with tempfile.TemporaryDirectory() as temporary:
+            logs = BoundedProcessLogs(Path(temporary)/'out', Path(temporary)/'err', stdout_tee=Tee())
+            child = self.spawn('print("hi")', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            started = time.monotonic()
+            result = wait_owned(child, logs=logs)
+            self.assertLess(time.monotonic()-started, 1)
+            self.assertEqual(result.returncode, 0)
+            self.assertTrue(logs.capture_errors)
+            release.set()
+            child.stdout.close()
+            child.stderr.close()
+
     def test_interrupt_cleans_and_propagates(self):
         class Interrupt:
             def is_set(self):

@@ -13,6 +13,7 @@ import signal
 import subprocess
 import time
 import threading
+import queue
 from typing import BinaryIO
 
 
@@ -44,17 +45,18 @@ class ProcessResult:
     elapsed_seconds: float
     timed_out: bool = False
     cancelled: bool = False
+    incomplete: bool = False
 
     @property
     def complete(self) -> bool:
-        return not self.timed_out and not self.cancelled
+        return not self.timed_out and not self.cancelled and not self.incomplete
 
 
 class BoundedProcessLogs:
     """Drain PIPE output to separate capped files; optionally tee every byte live.
 
     File truncation is explicit in ``truncated``. Tee destinations are synchronous
-    and must not block; use files or the coordinator's normal console streams.
+    using a bounded asynchronous backlog; stalled tees cannot block execution.
     """
     def __init__(self, stdout_path: Path, stderr_path: Path, *, max_bytes: int = 8 * 1024 * 1024,
                  stdout_tee: BinaryIO | None = None, stderr_tee: BinaryIO | None = None):
@@ -73,6 +75,9 @@ class BoundedProcessLogs:
         self._thread = None
         self._stop = threading.Event()
         self._error = None
+        self.capture_complete = True
+        self._tee_queues = [queue.Queue(maxsize=8), queue.Queue(maxsize=8)]
+        self._tee_threads = []
 
     def attach(self, process):
         try:
@@ -93,6 +98,21 @@ class BoundedProcessLogs:
     def start(self, process):
         """Begin capture immediately after Popen, including admission queue output."""
         self.attach(process)
+        for index, tee in enumerate(self.tees):
+            if tee is not None:
+                def tee_pump(index=index, tee=tee):
+                    try:
+                        while True:
+                            chunk = self._tee_queues[index].get()
+                            if chunk is None:
+                                return
+                            tee.write(chunk)
+                            tee.flush()
+                    except OSError as error:
+                        self.capture_errors.append(str(error))
+                thread = threading.Thread(target=tee_pump, daemon=True)
+                thread.start()
+                self._tee_threads.append((index, thread))
         def pump():
             try:
                 while not self._stop.is_set() and self._selector.get_map():
@@ -127,17 +147,25 @@ class BoundedProcessLogs:
             self.truncated[index] = self.bytes_seen[index] > self.max_bytes
             if self.tees[index] is not None:
                 try:
-                    self.tees[index].write(data)
-                    self.tees[index].flush()
-                except OSError as error:
+                    self._tee_queues[index].put_nowait(data)
+                except queue.Full:
                     if len(self.capture_errors) < 16:
-                        self.capture_errors.append(str(error))
-                    self.tees = tuple(None if item == index else tee for item, tee in enumerate(self.tees))
+                        self.capture_errors.append("live tee backlog dropped; file capture retained")
 
     def close(self):
         self._stop.set()
         if self._thread is not None:
-            self._thread.join()
+            self._thread.join(timeout=0.25)
+            if self._thread.is_alive():
+                self.capture_complete = False
+        for index, thread in self._tee_threads:
+            try:
+                self._tee_queues[index].put_nowait(None)
+            except queue.Full:
+                pass
+            thread.join(timeout=0.05)
+            if thread.is_alive() and len(self.capture_errors) < 16:
+                self.capture_errors.append("live tee did not finish; file capture retained")
         self._selector.close()
         for file in self._files:
             try:
@@ -183,7 +211,7 @@ def wait_owned(process: subprocess.Popen, *, limits: ProcessLimits = ProcessLimi
     """Wait after admission; timeout excludes queue time and returns status 124.
 
     The caller must launch with start_new_session=True and retain exclusive group
-    ownership. Workers must not detach into other sessions. Cancellation returns
+    ownership. Use run_supervised in the admitted child for detached descendants. Cancellation returns
     130; exceptions (including KeyboardInterrupt) clean up then propagate.
     ``execution_started`` is a monotonic timestamp at the admission handshake.
     Never publish success evidence for a result whose ``complete`` is false.
@@ -220,13 +248,20 @@ def wait_owned(process: subprocess.Popen, *, limits: ProcessLimits = ProcessLimi
         if logs is not None:
             # All writers in the owned group have been killed; drain buffered data.
             if logs._thread is not None:
-                logs._thread.join()
+                logs._thread.join(timeout=0.25)
+                if logs._thread.is_alive():
+                    logs.capture_complete = False
+                    logs.capture_errors.append("output writer survived owned process group cleanup")
                 logs.drain()
             else:
-                while logs._selector.get_map():
+                drain_until = time.monotonic() + 0.25
+                while logs._selector.get_map() and time.monotonic() < drain_until:
                     logs.drain(0.02)
-        return ProcessResult(130 if cancelled else 124 if timed_out else process.returncode,
-                             time.monotonic() - started, timed_out, cancelled)
+                if logs._selector.get_map():
+                    logs.capture_complete = False
+        incomplete = process.returncode == 125 or (logs is not None and not logs.capture_complete)
+        return ProcessResult(130 if cancelled else 124 if timed_out else 125 if incomplete else process.returncode,
+                             time.monotonic() - started, timed_out, cancelled, incomplete)
     except BaseException:
         _cleanup(process, limits.terminate_grace_seconds, None)
         raise
@@ -244,6 +279,81 @@ def terminate_owned(process: subprocess.Popen, *, grace_seconds: float = 0.5):
     except ProcessLookupError:
         pass
     _cleanup(process, grace_seconds, None)
+
+
+
+
+def _descendants(pid):
+    """Read only the isolated supervisor's lineage, never global process names."""
+    result = set()
+    pending = [pid]
+    while pending:
+        parent = pending.pop()
+        try:
+            children = Path(f"/proc/{parent}/task/{parent}/children").read_text().split()
+        except FileNotFoundError:
+            continue
+        for child in map(int, children):
+            if child not in result:
+                result.add(child)
+                pending.append(child)
+    return result
+
+
+def run_supervised(argv: list[str], env: dict[str, str]) -> int:
+    """Run inside the admitted child, retaining and reaping its entire lineage.
+
+    Linux subreaping is enabled here only, never in the shared coordinator.
+    Detached sessions remain descendants of this supervisor. A leftover child
+    after the command exits makes the action incomplete (125). SIGTERM/SIGINT
+    cancellation yields 130. Parent watchdog grace must be at least 0.5 seconds.
+    """
+    import ctypes
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(36, 1, 0, 0, 0) != 0:  # PR_SET_CHILD_SUBREAPER
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error))
+    interrupted = False
+    def interrupt(signum, frame):
+        nonlocal interrupted
+        interrupted = True
+    previous = {sig: signal.signal(sig, interrupt) for sig in (signal.SIGTERM, signal.SIGINT)}
+    worker = None
+    try:
+        worker = subprocess.Popen(argv, env=env)
+        while worker.poll() is None and not interrupted:
+            time.sleep(0.01)
+        status = worker.poll()
+        leftovers = _descendants(os.getpid())
+        incomplete = status is not None and bool(leftovers)
+        # Stop before kill so descendants cannot keep forking during shutdown.
+        deadline = time.monotonic() + 0.3
+        while leftovers and time.monotonic() < deadline:
+            for pid in leftovers:
+                try:
+                    os.kill(pid, signal.SIGSTOP)
+                    os.kill(pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            while True:
+                try:
+                    pid, _ = os.waitpid(-1, os.WNOHANG)
+                    if pid == 0:
+                        break
+                except ChildProcessError:
+                    break
+            leftovers = _descendants(os.getpid())
+            if leftovers:
+                time.sleep(0.005)
+        if worker.returncode is None:
+            # waitpid above may have reaped it; preserve only incomplete status.
+            worker.poll()
+        if leftovers:
+            return 125
+        return 130 if interrupted else 125 if incomplete else status
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 
 LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
