@@ -51,6 +51,20 @@ def mutations(payload):
     return dict(zip(NAMES, changed))
 
 
+
+def require_rejection(result):
+    # ComponentProtocol's established CLI renderer still uses a test-index label.
+    # Require that exact diagnostic, rather than treating every host failure as proof.
+    F.require(result[0] == 2 and not result[1], 'join reply was not a host rejection')
+    try:
+        record = json.loads(result[2])
+    except (ValueError, TypeError) as error:
+        raise RuntimeError('join rejection is not diagnostic-v1') from error
+    F.require(record == {'version': 'diagnostic-v1', 'kind': 'message',
+        'message': 'mylang: test-index component frame malformed, oversized, stale, or contains invalid IDs\n'},
+        'join rejection is not ComponentProtocol')
+
+
 def run(args, work, empty, checkpoint):
     """Persist every request/reply and partial verdict before checking status."""
     work.mkdir(parents=True, exist_ok=False)
@@ -86,7 +100,6 @@ def run(args, work, empty, checkpoint):
                         'payload_sha256': F.digest(path), 'payload_path': str(path), 'status': result[0],
                         'stdout': result[1].decode('utf8', 'replace'), 'stderr': result[2].decode('utf8', 'replace')})
         checkpoint(records, capture)
-        F.require(result[0] == 2 and not result[1] and b'ComponentProtocol' in result[2],
-                  'join forged reply escaped protocol rejection: ' + name)
+        require_rejection(result)
     F.require(len(records) == 4, 'incomplete join forged checks')
     return records, capture

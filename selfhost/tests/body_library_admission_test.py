@@ -26,6 +26,10 @@ class LibraryAdmissionTests(unittest.TestCase):
     def test_join_forgery_selection_and_shapes_are_independent_of_workflow_count(self):
         import struct
         J=D.J
+        protocol=json.dumps({'version':'diagnostic-v1','kind':'message','message':'mylang: test-index component frame malformed, oversized, stale, or contains invalid IDs\n'}).encode()+b'\n'
+        J.require_rejection((2,b'',protocol))
+        for bad in ((0,b'',protocol),(2,b'escaped',protocol),(2,b'',b'ComponentProtocol'),(2,b'',protocol.replace(b'frame malformed, oversized, stale, or contains invalid IDs',b'missing')),(2,b'',protocol+protocol)):
+            with self.assertRaises(RuntimeError):J.require_rejection(bad)
         rows=[]
         def add(kind,integer=0,data=b'',children=(),names=()):
             rows.append((kind,integer,data,list(children),list(names)));return len(rows)-1
@@ -70,7 +74,7 @@ class LibraryAdmissionTests(unittest.TestCase):
             with patch.object(J.D,'private_fixture',return_value=(Path('/private'),Path('/real'))), \
                  patch.object(J.D,'capture_exchange',return_value=((0,b'',b''),request,reply)), \
                  patch.object(J.F,'execute',side_effect=[(0,b'',b''),(0,b'',b'')]) as execute:
-                with self.assertRaisesRegex(RuntimeError,'escaped protocol rejection'):J.run(args,work,Path('/empty'),save)
+                with self.assertRaisesRegex(RuntimeError,'not a host rejection'):J.run(args,work,Path('/empty'),save)
                 self.assertEqual(len(checkpoints[-1][0]),1)
                 self.assertEqual(checkpoints[-1][0][0]['status'],0)
                 self.assertTrue((work/'wrong_result.bin').is_file())
