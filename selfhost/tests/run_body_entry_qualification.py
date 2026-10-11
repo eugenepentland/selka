@@ -147,6 +147,8 @@ class Qualification:
         self.records = []
         self.captures = []
         self.generations = []
+        self.resource_hostile = []
+        self.resource_capture = {}
         self.wrapper = self.work / 'capture-wrapper'
 
     def checkpoint(self, complete=False):
@@ -156,7 +158,8 @@ class Qualification:
                   'guest_leaks': True, 'other_six_boundary_modes': 'reference',
                   'cases': 24, 'success': 14, 'diagnostics': 8, 'profile': 2,
                   'operations': len(self.records), 'expected_operations': EXPECTED_OPERATIONS,
-                  'records': self.records, 'captures': self.captures, 'generations': self.generations}
+                  'records': self.records, 'captures': self.captures, 'generations': self.generations,
+                  'resource_forged': self.resource_hostile, 'resource_forged_capture': self.resource_capture}
         if complete:report.update(failed=0, skipped=0)
         self.args.report.parent.mkdir(parents=True, exist_ok=True)
         self.args.report.write_text(json.dumps(report, indent=2) + '\n')
@@ -277,12 +280,20 @@ class Qualification:
         compiled = F.execute([self.args.zig, 'cc', FIXTURES / 'exchange_capture.c', '-O2', '-o', self.wrapper], D.coordinator_environment(), self.work, 180)
         require(compiled[0] == 0, 'bounded native capture fixture failed to compile')
         self.fixtures(); self.entries()
+        import run_body_entry_hostile as hostile
+        def hostile_checkpoint(records, capture):
+            self.resource_hostile, self.resource_capture = records, capture
+            self.checkpoint()
+        self.resource_hostile, self.resource_capture = hostile.run(
+            self.args, self.work / 'resource-exchanges', self.empty, hostile_checkpoint)
+        require(len(self.resource_hostile) == len(hostile.NAMES), 'incomplete resource hostile selection')
         require(len(self.records) == EXPECTED_OPERATIONS and len(self.captures) == 35 and len(self.generations) == 2, 'incomplete B7 operations/captures/generations')
         require_capture_inventory(self.captures)
         require(F.digest(self.args.compiler) == self.identity['host'] and D.packages(self.args.component_dir, body_schema=SCHEMA) == self.identity['packages'], 'installed deployment changed')
         require(source_identity(self.args.source_root) == self.identity['sources'], 'component source changed')
         require(request_inventory(self.args.requests_dir) == self.requests, 'authentic replay inventory changed')
         self.checkpoint(True)
+        print('body entry resource forgeries: ' + str(len(self.resource_hostile)) + ' rejected; 0 failed, 0 skipped')
         print('body entry qualification: 24 fixtures, 7 actual entries, 2 generations, 349 operations; 0 failed, 0 skipped')
 
 
