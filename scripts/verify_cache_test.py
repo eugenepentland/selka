@@ -618,6 +618,34 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(captured['observed_steps']['status'], 'unknown')
         self.assertEqual(captured['observed_steps']['observations'], [])
 
+    def test_admission_settle_survives_worker_success_and_timeout(self):
+        for expected, source in ((0, 'pass'), (124, 'import time; time.sleep(30)')):
+            slots = self.root / ('.settle-slots-' + str(expected))
+            environment = coordinator.normalized_environment(self.root)
+            environment.update(MYLANG_SLOT_DIR=str(slots), MYLANG_GATE_SLOTS='1',
+                               MYLANG_GATE_MEM='0', MYLANG_SLOT_POLL='1', MYLANG_SLOT_SETTLE='2', MYLANG_TIMING_CPUS='')
+            timings = []
+            status, _ = REAL_ADMISSION(self.root, 'gate', [sys.executable, '-c', source], environment,
+                                      lambda: True, timings=timings,
+                                      limits=coordinator.ProcessLimits(.1 if expected else None),
+                                      log_dir=self.root / ('.settle-logs-' + str(expected)))
+            self.assertEqual(status, expected)
+            self.assertEqual(timings[0]['log_errors'], [])
+            with (slots / 'gate1.lock').open('a') as slot, (slots / 'admit.lock').open('a') as admission:
+                fcntl.flock(slot, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                with self.assertRaises(BlockingIOError):
+                    fcntl.flock(admission, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                # Leave no scheduler helper running when the private fixture ends.
+                deadline = time.monotonic() + 10
+                while True:
+                    try:
+                        fcntl.flock(admission, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        break
+                    except BlockingIOError:
+                        if time.monotonic() >= deadline:
+                            self.fail('admission helper did not release its lock')
+                        time.sleep(.02)
+
     def test_new_earlier_path_directory_cannot_shadow_normalized_worker_tool(self):
         tool = self.write('tools/existing/identity-tool', '#!/bin/sh\nprintf selected-tool\n')
         tool.chmod(0o755)

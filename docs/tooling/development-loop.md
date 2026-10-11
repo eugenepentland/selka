@@ -25,7 +25,9 @@ live descendants after a command exits are incomplete execution, status 125.
 Cancellation terminates the owned tree; another coordinator's work remains owned
 by that coordinator. None of these incomplete outcomes publishes new success
 receipts. A subsequent request can retry. The supervisor preserves inheritable
-descriptors used by admission and child tooling.
+descriptors used by admission and child tooling. Admission's memory-settle helper
+has separate ownership and retains its original delay after a worker finishes or
+is cancelled.
 
 `.mylang-cache/verification-v1/last-run.json` records admission wait, input validation,
 worker duration, final validation, publication, selected/reused actions and the

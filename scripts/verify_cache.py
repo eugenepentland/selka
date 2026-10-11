@@ -55,7 +55,7 @@ COORDINATOR_INPUTS = ["scripts/verify_cache.py", "scripts/verification_snapshot.
 HOST_TOOLS = ("python3", "sh", "bash", "env", "grep", "sort", "mktemp", "rm",
               "sleep", "git", "find", "dirname", "readlink", "realpath", "cp",
               "mv", "chmod", "uname", "ln", "head", "tail", "wc", "timeout",
-              "taskset", "flock", "awk", "seq", "date", "cat", "touch", "sha256sum")
+              "taskset", "setsid", "flock", "awk", "seq", "date", "cat", "touch", "sha256sum")
 UNTRACKED_ENV = ("LD_PRELOAD", "LD_LIBRARY_PATH", "LD_AUDIT", "PYTHONPATH",
                  "PYTHONHOME", "ZIG_LIB_DIR", "CC", "CXX", "CPATH",
                  "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "LIBRARY_PATH")
