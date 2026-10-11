@@ -21,6 +21,7 @@ pub const Catalog = struct {
     base_count: usize = 0,
     lists: []const Sequence = &.{},
     list_available: bool = false,
+    records: []const typed.Record = &.{},
 };
 /// The exact managed identity and its internal scalar element representation.
 pub const Sequence = struct { id: typed.Type, element: typed.Type };

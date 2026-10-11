@@ -4,6 +4,7 @@ const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const list_validate = @import("body_check_list_validate.zig");
+const record_validate = @import("body_check_record_validate.zig");
 /// Invalid producer values and allocation failures remain host failures.
 pub const Error = error{ ComponentProtocol, OutOfMemory };
 /// Maximum scalar expression or statement table length.
@@ -55,6 +56,7 @@ pub fn input(a: std.mem.Allocator, item: value.Input) Error!void {
         }
     }
     if (item.modules.len != 0 and offset != item.context.source.len) return error.ComponentProtocol;
+    try record_validate.input(a, item);
 }
 fn diagnostics(items: []const value.Diagnostic, size: usize, rejecting: bool) Error!void {
     if (items.len > local_limit or (rejecting and items.len == 0)) return error.ComponentProtocol;
@@ -76,6 +78,7 @@ pub fn outcome(a: std.mem.Allocator, request: value.Input, result: value.Outcome
             try span(refusal.span, request.context.source.len);
         },
         .success => |output| {
+            try record_validate.success(a, request);
             try diagnostics(output.diagnostics, request.context.source.len, false);
             if (output.import_used.len != request.modules.len) return error.ComponentProtocol;
             for (output.import_used, request.modules) |flags, module| {
@@ -91,7 +94,7 @@ pub fn outcome(a: std.mem.Allocator, request: value.Input, result: value.Outcome
     }
 }
 const Work = union(enum) { node: usize, statement: usize, finish_node: usize, finish_statement: usize };
-const GraphContext = struct { source_len: usize, catalog: value.Catalog };
+const GraphContext = struct { source_len: usize, catalog: value.Catalog, accepted: []const bool };
 const Graph = struct {
     allocator: std.mem.Allocator,
     tables: value.Batch,
@@ -119,7 +122,7 @@ const Graph = struct {
             return;
         }
         if (T == typed.Type) {
-            if (!admittedType(self.context.catalog, item)) return error.ComponentProtocol;
+            if (!admittedType(self.context.catalog, self.context.accepted, item)) return error.ComponentProtocol;
             return;
         }
         switch (@typeInfo(T)) {
@@ -153,7 +156,9 @@ fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch) Error!
     defer a.free(statement_states);
     @memset(node_states, 0);
     @memset(statement_states, 0);
-    var graph: Graph = .{ .allocator = a, .tables = tables, .context = .{ .source_len = request.context.source.len, .catalog = request.catalog }, .locals = 0 };
+    const accepted = try record_validate.policy(a, request.catalog);
+    defer a.free(accepted);
+    var graph: Graph = .{ .allocator = a, .tables = tables, .context = .{ .source_len = request.context.source.len, .catalog = request.catalog, .accepted = accepted }, .locals = 0 };
     defer graph.pending.deinit(a);
     var locals: usize = 0;
     for (tables.functions, request.program.functions, 0..) |function, raw, id| {
@@ -240,6 +245,15 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
             if (list_validate.listElement(graph.context.catalog, node.ty) == null or try nodeType(graph, operation.capacity) != .i64) return error.ComponentProtocol;
         },
         .buffer_operation => |operation| try bufferNode(graph, node, operation),
+        .record => |fields| try recordNode(graph, node.ty, fields, true),
+        .update => |update| {
+            if (node.ty != try nodeType(graph, update.base)) return error.ComponentProtocol;
+            try recordNode(graph, node.ty, update.fields, false);
+        },
+        .field => |field| {
+            const record = try recordSchema(graph, try nodeType(graph, field.base));
+            if (field.index >= record.fields.len or node.ty != record.fields[field.index].ty) return error.ComponentProtocol;
+        },
         .array => |items| {
             const element = sequenceElement(graph.context.catalog, node.ty) orelse return error.ComponentProtocol;
             for (items) |item| if (try nodeType(graph, item) != element) return error.ComponentProtocol;
@@ -385,7 +399,8 @@ fn sequenceElement(item: value.Catalog, ty: typed.Type) ?typed.Type {
     if (item.bytes) |entry| if (ty == entry.id) return entry.element;
     return list_validate.listElement(item, ty);
 }
-fn admittedType(item: value.Catalog, ty: typed.Type) bool {
+fn admittedType(item: value.Catalog, accepted: []const bool, ty: typed.Type) bool {
+    if (ty.isAggregate()) return ty.recordIndex() < accepted.len and accepted[ty.recordIndex()];
     return switch (ty) {
         .i64, .bool, .unit, .u8, .u32, .u64 => true,
         else => sequenceElement(item, ty) != null,
@@ -458,4 +473,24 @@ fn sortableListElement(catalog: value.Catalog, element: typed.Type) bool {
     if (catalog.string) |sequence| if (sequence.id == element) return true;
     if (catalog.bytes) |sequence| if (sequence.id == element) return true;
     return false;
+}
+
+fn recordSchema(graph: *Graph, ty: typed.Type) Error!typed.Record {
+    if (!ty.isAggregate() or ty.recordIndex() >= graph.context.catalog.records.len) return error.ComponentProtocol;
+    if (!graph.context.accepted[ty.recordIndex()]) return error.ComponentProtocol;
+    const record = graph.context.catalog.records[ty.recordIndex()];
+    if (!record_validate.ordinary(record)) return error.ComponentProtocol;
+    return record;
+}
+fn recordNode(graph: *Graph, ty: typed.Type, fields: []const typed.FieldInit, complete: bool) Error!void {
+    const record = try recordSchema(graph, ty);
+    if (fields.len > record.fields.len or (complete and fields.len != record.fields.len)) return error.ComponentProtocol;
+    const seen = try graph.allocator.alloc(bool, record.fields.len);
+    defer graph.allocator.free(seen);
+    @memset(seen, false);
+    for (fields) |field| {
+        if (field.index >= record.fields.len) return error.ComponentProtocol;
+        if (seen[field.index] or try nodeType(graph, field.value) != record.fields[field.index].ty) return error.ComponentProtocol;
+        seen[field.index] = true;
+    }
 }

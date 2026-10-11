@@ -3,6 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const value = @import("body_check_value.zig");
 const lists = @import("body_check_list_validate.zig");
+const record_validate = @import("body_check_record_validate.zig");
 const Native = @import("type_catalog.zig").Catalog;
 pub const Error = lists.Error;
 fn builtin(native: Native, ty: typed.Type, name: []const u8) bool {
@@ -41,15 +42,27 @@ pub fn project(a: std.mem.Allocator, native: Native) Error!value.Catalog {
         .string = sequence(native, "str", .string, .u32),
         .bytes = sequence(native, "bytes", .bytes, .u8),
         .base_count = native.records.len,
+        .records = try a.dupe(typed.Record, native.records),
         .list_available = available(native),
     };
+    errdefer a.free(output.records);
     var entries: std.ArrayList(value.Sequence) = .empty;
     errdefer entries.deinit(a);
-    for (native.records) |record| if (canonicalList(native, record) and supported(native, output, record.id, 0)) {
+    for (native.records) |record| if (canonicalList(native, record)) {
         try entries.append(a, .{ .id = record.id, .element = record.shape.buffer.? });
     };
     output.lists = try entries.toOwnedSlice(a);
     errdefer a.free(output.lists);
+    const accepted = try record_validate.policy(a, output);
+    defer a.free(accepted);
+    var count: usize = 0;
+    for (output.lists) |entry| if (accepted[entry.id.recordIndex()]) {
+        @constCast(output.lists)[count] = entry;
+        count += 1;
+    };
+    const filtered = try a.dupe(value.Sequence, output.lists[0..count]);
+    a.free(output.lists);
+    output.lists = filtered;
     try lists.catalog(a, output);
     return output;
 }
@@ -73,7 +86,9 @@ pub fn apply(a: std.mem.Allocator, native: *Native, input: value.Input, recipes:
     if (native.records.len != input.catalog.base_count) return error.ComponentProtocol;
     const actual = try project(a, native.*);
     defer a.free(actual.lists);
+    defer a.free(actual.records);
     if (!equalProjection(actual, input.catalog)) return error.ComponentProtocol;
+    if (!try equalCatalog(a, actual.records, input.catalog.records)) return error.ComponentProtocol;
     for (recipes) |recipe| {
         const before = native.records.len;
         const id = @import("collection_lower.zig").listType(native, recipe.element, recipe.span) catch |err| return switch (err) {
@@ -100,13 +115,4 @@ fn equalProjection(left: value.Catalog, right: value.Catalog) bool {
     if (!std.meta.eql(left.string, right.string) or !std.meta.eql(left.bytes, right.bytes)) return false;
     for (left.lists, right.lists) |a, b| if (!std.meta.eql(a, b)) return false;
     return true;
-}
-
-fn supported(native: Native, catalog: value.Catalog, ty: typed.Type, depth: usize) bool {
-    if (ty == .i64 or ty == .bool or ty == .unit) return true;
-    if (catalog.string) |item| if (item.id == ty) return true;
-    if (catalog.bytes) |item| if (item.id == ty) return true;
-    if (!ty.isAggregate() or ty.recordIndex() >= native.records.len or depth >= 255) return false;
-    const record = native.records[ty.recordIndex()];
-    return canonicalList(native, record) and supported(native, catalog, record.shape.buffer.?, depth + 1);
 }

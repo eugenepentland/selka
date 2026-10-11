@@ -3,6 +3,7 @@ const std = @import("std");
 const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
+const records = @import("body_check_record_validate.zig");
 pub const Error = error{ OutOfMemory, ComponentProtocol };
 pub const limit = 65536;
 
@@ -22,14 +23,21 @@ fn leaf(initial: value.Catalog, ty: typed.Type) bool {
     if (ty == .i64 or ty == .bool or ty == .unit) return true;
     if (initial.string) |item| if (item.id == ty) return true;
     if (initial.bytes) |item| if (item.id == ty) return true;
+    if (ty.isAggregate() and ty.recordIndex() < initial.records.len) return records.ordinary(initial.records[ty.recordIndex()]);
     return false;
 }
 fn descriptor(initial: value.Catalog, item: value.Sequence, expected: typed.Type) Error!void {
     const id = @backingInt(item.id);
     if (id < typed.Type.record_base or id - typed.Type.record_base >= initial.base_count or item.element != expected) return error.ComponentProtocol;
+    if (item.id.recordIndex() < initial.records.len) {
+        const record = initial.records[item.id.recordIndex()];
+        const kind: @import("runtime_values.zig").ManagedKind = if (expected == .u32) .string else .bytes;
+        if (!record.isCollection() or record.collection.kind != kind or record.shape.buffer != expected) return error.ComponentProtocol;
+    }
 }
 /// Validate all existing list dependencies, including forward edges, without assuming append topology.
 pub fn catalog(a: std.mem.Allocator, item: value.Catalog) Error!void {
+    try records.catalog(item);
     if (item.base_count > limit or item.lists.len > item.base_count) return error.ComponentProtocol;
     if (item.string) |entry| try descriptor(item, entry, .u32);
     if (item.bytes) |entry| try descriptor(item, entry, .u8);
@@ -45,11 +53,18 @@ pub fn catalog(a: std.mem.Allocator, item: value.Catalog) Error!void {
     for (item.lists, 0..) |entry, index| {
         const id = @backingInt(entry.id);
         if (id < typed.Type.record_base or id - typed.Type.record_base >= item.base_count or id <= prior or leaf(item, entry.id)) return error.ComponentProtocol;
+        if (entry.id.recordIndex() < item.records.len) {
+            const schema = item.records[entry.id.recordIndex()];
+            if (!schema.isCollection() or schema.collection.kind != .list or schema.shape.buffer != entry.element) return error.ComponentProtocol;
+        }
         prior = id;
         const found = try elements.getOrPut(a, entry.element);
         if (found.found_existing) return error.ComponentProtocol;
         try ids.put(a, entry.id, index);
     }
+    const accepted = try records.policy(a, item);
+    defer a.free(accepted);
+    for (item.lists) |entry| if (!accepted[entry.id.recordIndex()]) return error.ComponentProtocol;
     const states = try a.alloc(u8, item.lists.len);
     defer a.free(states);
     const depths = try a.alloc(usize, item.lists.len);
@@ -72,8 +87,11 @@ fn depth(item: value.Catalog, ids: std.AutoHashMapUnmanaged(typed.Type, usize), 
 }
 /// Validate contiguous unique producer recipes, source association and bounded dependency depth.
 pub fn recipes(a: std.mem.Allocator, input: value.Input, items: []const value.ListRecipe) Error!void {
+    if (input.catalog.records.len != input.catalog.base_count) return error.ComponentProtocol;
     try catalog(a, input.catalog);
     if (items.len > limit - input.catalog.base_count or (items.len != 0 and !input.catalog.list_available)) return error.ComponentProtocol;
+    const accepted = try records.policy(a, input.catalog);
+    defer a.free(accepted);
     var known: std.AutoHashMapUnmanaged(typed.Type, void) = .empty;
     defer known.deinit(a);
     for (input.catalog.lists) |item| try known.put(a, item.element, {});
@@ -86,7 +104,11 @@ pub fn recipes(a: std.mem.Allocator, input: value.Input, items: []const value.Li
         if (item.span.start > item.span.end or item.span.end > input.context.source.len or !sites.contains(item.span)) return error.ComponentProtocol;
         const exists = try known.getOrPut(a, item.element);
         if (exists.found_existing) return error.ComponentProtocol;
-        if (leaf(input.catalog, item.element) or listElement(input.catalog, item.element) != null) continue;
+        if (item.element.isAggregate() and item.element.recordIndex() < accepted.len) {
+            if (!accepted[item.element.recordIndex()]) return error.ComponentProtocol;
+            continue;
+        }
+        if (leaf(input.catalog, item.element)) continue;
         const element_id = @backingInt(item.element);
         if (element_id < typed.Type.record_base + input.catalog.base_count or element_id >= @backingInt(item.id)) return error.ComponentProtocol;
     }

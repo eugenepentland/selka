@@ -328,7 +328,7 @@ fn managedFixture(a: std.mem.Allocator, text_source: []const u8) !Fixture {
     var p: parser.Parser = .{ .src = src, .tokens = tokens, .storage = a, .sink = &sink };
     const syntax = try p.parse();
     const program = try @import("sema.zig").checkLibraryProgram(a, src, syntax, &sink, null);
-    var catalog: value.Catalog = .{ .base_count = program.records.len };
+    var catalog: value.Catalog = .{ .base_count = program.records.len, .records = program.records };
     for (program.records) |record| {
         if (!record.isCollection()) continue;
         const entry: value.Sequence = .{ .id = record.id, .element = record.shape.buffer.? };
@@ -387,7 +387,8 @@ test "body check rejects forged managed catalog identities and elements" {
     f.input.catalog.bytes = .{ .id = @fromBackingInt(typed.Type.record_base + 65536), .element = .u8 };
     try std.testing.expectError(error.ComponentProtocol, validate.input(std.testing.allocator, f.input));
     f.input.catalog.bytes = .{ .id = @fromBackingInt(typed.Type.record_base + 65535), .element = .u8 };
-    try validate.input(std.testing.allocator, f.input);
+    // A count without its exact retained schema prefix is not a valid request.
+    try std.testing.expectError(error.ComponentProtocol, validate.input(std.testing.allocator, f.input));
 }
 fn corruptCodepoint(a: std.mem.Allocator, f: Fixture, number: i128) !void {
     var output = f.output;

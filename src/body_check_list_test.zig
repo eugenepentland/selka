@@ -162,8 +162,7 @@ test "body lists project sequences only with their retained identity and exact e
     const ty = f.input.catalog.string.?.id;
     const original = f.native.records[ty.recordIndex()];
     f.native.records[ty.recordIndex()].id = .i64;
-    const wrong_identity = try materialize.project(a, f.native);
-    try std.testing.expect(wrong_identity.string == null);
+    try std.testing.expectError(error.ComponentProtocol, materialize.project(a, f.native));
     f.native.records[ty.recordIndex()] = original;
     f.native.records[ty.recordIndex()].shape.buffer = .u8;
     const wrong_element = try materialize.project(a, f.native);
