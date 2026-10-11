@@ -18,6 +18,7 @@ import resource_lower
 import io_arguments
 import list_repeat
 import list_places
+import dictionary_places
 import list_iteration
 import comprehension_lower
 import collection_comprehension
@@ -476,12 +477,21 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const base = try expression(mut state, base_raw)
         const rooted = try list_places.receiver(mut state.batch, mut state.scope, list_lower.Context(input=state.syntax.pool, span=target_span), base.id, base.ty)
         const index = try expression(mut state, index_raw)
-        const element = list_types.element_type(state.batch.facts.lists, base.ty)
+        const mapping = collection_types.schema(state.batch.facts.lists.types.collections, base.ty)
+        mut element = list_types.element_type(state.batch.facts.lists, base.ty)
+        mut key_type = 0
+        if mapping.id >= 0 and mapping.kind == 0:
+            element = mapping.value
+            key_type = mapping.key
         if element < 0:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "augmented destination requires an admitted list")
+            const rejection = try problem(state, span, "P_BODY_PROFILE", "augmented destination requires an admitted list or dictionary")
             fail rejection
-        _ = try require(state, index.ty, 0, target_span)
-        const plan = try list_places.indexed(mut state.batch, mut state.scope, rooted, index.id, element)
+        _ = try require(state, index.ty, key_type, target_span)
+        mut plan = rooted
+        if mapping.id >= 0 and mapping.kind == 0:
+            plan = try dictionary_places.indexed(mut state.batch, mut state.scope, rooted, index.id, key_type, element)
+        else:
+            plan = try list_places.indexed(mut state.batch, mut state.scope, rooted, index.id, element)
         const value_id = try graph.field(state.syntax.pool, payload, "value")
         const value_raw = try graph.number(state.syntax.pool, value_id)
         const value = try expression_expected(mut state, value_raw, element)
