@@ -24,6 +24,23 @@ class BodyQualificationTests(unittest.TestCase):
         for bad in (good+good,good.replace('30 warm','29 warm'),good.replace('4 live','0 live'),good.replace('19 malformed','18 malformed'),good.replace('66 rejected','8 rejected'),good.replace('2 host','1 host'),good.replace('0 skipped','1 skipped')):
             with self.assertRaises(RuntimeError):G.require_summary(bad)
 
+    def test_flow_diagnostics_pin_ordered_repairs_and_related_spans(self):
+        manifest = json.loads((D.FIXTURES/'manifest.json').read_text())
+        names = [name for name, spec in manifest.items() if 'diagnostics' in spec]
+        self.assertEqual(len(names), 6)
+        scalar = manifest['checked_implicit_scalar_discard_error.my']['diagnostics'][0]
+        self.assertEqual(scalar['edits'], [{'bytes': {'start': 59, 'end': 59}, 'text': '_ = '}])
+        pending = manifest['checked_implicit_pending_discard_error.my']['diagnostics'][0]
+        self.assertEqual(pending['edits'], [])
+        path = manifest['checked_short_circuit_path_error.my']['diagnostics'][0]
+        self.assertEqual(path['notes'][0]['bytes'], {'start': 327, 'end': 333})
+        annotated = manifest['checked_pending_list_annotated_error.my']
+        self.assertEqual(annotated['boundary'], 'retained-generic-bound')
+        self.assertEqual(annotated['diagnostics'][0]['code'], 'E_GENERIC_REQUIREMENT')
+        raw = {'code': 'E', 'message': 'test', 'location': {'bytes': {'start': 1, 'end': 2}},
+               'notes': [], 'fix': {'edits': [{'bytes': {'start': 1, 'end': 1}, 'text': 'é'}]}}
+        self.assertEqual(D.diagnostic_contract(raw)['edits'][0]['text'].encode(), b'\xc3\xa9')
+
     def test_frame_binds_whole_request(self):
         payload=b'raw body\x00'+ 'éλ'.encode();frame=D.frame(payload)
         self.assertEqual(frame[:8],b'SLKBCK01')

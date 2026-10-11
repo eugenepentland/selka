@@ -891,7 +891,28 @@
     "status": 1,
     "boundary": "variant-failure-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_RESULT_PATH",
+        "message": "ownership or result obligation must have the same state on every continuing path",
+        "bytes": {
+          "start": 372,
+          "end": 384
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "binding declared here",
+            "bytes": {
+              "start": 327,
+              "end": 333
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
   },
   "checked_explicit_pending_discard.my": {
     "status": 0,
@@ -904,30 +925,116 @@
     "status": 1,
     "boundary": "variant-failure-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_EXPLICIT_DISCARD_REQUIRED",
+        "message": "a standalone non-unit value requires `_ =` or result handling",
+        "bytes": {
+          "start": 59,
+          "end": 66
+        },
+        "notes": [],
+        "edits": [
+          {
+            "bytes": {
+              "start": 59,
+              "end": 59
+            },
+            "text": "_ = "
+          }
+        ]
+      }
+    ]
   },
   "checked_implicit_pending_discard_error.my": {
     "status": 1,
     "boundary": "variant-failure-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_EXPLICIT_DISCARD_REQUIRED",
+        "message": "a standalone non-unit value requires `_ =` or result handling",
+        "bytes": {
+          "start": 153,
+          "end": 161
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
   },
   "checked_pending_list_error.my": {
     "status": 1,
     "boundary": "variant-failure-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_LIST_ELEMENT",
+        "message": "managed list elements must be copyable values without resources or result obligations",
+        "bytes": {
+          "start": 0,
+          "end": 0
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
   },
   "checked_pending_list_annotated_error.my": {
     "status": 1,
     "boundary": "retained-generic-bound",
     "typed": false,
-    "library": false
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_GENERIC_REQUIREMENT",
+        "message": "type argument does not guarantee the nominal template's required operations",
+        "bytes": {
+          "start": 167,
+          "end": 187
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "type parameter requirements are declared here",
+            "bytes": {
+              "start": 0,
+              "end": 0
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
   },
   "checked_try_live_result_error.my": {
     "status": 1,
     "boundary": "variant-failure-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_RESULT_UNHANDLED",
+        "message": "result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded",
+        "bytes": {
+          "start": 213,
+          "end": 225
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "unhandled result-bearing binding",
+            "bytes": {
+              "start": 176,
+              "end": 183
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
   }
 }

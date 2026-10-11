@@ -226,6 +226,20 @@ def body_check_boundary():
         F.FRONTENDS, F.environment, F.packages = previous
 
 
+
+def diagnostic_contract(diagnostic):
+    """Pin ordered source diagnostics and repair bytes independently of path."""
+    return {
+        'code': diagnostic['code'],
+        'message': diagnostic['message'],
+        'bytes': diagnostic['location']['bytes'],
+        'notes': [{'role': note['role'], 'message': note['message'],
+                   'bytes': note['location']['bytes']} for note in diagnostic.get('notes', [])],
+        'edits': [{'bytes': edit['bytes'], 'text': edit['text']}
+                  for edit in diagnostic.get('fix', {}).get('edits', [])],
+    }
+
+
 class Qualification(F.Qualification):
     mixed = False
 
@@ -300,6 +314,9 @@ class Qualification(F.Qualification):
             else:
                 result = self.compare(name, args, spec['status'])
                 diagnostics = [json.loads(line)['diagnostic'] for line in result[2].splitlines()]
+                if 'diagnostics' in spec:
+                    F.require([diagnostic_contract(d) for d in diagnostics] == spec['diagnostics'],
+                              f'{name}: ordered diagnostic/repair contract changed')
                 if 'code' in spec:
                     F.require(any(d['code'] == spec['code'] for d in diagnostics), f'{name}: required body diagnostic missing')
                 if name == 'multi_body_errors.my':
