@@ -3,6 +3,7 @@ import graph
 import engine
 import variants
 import locals
+import recipe_index
 
 func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
     const data = try syntax_value.tagged(mut pool, tag, payload)
@@ -104,3 +105,25 @@ public func test_narrowed_list_append_reads_option_and_roots_payload_without_rep
     const owner_type = try graph.field(state.batch.pool, state.batch.nodes[0], "ty")
     const owner_ty = try graph.number(state.batch.pool, owner_type)
     return result.ty == 15 and owner_ty == 20 and final_tag.data == b"block_value" and state.scope.locals[0].usage.reads == 1 and state.scope.locals[0].usage.writes == 0 and state.control.options.present == [0] and len(state.scope.locals) == 3
+
+
+public func test_synthetic_optional_type_error_uses_payload_surface_name() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try recipe_index.insert(mut state.batch.facts.lists.types.variants.index, recipe_index.Key(kind=2, first=0, second=-1, id=19))
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    match engine.require(state, 0, 19, span):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "expected int?, found int" and problem.start == 0 and problem.end == 1
+
+
+public func test_synthetic_checked_result_type_error_formats_both_payloads() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    _ = try recipe_index.insert(mut state.batch.facts.lists.types.variants.index, recipe_index.Key(kind=1, first=0, second=1, id=20))
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    match engine.require(state, 0, 20, span):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "expected Result[int, bool], found int"

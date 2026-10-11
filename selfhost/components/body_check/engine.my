@@ -2266,6 +2266,12 @@ func type_name(state: State, ty: int) -> str:
         elif collection.kind == 5:
             label = "DictItems"
         return label + "[" + type_name(state, collection.key) + ", " + type_name(state, collection.value) + "]"
+    for key in state.batch.facts.lists.types.variants.index.keys:
+        if key.id == ty:
+            if key.kind == 2:
+                return type_name(state, key.first) + "?"
+            if key.kind == 1:
+                return "Result[" + type_name(state, key.first) + ", " + type_name(state, key.second) + "]"
     const records = state.batch.facts.lists.types.records
     if ty >= 19 and ty < len(records.by_type):
         const declaration = records.by_type[ty]
