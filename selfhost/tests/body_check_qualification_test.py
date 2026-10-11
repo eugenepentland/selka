@@ -376,7 +376,9 @@ class BodyQualificationTests(unittest.TestCase):
         self.assertEqual(len(set(inventory['cases'])),21)
         self.assertEqual(inventory['counts'],{'success':10,'diagnostic':9,'profile':2})
         self.assertTrue(all(name in manifest for name in inventory['cases']))
-        self.assertEqual(sum(manifest[name]['status']==0 for name in inventory['cases']),10)
+        # Historical B6 counts remain frozen; its two text refusals are now admitted.
+        self.assertEqual(sum(manifest[name]['status']==0 for name in inventory['cases']),12)
+        self.assertEqual(sum(manifest[name]['status']==2 for name in inventory['cases']),0)
         self.assertEqual(sum(manifest[name]['status']==1 for name in inventory['cases']),9)
         self.assertTrue(all(manifest[name].get('diagnostics') for name in inventory['cases']
                             if manifest[name]['status']==1))
@@ -435,7 +437,9 @@ class BodyQualificationTests(unittest.TestCase):
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         refusals=[n for n,v in manifest.items() if v['status']==2]
-        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_text_method.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my','bytes_encode_profile.my','bytes_decode_profile.my'})
+        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my'})
+        for name in ('profile_text_method.my', 'bytes_encode_profile.my', 'bytes_decode_profile.my'):
+            self.assertEqual(manifest[name], {'status': 0, 'boundary': 'managed-text-body', 'typed': True, 'library': False, 'result': 7})
         self.assertEqual(manifest['profile_managed.my']['result'], 1)
         self.assertEqual(manifest['profile_text_repeat.my'], {'status': 0, 'boundary': 'text-repetition-body', 'typed': True, 'library': False, 'result': 7})
         self.assertEqual(manifest['profile_chained_comparison.my'], {'status': 0, 'boundary': 'chained-comparison-body', 'typed': True, 'library': False, 'result': 7})

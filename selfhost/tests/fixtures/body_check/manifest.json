@@ -123,10 +123,11 @@
     "library": false
   },
   "profile_text_method.my": {
-    "status": 2,
-    "boundary": "profile",
-    "typed": false,
-    "library": false
+    "status": 0,
+    "boundary": "managed-text-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "profile_text_repeat.my": {
     "status": 0,
@@ -1212,10 +1213,18 @@
     ]
   },
   "bytes_encode_profile.my": {
-    "status": 2
+    "status": 0,
+    "boundary": "managed-text-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "bytes_decode_profile.my": {
-    "status": 2
+    "status": 0,
+    "boundary": "managed-text-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "bytes_buffer_arity_precedence_error.my": {
     "status": 1,
