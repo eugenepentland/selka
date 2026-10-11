@@ -1,9 +1,12 @@
 # Selka development loop improvement plan
 
-Date: 11 October 2026. Status: implementation started with DL1 instrumentation,
-DL2 command-deadline plumbing and the first reviewed DL3 test boundary.
-Full calibration, broader dependency splits and later waves remain open.
-Baseline: local `main` at `e935448025873afc0740b345acf77b7e4f09dda3`.
+Date: 11 October 2026. Status: DL1 now names gate members; DL2 has optional
+command deadlines and bounded advisory calibration; DL3 includes the pure Juice
+cohort, an independent native tooling root and group-local inventory contracts.
+Individual test timing, qualified hard action budgets, broader dependency splits
+and later waves remain open. Latest integration base: local `main` at
+`9225adeb06cca3ab19a0f4437ec2065fbea34e2e` (runtime ownership updates).
+Original plan baseline: `e935448025873afc0740b345acf77b7e4f09dda3`.
 
 Make ordinary compiler edits cheap to build and verify, keep expensive checks
 bounded and visible, and carry those improvements into the self-hosted compiler.

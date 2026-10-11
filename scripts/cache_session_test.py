@@ -174,6 +174,8 @@ class CacheSession(unittest.TestCase):
             self.assertRaises(cache_session.RestartRequired, cache_session.RuntimeGuard(self.root).__enter__)
         with patch.dict(sys.modules, {'verification_report': object()}):
             self.assertRaises(cache_session.RestartRequired, cache_session.RuntimeGuard(self.root).__enter__)
+        with patch.dict(sys.modules, {'verification_budgets': object()}):
+            self.assertRaises(cache_session.RestartRequired, cache_session.RuntimeGuard(self.root).__enter__)
 
     def test_real_runtime_guard_source_mutation_and_reset_independence(self):
         scripts = self.root / 'scripts'
