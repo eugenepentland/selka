@@ -1262,5 +1262,64 @@
         "edits": []
       }
     ]
+  },
+  "stream_signed_widths.my": {
+    "status": 0,
+    "boundary": "scalar-stream-output",
+    "typed": true,
+    "library": false,
+    "result": 7,
+    "stdout": "-128 -32768 -2147483648 -9223372036854775808\n7\n"
+  },
+  "stream_unsigned_widths.my": {
+    "status": 0,
+    "boundary": "scalar-stream-output",
+    "typed": true,
+    "library": false,
+    "result": 7,
+    "stdout": "255 65535 4294967295 18446744073709551615\n7\n"
+  },
+  "stream_float_values.my": {
+    "status": 0,
+    "boundary": "scalar-stream-output",
+    "typed": true,
+    "library": false,
+    "result": 7,
+    "stdout": "1.25 -0.0 inf nan\n7\n"
+  },
+  "stream_mixed_scalars.my": {
+    "status": 0,
+    "boundary": "scalar-stream-output",
+    "typed": true,
+    "library": false,
+    "result": 7,
+    "stdout": "v|-3|18446744073709551615|True|None|2.5!\n7\n"
+  },
+  "stream_capability_error.my": {
+    "status": 1,
+    "boundary": "scalar-stream-output",
+    "typed": false,
+    "library": false,
+    "code": "E_IO_ARGUMENT"
+  },
+  "stream_separator_width_error.my": {
+    "status": 1,
+    "boundary": "scalar-stream-output",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "stream_terminator_float_error.my": {
+    "status": 1,
+    "boundary": "scalar-stream-output",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "profile_stream_aggregate.my": {
+    "status": 2,
+    "boundary": "aggregate-stream-output-profile",
+    "typed": false,
+    "library": false
   }
 }

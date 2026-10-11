@@ -4605,10 +4605,11 @@ func stream_call(mut state: State, span: int, call: int, slot: int) -> Expressio
             const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
             const rejection = try problem(state, copied_span, "E_IO_ARGUMENT", "print cannot render this value; capabilities, files, owned resources and callbacks have no Python spelling")
             fail rejection
-        if ty != 0 and ty != 1 and ty != 15 and ty != state.batch.facts.string_type and ty != state.batch.facts.bytes_type and ty != state.batch.facts.lists.types.buffer.id:
+        const scalar = scalars.is_integer(ty) or ty == 1 or ty == 15 or (state.batch.facts.float_type >= 0 and ty == state.batch.facts.float_type)
+        if not scalar and ty != state.batch.facts.string_type and ty != state.batch.facts.bytes_type and ty != state.batch.facts.lists.types.buffer.id:
             const value_span = try graph.field(state.batch.pool, state.batch.nodes[value], "span")
             const copied_span = try graph.clone(mut state.syntax.pool, state.batch.pool, value_span, 0)
-            const rejection = try problem(state, copied_span, "P_BODY_PROFILE", "aggregate or narrow integer output is outside the closed Stream print profile")
+            const rejection = try problem(state, copied_span, "P_BODY_PROFILE", "aggregate output is outside the closed Stream print profile")
             fail rejection
         values.append(value)
     mut separator = -1

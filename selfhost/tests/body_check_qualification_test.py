@@ -372,7 +372,7 @@ class BodyQualificationTests(unittest.TestCase):
     def test_b6_inventory_preserves_history_and_pins_native_diagnostics(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         inventory=json.loads((D.FIXTURES/'b6_inventory.json').read_text())
-        self.assertEqual(len(manifest),169)
+        self.assertEqual(len(manifest),177)
         self.assertEqual(len(set(inventory['cases'])),21)
         self.assertEqual(inventory['counts'],{'success':10,'diagnostic':9,'profile':2})
         self.assertTrue(all(name in manifest for name in inventory['cases']))
@@ -435,7 +435,7 @@ class BodyQualificationTests(unittest.TestCase):
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         refusals=[n for n,v in manifest.items() if v['status']==2]
-        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_text_method.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my','bytes_encode_profile.my','bytes_decode_profile.my'})
+        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_text_method.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my','bytes_encode_profile.my','bytes_decode_profile.my','profile_stream_aggregate.my'})
         self.assertEqual(manifest['profile_managed.my']['result'], 1)
         self.assertEqual(manifest['profile_text_repeat.my'], {'status': 0, 'boundary': 'text-repetition-body', 'typed': True, 'library': False, 'result': 7})
         self.assertEqual(manifest['profile_chained_comparison.my'], {'status': 0, 'boundary': 'chained-comparison-body', 'typed': True, 'library': False, 'result': 7})

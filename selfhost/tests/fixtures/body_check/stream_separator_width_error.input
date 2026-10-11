@@ -1,0 +1,3 @@
+func main(out: Stream) -> int:
+    out.print(i8(1), sep=i8(1))
+    return 7

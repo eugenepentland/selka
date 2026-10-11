@@ -1,0 +1,8 @@
+func empty() -> Unit:
+    return
+
+
+func main(out: Stream) -> int:
+    const top: u64 = 18446744073709551615
+    out.print("v", i8(-3), top, True, empty(), 2.5, sep="|", end="!\n")
+    return 7

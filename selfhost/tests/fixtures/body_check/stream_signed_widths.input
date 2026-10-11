@@ -1,0 +1,7 @@
+func main(out: Stream) -> int:
+    const a: i8 = -128
+    const b: i16 = -32768
+    const c: i32 = -2147483648
+    const d: i64 = -9223372036854775808
+    out.print(a, b, c, d)
+    return 7
