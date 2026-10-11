@@ -1,0 +1,235 @@
+{
+  "iteration_unicode_ord.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "daf94b21fe7b78f91d3f38deae4b2280e9c6c7bd6f650b0b9d3becd25ed90c43"
+  },
+  "iteration_empty.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "6e410f04fdc0b569871892750c109139e2d5968258311a60d25e17da95b1d191"
+  },
+  "iteration_bytes_break.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "1af7d157ec35d7c163fef2be7afdbbe0fcdfec0f08b5d678e2562dfd764fe402"
+  },
+  "iteration_rebind_snapshot.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "3993fa4c354872e418fba89a2f96cf15d41b3e6e784a2e5280ba01b868458d73"
+  },
+  "comprehension_range_capacity.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "bc396146592f2d2e28e081b8bd0839a13c994f40757a5a4736421535e19a7903"
+  },
+  "comprehension_iterable_filter.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "f1bab93c0f802059ac060d43570a905a71f7d6a7469b0a99f20b4a8401834be5"
+  },
+  "comprehension_nested.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "604630edcd0f03b89fd259b8eb50f9f01af22ae9708ad1428af655f05d783b0f"
+  },
+  "comprehension_text_bytes.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "32d5eecbf0e14894b75a406f3f3ce06d73c3b9a060417808bdc8b9dd91606e5f"
+  },
+  "format_integer_bounds.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "a0580ffa7182fdb1c8d9c6fa0bd0744bdf9b3f80e1aad858c7a81294d37cae03"
+  },
+  "format_key_composition.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true,
+    "source_sha256": "68877f3d4badf567d46b7844cf66fa8470110b85272420b8e8feb641c44d890e"
+  },
+  "iteration_readonly_error.my": {
+    "status": 1,
+    "source_sha256": "99d409a9aa4ae463ac7b0b169621a07b171729a95089fdeed8184087f3437ac4",
+    "diagnostics": [
+      {
+        "code": "E_IMMUTABLE",
+        "message": "this binding cannot be assigned",
+        "bytes": {
+          "start": 47,
+          "end": 49
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "iteration_shadow_error.my": {
+    "status": 1,
+    "source_sha256": "6f3275e91f74e9baa53309e86cee73682c682a6748e27fb8fe2e1a37e3df1266",
+    "diagnostics": [
+      {
+        "code": "E_SHADOWING",
+        "message": "iteration binding shadows an active declaration",
+        "bytes": {
+          "start": 47,
+          "end": 49
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "comprehension_filter_error.my": {
+    "status": 1,
+    "source_sha256": "abfe1ee2235609c15caf9f477fa4fe6b9fc4e633e5c0e8204dafa0aaa597eb9a",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected bool, found int",
+        "bytes": {
+          "start": 66,
+          "end": 72
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "format_arity_error.my": {
+    "status": 1,
+    "source_sha256": "912a8003518bb08ebec2afb358a3ed7174a40f26e72f9b0dbb9e462ea89ee176",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "str conversion requires one argument",
+        "bytes": {
+          "start": 28,
+          "end": 33
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "format_aggregate_error.my": {
+    "status": 1,
+    "source_sha256": "8b340b23b2f17cfd7c676e0045d4ce1b7e98c28fb5e4e72b99f35149f8748506",
+    "diagnostics": [
+      {
+        "code": "E_TEXT_CONVERSION",
+        "message": "str conversion requires a scalar or str value",
+        "bytes": {
+          "start": 28,
+          "end": 36
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "ord_arity_error.my": {
+    "status": 1,
+    "source_sha256": "aab620676daaa7284fb9b2da2c318955f9ed4b04065b8a95953333b6c0d3733f",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`ord(text: str) -> int` takes 1 argument, but this call passes 0",
+        "bytes": {
+          "start": 28,
+          "end": 33
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "conditional_evaluation.my": {
+    "status": 0,
+    "source_sha256": "9b0b5633afb621274088c2ff17d8aefbc7563a6bb4dea6ea38fddd67a9133a60",
+    "result": 7,
+    "typed": true
+  },
+  "constant_literal_type_error.my": {
+    "status": 1,
+    "source_sha256": "8062286419573f7c1db01177a35998700776a04e1ce160fe517b08d388f74fe8",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "constant literal type differs from its declared str or bytes type",
+        "bytes": {
+          "start": 23,
+          "end": 29
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "constant_private_import_error.my": {
+    "status": 1,
+    "source_sha256": "daaa5c230ee0b2375137f7d03e0d0c1bcb5ab1fbd2c55bfaf524c8179834c5e6",
+    "diagnostics": [
+      {
+        "code": "E_PRIVATE_SYMBOL",
+        "message": "declaration is private to its module",
+        "bytes": {
+          "start": 60,
+          "end": 84
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "declaration is here",
+            "bytes": {
+              "start": 82,
+              "end": 88
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "imported_literal_constants.my": {
+    "status": 0,
+    "source_sha256": "88e465e4765e2f3e7dbffe58ae8bd769ca759e656165c5d5d8176cf00cdd49de",
+    "result": 7,
+    "typed": true
+  },
+  "iteration_nested_place.my": {
+    "status": 0,
+    "source_sha256": "a07ac040e970e846d9da99e2a5486cc8589e38780e65aff9d1ad70d9588aa561",
+    "result": 7,
+    "typed": true
+  },
+  "slice_negative.my": {
+    "status": 0,
+    "source_sha256": "1a38788d5e1ca9e7bbb5602125dfe1ce35ca661e52225a54bdd02c1ae64a1142",
+    "result": 7,
+    "typed": true
+  },
+  "slice_omitted.my": {
+    "status": 0,
+    "source_sha256": "bb3bacb718cbbcc975e1d74fcbfdab66ddb381644b73dae22d731f62796d170d",
+    "result": 7,
+    "typed": true
+  },
+  "slice_snapshot.my": {
+    "status": 0,
+    "source_sha256": "1d695b56658767a00804f371aaec4a1f9eaeb0f7fff62b29bcab80022aef62d6",
+    "result": 7,
+    "typed": true
+  }
+}

@@ -1,0 +1,9 @@
+func main() -> int:
+    const digits = str(7)
+    mut buffer = byte_buffer([0, 112, 97, 116])
+    for digit in digits:
+        _ = buffer.append_byte(ord(digit))
+    const encoded = bytes(buffer)
+    if encoded != b"\x00pat7" or encoded[1:] != b"pat7":
+        return 0
+    return 7

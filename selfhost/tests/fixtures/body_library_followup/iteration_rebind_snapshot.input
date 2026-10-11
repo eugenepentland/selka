@@ -1,0 +1,9 @@
+func main() -> int:
+    mut source = "ab"
+    mut observed = ""
+    for ch in source:
+        source = "z"
+        observed = observed + ch
+    if observed != "ab" or source != "z":
+        return 0
+    return 7

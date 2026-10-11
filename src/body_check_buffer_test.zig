@@ -6,6 +6,7 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const materialize = @import("body_check_materialize.zig");
 const buffers = @import("body_check_buffer_validate.zig");
+const validate = @import("body_check_validate.zig");
 const recipes = @import("body_check_recipe_validate.zig");
 const collections = @import("collection_lower.zig");
 const buffer_name = @import("nominal_templates.zig").byte_buffer_name;
@@ -172,7 +173,7 @@ fn corruptOperation(a: std.mem.Allocator, f: GraphFixture) !void {
     for (nodes) |*node| {
         if (node.data != .buffer_operation or node.data.buffer_operation.kind != .buffer_append_range) continue;
         node.data.buffer_operation.arguments = &.{ node.data.buffer_operation.arguments[0], node.data.buffer_operation.arguments[0], node.data.buffer_operation.arguments[2] };
-        return @import("body_check_validate.zig").outcome(a, f.input, .{ .success = output });
+        return validate.outcome(a, f.input, .{ .success = output });
     }
     return error.MissingOperation;
 }
@@ -205,8 +206,8 @@ test "body buffers accept native Unicode tail byte slice and octet read lowering
     const a = arena.allocator();
     const text = try graphFixture(a, "func value(text: str, data: bytes) -> int:\n    const tail = text[1:]\n    const raw = data[-2:]\n    return len(tail) + len(raw)\n");
     const read = try graphFixture(a, "func value(buffer: byte_buffer) -> int:\n    return int(buffer[0])\n");
-    try @import("body_check_validate.zig").outcome(a, text.input, .{ .success = text.output });
-    try @import("body_check_validate.zig").outcome(a, read.input, .{ .success = read.output });
+    try validate.outcome(a, text.input, .{ .success = text.output });
+    try validate.outcome(a, read.input, .{ .success = read.output });
 }
 fn indexedWrite(a: std.mem.Allocator) ![]const u8 {
     const f = try fixture(a, "func value(mut buffer: byte_buffer):\n    buffer[0] = 7\n");
@@ -230,7 +231,7 @@ test "body buffers accept native integer list construction and immutable snapsho
     defer arena.deinit();
     const a = arena.allocator();
     const f = try graphFixture(a, "func copy(values: int[]) -> bytes:\n    const buffer = byte_buffer(values)\n    return bytes(buffer)\n");
-    try @import("body_check_validate.zig").outcome(a, f.input, .{ .success = f.output });
+    try validate.outcome(a, f.input, .{ .success = f.output });
 }
 
 // spec-case: SELFHOST-BODY-BUFFERS-1
@@ -244,4 +245,109 @@ test "body buffers refuse authenticated schema five replies before graph adoptio
     const bytes = try protocol.response(a, .{ .success = f.output }, request.identity);
     bytes[12] = 5;
     try std.testing.expectError(error.ComponentProtocol, protocol.reply(a, bytes, request.identity, f.input));
+}
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body pure closure accepts native text iteration ord and scalar rendering graphs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const text = "func value(text: str) -> int:\n    mut count = 0\n    for ch in text:\n        count += ord(ch)\n    return len(str(count))\n";
+    const f = try graphFixture(a, text);
+    try validate.outcome(a, f.input, .{ .success = f.output });
+    var guards: usize = 0;
+    var ords: usize = 0;
+    for (f.output.batch.nodes) |node| {
+        if (node.data != .buffer_operation) continue;
+        if (node.data.buffer_operation.kind == .iteration_check) guards += 1;
+        if (node.data.buffer_operation.kind == .text_ord) ords += 1;
+    }
+    try std.testing.expect(guards != 0 and ords != 0);
+}
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body pure closure accepts native octet iteration and source first range comprehension" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const text = "func value(items: int[]) -> int:\n    const copied = [for x in range(-2, 3) yield x]\n    mut count = len(copied)\n    for octet in b\"abc\":\n        count += octet\n    return count\n";
+    const f = try graphFixture(a, text);
+    try validate.outcome(a, f.input, .{ .success = f.output });
+    var capacities: usize = 0;
+    var unsigned_adds: usize = 0;
+    for (f.output.batch.nodes) |node| {
+        if (node.data == .acquire_buffer and f.output.batch.nodes[@backingInt(node.data.acquire_buffer.capacity)].ty == .u64) capacities += 1;
+        if (node.data == .binary and node.ty == .u64) unsigned_adds += 1;
+    }
+    try std.testing.expect(capacities != 0 and unsigned_adds != 0);
+}
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body pure closure rejects foreign text guards ord and rendering operands" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const c = (try retained(arena.allocator())).input.catalog;
+    const text = c.string.?.id;
+    const bytes = c.bytes.?.id;
+    const buffer = c.templates.byte_buffer.identity.?.id;
+    try buffers.operation(c, text, .unit, .iteration_check, &.{.i64}, false);
+    try buffers.operation(c, bytes, .unit, .iteration_check, &.{.i64}, false);
+    try buffers.operation(c, text, .i64, .text_ord, &.{}, false);
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, buffer, .unit, .iteration_check, &.{.i64}, true));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .unit, .iteration_check, &.{.bool}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .bool, .iteration_check, &.{.i64}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .unit, .iteration_check, &.{}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, bytes, .i64, .text_ord, &.{}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .i64, .text_ord, &.{.i64}, false));
+    try std.testing.expect(buffers.cast(c, text, .i64));
+    try std.testing.expect(buffers.cast(c, text, .bool));
+    try std.testing.expect(buffers.cast(c, text, .unit));
+    try std.testing.expect(!buffers.cast(c, text, bytes));
+    try std.testing.expect(!buffers.cast(c, text, c.lists[0].id));
+}
+
+fn corruptCapacity(a: std.mem.Allocator, f: GraphFixture, ty: typed.Type) !void {
+    const nodes = try a.dupe(typed.Node, f.output.batch.nodes);
+    var output = f.output;
+    output.batch.nodes = nodes;
+    for (nodes) |node| {
+        if (node.data != .acquire_buffer) continue;
+        nodes[@backingInt(node.data.acquire_buffer.capacity)].ty = ty;
+        return validate.outcome(a, f.input, .{ .success = output });
+    }
+    return error.MissingOperation;
+}
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body pure closure rejects noninteger range comprehension capacity" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try graphFixture(a, "func value(items: int[]) -> int:\n    return len([for x in range(-2, 3) yield x])\n");
+    try std.testing.expectError(error.ComponentProtocol, corruptCapacity(a, f, .bool));
+    try std.testing.expectError(error.ComponentProtocol, corruptCapacity(a, f, .u8));
+}
+
+fn corruptUnsigned(a: std.mem.Allocator, f: GraphFixture, mixed: bool) !void {
+    const nodes = try a.dupe(typed.Node, f.output.batch.nodes);
+    var output = f.output;
+    output.batch.nodes = nodes;
+    for (nodes) |*node| {
+        if (node.data != .binary or node.ty != .u64) continue;
+        if (mixed) {
+            nodes[@backingInt(node.data.binary.right)].ty = .i64;
+        } else node.data.binary.op = .mul;
+        return validate.outcome(a, f.input, .{ .success = output });
+    }
+    return error.MissingOperation;
+}
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body pure closure rejects foreign unsigned capacity arithmetic" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try graphFixture(a, "func value(items: int[]) -> int:\n    return len([for x in range(-2, 3) yield x])\n");
+    try std.testing.expectError(error.ComponentProtocol, corruptUnsigned(a, f, false));
+    try std.testing.expectError(error.ComponentProtocol, corruptUnsigned(a, f, true));
 }

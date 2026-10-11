@@ -240,13 +240,17 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
         .block_value => |block| if (node.ty != try nodeType(graph, block.value)) return error.ComponentProtocol,
         .cast => |operand| {
             const input_type = try nodeType(graph, operand);
-            const scalar_conversion = node.ty == .i64 and (input_type == .bool or input_type == .u8 or input_type == .u64);
+            const to_integer = node.ty == .i64 and (input_type == .bool or input_type == .u8 or input_type == .u64);
+            const capacity_conversion = node.ty == .u64 and input_type == .i64;
+            const scalar_conversion = to_integer or capacity_conversion;
             const sequence_conversion = @import("body_check_buffer_validate.zig").cast(graph.context.catalog, node.ty, input_type);
             const valid = node.ty == input_type or scalar_conversion or sequence_conversion;
             if (!valid) return error.ComponentProtocol;
         },
         .acquire_buffer => |operation| {
-            if (list_validate.listElement(graph.context.catalog, node.ty) == null or try nodeType(graph, operation.capacity) != .i64) return error.ComponentProtocol;
+            const capacity = try nodeType(graph, operation.capacity);
+            if (list_validate.listElement(graph.context.catalog, node.ty) == null) return error.ComponentProtocol;
+            if (capacity != .i64 and capacity != .u64) return error.ComponentProtocol;
         },
         .buffer_operation => |operation| try bufferNode(graph, node, operation),
         .variant => |item| try variantNode(graph, node, item),
@@ -437,6 +441,10 @@ fn binaryNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
             else => return error.ComponentProtocol,
         };
         if (node.ty != result) return error.ComponentProtocol;
+        return;
+    }
+    if (left == .u64) {
+        if (operation.op != .add or node.ty != .u64) return error.ComponentProtocol;
         return;
     }
     const result: typed.Type = switch (operation.op) {

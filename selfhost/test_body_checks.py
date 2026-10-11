@@ -54,7 +54,12 @@ def main():
     for release in (False,True):
         flags=['--release','--verify-facts'] if release else []
         for source,count in roots:
-            budget = ['--max-steps', '100000000'] if source.name in ('indexed_tests.my', 'profile_tests.my', 'record_index_tests.my') else []
+            if source.name == 'profile_tests.my':
+                # Exercise the real two-million-row boundary in this test child.
+                # Installed compiler requests retain their separate limits.
+                budget = ['--max-steps', '500000000', '--max-memory', '1G']
+            else:
+                budget = ['--max-steps', '100000000'] if source.name in ('indexed_tests.my', 'record_index_tests.my') else []
             require_guest(execute([seed,'test',source,'--force','--no-cache',*flags,*budget],env),count)
         command=[sys.executable,ROOT/'selfhost/tests/run_body_check_qualification.py','--compiler',args.compiler.resolve(),'--builder',args.builder.resolve(),'--component-dir',args.component_dir.resolve(),'--zig',args.zig]
         if args.report_dir:

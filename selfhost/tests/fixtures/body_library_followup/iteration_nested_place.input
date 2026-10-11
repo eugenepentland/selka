@@ -1,0 +1,11 @@
+func main() -> int:
+    const source = [[1, 2], [4]]
+    mut total = 0
+    for item in source[0]:
+        total += item
+    for row in [[4]]:
+        for item in row:
+            total += item
+    if total == 7 and source == [[1, 2], [4]]:
+        return 7
+    return 0

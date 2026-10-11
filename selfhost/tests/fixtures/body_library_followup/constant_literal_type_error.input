@@ -1,0 +1,3 @@
+const INVALID: bytes = "text"
+func main() -> int:
+    return len(INVALID)

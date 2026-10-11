@@ -54,6 +54,7 @@ fn listElement(catalog: value.Catalog, ty: typed.Type) ?typed.Type {
 }
 /// The three exact snapshot/construction cast pairs used by codec libraries.
 pub fn cast(catalog: value.Catalog, output: typed.Type, input: typed.Type) bool {
+    if (catalog.string) |text| if (output == text.id) return input.isInteger() or input == .bool or input == .unit;
     const list = listElement(catalog, input);
     if (mutable(catalog, output)) return list == .i64;
     if (catalog.bytes) |entry| if (entry.id == output) return list == .i64 or mutable(catalog, input);
@@ -66,6 +67,10 @@ pub fn operation(catalog: value.Catalog, owner: typed.Type, result: typed.Type, 
     if (arguments.len != kind.arity()) return error.ComponentProtocol;
     switch (kind) {
         .length => if (result != .i64) return error.ComponentProtocol,
+        .iteration_check => {
+            if (mutable(catalog, owner) or result != .unit or arguments[0] != .i64) return error.ComponentProtocol;
+        },
+        .text_ord => if (!text or result != .i64) return error.ComponentProtocol,
         .read => {
             const wanted = if (text) owner else typed.Type.u8;
             if (result != wanted or !arguments[0].isInteger()) return error.ComponentProtocol;
