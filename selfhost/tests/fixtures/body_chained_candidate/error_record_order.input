@@ -1,0 +1,6 @@
+record Pair:
+    value: int
+
+func main() -> int:
+    assert Pair(value=1) < Pair(value=2) < Pair(value=3)
+    return 7

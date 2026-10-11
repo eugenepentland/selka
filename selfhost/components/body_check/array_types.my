@@ -12,6 +12,7 @@ public record Catalog:
     arrays: Array[]
     slots: int[]
     by_type: int[]
+    sources: int[]
 
 
 public record Recipe:
@@ -22,7 +23,7 @@ public record Recipe:
 
 
 public func empty() -> Catalog:
-    return Catalog(arrays=[], slots=[], by_type=[])
+    return Catalog(arrays=[], slots=[], by_type=[], sources=[])
 
 
 func invalid() -> syntax_value.Problem:

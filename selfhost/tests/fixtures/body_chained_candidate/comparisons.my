@@ -1,0 +1,8 @@
+public record Pair:
+    value: int
+
+public func integer(value: int) -> int:
+    return value
+
+public func pair(value: int) -> Pair:
+    return Pair(value=value)

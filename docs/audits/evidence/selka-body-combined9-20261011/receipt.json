@@ -158,7 +158,7 @@
     "selfhost/components/body_check/variant_type_tests.my": "1a7d6a5488b19c606fdab81e23e6f42772a2ea863826742bb8c8d145024e6c80",
     "selfhost/components/body_check/variants.my": "a197d46cfb3670de847ee407d68e052676d1b32ea2f7c93bf0ef0856dae546ee"
   },
-  "qualification": "pending final rebuilt-host matrices and release pure suite",
+  "qualification": "final numeric and original collection installed matrices passed; all 473 pure tests passed separately in normal and release modes",
   "pre_donor_package": {
     "artifact": "body-check-41079baea208395a37788a3d5e8854fef2c34f4df757c530ddc7163673a22d94",
     "component": "body-check",
@@ -178,6 +178,123 @@
     "b8-schema9-hostile.json.gz": "a0795606c96f0e9a23f25bc2e732822ddb7441ba6f279c170b9bf559aa8afca7",
     "numeric-combined-final-release.json.gz": "4ea441a28a40e20defee3839acfaab386d9326010d5067af63ebb4573157ea08",
     "earlyoom.log.gz": "ea27dcb33f38f743ee02021b4e729a300af3b538f15e55ebe9a9db216a2f5e4b",
-    "numeric-combined-final-boundaries.json.gz": "ffdffdd8dcfdc092a8d419e30e42b8fb0721d4e49e94bcf3da8245f9f2e77ad5"
-  }
+    "numeric-combined-final-boundaries.json.gz": "ffdffdd8dcfdc092a8d419e30e42b8fb0721d4e49e94bcf3da8245f9f2e77ad5",
+    "combined-final-replay.json.gz": "b853c075b7d3d4bf967b931904caa9eb92cdf949623a9b4d46d1781670adbf53",
+    "numeric-final-normal.json.gz": "979f00c07ad76330c0bc4c08bf3f4caa5c40a6cf755647af378902a2c17c19c4",
+    "numeric-final-release.json.gz": "e45d92c3c1ea6c3d0f9b95e4c11a65cd4bbbb1218ab76acfa4acb3ba2d3c5b88",
+    "numeric-final-boundaries.json.gz": "ae58320c4d26d9122b9f554251fe7a49309ba23e642cd5292f1add234e23870d",
+    "dictionary-final-normal.json.gz": "3bd2b2d65e723b2395fbd76ea3d2f8b696470249b13900cf2161d4fd28e356ac",
+    "dictionary-final-release.json.gz": "b53b122887bd7c35d270f7fc75f3333ba61f590b6c20b0e3126c073e35e9f2b0",
+    "dictionary-final-hostile.json.gz": "2e26cbfed15b1c5925d2c6ae8135a5b47ac9b0d3faaec47187a0636735b030bf",
+    "replay_combined_final.py.gz": "95bcdcdd31c45a102ed551b5a6f1d4b11da8b72296787bc8e3ca95d2ab08eb61",
+    "producer_suites_bounded.py.gz": "16ea8988f40be115ca796e0303bcd72b0321e9d9493f12ca19d0db499e72c71c",
+    "body-package-prefix-receipt.json.gz": "f2d820b4d30b2698dbd589ad07a820dd2a4a7b8d15e6cf44cf0fe2c0bd344218",
+    "body-package-private-receipt.json.gz": "d16a08824d64c96732593b94acfbcddcccf8108d8443c9cb156f0bd44788e430",
+    "producer-suites-bounded-final.json.gz": "598bb21f0d03e2821b54a74187c7ea29804d019ff54481ca85890292922d5dfd"
+  },
+  "final_source_commit": "47f32534613adcc647718bd5c5541cc72a0c0045",
+  "final_host": {
+    "path": "/home/epentland/ai/canopy/.selka-agent-cache/numeric-b9/install-host-final/focus/mylang",
+    "sha256": "02870ae6efcc13d8e7f5fcaaee712916ee9cc994688e3ffb860f52289f97fa18"
+  },
+  "final_packages": {
+    "body-check.json": {
+      "artifact": "body-check-0086563cd6c063777bf90e00bd8553ea584cbaca779225c1342ca2f0bbf587d1",
+      "component": "body-check",
+      "format": 1,
+      "key": "fa29e5ae5f24f6f7444a2f9ae87ba288bcdade9cc42eccecd2c4c3f985c96df0",
+      "protocol": 1,
+      "schema": 9,
+      "sha256": "0086563cd6c063777bf90e00bd8553ea584cbaca779225c1342ca2f0bbf587d1"
+    },
+    "cache-plan.json": {
+      "artifact": "cache-plan-a60dbc30655f08f31a6dfd54501ace067e93236b78e3f53ff8982c83fdefaf73",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "d16bea5359a6f2f6e0c766bd47482d07424cb6b250e67a62e943ee4bc9aa98b8",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "a60dbc30655f08f31a6dfd54501ace067e93236b78e3f53ff8982c83fdefaf73"
+    },
+    "declaration-index.json": {
+      "artifact": "declaration-index-fe99a8ffa1bf4cfeb0f2b655228b992ffa8443818fa97f5e03317cde6487058d",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "c2c5cdb2fdc72daac39c6ff78e9cac6cc4b699b1a5294225d62f6770b8899d94",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "fe99a8ffa1bf4cfeb0f2b655228b992ffa8443818fa97f5e03317cde6487058d"
+    },
+    "lexer-pilot.json": {
+      "artifact": "lexer-pilot-1be3095609b1901a3613d05668b37a25f5181e78ca38a738ffe09f4018e89e47",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "77eedaada6758f6f5b7630ef963b66cc825442b3672d2a4989996e1324d3efb6",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "1be3095609b1901a3613d05668b37a25f5181e78ca38a738ffe09f4018e89e47"
+    },
+    "parser-pilot.json": {
+      "artifact": "parser-pilot-6db9fd0269365e5b443eeb5c6c334f6c79555adff20190e0827df26df793c080",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "fce0175dc3762c3bb2cf46d4efb1cf84d82a672ceb64abeeda61a02c66765ce1",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "6db9fd0269365e5b443eeb5c6c334f6c79555adff20190e0827df26df793c080"
+    },
+    "test-index.json": {
+      "artifact": "test-index-672cf342fc12e948bfddbec1a4d13c643b11ed8d5a365c09ec35236b1726177f",
+      "component": "test-index",
+      "format": 1,
+      "key": "006d25ef8ba8d01fef44d78b9de95c3e69312b2323716a8a3f8ab7a61b2e2531",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "672cf342fc12e948bfddbec1a4d13c643b11ed8d5a365c09ec35236b1726177f"
+    },
+    "type-interface.json": {
+      "artifact": "type-interface-98e8c91dc72b86f0b5aa1c8f14f3d7101900ca5d8a4069b500e077c208759ba6",
+      "component": "type-interface",
+      "format": 1,
+      "key": "fa720cf533dd167b90dc3d97e24c1db2506efef746b410f8a4f1f6e335c6749b",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "98e8c91dc72b86f0b5aa1c8f14f3d7101900ca5d8a4069b500e077c208759ba6"
+    }
+  },
+  "final_qualification": {
+    "numeric_normal_operations": 366,
+    "numeric_release_operations": 366,
+    "supplemental_cases": 35,
+    "supplemental_operations": 168,
+    "dictionary_normal_operations": 246,
+    "dictionary_release_operations": 246,
+    "hostile_exact_refusals": 27,
+    "failed": 0,
+    "skipped": 0,
+    "native_body": {
+      "tool_session": 40006,
+      "exit_code": 0,
+      "filter": "body",
+      "named": 193,
+      "unnamed": 7,
+      "passed": 200,
+      "failed": 0,
+      "skipped": 0,
+      "receipt_kind": "summary of direct tool completion; not a raw stdout archive"
+    },
+    "pure_normal_tests": 473,
+    "pure_release": {
+      "passed": 473,
+      "modules": 77,
+      "failed": 0,
+      "skipped": 0,
+      "facts": true,
+      "leaks": true,
+      "seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+      "all_seven_component_modes": "reference"
+    },
+    "whole_language_bootstrap_and_1_5x_performance": "outstanding"
+  },
+  "private_package_qualification": "built and verified; final fixture claims use prefix package only"
 }

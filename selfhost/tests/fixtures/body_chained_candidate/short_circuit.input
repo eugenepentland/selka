@@ -1,0 +1,11 @@
+func mark(mut log: int[], value: int) -> int:
+    log.append(value)
+    return value
+
+func main() -> int:
+    mut log: int[] = []
+    assert mark(mut log, 1) < mark(mut log, 2) < mark(mut log, 3)
+    assert log == [1, 2, 3]
+    assert not (mark(mut log, 5) < mark(mut log, 4) < mark(mut log, 99))
+    assert log == [1, 2, 3, 5, 4]
+    return 7

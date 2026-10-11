@@ -93,15 +93,13 @@ public func test_malformed_body_reference_is_transport_failure() -> bool fails s
             return problem.code == "P_BODY_TRANSPORT"
 
 
-public func test_semantic_depth_limit_is_deliberate_profile_refusal() -> bool fails syntax_value.Problem:
-    mut request = try input(b"integer", b"int")
-    const root = len(request.values) - 1
+func nested_blocks(mut request: syntax_value.Pool, root: int, count: int) -> Unit fails syntax_value.Problem:
     const program = try graph.field(request, root, "program")
     const original_id = try graph.field(request, program, "statements")
     const original = try graph.items(request, original_id)
     mut statements = original
     const span = try graph.field(request, original[0], "span")
-    for index in range(256):
+    for index in range(count):
         const child = try syntax_value.integer(mut request, index)
         const children = try syntax_value.sequence(mut request, [child])
         const data = try syntax_value.tagged(mut request, b"block", children)
@@ -110,14 +108,47 @@ public func test_semantic_depth_limit_is_deliberate_profile_refusal() -> bool fa
     request.values[original_id].children = statements
     const functions_id = try graph.field(request, program, "functions")
     const functions = try graph.items(request, functions_id)
-    const body = try graph.field(request, functions[0], "body")
-    request.values[body].integer = 256
+    const body = try syntax_value.integer(mut request, count)
+    mut function = request.values[functions[0]]
+    for position in range(len(function.names)):
+        if function.names[position] == "body":
+            function.children[position] = body
+    request.values[functions[0]] = function
+
+
+public func test_semantic_depth_limit_is_deliberate_profile_refusal() -> bool fails syntax_value.Problem:
+    mut request = try input(b"integer", b"int")
+    const root = len(request.values) - 1
+    try nested_blocks(mut request, root, 256)
     const response = try checking.check(request, root)
     const outcome = try graph.get(response, len(response.values) - 1)
     const payload = try graph.payload(response, len(response.values) - 1)
     const code_id = try graph.field(response, payload, "code")
     const code = try graph.get(response, code_id)
     return outcome.data == b"profile" and code.data == b"P_BODY_PROFILE"
+
+
+public func test_nested_blocks_preserve_the_exact_semantic_depth_boundary() -> bool fails syntax_value.Problem:
+    mut request = try input(b"integer", b"int")
+    const root = len(request.values) - 1
+    try nested_blocks(mut request, root, 254)
+    const response = try checking.check(request, root)
+    const outcome = try graph.get(response, len(response.values) - 1)
+    if outcome.data != b"success":
+        return False
+    const output = try graph.payload(response, len(response.values) - 1)
+    const batch = try graph.field(response, output, "batch")
+    const statements_id = try graph.field(response, batch, "statements")
+    const statements = try graph.items(response, statements_id)
+    mut excessive = try input(b"integer", b"int")
+    const excessive_root = len(excessive.values) - 1
+    try nested_blocks(mut excessive, excessive_root, 255)
+    const refused = try checking.check(excessive, excessive_root)
+    const refusal = try graph.get(refused, len(refused.values) - 1)
+    const payload = try graph.payload(refused, len(refused.values) - 1)
+    const code_id = try graph.field(refused, payload, "code")
+    const code = try graph.get(refused, code_id)
+    return len(statements) == 255 and refusal.data == b"profile" and code.data == b"P_BODY_PROFILE"
 
 
 public func test_range_variable_assignment_is_native_immutable_error() -> bool fails syntax_value.Problem:
@@ -240,3 +271,43 @@ public func test_mut_marker_retains_inner_probe_and_emits_wrapper_span() -> bool
     const slot_id = try graph.payload(state.batch.pool, data_id)
     const slot = try graph.number(state.batch.pool, slot_id)
     return result.id == 1 and reused.id == 1 and len(state.batch.nodes) == 2 and end == 5 and data.data == b"local" and slot == 0 and state.scope.locals[0].usage.reads == 1
+
+
+func chain_binary(mut pool: syntax_value.Pool, span: int, operands: int[], chained: bool) -> int fails syntax_value.Problem:
+    const op = try syntax_value.enumeration(mut pool, b"le")
+    const left = try syntax_value.integer(mut pool, operands[0])
+    const right = try syntax_value.integer(mut pool, operands[1])
+    const marker = try syntax_value.boolean(mut pool, chained)
+    const payload = try syntax_value.object(mut pool, ["op", "left", "right", "op_span", "chained"], [op, left, right, span, marker])
+    const data = try syntax_value.tagged(mut pool, b"binary", payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+public func test_chain_whole_span_keeps_emitted_wire_postorder() -> bool fails syntax_value.Problem:
+    mut request = try input(b"integer", b"bool")
+    const root = len(request.values) - 1
+    const program = try graph.field(request, root, "program")
+    const old_nodes = try graph.field(request, program, "nodes")
+    const nodes = try graph.items(request, old_nodes)
+    const span = try graph.field(request, nodes[0], "span")
+    const first = try chain_binary(mut request, span, [0, 1], False)
+    const last = try chain_binary(mut request, span, [3, 2], True)
+    const replacement = try syntax_value.sequence(mut request, [nodes[0], nodes[0], nodes[0], first, last])
+    const value = try syntax_value.integer(mut request, 4)
+    const ret = try syntax_value.tagged(mut request, b"ret", value)
+    const statement = try syntax_value.object(mut request, ["span", "data"], [span, ret])
+    const replaced_statements = try syntax_value.sequence(mut request, [statement])
+    mut changed = request.values[program]
+    for position in range(len(changed.names)):
+        if changed.names[position] == "nodes":
+            changed.children[position] = replacement
+        elif changed.names[position] == "statements":
+            changed.children[position] = replaced_statements
+    request.values[program] = changed
+    const response = try checking.check(request, root)
+    const outcome = try graph.get(response, len(response.values) - 1)
+    assert outcome.data == b"success"
+    for index in range(len(response.values)):
+        for child in response.values[index].children:
+            assert child < index
+    return True

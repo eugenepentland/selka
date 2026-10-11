@@ -1,0 +1,188 @@
+{
+  "base_commit": "47f32534613adcc647718bd5c5541cc72a0c0045",
+  "selected": {
+    "complete": true,
+    "selected_admission": "passed",
+    "body_schema": 9,
+    "scope": "comparison-chain chained numeric/managed/record/Option comparison source fixtures; no compiler/bootstrap claim",
+    "release_facts_leaks": true,
+    "native_controls": false,
+    "native_body_schema": null,
+    "modes": [
+      "reference",
+      "shadow",
+      "component"
+    ],
+    "expected_operations": 219,
+    "compiler_sha256": "02870ae6efcc13d8e7f5fcaaee712916ee9cc994688e3ffb860f52289f97fa18",
+    "packages": {
+      "test-index": {
+        "artifact": "test-index-672cf342fc12e948bfddbec1a4d13c643b11ed8d5a365c09ec35236b1726177f",
+        "component": "test-index",
+        "format": 1,
+        "key": "006d25ef8ba8d01fef44d78b9de95c3e69312b2323716a8a3f8ab7a61b2e2531",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "672cf342fc12e948bfddbec1a4d13c643b11ed8d5a365c09ec35236b1726177f"
+      },
+      "cache-plan": {
+        "artifact": "cache-plan-a60dbc30655f08f31a6dfd54501ace067e93236b78e3f53ff8982c83fdefaf73",
+        "component": "cache-plan",
+        "format": 1,
+        "key": "d16bea5359a6f2f6e0c766bd47482d07424cb6b250e67a62e943ee4bc9aa98b8",
+        "protocol": 2,
+        "schema": 2,
+        "sha256": "a60dbc30655f08f31a6dfd54501ace067e93236b78e3f53ff8982c83fdefaf73"
+      },
+      "lexer-pilot": {
+        "artifact": "lexer-pilot-1be3095609b1901a3613d05668b37a25f5181e78ca38a738ffe09f4018e89e47",
+        "component": "lexer-pilot",
+        "format": 1,
+        "key": "77eedaada6758f6f5b7630ef963b66cc825442b3672d2a4989996e1324d3efb6",
+        "protocol": 1,
+        "schema": 2,
+        "sha256": "1be3095609b1901a3613d05668b37a25f5181e78ca38a738ffe09f4018e89e47"
+      },
+      "parser-pilot": {
+        "artifact": "parser-pilot-6db9fd0269365e5b443eeb5c6c334f6c79555adff20190e0827df26df793c080",
+        "component": "parser-pilot",
+        "format": 1,
+        "key": "fce0175dc3762c3bb2cf46d4efb1cf84d82a672ceb64abeeda61a02c66765ce1",
+        "protocol": 1,
+        "schema": 2,
+        "sha256": "6db9fd0269365e5b443eeb5c6c334f6c79555adff20190e0827df26df793c080"
+      },
+      "declaration-index": {
+        "artifact": "declaration-index-fe99a8ffa1bf4cfeb0f2b655228b992ffa8443818fa97f5e03317cde6487058d",
+        "component": "declaration-index",
+        "format": 1,
+        "key": "c2c5cdb2fdc72daac39c6ff78e9cac6cc4b699b1a5294225d62f6770b8899d94",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "fe99a8ffa1bf4cfeb0f2b655228b992ffa8443818fa97f5e03317cde6487058d"
+      },
+      "type-interface": {
+        "artifact": "type-interface-98e8c91dc72b86f0b5aa1c8f14f3d7101900ca5d8a4069b500e077c208759ba6",
+        "component": "type-interface",
+        "format": 1,
+        "key": "fa720cf533dd167b90dc3d97e24c1db2506efef746b410f8a4f1f6e335c6749b",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "98e8c91dc72b86f0b5aa1c8f14f3d7101900ca5d8a4069b500e077c208759ba6"
+      },
+      "body-check": {
+        "artifact": "body-check-b4b218f088272a185c55c72d08385f7211e00276b5442aaa2df37ec8bbc601ff",
+        "component": "body-check",
+        "format": 1,
+        "key": "db537bd9017a73f47ded125b0dc5ba309636175ed0df0591fa852adf800613f0",
+        "protocol": 1,
+        "schema": 9,
+        "sha256": "b4b218f088272a185c55c72d08385f7211e00276b5442aaa2df37ec8bbc601ff"
+      }
+    },
+    "fixtures": 31,
+    "success": 21,
+    "diagnostic": 10,
+    "profiles": 0,
+    "donors": {
+      "comparisons.my": "060769b2fdbc78c368fb7798dda4726f822e4ff7081c8f602db265c63fdc1b4e"
+    },
+    "runtime_flags": [
+      "--release",
+      "--verify-facts",
+      "MYL_CORE_LEAKCHECK=1"
+    ],
+    "typed_oracle": "full canonical batch/catalog shadow comparison; dump-typed supplements",
+    "qualified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+    "operations": 219,
+    "failed": 0,
+    "skipped": 0
+  },
+  "supplemental_capture": {
+    "operations": 1,
+    "status": 0,
+    "stdout_hex": "",
+    "stderr_hex": "",
+    "schema": 9,
+    "source": "bound_width_i16.input",
+    "source_sha256": "2e991741412bc9c3066f2280d932898ebe03c92905c7ed285794437a3606633b"
+  },
+  "pure_tests": {
+    "chained_compare": {
+      "debug": 3,
+      "release_facts_leaks": 3
+    },
+    "body": {
+      "debug": 12,
+      "release_facts_leaks": 12
+    },
+    "admission_python": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "guardian_diff_scoped_checks": 88,
+  "full_guardian_commit": "Guardian commit must run the whole-tree gate; its terminal commit result is authoritative",
+  "prior_failures": {
+    "genuine_initial_checks": 93,
+    "selected_mismatches": 42,
+    "cause": "forward-child logical span replacement rejected by parser_value.zig:188; corrected by fresh record append",
+    "wrong_schema8_deployment": "strict runner rejected before selected operations; original metadata retained",
+    "fixed_install_attempt": "earlyoom SIGTERM of LLVM child840647, seed exited2; retry succeeded"
+  },
+  "files": [
+    {
+      "file": "selected-final.json.gz",
+      "sha256": "320531107f149c31b2af33fef09b4de5e92060a67736be7d6ca30e0c99ae96b4",
+      "gzip_sha256": "df56b74b06b815950befd824634172046800daa214fb5ae58ef4eb8a9d05ffe9",
+      "bytes": 382346
+    },
+    {
+      "file": "checks-initial-failed.json.gz",
+      "sha256": "c8926a64f548f605d189bd5dff1c8caedf5b2e41e008d8bd41921ed11ffd48f3",
+      "gzip_sha256": "18aa6a2784cab23fb7611c964c651708b0d346c4df954310743a612e41242b01",
+      "bytes": 58381
+    },
+    {
+      "file": "body-package-receipt.json.gz",
+      "sha256": "c61f4a6e09ee011f8274cb9523e218d449e6759e9875179f871618dad87e5145",
+      "gzip_sha256": "3de3907bd3cf77da18f4cc584db8c3b8895c90103625a32d15bf0a8f8c0e67d9",
+      "bytes": 72170
+    },
+    {
+      "file": "wrong-schema8-package.json.gz",
+      "sha256": "9859e2744f35a1d8eb690b1ff203e7a780f804b2feb4a427c0317737a19a6bfd",
+      "gzip_sha256": "a4d24b96473c7a7d8328f035620f41bf246528e7c3a6db1002c49a81cc38736a",
+      "bytes": 300
+    },
+    {
+      "file": "capture-selected-request.bin.gz",
+      "sha256": "842b7e23ce5b0d66464323f346b6a0b44eb82764b8b7ed5d7922eab110e5025e",
+      "gzip_sha256": "5444997571f3492e2474a26b915665650473fb8f075bb1128093c73191cc3de4",
+      "bytes": 12661
+    },
+    {
+      "file": "capture-selected-reply.bin.gz",
+      "sha256": "5ff5319499581b2a5dd125baa5fc1784d50e47e22637705f014a1d6007e468b2",
+      "gzip_sha256": "2b41f72defb60e64a5828e6cb4d84c64153b736b7a59ebd2ba5be9211d2656d5",
+      "bytes": 12956
+    },
+    {
+      "file": "capture-selected-final-request.bin.gz",
+      "sha256": "a34ecd9d69e07f7534ad20fc07fca173eec0c991af623018193b3e5427c92dff",
+      "gzip_sha256": "a9af3f00f57f659b415d054ea0f4170bd3a6ea3558e69c961b922a1f698727df",
+      "bytes": 12661
+    },
+    {
+      "file": "capture-selected-final-reply.bin.gz",
+      "sha256": "ce4fe97e281e7ae04e0606cd8f498942e1f889c10f027f00ab861872e36adc33",
+      "gzip_sha256": "f558c20987c9f0fcdff6aa702da945923a676e966dcf025ba6f953d5fecdc629",
+      "bytes": 13066
+    },
+    {
+      "file": "producer-source.json.gz",
+      "sha256": "041dedcfeaf5d60227a4653a0abaafb15b28eb8a4fed41cad8e5b35de1b587c3",
+      "gzip_sha256": "9de733f37fa48008c6ffb28f4d88f7bb5a05bdcde96441c96e4ce013414e5753",
+      "bytes": 1453720
+    }
+  ]
+}

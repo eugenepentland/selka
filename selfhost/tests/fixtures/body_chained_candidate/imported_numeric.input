@@ -1,0 +1,5 @@
+import comparisons
+
+func main() -> int:
+    assert comparisons.integer(1) < comparisons.integer(2) <= comparisons.integer(3)
+    return 7

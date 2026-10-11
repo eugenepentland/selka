@@ -1,0 +1,5 @@
+import comparisons
+
+func main() -> int:
+    assert comparisons.pair(1) == comparisons.pair(1) != comparisons.pair(2)
+    return 7

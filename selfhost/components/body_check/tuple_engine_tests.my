@@ -3,6 +3,8 @@ import graph
 import engine
 import tuple_types
 import list_types
+import variants
+import locals
 
 func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
     const data = try syntax_value.tagged(mut pool, tag, payload)
@@ -63,3 +65,44 @@ public func test_tuple_expected_arity_rejects_before_checking_children() -> bool
             return False
         case Err(problem):
             return problem.code == "E_TUPLE_ARITY" and len(state.batch.nodes) == 0
+
+
+public func test_tuple_children_preserve_inherited_stack_without_accumulating_owned_results() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    state.syntax.source = b"rs"
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 0)
+    const first = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const second = try syntax_value.span(mut state.syntax.pool, 1, 2)
+    const template = variants.Template(id=0, declaration=span, raw=-1, cases=[variants.TemplateCase(name=b"ok", declaration=span, parameter=0), variants.TemplateCase(name=b"err", declaration=span, parameter=1)])
+    const row = try variants.materialize(mut state.syntax.pool, [], template, 19, 0, 1, True)
+    state.batch.facts.lists.base_count = 1
+    state.batch.facts.lists.types.records.rows = [row]
+    for unused in range(19):
+        state.batch.facts.lists.types.records.by_type.append(-1)
+        state.batch.facts.lists.types.records.admitted.append(True)
+    state.batch.facts.lists.types.records.by_type.append(-2)
+    state.batch.facts.lists.types.records.admitted.append(True)
+    state.batch.facts.lists.by_element.append(-1)
+    state.batch.facts.lists.elements.append(-1)
+    state.return_type = 19
+    const r = try locals.add(mut state.scope, b"r", first, 19, False, b"local")
+    const s = try locals.add(mut state.scope, b"s", second, 19, False, b"local")
+    state.scope.locals[r].usage.transfer_available = True
+    state.scope.locals[s].usage.transfer_available = True
+    const r_node = try node(mut state.syntax.pool, first, b"name", first)
+    state.syntax.nodes[0] = r_node
+    const s_node = try node(mut state.syntax.pool, second, b"name", second)
+    state.syntax.nodes[1] = s_node
+    const operand = try syntax_value.integer(mut state.syntax.pool, 1)
+    const propagate = try node(mut state.syntax.pool, second, b"propagate", operand)
+    state.syntax.nodes.append(propagate)
+    state.batch.resolved.append(-1)
+    state.batch.facts.expected.append(-1)
+    const zero = try syntax_value.integer(mut state.syntax.pool, 0)
+    const four = try syntax_value.integer(mut state.syntax.pool, 4)
+    const values = try syntax_value.sequence(mut state.syntax.pool, [zero, four])
+    const tuple_node = try node(mut state.syntax.pool, second, b"tuple", values)
+    state.syntax.nodes[3] = tuple_node
+    const value = try engine.expression(mut state, 3)
+    const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, value.ty)
+    return tuple.elements == [19, 0] and not state.scope.locals[r].usage.transfer_available and not state.scope.locals[s].usage.transfer_available

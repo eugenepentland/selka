@@ -1,0 +1,6 @@
+func value() -> int?:
+    return Some(3)
+
+func main() -> int:
+    assert None != value() == Some(3)
+    return 7

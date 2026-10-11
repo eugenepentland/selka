@@ -1,0 +1,116 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import chained_compare
+
+record Fixture:
+    pool: syntax_value.Pool
+    nodes: int[]
+    span: int
+
+
+func raw_node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func raw_binary(mut pool: syntax_value.Pool, span: int, operands: int[], op: bytes, chained: bool) -> int fails syntax_value.Problem:
+    const left = try syntax_value.integer(mut pool, operands[0])
+    const right = try syntax_value.integer(mut pool, operands[1])
+    const operator = try syntax_value.enumeration(mut pool, op)
+    const marker = try syntax_value.boolean(mut pool, chained)
+    const payload = try syntax_value.object(mut pool, ["op", "left", "right", "op_span", "chained"], [operator, left, right, span, marker])
+    return try raw_node(mut pool, span, b"binary", payload)
+
+
+func fixture() -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 3, 12)
+    mut nodes: int[] = []
+    for unused in range(3):
+        const leaf = try raw_node(mut pool, span, b"integer", span)
+        nodes.append(leaf)
+    const first = try raw_binary(mut pool, span, [0, 1], b"lt", False)
+    nodes.append(first)
+    const second = try raw_binary(mut pool, span, [3, 2], b"le", True)
+    nodes.append(second)
+    return Fixture(pool=pool, nodes=nodes, span=span)
+
+
+func number(pool: syntax_value.Pool, row: int, field: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, field)
+    return try graph.number(pool, value)
+
+
+func node_data(pool: syntax_value.Pool, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const value = try graph.field(pool, row, "data")
+    return try graph.get(pool, value)
+
+
+public func test_plan_restores_source_order_and_shared_middle_operand() -> bool fails syntax_value.Problem:
+    const input = try fixture()
+    const plan = try chained_compare.plan(input.pool, input.nodes, 4)
+    return plan.operands == [0, 1, 2] and len(plan.links) == 2 and plan.links[0].op == b"lt" and plan.links[1].op == b"le" and plan.links[0].right == 1 and plan.links[1].right == 2
+
+
+public func test_reverse_blocks_single_initialization_and_short_circuit_native_shape() -> bool fails syntax_value.Problem:
+    const input = try fixture()
+    mut batch = emission.empty()
+    mut scope = locals.empty()
+    const context = list_lower.Context(input=input.pool, span=input.span)
+    mut inputs: int[] = []
+    for value in [2, 3, 4]:
+        const node = try list_lower.integer(mut batch, context, value, 0)
+        inputs.append(node)
+    const storage = try chained_compare.reserve(mut scope, context, [0, 0, 0])
+    const middle = try list_lower.read(mut batch, context, storage.slots[1], 0)
+    const last_comparison = try list_lower.binary(mut batch, context, b"le", middle, inputs[2], 1)
+    const last = try chained_compare.link_block(mut batch, context, storage, inputs, chained_compare.Step(position=1, comparison=last_comparison, tail=-1))
+    const right = try list_lower.read(mut batch, context, storage.slots[1], 0)
+    const left = try list_lower.read(mut batch, context, storage.slots[0], 0)
+    const first_comparison = try list_lower.binary(mut batch, context, b"lt", left, right, 1)
+    const first = try chained_compare.link_block(mut batch, context, storage, inputs, chained_compare.Step(position=0, comparison=first_comparison, tail=last))
+    const result = try chained_compare.finish(mut batch, context, storage, inputs[0], first)
+    if storage.slots != [0, 1] or storage.result != 2 or len(scope.locals) != 3 or len(scope.active) != 0:
+        return False
+    const tail_store = try node_data(batch.pool, batch.statements[0])
+    const middle_store = try node_data(batch.pool, batch.statements[2])
+    const result_store = try node_data(batch.pool, batch.statements[3])
+    const branch = try node_data(batch.pool, batch.statements[4])
+    const initial = try node_data(batch.pool, batch.statements[6])
+    const body = try number(batch.pool, result.payload, "body")
+    const outer = try node_data(batch.pool, batch.statements[body])
+    const outer_rows = try graph.items(batch.pool, outer.children[0])
+    mut outer_statements: int[] = []
+    for row in outer_rows:
+        const statement = try graph.number(batch.pool, row)
+        outer_statements.append(statement)
+    const middle_value = try number(batch.pool, middle_store.children[0], "value")
+    const initial_value = try number(batch.pool, initial.children[0], "value")
+    const then_body = try number(batch.pool, branch.children[0], "then_body")
+    assert result.tag == b"block_value"
+    assert result.ty == 1
+    assert tail_store.data == b"assign"
+    assert middle_store.data == b"initialize"
+    assert result_store.data == b"initialize"
+    assert branch.data == b"branch"
+    assert initial.data == b"initialize"
+    assert middle_value == inputs[1]
+    assert initial_value == inputs[0]
+    assert then_body == last
+    assert outer_statements == [6, first]
+    assert len(batch.statements) == 8
+    return True
+
+
+public func test_noncomparison_chain_is_rejected_before_lowering() -> bool fails syntax_value.Problem:
+    mut input = try fixture()
+    const bad = try raw_binary(mut input.pool, input.span, [3, 2], b"add", True)
+    input.nodes[4] = bad
+    match chained_compare.plan(input.pool, input.nodes, 4):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

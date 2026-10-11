@@ -1,0 +1,56 @@
+import syntax_value
+import graph
+import list_types
+import tuple_types
+import array_types
+
+func fresh() -> list_types.Catalog:
+    mut catalog = list_types.empty()
+    catalog.available = True
+    for unused in range(19):
+        catalog.by_element.append(-1)
+        catalog.elements.append(-1)
+    return catalog
+
+
+public func test_array_tuple_and_list_recipes_share_append_order_and_identity() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 2, 4)
+    mut catalog = fresh()
+    const array = try list_types.array_intern(mut catalog, mut pool, 0, 2, span)
+    const tuple = try list_types.tuple_intern(mut catalog, mut pool, [array, 1], span)
+    const list = try list_types.intern(mut catalog, pool, list_types.Recipe(id=-1, element=tuple, span=span), [])
+    const repeated = try list_types.array_intern(mut catalog, mut pool, 0, 2, span)
+    return array == 19 and tuple == 20 and list == 21 and repeated == 19 and len(catalog.recipes) == 3 and catalog.recipes[0].kind == "array" and catalog.recipes[0].members == 2 and catalog.recipes[1].depth == 3 and catalog.types.records.admitted[array]
+
+
+public func test_array_recipe_wrapper_preserves_source_span_and_numeric_length() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 7, 12)
+    mut catalog = fresh()
+    _ = try list_types.array_intern(mut catalog, mut pool, 5, 3, span)
+    mut output = syntax_value.empty()
+    const encoded = try list_types.encode(mut output, pool, catalog.recipes)
+    const entries = try graph.items(output, encoded)
+    const outer = try graph.get(output, entries[0])
+    const inner_id = try graph.payload(output, entries[0])
+    const inner = try graph.get(output, inner_id)
+    const payload_id = try graph.payload(output, inner_id)
+    const payload = try graph.get(output, payload_id)
+    const source_id = try graph.field(output, payload_id, "span")
+    const start_id = try graph.field(output, source_id, "start")
+    const start = try graph.number(output, start_id)
+    return outer.data == b"structural" and inner.data == b"array" and payload.names == ["id", "element", "length", "span"] and start == 7
+
+
+public func test_array_demand_flushes_lazy_list_before_materializing_element_name() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    mut catalog = fresh()
+    const list = try list_types.intern(mut catalog, pool, list_types.Recipe(id=-1, element=0, span=span), [])
+    const array = try list_types.array_intern(mut catalog, mut pool, list, 0, span)
+    const shape = array_types.schema(catalog.types.arrays, array)
+    const row = catalog.types.records.rows[array - 19]
+    const name_id = try graph.field(pool, row, "name")
+    const name = try graph.get(pool, name_id)
+    return list == 19 and array == 20 and shape.length == 0 and shape.element == list and name.data == b"[0]List<i64>" and len(catalog.types.records.rows) == 2

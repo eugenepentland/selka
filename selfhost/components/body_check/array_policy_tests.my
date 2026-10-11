@@ -1,0 +1,37 @@
+import syntax_value
+import graph
+import list_types
+import record_types
+
+func fresh() -> list_types.Catalog:
+    mut catalog = list_types.empty()
+    for unused in range(19):
+        catalog.elements.append(-1)
+        catalog.by_element.append(-1)
+    return catalog
+
+
+public func test_zero_array_cuts_storage_and_layout_dependencies() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    mut catalog = fresh()
+    const ty = try list_types.array_intern(mut catalog, mut pool, 16, 0, span)
+    const children = try record_types.children_of(pool, catalog.types.records.rows, ty)
+    const admitted = try record_types.closure(mut catalog.types.records, pool, catalog.elements, [])
+    return len(children) == 0 and admitted and catalog.types.records.admitted[ty]
+
+
+public func test_nonempty_array_tracks_unsupported_element_before_publication() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    mut catalog = fresh()
+    const ty = try list_types.array_intern(mut catalog, mut pool, 16, 1, span)
+    const children = try record_types.children_of(pool, catalog.types.records.rows, ty)
+    if children != [16]:
+        return False
+    const result = record_types.closure(mut catalog.types.records, pool, catalog.elements, [])
+    match result:
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE"

@@ -1,0 +1,146 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+
+public record Step:
+    key: int
+    from_end: bool
+    member: int
+
+
+public record Input:
+    owner: int
+    index: int
+    bases: int[]
+    steps: Step[]
+    value: int
+    setup: int[]
+
+
+public record Spill:
+    value: int
+    statement: int
+
+
+func invalid() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid static array mutation plan")
+
+
+func node_type(batch: emission.Batch, node: int) -> int fails syntax_value.Problem:
+    if node < 0 or node >= len(batch.nodes):
+        fail invalid()
+    const ty = try graph.field(batch.pool, batch.nodes[node], "ty")
+    return try graph.number(batch.pool, ty)
+
+
+func node_data(batch: emission.Batch, node: int) -> syntax_value.Value fails syntax_value.Problem:
+    _ = try node_type(batch, node)
+    const data = try graph.field(batch.pool, batch.nodes[node], "data")
+    return try graph.get(batch.pool, data)
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, row, name)
+    return try graph.number(pool, field)
+
+
+public func inert_value(batch: emission.Batch, node: int) -> bool fails syntax_value.Problem:
+    const data = try node_data(batch, node)
+    return data.data == b"integer" or data.data == b"boolean" or data.data == b"unit" or data.data == b"local"
+
+
+func effect_free(batch: emission.Batch, node: int, depth: int) -> bool fails syntax_value.Problem:
+    if depth == 16:
+        return False
+    const data = try node_data(batch, node)
+    if data.data == b"integer" or data.data == b"boolean" or data.data == b"unit" or data.data == b"local":
+        return True
+    if data.data == b"cast":
+        const operand = try graph.number(batch.pool, data.children[0])
+        return try effect_free(batch, operand, depth + 1)
+    if data.data == b"unary" or data.data == b"field":
+        mut name = "operand"
+        if data.data == b"field":
+            name = "base"
+        const operand = try number(batch.pool, data.children[0], name)
+        return try effect_free(batch, operand, depth + 1)
+    if data.data == b"binary" or data.data == b"index":
+        mut first = "left"
+        mut second = "right"
+        if data.data == b"index":
+            first = "base"
+            second = "index"
+        const left = try number(batch.pool, data.children[0], first)
+        const right = try number(batch.pool, data.children[0], second)
+        const left_free = try effect_free(batch, left, depth + 1)
+        if not left_free:
+            return False
+        return try effect_free(batch, right, depth + 1)
+    return False
+
+
+public func effect_free_value(batch: emission.Batch, node: int) -> bool fails syntax_value.Problem:
+    return try effect_free(batch, node, 0)
+
+
+public func spill_value(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, value: int) -> Spill fails syntax_value.Problem:
+    const ty = try node_type(batch, value)
+    const slot = try list_lower.temporary(mut scope, context, ty)
+    const statement = try list_lower.store(mut batch, context, slot, value, True)
+    const read = try list_lower.read(mut batch, context, slot, ty)
+    return Spill(value=read, statement=statement)
+
+
+public func read_root(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, slot: int) -> int fails syntax_value.Problem:
+    if slot < 0 or slot >= len(scope.locals):
+        fail invalid()
+    scope.locals[slot].usage.writes += 1
+    scope.locals[slot].usage.reads += 1
+    return try list_lower.read(mut batch, context, slot, scope.locals[slot].ty)
+
+
+func rebuild(mut batch: emission.Batch, context: list_lower.Context, base: int, step: Step, value: int) -> int fails syntax_value.Problem:
+    const ty = try node_type(batch, base)
+    const base_id = try syntax_value.integer(mut batch.pool, base)
+    const value_id = try syntax_value.integer(mut batch.pool, value)
+    if step.member >= 0:
+        const index = try syntax_value.integer(mut batch.pool, step.member)
+        const entry = try syntax_value.object(mut batch.pool, ["index", "value"], [index, value_id])
+        const fields = try syntax_value.sequence(mut batch.pool, [entry])
+        const payload = try syntax_value.object(mut batch.pool, ["base", "fields"], [base_id, fields])
+        return try emission.node(mut batch, context.input, context.span, ty, b"update", payload)
+    _ = try node_type(batch, step.key)
+    const index = try syntax_value.integer(mut batch.pool, step.key)
+    const from_end = try syntax_value.boolean(mut batch.pool, step.from_end)
+    const payload = try syntax_value.object(mut batch.pool, ["base", "index", "value", "from_end"], [base_id, index, value_id, from_end])
+    return try emission.node(mut batch, context.input, context.span, ty, b"replace", payload)
+
+
+public func finish(mut batch: emission.Batch, context: list_lower.Context, request: Input) -> list_lower.Lowered fails syntax_value.Problem:
+    if request.owner < 0 or request.index < -1 or len(request.bases) == 0 or len(request.bases) != len(request.steps) or len(request.bases) > 256:
+        fail invalid()
+    _ = try node_type(batch, request.value)
+    mut statements = request.setup
+    mut value = request.value
+    mut position = len(request.bases)
+    while position > 0:
+        position -= 1
+        value = try rebuild(mut batch, context, request.bases[position], request.steps[position], value)
+    if request.index >= 0:
+        _ = try node_type(batch, request.index)
+        const write = try list_lower.operation(mut batch, context, list_lower.Operation(owner=request.owner, kind=b"write", arguments=[request.index, value], ty=15))
+        const payload = try syntax_value.integer(mut batch.pool, write)
+        const stored = try emission.statement(mut batch, context.input, context.span, False, b"discard", payload)
+        statements.append(stored)
+    else:
+        const slot = try syntax_value.integer(mut batch.pool, request.owner)
+        const expression = try syntax_value.integer(mut batch.pool, value)
+        const element = try syntax_value.boolean(mut batch.pool, True)
+        const payload = try syntax_value.object(mut batch.pool, ["slot", "value", "element"], [slot, expression, element])
+        const stored = try emission.statement(mut batch, context.input, context.span, False, b"assign", payload)
+        statements.append(stored)
+    const absent = try syntax_value.absent(mut batch.pool)
+    const unit = try emission.node(mut batch, context.input, context.span, 15, b"unit", absent)
+    return try list_lower.block(mut batch, context, statements, unit, 15)

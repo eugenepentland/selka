@@ -1,0 +1,101 @@
+{
+  "scope": "Native controls for five complete existing array/tuple language suites; independent array-place helper tests.",
+  "source_root_commit": "4069e037eda8ff101b90dfcd9af925b888bfbac1",
+  "native_compiler_sha256": "02870ae6efcc13d8e7f5fcaaee712916ee9cc994688e3ffb860f52289f97fa18",
+  "native_body_schema": 9,
+  "native_body_package": {
+    "artifact": "body-check-0086563cd6c063777bf90e00bd8553ea584cbaca779225c1342ca2f0bbf587d1",
+    "component": "body-check",
+    "format": 1,
+    "key": "fa29e5ae5f24f6f7444a2f9ae87ba288bcdade9cc42eccecd2c4c3f985c96df0",
+    "protocol": 1,
+    "schema": 9,
+    "sha256": "0086563cd6c063777bf90e00bd8553ea584cbaca779225c1342ca2f0bbf587d1"
+  },
+  "source_roots": {
+    "array_writes.my": {
+      "source_sha256": "e6716908adc8c303379e0a65899465d4ac42f8e22c3946d9b23482966cd4c1f8",
+      "tests": 10
+    },
+    "array_places.my": {
+      "source_sha256": "51d5f06e30fb027d2b0f1530b7ac897b47bf9793d7234775d385e39f9d5f177a",
+      "tests": 22
+    },
+    "array_negative_index.my": {
+      "source_sha256": "3a1b33bf27193f189e65879e57a392368fc3908934da7887ccd1541820681eab",
+      "tests": 20
+    },
+    "python_arrays.my": {
+      "source_sha256": "14791138de2d8e438b28c06cd1c59dc2ffd7367257b34b411429ad6c7ded39b1",
+      "tests": 5
+    },
+    "tuples.my": {
+      "source_sha256": "2227a535862dc7f7dd7e41911de7a6b4550cb16bcfb1ea8ebb2574ec0b3206ec",
+      "tests": 5
+    }
+  },
+  "native_operations": 15,
+  "native_tests_per_mode": 62,
+  "native_executed_tests": 124,
+  "native_failed": 0,
+  "native_skipped": 0,
+  "selected_admission": "pending",
+  "helper_first_commit": "53ff217b0",
+  "helper_followup_tests_per_mode": 6,
+  "qualified_helper_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "helper_flags": [
+    "--force",
+    "--no-cache",
+    "--release",
+    "--verify-facts",
+    "MYL_CORE_LEAKCHECK=1"
+  ],
+  "limitations": [
+    "Native controls do not prove Selka body admission.",
+    "Complete five-file selection includes array iteration and generic tuple functions not yet admitted.",
+    "Pure emission helper checks do not establish installed engine routing.",
+    "No compiler bootstrap or performance acceptance is claimed."
+  ],
+  "files": {
+    "native-report.json.gz": {
+      "sha256": "3388a31edcd713aea1a27b3d622ab888a3774896698b62696a136f084a6a1615",
+      "uncompressed_sha256": "fc108e15a6744fe1e0cabdd75de91cb63375e6711b491f4660fd5d83b8d5f66f"
+    },
+    "native-run.log.gz": {
+      "sha256": "bec8d49daf356cce9ad0714b9571ccbba1da365167cd7686e14bea357fbcabc1",
+      "uncompressed_sha256": "3246217d13c07a0594525e2bf9b37245248590a82203cc2e625d5587a9aab1d5"
+    },
+    "body-structural-language-suites.py.gz": {
+      "sha256": "08182bbad1e003dfe1220e0383372f01c963c0bea2de222d0ba2fb2369eb11e6",
+      "uncompressed_sha256": "599afede337935902d2c413e9276f3d0172de8515ffa671660cee84c52e93935"
+    },
+    "array-places-four-tests.log.gz": {
+      "sha256": "6924d437339e5e433d52ea5a3040cdee4a35af737d4c8bcb603af25d2a81de94",
+      "uncompressed_sha256": "5a317aec5dd2ee7f5c9f1500c4b2eb4c900ffd36449230df25aadb3b50001043"
+    },
+    "array-places-six-tests.log.gz": {
+      "sha256": "dee893ff746d31aa6403ff3fa1b9faabd17bc27bb2583afc5ade2f87706a25a6",
+      "uncompressed_sha256": "e30288a1e02651a247d0dc408dd189f8c5b9019a0862c451ab3874f1f4c9b14a"
+    },
+    "array_writes.my.gz": {
+      "sha256": "3e6ebdb71476a2ac6f4bcd5e3338a11f4ce2c1adf5b756a5f1a68e92d4fecfa0",
+      "uncompressed_sha256": "e6716908adc8c303379e0a65899465d4ac42f8e22c3946d9b23482966cd4c1f8"
+    },
+    "array_places.my.gz": {
+      "sha256": "1259d89f369e7ae49b3fef0a1d9709c31a9a94e19a763757a5d6f033f542492b",
+      "uncompressed_sha256": "51d5f06e30fb027d2b0f1530b7ac897b47bf9793d7234775d385e39f9d5f177a"
+    },
+    "array_negative_index.my.gz": {
+      "sha256": "09acdfa5cc8998632b823271325437a2ea432ffa98af0d055e22bfe142e463cf",
+      "uncompressed_sha256": "3a1b33bf27193f189e65879e57a392368fc3908934da7887ccd1541820681eab"
+    },
+    "python_arrays.my.gz": {
+      "sha256": "a0341651e8c050d01df622374f4ebb2914060ce649dce83971377a569ee896ec",
+      "uncompressed_sha256": "14791138de2d8e438b28c06cd1c59dc2ffd7367257b34b411429ad6c7ded39b1"
+    },
+    "tuples.my.gz": {
+      "sha256": "f7aa32b38e1939f08570209c09a0930cb16d99be1bc463668cb8d1c500f27d95",
+      "uncompressed_sha256": "2227a535862dc7f7dd7e41911de7a6b4550cb16bcfb1ea8ebb2574ec0b3206ec"
+    }
+  }
+}

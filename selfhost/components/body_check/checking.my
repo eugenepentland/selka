@@ -138,6 +138,9 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
         if source_types.names[position] == "tuples":
             const tuples = try graph.items(pool, source_types.children[position])
             lists.types.tuples.sources = tuples
+        elif source_types.names[position] == "arrays":
+            const arrays = try graph.items(pool, source_types.children[position])
+            lists.types.arrays.sources = arrays
     records = lists.types.records
     match record_types.closure(mut records, pool, lists.elements, managed_types, floating):
         case Ok(admitted):

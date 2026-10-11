@@ -1,0 +1,44 @@
+{
+  "counts": {
+    "fixtures": 31,
+    "success": 21,
+    "diagnostic": 10,
+    "profiles": 0
+  },
+  "source_cases": [
+    "bound_width_i16.my",
+    "bound_width_i32.my",
+    "bound_width_i64.my",
+    "bound_width_i8.my",
+    "bound_width_u16.my",
+    "bound_width_u32.my",
+    "bound_width_u64.my",
+    "bound_width_u8.my",
+    "bytes.my",
+    "dictionary_equality.my",
+    "error_list_order.my",
+    "error_record_order.my",
+    "error_width.my",
+    "float.my",
+    "imported_numeric.my",
+    "imported_record.my",
+    "list_equality.my",
+    "option_peer.my",
+    "record_equality.my",
+    "scalar.my",
+    "set_relations.my",
+    "short_circuit.my",
+    "text.my",
+    "width_i16.my",
+    "width_i32.my",
+    "width_i64.my",
+    "width_i8.my",
+    "width_u16.my",
+    "width_u32.my",
+    "width_u64.my",
+    "width_u8.my"
+  ],
+  "donors": {
+    "comparisons.my": "060769b2fdbc78c368fb7798dda4726f822e4ff7081c8f602db265c63fdc1b4e"
+  }
+}

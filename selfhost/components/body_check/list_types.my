@@ -7,6 +7,7 @@ import recipe_index
 import buffer_types
 import collection_types
 import tuple_types
+import array_types
 
 public record Schema:
     id: int
@@ -30,6 +31,7 @@ public record TypeTables:
     buffer: buffer_types.Basis
     collections: collection_types.Catalog
     tuples: tuple_types.Catalog
+    arrays: array_types.Catalog
 
 
 public record Catalog:
@@ -43,7 +45,7 @@ public record Catalog:
 
 
 public func empty() -> Catalog:
-    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty(), buffer=buffer_types.empty(), collections=collection_types.empty(), tuples=tuple_types.empty()), by_element=[], elements=[])
+    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty(), buffer=buffer_types.empty(), collections=collection_types.empty(), tuples=tuple_types.empty(), arrays=array_types.empty()), by_element=[], elements=[])
 
 
 func bad() -> syntax_value.Problem:
@@ -71,6 +73,11 @@ public func prepare_records(pool: syntax_value.Pool, id: int, suffixes: int[], m
     for tuple in catalog.types.tuples.tuples:
         catalog.types.records.admitted[tuple.id] = True
         catalog.types.records.by_type[tuple.id] = -4
+    const arrays = try array_types.prepare(pool, records.rows)
+    catalog.types.arrays = arrays
+    for array in arrays.arrays:
+        catalog.types.records.admitted[array.id] = True
+        catalog.types.records.by_type[array.id] = -5
     const collections = try collection_types.prepare(pool, id, records.rows)
     catalog.types.collections = collections
     for schema in collections.schemas:
@@ -227,6 +234,11 @@ public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recip
 public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, recipes: Recipe[]) -> int fails syntax_value.Problem:
     mut values: int[] = []
     for recipe in recipes:
+        if recipe.kind == "array":
+            const site = try graph.clone(mut pool, input, recipe.span, 0)
+            const array = try array_types.encode(mut pool, array_types.Recipe(id=recipe.id, element=recipe.element, length=recipe.members, span=site))
+            values.append(array)
+            continue
         if recipe.kind == "tuple":
             const members = try graph.items(input, recipe.members)
             mut elements: int[] = []
@@ -490,4 +502,44 @@ public func tuple_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, elem
     catalog.by_element.append(-1)
     catalog.elements.append(-1)
     _ = try tuple_types.add(mut catalog.types.tuples, tuple_types.Tuple(id=id, elements=elements))
+    return id
+
+
+public func array_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, element: int, length: int, span: int) -> int fails syntax_value.Problem:
+    const existing = array_types.find(catalog.types.arrays, element, length, -1)
+    if existing >= 0:
+        return existing
+    const id = 19 + catalog.base_count + len(catalog.recipes)
+    if id >= 65555 or element < 0 or element >= id or length < 0:
+        fail bad()
+    const parent_depth = try recipe_depth(catalog, element)
+    const depth = parent_depth + 1
+    if depth > 256:
+        const rejection = try refusal(pool, span, "catalog recipe depth limit exceeded")
+        fail rejection
+    while len(catalog.types.records.rows) < id - 19:
+        const missing = 19 + len(catalog.types.records.rows)
+        const ordinal = missing - 19 - catalog.base_count
+        if ordinal < 0 or ordinal >= len(catalog.recipes):
+            fail bad()
+        const previous = catalog.recipes[ordinal]
+        mut row = -1
+        if previous.kind == "list":
+            row = try variants.list_semantic(mut pool, catalog.types.records.rows, missing, previous.element, previous.span)
+        elif previous.kind == "byte_buffer":
+            row = try variants.buffer_semantic(mut pool, missing, previous.span)
+        else:
+            fail bad()
+        catalog.types.records.rows.append(row)
+    const row = try array_types.materialize(mut pool, catalog.types.records.rows, array_types.Recipe(id=id, element=element, length=length, span=span))
+    catalog.types.records.rows.append(row)
+    while len(catalog.types.records.by_type) < id:
+        catalog.types.records.by_type.append(-1)
+        catalog.types.records.admitted.append(False)
+    catalog.types.records.by_type.append(-5)
+    catalog.types.records.admitted.append(True)
+    catalog.recipes.append(Recipe(id=id, element=element, span=span, kind="array", depth=depth, members=length))
+    catalog.by_element.append(-1)
+    catalog.elements.append(-1)
+    _ = try array_types.add(mut catalog.types.arrays, array_types.Array(id=id, element=element, length=length, key=-1))
     return id

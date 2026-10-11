@@ -356,6 +356,20 @@ public func children_of(pool: syntax_value.Pool, rows: int[], ty: int) -> int[] 
         const element = try graph.number(pool, buffer_id)
         children.append(key)
         children.append(element)
+    const shape_id = try graph.field(pool, rows[ty - 19], "shape")
+    const array_id = try graph.field(pool, shape_id, "array")
+    const array = try graph.get(pool, array_id)
+    if array.kind != 0:
+        const length_id = try graph.field(pool, array_id, "length")
+        const length = try graph.number(pool, length_id)
+        if length != 0:
+            const element_id = try graph.field(pool, array_id, "element")
+            const element = try graph.number(pool, element_id)
+            children.append(element)
+        const key_id = try graph.field(pool, array_id, "key")
+        const key = try graph.get(pool, key_id)
+        if key.kind == 1:
+            children.append(key.integer)
     const value = try variants.shape(pool, rows, ty)
     for member in value.cases:
         if member.boxed:

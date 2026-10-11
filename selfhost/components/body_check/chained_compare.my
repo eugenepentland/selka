@@ -1,0 +1,119 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import comprehension_lower
+
+public record Link:
+    op: bytes
+    operator_span: int
+    span: int
+    right: int
+
+
+public record Plan:
+    operands: int[]
+    links: Link[]
+
+
+public record Storage:
+    slots: int[]
+    result: int
+
+
+public record Step:
+    position: int
+    comparison: int
+    tail: int
+
+
+func invalid() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid chained comparison authority")
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, row, name)
+    return try graph.number(pool, field)
+
+
+public func plan(pool: syntax_value.Pool, nodes: int[], root: int) -> Plan fails syntax_value.Problem:
+    mut reversed: Link[] = []
+    mut current = root
+    mut left = -1
+    while True:
+        if current < 0 or current >= len(nodes) or len(reversed) >= 65536:
+            fail invalid()
+        const node = nodes[current]
+        const data_id = try graph.field(pool, node, "data")
+        const data = try graph.get(pool, data_id)
+        if data.kind != 7 or data.data != b"binary":
+            fail invalid()
+        const payload = try graph.payload(pool, data_id)
+        const op_id = try graph.field(pool, payload, "op")
+        const op = try graph.get(pool, op_id)
+        if op.kind != 4 or (op.data != b"eq" and op.data != b"ne" and op.data != b"lt" and op.data != b"le" and op.data != b"gt" and op.data != b"ge"):
+            fail invalid()
+        const span = try graph.field(pool, node, "span")
+        const operator_span = try graph.field(pool, payload, "op_span")
+        const right = try number(pool, payload, "right")
+        left = try number(pool, payload, "left")
+        if right < 0 or right >= len(nodes) or left < 0 or left >= current:
+            fail invalid()
+        reversed.append(Link(op=op.data, operator_span=operator_span, span=span, right=right))
+        const chained_id = try graph.field(pool, payload, "chained")
+        const chained = try graph.get(pool, chained_id)
+        if chained.kind != 2:
+            fail invalid()
+        if chained.integer == 0:
+            break
+        current = left
+    if len(reversed) < 2:
+        fail invalid()
+    mut links: Link[] = []
+    mut operands = [left]
+    mut position = len(reversed)
+    while position > 0:
+        position -= 1
+        const link = reversed[position]
+        links.append(link)
+        operands.append(link.right)
+    return Plan(operands=operands, links=links)
+
+
+public func reserve(mut scope: locals.Scope, context: list_lower.Context, types: int[]) -> Storage fails syntax_value.Problem:
+    if len(types) < 3 or len(types) > 65537:
+        fail invalid()
+    mut slots: int[] = []
+    for position in range(len(types) - 1):
+        const slot = try list_lower.temporary(mut scope, context, types[position])
+        slots.append(slot)
+    const result = try list_lower.temporary(mut scope, context, 1)
+    return Storage(slots=slots, result=result)
+
+
+public func link_block(mut batch: emission.Batch, context: list_lower.Context, storage: Storage, inputs: int[], step: Step) -> int fails syntax_value.Problem:
+    const position = step.position
+    const comparison = step.comparison
+    const tail = step.tail
+    mut statements: int[] = []
+    if position + 1 < len(storage.slots):
+        const initialized = try list_lower.store(mut batch, context, storage.slots[position + 1], inputs[position + 1], True)
+        statements.append(initialized)
+    const stored = try list_lower.store(mut batch, context, storage.result, comparison, position == 0)
+    statements.append(stored)
+    if tail >= 0:
+        const condition = try list_lower.read(mut batch, context, storage.result, 1)
+        const condition_id = try syntax_value.integer(mut batch.pool, condition)
+        const then_body = try syntax_value.integer(mut batch.pool, tail)
+        const absent = try syntax_value.absent(mut batch.pool)
+        const branch = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [condition_id, then_body, absent])
+        const statement = try emission.statement(mut batch, context.input, context.span, False, b"branch", branch)
+        statements.append(statement)
+    return try comprehension_lower.block_statement(mut batch, context, statements)
+
+
+public func finish(mut batch: emission.Batch, context: list_lower.Context, storage: Storage, first: int, tail: int) -> list_lower.Lowered fails syntax_value.Problem:
+    const initialized = try list_lower.store(mut batch, context, storage.slots[0], first, True)
+    const value = try list_lower.read(mut batch, context, storage.result, 1)
+    return try list_lower.block(mut batch, context, [initialized, tail], value, 1)

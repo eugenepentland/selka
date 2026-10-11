@@ -3,6 +3,7 @@ import graph
 import scalars
 import integer_literals
 import floating_literals
+import chained_compare
 import numeric_lower
 import sequences
 import emission
@@ -56,6 +57,8 @@ import membership_lower
 import gather_lower
 import gather_pair
 import tuple_types
+import array_types
+import array_index
 import tuple_lower
 import dictionary_view_contains
 
@@ -96,6 +99,7 @@ public record Values:
     depth: int
     temporaries: int[]
     gathers: GatherSink[]
+    counters: int[]
     trapping_open: int = -1
 
 
@@ -136,6 +140,11 @@ public func make(pool: syntax_value.Pool, source: bytes, program: int) -> State 
             const name = try graph.spelling(pool, source, span)
             batch.facts.top_names.append(name)
     const expressions = try graph.field(pool, types, "expressions")
+    const source_types = try graph.get(pool, expressions)
+    for position in range(len(source_types.names)):
+        if source_types.names[position] == "arrays":
+            const arrays = try graph.items(pool, source_types.children[position])
+            batch.facts.lists.types.arrays.sources = arrays
     const applications_id = try graph.field(pool, expressions, "applications")
     const applications = try graph.items(pool, applications_id)
     batch.facts.applications = applications
@@ -402,13 +411,14 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         if value.kind != 3:
             fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid sequence literal payload")
         ty = state.batch.facts.bytes_type
-        if data.data == b"bytes" and state.batch.facts.expected[raw_id] >= 0 and state.batch.facts.expected[raw_id] < 19:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "byte literals in scalar contexts require an additional fixed-array catalog schema")
-            fail rejection
         mut text_literal = data.data == b"text"
         if data.data == b"bytes" and state.batch.facts.expected[raw_id] >= 19:
             ty = state.batch.facts.expected[raw_id]
             text_literal = ty == state.batch.facts.string_type
+        const expected_bytes = state.batch.facts.expected[raw_id]
+        if data.data == b"bytes" and expected_bytes >= 0 and expected_bytes != state.batch.facts.string_type and expected_bytes != state.batch.facts.bytes_type and expected_bytes != state.batch.facts.lists.types.buffer.id:
+            ty = try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, 5, len(value.data), span)
+            text_literal = False
         if text_literal:
             ty = state.batch.facts.string_type
         if ty < 0:
@@ -440,6 +450,12 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         state.depth = state.depth - 1
         return result
     elif data.data == b"list_literal":
+        const fixed = array_types.schema(state.batch.facts.lists.types.arrays, state.batch.facts.expected[raw_id])
+        if fixed.id >= 0 and fixed.key < 0:
+            const result = try array_literal(mut state, payload, span, fixed)
+            state.batch.resolved[raw_id] = result.id
+            state.depth = state.depth - 1
+            return result
         const inputs = try graph.items(state.syntax.pool, payload)
         mut element = list_types.element_type(state.batch.facts.lists, state.batch.facts.expected[raw_id])
         if state.batch.facts.expected[raw_id] >= 0 and element < 0:
@@ -610,6 +626,17 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
     elif data.data == b"length":
         const input = try graph.number(state.syntax.pool, payload)
         const base = try expression(mut state, input)
+        const fixed = array_types.schema(state.batch.facts.lists.types.arrays, base.ty)
+        if fixed.id >= 0:
+            const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, base.ty)
+            if pending:
+                const rejection = try problem(state, span, "E_RESULT_OPERATION", "length evaluation would drop result-bearing elements")
+                fail rejection
+            const value = try syntax_value.integer(mut state.batch.pool, base.id)
+            const id = try emission.node(mut state.batch, state.syntax.pool, span, 0, b"length", value)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=0)
         const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, base.ty)
         if tuple.id >= 0:
             const rejection = try problem(state, span, "E_TYPE", "a tuple has no length; take it apart with `head, rest = value`")
@@ -687,7 +714,33 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const base_raw = try graph.number(state.syntax.pool, base_id)
         const index_raw = try graph.number(state.syntax.pool, index_id)
         const base = try expression(mut state, base_raw)
+        const fixed = array_types.schema(state.batch.facts.lists.types.arrays, base.ty)
         const index = try expression(mut state, index_raw)
+        if fixed.id >= 0:
+            const index_span = try graph.field(state.syntax.pool, state.syntax.nodes[index_raw], "span")
+            if fixed.key >= 0:
+                _ = try require(state, index.ty, fixed.key, index_span)
+            elif index.ty < 0 or index.ty > 8 or index.ty == 1:
+                const rejection = try problem(state, index_span, "E_TYPE", "operation requires an integer type")
+                fail rejection
+            const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, fixed.element)
+            if pending and fixed.length != 1:
+                const rejection = try problem(state, span, "E_RESULT_OPERATION", "indexing would drop other result-bearing elements; handle or transfer the entire array")
+                fail rejection
+            const plan = try array_index.select(state.batch, state.control.values.counters, index.id, fixed.length, fixed.key >= 0)
+            mut key = plan.key
+            if plan.folded:
+                const checked_span = try graph.field(state.batch.pool, state.batch.nodes[index.id], "span")
+                const copied = try graph.clone(mut state.syntax.pool, state.batch.pool, checked_span, 0)
+                key = try list_lower.integer(mut state.batch, list_lower.Context(input=state.syntax.pool, span=copied), plan.value, 0)
+            const typed_base = try syntax_value.integer(mut state.batch.pool, base.id)
+            const typed_key = try syntax_value.integer(mut state.batch.pool, key)
+            const from_end = try syntax_value.boolean(mut state.batch.pool, plan.from_end)
+            const indexed = try syntax_value.object(mut state.batch.pool, ["base", "index", "from_end"], [typed_base, typed_key, from_end])
+            const id = try emission.node(mut state.batch, state.syntax.pool, span, fixed.element, b"index", indexed)
+            state.batch.resolved[raw_id] = id
+            state.depth = state.depth - 1
+            return Expression(id=id, ty=fixed.element)
         const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, base.ty)
         if tuple.id >= 0:
             const rejection = try problem(state, span, "E_TUPLE_INDEX", "a tuple has no elements to index; bind its values with `head, rest = ...`")
@@ -898,6 +951,39 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         result_payload = try syntax_value.object(mut state.batch.pool, ["op", "operand", "op_span"], [typed_op, typed_operand, typed_span])
     elif data.data == b"call":
         mut call_name = try graph.field(state.syntax.pool, payload, "name")
+        const constructor_owner_id = try graph.field(state.syntax.pool, payload, "owner")
+        const constructor_owner = try graph.get(state.syntax.pool, constructor_owner_id)
+        if constructor_owner.kind == 0:
+            for application in state.batch.facts.applications:
+                const application_span = try graph.field(state.syntax.pool, application, "span")
+                const matches = try same_span(state.syntax.pool, application_span, call_name)
+                const name_span = try graph.field(state.syntax.pool, application, "name")
+                const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
+                if matches and name == b"FixedArray":
+                    _ = try io_arguments.positional(state.syntax.pool, payload)
+                    const arguments_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const arguments = try graph.items(state.syntax.pool, arguments_id)
+                    if len(arguments) != 1:
+                        const rejection = try problem(state, span, "E_ARITY", "FixedArray construction takes one array literal")
+                        fail rejection
+                    const constructor_raw = try graph.number(state.syntax.pool, arguments[0])
+                    const raw_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[constructor_raw], "data")
+                    const raw_data = try graph.get(state.syntax.pool, raw_data_id)
+                    if raw_data.data != b"list_literal":
+                        const value = try expression(mut state, constructor_raw)
+                        _ = try type_at(mut state, application_span)
+                        if list_types.element_type(state.batch.facts.lists, value.ty) < 0:
+                            const rejection = try problem(state, span, "E_TYPE", "runtime FixedArray conversion requires a growable array")
+                            fail rejection
+                        const rejection = try problem(state, span, "P_BODY_PROFILE", "runtime FixedArray conversion requires a checked length-error schema")
+                        fail rejection
+                    const constructor_type = try type_at(mut state, application_span)
+                    const fixed = array_types.schema(state.batch.facts.lists.types.arrays, constructor_type)
+                    const inputs = try graph.payload(state.syntax.pool, raw_data_id)
+                    const result = try array_literal(mut state, inputs, span, fixed)
+                    state.batch.resolved[raw_id] = result.id
+                    state.depth = state.depth - 1
+                    return result
         const type_arguments_id = try graph.field(state.syntax.pool, payload, "type_arguments")
         const type_arguments = try graph.items(state.syntax.pool, type_arguments_id)
         mut explicit_count = len(type_arguments)
@@ -1616,7 +1702,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         state.scope.locals[slot].flags.initialized = False
         state.scope.locals[slot].usage.temporary = True
         state.scope.locals[slot].usage.reads = 1
-        state.control.values = Values(yield_type=expected, yield_slot=slot, depth=0, temporaries=[], gathers=saved.gathers)
+        state.control.values = Values(yield_type=expected, yield_slot=slot, depth=0, temporaries=[], gathers=saved.gathers, counters=saved.counters)
         const body = try match_payload(mut state, payload, span)
         const result_type = state.control.values.yield_type
         if result_type < 0:
@@ -1676,7 +1762,12 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
         const chained_id = try graph.field(state.syntax.pool, payload, "chained")
         const chained = try graph.get(state.syntax.pool, chained_id)
-        if chained.integer != 0 or (len(op.data) >= 3 and op.data[:3] == b"f64"):
+        if chained.integer != 0:
+            const result = try comparison_chain(mut state, raw_id, span)
+            state.batch.resolved[raw_id] = result.id
+            state.depth = state.depth - 1
+            return result
+        if (len(op.data) >= 3 and op.data[:3] == b"f64"):
             const rejection = try problem(state, span, "P_BODY_PROFILE", "binary operation is outside the B1 scalar profile")
             fail rejection
         mut sequence_constructor = False
@@ -1716,138 +1807,266 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             const difference = try pending_flow.mismatch(state.scope, pending_checkpoint)
             const right_span = try graph.field(state.syntax.pool, state.syntax.nodes[right_raw], "span")
             _ = try obligations.consistent(state.syntax.pool, state.scope, difference, right_span, False, mut state.problems)
-        if op.data == b"mul" and ((repeatable_type(state, left.ty) and right.ty == 0) or (left.ty == 0 and repeatable_type(state, right.ty))):
-            mut sequence = left
-            mut count = right
-            mut count_first = False
-            if left.ty == 0:
-                sequence = right
-                count = left
-                count_first = True
-            mut gathered_type = -1
-            if list_types.element_type(state.batch.facts.lists, sequence.ty) < 0:
-                gathered_type = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=sequence.ty, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
-            const lowered = try list_repeat.build(mut state.batch, mut state.scope, list_lower.Context(input=state.syntax.pool, span=span), list_repeat.Input(sequence=sequence.id, count=count.id, ty=sequence.ty, count_first=count_first, loop_id=state.control.next, gathered_type=gathered_type))
-            state.control.next = state.control.next + 1
-            const id = try list_lower.append(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), lowered)
-            state.batch.resolved[raw_id] = id
-            state.depth = state.depth - 1
-            return Expression(id=id, ty=sequence.ty)
-        if (managed(state, left.ty) or (state.batch.facts.float_type >= 0 and left.ty == state.batch.facts.float_type)) and collection_types.schema(state.batch.facts.lists.types.collections, left.ty).kind != 1:
-            const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, operator_span)
-            mut builtin = ""
-            mut operator = ""
-            if spelling == b"|":
-                builtin = "bit_or"
-                operator = "|"
-            elif spelling == b"&":
-                builtin = "bit_and"
-                operator = "&"
-            elif spelling == b"^":
-                builtin = "bit_xor"
-                operator = "^"
-            if len(builtin) != 0:
-                const rejection = try problem(state, operator_span, "E_SET_OPERATOR", "`" + operator + "` combines two sets or two integers (`" + builtin + "(a, b)`)")
-                fail rejection
-        if state.batch.facts.float_type >= 0 and (op.data == b"python_div" or left.ty == state.batch.facts.float_type or right.ty == state.batch.facts.float_type):
-            const promotion_context = list_lower.Context(input=state.syntax.pool, span=operator_span)
-            if scalars.is_integer(left.ty):
-                const converted = try numeric_lower.from_integer(mut state.batch, promotion_context, left.id, left.ty)
-                const id = try list_lower.append(mut state.batch, promotion_context, converted)
-                left = Expression(id=id, ty=converted.ty)
-            if scalars.is_integer(right.ty):
-                const converted = try numeric_lower.from_integer(mut state.batch, promotion_context, right.id, right.ty)
-                const id = try list_lower.append(mut state.batch, promotion_context, converted)
-                right = Expression(id=id, ty=converted.ty)
-            _ = try require(state, right.ty, left.ty, operator_span)
-            if left.ty == state.batch.facts.float_type:
-                const context = list_lower.Context(input=state.syntax.pool, span=span)
-                const lowered = try numeric_lower.binary(mut state.batch, mut state.scope, context, op.data, left.id, right.id)
-                const id = try list_lower.append(mut state.batch, context, lowered)
-                state.batch.resolved[raw_id] = id
-                state.depth = state.depth - 1
-                return Expression(id=id, ty=lowered.ty)
-        _ = try require(state, right.ty, left.ty, operator_span)
-        const left_collection = collection_types.schema(state.batch.facts.lists.types.collections, left.ty)
-        if left_collection.kind == 1 and op.data != b"eq" and op.data != b"ne":
-            mut kind = b""
-            mut relation = False
-            if op.data == b"bit_or":
-                kind = b"union"
-            elif op.data == b"bit_and":
-                kind = b"intersection"
-            elif op.data == b"sub":
-                kind = b"difference"
-            elif op.data == b"bit_xor":
-                kind = b"symmetric_difference"
-            elif op.data == b"le":
-                kind = b"subset"
-                relation = True
-            elif op.data == b"lt":
-                kind = b"proper_subset"
-                relation = True
-            elif op.data == b"ge":
-                kind = b"superset"
-                relation = True
-            elif op.data == b"gt":
-                kind = b"proper_superset"
-                relation = True
-            else:
-                const rejection = try problem(state, operator_span, "E_SET_OPERATOR", "sets combine with `|`, `&`, `-` and `^`, compare with `<=`, `<`, `>=` and `>`, and test equality with `==`")
-                fail rejection
-            const context = list_lower.Context(input=state.syntax.pool, span=operator_span)
-            const request = set_lower.Binary(ty=left.ty, element=left_collection.key, left=left.id, right=right.id, kind=kind, loop_id=state.control.next)
-            mut combined = set_lower.Combined(value=list_lower.Lowered(ty=left.ty, tag=b"", payload=-1), next_loop=state.control.next)
-            if relation:
-                const result = try set_lower.relation(mut state.batch, mut state.scope, context, request)
-                combined = result
-            else:
-                const result = try set_lower.combine(mut state.batch, mut state.scope, context, request)
-                combined = result
-            state.control.next = combined.next_loop
-            const id = try list_lower.append(mut state.batch, context, combined.value)
-            state.batch.resolved[raw_id] = id
-            state.depth = state.depth - 1
-            return Expression(id=id, ty=combined.value.ty)
-        if op.data == b"eq" or op.data == b"ne":
-            const supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, left.ty, [state.batch.facts.string_type, state.batch.facts.bytes_type, state.batch.facts.lists.types.buffer.id], [])
-            if not supported:
-                const rejection = try problem(state, operator_span, "E_TYPE", "aggregate equality is not defined; compare the relevant elements explicitly")
-                fail rejection
-        ty = left.ty
-        if managed(state, left.ty):
-            if (list_types.element_type(state.batch.facts.lists, left.ty) >= 0 or left_collection.kind == 0 or left_collection.kind == 1) and op.data != b"eq" and op.data != b"ne":
-                const rejection = try problem(state, operator_span, "E_TEXT_OPERATOR", "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`")
-                fail rejection
-            if op.data == b"add":
-                ty = left.ty
-            elif op.data == b"eq" or op.data == b"ne" or op.data == b"lt" or op.data == b"le" or op.data == b"gt" or op.data == b"ge":
-                ty = 1
-            else:
-                const rejection = try problem(state, operator_span, "E_TEXT_OPERATOR", "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`")
-                fail rejection
-        elif op.data == b"logical_and" or op.data == b"logical_or":
-            _ = try require(state, left.ty, 1, operator_span)
-            ty = 1
-        elif op.data == b"eq" or op.data == b"ne":
-            ty = 1
-        else:
-            if not scalars.is_integer(left.ty):
-                const rejection = try problem(state, operator_span, "E_TYPE", "operation requires an integer type")
-                fail rejection
-            if op.data == b"lt" or op.data == b"le" or op.data == b"gt" or op.data == b"ge":
-                ty = 1
-        const typed_op = try syntax_value.enumeration(mut state.batch.pool, op.data)
-        const typed_left = try syntax_value.integer(mut state.batch.pool, left.id)
-        const typed_right = try syntax_value.integer(mut state.batch.pool, right.id)
-        const typed_span = try graph.clone(mut state.batch.pool, state.syntax.pool, operator_span, 0)
-        result_payload = try syntax_value.object(mut state.batch.pool, ["op", "left", "right", "op_span"], [typed_op, typed_left, typed_right, typed_span])
+        const result = try binary_values(mut state, BinaryRequest(span=span, operator_span=operator_span, op=op.data, chain=False), left, right)
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
     else:
         const rejection = try problem(state, span, "P_BODY_PROFILE", "body expression is outside the B1 scalar profile")
         fail rejection
     const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, data.data, result_payload)
     state.batch.resolved[raw_id] = id
     state.depth = state.depth - 1
+    return Expression(id=id, ty=ty)
+
+
+func chain_obvious(state: State, raw: int) -> int fails syntax_value.Problem:
+    const obvious = try obvious_type(state, raw, 0)
+    if obvious >= 0:
+        return obvious
+    const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    if data.data == b"integer":
+        const token = try graph.payload(state.syntax.pool, data_id)
+        const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, token)
+        if floating_literals.spelling(spelling):
+            return state.batch.facts.float_type
+    return -1
+
+
+func chain_hint(mut state: State, left_raw: int, right_raw: int, op: bytes) -> Unit fails syntax_value.Problem:
+    mut obvious = try chain_obvious(state, left_raw)
+    if obvious < 0:
+        obvious = try chain_obvious(state, right_raw)
+    if scalars.is_integer(obvious) or (state.batch.facts.float_type >= 0 and obvious == state.batch.facts.float_type):
+        state.batch.facts.expected[left_raw] = obvious
+        state.batch.facts.expected[right_raw] = obvious
+    elif op == b"eq" or op == b"ne" or collection_types.schema(state.batch.facts.lists.types.collections, obvious).kind == 1:
+        const left_hint = try chain_obvious(state, left_raw)
+        const right_hint = try chain_obvious(state, right_raw)
+        if left_hint >= 0:
+            state.batch.facts.expected[right_raw] = left_hint
+        if right_hint >= 0:
+            state.batch.facts.expected[left_raw] = right_hint
+
+
+func awaits_peer(state: State, raw: int) -> bool fails syntax_value.Problem:
+    if state.batch.facts.expected[raw] >= 0:
+        return False
+    const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+    const data = try graph.get(state.syntax.pool, data_id)
+    if data.data == b"unit":
+        return True
+    if data.data != b"call":
+        return False
+    const call = try graph.payload(state.syntax.pool, data_id)
+    const owner_id = try graph.field(state.syntax.pool, call, "owner")
+    const owner = try graph.get(state.syntax.pool, owner_id)
+    const arguments_id = try graph.field(state.syntax.pool, call, "type_arguments")
+    const arguments = try graph.items(state.syntax.pool, arguments_id)
+    if owner.kind != 0 or len(arguments) != 0:
+        return False
+    const name = try graph.field(state.syntax.pool, call, "name")
+    const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, name)
+    if spelling != b"Some" and spelling != b"Ok" and spelling != b"Err":
+        return False
+    const declared = try top_level(state, name)
+    return locals.find(state.scope, spelling) < 0 and not declared
+
+
+func comparison_chain(mut state: State, raw: int, span: int) -> Expression fails syntax_value.Problem:
+    const plan = try chained_compare.plan(state.syntax.pool, state.syntax.nodes, raw)
+    for position in range(len(plan.links)):
+        try chain_hint(mut state, plan.operands[position], plan.operands[position + 1], plan.links[position].op)
+    mut checked: Expression[] = []
+    const equality = plan.links[0].op == b"eq" or plan.links[0].op == b"ne"
+    const left_awaits = try awaits_peer(state, plan.operands[0])
+    const right_awaits = try awaits_peer(state, plan.operands[1])
+    mut start = 1
+    if equality and left_awaits and not right_awaits:
+        const right = try expression(mut state, plan.operands[1])
+        const left = try expression_expected(mut state, plan.operands[0], right.ty)
+        checked.append(left)
+        checked.append(right)
+        start = 2
+    else:
+        const first = try expression(mut state, plan.operands[0])
+        checked.append(first)
+    for position in range(start, len(plan.operands)):
+        const op = plan.links[position - 1].op
+        const peer = try awaits_peer(state, plan.operands[position])
+        mut value = Expression(id=-1, ty=-1)
+        if (op == b"eq" or op == b"ne") and peer:
+            value = try expression_expected(mut state, plan.operands[position], checked[position - 1].ty)
+        else:
+            value = try expression(mut state, plan.operands[position])
+        checked.append(value)
+    mut types: int[] = []
+    mut inputs: int[] = []
+    for value in checked:
+        types.append(value.ty)
+        inputs.append(value.id)
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const storage = try chained_compare.reserve(mut state.scope, context, types)
+    mut tail = -1
+    mut position = len(plan.links)
+    while position > 0:
+        position -= 1
+        const link = plan.links[position]
+        mut right = checked[position + 1]
+        if position + 1 < len(plan.links):
+            const read = try list_lower.read(mut state.batch, context, storage.slots[position + 1], checked[position + 1].ty)
+            right = Expression(id=read, ty=checked[position + 1].ty)
+        const left_id = try list_lower.read(mut state.batch, context, storage.slots[position], checked[position].ty)
+        const left = Expression(id=left_id, ty=checked[position].ty)
+        const comparison = try binary_values(mut state, BinaryRequest(span=link.span, operator_span=link.operator_span, op=link.op, chain=True), left, right)
+        # Native chainBlock appends binaryValue's data using the whole-chain span.
+        const node = state.batch.nodes[comparison.id]
+        const node_type = try graph.field(state.batch.pool, node, "ty")
+        const node_data = try graph.field(state.batch.pool, node, "data")
+        const whole_span = try graph.clone(mut state.batch.pool, state.syntax.pool, span, 0)
+        const replaced = try syntax_value.object(mut state.batch.pool, ["ty", "span", "data"], [node_type, whole_span, node_data])
+        state.batch.nodes[comparison.id] = replaced
+        tail = try chained_compare.link_block(mut state.batch, context, storage, inputs, chained_compare.Step(position=position, comparison=comparison.id, tail=tail))
+    const result = try chained_compare.finish(mut state.batch, context, storage, checked[0].id, tail)
+    const id = try list_lower.append(mut state.batch, context, result)
+    return Expression(id=id, ty=1)
+
+
+record BinaryRequest:
+    span: int
+    operator_span: int
+    op: bytes
+    chain: bool
+
+
+func binary_values(mut state: State, request: BinaryRequest, first: Expression, second: Expression) -> Expression fails syntax_value.Problem:
+    const span = request.span
+    mut left = first
+    mut right = second
+    mut ty = 15
+    mut result_payload = -1
+    if request.op == b"mul" and ((repeatable_type(state, left.ty) and right.ty == 0) or (left.ty == 0 and repeatable_type(state, right.ty))):
+        mut sequence = left
+        mut count = right
+        mut count_first = False
+        if left.ty == 0:
+            sequence = right
+            count = left
+            count_first = True
+        mut gathered_type = -1
+        if list_types.element_type(state.batch.facts.lists, sequence.ty) < 0:
+            gathered_type = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=sequence.ty, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+        const lowered = try list_repeat.build(mut state.batch, mut state.scope, list_lower.Context(input=state.syntax.pool, span=span), list_repeat.Input(sequence=sequence.id, count=count.id, ty=sequence.ty, count_first=count_first, loop_id=state.control.next, gathered_type=gathered_type))
+        state.control.next = state.control.next + 1
+        const id = try list_lower.append(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), lowered)
+        return Expression(id=id, ty=sequence.ty)
+    if (managed(state, left.ty) or (state.batch.facts.float_type >= 0 and left.ty == state.batch.facts.float_type)) and collection_types.schema(state.batch.facts.lists.types.collections, left.ty).kind != 1:
+        const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, request.operator_span)
+        mut builtin = ""
+        mut operator = ""
+        if spelling == b"|":
+            builtin = "bit_or"
+            operator = "|"
+        elif spelling == b"&":
+            builtin = "bit_and"
+            operator = "&"
+        elif spelling == b"^":
+            builtin = "bit_xor"
+            operator = "^"
+        if len(builtin) != 0:
+            const rejection = try problem(state, request.operator_span, "E_SET_OPERATOR", "`" + operator + "` combines two sets or two integers (`" + builtin + "(a, b)`)")
+            fail rejection
+    if state.batch.facts.float_type >= 0 and (request.op == b"python_div" or left.ty == state.batch.facts.float_type or right.ty == state.batch.facts.float_type):
+        const promotion_context = list_lower.Context(input=state.syntax.pool, span=request.operator_span)
+        if scalars.is_integer(left.ty):
+            const converted = try numeric_lower.from_integer(mut state.batch, promotion_context, left.id, left.ty)
+            const id = try list_lower.append(mut state.batch, promotion_context, converted)
+            left = Expression(id=id, ty=converted.ty)
+        if scalars.is_integer(right.ty):
+            const converted = try numeric_lower.from_integer(mut state.batch, promotion_context, right.id, right.ty)
+            const id = try list_lower.append(mut state.batch, promotion_context, converted)
+            right = Expression(id=id, ty=converted.ty)
+        _ = try require(state, right.ty, left.ty, request.operator_span)
+        if left.ty == state.batch.facts.float_type:
+            const context = list_lower.Context(input=state.syntax.pool, span=span)
+            const lowered = try numeric_lower.binary(mut state.batch, mut state.scope, context, request.op, left.id, right.id)
+            const id = try list_lower.append(mut state.batch, context, lowered)
+            return Expression(id=id, ty=lowered.ty)
+    _ = try require(state, right.ty, left.ty, request.operator_span)
+    const left_collection = collection_types.schema(state.batch.facts.lists.types.collections, left.ty)
+    if left_collection.kind == 1 and request.op != b"eq" and request.op != b"ne":
+        mut kind = b""
+        mut relation = False
+        if request.op == b"bit_or":
+            kind = b"union"
+        elif request.op == b"bit_and":
+            kind = b"intersection"
+        elif request.op == b"sub":
+            kind = b"difference"
+        elif request.op == b"bit_xor":
+            kind = b"symmetric_difference"
+        elif request.op == b"le":
+            kind = b"subset"
+            relation = True
+        elif request.op == b"lt":
+            kind = b"proper_subset"
+            relation = True
+        elif request.op == b"ge":
+            kind = b"superset"
+            relation = True
+        elif request.op == b"gt":
+            kind = b"proper_superset"
+            relation = True
+        else:
+            const rejection = try problem(state, request.operator_span, "E_SET_OPERATOR", "sets combine with `|`, `&`, `-` and `^`, compare with `<=`, `<`, `>=` and `>`, and test equality with `==`")
+            fail rejection
+        const context = list_lower.Context(input=state.syntax.pool, span=request.operator_span)
+        const set_request = set_lower.Binary(ty=left.ty, element=left_collection.key, left=left.id, right=right.id, kind=kind, loop_id=state.control.next)
+        mut combined = set_lower.Combined(value=list_lower.Lowered(ty=left.ty, tag=b"", payload=-1), next_loop=state.control.next)
+        if relation:
+            const result = try set_lower.relation(mut state.batch, mut state.scope, context, set_request)
+            combined = result
+        else:
+            const result = try set_lower.combine(mut state.batch, mut state.scope, context, set_request)
+            combined = result
+        state.control.next = combined.next_loop
+        const id = try list_lower.append(mut state.batch, context, combined.value)
+        return Expression(id=id, ty=combined.value.ty)
+    if request.op == b"eq" or request.op == b"ne":
+        const supported = try record_types.equality(state.syntax.pool, state.batch.facts.lists.types.records, state.batch.facts.lists.elements, left.ty, [state.batch.facts.string_type, state.batch.facts.bytes_type, state.batch.facts.lists.types.buffer.id], [])
+        if not supported:
+            const rejection = try problem(state, request.operator_span, "E_TYPE", "aggregate equality is not defined; compare the relevant elements explicitly")
+            fail rejection
+    ty = left.ty
+    if managed(state, left.ty):
+        if (list_types.element_type(state.batch.facts.lists, left.ty) >= 0 or left_collection.kind == 0 or left_collection.kind == 1) and request.op != b"eq" and request.op != b"ne":
+            const rejection = try problem(state, request.operator_span, "E_TEXT_OPERATOR", "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`")
+            fail rejection
+        if request.op == b"add":
+            ty = left.ty
+        elif request.op == b"eq" or request.op == b"ne" or request.op == b"lt" or request.op == b"le" or request.op == b"gt" or request.op == b"ge":
+            ty = 1
+        else:
+            const rejection = try problem(state, request.operator_span, "E_TEXT_OPERATOR", "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`")
+            fail rejection
+    elif request.op == b"logical_and" or request.op == b"logical_or":
+        _ = try require(state, left.ty, 1, request.operator_span)
+        ty = 1
+    elif request.op == b"eq" or request.op == b"ne":
+        ty = 1
+    else:
+        if not scalars.is_integer(left.ty):
+            const rejection = try problem(state, request.operator_span, "E_TYPE", "operation requires an integer type")
+            fail rejection
+        if request.op == b"lt" or request.op == b"le" or request.op == b"gt" or request.op == b"ge":
+            ty = 1
+    const typed_op = try syntax_value.enumeration(mut state.batch.pool, request.op)
+    const typed_left = try syntax_value.integer(mut state.batch.pool, left.id)
+    const typed_right = try syntax_value.integer(mut state.batch.pool, right.id)
+    const typed_span = try graph.clone(mut state.batch.pool, state.syntax.pool, request.operator_span, 0)
+    result_payload = try syntax_value.object(mut state.batch.pool, ["op", "left", "right", "op_span"], [typed_op, typed_left, typed_right, typed_span])
+    const id = try emission.node(mut state.batch, state.syntax.pool, span, ty, b"binary", result_payload)
     return Expression(id=id, ty=ty)
 
 
@@ -1904,35 +2123,48 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
     const data_id = try graph.field(state.syntax.pool, raw, "data")
     const data = try graph.get(state.syntax.pool, data_id)
     const payload = try graph.payload(state.syntax.pool, data_id)
+    if data.data == b"block":
+        return try checked_block(mut state, span, payload)
+    return try checked_statement_value(mut state, raw_id, span, payload, data.data)
+
+
+func checked_block(mut state: State, span: int, payload: int) -> Statement fails syntax_value.Problem:
+    const first_local = len(state.scope.locals)
+    const active = state.scope.active
+    const children = try graph.items(state.syntax.pool, payload)
+    mut checked: int[] = []
+    mut terminates = False
+    mut looping = False
+    for child in children:
+        const child_id = try graph.number(state.syntax.pool, child)
+        if terminates and not looping:
+            const child_raw = state.syntax.statements[child_id]
+            const child_span = try graph.field(state.syntax.pool, child_raw, "span")
+            const rejection = try problem(state, child_span, "E_UNREACHABLE", "statement follows a structurally terminating statement")
+            fail rejection
+        const result = try statement(mut state, child_id)
+        checked.append(result.id)
+        terminates = result.terminates
+        looping = result.looping
+    if not terminates:
+        _ = try obligations.handled(state.syntax.pool, state.batch.facts.lists.types.records.rows, state.scope, first_local, span, mut state.problems)
+    option_flow.end_scope(mut state.control.options, first_local)
+    state.scope.active = active
+    const payload_out = try emission.ids(mut state.batch, checked)
+    const id = try emission.statement(mut state.batch, state.syntax.pool, span, terminates, b"block", payload_out)
+    state.depth = state.depth - 1
+    return Statement(id=id, terminates=terminates, looping=looping)
+
+
+func checked_statement_value(mut state: State, raw_id: int, span: int, payload: int, initial_tag: bytes) -> Statement fails syntax_value.Problem:
     mut terminates = False
     mut looping = False
     mut result_payload = -1
-    mut tag = data.data
+    mut tag = initial_tag
     if tag == b"gather_step":
         const lowered = try gather_step(mut state, payload, span)
         tag = lowered.tag
         result_payload = lowered.payload
-    elif tag == b"block":
-        const first_local = len(state.scope.locals)
-        const active = state.scope.active
-        const children = try graph.items(state.syntax.pool, payload)
-        mut checked: int[] = []
-        for child in children:
-            const child_id = try graph.number(state.syntax.pool, child)
-            if terminates and not looping:
-                const child_raw = state.syntax.statements[child_id]
-                const child_span = try graph.field(state.syntax.pool, child_raw, "span")
-                const rejection = try problem(state, child_span, "E_UNREACHABLE", "statement follows a structurally terminating statement")
-                fail rejection
-            const result = try statement(mut state, child_id)
-            checked.append(result.id)
-            terminates = result.terminates
-            looping = result.looping
-        if not terminates:
-            _ = try obligations.handled(state.syntax.pool, state.batch.facts.lists.types.records.rows, state.scope, first_local, span, mut state.problems)
-        option_flow.end_scope(mut state.control.options, first_local)
-        state.scope.active = active
-        result_payload = try emission.ids(mut state.batch, checked)
     elif tag == b"with_scope":
         const resource_id = try graph.field(state.syntax.pool, payload, "resource")
         const resource = try graph.get(state.syntax.pool, resource_id)
@@ -2431,6 +2663,9 @@ public func managed(state: State, ty: int) -> bool:
 func type_name(state: State, ty: int) -> str:
     if ty >= 0 and ty == state.batch.facts.float_type:
         return "float"
+    const fixed = array_types.schema(state.batch.facts.lists.types.arrays, ty)
+    if fixed.id >= 0 and fixed.key < 0:
+        return "FixedArray[" + type_name(state, fixed.element) + ", " + str(fixed.length) + "]"
     const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, ty)
     if tuple.id >= 0:
         mut name = "tuple["
@@ -2476,10 +2711,41 @@ func type_name(state: State, ty: int) -> str:
     return scalars.name(ty)
 
 
+func array_length(state: State, span: int) -> int fails syntax_value.Problem:
+    const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    if len(spelling) == 0 or spelling[0] < 48 or spelling[0] > 57:
+        const rejection = try problem(state, span, "P_BODY_PROFILE", "array length expression requires scalar constant evaluation")
+        fail rejection
+    const location = try problem(state, span, "", "")
+    return try scalars.integer(spelling, False, location.start, location.end)
+
+
 public func type_at(mut state: State, span: int) -> int fails syntax_value.Problem:
     const text = try graph.spelling(state.syntax.pool, state.syntax.source, span)
     if text == b"float" and state.batch.facts.float_type >= 0:
         return state.batch.facts.float_type
+    for array in state.batch.facts.lists.types.arrays.sources:
+        const array_span = try graph.field(state.syntax.pool, array, "span")
+        const matches = try same_span(state.syntax.pool, array_span, span)
+        if matches:
+            const element_span = try graph.field(state.syntax.pool, array, "element")
+            const element = try type_at(mut state, element_span)
+            const index_id = try graph.field(state.syntax.pool, array, "index")
+            const index = try graph.get(state.syntax.pool, index_id)
+            const index_span = try graph.payload(state.syntax.pool, index_id)
+            mut key = -1
+            mut length = -1
+            if index.data == b"length":
+                length = try array_length(state, index_span)
+            elif index.data == b"enum_type":
+                key = try type_at(mut state, index_span)
+                const variant = try variants.shape(state.syntax.pool, state.batch.facts.lists.types.records.rows, key)
+                length = len(variant.cases)
+            const ty = array_types.find(state.batch.facts.lists.types.arrays, element, length, key)
+            if ty < 0:
+                const rejection = try problem(state, span, "P_BODY_PROFILE", "annotated array type is absent from the common catalog")
+                fail rejection
+            return ty
     for tuple in state.batch.facts.lists.types.tuples.sources:
         const tuple_span = try graph.field(state.syntax.pool, tuple, "span")
         const matches = try same_span(state.syntax.pool, tuple_span, span)
@@ -2521,6 +2787,14 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
             const name = try graph.spelling(state.syntax.pool, state.syntax.source, name_span)
             const arguments_id = try graph.field(state.syntax.pool, application, "arguments")
             const arguments = try graph.items(state.syntax.pool, arguments_id)
+            if name == b"FixedArray" and len(arguments) == 2:
+                const element = try type_at(mut state, arguments[0])
+                const length = try array_length(state, arguments[1])
+                const ty = array_types.find(state.batch.facts.lists.types.arrays, element, length, -1)
+                if ty < 0:
+                    const rejection = try problem(state, span, "P_BODY_PROFILE", "annotated array type is absent from the common catalog")
+                    fail rejection
+                return ty
             if (name == b"Result" and len(arguments) == 2) or (name == b"Option" and len(arguments) == 1):
                 const first = try type_at(mut state, arguments[0])
                 mut second = -1
@@ -2714,6 +2988,9 @@ func list_arity(kind: bytes) -> int:
 
 
 public func record_field(state: State, ty: int, span: int) -> int fails syntax_value.Problem:
+    const fixed_table = array_types.schema(state.batch.facts.lists.types.arrays, ty)
+    if fixed_table.id >= 0 and fixed_table.key >= 0:
+        return try variant_tag(state, fixed_table.key, span)
     const tuple = tuple_types.schema(state.batch.facts.lists.types.tuples, ty)
     if tuple.id >= 0:
         const rejection = try problem(state, span, "E_TYPE", "a tuple has no fields; take it apart with `head, rest = value`")
@@ -3328,7 +3605,7 @@ func error_case(state: State, expected: int, actual: int) -> int fails syntax_va
 
 
 public func fresh_control() -> Control:
-    return Control(next=0, active=[], exited=[], values=Values(yield_type=-1, yield_slot=-1, depth=0, temporaries=[], gathers=[]), options=option_flow.State(present=[]))
+    return Control(next=0, active=[], exited=[], values=Values(yield_type=-1, yield_slot=-1, depth=0, temporaries=[], gathers=[], counters=[]), options=option_flow.State(present=[]))
 
 
 func yields_every_path(state: State, raw_id: int, depth: int) -> bool fails syntax_value.Problem:
@@ -4349,7 +4626,53 @@ func require_hash_key(mut state: State, key: int, span: int, set: bool) -> bool 
     fail rejection
 
 
+func table_literal(mut state: State, payload: int, span: int, table: array_types.Array) -> Expression fails syntax_value.Problem:
+    const entries = try graph.items(state.syntax.pool, payload)
+    if len(entries) % 2 != 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="table literal has an odd entry table")
+    mut initializers: record_construct.Initializer[] = []
+    mut position = 0
+    while position < len(entries):
+        const raw = try graph.number(state.syntax.pool, entries[position])
+        const raw_span = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+        const data_id = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "data")
+        const data = try graph.get(state.syntax.pool, data_id)
+        const raw_payload = try graph.payload(state.syntax.pool, data_id)
+        mut qualifier = -1
+        mut name = -1
+        if data.data == b"variant":
+            qualifier = try graph.field(state.syntax.pool, raw_payload, "ty")
+            name = try graph.field(state.syntax.pool, raw_payload, "name")
+        elif data.data == b"field":
+            const base_id = try graph.field(state.syntax.pool, raw_payload, "base")
+            const base = try graph.number(state.syntax.pool, base_id)
+            const base_data_id = try graph.field(state.syntax.pool, state.syntax.nodes[base], "data")
+            const base_data = try graph.get(state.syntax.pool, base_data_id)
+            if base_data.data == b"name":
+                qualifier = try graph.payload(state.syntax.pool, base_data_id)
+                name = try graph.field(state.syntax.pool, raw_payload, "name")
+        if qualifier < 0:
+            const rejection = try problem(state, raw_span, "E_TABLE_KEY", "table entry keys name a case of the table's key enum, such as `Kind.first`")
+            fail rejection
+        const key = try variant_owner(mut state, qualifier, -1)
+        if key < 0:
+            const rejection = try problem(state, raw_span, "E_TABLE_KEY", "table entry keys name a case of the table's key enum, such as `Kind.first`")
+            fail rejection
+        if key != table.key:
+            const rejection = try problem(state, raw_span, "E_TABLE_KEY", "table entry key names a case of a different enum than the table's key")
+            fail rejection
+        const value = try graph.number(state.syntax.pool, entries[position + 1])
+        initializers.append(record_construct.Initializer(name=name, value=value, default=False))
+        position += 2
+    const initialized = try record_initializers(mut state, table.id, span, initializers)
+    const id = try emission.node(mut state.batch, state.syntax.pool, span, table.id, b"record", initialized)
+    return Expression(id=id, ty=table.id)
+
+
 func dictionary_literal(mut state: State, payload: int, span: int, expected: int) -> Expression fails syntax_value.Problem:
+    const table = array_types.schema(state.batch.facts.lists.types.arrays, expected)
+    if table.id >= 0 and table.key >= 0:
+        return try table_literal(mut state, payload, span, table)
     const inputs = try graph.items(state.syntax.pool, payload)
     if len(inputs) % 2 != 0:
         fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="dictionary literal has an odd entry table")
@@ -4699,6 +5022,8 @@ func dictionary_iteration_payload(mut state: State, each: int, span: int, iterab
     const request = list_iteration.Input(source=state.syntax.source, name=name_span, span=span, iterable=iterable.id, owner_type=mapping, element=element, loop_id=loop_id)
     const shape = dictionary_view_lower.Shape(mapping=mapping, key=schema.key, value=schema.value, item=item, list=-1, kind=kind)
     const plan = try dictionary_iteration.prepare(mut state.batch, mut state.scope, state.syntax.pool, dictionary_iteration.Input(iteration=request, shape=shape, kind=kind, second_name=second_name, position=dictionary_iteration.Position(enumerated=enumerated, rebound=rebound)))
+    if enumerated and not rebound:
+        state.control.values.counters.append(plan.walk.index)
     state.control.active.append(loop_id)
     state.control.exited.append(False)
     const before = locals_flow.snapshot(state.scope)
@@ -5193,6 +5518,25 @@ func set_value_access(mut state: State, span: int, base: Expression, method: byt
     return try set_checked(mut state, span, schema, base.id, method, values)
 
 
+func array_literal(mut state: State, payload: int, span: int, fixed: array_types.Array) -> Expression fails syntax_value.Problem:
+    const inputs = try graph.items(state.syntax.pool, payload)
+    if len(inputs) != fixed.length:
+        const rejection = try problem(state, span, "E_ARRAY_LENGTH", "list literal has " + str(len(inputs)) + " element(s); the expected fixed array holds exactly " + str(fixed.length))
+        fail rejection
+    const inherited = len(state.control.values.temporaries)
+    mut values: int[] = []
+    for input in inputs:
+        const child = try graph.number(state.syntax.pool, input)
+        const value = try expression_expected(mut state, child, fixed.element)
+        const child_span = try graph.field(state.syntax.pool, state.syntax.nodes[child], "span")
+        _ = try require(state, value.ty, fixed.element, child_span)
+        values.append(value.id)
+        state.control.values.temporaries = state.control.values.temporaries[:inherited]
+    const array = try emission.ids(mut state.batch, values)
+    const id = try emission.node(mut state.batch, state.syntax.pool, span, fixed.id, b"array", array)
+    return Expression(id=id, ty=fixed.id)
+
+
 func tuple_value(mut state: State, raw_id: int, payload: int, span: int) -> Expression fails syntax_value.Problem:
     const inputs = try graph.items(state.syntax.pool, payload)
     if len(inputs) < 2 or len(inputs) > 8:
@@ -5205,6 +5549,7 @@ func tuple_value(mut state: State, raw_id: int, payload: int, span: int) -> Expr
         fail rejection
     mut values: int[] = []
     mut elements: int[] = []
+    const inherited = len(state.control.values.temporaries)
     for position in range(len(inputs)):
         const child = try graph.number(state.syntax.pool, inputs[position])
         mut hint = -1
@@ -5216,6 +5561,7 @@ func tuple_value(mut state: State, raw_id: int, payload: int, span: int) -> Expr
             _ = try require(state, value.ty, hint, child_span)
         values.append(value.id)
         elements.append(if hint >= 0 then hint else value.ty)
+        state.control.values.temporaries = state.control.values.temporaries[:inherited]
     mut ty = expected.id
     if ty < 0:
         const inferred = try list_types.tuple_intern(mut state.batch.facts.lists, mut state.syntax.pool, elements, span)

@@ -1,0 +1,3 @@
+func main() -> int:
+    assert b"a" < b"b" != b"c"
+    return 7

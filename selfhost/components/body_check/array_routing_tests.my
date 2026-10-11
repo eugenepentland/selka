@@ -1,0 +1,165 @@
+import syntax_value
+import graph
+import engine
+import tuple_types
+import list_types
+import array_types
+
+func node(mut pool: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut pool, tag, payload)
+    return try syntax_value.object(mut pool, ["span", "data"], [span, data])
+
+
+func fresh(kind: bytes) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 2)
+    const first = try syntax_value.span(mut pool, 0, 1)
+    const second = try syntax_value.span(mut pool, 1, 2)
+    const key_node = try node(mut pool, first, b"integer", first)
+    const value_node = try node(mut pool, second, b"integer", second)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const absent = try syntax_value.absent(mut pool)
+    const key = if kind == b"dict" then zero else absent
+    const step_data = try syntax_value.object(mut pool, ["value", "key"], [one, key])
+    const step = try node(mut pool, span, b"gather_step", step_data)
+    const steps = try syntax_value.sequence(mut pool, [zero])
+    const loop = try node(mut pool, span, b"block", steps)
+    const shape = try syntax_value.enumeration(mut pool, kind)
+    const gather_data = try syntax_value.object(mut pool, ["shape", "loop", "open"], [shape, one, first])
+    const gather = try node(mut pool, span, b"gather", gather_data)
+    const tuple_data = try syntax_value.sequence(mut pool, [zero, one])
+    const tuple_node = try node(mut pool, span, b"tuple", tuple_data)
+    const nodes = try syntax_value.sequence(mut pool, [key_node, value_node, gather, tuple_node])
+    const statements = try syntax_value.sequence(mut pool, [step, loop])
+    const empty = try syntax_value.sequence(mut pool, [])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, statements, empty, types])
+    mut state = try engine.make(pool, b"07", program)
+    state.batch.facts.lists.types.collections.bases = [0, 1, 2, 3, 4, 5]
+    state.batch.facts.lists.available = True
+    for unused in range(19):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    return state
+
+
+public func test_fixed_array_application_annotation_reuses_retained_identity() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    state.syntax.source = b"FixedArrayint2"
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 14)
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 10)
+    const element = try syntax_value.span(mut state.syntax.pool, 10, 13)
+    const length = try syntax_value.span(mut state.syntax.pool, 13, 14)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [element, length])
+    const application = try syntax_value.object(mut state.syntax.pool, ["span", "name", "arguments"], [span, name, arguments])
+    state.batch.facts.applications = [application]
+    const ty = try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, 0, 2, span)
+    const resolved = try engine.type_at(mut state, span)
+    return resolved == ty and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_byte_literal_in_nonmanaged_context_demands_actual_u8_array() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const bytes = try syntax_value.octets(mut state.syntax.pool, b"ab")
+    const literal = try node(mut state.syntax.pool, span, b"bytes", bytes)
+    state.syntax.nodes[3] = literal
+    const value = try engine.expression_expected(mut state, 3, 0)
+    const fixed = array_types.schema(state.batch.facts.lists.types.arrays, value.ty)
+    const first_ty_id = try graph.field(state.batch.pool, state.batch.nodes[0], "ty")
+    const first_ty = try graph.number(state.batch.pool, first_ty_id)
+    return fixed.element == 5 and fixed.length == 2 and first_ty == 5 and value.id == 2 and state.batch.facts.lists.recipes[0].kind == "array"
+
+
+public func test_fixed_array_negative_index_folds_after_written_checked_key() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    state.syntax.source = b"01"
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const minus = try syntax_value.span(mut state.syntax.pool, 1, 2)
+    const ty = try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, 0, 2, span)
+    const zero = try syntax_value.integer(mut state.syntax.pool, 0)
+    const one = try syntax_value.integer(mut state.syntax.pool, 1)
+    const three = try syntax_value.integer(mut state.syntax.pool, 3)
+    const four = try syntax_value.integer(mut state.syntax.pool, 4)
+    const inputs = try syntax_value.sequence(mut state.syntax.pool, [zero, one])
+    const literal = try node(mut state.syntax.pool, span, b"list_literal", inputs)
+    state.syntax.nodes[3] = literal
+    for unused in range(4):
+        state.batch.facts.expected.append(-1)
+    state.batch.facts.expected[3] = ty
+    const op = try syntax_value.enumeration(mut state.syntax.pool, b"neg")
+    const unary = try syntax_value.object(mut state.syntax.pool, ["op", "operand", "op_span"], [op, one, minus])
+    const negative = try node(mut state.syntax.pool, minus, b"unary", unary)
+    state.syntax.nodes.append(negative)
+    const indexed = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [three, four])
+    const target = try node(mut state.syntax.pool, span, b"index", indexed)
+    state.syntax.nodes.append(target)
+    const value = try engine.expression(mut state, 5)
+    const data = try graph.field(state.batch.pool, state.batch.nodes[value.id], "data")
+    const payload = try graph.payload(state.batch.pool, data)
+    const key_id = try graph.field(state.batch.pool, payload, "index")
+    const key = try graph.number(state.batch.pool, key_id)
+    const key_data_id = try graph.field(state.batch.pool, state.batch.nodes[key], "data")
+    const key_payload = try graph.payload(state.batch.pool, key_data_id)
+    const folded = try graph.number(state.batch.pool, key_payload)
+    const from_end_id = try graph.field(state.batch.pool, payload, "from_end")
+    const from_end = try graph.get(state.batch.pool, from_end_id)
+    return value.ty == 0 and folded == 1 and from_end.integer == 0 and key > 2
+
+
+public func test_fixed_array_constructor_checks_children_without_resolving_list_node() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    state.syntax.source = b"FixedArrayint201"
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 16)
+    const application_span = try syntax_value.span(mut state.syntax.pool, 0, 14)
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 10)
+    const element = try syntax_value.span(mut state.syntax.pool, 10, 13)
+    const length = try syntax_value.span(mut state.syntax.pool, 13, 14)
+    const first = try syntax_value.span(mut state.syntax.pool, 14, 15)
+    const second = try syntax_value.span(mut state.syntax.pool, 15, 16)
+    const first_node = try node(mut state.syntax.pool, first, b"integer", first)
+    const second_node = try node(mut state.syntax.pool, second, b"integer", second)
+    state.syntax.nodes[0] = first_node
+    state.syntax.nodes[1] = second_node
+    const type_arguments = try syntax_value.sequence(mut state.syntax.pool, [element, length])
+    const application = try syntax_value.object(mut state.syntax.pool, ["span", "name", "arguments"], [application_span, name, type_arguments])
+    state.batch.facts.applications = [application]
+    const ty = try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, 0, 2, application_span)
+    const zero = try syntax_value.integer(mut state.syntax.pool, 0)
+    const one = try syntax_value.integer(mut state.syntax.pool, 1)
+    const three = try syntax_value.integer(mut state.syntax.pool, 3)
+    const values = try syntax_value.sequence(mut state.syntax.pool, [zero, one])
+    const literal = try node(mut state.syntax.pool, span, b"list_literal", values)
+    state.syntax.nodes[3] = literal
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [three])
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const call = try syntax_value.object(mut state.syntax.pool, ["owner", "name", "type_arguments", "arguments", "argument_names"], [absent, application_span, empty, arguments, empty])
+    const target = try node(mut state.syntax.pool, span, b"call", call)
+    state.syntax.nodes.append(target)
+    const value = try engine.expression(mut state, 4)
+    const result_span_id = try graph.field(state.batch.pool, state.batch.nodes[value.id], "span")
+    const result_end_id = try graph.field(state.batch.pool, result_span_id, "end")
+    const result_end = try graph.number(state.batch.pool, result_end_id)
+    return value.id == 2 and value.ty == ty and state.batch.resolved[3] == -1 and result_end == 16
+
+
+public func test_empty_array_length_retains_checked_owner_and_length_node() -> bool fails syntax_value.Problem:
+    mut state = try fresh(b"dict")
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 2)
+    const ty = try list_types.array_intern(mut state.batch.facts.lists, mut state.syntax.pool, 15, 0, span)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const literal = try node(mut state.syntax.pool, span, b"list_literal", empty)
+    state.syntax.nodes[3] = literal
+    const value = try engine.expression_expected(mut state, 3, ty)
+    const three = try syntax_value.integer(mut state.syntax.pool, 3)
+    const length = try node(mut state.syntax.pool, span, b"length", three)
+    state.syntax.nodes.append(length)
+    const result = try engine.expression(mut state, 4)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const payload = try graph.payload(state.batch.pool, data_id)
+    const owner = try graph.number(state.batch.pool, payload)
+    return result.ty == 0 and data.data == b"length" and owner == value.id and result.id == 1

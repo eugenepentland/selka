@@ -1,0 +1,179 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import record_places
+import array_places
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 3, 17)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, row, name)
+    return try graph.number(pool, field)
+
+
+func payload(pool: syntax_value.Pool, row: int, tag: bytes) -> int fails syntax_value.Problem:
+    const data_id = try graph.field(pool, row, "data")
+    const data = try graph.get(pool, data_id)
+    if data.data != tag:
+        fail syntax_value.Problem(code="TEST_TAG", start=0, end=0, message="unexpected emitted tag")
+    return try graph.payload(pool, data_id)
+
+
+func body(batch: emission.Batch, lowered: list_lower.Lowered) -> int[] fails syntax_value.Problem:
+    const id = try number(batch.pool, lowered.payload, "body")
+    const children = try payload(batch.pool, batch.statements[id], b"block")
+    const rows = try graph.items(batch.pool, children)
+    mut result: int[] = []
+    for row in rows:
+        const child = try graph.number(batch.pool, row)
+        result.append(child)
+    return result
+
+
+func postorder(pool: syntax_value.Pool) -> bool:
+    for parent in range(len(pool.values)):
+        for child in pool.values[parent].children:
+            if child < 0 or child >= parent:
+                return False
+    return True
+
+
+public func test_array_binding_store_preserves_element_provenance_and_from_end_key() -> bool fails syntax_value.Problem:
+    mut f = try fresh()
+    const slot = try locals.add(mut f.scope, b"values", f.context.span, 40, True, b"parameter")
+    const root = try array_places.read_root(mut f.batch, mut f.scope, f.context, slot)
+    const key = try list_lower.integer(mut f.batch, f.context, -1, 3)
+    const right = try list_lower.integer(mut f.batch, f.context, 7, 0)
+    const lowered = try array_places.finish(mut f.batch, f.context, array_places.Input(owner=slot, index=-1, bases=[root], steps=[array_places.Step(key=key, from_end=True, member=-1)], value=right, setup=[]))
+    const statements = try body(f.batch, lowered)
+    const assignment = try payload(f.batch.pool, f.batch.statements[statements[0]], b"assign")
+    const element_id = try graph.field(f.batch.pool, assignment, "element")
+    const element = try graph.get(f.batch.pool, element_id)
+    const value = try number(f.batch.pool, assignment, "value")
+    const replacement = try payload(f.batch.pool, f.batch.nodes[value], b"replace")
+    const from_end_id = try graph.field(f.batch.pool, replacement, "from_end")
+    const from_end = try graph.get(f.batch.pool, from_end_id)
+    const source = try graph.field(f.batch.pool, f.batch.nodes[root], "span")
+    const start = try number(f.batch.pool, source, "start")
+    const finish = try number(f.batch.pool, source, "end")
+    const base = try number(f.batch.pool, replacement, "base")
+    const index = try number(f.batch.pool, replacement, "index")
+    const replaced = try number(f.batch.pool, replacement, "value")
+    return len(statements) == 1 and element.kind == 2 and element.integer == 1 and from_end.integer == 1 and base == root and index == key and replaced == right and start == 3 and finish == 17 and f.scope.locals[slot].usage.reads == 1 and f.scope.locals[slot].usage.writes == 1 and f.scope.locals[slot].origin == b"parameter" and f.scope.locals[slot].usage.dead_write_span == -1 and len(f.scope.locals) == 1 and postorder(f.batch.pool)
+
+
+public func test_array_nested_field_rebuilds_inside_out_and_preserves_setup_order() -> bool fails syntax_value.Problem:
+    mut f = try fresh()
+    const slot = try locals.add(mut f.scope, b"record", f.context.span, 40, True, b"local")
+    const root = try array_places.read_root(mut f.batch, mut f.scope, f.context, slot)
+    const array = try record_places.field(mut f.batch, f.context, root, 2, 41)
+    const key = try list_lower.integer(mut f.batch, f.context, 1, 0)
+    const right = try list_lower.integer(mut f.batch, f.context, 7, 0)
+    const rhs_setup = try list_lower.store(mut f.batch, f.context, slot, root, False)
+    const target_setup = try list_lower.store(mut f.batch, f.context, slot, root, False)
+    const steps = [array_places.Step(key=-1, from_end=False, member=2), array_places.Step(key=key, from_end=False, member=-1)]
+    const lowered = try array_places.finish(mut f.batch, f.context, array_places.Input(owner=slot, index=-1, bases=[root, array], steps=steps, value=right, setup=[rhs_setup, target_setup]))
+    const statements = try body(f.batch, lowered)
+    const assignment = try payload(f.batch.pool, f.batch.statements[statements[2]], b"assign")
+    const rebuilt = try number(f.batch.pool, assignment, "value")
+    const update = try payload(f.batch.pool, f.batch.nodes[rebuilt], b"update")
+    const base = try number(f.batch.pool, update, "base")
+    const fields_id = try graph.field(f.batch.pool, update, "fields")
+    const fields = try graph.items(f.batch.pool, fields_id)
+    const member = try number(f.batch.pool, fields[0], "index")
+    const inner = try number(f.batch.pool, fields[0], "value")
+    const replacement = try payload(f.batch.pool, f.batch.nodes[inner], b"replace")
+    const inner_base = try number(f.batch.pool, replacement, "base")
+    const inner_value = try number(f.batch.pool, replacement, "value")
+    const outer_type = try number(f.batch.pool, f.batch.nodes[rebuilt], "ty")
+    const inner_type = try number(f.batch.pool, f.batch.nodes[inner], "ty")
+    return len(statements) == 3 and statements[0] == rhs_setup and statements[1] == target_setup and base == root and member == 2 and inner_base == array and inner_value == right and inner < rebuilt and outer_type == 40 and inner_type == 41 and postorder(f.batch.pool)
+
+
+public func test_array_inside_managed_slot_writes_rebuilt_value_after_caller_setup() -> bool fails syntax_value.Problem:
+    mut f = try fresh()
+    const owner = try locals.add(mut f.scope, b"items", f.context.span, 42, True, b"local")
+    const root = try list_lower.read(mut f.batch, f.context, owner, 41)
+    const index = try list_lower.integer(mut f.batch, f.context, 3, 0)
+    const key = try list_lower.integer(mut f.batch, f.context, 1, 0)
+    const right = try list_lower.integer(mut f.batch, f.context, 7, 0)
+    const setup = try list_lower.store(mut f.batch, f.context, owner, root, False)
+    const lowered = try array_places.finish(mut f.batch, f.context, array_places.Input(owner=owner, index=index, bases=[root], steps=[array_places.Step(key=key, from_end=False, member=-1)], value=right, setup=[setup]))
+    const statements = try body(f.batch, lowered)
+    const discarded = try payload(f.batch.pool, f.batch.statements[statements[1]], b"discard")
+    const operation_id = try graph.number(f.batch.pool, discarded)
+    const operation = try payload(f.batch.pool, f.batch.nodes[operation_id], b"buffer_operation")
+    const kind_id = try graph.field(f.batch.pool, operation, "kind")
+    const kind = try graph.get(f.batch.pool, kind_id)
+    const arguments_id = try graph.field(f.batch.pool, operation, "arguments")
+    const arguments = try graph.items(f.batch.pool, arguments_id)
+    const first = try graph.number(f.batch.pool, arguments[0])
+    const value = try graph.number(f.batch.pool, arguments[1])
+    const replacement = try payload(f.batch.pool, f.batch.nodes[value], b"replace")
+    const base = try number(f.batch.pool, replacement, "base")
+    const written_owner = try number(f.batch.pool, operation, "owner")
+    const unit_id = try number(f.batch.pool, lowered.payload, "value")
+    const unit = try payload(f.batch.pool, f.batch.nodes[unit_id], b"unit")
+    const unit_value = try graph.get(f.batch.pool, unit)
+    return len(statements) == 2 and statements[0] == setup and kind.data == b"write" and len(arguments) == 2 and first == index and base == root and written_owner == owner and lowered.ty == 15 and lowered.tag == b"block_value" and unit_value.kind == 0 and len(f.scope.locals) == 1 and postorder(f.batch.pool)
+
+
+public func test_array_plan_rejects_missing_path_step_before_emission() -> bool fails syntax_value.Problem:
+    mut f = try fresh()
+    const root = try list_lower.integer(mut f.batch, f.context, 0, 40)
+    const right = try list_lower.integer(mut f.batch, f.context, 7, 0)
+    match array_places.finish(mut f.batch, f.context, array_places.Input(owner=0, index=-1, bases=[root], steps=[], value=right, setup=[])):
+        case Ok(_):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(f.batch.nodes) == 2 and len(f.batch.statements) == 0
+
+
+public func test_array_effect_analysis_preserves_trapping_vs_inert_and_depth_bound() -> bool fails syntax_value.Problem:
+    mut f = try fresh()
+    const first = try list_lower.integer(mut f.batch, f.context, 7, 0)
+    const second = try list_lower.integer(mut f.batch, f.context, 2, 0)
+    const sum = try list_lower.binary(mut f.batch, f.context, b"add", first, second, 0)
+    const leaf_inert = try array_places.inert_value(f.batch, first)
+    const sum_inert = try array_places.inert_value(f.batch, sum)
+    const sum_free = try array_places.effect_free_value(f.batch, sum)
+    mut wrapped = first
+    for _ in range(15):
+        const operand = try syntax_value.integer(mut f.batch.pool, wrapped)
+        wrapped = try emission.node(mut f.batch, f.context.input, f.context.span, 0, b"cast", operand)
+    const fifteen = try array_places.effect_free_value(f.batch, wrapped)
+    const operand = try syntax_value.integer(mut f.batch.pool, wrapped)
+    const sixteen_node = try emission.node(mut f.batch, f.context.input, f.context.span, 0, b"cast", operand)
+    const sixteen = try array_places.effect_free_value(f.batch, sixteen_node)
+    const owner = try locals.add(mut f.scope, b"values", f.context.span, 40, True, b"local")
+    const read = try list_lower.operation(mut f.batch, f.context, list_lower.Operation(owner=owner, kind=b"read", arguments=[first], ty=0))
+    const managed_free = try array_places.effect_free_value(f.batch, read)
+    const combined = try list_lower.binary(mut f.batch, f.context, b"add", first, read, 0)
+    const combined_free = try array_places.effect_free_value(f.batch, combined)
+    return leaf_inert and not sum_inert and sum_free and fifteen and not sixteen and not managed_free and not combined_free and postorder(f.batch.pool)
+
+
+public func test_array_spill_saves_exact_value_once_without_exposing_temporary_name() -> bool fails syntax_value.Problem:
+    mut f = try fresh()
+    const owner = try locals.add(mut f.scope, b"values", f.context.span, 40, True, b"local")
+    const right = try list_lower.integer(mut f.batch, f.context, 7, 6)
+    const saved = try array_places.spill_value(mut f.batch, mut f.scope, f.context, right)
+    const initialized = try payload(f.batch.pool, f.batch.statements[saved.statement], b"initialize")
+    const slot = try number(f.batch.pool, initialized, "slot")
+    const value = try number(f.batch.pool, initialized, "value")
+    const read = try payload(f.batch.pool, f.batch.nodes[saved.value], b"local")
+    const read_slot = try graph.number(f.batch.pool, read)
+    const ty = try number(f.batch.pool, f.batch.nodes[saved.value], "ty")
+    return owner == 0 and slot == 1 and read_slot == slot and value == right and ty == 6 and len(f.scope.active) == 1 and f.scope.active[0] == owner and len(f.scope.locals) == 2 and f.scope.locals[slot].name == b"<collection>" and f.scope.locals[slot].usage.temporary and f.scope.locals[slot].usage.reads == 1 and not f.scope.locals[slot].flags.initialized and len(f.batch.statements) == 1 and postorder(f.batch.pool)

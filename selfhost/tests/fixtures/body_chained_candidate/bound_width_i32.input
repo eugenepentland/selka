@@ -1,0 +1,5 @@
+func main() -> int:
+    const first: i32 = 1
+    const middle: i32 = 2
+    assert first < middle <= 3
+    return 7

@@ -1,0 +1,267 @@
+{
+  "bound_width_i16.my": {
+    "status": 0,
+    "source_sha256": "2e991741412bc9c3066f2280d932898ebe03c92905c7ed285794437a3606633b",
+    "diagnostics": []
+  },
+  "bound_width_i32.my": {
+    "status": 0,
+    "source_sha256": "a886b96518a880f9c23653d4d25bdd2dbe456abb645270e325f798a2694f32c3",
+    "diagnostics": []
+  },
+  "bound_width_i64.my": {
+    "status": 0,
+    "source_sha256": "a7a03f67315d5d998eb4c0c533fe2588694af424eccccbb0123f3d996601fed9",
+    "diagnostics": []
+  },
+  "bound_width_i8.my": {
+    "status": 0,
+    "source_sha256": "4906ea3789060b3e9f0b9f2b57ed300d176e6556bdb25042d925ea3cac6c9838",
+    "diagnostics": []
+  },
+  "bound_width_u16.my": {
+    "status": 0,
+    "source_sha256": "76697ea0ee4f735f18bfbf15558d56f1f1df2f16b7744214af2d23730bf504fa",
+    "diagnostics": []
+  },
+  "bound_width_u32.my": {
+    "status": 0,
+    "source_sha256": "361cba1208a739f601b17cabb65901e6e114e9b1b533182997d76d86808139d4",
+    "diagnostics": []
+  },
+  "bound_width_u64.my": {
+    "status": 0,
+    "source_sha256": "15ff8ab8b4f8dbd41736512804c637265ae084415ba1c58d152a89556b56fc96",
+    "diagnostics": []
+  },
+  "bound_width_u8.my": {
+    "status": 0,
+    "source_sha256": "e39e1b68d1d54de1627e035c75b58d7cd893ea14db101adda313dbb2780c8948",
+    "diagnostics": []
+  },
+  "bytes.my": {
+    "status": 0,
+    "source_sha256": "cdc6b73cc1fe5c8f0399f3838bd0a9c324c15ec4b3f3050f89da536ab80039f5",
+    "diagnostics": []
+  },
+  "dictionary_equality.my": {
+    "status": 0,
+    "source_sha256": "a2179e39cfd7bc72fbb27af719ec6650f6ed8744fa5707bc977151b51c902d3f",
+    "diagnostics": []
+  },
+  "error_list_order.my": {
+    "status": 1,
+    "source_sha256": "7c89bf2889a2fc0de84c828241e4871879d1373042b7c389c740688279fedef0",
+    "diagnostics": [
+      {
+        "code": "E_TEXT_OPERATOR",
+        "message": "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`",
+        "bytes": {
+          "start": 41,
+          "end": 42
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_record_order.my": {
+    "status": 1,
+    "source_sha256": "6f1c3dd70c6d1bb0d349fb4cb5f61937fc1c1ff304bb31ecd09e1a61cdfc6578",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "operation requires an integer type",
+        "bytes": {
+          "start": 90,
+          "end": 91
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_width.my": {
+    "status": 1,
+    "source_sha256": "9101bf5fb44a1943bee6f675ca2a12bd2723ceafd24b71c67f292e6c09d7441b",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected i16, found i32",
+        "bytes": {
+          "start": 46,
+          "end": 47
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "float.my": {
+    "status": 0,
+    "source_sha256": "b57eb9a2f56d38503cccbec0369412ba921e8fce2af3012179bea19f12a53a25",
+    "diagnostics": []
+  },
+  "imported_numeric.my": {
+    "status": 0,
+    "source_sha256": "864b3b8440f55370d5e4cd8ff39460966180e6e0908641fc4a8c374e6f109af9",
+    "diagnostics": []
+  },
+  "imported_record.my": {
+    "status": 0,
+    "source_sha256": "9d0a0afaea2fa2f0ae74b65ac5730c1a6b2499c53e887dd8f4b8e732993f2523",
+    "diagnostics": []
+  },
+  "list_equality.my": {
+    "status": 0,
+    "source_sha256": "0f7c3d734115c6d9fc76cc0f31015441c5d83ba95fa13c00a80a1d0458a0547a",
+    "diagnostics": []
+  },
+  "option_peer.my": {
+    "status": 0,
+    "source_sha256": "aa7fbe08ee6e21ad72a0b42c24495e146a2243a88c218de01fdd0a52fc4a7ca7",
+    "diagnostics": []
+  },
+  "record_equality.my": {
+    "status": 0,
+    "source_sha256": "270f51385ee382e4662ac06c65cec5c3669f23d69672c28ad8182b2e817e5090",
+    "diagnostics": []
+  },
+  "scalar.my": {
+    "status": 0,
+    "source_sha256": "29d29db1755b2585cc416f0f5784dce8b9ae83cdb250c274b315fa54c54c3b3e",
+    "diagnostics": []
+  },
+  "set_relations.my": {
+    "status": 0,
+    "source_sha256": "aff7cf3c84fcd93275d908cf074fea020ae93c5a7be9c34c540d4c4d800ccf93",
+    "diagnostics": []
+  },
+  "short_circuit.my": {
+    "status": 0,
+    "source_sha256": "a5219b51bc5381df6a7fc36eb76938cab9d9443a3811a3cc004c366315cb30d4",
+    "diagnostics": []
+  },
+  "text.my": {
+    "status": 0,
+    "source_sha256": "5f5a6689f4463cfc33acf44233a50d1a7ff744dd0e8d4670737f7bdfbfc6be9f",
+    "diagnostics": []
+  },
+  "width_i16.my": {
+    "status": 1,
+    "source_sha256": "39f053e79b53fa0f3a8a0a800a25c37246f519b95c18fb9e1ba55dac2bf8dfb9",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected i16, found int",
+        "bytes": {
+          "start": 38,
+          "end": 39
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "width_i32.my": {
+    "status": 1,
+    "source_sha256": "f23028c500f02e7c807dbecbaae08cf64bf8e6151f28a1414184164c94d8f679",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected i32, found int",
+        "bytes": {
+          "start": 38,
+          "end": 39
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "width_i64.my": {
+    "status": 0,
+    "source_sha256": "cf7d820878dc9bba36750fb59d85db306de1c0f1ca74b8c3c911293d88a3d4d7",
+    "diagnostics": []
+  },
+  "width_i8.my": {
+    "status": 1,
+    "source_sha256": "2805ce81bd10065846fdfba38dd42665b7a888caabf8371fb0e967916c861464",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected i8, found int",
+        "bytes": {
+          "start": 37,
+          "end": 38
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "width_u16.my": {
+    "status": 1,
+    "source_sha256": "b95f117f803bc33b34dc7fac5745be25c16a2dc4c358b07ac713f9f2612b3abf",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected u16, found int",
+        "bytes": {
+          "start": 38,
+          "end": 39
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "width_u32.my": {
+    "status": 1,
+    "source_sha256": "5a57e76500747b8d9e1d8b80100f7c40e4eeacc54a000a73fc08dbb3af3a6969",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected u32, found int",
+        "bytes": {
+          "start": 38,
+          "end": 39
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "width_u64.my": {
+    "status": 1,
+    "source_sha256": "d49e33163f8db2ea9b01d226c88094953c9516044669f65b6c49053f75495ff5",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected u64, found int",
+        "bytes": {
+          "start": 38,
+          "end": 39
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "width_u8.my": {
+    "status": 1,
+    "source_sha256": "1dc237e0759fffb70c394670bd1ce29da96099fb94a2abefc14687511b1df0df",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected u8, found int",
+        "bytes": {
+          "start": 37,
+          "end": 38
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  }
+}
