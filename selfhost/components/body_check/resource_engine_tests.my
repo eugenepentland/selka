@@ -195,3 +195,61 @@ public func test_inactive_file_owner_resolves_reserved_type_after_scope() -> boo
 public func test_discard_file_binding_restores_previous_discard_local() -> bool fails syntax_value.Problem:
     const state = try scoped(True)
     return state.scope.active == [0, 1] and len(state.scope.locals) == 3 and state.scope.locals[2].name == b"_" and state.scope.locals[2].flags.scoped_file and state.scope.locals[2].usage.reads == 1
+
+
+func capability_module(mut pool: syntax_value.Pool, declared: bool) -> int fails syntax_value.Problem:
+    const module_name = try syntax_value.octets(mut pool, b"main")
+    const source = try syntax_value.octets(mut pool, b"Filesystem Stream")
+    const context = try syntax_value.object(mut pool, ["name", "source"], [module_name, source])
+    const helper = try syntax_value.octets(mut pool, b"helper")
+    const fs = try syntax_value.octets(mut pool, b"Filesystem")
+    const stream = try syntax_value.octets(mut pool, b"Stream")
+    const fs_import = try syntax_value.object(mut pool, ["name", "alias"], [helper, fs])
+    const stream_import = try syntax_value.object(mut pool, ["name", "alias"], [helper, stream])
+    const imports = try syntax_value.sequence(mut pool, [fs_import, stream_import])
+    mut rows: int[] = []
+    if declared:
+        const kind = try syntax_value.enumeration(mut pool, b"type")
+        const symbol = try syntax_value.object(mut pool, ["name", "kind"], [fs, kind])
+        rows.append(symbol)
+    const symbols = try syntax_value.sequence(mut pool, rows)
+    const offset = try syntax_value.integer(mut pool, 0)
+    return try syntax_value.object(mut pool, ["context", "offset", "symbols", "imports"], [context, offset, symbols, imports])
+
+
+public func test_module_aliases_do_not_shadow_capability_annotations() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"Filesystem Stream"
+    const module = try capability_module(mut state.syntax.pool, False)
+    state.syntax.modules = [module]
+    const fs = try syntax_value.span(mut state.syntax.pool, 0, 10)
+    const stream = try syntax_value.span(mut state.syntax.pool, 11, 17)
+    const fs_type = try engine.type_at(mut state, fs)
+    const stream_type = try engine.type_at(mut state, stream)
+    const fs_active = try engine.top_level(state, fs)
+    const stream_active = try engine.top_level(state, stream)
+    const fs_declared = try engine.declared_symbol(state, fs)
+    const stream_declared = try engine.declared_symbol(state, stream)
+    return fs_type == 11 and stream_type == 18 and fs_active and stream_active and not fs_declared and not stream_declared
+
+
+public func test_declared_symbol_still_shadows_reserved_type_authority() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"Filesystem Stream"
+    const module = try capability_module(mut state.syntax.pool, True)
+    state.syntax.modules = [module]
+    const fs = try syntax_value.span(mut state.syntax.pool, 0, 10)
+    const stream = try syntax_value.span(mut state.syntax.pool, 11, 17)
+    const fs_declared = try engine.declared_symbol(state, fs)
+    const stream_declared = try engine.declared_symbol(state, stream)
+    return fs_declared and not stream_declared
+
+
+public func test_standalone_function_name_does_not_shadow_capability_type() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.batch.facts.top_names = [b"Filesystem", b"Stream"]
+    const fs = try syntax_value.span(mut state.syntax.pool, 25, 35)
+    const stream = try syntax_value.span(mut state.syntax.pool, 18, 24)
+    const fs_type = try engine.type_at(mut state, fs)
+    const stream_type = try engine.type_at(mut state, stream)
+    return fs_type == 11 and stream_type == 18

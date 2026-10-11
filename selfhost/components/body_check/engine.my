@@ -133,6 +133,26 @@ public func require(state: State, actual: int, expected: int, span: int) -> bool
     return True
 
 
+public func declared_symbol(state: State, span: int) -> bool fails syntax_value.Problem:
+    const name = try graph.spelling(state.syntax.pool, state.syntax.source, span)
+    if len(state.syntax.modules) == 0:
+        const ty = try record_types.named(state.batch.facts.lists.types.records, name)
+        return ty != -1
+    const start_id = try graph.field(state.syntax.pool, span, "start")
+    const start = try graph.number(state.syntax.pool, start_id)
+    const module = try names.module_at(state.syntax.pool, state.syntax.modules, start)
+    if module < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="binding has no source module")
+    const symbols_id = try graph.field(state.syntax.pool, state.syntax.modules[module], "symbols")
+    const symbols = try graph.items(state.syntax.pool, symbols_id)
+    for symbol in symbols:
+        const name_id = try graph.field(state.syntax.pool, symbol, "name")
+        const candidate = try graph.get(state.syntax.pool, name_id)
+        if candidate.data == name:
+            return True
+    return False
+
+
 public func top_level(state: State, span: int) -> bool fails syntax_value.Problem:
     const name = try graph.spelling(state.syntax.pool, state.syntax.source, span)
     if len(state.syntax.modules) == 0:
@@ -823,7 +843,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 const rejection = try problem(state, span, "P_BODY_PROFILE", "non-list managed methods are outside the admitted body closure")
                 fail rejection
             if owner_name == b"file" or owner_name == b"text_file" or owner_name == b"Filesystem" or owner_name == b"Stream":
-                const declared_owner = try top_level(state, owner)
+                const declared_owner = try declared_symbol(state, owner)
                 if not declared_owner:
                     const rejection = try problem(state, owner, "E_TYPE", "operation requires a nominal scalar domain")
                     fail rejection
@@ -2067,7 +2087,7 @@ public func type_at(mut state: State, span: int) -> int fails syntax_value.Probl
             const rejection = try problem(state, span, "P_BODY_PROFILE", "qualified or user generic type application is outside the body profile")
             fail rejection
     if text == b"Filesystem" or text == b"Stream":
-        const declared = try top_level(state, span)
+        const declared = try declared_symbol(state, span)
         if not declared:
             if text == b"Filesystem":
                 return 11
