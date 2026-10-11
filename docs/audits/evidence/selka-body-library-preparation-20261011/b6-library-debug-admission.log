@@ -1,0 +1,11 @@
+build-slot: gate slot 1, FIFO ticket 185 after 0s
+Traceback (most recent call last):
+  File "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_library_admission.py", line 164, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_library_admission.py", line 134, in main
+    F.require(native == (0, b'', b''), 'native actual library admission failed: ' + relative)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_frontend_qualification.py", line 53, in require
+    raise RuntimeError(message)
+RuntimeError: native actual library admission failed: body_check/checking.my

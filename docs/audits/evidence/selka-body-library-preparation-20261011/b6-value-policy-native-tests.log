@@ -1,0 +1,107 @@
+build-slot: build slot 2, FIFO ticket 1957 after 0s
+77342b5c394ada8b14a59ed5976eaeeee7c4192a739240231c2d00714e1f11dd
+933d90144299c3faba2f74a3cbbc243aa4104b95ed836e36bd6989f34b60fab4
+288047639c534f241dd88a58f5e44b91a8ae0bb0d0877dd640606d844f5c6034
+823b6d958132b11b11241ed1d17808e9e93a97c504ab9f873aee6256521edfd9
+5a04ebaf3b0304d11dbf77a8d506356c8891d43965c46e5c22370fae2cd14d55
+57c8ce69de6d605a5d0ee6d5637ad399b551e1109714011a7a1bc968029f62f2
+engine.my:1898:21: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Ok(unused):
+                      ^
+engine.my:2292:38: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func payload_local(mut state: State, arm_name: int, binding: int, internal_name: bytes, ty: int) -> int fails syntax_value.Problem:
+                                       ^
+record_names.my:175:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_start = try graph.number(pool, diagnostic_start_id)
+            ^
+record_names.my:176:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_end = try graph.number(pool, diagnostic_end_id)
+            ^
+record_names.my:179:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              const owner_text = try graph.spelling(pool, source, owner)
+                    ^
+record_names.my:181:15: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          const original = try graph.spelling(pool, source, name)
+                ^
+record_names.my:189:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut used_import = -1
+          ^
+record_names.my:215:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut canonical_name = spelling
+          ^
+record_names.my:216:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut matched = False
+          ^
+13a3c1d7dea679a6a6f63edb1aeae6cc9c154d396c676110567e6a3f1d814e51
+test-units
++- run test w
+guardian/test: 13 test(s) selected by filter: "body policy" — 6 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 3.49s; slowest over 50ms:
+guardian/test:   2.02s  body_check_policy_test.test.body policy exact body ceiling and first excess are isolated
+guardian/test:   0.73s  body_check_policy_test.test.body policy wire encoding admits values beyond syntax without changing bytes
+guardian/test:   0.73s  body_check_policy_test.test.body policy exact syntax ceiling and first excess remain unchanged
+guardian/test: PASS — 13 passed
+guardian/test: RESULT {"passed":13,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components /home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/8d72c645510b0c9be5f979dff670047c/test "--guardian-filter=body policy" --cache-dir=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots --seed=0x754c4228 --listen=-
+
+Build Summary: 12/12 steps succeeded; 13/13 tests passed
+test-units success
++- run test 13 pass (13 total) 3s MaxRSS:200M
+   +- compile test debug native success 434ms MaxRSS:190M
+   |  +- WriteFile cached
+   |  +- compile obj component_sha256 safe native cached 5ms MaxRSS:41M
+   |  +- compile obj component_sha256 safe native (reused)
+   |  +- run exe build-identity (build_identity) success 36ms
+   |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:41M
+   |  +- options success
+   |     +- compile exe mylang debug native success 4s MaxRSS:560M
+   |        +- WriteFile (reused)
+   |        +- compile obj component_sha256 safe native (reused)
+   |        +- compile obj component_sha256 safe native (reused)
+   |        +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |        +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:42M
+   +- run exe selka-components success 58s
+      +- compile exe selka-components safe native cached 4ms MaxRSS:41M
+
+77342b5c394ada8b14a59ed5976eaeeee7c4192a739240231c2d00714e1f11dd
+933d90144299c3faba2f74a3cbbc243aa4104b95ed836e36bd6989f34b60fab4
+288047639c534f241dd88a58f5e44b91a8ae0bb0d0877dd640606d844f5c6034
+823b6d958132b11b11241ed1d17808e9e93a97c504ab9f873aee6256521edfd9
+5a04ebaf3b0304d11dbf77a8d506356c8891d43965c46e5c22370fae2cd14d55
+57c8ce69de6d605a5d0ee6d5637ad399b551e1109714011a7a1bc968029f62f2
+13a3c1d7dea679a6a6f63edb1aeae6cc9c154d396c676110567e6a3f1d814e51
+test-units
++- run test
+   +- compile test debug native 1 errors
+src/parser_value.zig:420:26: error: missing struct field: profile
+    var first: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget };
+                        ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/parser_value.zig:159:16: note: struct declared here
+const Reader = struct {
+               ^~~~~~
+referenced by:
+    wire: src/parser_value_test.zig:8:22
+    test.parser values preserve declarations, calls, policies and exact operator spans: src/parser_value_test.zig:35:32
+    1 reference(s) hidden; use '-freference-trace=3' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test /home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/85bad65503a99a96a63671d0682460cd/component_sha256.o -ferror-tracing -ODebug -I /home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/f77856bf22d15753e2ef722d1f09ae46 --dep build_identity --dep memory_budget --dep compiler_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/sets --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/context --dep user-doc/api --dep user-doc/fix --dep native_test_options -Mroot=src/root_test.zig -ODebug -Mbuild_identity=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/6c4557352d4fb4f57d938f4c320b60cc/build_identity/identity.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Muser-doc/primer=docs/primer.md -Muser-doc/syntax=docs/python-syntax.md -Muser-doc/statements=docs/statements.md -Muser-doc/records=docs/records-and-unions.md -Muser-doc/functions=docs/functions.md -Muser-doc/errors=docs/results-and-options.md -Muser-doc/text=docs/text.md -Muser-doc/bytes=docs/bytes.md -Muser-doc/io=docs/io.md -Muser-doc/effects=docs/effects.md -Muser-doc/contracts=docs/contracts.md -Muser-doc/modules=docs/modules.md -Muser-doc/memory=docs/managed-memory.md -Muser-doc/sets=docs/sets.md -Muser-doc/stdlib=docs/standard-library.md -Muser-doc/tests=docs/tooling/guest-tests.md -Muser-doc/build=docs/tooling/native-build.md -Muser-doc/navigation=docs/tooling/navigation.md -Muser-doc/context=docs/tooling/agent-context.md -Muser-doc/api=docs/tooling/interface-files.md -Muser-doc/fix=docs/tooling/fix.md -Mnative_test_options=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/9359bde264d13d01fd18b16eb7960a43/options.zig --test-filter "parser values" --test-runner ../guardian-zig/src/test_runner.zig --cache-dir /home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 9/12 steps succeeded (1 failed)
+test-units transitive failure
++- run test transitive failure
+   +- compile test debug native 1 errors
+   |  +- WriteFile cached
+   |  +- compile obj component_sha256 safe native cached 5ms MaxRSS:41M
+   |  +- compile obj component_sha256 safe native (reused)
+   |  +- run exe build-identity (build_identity) cached
+   |  |  +- compile exe build-identity debug native cached 5ms MaxRSS:41M
+   |  +- options cached
+   |     +- compile exe mylang debug native cached 7ms MaxRSS:41M
+   |        +- WriteFile (reused)
+   |        +- compile obj component_sha256 safe native (reused)
+   |        +- compile obj component_sha256 safe native (reused)
+   |        +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |        +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:42M
+   +- run exe selka-components success 510ms
+      +- compile exe selka-components safe native cached 7ms MaxRSS:41M
+

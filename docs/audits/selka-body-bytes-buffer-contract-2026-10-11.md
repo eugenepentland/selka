@@ -94,3 +94,13 @@ B6 continues explicit profile refusal for Filesystem/Stream/File, scoped resourc
 6. Root runs isolated performance only after correctness gates. No performance estimate or <=1.5x assertion is inferred from this contract.
 
 B7 subsequently admits capability signatures, file open/read, stream write/print and with-scope cleanup/effects, then independently builds/runs all seven actual packages and a second generation. Native catalog, symbolic generic checking, contract synthesized bodies, entry adaptation, effects/origins, domain codecs, warnings and backend are still explicitly retained seams after that bootstrap milestone. Full language selfhosting requires moving those semantic owners as well.
+
+## Archived library preparation (2026-10-11)
+
+[Preparation evidence](evidence/selka-body-library-preparation-20261011/README.md) retains native integration, strict runner registration/selfchecks, the body-only value-policy checks, and the producer's final measurement/profile receipt. The failed native-policy log is explicitly retained as resolved: 13 body tests passed before parser compilation failed; the separate corrected parser log records 15 passing tests. It is not counted as a passing gate.
+
+The instrumented checking measurement reports 1,139,971 canonical occurrences (37,032,310 canonical bytes), motivating the body-only 2,097,152-value ceiling; its profile reply is measurement evidence, not successful installed admission. Parser/declaration/type-interface policy remains unchanged. Earlier failed logical measurement output is excluded. Deterministically compressed artifacts and SHA256SUMS preserve provenance.
+
+Strict installed library admission remains pending: all 24 controls, nine actual library check roots, and six actual test roots require all 183 operations and exact selected parity. These preparatory results do not establish full component-source bootstrap or performance acceptance.
+
+The first library followup installation at `6cbe600ef` passes 14/14 steps. Its admission attempt completes 120 fixture operations and six actual graph/codec checks, then stops at operation 127 on valid native unused-binding warnings from `body_check/checking.my`. The runner's zero-warning assumption is corrected while retaining exact selected warning equality. This incomplete run is archived as failure evidence, with installation identities; it is not the 183-operation acceptance result. Independent developer replay also found two remaining shadow metadata differences under investigation.

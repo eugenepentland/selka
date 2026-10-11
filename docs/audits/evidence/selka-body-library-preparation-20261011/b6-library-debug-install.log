@@ -1,0 +1,64 @@
+build-slot: build slot 1, FIFO ticket 1984 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 95/680 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 4 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2091 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 95 file(s) in scope
+77342b5c394ada8b14a59ed5976eaeeee7c4192a739240231c2d00714e1f11dd
+933d90144299c3faba2f74a3cbbc243aa4104b95ed836e36bd6989f34b60fab4
+288047639c534f241dd88a58f5e44b91a8ae0bb0d0877dd640606d844f5c6034
+823b6d958132b11b11241ed1d17808e9e93a97c504ab9f873aee6256521edfd9
+5a04ebaf3b0304d11dbf77a8d506356c8891d43965c46e5c22370fae2cd14d55
+57c8ce69de6d605a5d0ee6d5637ad399b551e1109714011a7a1bc968029f62f2
+engine.my:208:22: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Err(unused):
+                       ^
+engine.my:2074:21: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Ok(unused):
+                      ^
+engine.my:2468:38: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func payload_local(mut state: State, arm_name: int, binding: int, internal_name: bytes, ty: int) -> int fails syntax_value.Problem:
+                                       ^
+record_names.my:175:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_start = try graph.number(pool, diagnostic_start_id)
+            ^
+record_names.my:176:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_end = try graph.number(pool, diagnostic_end_id)
+            ^
+record_names.my:179:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              const owner_text = try graph.spelling(pool, source, owner)
+                    ^
+record_names.my:181:15: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          const original = try graph.spelling(pool, source, name)
+                ^
+record_names.my:189:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut used_import = -1
+          ^
+record_names.my:215:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut canonical_name = spelling
+          ^
+record_names.my:216:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut matched = False
+          ^
+75d7cbb66a07d9f51a7c1e8acc24180bf6fe163dc43b396c040e92cc6db338fa
+Build Summary: 14/14 steps succeeded
+install success
++- install mylang success
+|  +- compile exe mylang debug native cached 9ms MaxRSS:41M
+|  |  +- WriteFile cached
+|  |  +- compile obj component_sha256 safe native cached 6ms MaxRSS:39M
+|  |  +- compile obj component_sha256 safe native (reused)
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 4ms MaxRSS:40M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:40M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- install generated to selka-components cached
+|  +- compile exe selka-components safe native cached 6ms MaxRSS:39M
++- run exe selka-components success 57s
+|  +- compile exe selka-components safe native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+

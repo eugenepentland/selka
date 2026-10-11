@@ -1,0 +1,73 @@
+{
+  "scope": "Pure-library followup; installed nine-library/six-test admission pending, no qualification claim",
+  "seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "environment": {
+    "MYL_CORE_LEAKCHECK": "1",
+    "TMPDIR": "$PWD/.body-check-tmp",
+    "ZIG_LOCAL_CACHE_DIR": "$PWD/.zig-cache-routing",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache"
+  },
+  "focused_suite": {
+    "log": "pure-closure-focused-final.log",
+    "roots_per_mode": 14,
+    "passed_per_mode": 85,
+    "cached_failed_skipped": 0,
+    "flags": "test FILE --force --no-cache --max-steps=100000000; release additionally --release --verify-facts"
+  },
+  "body_profile": {
+    "logs": [
+      "body-profile-debug.log",
+      "body-profile-release.log"
+    ],
+    "passed_per_mode": 4,
+    "flags": "--force --no-cache --max-steps=500000000 --max-memory=1G",
+    "max_rss_kib": [
+      300380,
+      300184
+    ]
+  },
+  "measurement": {
+    "input_sha256": "72cf8a74a4ed8cf6622636565c2e5c08681d3a32d860fd13ad854cbee4e2f414",
+    "input_values": 519467,
+    "pool_values": 1127194,
+    "canonical_occurrences": 1139971,
+    "canonical_bytes": 37032310,
+    "edges": 1138952,
+    "data_and_field_names_bytes": 5168822,
+    "typed_nodes": 91607,
+    "typed_statements": 19782,
+    "functions": 341,
+    "final_reply": "checking-full-limit-measure-reply-3.bin",
+    "final_build_log": "pure-followup-build-full-limit-measure-3.log",
+    "final_run_log": "checking-full-limit-measure-3.log",
+    "restoration": "checking.my restored byte-exact from measurement-checking-original-2.my; temporary symlink/private measurement restored before approved body-private copies",
+    "source_diff": "measurement-source-diff.txt",
+    "warning": "checking-full-limit-measure-logical.json is earlier failed diagnostic output, not final proof",
+    "checking_restored_sha": "0bb94e093513b8b417fa945497e26ff828a0311943c31b61c54cead677e73808",
+    "original_checking_sha": "0bb94e093513b8b417fa945497e26ff828a0311943c31b61c54cead677e73808"
+  },
+  "post_review": {
+    "check_log": "pure-review-check.log",
+    "build_log": "pure-peer-build.log",
+    "format_logs": [
+      "pure-final-format.log",
+      "pure-peer-format.log"
+    ],
+    "focused_log": "pure-peer-focused-final.log",
+    "superseded_focused": "pure-review-focused.log (12 tests passed, last root SourceChanged during newly discovered aggregate equality fix; not final verdict)",
+    "replies": [
+      "pure-followup-replies-peer-final",
+      "pure-extension-replies-peer-final",
+      "pure-review-replies"
+    ],
+    "status": "native exact replay and strict installed actual-source admission pending",
+    "passed_per_mode": 8,
+    "cached_failed_skipped": 0
+  },
+  "producer_commit": "ed371c95780313f93976f423f64e257f3b1c95e8",
+  "guardian": {
+    "log": "pure-final-guardian-all.log",
+    "checks": 88,
+    "exit_status": 0
+  }
+}

@@ -1,0 +1,62 @@
+build-slot: build slot 2, FIFO ticket 1929 after 0s
+77342b5c394ada8b14a59ed5976eaeeee7c4192a739240231c2d00714e1f11dd
+933d90144299c3faba2f74a3cbbc243aa4104b95ed836e36bd6989f34b60fab4
+288047639c534f241dd88a58f5e44b91a8ae0bb0d0877dd640606d844f5c6034
+823b6d958132b11b11241ed1d17808e9e93a97c504ab9f873aee6256521edfd9
+5a04ebaf3b0304d11dbf77a8d506356c8891d43965c46e5c22370fae2cd14d55
+57c8ce69de6d605a5d0ee6d5637ad399b551e1109714011a7a1bc968029f62f2
+engine.my:1898:21: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Ok(unused):
+                      ^
+engine.my:2292:38: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func payload_local(mut state: State, arm_name: int, binding: int, internal_name: bytes, ty: int) -> int fails syntax_value.Problem:
+                                       ^
+record_names.my:175:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_start = try graph.number(pool, diagnostic_start_id)
+            ^
+record_names.my:176:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_end = try graph.number(pool, diagnostic_end_id)
+            ^
+record_names.my:179:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              const owner_text = try graph.spelling(pool, source, owner)
+                    ^
+record_names.my:181:15: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          const original = try graph.spelling(pool, source, name)
+                ^
+record_names.my:189:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut used_import = -1
+          ^
+record_names.my:215:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut canonical_name = spelling
+          ^
+record_names.my:216:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut matched = False
+          ^
+0fa656e874a51aa77433eff2910d476c1774cf28566f4d61c1c6876af6d10bb7
+test-units
++- run test w
+guardian/test: 12 test(s) selected by filter: "body pure closure" — 5 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.00s
+guardian/test: PASS — 12 passed
+guardian/test: RESULT {"passed":12,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components /home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/7df6b199ec2378db742f467dcd5559c9/test "--guardian-filter=body pure closure" --cache-dir=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots --seed=0x54b99ccd --listen=-
+
+Build Summary: 12/12 steps succeeded; 12/12 tests passed
+test-units success
++- run test 12 pass (12 total) 39ms MaxRSS:15M
+   +- compile test debug native success 1s MaxRSS:311M
+   |  +- WriteFile cached
+   |  +- compile obj component_sha256 safe native cached 6ms MaxRSS:41M
+   |  +- compile obj component_sha256 safe native (reused)
+   |  +- run exe build-identity (build_identity) success 43ms
+   |  |  +- compile exe build-identity debug native cached 5ms MaxRSS:41M
+   |  +- options success
+   |     +- compile exe mylang debug native success 4s MaxRSS:574M
+   |        +- WriteFile (reused)
+   |        +- compile obj component_sha256 safe native (reused)
+   |        +- compile obj component_sha256 safe native (reused)
+   |        +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |        +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:42M
+   +- run exe selka-components success 59s
+      +- compile exe selka-components safe native cached 5ms MaxRSS:41M
+

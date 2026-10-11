@@ -1,0 +1,28 @@
+--- /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/src/body_check_component.zig
++++ /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/src/body_check_component.zig
+@@ -21,7 +21,14 @@
+ }
+ /// Require complete value equality for shadow execution, including source failure provenance.
+ pub fn compare(a: std.mem.Allocator, actual: value.Outcome, expected: value.Outcome) Error!void {
+-    if (!try value.equal(a, actual, expected)) return error.ComponentShadowMismatch;
++    if (!try value.equal(a, actual, expected)) {
++        const x = try std.json.Stringify.valueAlloc(a, actual, .{});
++        defer a.free(x);
++        const y = try std.json.Stringify.valueAlloc(a, expected, .{});
++        defer a.free(y);
++        std.debug.print("BODY_ACTUAL {s}\nBODY_EXPECTED {s}\n", .{ x, y });
++        return error.ComponentShadowMismatch;
++    }
+ }
+ fn directory(a: std.mem.Allocator, runtime: Runtime) Error![]u8 {
+     if (runtime.component_dir orelse runtime.environ.get("MYLANG_COMPONENT_DIR")) |dir| return a.dupe(u8, dir);
+--- /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/build.zig
++++ /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/build.zig
+@@ -541,6 +541,7 @@
+     // A command file that the unit root also compiles reaches the front end
+     // through its root's `compiler_language`, never by a second module path.
+     exe.root_module.addImport("compiler_root", exe.root_module);
++    b.step("body-diagnostic-compiler", "Private comparison diagnostic only").dependOn(&exe.step);
+     addUserDocs(b, exe.root_module);
+     const identity = @import("build_identity.zig").module(b, target, optimize, .{ .compile = rss.compile, .run = rss.driver });
+     exe.root_module.addImport("build_identity", identity);

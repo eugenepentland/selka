@@ -1,0 +1,9 @@
+syntax_value: internal push ceiling 1048576 ->2097152; wire encoder unchanged
+    mut counts: int[] = []
+    for value in state.batch.pool.values:
+        mut size = 1
+        for child in value.children:
+            size = size + counts[child]
+        counts.append(size)
+    const message = "values=" + str(len(state.batch.pool.values)) + " occurrences=" + str(counts[len(counts) - 1]) + " edges=" + str(state.batch.pool.edges_used) + " bytes=" + str(state.batch.pool.bytes_used) + " nodes=" + str(len(state.batch.nodes)) + " statements=" + str(len(state.batch.statements)) + " functions=" + str(len(state.batch.functions)) + " input=" + str(len(pool.values))
+    return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message=message))
