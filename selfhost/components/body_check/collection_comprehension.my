@@ -1,0 +1,98 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+import buffer_lower
+import list_iteration
+import dictionary_view_lower
+import comprehension_lower
+
+public record Output:
+    slot: int
+    body: int
+    ty: int
+    reserve: bool
+    set: bool
+
+
+public record Input:
+    plan: list_iteration.Plan
+    source: list_iteration.SourceBody
+    projection: dictionary_view_lower.Shape
+    kind: bytes
+    output: Output
+
+
+func element(mut batch: emission.Batch, context: list_lower.Context, request: Input, index: int) -> int fails syntax_value.Problem:
+    const plan = request.plan
+    if request.kind == b"keys" or request.kind == b"values" or request.kind == b"items":
+        return try dictionary_view_lower.at(mut batch, context, plan.owner, index, request.projection)
+    if request.kind == b"dict" or request.kind == b"set":
+        return try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"key_at", arguments=[index], ty=plan.request.element))
+    mut ty = plan.request.element
+    if request.kind == b"bytes":
+        ty = 5
+    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"read", arguments=[index], ty=ty))
+    if request.kind == b"bytes":
+        return try buffer_lower.cast(mut batch, context, value, 0)
+    return value
+
+
+# The caller projects a view's mapping before allocating the plan's locals and
+# checks the binding, filter and output before this native-order loop assembly.
+public func collect(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Input) -> list_lower.Lowered fails syntax_value.Problem:
+    if request.kind != b"list" and request.kind != b"text" and request.kind != b"bytes" and request.kind != b"dict" and request.kind != b"set" and request.kind != b"keys" and request.kind != b"values" and request.kind != b"items":
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid comprehension source kind")
+    const plan = request.plan
+    const output = request.output
+    const prepared = try list_iteration.source(mut batch, mut scope, context.input, plan, request.source)
+    const index = try list_lower.read(mut batch, context, plan.index, 0)
+    const value = try element(mut batch, context, request, index)
+    const initialize = try list_lower.store(mut batch, context, plan.binding, value, True)
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", index, one, 0)
+    const advance = try list_lower.store(mut batch, context, plan.index, next, False)
+    # A changed mapping refreshes its root, but never accepts list-style growth.
+    const growing = request.kind == b"list" and prepared.growing
+    const guard = try list_iteration.guard(mut batch, context, plan, prepared.refresh, growing)
+    const body = try comprehension_lower.block_statement(mut batch, context, [guard, initialize, output.body])
+    const step = try comprehension_lower.block_statement(mut batch, context, [guard, advance])
+    mut capacity = -1
+    if output.reserve:
+        const count = try list_lower.read(mut batch, context, plan.limit, 0)
+        capacity = count
+    else:
+        const empty = try list_lower.integer(mut batch, context, 0, 0)
+        capacity = empty
+    # Native comprehensionLoop retains this capacity node even for set output.
+    mut fresh = -1
+    if output.set:
+        const empty = try emission.ids(mut batch, [])
+        const allocated = try emission.node(mut batch, context.input, context.span, output.ty, b"array", empty)
+        fresh = allocated
+    else:
+        const capacity_id = try syntax_value.integer(mut batch.pool, capacity)
+        const acquire = try syntax_value.object(mut batch.pool, ["capacity"], [capacity_id])
+        const allocated = try emission.node(mut batch, context.input, context.span, output.ty, b"acquire_buffer", acquire)
+        fresh = allocated
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const setup_index = try list_lower.store(mut batch, context, plan.index, zero, True)
+    mut length = -1
+    if request.kind == b"list":
+        const count = try list_lower.length(mut batch, context, plan.owner)
+        length = count
+    else:
+        const count = try buffer_lower.length(mut batch, context, plan.owner)
+        length = count
+    const setup_limit = try list_lower.store(mut batch, context, plan.limit, length, True)
+    const setup_output = try list_lower.store(mut batch, context, output.slot, fresh, True)
+    const bound = try list_lower.read(mut batch, context, plan.limit, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", index, bound, 1)
+    const loop = try comprehension_lower.loop_statement(mut batch, context, plan.request.loop_id, condition, body, step)
+    const result = try list_lower.read(mut batch, context, output.slot, output.ty)
+    mut statements = prepared.setup
+    statements.append(setup_index)
+    statements.append(setup_limit)
+    statements.append(setup_output)
+    statements.append(loop)
+    return try list_lower.block(mut batch, context, statements, result, output.ty)

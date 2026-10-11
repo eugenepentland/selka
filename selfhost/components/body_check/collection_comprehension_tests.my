@@ -1,0 +1,272 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import list_iteration
+import dictionary_view_lower
+import comprehension_lower
+import collection_comprehension
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+    request: collection_comprehension.Input
+
+
+func raw(mut input: syntax_value.Pool, span: int, tag: bytes, payload: int) -> int fails syntax_value.Problem:
+    const tagged = try syntax_value.tagged(mut input, tag, payload)
+    return try syntax_value.object(mut input, ["span", "data"], [span, tagged])
+
+
+func number(pool: syntax_value.Pool, object: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, object, name)
+    return try graph.number(pool, field)
+
+
+func data(batch: emission.Batch, row: int) -> syntax_value.Value fails syntax_value.Problem:
+    const value = try graph.field(batch.pool, row, "data")
+    return try graph.get(batch.pool, value)
+
+
+func fresh(kind: bytes, set: bool, effect: int) -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const root_span = try syntax_value.span(mut input, 0, 2)
+    const name = try syntax_value.span(mut input, 3, 7)
+    const span = try syntax_value.span(mut input, 0, 7)
+    const root = try raw(mut input, root_span, b"name", root_span)
+    mut nodes = [root]
+    const zero = try syntax_value.integer(mut input, 0)
+    mut payload = try syntax_value.sequence(mut input, [])
+    mut tag = b"block"
+    mut expressions: int[] = []
+    if effect == 1:
+        const argument = try raw(mut input, span, b"mut_argument", zero)
+        nodes.append(argument)
+        expressions.append(1)
+    elif effect == 2:
+        const op = try syntax_value.enumeration(mut input, b"set")
+        payload = try syntax_value.object(mut input, ["name", "value", "op"], [root_span, zero, op])
+        tag = b"assignment"
+    const statement = try raw(mut input, span, tag, payload)
+    const context = list_lower.Context(input=input, span=span)
+    mut batch = emission.empty()
+    batch.facts.string_type = 44
+    batch.facts.bytes_type = 45
+    mut owner_type = 40
+    mut element = 0
+    if kind == b"text":
+        owner_type = 44
+        element = 44
+    elif kind == b"bytes":
+        owner_type = 45
+    elif kind == b"values":
+        element = 1
+    elif kind == b"items":
+        element = 42
+    mut scope = locals.empty()
+    const slot = try locals.add(mut scope, b"xs", root_span, owner_type, True, b"local")
+    scope.locals[slot].usage.reads = 1
+    mut iterable = try list_lower.read(mut batch, context, slot, owner_type)
+    const shape = dictionary_view_lower.Shape(mapping=owner_type, key=0, value=1, item=42, list=-1, kind=kind)
+    if kind == b"keys" or kind == b"values" or kind == b"items":
+        const view = try dictionary_view_lower.construct(mut batch, context, 41, iterable)
+        const value = try list_lower.append(mut batch, context, view)
+        const mapping = try dictionary_view_lower.owner(mut batch, context, value, owner_type)
+        iterable = mapping
+    const active = scope.active
+    const owner = try list_lower.temporary(mut scope, context, owner_type)
+    const index = try list_lower.temporary(mut scope, context, 0)
+    const limit = try list_lower.temporary(mut scope, context, 0)
+    const binding = try list_lower.temporary(mut scope, context, element)
+    scope.locals[binding].name = b"item"
+    scope.locals[binding].mutable = False
+    scope.locals[binding].origin = b"iteration"
+    scope.locals[binding].flags.initialized = True
+    scope.active.append(binding)
+    const output = try list_lower.temporary(mut scope, context, 50)
+    const body = try comprehension_lower.block_statement(mut batch, context, [])
+    const iteration = list_iteration.Input(source=b"xs item", name=name, span=span, iterable=iterable, owner_type=owner_type, element=element, loop_id=9)
+    const plan = list_iteration.Plan(request=iteration, owner=owner, index=index, limit=limit, binding=binding, before_active=active)
+    const source = list_iteration.SourceBody(raw_statements=[statement], raw_nodes=nodes, body_raw=0, expressions=expressions)
+    const produced = collection_comprehension.Output(slot=output, body=body, ty=50, reserve=not set, set=set)
+    const request = collection_comprehension.Input(plan=plan, source=source, projection=shape, kind=kind, output=produced)
+    return Fixture(batch=batch, scope=scope, context=context, request=request)
+
+
+func operations(batch: emission.Batch) -> bytes[] fails syntax_value.Problem:
+    mut result: bytes[] = []
+    for node in batch.nodes:
+        const value = try data(batch, node)
+        if value.data == b"buffer_operation":
+            const kind_id = try graph.field(batch.pool, value.children[0], "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            result.append(kind.data)
+    return result
+
+
+func loop_guard(batch: emission.Batch) -> int fails syntax_value.Problem:
+    const loop = try data(batch, batch.statements[-2])
+    const body_id = try number(batch.pool, loop.children[0], "body")
+    const body = try data(batch, batch.statements[body_id])
+    const rows = try graph.items(batch.pool, body.children[0])
+    return try graph.number(batch.pool, rows[0])
+
+
+public func test_existing_list_text_bytes_lowering_has_identical_value_tables() -> bool fails syntax_value.Problem:
+    for kind in [b"list", b"text", b"bytes"]:
+        for effect in range(3):
+            for reserve in [False, True]:
+                mut left = try fresh(kind, False, effect)
+                left.request.output.reserve = reserve
+                mut right = left
+                const actual = try collection_comprehension.collect(mut left.batch, mut left.scope, left.context, left.request)
+                const output = right.request.output
+                const legacy = comprehension_lower.Iterable(plan=right.request.plan, source=right.request.source, output=output.slot, body=output.body, reserve=output.reserve, result_type=output.ty)
+                const expected = try comprehension_lower.iterable(mut right.batch, mut right.scope, right.context, legacy)
+                if actual != expected or left.batch.pool != right.batch.pool or left.batch.nodes != right.batch.nodes or left.batch.statements != right.batch.statements or left.scope != right.scope:
+                    return False
+    return True
+
+
+public func test_mapping_reads_preserve_native_projection_order() -> bool fails syntax_value.Problem:
+    for kind in [b"dict", b"set", b"keys", b"values", b"items"]:
+        for set in [False, True]:
+            mut fixture = try fresh(kind, set, 0)
+            _ = try collection_comprehension.collect(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+            mut expected = [b"key_at", b"iteration_check", b"length"]
+            if kind == b"values" or kind == b"items":
+                expected = [b"key_at", b"value_at", b"iteration_check", b"length"]
+            const actual = try operations(fixture.batch)
+            if actual != expected or len(fixture.scope.locals) != 6 or fixture.scope.active != [0, 4]:
+                return False
+    return True
+
+
+public func test_collection_lengths_keep_native_integer_types() -> bool fails syntax_value.Problem:
+    for kind in [b"list", b"text", b"bytes", b"dict", b"set", b"keys", b"values", b"items"]:
+        mut fixture = try fresh(kind, True, 0)
+        _ = try collection_comprehension.collect(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+        mut found = 0
+        for node in fixture.batch.nodes:
+            const value = try data(fixture.batch, node)
+            if value.data == b"buffer_operation":
+                const kind_id = try graph.field(fixture.batch.pool, value.children[0], "kind")
+                const method = try graph.get(fixture.batch.pool, kind_id)
+                if method.data == b"length":
+                    mut expected = 0
+                    if kind == b"list":
+                        expected = 8
+                    const actual = try number(fixture.batch.pool, node, "ty")
+                    if actual != expected:
+                        return False
+                    found = found + 1
+        if found != 1:
+            return False
+    return True
+
+
+public func test_mapping_expression_mutation_refreshes_without_growth_branch() -> bool fails syntax_value.Problem:
+    for kind in [b"dict", b"set", b"keys", b"values", b"items"]:
+        mut fixture = try fresh(kind, False, 1)
+        _ = try collection_comprehension.collect(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+        const guard_id = try loop_guard(fixture.batch)
+        const guard = try data(fixture.batch, fixture.batch.statements[guard_id])
+        const rows = try graph.items(fixture.batch.pool, guard.children[0])
+        if len(rows) != 2 or fixture.scope.locals[0].usage.reads != 2:
+            return False
+        const first_id = try graph.number(fixture.batch.pool, rows[0])
+        const last_id = try graph.number(fixture.batch.pool, rows[1])
+        const refresh = try data(fixture.batch, fixture.batch.statements[first_id])
+        const check = try data(fixture.batch, fixture.batch.statements[last_id])
+        const slot = try number(fixture.batch.pool, refresh.children[0], "slot")
+        if refresh.data != b"assign" or slot != fixture.request.plan.owner or check.data != b"discard":
+            return False
+        for statement in fixture.batch.statements:
+            const value = try data(fixture.batch, statement)
+            if value.data == b"branch":
+                return False
+    return True
+
+
+public func test_mapping_rebinding_uses_entry_copy_without_refresh() -> bool fails syntax_value.Problem:
+    for kind in [b"dict", b"set", b"keys", b"values", b"items"]:
+        mut fixture = try fresh(kind, True, 2)
+        _ = try collection_comprehension.collect(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+        const kinds = try operations(fixture.batch)
+        const guard_id = try loop_guard(fixture.batch)
+        const guard = try data(fixture.batch, fixture.batch.statements[guard_id])
+        const rows = try graph.items(fixture.batch.pool, guard.children[0])
+        if kinds[0] != b"copy" or len(rows) != 1 or fixture.scope.locals[0].usage.reads != 1 or len(fixture.scope.locals) != 7:
+            return False
+    return True
+
+
+public func test_output_capacity_and_set_allocation_keep_native_orphan_node() -> bool fails syntax_value.Problem:
+    for set in [False, True]:
+        for reserve in [False, True]:
+            mut fixture = try fresh(b"dict", set, 0)
+            fixture.request.output.reserve = reserve
+            _ = try collection_comprehension.collect(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+            mut found = 0
+            for index in range(1, len(fixture.batch.nodes)):
+                const value = try data(fixture.batch, fixture.batch.nodes[index])
+                if value.data == b"array" or value.data == b"acquire_buffer":
+                    const capacity = try data(fixture.batch, fixture.batch.nodes[index - 1])
+                    const count = try graph.number(fixture.batch.pool, capacity.children[0])
+                    if reserve:
+                        if capacity.data != b"local" or count != fixture.request.plan.limit:
+                            return False
+                    elif capacity.data != b"integer" or count != 0:
+                        return False
+                    if set:
+                        const entries = try graph.items(fixture.batch.pool, value.children[0])
+                        if value.data != b"array" or len(entries) != 0:
+                            return False
+                    else:
+                        const referenced = try number(fixture.batch.pool, value.children[0], "capacity")
+                        if value.data != b"acquire_buffer" or referenced != index - 1:
+                            return False
+                    found = found + 1
+            if found != 1:
+                return False
+    return True
+
+
+public func test_loop_shares_guard_preserves_body_and_evaluates_source_once() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"items", False, 0)
+    const result = try collection_comprehension.collect(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request)
+    const outer_id = try number(fixture.batch.pool, result.payload, "body")
+    const outer = try data(fixture.batch, fixture.batch.statements[outer_id])
+    const rows = try graph.items(fixture.batch.pool, outer.children[0])
+    if len(rows) != 5 or result.ty != 50:
+        return False
+    const first_id = try graph.number(fixture.batch.pool, rows[0])
+    const first = try data(fixture.batch, fixture.batch.statements[first_id])
+    const source = try number(fixture.batch.pool, first.children[0], "value")
+    const loop_id = try graph.number(fixture.batch.pool, rows[4])
+    const loop = try data(fixture.batch, fixture.batch.statements[loop_id])
+    const id = try number(fixture.batch.pool, loop.children[0], "id")
+    const body_id = try number(fixture.batch.pool, loop.children[0], "body")
+    const step_id = try number(fixture.batch.pool, loop.children[0], "step")
+    const body = try data(fixture.batch, fixture.batch.statements[body_id])
+    const step = try data(fixture.batch, fixture.batch.statements[step_id])
+    const body_rows = try graph.items(fixture.batch.pool, body.children[0])
+    const step_rows = try graph.items(fixture.batch.pool, step.children[0])
+    const body_guard = try graph.number(fixture.batch.pool, body_rows[0])
+    const step_guard = try graph.number(fixture.batch.pool, step_rows[0])
+    const kept = try graph.number(fixture.batch.pool, body_rows[2])
+    return first.data == b"initialize" and source == fixture.request.plan.request.iterable and id == 9 and len(body_rows) == 3 and len(step_rows) == 2 and body_guard == step_guard and kept == fixture.request.output.body
+
+
+public func test_invalid_source_kind_is_rejected_before_emission() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(b"unknown", False, 0)
+    const nodes = len(fixture.batch.nodes)
+    const statements = len(fixture.batch.statements)
+    const slots = len(fixture.scope.locals)
+    match collection_comprehension.collect(mut fixture.batch, mut fixture.scope, fixture.context, fixture.request):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and problem.message == "invalid comprehension source kind" and len(fixture.batch.nodes) == nodes and len(fixture.batch.statements) == statements and len(fixture.scope.locals) == slots
