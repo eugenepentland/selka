@@ -1773,6 +1773,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 raw_slots[position] = default_raw
                 order.append(position)
         if len(required) != 0 and explicit_count == 0:
+            inference.types.catalog = state.batch.facts.lists
             for position in range(len(parameters)):
                 const type_span = try graph.field(state.syntax.pool, parameters[position], "ty")
                 const actual = try typed_type(state, slots[position])

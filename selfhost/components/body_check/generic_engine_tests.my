@@ -8,6 +8,7 @@ import generic_bindings
 import generic_inference
 import list_types
 import array_types
+import tuple_types
 
 func fresh(explicit: bool, recursive: bool) -> engine.State fails syntax_value.Problem:
     mut pool = syntax_value.empty()
@@ -213,3 +214,22 @@ public func test_undetermined_inference_retains_requirement_and_site() -> bool f
             return False
         case Err(rejected):
             return rejected.code == "E_GENERIC_INFERENCE" and rejected.message == "cannot infer every generic argument from call arguments and expected result; supply explicit type arguments" and rejected.start == 2 and rejected.end == 3 and len(diagnostics) == 1 and diagnostics[0].notes.related[0].message == "undetermined parameter declared here"
+
+
+public func test_late_inference_uses_tuple_catalog_created_by_checked_operands() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const full = try syntax_value.span(mut pool, 0, 14)
+    const parameter = try syntax_value.span(mut pool, 6, 7)
+    const boolean = try syntax_value.span(mut pool, 9, 13)
+    const elements = try syntax_value.sequence(mut pool, [parameter, boolean])
+    const raw = try syntax_value.object(mut pool, ["span", "elements"], [full, elements])
+    mut catalog = list_types.empty()
+    catalog.types.tuples.sources = [raw]
+    const parameters = [generic_bindings.Parameter(name=parameter, constant_length=False, requirements=17)]
+    mut inference = generic_inference.make(pool, b"tuple[T, bool]", catalog, parameters, full)
+    _ = try tuple_types.add(mut catalog.types.tuples, tuple_types.Tuple(id=19, elements=[0, 1]))
+    inference.types.catalog = catalog
+    mut problems: syntax_problem.Diagnostic[] = []
+    _ = try generic_inference.match_type(mut inference, full, generic_inference.Actual(value=19, length=False), mut problems, 0)
+    const key = try generic_inference.finish(inference, 0, mut problems)
+    return key.arguments == [0] and key.lengths == [None] and len(problems) == 0
