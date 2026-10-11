@@ -1,0 +1,5 @@
+func main(out: Stream) -> int:
+    const present: int? = Some(7)
+    const missing: int? = None
+    out.print(present, missing)
+    return 7

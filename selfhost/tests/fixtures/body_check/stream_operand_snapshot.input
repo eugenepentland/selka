@@ -1,0 +1,9 @@
+func replace(mut values: int[]) -> int[]:
+    values[0] = 9
+    return values
+
+
+func main(out: Stream) -> int:
+    mut values = [1, 2]
+    out.print(values, replace(mut values), values)
+    return 7

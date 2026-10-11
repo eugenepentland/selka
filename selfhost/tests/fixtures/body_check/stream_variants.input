@@ -1,0 +1,8 @@
+enum Choice:
+    box(values: int[])
+    empty
+
+
+func main(out: Stream) -> int:
+    out.print(Choice.box(values=[3, 4]), Choice.empty)
+    return 7

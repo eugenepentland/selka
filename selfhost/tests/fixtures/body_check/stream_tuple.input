@@ -1,0 +1,4 @@
+func main(out: Stream) -> int:
+    const value = (3, "four")
+    out.print(value, (True, [5, 6]))
+    return 7

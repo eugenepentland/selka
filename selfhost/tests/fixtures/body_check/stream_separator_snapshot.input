@@ -1,0 +1,10 @@
+func separator(mut values: int[]) -> str:
+    values[0] = 9
+    return "|"
+
+
+func main(out: Stream) -> int:
+    mut values = [1, 2]
+    out.print(values, "tail", sep=separator(mut values), end="!\n")
+    out.print(values)
+    return 7
