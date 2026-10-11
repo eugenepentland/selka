@@ -7,7 +7,7 @@ DTO of 1,139,971 values. The 64 MiB wire ceiling, 4,194,304 aggregate edges,
 values retain their independent 1,048,576 ceiling; declaration and type-interface
 key/catalog bounds remain independent as well. The actual-library gate changes
 no boundary mode or limit: its selected lane changes only body checking, checks
-all 24 fixtures, nine libraries and six test roots, and requires 183 uncached
+all 30 fixtures, nine libraries and six test roots, and requires 213 uncached
 operations without profile skips. A changed authenticated package key binds the
 new body policy; this developer harness update alone does not qualify an install.
 
@@ -49,3 +49,5 @@ The schema-6 transport keeps protocol 1 and adds grouped Templates.byte_buffer w
 Selected schema-6 installation, full shadow batch/catalog equality and installed forged-reply rejection are pending. The candidate library/test checklist does not establish those results or seven-package bootstrap. B5 installed evidence remains historical schema-5 evidence; B6 is not claimed qualified by these developer/native controls.
 
 The buffer-function shadow control checks both command contexts: standalone `check` succeeds; `check-project` reports E_TYPE at the call/return span. Frozen B3 and current B5 agree. The previous native `run-project` result 7 is retained as a different context, not used to infer project checking success.
+
+Library admission separately requires four authentic join-forgery rejections and seven adversarial harness selfchecks. The main body suite retains its92 forged checks. Selected library acceptance remains pending; raw captures and partial forged verdicts are preserved beside its report.

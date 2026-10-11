@@ -242,6 +242,7 @@ pub const body_check_qualification = [_][]const u8{"selfhost/"};
 /// Actual compiler libraries, transitive source closure, fixture controls and verified seed pin.
 pub const body_library_admission = [_][]const u8{
     "selfhost/tests/run_body_library_admission.py",
+    "selfhost/tests/run_body_library_join.py",
     "selfhost/tests/run_body_check_qualification.py",
     "selfhost/tests/run_frontend_qualification.py",
     "selfhost/tests/fixtures/body_library_followup/",
@@ -253,6 +254,7 @@ pub const body_library_admission = [_][]const u8{
 pub const body_library_admission_self = [_][]const u8{
     "selfhost/tests/body_library_admission_test.py",
     "selfhost/tests/run_body_library_admission.py",
+    "selfhost/tests/run_body_library_join.py",
     "selfhost/tests/run_body_check_qualification.py",
     "selfhost/tests/run_frontend_qualification.py",
     "selfhost/tests/fixtures/body_library_followup/",
