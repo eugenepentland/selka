@@ -148,11 +148,13 @@ scripts/build-slot.sh build python3 experiments/zero-rc-batch-20261011/measure.p
   --phase before --compiler "$BATCH_BASELINE" --zig "$BATCH_ZIG" --output .tmp/batch-measure/before
 scripts/build-slot.sh build python3 experiments/zero-rc-batch-20261011/measure.py build-timing \
   --phase after --compiler "$BATCH_CANDIDATE" --zig "$BATCH_ZIG" --output .tmp/batch-measure/after
-python3 experiments/zero-rc-batch-20261011/measure.py timing \
+scripts/build-slot.sh timing python3 experiments/zero-rc-batch-20261011/measure.py timing \
   --before .tmp/batch-measure/before --after .tmp/batch-measure/after
 ```
 
-Coordinate the final timing command with other agents using reserved timing CPUs.
+The timing wrapper is required for new runs: it drains cooperating builds/gates
+before measuring and resumes admission afterward. The historical results above
+predate this timing mode and remain shared-host observations.
 `capture` resumes already completed lanes only when compiler and source hashes
 match. Archive/remove this directory's `before.json` or `after.json` when starting
 a deliberately different comparison.

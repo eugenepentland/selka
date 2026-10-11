@@ -5,7 +5,7 @@ several agents at once, each with its own worktree. Three things keep them from
 slowing each other down:
 
 - a cap on concurrent builds and gates that also checks free memory;
-- a few CPUs reserved for timing, so benchmarks stay accurate;
+- exclusive timing windows, while ordinary work uses all allowed CPUs;
 - a private cache and temporary directory for each worktree.
 
 The 2026-09-22 parity run ran without these. Gates took 3 to 5 times longer,
@@ -19,16 +19,38 @@ out-of-memory kills showed up as test failures, identical binaries timed up to
 scripts/build-slot.sh build zig build
 scripts/build-slot.sh build zig build test-cli -Dtest-filter=benchmark
 scripts/build-slot.sh gate  zig build test --summary all
+scripts/build-slot.sh timing taskset -c 2 ./prebuilt-program
 scripts/build-slot.sh status            # slots, MemAvailable, CPUs builds may use
 ```
 
 `build` covers any compile or install, the focused `test-units`/`test-cli`
 steps, `fmt-check` and `mylang test <dir>`. `gate` covers the full gate,
-`zig build test`.
+`zig build test`. `timing` covers runtime and compiler-speed measurements.
 The wrapper runs a job only when a slot of its kind is free **and**
 `MemAvailable` is at least that kind's threshold. Otherwise it waits and says
 why. When it finally runs the job it prints how long it waited, and it passes the
 job's exit status through unchanged.
+
+Ordinary jobs use all CPUs allowed to the caller (20 logical CPUs on this host).
+An explicitly set `MYLANG_TIMING_CPUS` still excludes those CPUs from builds and
+gates. It does not restrict timing commands, which inherit the caller's affinity;
+put `taskset` inside the timing command when pinning a benchmark.
+
+Timing has its own FIFO queue. Once a measurement is queued, new builds and gates
+pause. Existing jobs finish normally; the oldest measurement holds admission
+while draining every existing build/gate slot, including higher-numbered slots
+created by another worktree. It then runs alone among cooperating jobs. Pending
+measurements run serially before ordinary admissions resume. A cancelled waiter,
+failed command, or killed measurement releases its locks. A continuous stream of
+timing requests can delay ordinary work, so keep measurement windows bounded.
+Queueing and drain time are outside a benchmark's own measured intervals.
+
+Prepare benchmark binaries under `build`, then request `timing` for execution.
+For a compiler-speed experiment, the compilation being measured belongs inside
+`timing`. Do not request timing while holding a build/gate slot: it would wait
+for itself. Nested shell admission fails with a diagnostic. Python developer
+harnesses use `scripts/build_admission.py` to acquire and release individual
+phases; they restore affinity and release admission when a phase raises.
 
 Waiting jobs receive monotonically numbered **FIFO tickets**, separately for
 `build` and `gate`. Only the oldest live ticket of a kind may claim a slot of
@@ -51,7 +73,8 @@ provide memory that is unavailable.
 | `MYLANG_GATE_SLOTS` | 1 | concurrent `gate` jobs |
 | `MYLANG_BUILD_MEM` | `4G` | `MemAvailable` needed to start a build |
 | `MYLANG_GATE_MEM` | `6G` | `MemAvailable` needed to start a gate |
-| `MYLANG_TIMING_CPUS` | `2,3,10,11` | CPUs no admitted job may use (`""` reserves none) |
+| `MYLANG_TIMING_MEM` | `4G` | `MemAvailable` needed to start measurement after draining |
+| `MYLANG_TIMING_CPUS` | empty | optional CPUs excluded from ordinary jobs |
 | `MYLANG_SLOT_SETTLE` | 5 | seconds before the next job is admitted, so this job's memory counts |
 | `MYLANG_SLOT_POLL` | 5 | seconds between admission attempts |
 | `MYLANG_SLOT_DIR` | `$XDG_RUNTIME_DIR/mylang-slots`, else `~/.cache/mylang/slots` | shared slot locks and FIFO tickets |
@@ -91,6 +114,12 @@ can invoke the updated wrapper by absolute path without changing their source
 tree. Already running wrappers retain the admission policy they started with.
 Benchmark harnesses that reserve these slot files directly also need to enter
 through this queue before system-wide FIFO ordering can be claimed.
+
+Timing keeps `admit.lock` for the entire measurement, so old wrappers using that
+lock also pause. Old benchmark scripts and raw slot holders do not participate in
+timing admission: update them or wrap their measurement command with `timing`.
+All participants must use the same `MYLANG_SLOT_DIR`; private directories isolate
+tests, not production measurements.
 
 Run the admission regression tests without a compiler build:
 
@@ -177,48 +206,45 @@ installation or installed Selka commands. Run its lightweight adversarial tests
 with `python3 -B scripts/verify_cache_test.py` and
 `python3 -B scripts/verification_snapshot_test.py`; they are also in the gate.
 
-## Reserved timing cores
+## Timing windows and CPU placement
 
 On the i7-12700H, CPUs 0–11 are six P-cores with two SMT threads each, and the
 threads of one core are adjacent (2/3, 10/11). CPUs 12–19 are E-cores. Check with
-`lscpu -e`: rows with the same `CORE` are siblings. The default
-`MYLANG_TIMING_CPUS=2,3,10,11` reserves two whole P-cores. `scripts/build-slot.sh`
-runs every job under `taskset` with those CPUs removed, so no gate or build it
-admits lands on them.
+`lscpu -e`: rows with the same `CORE` are siblings. Explicitly setting
+`MYLANG_TIMING_CPUS=2,3,10,11` retains the old two-P-core reservation, if needed
+while migrating an older benchmark. The normal default reserves no CPUs.
 
-Both benchmark harnesses use those cores by default:
+Run these harnesses directly; they own admission:
 
-- `bench/parity/bench_parity.py` (`zig build bench-parity`) and
-  `experiments/perf-parity-plan-20260922/bench.py` pin timed runs to the first
-  reserved CPU (CPU 2) unless `--cpu`/`-Dbench-cpu` names another.
-- They build their arms with the reserved CPUs masked off.
-- Before timing, each one samples the timing CPU and its SMT sibling for a second
-  and warns if either is busy.
-- Each records `sibling_busy` per program and warns past 25%.
+- `bench/parity/bench_parity.py` (`zig build bench-parity`) admits parallel arm
+  builds and correctness qualification as ordinary work, then requests timing
+  for measurements and any confirmation pass. It pins measurements to CPU 2 by
+  default, or `--cpu`/`-Dbench-cpu` (first of `MYLANG_TIMING_CPUS` when set).
+- `scripts/juice_runtime_bench.py` requests timing for its prebuilt-pair suite
+  and retains the legacy collector lock to detect older concurrent timers.
+- `scripts/benchmark_debug_runtime.py` requests timing for its experiment,
+  because it measures compilation as well as guest execution.
 
-Run a benchmark harness directly, not through the wrapper. The wrapper's jobs
-cannot use the timing CPUs, and the harness refuses to run there. Two agents
-timing at once should pick different reserved cores (`--cpu 10`).
+Other benchmark commands, including historical experiment scripts, need an
+explicit `scripts/build-slot.sh timing …` wrapper. Do not run simultaneous
+timers on different cores: caches, memory bandwidth and package power are shared.
+Parity still samples the timing core and its sibling before timing and records
+`sibling_busy`; those checks can catch unrelated load outside admission.
 
-The wrapper keeps only its own jobs off those CPUs. Agent shells, editors and
-language servers can still be scheduled there. Stronger isolation needs root and
-is **not applied** on this machine. The options are:
-
-- `isolcpus=2,3,10,11 nohz_full=2,3,10,11` on the kernel command line, which takes
-  the CPUs away from the scheduler except for explicit pinning;
-- `systemctl set-property user.slice AllowedCPUs=0-1,4-9,12-19`, then run the
-  benchmarks from a `systemd-run --scope -p AllowedCPUs=2,3,10,11` unit;
-- `kernel.perf_event_paranoid=1`, already set. `bench-parity` then records
-  instruction counts, which do not move with load. One run can settle most
-  "did this get faster" questions without 9–11 timed rounds.
+This is cooperative scheduling, not OS-wide isolation. Agent shells, editors,
+language servers, kernel work and commands bypassing admission can still affect
+measurements. CPU pinning alone does not remove that interference. Preserve raw
+samples and report variability; use a dedicated machine for stronger isolation.
 
 ## How many agents
 
-About four build-heavy agents fit this machine. Three build slots and one gate
-slot already allow that many concurrent jobs. More lanes than that queue in the
-wrapper anyway, and before the wrapper checked memory they also brought
-out-of-memory kills and load-induced test failures. Agents that mostly read and
-reason cost little, so they do not count toward the four.
+Three build slots and one gate slot allow four concurrent heavy jobs outside
+timing windows. Each may already use multiple CPUs; one gate is not one core.
+More agents can read and edit while their heavy work queues. Keep these slot
+counts until current-workload throughput and peak memory justify changing them;
+the measurements above predate the current backend. Admission checks available
+memory at startup, not a reservation of every job's future peak. Reuse verification
+evidence and limit per-job parallelism before simply adding more full gates.
 
 ## Per-worktree environment
 

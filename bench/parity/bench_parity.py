@@ -47,6 +47,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from build_admission import admission
 GROUPS = ("suite", "lib", "micro")
 REFERENCE = "zig-fast"
 SCHEMA_RESULT = "mylang-parity-result-v1"
@@ -218,8 +220,8 @@ def busy_fraction(before: dict, after: dict) -> float | None:
     return round(busy / total, 3) if total > 0 else None
 
 
-# `scripts/build-slot.sh` keeps these CPUs free of builds and gates (two P-core
-# SMT pairs on the i7-12700H development box; docs/tooling/many-agents.md).
+# Preferred timing CPUs (two P-core SMT pairs on the development box).
+# Admission drains cooperating jobs before timing; CPU pinning alone is not isolation.
 DEFAULT_TIMING_CPUS = "2,3,10,11"
 BUSY_SIBLING = 0.25
 
@@ -241,7 +243,7 @@ def timing_cpus() -> list[int]:
 
 
 def default_timing_cpu() -> int:
-    """The first reserved timing CPU, so a benchmark lands where builds are kept away."""
+    """The first preferred timing CPU; admission supplies the quiet window."""
     cpus = timing_cpus()
     return cpus[0] if cpus else 2
 
@@ -586,8 +588,8 @@ def command_run(opts: argparse.Namespace) -> int:
         print(f"bench-parity: no compiler at {mylang}", file=sys.stderr)
         return 2
     if opts.cpu not in os.sched_getaffinity(0):
-        print(f"bench-parity: CPU {opts.cpu} is not available to this process (run benchmarks directly, not "
-              "through scripts/build-slot.sh, which keeps the timing CPUs away from its jobs)", file=sys.stderr)
+        print(f"bench-parity: CPU {opts.cpu} is not available to this process; "
+              "run this harness directly with an allowed --cpu", file=sys.stderr)
         return 2
     notices: list[str] = []
     rustc = find_rustc(opts.rustc)
@@ -623,25 +625,26 @@ def command_run(opts: argparse.Namespace) -> int:
     tools_for_build = {"mylang": str(mylang), "zig": opts.zig, "rustc": rustc}
     print(f"bench-parity: building {len(jobs)} arms of {len(benches)} benchmark(s) with {opts.jobs} job(s)",
           file=sys.stderr)
-    with OffTimingCpus(), concurrent.futures.ThreadPoolExecutor(max_workers=opts.jobs) as pool:
-        builds = list(pool.map(lambda job: build(job, tools_for_build, work), jobs))
     failures: list[str] = []
     timed: dict[str, list[dict]] = {}
-    for job, built in zip(jobs, builds):
-        data = result["benchmarks"][job["bench"]]["arms"][job["arm"]]
-        data["build"] = built
-        if not built["ok"]:
-            data["failure"] = "build failed"
-            print(f"BUILD FAIL {job['bench']} {job['arm']}\n{built['stderr']}", file=sys.stderr)
-            continue
-        stdout, status = run_captured(job["bin"])
-        data.update(stdout_sha256=sha(stdout), status=status, matches_expected=stdout == expected_of(benches, job))
-        if status != 0 or not data["matches_expected"]:
-            data["failure"] = f"output differs from .expected (status {status})"
-            print(f"MISMATCH {job['bench']} {job['arm']} status={status}", file=sys.stderr)
-            continue
-        data["binary_sha256"] = sha(job["bin"].read_bytes())
-        timed.setdefault(job["bench"], []).append(job)
+    with admission("build"):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=opts.jobs) as pool:
+            builds = list(pool.map(lambda job: build(job, tools_for_build, work), jobs))
+        for job, built in zip(jobs, builds):
+            data = result["benchmarks"][job["bench"]]["arms"][job["arm"]]
+            data["build"] = built
+            if not built["ok"]:
+                data["failure"] = "build failed"
+                print(f"BUILD FAIL {job['bench']} {job['arm']}\n{built['stderr']}", file=sys.stderr)
+                continue
+            stdout, status = run_captured(job["bin"])
+            data.update(stdout_sha256=sha(stdout), status=status, matches_expected=stdout == expected_of(benches, job))
+            if status != 0 or not data["matches_expected"]:
+                data["failure"] = f"output differs from .expected (status {status})"
+                print(f"MISMATCH {job['bench']} {job['arm']} status={status}", file=sys.stderr)
+                continue
+            data["binary_sha256"] = sha(job["bin"].read_bytes())
+            timed.setdefault(job["bench"], []).append(job)
     for job in jobs:
         data = result["benchmarks"][job["bench"]]["arms"][job["arm"]]
         if "failure" not in data:
@@ -653,17 +656,18 @@ def command_run(opts: argparse.Namespace) -> int:
         else:
             notices.append(f"{job['bench']} {job['arm']}: {data['failure']}; arm skipped")
     rng = random.Random(opts.seed)
-    crowded = shared_core_warning(opts.cpu)
-    if crowded:
-        print(f"bench-parity: warning: {crowded}", file=sys.stderr)
-        notices.append(crowded)
-    with Pinned(opts.cpu):
-        for name, arms in timed.items():
-            if not any(a["arm"] == REFERENCE for a in arms):
-                result["benchmarks"][name]["failure"] = f"no qualified {REFERENCE}"
-                continue
-            time_benchmark(result["benchmarks"][name], arms, opts, rng, with_perf)
-            write_json(opts.json, result)
+    with admission("timing"):
+        crowded = shared_core_warning(opts.cpu)
+        if crowded:
+            print(f"bench-parity: warning: {crowded}", file=sys.stderr)
+            notices.append(crowded)
+        with Pinned(opts.cpu):
+            for name, arms in timed.items():
+                if not any(a["arm"] == REFERENCE for a in arms):
+                    result["benchmarks"][name]["failure"] = f"no qualified {REFERENCE}"
+                    continue
+                time_benchmark(result["benchmarks"][name], arms, opts, rng, with_perf)
+                write_json(opts.json, result)
     thresholds_path = Path(opts.thresholds)
     thresholds = load_thresholds(thresholds_path)
     if opts.write_thresholds:
@@ -676,7 +680,7 @@ def command_run(opts: argparse.Namespace) -> int:
     if exceeded and opts.confirm:
         print(f"bench-parity: re-measuring {len(exceeded)} program(s) that exceeded a threshold: "
               f"{', '.join(exceeded)}", file=sys.stderr)
-        with Pinned(opts.cpu):
+        with admission("timing"), Pinned(opts.cpu):
             for name in exceeded:
                 confirm_benchmark(result["benchmarks"][name], timed[name], opts, rng)
         verdicts = check(result, thresholds)
@@ -688,7 +692,7 @@ def command_run(opts: argparse.Namespace) -> int:
                        f"25% busy while {len(shared)} program(s) were timed ({', '.join(shared[:6])}"
                        f"{' ...' if len(shared) > 6 else ''}); a busy sibling moves some ratios by tens of "
                        "percent — prefer a core whose sibling is idle (run builds through "
-                       "scripts/build-slot.sh, which keeps MYLANG_TIMING_CPUS free)")
+                       "scripts/build-slot.sh so they participate in timing admission)")
     unthresholded = [f"{name} {arm_name}" for name, bench in result["benchmarks"].items()
                      for arm_name, data in bench["arms"].items()
                      if data.get("lang") == "my" and data.get("ratio_wall")
@@ -794,9 +798,11 @@ class Pinned:
 
 
 class OffTimingCpus(Pinned):
-    """Keep this process and its children off the reserved timing CPUs for a
-    block (the build phase), so builds never land where anyone is timing.
-    Leaves the affinity alone when that would leave no CPU at all."""
+    """Legacy affinity helper imported by historical experiment harnesses.
+
+    Those harnesses still need timing admission; this mask alone is not a lease.
+    The maintained harness uses admission("build") for its preparation phase.
+    """
 
     def __init__(self):
         super().__init__(-1)
@@ -889,7 +895,7 @@ def command_same_binaries(opts: argparse.Namespace) -> int:
                 jobs.append({"name": bench["name"], "side": side, "tools": {"mylang": str(compiler)},
                              "work": side_work, "job": dict(job, bin=binary)})
     print(f"bench-parity: building {len(jobs) // 2} mylang arm(s) with each of two compilers", file=sys.stderr)
-    with OffTimingCpus(), concurrent.futures.ThreadPoolExecutor(max_workers=opts.jobs) as pool:
+    with admission("build"), concurrent.futures.ThreadPoolExecutor(max_workers=opts.jobs) as pool:
         outcomes = list(pool.map(lambda j: build(j["job"], j["tools"], j["work"]), jobs))
     digests: dict[tuple[str, str], dict[str, str | None]] = {}
     for item, outcome in zip(jobs, outcomes):
@@ -927,7 +933,7 @@ def main() -> int:
     run.add_argument("--rustc", help="rustc for the Rust arms (default: RUSTC, PATH, ~/.cargo/bin)")
     run.add_argument("--cpu", type=int, default=default_timing_cpu(),
                      help="the one CPU every timed process is pinned to (default: the first of "
-                          f"MYLANG_TIMING_CPUS, {DEFAULT_TIMING_CPUS} unset, which scripts/build-slot.sh keeps free)")
+                          f"MYLANG_TIMING_CPUS, {DEFAULT_TIMING_CPUS} unset; timing admission drains other work)")
     run.add_argument("--rounds", type=int, default=7)
     run.add_argument("--warmups", type=int, default=2)
     run.add_argument("--filter", help="comma-separated substrings of GROUP/NAME")

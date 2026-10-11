@@ -91,8 +91,11 @@ declared suite of prebuilt executable pairs. It verifies SHA-256 identities,
 alternates counter captures, records scheduling/frequency policy, reuses cached
 builds, retains original and aggregated
 records, checks output oracles on every execution, and measures elapsed time in
-separate alternating runs. It takes a nonblocking shared runtime timing lock, so
-a busy timing runner produces an immediate error. Example:
+separate alternating runs. It owns timing admission: new builds and gates pause,
+active jobs finish, and this suite runs in a quiet window among cooperating jobs.
+It also takes the legacy nonblocking runtime timing lock, so an older concurrent
+timing runner still produces an error. Run it directly, without an outer build or
+gate slot. Example:
 
 ```bash
 python3 scripts/juice_runtime_bench.py suite.json --compiler /path/to/mylang \

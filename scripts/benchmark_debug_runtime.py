@@ -13,6 +13,7 @@ import statistics
 import subprocess
 import time
 
+from build_admission import admission
 
 REPO = Path(__file__).resolve().parents[1]
 MODES = {"debug": ["--unoptimized"], "optimized_debug": [], "release": ["--release"]}
@@ -173,8 +174,11 @@ def main():
         "runtime_scope": "prebuilt guest process wall time, including startup, excluding compilation; output checked on every run; untimed leak check",
         "build_scope": "caller-supplied compiler; fresh local program and isolated guest-object caches per trial; prewarmed runtime objects and toolchain caches; invoice leaf edit 100 -> 101",
     }
-    report["runtime"] = runtimes(args, environment)
-    report["rebuild"] = rebuilds(args, environment)
+    # This harness measures compilation as well as runtime, so its complete
+    # experiment requires a quiet window. Admission wait is outside the samples.
+    with admission("timing"):
+        report["runtime"] = runtimes(args, environment)
+        report["rebuild"] = rebuilds(args, environment)
     (args.output / "results.json").write_text(json.dumps(report, indent=2) + "\n")
     print(args.output / "results.json")
 

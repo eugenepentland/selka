@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-# build-slot.sh — run one build or gate command without overloading a shared machine.
+# build-slot.sh — admit parallel work or an exclusive measurement window.
 #
 # usage: scripts/build-slot.sh KIND [--] CMD...
 #        scripts/build-slot.sh status
 #
 # KIND is `build` (any `zig build` compile or install, a focused `test-units`/
 # `test-cli`, `mylang test <dir>`, a guest benchmark build) or `gate` (a full gate
-# step: `zig build test`, `test-qbe`, `test-qbe-build`, `test-schematic`,
-# `test-byte-io`). A job is admitted only when both hold:
+# step: `zig build test`), or `timing` (runtime/compiler measurements).
+# A build or gate is admitted only when all hold:
 #   * a slot of its kind is free (flock on a per-slot lock file), and
-#   * MemAvailable is at least the kind's threshold.
+#   * MemAvailable is at least the kind's threshold, and
+#   * no timing request is queued or running.
 # Waiters receive FIFO tickets per kind; later tickets cannot overtake a live
 # earlier waiter, even when it polls less often. Dead/cancelled tickets are reaped.
 # Otherwise it waits, polling, and reports its position and how long it waited.
-# An admitted job
-# runs under `taskset` with the reserved timing CPUs removed from its affinity,
-# so benchmarks pinned to those CPUs are not disturbed by builds.
+# Timing requests stop new admissions, drain active builds/gates, and run one at
+# a time. They hold admit.lock through measurement, also excluding older wrappers
+# that use that lock. Unwrapped work is outside this cooperative protocol.
+# Ordinary jobs use all allowed CPUs unless MYLANG_TIMING_CPUS is explicitly set.
 #
 # Environment (defaults measured on the i7-12700H / 30 GB development box,
 # docs/tooling/many-agents.md):
@@ -23,7 +25,9 @@
 #   MYLANG_GATE_SLOTS=1           concurrent `gate` jobs
 #   MYLANG_BUILD_MEM=4G           MemAvailable needed to admit a build
 #   MYLANG_GATE_MEM=6G            MemAvailable needed to admit a gate
-#   MYLANG_TIMING_CPUS=2,3,10,11  CPUs kept free of admitted jobs ("" keeps none)
+#   MYLANG_TIMING_MEM=4G          MemAvailable needed to start a measurement
+#   MYLANG_TIMING_CPUS=           optional CPUs excluded from builds/gates
+#                                 (timing inherits the caller's affinity)
 #   MYLANG_SLOT_POLL=5            seconds between admission attempts
 #   MYLANG_SLOT_SETTLE=5          seconds an admitted job delays the next admission,
 #                                 so its memory shows up in MemAvailable first
@@ -147,7 +151,7 @@ slot_dir() {
 
 # The CPUs this process may use, minus the reserved timing CPUs, as a taskset list.
 allowed_cpus() {
-  local reserved=${MYLANG_TIMING_CPUS-2,3,10,11} list cpu keep=() skipped usable
+  local reserved=${MYLANG_TIMING_CPUS-} list cpu keep=() skipped usable
   list=$(awk '/^Cpus_allowed_list:/ { print $2 }' /proc/self/status)
   skipped=$(expand "$reserved") || exit 2
   usable=$(expand "$list") || exit 2
@@ -165,7 +169,7 @@ expand() {
   for part in $1; do
     [ -n "$part" ] || continue
     low=${part%-*}; high=${part#*-}
-    [[ $low =~ ^[0-9]+$ && $high =~ ^[0-9]+$ ]] || die "not a CPU list: '$1'"
+    [[ $low =~ ^[0-9]+$ && $high =~ ^[0-9]+$ ]] && [ "$low" -le "$high" ] || die "not a CPU list: '$1'"
     seq "$low" "$high"
   done
 }
@@ -175,9 +179,14 @@ status() {
   dir=$(slot_dir)
   echo "slot dir: $dir"
   echo "MemAvailable: $(human "$(available)")"
-  echo "timing CPUs kept free: ${MYLANG_TIMING_CPUS-2,3,10,11}; builds run on: $(allowed_cpus)"
-  for kind in build gate; do
-    if [ $kind = build ]; then n=${MYLANG_BUILD_SLOTS:-3}; else n=${MYLANG_GATE_SLOTS:-1}; fi
+  echo "optional reserved CPUs: ${MYLANG_TIMING_CPUS:-none}; builds run on: $(allowed_cpus)"
+  echo "timing policy: queued measurements stop admissions and drain active work"
+  for kind in build gate timing; do
+    case $kind in
+      build) n=${MYLANG_BUILD_SLOTS:-3} ;;
+      gate) n=${MYLANG_GATE_SLOTS:-1} ;;
+      timing) n=1 ;;
+    esac
     for i in $(seq 1 "$n"); do
       if [ -e "$dir/$kind$i.lock" ] && ! flock -n "$dir/$kind$i.lock" true; then
         echo "$kind$i: busy"
@@ -189,24 +198,74 @@ status() {
   done
 }
 
+# Caller holds admit.lock and its own queue lock (fd 7). Timing's queue needs
+# a separate descriptor; timing never waits on admit.lock while holding its queue.
+timing_pending() {
+  local queue_dir="$dir/queue-timing" entry pending=1
+  [ -d "$queue_dir" ] || return 1
+  exec 6>"$queue_dir/queue.lock" || die "cannot open timing queue lock"
+  flock 6 || die "cannot lock timing queue"
+  reap_queue
+  for entry in "$queue_dir"/[0-9]*.wait; do
+    if [ -f "$entry" ]; then pending=0; break; fi
+  done
+  exec 6>&-
+  return "$pending"
+}
+
+# Holding admit.lock prevents every cooperating wrapper from starting work.
+# Inspect existing slot files, including slots above this caller's configured
+# count: another worktree may have admitted more jobs before timing was requested.
+work_drained() {
+  local lock
+  for lock in "$dir"/build[0-9]*.lock "$dir"/gate[0-9]*.lock; do
+    [ -e "$lock" ] || continue
+    if ! flock -n "$lock" true; then
+      reason="draining active work (${lock##*/})"
+      return 1
+    fi
+  done
+}
+
+run_job() {
+  echo "build-slot: $kind slot $i, FIFO ticket $ticket_number after ${waited}s" >&2
+  rm -f -- "$ticket" || die "cannot retire FIFO ticket"
+  ticket=""
+  exec 7>&-
+  export MYLANG_ADMISSION_DIR="$dir" MYLANG_ADMISSION_KIND="$kind"
+  # Timing holds fd 8 for its entire lifetime; ordinary jobs keep only fd 9.
+  if [ "$kind" != timing ]; then
+    if [ "$settle" -gt 0 ]; then sleep "$settle" 9>&- & fi
+    exec 8>&-
+  fi
+  exec taskset -c "$cpus" "$@"
+}
+
 [ -r /proc/sys/kernel/random/boot_id ] || die "Linux /proc is required"
 read -r boot_id </proc/sys/kernel/random/boot_id
-[ $# -ge 1 ] || die "usage: build-slot.sh build|gate [--] CMD...  |  build-slot.sh status"
+[ $# -ge 1 ] || die "usage: build-slot.sh build|gate|timing [--] CMD...  |  build-slot.sh status"
 kind=$1; shift
 case $kind in
   status) status; exit 0 ;;
   build) slots=${MYLANG_BUILD_SLOTS:-3}; need=$(bytes "${MYLANG_BUILD_MEM:-4G}") || exit 2 ;;
   gate) slots=${MYLANG_GATE_SLOTS:-1}; need=$(bytes "${MYLANG_GATE_MEM:-6G}") || exit 2 ;;
-  *) die "kind must be build, gate or status, not '$kind'" ;;
+  timing) slots=1; need=$(bytes "${MYLANG_TIMING_MEM:-4G}") || exit 2 ;;
+  *) die "kind must be build, gate, timing or status, not '$kind'" ;;
 esac
 [ "${1:-}" = "--" ] && shift
 [ $# -ge 1 ] || die "no command given"
 [[ $slots =~ ^[1-9][0-9]*$ ]] || die "slot count must be a positive integer, not '$slots'"
 poll=${MYLANG_SLOT_POLL:-5}
 [[ $poll =~ ^[1-9][0-9]*$ ]] || die "MYLANG_SLOT_POLL must be a positive integer"
-cpus=$(allowed_cpus) || exit 2
+if [ "$kind" = timing ]; then
+  cpus=$(awk '/^Cpus_allowed_list:/ { print $2 }' /proc/self/status)
+else
+  cpus=$(allowed_cpus) || exit 2
+fi
 dir=$(slot_dir)
 mkdir -p "$dir" || die "cannot create $dir"
+dir=$(cd "$dir" && pwd -P) || die "cannot resolve slot directory"
+[ "${MYLANG_ADMISSION_DIR:-}" != "$dir" ] || die "nested admission inside ${MYLANG_ADMISSION_KIND:-unknown} would deadlock; run the coordinator directly, and prepare builds before requesting timing"
 
 settle=${MYLANG_SLOT_SETTLE:-5}
 [[ $settle =~ ^[0-9]+$ ]] || die "MYLANG_SLOT_SETTLE must be a non-negative integer"
@@ -216,12 +275,41 @@ reason=""
 started=$(date +%s)
 queue_dir="$dir/queue-$kind"
 ticket=""
+draining=0
 enqueue
 while :; do
+  # Python phase holders supply a parent identity while waiting. A killed
+  # coordinator cannot leave its still-live wrapper blocking the timing queue.
+  if [ -n "${MYLANG_ADMISSION_PARENT_PID:-}" ]; then
+    if ! process_start "$MYLANG_ADMISSION_PARENT_PID" ||
+       [ "$proc_start" != "${MYLANG_ADMISSION_PARENT_START:-}" ]; then
+      exit 143
+    fi
+  fi
   queue_lock
   reap_queue
   queue_position
-  if [ "$position" -eq 1 ]; then
+  if [ "$position" -eq 1 ] && [ "$kind" = timing ]; then
+    if [ "$draining" -eq 0 ]; then
+      exec 8>"$dir/admit.lock" || die "cannot open admission lock"
+      if flock -n 8; then
+        exec 9>"$dir/timing1.lock" || die "cannot open timing lock"
+        flock -n 9 || die "timing lock held without admission lock"
+        draining=1
+      else
+        exec 8>&-
+        reason="waiting for memory-accounting settle delay or another measurement"
+      fi
+    fi
+    if [ "$draining" -eq 1 ] && work_drained; then
+      free=$(available)
+      if [ "$free" -ge "$need" ]; then
+        i=1
+        run_job "$@"
+      fi
+      reason="waiting for memory: $(human "$free") available, timing needs $(human "$need")"
+    fi
+  elif [ "$position" -eq 1 ]; then
     for i in $(seq 1 "$slots"); do
       exec 9>"$dir/$kind$i.lock"
       if flock -n 9; then
@@ -232,20 +320,18 @@ while :; do
         if ! flock -n 8; then
           exec 8>&-
           exec 9>&-
-          reason="waiting for memory-accounting settle delay"
+          reason="waiting for measurement or memory-accounting settle delay"
+          break
+        fi
+        if timing_pending; then
+          exec 8>&-
+          exec 9>&-
+          reason="timing request queued; pausing new work"
           break
         fi
         free=$(available)
         if [ "$free" -ge "$need" ]; then
-          echo "build-slot: $kind slot $i, FIFO ticket $ticket_number after ${waited}s" >&2
-          rm -f -- "$ticket" || die "cannot retire FIFO ticket"
-          ticket=""
-          exec 7>&-
-          if [ "$settle" -gt 0 ]; then sleep "$settle" 9>&- & fi
-          exec 8>&-
-          # Hold the slot lock (fd 9, inherited) for the job's lifetime; exec keeps
-          # the job's exit status and signals exactly as if it ran directly.
-          exec taskset -c "$cpus" "$@"
+          run_job "$@"
         fi
         exec 8>&-
         reason="waiting for memory: $(human "$free") available, $kind needs $(human "$need")"

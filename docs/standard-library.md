@@ -18,6 +18,7 @@ Import a module by name; projects do not copy these files.
 | [`base64`](#base64) | RFC 4648 standard and URL-safe transcoding |
 | [`byte_builder`](#byte_builder) | incremental binary and UTF-8 output assembly |
 | [`json`](#json) | strict RFC 8259 parsing, rendering and typed access |
+| [`parallel`](#parallel) | ordered mapping with scoped workers in experimental zero-RC builds |
 | [`pool`](#pool) | generational handles into a reusable slot store |
 | [`memo`](#memo) | bounded, process-local reuse of pure computations |
 | [`hashes`](#hashes) | block-based SHA-256 in Selka |
@@ -514,6 +515,37 @@ func field(row: json.Json) -> int:
 `dumps` renders infinities and not-a-number as `null`, because RFC 8259 has no
 spelling for them. Rendering a float uses the shortest decimal that reads back as
 the same value, written without an exponent.
+
+## parallel
+
+```text
+# doc: not-mylang
+map[T: copy + storable, R: copy + storable](values: T[], function: func(T) -> R) -> R[]
+```
+
+`map` applies a read-only function to each input and returns results in input
+order. Ordinary builds execute it sequentially. Experimental zero-RC builds
+borrow input elements for scoped parallel work and join every task before
+returning. A callback returning managed input data must explicitly copy it;
+newly created results transfer to the output. The initial API takes one
+read-only parameter and has no closure captures or detached tasks. See
+[scoped parallel work](managed-memory.md#explicit-values-and-scoped-parallel-work-experimental-closeout).
+
+```mylang
+# doc: expect 0
+import parallel
+
+func square(value: int) -> int:
+    return value * value
+
+
+func main() -> int:
+    const input = [1, 2, 3]
+    const output = parallel.map(input, square)
+    assert output == [1, 4, 9]
+    assert input == [1, 2, 3]
+    return 0
+```
 
 ## pool
 

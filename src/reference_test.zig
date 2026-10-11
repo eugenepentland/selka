@@ -346,6 +346,17 @@ test "the reference handles short nominal exports beside generic memo functions"
     try t.expectEqualStrings("template", stringAt(call, "analysis"));
 }
 
+test "the reference includes the generic parallel map declaration" {
+    const bytes = try json("parallel");
+    defer t.allocator.free(bytes);
+    var parsed = try envelope(t.allocator, bytes);
+    defer parsed.deinit();
+    const declarations = section(parsed.value, "declarations");
+    const declaration = find(declarations, "name", "parallel::map") orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings("function", stringAt(declaration, "kind"));
+    try t.expectEqualStrings("template", stringAt(declaration, "analysis"));
+}
+
 // spec: REFERENCE-6
 test "unsupported and removed names answer as exclusions, never as features" {
     const unsupported_bytes = try json("capturing-closures");
@@ -419,8 +430,8 @@ test "the embedded project reads exactly one in-memory path and no checkout file
     defer t.allocator.free(served);
     try t.expectEqualStrings("", served);
     try t.expect(try standardModulesMatchCheckout(&reference.standard_modules));
-    // Stand-ins and application memoization are part of the reference project.
-    try t.expectEqual(@as(usize, 19), reference.standard_modules.len);
+    // Stand-ins, application memoization and parallel mapping are included.
+    try t.expectEqual(@as(usize, 20), reference.standard_modules.len);
 }
 
 // spec: REFERENCE-10

@@ -342,7 +342,7 @@ fn addParityBench(b: *std.Build) void {
     const compiler = b.option([]const u8, "bench-mylang", "bench-parity: time this compiler instead of the one this build installs");
     const bench = b.addSystemCommand(&.{ "python3", "bench/parity/bench_parity.py", "run", "--zig", b.graph.zig_exe });
     bench.setCwd(b.path("."));
-    // Without -Dbench-cpu the harness picks the first reserved timing CPU itself.
+    // Without -Dbench-cpu the harness picks the first preferred timing CPU itself.
     if (cpu) |index| bench.addArgs(&.{ "--cpu", b.fmt("{d}", .{index}) });
     bench.addArgs(&.{ "--rounds", b.fmt("{d}", .{rounds}) });
     if (filter) |needle| {
@@ -870,7 +870,7 @@ pub fn build(b: *std.Build) void {
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
     const verification_tests = b.step("test-verification-cache", "Verify action receipt admission and immutable input snapshots");
-    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py" }) |script| {
+    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/build_slot_test.py" }) |script| {
         const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
         verification_run.addArgs(&.{ "python3", script });
         verification_tests.dependOn(&verification_run.step);

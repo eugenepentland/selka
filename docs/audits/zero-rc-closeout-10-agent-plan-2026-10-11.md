@@ -138,8 +138,10 @@ Use the repository-pinned Zig toolchain; at plan creation it is:
   inside each worker's worktree. Never overwrite a frozen compiler or prior report.
 - Do not edit compiler/test inputs while a build in that worktree is running.
 - A09 schedules all timing windows. A08 coordinates compile timing with A09.
-  Use reserved CPU 2 for serial timing; the wrapper reserves CPUs 2, 3, 10, and 11
-  from ordinary builds. Do not run competing benchmark timers.
+  Use `scripts/build-slot.sh timing …` for measurements and pin serial guests to
+  CPU 2 inside that command. Timing admission drains cooperating builds/gates;
+  ordinary jobs use all allowed CPUs outside timing windows. Harnesses that own
+  admission run directly. Do not run competing benchmark timers.
 - Each agent owns its listed production files, a new uniquely named test file,
   and `experiments/zero-rc-closeout-10-20261011/Axx/`. A10 also owns release docs.
   A worker may inspect any file, but requests changes outside its ownership.

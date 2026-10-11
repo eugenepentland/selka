@@ -7,6 +7,7 @@ func expect_missing(value: json.Json?):
         case None:
             return
 
+
 func render(value: json.Json?) -> str:
     match value:
         case Some(item):
@@ -14,19 +15,24 @@ func render(value: json.Json?) -> str:
         case None:
             return "missing"
 
+
 func object_value() -> json.Json:
     return json.Json.object(value={"target": json.Json.array(value=[json.Json.object(value={"nested": json.Json.text(value="value-" + str(7))})]), "other": json.Json.text(value="other-" + str(8))})
 
+
 func array_value() -> json.Json:
     return json.Json.array(value=[json.Json.object(value={"nested": json.Json.array(value=[json.Json.text(value="value-" + str(9))])}), json.integer(2)])
+
 
 func local_object() -> json.Json?:
     const value = object_value()
     return json.get(value, "target")
 
+
 func local_array() -> json.Json?:
     const value = array_value()
     return json.at(value, 0)
+
 
 func wrong_variants():
     const values = [json.null_value(), json.boolean(True), json.integer(3), json.number(1.5), json.text("text")]
@@ -35,6 +41,7 @@ func wrong_variants():
         expect_missing(json.at(value, 0))
     expect_missing(json.get(json.array([]), "target"))
     expect_missing(json.at(json.object({}), 0))
+
 
 func main(out: Stream) -> int:
     wrong_variants()
