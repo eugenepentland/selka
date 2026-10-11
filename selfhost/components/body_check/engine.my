@@ -199,9 +199,14 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
     elif data.data == b"mut_argument":
         const target = try graph.number(state.syntax.pool, payload)
         const checked = try expression(mut state, target)
-        state.batch.resolved[raw_id] = checked.id
+        const child_node = state.batch.nodes[checked.id]
+        const child_data_id = try graph.field(state.batch.pool, child_node, "data")
+        const child_data = try graph.get(state.batch.pool, child_data_id)
+        const child_payload = try graph.payload(state.batch.pool, child_data_id)
+        const id = try emission.node(mut state.batch, state.syntax.pool, span, checked.ty, child_data.data, child_payload)
+        state.batch.resolved[raw_id] = id
         state.depth = state.depth - 1
-        return checked
+        return Expression(id=id, ty=checked.ty)
     elif data.data == b"unary":
         const op_id = try graph.field(state.syntax.pool, payload, "op")
         const op = try graph.get(state.syntax.pool, op_id)

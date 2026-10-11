@@ -213,3 +213,26 @@ public func test_augmented_unbound_after_rhs_before_operator_with_related_site()
             if len(related) != 1:
                 return False
             return problem.code == "E_UNBOUND" and problem.start == 0 and problem.end == 1 and problem.message == "name may be read before it is assigned; some control-flow path reaching here leaves it unbound" and related[0].start == 2 and related[0].end == 3 and related[0].message == "binding first assigned here" and state.scope.locals[0].usage.reads == 0
+
+
+public func test_mut_marker_retains_inner_probe_and_emits_wrapper_span() -> bool fails syntax_value.Problem:
+    mut state = try assignment_state(b"add", True)
+    const inner_span = try syntax_value.span(mut state.syntax.pool, 0, 1)
+    const outer_span = try syntax_value.span(mut state.syntax.pool, 0, 5)
+    const name_data = try syntax_value.tagged(mut state.syntax.pool, b"name", inner_span)
+    const inner = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [inner_span, name_data])
+    const zero = try syntax_value.integer(mut state.syntax.pool, 0)
+    const marker_data = try syntax_value.tagged(mut state.syntax.pool, b"mut_argument", zero)
+    const marker = try syntax_value.object(mut state.syntax.pool, ["span", "data"], [outer_span, marker_data])
+    state.syntax.nodes = [inner, marker]
+    const result = try engine.expression(mut state, 1)
+    const reused = try engine.expression(mut state, 1)
+    const node = state.batch.nodes[1]
+    const span_id = try graph.field(state.batch.pool, node, "span")
+    const end_id = try graph.field(state.batch.pool, span_id, "end")
+    const end = try graph.number(state.batch.pool, end_id)
+    const data_id = try graph.field(state.batch.pool, node, "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    const slot_id = try graph.payload(state.batch.pool, data_id)
+    const slot = try graph.number(state.batch.pool, slot_id)
+    return result.id == 1 and reused.id == 1 and len(state.batch.nodes) == 2 and end == 5 and data.data == b"local" and slot == 0 and state.scope.locals[0].usage.reads == 1
