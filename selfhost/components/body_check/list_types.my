@@ -3,6 +3,7 @@ import graph
 import record_types
 import variants
 import recipe_index
+import buffer_types
 
 public record Schema:
     id: int
@@ -22,6 +23,7 @@ public record TypeTables:
     suffixes: int[]
     records: record_types.Catalog
     variants: variants.Catalog
+    buffer: buffer_types.Basis
 
 
 public record Catalog:
@@ -35,7 +37,7 @@ public record Catalog:
 
 
 public func empty() -> Catalog:
-    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty()), by_element=[], elements=[])
+    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty(), buffer=buffer_types.empty()), by_element=[], elements=[])
 
 
 func bad() -> syntax_value.Problem:
@@ -58,6 +60,8 @@ public func prepare_records(pool: syntax_value.Pool, id: int, suffixes: int[], m
     catalog.available = available.integer != 0
     catalog.types.suffixes = suffixes
     catalog.types.records = records
+    const prepared_buffer = try buffer_types.prepare(pool, id)
+    catalog.types.buffer = prepared_buffer
     for unused in range(19 + count):
         catalog.by_element.append(-1)
         catalog.elements.append(-1)
@@ -89,6 +93,8 @@ public func prepare_records(pool: syntax_value.Pool, id: int, suffixes: int[], m
     for ty in range(19, len(records.admitted)):
         if records.admitted[ty]:
             depths[ty] = 1
+    if catalog.types.buffer.id >= 0:
+        depths[catalog.types.buffer.id] = 1
     for schema in catalog.known:
         if depths[schema.id] == 1:
             fail bad()
@@ -151,7 +157,7 @@ public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recip
     mut slow = current
     mut steps = 0
     while current >= 19:
-        mut leaf = False
+        mut leaf = current == catalog.types.buffer.id
         for id in managed:
             if current == id:
                 leaf = True
@@ -206,6 +212,8 @@ public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, recipe
         if recipe.kind == "result":
             const failure = try syntax_value.integer(mut pool, recipe.failure)
             value = try syntax_value.object(mut pool, ["id", "success", "failure", "span"], [id, element, failure, span])
+        elif recipe.kind == "byte_buffer":
+            value = try syntax_value.object(mut pool, ["id", "span"], [id, span])
         elif recipe.kind == "list" or recipe.kind == "option":
             value = try syntax_value.object(mut pool, ["id", "element", "span"], [id, element, span])
         else:
@@ -215,6 +223,8 @@ public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, recipe
             tag = b"result"
         elif recipe.kind == "option":
             tag = b"option"
+        elif recipe.kind == "byte_buffer":
+            tag = b"byte_buffer"
         const tagged = try syntax_value.tagged(mut pool, tag, value)
         values.append(tagged)
     return try syntax_value.sequence(mut pool, values)
@@ -269,10 +279,14 @@ public func union_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, firs
     while len(catalog.types.records.rows) < id - 19:
         const missing = 19 + len(catalog.types.records.rows)
         const ordinal = missing - 19 - catalog.base_count
-        if ordinal < 0 or ordinal >= len(catalog.recipes) or catalog.recipes[ordinal].kind != "list":
+        if ordinal < 0 or ordinal >= len(catalog.recipes) or (catalog.recipes[ordinal].kind != "list" and catalog.recipes[ordinal].kind != "byte_buffer"):
             fail bad()
         const recipe = catalog.recipes[ordinal]
-        const semantic = try variants.list_semantic(mut pool, catalog.types.records.rows, missing, recipe.element, recipe.span)
+        mut semantic = -1
+        if recipe.kind == "byte_buffer":
+            semantic = try variants.buffer_semantic(mut pool, missing, recipe.span)
+        else:
+            semantic = try variants.list_semantic(mut pool, catalog.types.records.rows, missing, recipe.element, recipe.span)
         catalog.types.records.rows.append(semantic)
     if len(catalog.types.records.rows) != id - 19:
         fail bad()
@@ -287,4 +301,31 @@ public func union_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, firs
     catalog.by_element.append(-1)
     catalog.elements.append(-1)
     _ = try recipe_index.insert(mut catalog.types.variants.index, recipe_index.Key(kind=kind, first=first, second=second, id=id))
+    return id
+
+
+public func buffer_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, span: int) -> int fails syntax_value.Problem:
+    if catalog.types.buffer.id >= 0:
+        return catalog.types.buffer.id
+    if not catalog.types.buffer.available:
+        const rejection = try refusal(pool, span, "builtin byte_buffer is unavailable")
+        fail rejection
+    const id = 19 + catalog.base_count + len(catalog.recipes)
+    if id >= 65555:
+        const rejection = try refusal(pool, span, "byte buffer schema limit exceeded")
+        fail rejection
+    while len(catalog.types.records.rows) < id - 19:
+        const missing = 19 + len(catalog.types.records.rows)
+        const ordinal = missing - 19 - catalog.base_count
+        if ordinal < 0 or ordinal >= len(catalog.recipes) or catalog.recipes[ordinal].kind != "list":
+            fail bad()
+        const recipe = catalog.recipes[ordinal]
+        const semantic = try variants.list_semantic(mut pool, catalog.types.records.rows, missing, recipe.element, recipe.span)
+        catalog.types.records.rows.append(semantic)
+    const row = try variants.buffer_semantic(mut pool, id, span)
+    catalog.types.records.rows.append(row)
+    catalog.types.buffer.id = id
+    catalog.recipes.append(Recipe(id=id, element=5, span=span, kind="byte_buffer", depth=1))
+    catalog.by_element.append(-1)
+    catalog.elements.append(-1)
     return id

@@ -1,0 +1,95 @@
+import syntax_value
+import graph
+import list_types
+import buffer_types
+
+func fresh() -> list_types.Catalog:
+    mut catalog = list_types.empty()
+    catalog.available = True
+    catalog.types.buffer.available = True
+    for unused in range(19):
+        catalog.by_element.append(-1)
+        catalog.elements.append(-1)
+    return catalog
+
+
+public func test_buffer_lazy_global_order_reuse_and_leaf_depth() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const first = try syntax_value.span(mut pool, 1, 3)
+    const second = try syntax_value.span(mut pool, 4, 9)
+    mut catalog = fresh()
+    const list_id = try list_types.intern(mut catalog, pool, list_types.Recipe(id=0, element=0, span=first), [])
+    const buffer = try list_types.buffer_intern(mut catalog, mut pool, second)
+    const reused = try list_types.buffer_intern(mut catalog, mut pool, first)
+    const outer = try list_types.intern(mut catalog, pool, list_types.Recipe(id=0, element=buffer, span=first), [])
+    return list_id == 19 and buffer == 20 and reused == 20 and outer == 21 and len(catalog.recipes) == 3 and catalog.recipes[1].span == second and catalog.recipes[1].kind == "byte_buffer" and catalog.recipes[1].depth == 1 and catalog.recipes[2].depth == 2
+
+
+public func test_buffer_unavailable_refuses_without_catalog_mutation() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const site = try syntax_value.span(mut pool, 3, 8)
+    mut catalog = fresh()
+    catalog.types.buffer.available = False
+    match list_types.buffer_intern(mut catalog, mut pool, site):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and problem.start == 3 and problem.end == 8 and len(catalog.recipes) == 0
+
+
+public func test_buffer_recipe_exact_tag_and_no_type_arguments() -> bool fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const site = try syntax_value.span(mut input, 7, 12)
+    mut output = syntax_value.empty()
+    const encoded = try list_types.encode(mut output, input, [list_types.Recipe(id=23, element=5, span=site, kind="byte_buffer", depth=1)])
+    const rows = try graph.items(output, encoded)
+    const tagged = try graph.get(output, rows[0])
+    const payload = try graph.payload(output, rows[0])
+    const record = try graph.get(output, payload)
+    const id_value = try graph.field(output, payload, "id")
+    const id = try graph.number(output, id_value)
+    return tagged.data == b"byte_buffer" and len(record.names) == 2 and record.names[0] == "id" and record.names[1] == "span" and id == 23
+
+
+func basis_graph(mut pool: syntax_value.Pool, available: bool, element: int, immutable: bool) -> int fails syntax_value.Problem:
+    const count = try syntax_value.integer(mut pool, 1)
+    const id = try syntax_value.integer(mut pool, 19)
+    const child = try syntax_value.integer(mut pool, element)
+    const identity = try syntax_value.object(mut pool, ["id", "element"], [id, child])
+    const flag = try syntax_value.boolean(mut pool, available)
+    const basis = try syntax_value.object(mut pool, ["available", "identity"], [flag, identity])
+    const templates = try syntax_value.object(mut pool, ["byte_buffer"], [basis])
+    const absent = try syntax_value.absent(mut pool)
+    mut bytes_identity = absent
+    if immutable:
+        bytes_identity = identity
+    return try syntax_value.object(mut pool, ["base_count", "templates", "string", "bytes"], [count, templates, absent, bytes_identity])
+
+
+public func test_buffer_basis_retained_authority_and_invalid_element() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const valid = try basis_graph(mut pool, True, 5, False)
+    const accepted = try buffer_types.prepare(pool, valid)
+    const invalid = try basis_graph(mut pool, True, 0, False)
+    match buffer_types.prepare(pool, invalid):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return accepted.available and accepted.id == 19 and problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_buffer_basis_cannot_alias_bytes_or_bypass_shadowing() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const shared = try basis_graph(mut pool, True, 5, True)
+    match buffer_types.prepare(pool, shared):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            if problem.code != "P_BODY_TRANSPORT":
+                return False
+    const hidden = try basis_graph(mut pool, False, 5, False)
+    match buffer_types.prepare(pool, hidden):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
