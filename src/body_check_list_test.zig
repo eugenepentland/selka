@@ -152,3 +152,23 @@ test "body lists bound logical nesting and exact catalog record counts" {
     catalog.base_count = 65537;
     try std.testing.expectError(error.ComponentProtocol, validate.catalog(a, catalog));
 }
+
+// spec-case: SELFHOST-BODY-LISTS-1
+test "body lists project sequences only with their retained identity and exact element" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var f = try fixture(a, program_text);
+    const ty = f.input.catalog.string.?.id;
+    const original = f.native.records[ty.recordIndex()];
+    f.native.records[ty.recordIndex()].id = .i64;
+    const wrong_identity = try materialize.project(a, f.native);
+    try std.testing.expect(wrong_identity.string == null);
+    f.native.records[ty.recordIndex()] = original;
+    f.native.records[ty.recordIndex()].shape.buffer = .u8;
+    const wrong_element = try materialize.project(a, f.native);
+    try std.testing.expect(wrong_element.string == null);
+    f.native.records[ty.recordIndex()] = original;
+    const valid = try materialize.project(a, f.native);
+    try std.testing.expectEqual(ty, valid.string.?.id);
+}

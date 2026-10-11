@@ -20,6 +20,7 @@ fn sequence(native: Native, name: []const u8, kind: @import("runtime_values.zig"
     if (!ty.isAggregate()) return null;
     if (ty.recordIndex() >= native.records.len or !builtin(native, ty, name)) return null;
     const record = native.records[ty.recordIndex()];
+    if (record.id != ty) return null;
     if (!record.isCollection() or record.collection.kind != kind or record.shape.buffer != element) return null;
     return .{ .id = ty, .element = element };
 }
