@@ -47,6 +47,8 @@ import mapping_lower
 import loop_assigns
 import hash_keys
 import set_lower
+import membership_lower
+import dictionary_view_contains
 
 public record Syntax:
     pool: syntax_value.Pool
@@ -385,6 +387,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         return result
     elif data.data == b"dictionary_literal":
         const result = try dictionary_literal(mut state, payload, span, state.batch.facts.expected[raw_id])
+        state.batch.resolved[raw_id] = result.id
+        state.depth = state.depth - 1
+        return result
+    elif data.data == b"membership":
+        const result = try membership_value(mut state, payload, span)
         state.batch.resolved[raw_id] = result.id
         state.depth = state.depth - 1
         return result
@@ -4660,3 +4667,57 @@ func set_method(mut state: State, call: int, span: int, slot: int) -> Expression
     const lowered = try mapping_lower.access(mut state.batch, mut state.scope, context, list_lower.Access(base=base, owner_type=ty, kind=operation, arguments=ids, result_type=result_type, signed_length=False))
     const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=result_type)
+
+
+func membership_value(mut state: State, payload: int, span: int) -> Expression fails syntax_value.Problem:
+    const needle_id = try graph.field(state.syntax.pool, payload, "needle")
+    const container_id = try graph.field(state.syntax.pool, payload, "container")
+    const negate_id = try graph.field(state.syntax.pool, payload, "negate")
+    const negate_value = try graph.get(state.syntax.pool, negate_id)
+    const needle_raw = try graph.number(state.syntax.pool, needle_id)
+    const container_raw = try graph.number(state.syntax.pool, container_id)
+    mut needle = try expression(mut state, needle_raw)
+    const container = try expression(mut state, container_raw)
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, container.ty)
+    if schema.id >= 0 and schema.kind >= 3:
+        mut kind = b"keys"
+        mut expected = schema.key
+        mut item = -1
+        if schema.kind == 4:
+            kind = b"values"
+            expected = schema.value
+        elif schema.kind == 5:
+            kind = b"items"
+            const item_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=2, key=schema.key, value=schema.value, owner=-1), span)
+            item = item_type
+            expected = item_type
+        const shape = dictionary_view_lower.Shape(mapping=schema.owner, key=schema.key, value=schema.value, item=item, list=-1, kind=kind)
+        const mapping = try dictionary_view_lower.owner(mut state.batch, context, container.id, schema.owner)
+        _ = try require(state, needle.ty, expected, span)
+        const lowered = try dictionary_view_contains.contains(mut state.batch, mut state.scope, context, dictionary_view_contains.Membership(needle=needle.id, needle_type=needle.ty, mapping=mapping, shape=shape, negate=negate_value.integer != 0, loop_id=state.control.next))
+        state.control.next = lowered.next_loop
+        const id = try list_lower.append(mut state.batch, context, lowered.value)
+        return Expression(id=id, ty=1)
+    mut expected = list_types.element_type(state.batch.facts.lists, container.ty)
+    if schema.id >= 0 and schema.kind <= 1:
+        expected = schema.key
+    elif container.ty == state.batch.facts.string_type:
+        expected = container.ty
+    elif container.ty == state.batch.facts.bytes_type or container.ty == state.batch.facts.lists.types.buffer.id:
+        if needle.ty >= 0 and needle.ty <= 8 and needle.ty != 1:
+            expected = 0
+            if needle.ty != 0:
+                const cast = try buffer_lower.cast(mut state.batch, context, needle.id, 0)
+                needle = Expression(id=cast, ty=0)
+        else:
+            expected = container.ty
+    if expected < 0:
+        const rejection = try problem(state, span, "E_MEMBERSHIP", "membership requires a list, dictionary, or str")
+        fail rejection
+    const mixed_bytes = (container.ty == state.batch.facts.bytes_type or container.ty == state.batch.facts.lists.types.buffer.id) and (needle.ty == state.batch.facts.bytes_type or needle.ty == state.batch.facts.lists.types.buffer.id)
+    if not mixed_bytes:
+        _ = try require(state, needle.ty, expected, span)
+    const lowered = try membership_lower.contains(mut state.batch, mut state.scope, context, membership_lower.Input(needle=needle.id, needle_type=needle.ty, container=container.id, container_type=container.ty, negate=negate_value.integer != 0))
+    const id = try list_lower.append(mut state.batch, context, lowered)
+    return Expression(id=id, ty=1)

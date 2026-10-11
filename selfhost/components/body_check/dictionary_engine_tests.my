@@ -155,3 +155,34 @@ public func test_plain_dictionary_write_preserves_key_and_snapshots_value_before
     const inputs = try graph.items(state.batch.pool, inputs_id)
     const actual_key = try graph.number(state.batch.pool, inputs[0])
     return result.ty == 15 and actual_key == 0 and state.scope.locals[0].usage.writes == 1 and state.scope.locals[0].usage.reads == 1 and len(state.scope.locals) == 3
+
+
+func membership(mut state: engine.State, needle: int, negate: bool) -> int fails syntax_value.Problem:
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[4], "span")
+    const needle_id = try syntax_value.integer(mut state.syntax.pool, needle)
+    const container = try syntax_value.integer(mut state.syntax.pool, 4)
+    const inverse = try syntax_value.boolean(mut state.syntax.pool, negate)
+    const payload = try syntax_value.object(mut state.syntax.pool, ["needle", "container", "negate"], [needle_id, container, inverse])
+    const raw = try node(mut state.syntax.pool, span, b"membership", payload)
+    const index = len(state.syntax.nodes)
+    state.syntax.nodes.append(raw)
+    return index
+
+
+public func test_dictionary_membership_dispatch_roots_written_operands_once() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const raw = try membership(mut state, 0, False)
+    const result = try engine.expression(mut state, raw)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 1 and result.id == 7 and data.data == b"block_value" and len(state.scope.locals) == 2 and state.scope.locals[0].name == b"<membership>" and state.scope.locals[0].ty == 1 and state.scope.locals[1].ty == 19 and not state.scope.locals[0].flags.initialized and len(state.scope.active) == 0
+
+
+public func test_dictionary_membership_wrong_key_reports_full_membership_site() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const raw = try membership(mut state, 1, True)
+    match engine.expression(mut state, raw):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "expected bool, found int" and problem.start == 0 and problem.end == 11 and len(state.scope.locals) == 0
