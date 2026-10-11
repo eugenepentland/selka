@@ -306,9 +306,13 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
         const inputs = try graph.items(state.syntax.pool, arguments_id)
         if kind_name == b"pop" and len(inputs) == 1:
             kind_name = b"pop_at"
+        mut base = Expression(id=-1, ty=15)
+        if data.data == b"method_call":
+            base = try expression(mut state, base_raw)
         if kind_name == b"write" or kind_name == b"append" or kind_name == b"extend" or kind_name == b"insert" or kind_name == b"pop" or kind_name == b"pop_at" or kind_name == b"remove" or kind_name == b"reverse" or kind_name == b"sort" or kind_name == b"clear":
             _ = try list_places.writable(state.syntax.pool, state.syntax.source, state.syntax.nodes, mut state.scope, base_raw)
-        const base = try expression(mut state, base_raw)
+        if base.id < 0:
+            base = try expression(mut state, base_raw)
         const element = list_types.element_type(state.batch.facts.lists, base.ty)
         if element < 0:
             const rejection = try problem(state, span, "P_BODY_PROFILE", "list operation receiver is outside the admitted list closure")

@@ -105,3 +105,31 @@ public func test_list_index_boolean_uses_native_collection_diagnostic() -> bool 
             return False
         case Err(problem):
             return problem.code == "E_TYPE" and problem.start == 0 and problem.end == 1 and problem.message == "collection index requires an integer"
+
+
+public func test_expression_method_checks_receiver_before_writable_root() -> bool fails syntax_value.Problem:
+    mut state = fresh()
+    state.syntax.source = b"1 xs append"
+    state.batch.facts.lists.base_count = 1
+    state.batch.facts.lists.by_element.append(-1)
+    state.batch.facts.lists.elements.append(0)
+    state.batch.facts.lists.by_element[0] = 19
+    const owner = try syntax_value.span(mut state.syntax.pool, 2, 4)
+    _ = try locals.add(mut state.scope, b"xs", owner, 19, False, b"local")
+    const name_raw = try add(mut state, b"name", owner)
+    const name_id = try syntax_value.integer(mut state.syntax.pool, name_raw)
+    const truth = try syntax_value.boolean(mut state.syntax.pool, True)
+    const boolean = try add(mut state, b"boolean", truth)
+    const index_id = try syntax_value.integer(mut state.syntax.pool, boolean)
+    const index = try syntax_value.object(mut state.syntax.pool, ["base", "index"], [name_id, index_id])
+    const receiver = try add(mut state, b"index", index)
+    const base = try syntax_value.integer(mut state.syntax.pool, receiver)
+    const name = try syntax_value.span(mut state.syntax.pool, 5, 11)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const method = try syntax_value.object(mut state.syntax.pool, ["base", "name", "arguments", "argument_names"], [base, name, empty, empty])
+    const raw = try add(mut state, b"method_call", method)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_TYPE" and problem.message == "collection index requires an integer"
