@@ -241,7 +241,44 @@ while :; do
           rm -f -- "$ticket" || die "cannot retire FIFO ticket"
           ticket=""
           exec 7>&-
-          if [ "$settle" -gt 0 ]; then sleep "$settle" 9>&- & fi
+          if [ "$settle" -gt 0 ]; then
+            # The accounting timer owns only admission fd 8. Detach it before
+            # exec so cancellation of the worker cannot release the delay or
+            # inherit a worker pipe/lease/handshake descriptor into the timer.
+            command -v setsid >/dev/null || die "setsid is required for the admission timer"
+            (
+              for settle_path in /proc/$BASHPID/fd/*; do
+                settle_fd=${settle_path##*/}
+                if [[ $settle_fd =~ ^[0-9]+$ ]] && [ "$settle_fd" -gt 2 ] && [ "$settle_fd" -ne 8 ]; then
+                  eval "exec ${settle_fd}>&-"
+                fi
+              done
+              exec setsid sleep "$settle"
+            ) </dev/null >/dev/null 2>&1 &
+            settle_pid=$!
+            # setsid has no fork here: its caller is not a process-group leader.
+            # Wait until detachment is observable before exposing the worker.
+            settle_detached=false
+            settle_deadline=$((SECONDS + 5))
+            while IFS= read -r settle_stat 2>/dev/null <"/proc/$settle_pid/stat"; do
+              settle_rest=${settle_stat##*) }
+              read -r -a settle_fields <<<"$settle_rest"
+              [ "${settle_fields[0]}" = Z ] && break
+              if [ "${settle_fields[3]}" = "$settle_pid" ]; then
+                settle_detached=true
+                break
+              fi
+              if [ "$SECONDS" -ge "$settle_deadline" ]; then
+                kill -KILL "$settle_pid" 2>/dev/null || true
+                wait "$settle_pid" 2>/dev/null || true
+                die "admission timer did not detach"
+              fi
+              sleep .001
+            done
+            if [ "$settle_detached" = false ]; then
+              wait "$settle_pid" || die "admission timer failed before detaching"
+            fi
+          fi
           exec 8>&-
           # Hold the slot lock (fd 9, inherited) for the job's lifetime; exec keeps
           # the job's exit status and signals exactly as if it ran directly.
