@@ -118,7 +118,8 @@ public func test_snapshot_roots_mapping_and_allocates_native_local_order() -> bo
         const id = try graph.number(fixture.batch.pool, row)
         indices.append(id)
     const value = try number(fixture.batch.pool, result.value.payload, "value")
-    return result.next_loop == 18 and result.value.ty == 44 and result.value.tag == b"block_value" and fixture.scope.locals[0].ty == 40 and fixture.scope.locals[1].ty == 44 and fixture.scope.locals[2].ty == 0 and fixture.scope.locals[3].ty == 0 and indices == [1, 2, 3, 4, 7] and value == 16 and len(fixture.batch.nodes) == 17 and len(fixture.batch.statements) == 9
+    const signed_lengths = try lengths_are_signed(fixture.batch)
+    return signed_lengths and result.next_loop == 18 and result.value.ty == 44 and result.value.tag == b"block_value" and fixture.scope.locals[0].ty == 40 and fixture.scope.locals[1].ty == 44 and fixture.scope.locals[2].ty == 0 and fixture.scope.locals[3].ty == 0 and indices == [1, 2, 3, 4, 7] and value == 16 and len(fixture.batch.nodes) == 17 and len(fixture.batch.statements) == 9
 
 
 public func test_snapshot_capacity_and_loop_reuse_original_cursor_read() -> bool fails syntax_value.Problem:
@@ -149,3 +150,21 @@ public func test_snapshot_values_and_items_preserve_distinct_element_nodes() -> 
     const value = try operation_kind(values.batch, 6)
     const pair_type = try number(items.batch.pool, items.batch.nodes[7], "ty")
     return projected.next_loop == 32 and pairs.next_loop == 33 and len(values.batch.nodes) == 18 and len(items.batch.nodes) == 19 and key == b"key_at" and value == b"value_at" and pair_type == 42
+
+
+func lengths_are_signed(batch: emission.Batch) -> bool fails syntax_value.Problem:
+    mut found = False
+    for row in batch.nodes:
+        const data_id = try graph.field(batch.pool, row, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(batch.pool, data_id)
+            const kind_id = try graph.field(batch.pool, operation, "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            if kind.data == b"length":
+                found = True
+                const type_id = try graph.field(batch.pool, row, "ty")
+                const ty = try graph.number(batch.pool, type_id)
+                if ty != 0:
+                    return False
+    return found

@@ -3,6 +3,7 @@ import graph
 import emission
 import locals
 import list_lower
+import buffer_lower
 import list_iteration
 import dictionary_view_lower
 
@@ -133,7 +134,7 @@ public func finish(mut batch: emission.Batch, mut scope: locals.Scope, input: sy
     _ = orphan
     const zero = try list_lower.integer(mut batch, context, 0, 0)
     const setup_index = try list_lower.store(mut batch, context, walk.index, zero, True)
-    const length = try list_lower.length(mut batch, context, walk.owner)
+    const length = try buffer_lower.length(mut batch, context, walk.owner)
     const setup_limit = try list_lower.store(mut batch, context, walk.limit, length, True)
     const bound = try list_lower.read(mut batch, context, walk.limit, 0)
     const condition = try list_lower.binary(mut batch, context, b"lt", index, bound, 1)

@@ -3,6 +3,7 @@ import graph
 import emission
 import locals
 import list_lower
+import buffer_lower
 import comprehension_lower
 import dictionary_view_lower
 
@@ -67,7 +68,7 @@ public func contains(mut batch: emission.Batch, mut scope: locals.Scope, context
         result = inverted
     const setup_member = try list_lower.store(mut batch, context, member, request.needle, True)
     const setup_input = try list_lower.store(mut batch, context, input, request.mapping, True)
-    const length = try list_lower.length(mut batch, context, input)
+    const length = try buffer_lower.length(mut batch, context, input)
     const setup_count = try list_lower.store(mut batch, context, count, length, True)
     const zero = try list_lower.integer(mut batch, context, 0, 0)
     const setup_cursor = try list_lower.store(mut batch, context, cursor, zero, True)

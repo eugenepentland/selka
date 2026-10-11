@@ -86,7 +86,8 @@ public func test_value_membership_keeps_native_locals_and_early_exit() -> bool f
     for local in fixture.scope.locals:
         if local.flags.initialized or not local.mutable or not local.usage.temporary or local.usage.reads != 1:
             return False
-    return result.next_loop == 24 and fixture.scope.locals[0].ty == 1 and fixture.scope.locals[1].ty == 40 and fixture.scope.locals[2].ty == 0 and fixture.scope.locals[3].ty == 0 and fixture.scope.locals[4].ty == 1 and target == 23 and id == 23 and condition == 4 and matched == 2 and result_read == 6 and len(fixture.batch.statements) == 12
+    const signed_lengths = try lengths_are_signed(fixture.batch)
+    return signed_lengths and result.next_loop == 24 and fixture.scope.locals[0].ty == 1 and fixture.scope.locals[1].ty == 40 and fixture.scope.locals[2].ty == 0 and fixture.scope.locals[3].ty == 0 and fixture.scope.locals[4].ty == 1 and target == 23 and id == 23 and condition == 4 and matched == 2 and result_read == 6 and len(fixture.batch.statements) == 12
 
 
 public func test_value_membership_retains_key_read_and_initialization_order() -> bool fails syntax_value.Problem:
@@ -128,3 +129,21 @@ public func test_negated_value_membership_keeps_match_and_negates_result() -> bo
     const branch = try payload(fixture.batch.pool, fixture.batch.statements[8])
     const condition = try number(fixture.batch.pool, branch, "condition")
     return result.next_loop == 24 and unary_tag == b"unary" and operand == 6 and final_value == 7 and condition == 4 and len(fixture.batch.nodes) == 16
+
+
+func lengths_are_signed(batch: emission.Batch) -> bool fails syntax_value.Problem:
+    mut found = False
+    for row in batch.nodes:
+        const data_id = try graph.field(batch.pool, row, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(batch.pool, data_id)
+            const kind_id = try graph.field(batch.pool, operation, "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            if kind.data == b"length":
+                found = True
+                const type_id = try graph.field(batch.pool, row, "ty")
+                const ty = try graph.number(batch.pool, type_id)
+                if ty != 0:
+                    return False
+    return found

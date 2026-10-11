@@ -3,6 +3,7 @@ import emission
 import graph
 import locals
 import list_lower
+import buffer_lower
 import comprehension_lower
 
 public record Literal:
@@ -104,7 +105,7 @@ func walk(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lowe
         condition = try list_lower.binary(mut batch, context, b"logical_and", condition, flag, 1)
     const zero = try list_lower.integer(mut batch, context, 0, 0)
     const first = try list_lower.store(mut batch, context, index, zero, True)
-    const length = try list_lower.length(mut batch, context, request.owner)
+    const length = try buffer_lower.length(mut batch, context, request.owner)
     const last = try list_lower.store(mut batch, context, limit, length, True)
     const loop = try comprehension_lower.loop_statement(mut batch, context, request.loop_id, condition, body, step)
     return [first, last, loop]
@@ -167,8 +168,8 @@ public func relation(mut batch: emission.Batch, mut scope: locals.Scope, context
         const truth = try syntax_value.boolean(mut batch.pool, True)
         initial = try emission.node(mut batch, context.input, context.span, 1, b"boolean", truth)
     else:
-        const left_length = try list_lower.length(mut batch, context, inner)
-        const right_length = try list_lower.length(mut batch, context, outer)
+        const left_length = try buffer_lower.length(mut batch, context, inner)
+        const right_length = try buffer_lower.length(mut batch, context, outer)
         initial = try list_lower.binary(mut batch, context, b"le", left_length, right_length, 1)
     const element = try list_lower.temporary(mut scope, context, request.element)
     const settles = try membership(mut batch, context, outer, element, request.element, request.kind == b"disjoint")
@@ -179,8 +180,8 @@ public func relation(mut batch: emission.Batch, mut scope: locals.Scope, context
     const loop = try walk(mut batch, mut scope, context, Walk(owner=inner, element=element, element_type=request.element, body=body, running=holds, loop_id=request.loop_id))
     mut answer = try list_lower.read(mut batch, context, holds, 1)
     if request.kind == b"proper_subset" or request.kind == b"proper_superset":
-        const left_length = try list_lower.length(mut batch, context, inner)
-        const right_length = try list_lower.length(mut batch, context, outer)
+        const left_length = try buffer_lower.length(mut batch, context, inner)
+        const right_length = try buffer_lower.length(mut batch, context, outer)
         const shorter = try list_lower.binary(mut batch, context, b"lt", left_length, right_length, 1)
         answer = try list_lower.binary(mut batch, context, b"logical_and", answer, shorter, 1)
     const left = try list_lower.store(mut batch, context, first, request.left, True)

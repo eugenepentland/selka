@@ -92,7 +92,8 @@ public func test_intersection_walk_keeps_native_body_before_index_locals_and_sha
     const body_guard = try graph.number(fixture.batch.pool, body_rows[0])
     const step_guard = try graph.number(fixture.batch.pool, step_rows[0])
     const extracted_7 = try loop_identity(fixture, 12)
-    return result.next_loop == 18 and len(fixture.scope.locals) == 6 and fixture.scope.locals[3].ty == 0 and fixture.scope.locals[4].ty == 0 and len(fixture.batch.nodes) == 20 and len(fixture.batch.statements) == 14 and body_guard == 5 and step_guard == body_guard and extracted_7 == 17
+    const signed_lengths = try lengths_are_signed(fixture.batch)
+    return signed_lengths and result.next_loop == 18 and len(fixture.scope.locals) == 6 and fixture.scope.locals[3].ty == 0 and fixture.scope.locals[4].ty == 0 and len(fixture.batch.nodes) == 20 and len(fixture.batch.statements) == 14 and body_guard == 5 and step_guard == body_guard and extracted_7 == 17
 
 
 public func test_symmetric_difference_allocates_two_ordered_walks() -> bool fails syntax_value.Problem:
@@ -161,3 +162,21 @@ public func test_disjoint_starts_true_and_guards_walk_with_running_flag() -> boo
     const op_id = try graph.field(fixture.batch.pool, condition, "op")
     const op = try graph.get(fixture.batch.pool, op_id)
     return result.next_loop == 51 and initial.kind == 2 and initial.integer == 1 and op.data == b"logical_and" and len(rows) == 6
+
+
+func lengths_are_signed(batch: emission.Batch) -> bool fails syntax_value.Problem:
+    mut found = False
+    for row in batch.nodes:
+        const data_id = try graph.field(batch.pool, row, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(batch.pool, data_id)
+            const kind_id = try graph.field(batch.pool, operation, "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            if kind.data == b"length":
+                found = True
+                const type_id = try graph.field(batch.pool, row, "ty")
+                const ty = try graph.number(batch.pool, type_id)
+                if ty != 0:
+                    return False
+    return found

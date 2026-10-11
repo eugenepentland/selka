@@ -89,7 +89,8 @@ public func test_dictionary_walk_hidden_local_order_and_key_read() -> bool fails
     const plan = try lower(mut fixture)
     const kinds = try operation_names(fixture.batch)
     const binding = fixture.scope.locals[4]
-    return plan.walk.owner == 1 and plan.walk.index == 2 and plan.walk.limit == 3 and plan.walk.binding == 4 and len(fixture.scope.locals) == 5 and kinds == [b"iteration_check", b"key_at", b"length"] and binding.name == b"item" and binding.origin == b"iteration" and not binding.mutable and binding.flags.initialized and binding.usage.temporary and len(fixture.batch.nodes) == 12 and len(fixture.batch.statements) == 12
+    const signed_lengths = try lengths_are_signed(fixture.batch)
+    return signed_lengths and plan.walk.owner == 1 and plan.walk.index == 2 and plan.walk.limit == 3 and plan.walk.binding == 4 and len(fixture.scope.locals) == 5 and kinds == [b"iteration_check", b"key_at", b"length"] and binding.name == b"item" and binding.origin == b"iteration" and not binding.mutable and binding.flags.initialized and binding.usage.temporary and len(fixture.batch.nodes) == 12 and len(fixture.batch.statements) == 12
 
 
 public func test_set_walk_uses_dictionary_keys_not_list_read() -> bool fails syntax_value.Problem:
@@ -184,3 +185,21 @@ public func test_body_and_step_share_one_guard_with_orphan_owner_setup() -> bool
     const owner = try number(fixture.batch.pool, orphan, "slot")
     const value = try number(fixture.batch.pool, orphan, "value")
     return len(body_rows) == 3 and len(step_rows) == 2 and guard_body == guard_step and guard_body == 3 and owner == plan.walk.owner and value == plan.walk.request.iterable
+
+
+func lengths_are_signed(batch: emission.Batch) -> bool fails syntax_value.Problem:
+    mut found = False
+    for row in batch.nodes:
+        const data_id = try graph.field(batch.pool, row, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const operation = try graph.payload(batch.pool, data_id)
+            const kind_id = try graph.field(batch.pool, operation, "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            if kind.data == b"length":
+                found = True
+                const type_id = try graph.field(batch.pool, row, "ty")
+                const ty = try graph.number(batch.pool, type_id)
+                if ty != 0:
+                    return False
+    return found
