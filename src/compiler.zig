@@ -267,7 +267,7 @@ pub const Compilation = struct {
         try self.parseCached(cache);
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, null);
+        const program = try sema.checkRuntime(sink.allocator, self.src, self.syntax.?, &sink, .{ .runtime = self.frontendRuntime() });
         try self.confirmFrontend(verified);
         self.program = program;
     }
@@ -283,7 +283,7 @@ pub const Compilation = struct {
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+        const program = try sema.checkRuntime(sink.allocator, self.src, self.syntax.?, &sink, .{ .runtime = self.frontendRuntime(), .cache = cache });
         try self.confirmFrontend(verified);
         self.program = program;
     }
@@ -300,7 +300,7 @@ pub const Compilation = struct {
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const program = try sema.checkLibraryProgram(sink.allocator, self.src, self.syntax.?, &sink, null);
+        const program = try sema.checkRuntime(sink.allocator, self.src, self.syntax.?, &sink, .{ .runtime = self.frontendRuntime(), .entry_required = false });
         try self.confirmFrontend(verified);
         return program;
     }
@@ -314,7 +314,7 @@ pub const Compilation = struct {
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        try sema.checkLibrary(sink.allocator, self.src, self.syntax.?, &sink, null);
+        _ = try sema.checkRuntime(sink.allocator, self.src, self.syntax.?, &sink, .{ .runtime = self.frontendRuntime(), .entry_required = false });
         try self.confirmFrontend(verified);
     }
 };

@@ -115,7 +115,11 @@ const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
 const record_layouts = @import("record_layouts.zig");
 const Error = diagnostic.Error;
-const FrontendError = @import("frontend_runtime.zig").Error;
+const frontend_runtime = @import("frontend_runtime.zig");
+const FrontendError = frontend_runtime.Error;
+const body_check = @import("body_check_component.zig");
+const body_value = @import("body_check_value.zig");
+const body_projection = @import("body_check_projection.zig");
 const instances = @import("generic_instances.zig");
 const semantic_cache = @import("semantic_cache.zig");
 const sema_summaries = @import("sema_summaries.zig");
@@ -1614,6 +1618,56 @@ fn checkBodies(initial: InstanceStep, contracts_failed: bool, prior_failure: boo
     return functions.toOwnedSlice(step.allocator);
 }
 
+const BodySelection = struct {
+    mode: body_check.Mode,
+    outcome: ?body_value.Outcome,
+    names: ?*Names,
+};
+
+fn selectedBodies(step: InstanceStep, contracts_failed: bool, prior_failure: bool, selection: BodySelection) FrontendError![]typed.Function {
+    if (selection.mode == .reference) return checkBodies(step, contracts_failed, prior_failure) catch |err| return retryOr(step.plan, err);
+    const actual = selection.outcome orelse return error.ComponentProtocol;
+    if (selection.mode == .component) {
+        if (contracts_failed or prior_failure) return error.SourceError;
+        return adoptBodies(step, selection.names, actual);
+    }
+    const first = step.checker.sink.items.items.len;
+    var failed = false;
+    const functions: []typed.Function = checkBodies(step, contracts_failed, prior_failure) catch |err| failure: {
+        if (err != error.SourceError) return err;
+        failed = true;
+        break :failure &.{};
+    };
+    const diagnostics = try body_value.diagnostics(step.allocator, step.checker.sink.items.items[first..]);
+    const expected: body_value.Outcome = if (failed) .{ .failure = diagnostics } else .{ .success = .{
+        .batch = .{ .nodes = step.checker.nodes.items, .statements = step.checker.statements.items, .functions = functions, .ranges = step.checker.spec_ranges.items },
+        .import_used = try body_projection.importUsage(step.allocator, selection.names),
+        .diagnostics = diagnostics,
+    } };
+    try body_check.compare(step.allocator, actual, expected);
+    if (failed) return error.SourceError;
+    return functions;
+}
+
+fn adoptBodies(step: InstanceStep, names: ?*Names, outcome: body_value.Outcome) FrontendError![]typed.Function {
+    switch (outcome) {
+        .profile => return error.ComponentProfile,
+        .failure => |diagnostics| {
+            try body_value.publish(step.checker.sink, diagnostics);
+            return error.SourceError;
+        },
+        .success => |output| {
+            const batch = try body_value.cloneBatch(step.allocator, output.batch);
+            if (step.checker.nodes.items.len != 0 or step.checker.statements.items.len != 0) return error.ComponentProtocol;
+            try step.checker.nodes.appendSlice(step.allocator, batch.nodes);
+            try step.checker.statements.appendSlice(step.allocator, batch.statements);
+            try body_projection.adoptUsage(names, output.import_used);
+            try body_value.publish(step.checker.sink, output.diagnostics);
+            return step.allocator.dupe(typed.Function, batch.functions);
+        },
+    }
+}
+
 /// One body's fresh interval recording inputs.
 const RangeRecord = struct {
     checker: *Checker,
@@ -1732,11 +1786,24 @@ pub fn declaresMain(src: source.Source, program: ast.Program) bool {
     return false;
 }
 
-const CheckOptions = struct {
-    names: ?*Names,
+/// Semantic configuration with optional authenticated body checking.
+pub const CheckOptions = struct {
+    names: ?*Names = null,
     cache: ?*semantic_cache.Cache = null,
     entry_required: bool = true,
+    runtime: ?frontend_runtime.Runtime = null,
 };
+
+/// Check with selected body ownership and authenticate every published outcome.
+pub fn checkRuntime(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) FrontendError!typed.Program {
+    const captured = try frontend_runtime.verify(allocator, options.runtime);
+    const checked = checkCore(allocator, src, program, sink, options) catch |err| {
+        try frontend_runtime.revalidate(allocator, options.runtime, captured);
+        return err;
+    };
+    try frontend_runtime.revalidate(allocator, options.runtime, captured);
+    return checked;
+}
 
 fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) FrontendError!typed.Program {
     defer normalizeDiagnostics(sink);
@@ -1750,9 +1817,27 @@ fn checkCore(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     return checked;
 }
 
+// Refuse unsupported profiles before native symbolic checking; defer source
+// diagnostics until common declaration and entry validation have succeeded.
+fn openBody(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, options: CheckOptions) FrontendError!?body_value.Decoded {
+    if (try body_check.mode(options.runtime) == .reference) return null;
+    const input = try body_projection.input(allocator, src, program, options.names, options.entry_required);
+    var reply = try body_check.execute(allocator, input, options.runtime.?);
+    if (reply.outcome == .profile) {
+        reply.deinit();
+        return error.ComponentProfile;
+    }
+    return reply;
+}
+
 fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, options: CheckOptions) FrontendError!typed.Program {
-    const cache = options.cache;
+    const selected = try body_check.mode(options.runtime);
+    // The body component checks every admitted body; only reference may replay
+    // native bodies, specializations or cross-function summary stand-ins.
+    const cache = if (selected == .reference) options.cache else null;
     const module_names = options.names;
+    var body_reply = try openBody(allocator, src, program, options);
+    defer if (body_reply) |*reply| reply.deinit();
     const timing = activeTiming(cache);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
     var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
@@ -1839,7 +1924,7 @@ fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.P
     // library checking neither adapts, returns nor caches the checked program.
     const main = if (options.entry_required) try checkEntry(&checker, module_names, failed) else @as(typed.FunctionId, @fromBackingInt(0));
     var plan = try openPlan(cache, &session, allocator, @backingInt(main), program);
-    const functions = checkBodies(.{
+    const functions = try selectedBodies(.{
         .checker = &checker,
         .session = &session,
         .spec_session = &spec_session,
@@ -1847,7 +1932,7 @@ fn checkProgram(allocator: std.mem.Allocator, src: source.Source, program: ast.P
         .plan = &plan,
         .allocator = allocator,
         .index = 0,
-    }, contracts_failed, failed) catch |err| return retryOr(&plan, err);
+    }, contracts_failed, failed, .{ .mode = selected, .outcome = if (body_reply) |reply| reply.outcome else null, .names = module_names });
     const pass_start = sink.items.items.len;
     try @import("c_abi.zig").validateImports(allocator, functions, sink);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;

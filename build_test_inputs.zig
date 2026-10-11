@@ -235,3 +235,9 @@ pub const type_interface_qualification = [_][]const u8{"selfhost/"};
 
 /// Adversarial verdict accounting for type interface qualification.
 pub const type_interface_qualification_self = [_][]const u8{ "selfhost/test_type_interfaces.py", "selfhost/test_pilots.py", "selfhost/tests/run_type_interface_qualification.py", "selfhost/tests/run_declaration_qualification.py", "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/type_interface_qualification_test.py", "selfhost/tests/fixtures/type_interface/" };
+
+/// Qualified body check pure tests and installed workflow/protocol qualification.
+pub const body_check_qualification = [_][]const u8{"selfhost/"};
+
+/// Adversarial verdict accounting for body check qualification.
+pub const body_check_qualification_self = [_][]const u8{ "selfhost/test_body_checks.py", "selfhost/test_pilots.py", "selfhost/tests/run_body_check_qualification.py", "selfhost/tests/run_declaration_qualification.py", "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/body_check_qualification_test.py", "selfhost/tests/fixtures/body_check/" };

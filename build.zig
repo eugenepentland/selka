@@ -153,6 +153,7 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/parser-pilot.json" } });
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/declaration-index.json" } });
         run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/type-interface.json" } });
+        run.addFileInput(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/body-check.json" } });
     }
     for (tool_inputs) |tool| if (tool) |path| run.addFileInput(path);
     if (list.len != 0) verification_registry.?.declared(&run.step, list);
@@ -879,6 +880,22 @@ pub fn build(b: *std.Build) void {
     type_interfaces_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/type_interface_qualification_test.py" });
     type_interfaces_step.dependOn(&type_interfaces_checks.step);
     test_step.dependOn(type_interfaces_step);
+    const body_checks_step = b.step("test-selfhost-body-checks", "Qualify scalar body checking with the verified seed and installed compiler");
+    const body_checks_run = driver(b, "scalar body checking pure and installed qualification", rss.driver, "body_check_qualification");
+    body_checks_run.has_side_effects = true;
+    body_checks_run.addArgs(&.{ "python3", "selfhost/test_body_checks.py", "--zig", b.graph.zig_exe, "--builder" });
+    body_checks_run.addArtifactArg(component_tool);
+    body_checks_run.addArg("--compiler");
+    body_checks_run.addArtifactArg(exe);
+    body_checks_run.addArg("--component-dir");
+    body_checks_run.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    body_checks_run.addArg("--report-dir");
+    _ = body_checks_run.addOutputDirectoryArg("body-check-qualification");
+    body_checks_step.dependOn(&body_checks_run.step);
+    const body_checks_checks = driver(b, "body check qualification verdict accounting", rss.script, "body_check_qualification_self");
+    body_checks_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/body_check_qualification_test.py" });
+    body_checks_step.dependOn(&body_checks_checks.step);
+    test_step.dependOn(body_checks_step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
     const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
     selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });

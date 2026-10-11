@@ -10,10 +10,11 @@ const lex_boundary = @import("lexer_component.zig");
 const parse_boundary = @import("parser_component.zig");
 const declaration_boundary = @import("declaration_component.zig");
 const type_interface_boundary = @import("type_interface_component.zig");
+const body_check_boundary = @import("body_check_component.zig");
 /// Process capabilities for the independently installed frontend producers.
 pub const Runtime = @import("config/component_runtime.zig").Runtime;
 /// Source failures stay distinct from bounded deployment and transport failures.
-pub const HostError = lex_boundary.Error || parse_boundary.Error || declaration_boundary.Error || type_interface_boundary.Error;
+pub const HostError = lex_boundary.Error || parse_boundary.Error || declaration_boundary.Error || type_interface_boundary.Error || body_check_boundary.Error;
 /// Combined source and host failures for lexing and parsing.
 pub const Error = diagnostic.Error || HostError;
 /// Value copied into cache contexts only after deployment authentication succeeds.
@@ -36,7 +37,7 @@ pub fn reusable(runtime: ?Runtime) bool {
     }
     return true;
 }
-const mode_keys = [_][]const u8{ "MYLANG_LEXER_MODE", "MYLANG_PARSER_MODE", "MYLANG_DECLARATION_MODE", "MYLANG_TYPE_INTERFACE_MODE" };
+const mode_keys = [_][]const u8{ "MYLANG_LEXER_MODE", "MYLANG_PARSER_MODE", "MYLANG_DECLARATION_MODE", "MYLANG_TYPE_INTERFACE_MODE", "MYLANG_BODY_CHECK_MODE" };
 fn allReference(runtime: Runtime) bool {
     for (mode_keys) |key| {
         if (!std.mem.eql(u8, runtime.environ.get(key) orelse reference_mode, reference_mode)) return false;
@@ -50,13 +51,15 @@ pub fn verify(a: std.mem.Allocator, runtime: ?Runtime) HostError!Verified {
     const parse_id = try parse_boundary.identity(a, capabilities);
     const declaration_id = try declaration_boundary.identity(a, capabilities);
     const type_interface_id = try type_interface_boundary.identity(a, capabilities);
+    const body_check_id = try body_check_boundary.identity(a, capabilities);
     if (allReference(capabilities)) return .{};
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("frontend-boundary-v3/target-profile/module-and-trust-v1/type-interface-v1");
+    hash.update("frontend-boundary-v4/target-profile/module-and-trust-v1/type-interface-v1/body-check-v1");
     hash.update(&lex_id);
     hash.update(&parse_id);
     hash.update(&declaration_id);
     hash.update(&type_interface_id);
+    hash.update(&body_check_id);
     var result: [32]u8 = undefined;
     hash.final(&result);
     return .{ .identity = result, .reuse = reusable(runtime) };
@@ -132,4 +135,17 @@ test "type interface verification precedes cache reuse and shadow disables reuse
     try environment.put("MYLANG_TYPE_INTERFACE_MODE", "component");
     try std.testing.expect(reusable(runtime));
     try std.testing.expectError(error.ComponentMissing, verify(std.testing.allocator, runtime));
+}
+
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check producer identity gates reuse and shadow disables retained bodies" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    const runtime: Runtime = .{ .io = std.testing.io, .environ = &environment, .component_dir = "missing-body-fixture" };
+    try std.testing.expectEqualDeep(Verified{}, try verify(std.testing.allocator, runtime));
+    try environment.put("MYLANG_BODY_CHECK_MODE", "shadow");
+    try std.testing.expect(!reusable(runtime));
+    try std.testing.expectError(error.ComponentMissing, verify(std.testing.allocator, runtime));
+    try environment.put("MYLANG_BODY_CHECK_MODE", "invalid");
+    try std.testing.expectError(error.ComponentMode, verify(std.testing.allocator, runtime));
 }

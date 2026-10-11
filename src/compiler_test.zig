@@ -844,3 +844,12 @@ test "a mut collection at parameter 17 or 64 checks, and one at parameter 65 is 
     try testing.expectEqualStrings("", try wideCheck(64));
     try testing.expectEqualStrings("E_PARAMETER_POSITION", try wideCheck(65));
 }
+
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check checkRuntime preserves source errors without publishing a program" {
+    var compilation = try language.Compilation.init(testing.allocator, "bad-body.my", "func main() -> int:\n    return True\n");
+    defer compilation.deinit();
+    try testing.expectError(error.SourceError, compilation.check());
+    try testing.expect(compilation.program == null);
+    try testing.expectEqualStrings("E_TYPE", compilation.diagnostics.items[0].code);
+}

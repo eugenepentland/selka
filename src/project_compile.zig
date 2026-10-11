@@ -60,7 +60,7 @@ pub const Compilation = struct {
         _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
-        const program = try sema.checkLibraryProgram(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
+        const program = try sema.checkRuntime(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, .{ .names = &names, .runtime = self.index.project.frontendRuntime(), .entry_required = false });
         _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         return program;
     }
@@ -71,7 +71,7 @@ pub const Compilation = struct {
         _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
-        try sema.checkLibrary(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
+        _ = try sema.checkRuntime(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, .{ .names = &names, .runtime = self.index.project.frontendRuntime(), .entry_required = false });
         _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
     }
     /// Whether the entry module (the first input) declares a free function named `main`.
@@ -94,7 +94,7 @@ pub const Compilation = struct {
         if (cache) |semantic| semantic.resolution = self.index;
         const before = self.diagnostics.items.items.len;
         const counters = if (cache) |semantic| Counters.save(semantic) else null;
-        const program = sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache) catch |err| retry: {
+        const program = sema.checkRuntime(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, .{ .names = &names, .runtime = self.index.project.frontendRuntime(), .cache = cache }) catch |err| retry: {
             // A check whose stood-in bodies met a changed cross-function fact
             // repeats in full, from the same diagnostics and work counters.
             const semantic = cache orelse return err;
@@ -103,7 +103,7 @@ pub const Compilation = struct {
             self.diagnostics.items.shrinkRetainingCapacity(before);
             counters.?.restore(semantic);
             request.* = .{ .body_policy = request.body_policy };
-            break :retry try sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
+            break :retry try sema.checkRuntime(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, .{ .names = &names, .runtime = self.index.project.frontendRuntime(), .cache = cache });
         };
         _ = try self.index.verifyFrontend(self.index.project.arena.allocator());
         self.program = program;
