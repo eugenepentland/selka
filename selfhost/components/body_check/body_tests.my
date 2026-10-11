@@ -2,6 +2,7 @@ import syntax_value
 import graph
 import checking
 import engine
+import locals
 
 func input(value_tag: bytes, return_text: bytes) -> syntax_value.Pool fails syntax_value.Problem:
     mut pool = syntax_value.empty()
@@ -115,21 +116,23 @@ public func test_semantic_depth_limit_is_deliberate_profile_refusal() -> bool fa
     return outcome.data == b"profile" and code.data == b"P_BODY_PROFILE"
 
 
-public func test_range_variable_rebinding_is_profile_not_immutable() -> bool fails syntax_value.Problem:
-    const request = try input(b"integer", b"int")
+public func test_range_variable_assignment_is_native_immutable_error() -> bool fails syntax_value.Problem:
+    mut request = try input(b"integer", b"int")
     const root = len(request.values) - 1
     const program = try graph.field(request, root, "program")
     const context = try graph.field(request, root, "context")
     const source_id = try graph.field(request, context, "source")
     const source = try graph.get(request, source_id)
+    const name = try syntax_value.span(mut request, 0, 1)
+    const payload = try syntax_value.object(mut request, ["name"], [name])
+    const data = try syntax_value.tagged(mut request, b"assignment", payload)
+    const statement = try syntax_value.object(mut request, ["span", "data"], [name, data])
     mut state = try engine.make(request, source.data, program)
-    state.control.ranges = [0]
-    const nodes_id = try graph.field(request, program, "nodes")
-    const nodes = try graph.items(request, nodes_id)
-    const span = try graph.field(request, nodes[0], "span")
-    match engine.admit_assignment(state, 0, span):
+    state.syntax.statements = [statement]
+    _ = try locals.add(mut state.scope, b"f", name, 0, False, b"local")
+    match engine.statement(mut state, 0):
         case Ok(value):
             _ = value
             return False
         case Err(problem):
-            return problem.code == "P_BODY_PROFILE"
+            return problem.code == "E_IMMUTABLE" and problem.message == "this binding cannot be assigned" and problem.start == 0 and problem.end == 1

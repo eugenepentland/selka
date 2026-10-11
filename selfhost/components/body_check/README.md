@@ -16,8 +16,9 @@ are checked by the producer. Diagnostics include related sites and source edits.
 Generic functions, checked failure signatures, managed values, lambdas, resources,
 contracts, nominal declarations, non-i64 literal suffixes, floating division,
 chained comparisons, dynamic assertion messages, and explicit range strides are
-outside B1. Assignment to an active range variable is explicitly outside B1; shadowing an
-existing outer declaration retains the native shadowing diagnostic. Scalar alias
+outside B1. Range variables are read-only: assignment retains the native `E_IMMUTABLE`
+source diagnostic. Shadowing an existing outer declaration retains the native
+shadowing diagnostic. Scalar alias
 declarations can remain in the catalog for name/shadow checking, but alias type
 annotations are not resolved by B1. These limits produce a `P_BODY_PROFILE` result;
 component mode refuses the program without native body fallback. Malformed graph

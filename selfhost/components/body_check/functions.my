@@ -23,7 +23,7 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
         state.batch.resolved.append(-1)
         state.batch.facts.expected.append(-1)
     state.depth = 0
-    state.control = engine.Control(next=0, active=[], exited=[], ranges=[])
+    state.control = engine.Control(next=0, active=[], exited=[])
     const declaration = try graph.field(state.syntax.pool, raw, "name")
     const raw_policy = try graph.field(state.syntax.pool, raw, "policy")
     for field_name in ["constant", "c_abi", "restricted", "conversion"]:

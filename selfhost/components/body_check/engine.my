@@ -40,7 +40,6 @@ public record Control:
     next: int
     active: int[]
     exited: bool[]
-    ranges: int[]
 
 
 public record Statement:
@@ -79,7 +78,7 @@ public func make(pool: syntax_value.Pool, source: bytes, program: int) -> State 
         const span = try graph.field(pool, alias, "name")
         const name = try graph.spelling(pool, source, span)
         batch.facts.top_names.append(name)
-    return State(syntax=Syntax(pool=pool, source=source, nodes=nodes, statements=statements, functions=functions, modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=Control(next=0, active=[], exited=[], ranges=[]), problems=[])
+    return State(syntax=Syntax(pool=pool, source=source, nodes=nodes, statements=statements, functions=functions, modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=Control(next=0, active=[], exited=[]), problems=[])
 
 
 public func problem(state: State, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
@@ -559,7 +558,6 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
             const rejection = try problem(state, name_span, "E_BINDING_DECLARATION", "assignment requires a declared binding; introduce a writable local with `mut`")
             state.problems.append(syntax_problem.repaired(rejection, [syntax_problem.Edit(start=rejection.start, end=rejection.start, text=b"mut ")]))
             fail rejection
-        _ = try admit_assignment(state, slot, name_span)
         if not state.scope.locals[slot].mutable:
             const rejection = try problem(state, name_span, "E_IMMUTABLE", "this binding cannot be assigned")
             fail rejection
@@ -689,7 +687,6 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
         const plan = try range_lower.prepare(mut state.batch, mut state.scope, state.syntax.pool, range_lower.Input(source=state.syntax.source, name=name_span, span=span, start=start.id, end=end.id, loop_id=loop_id))
         state.control.active.append(loop_id)
         state.control.exited.append(False)
-        state.control.ranges.append(plan.index)
         const body_id = try graph.field(state.syntax.pool, payload, "body")
         const body_raw = try graph.number(state.syntax.pool, body_id)
         const before = locals_flow.snapshot(state.scope)
@@ -699,7 +696,6 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
         state.control.active = state.control.active[:last]
         state.control.exited = state.control.exited[:last]
         state.scope.active = active
-        state.control.ranges = state.control.ranges[:len(state.control.ranges) - 1]
         result_payload = try range_lower.finish(mut state.batch, state.syntax.pool, plan, body.id)
         tag = b"range_loop"
     else:
@@ -708,11 +704,3 @@ public func statement(mut state: State, raw_id: int) -> Statement fails syntax_v
     const id = try emission.statement(mut state.batch, state.syntax.pool, span, terminates, tag, result_payload)
     state.depth = state.depth - 1
     return Statement(id=id, terminates=terminates, looping=looping)
-
-
-public func admit_assignment(state: State, slot: int, span: int) -> bool fails syntax_value.Problem:
-    for range_slot in state.control.ranges:
-        if range_slot == slot:
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "range-variable rebinding requires lowering outside B1")
-            fail rejection
-    return True
