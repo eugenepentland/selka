@@ -1,0 +1,105 @@
+import syntax_value
+import syntax_problem
+import graph
+import record_construct
+import record_name_index
+import suggestions
+
+public record Input:
+    source: bytes
+    name: int
+    span: int
+    arguments: int[]
+    argument_names: int[]
+
+
+func rejection(pool: syntax_value.Pool, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+func declared_index(pool: syntax_value.Pool, source: bytes, fields: int[], name: int) -> int fails syntax_value.Problem:
+    const written = try graph.spelling(pool, source, name)
+    for index in range(len(fields)):
+        const declared = try graph.field(pool, fields[index], "name")
+        const spelling = try graph.spelling(pool, source, declared)
+        if written == spelling:
+            return index
+    return -1
+
+
+func missing(pool: syntax_value.Pool, source: bytes, fields: int[]) -> str fails syntax_value.Problem:
+    mut names: bytes[] = []
+    for field in fields:
+        const name = try graph.field(pool, field, "name")
+        const spelling = try graph.spelling(pool, source, name)
+        names.append(spelling)
+    match record_name_index.make(names):
+        case Ok(table):
+            mut declared = ""
+            for position in table.order:
+                if len(declared) != 0:
+                    declared = declared + ", "
+                const text = try suggestions.text(table.names[position])
+                declared = declared + text
+            return "field does not exist on this record type; declared fields: " + declared
+        case Err(error):
+            fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message=error.message)
+
+
+public func bind(pool: syntax_value.Pool, raw_nodes: int[], fields: int[], request: Input, mut problems: syntax_problem.Diagnostic[]) -> record_construct.Initializer[] fails syntax_value.Problem:
+    if len(request.arguments) > len(fields):
+        const error = try rejection(pool, request.span, "E_ARITY", "too many field arguments for this variant case")
+        fail error
+    if len(request.argument_names) != 0 and len(request.argument_names) != len(request.arguments):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="constructor labels do not match operands")
+    mut edits: syntax_problem.Edit[] = []
+    for index in range(len(request.arguments)):
+        const argument = request.arguments[index]
+        if argument < 0 or argument >= len(raw_nodes):
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid constructor operand")
+        mut named = False
+        if len(request.argument_names) != 0:
+            const keyword = try graph.get(pool, request.argument_names[index])
+            named = keyword.kind != 0
+        if not named:
+            const declaration = try graph.field(pool, fields[index], "name")
+            const label = try graph.spelling(pool, request.source, declaration)
+            const span = try graph.field(pool, raw_nodes[argument], "span")
+            const start_id = try graph.field(pool, span, "start")
+            const start = try graph.number(pool, start_id)
+            edits.append(syntax_problem.Edit(start=start, end=start, text=label + b"="))
+    if len(edits) > 0:
+        const error = try rejection(pool, request.span, "E_NAMED_FIELDS", "payload fields must be supplied by name")
+        problems.append(syntax_problem.repaired(error, edits))
+        fail error
+    mut supplied: bool[] = []
+    for _ in fields:
+        supplied.append(False)
+    mut initializers: record_construct.Initializer[] = []
+    for index in range(len(request.arguments)):
+        const keyword = request.argument_names[index]
+        const found = try declared_index(pool, request.source, fields, keyword)
+        if found < 0:
+            const message = try missing(pool, request.source, fields)
+            const error = try rejection(pool, keyword, "E_UNKNOWN_FIELD", message)
+            fail error
+        if supplied[found]:
+            const error = try rejection(pool, keyword, "E_DUPLICATE_FIELD", "field is initialized more than once")
+            fail error
+        supplied[found] = True
+        initializers.append(record_construct.Initializer(name=keyword, value=request.arguments[index], default=False))
+    for index in range(len(fields)):
+        if not supplied[index]:
+            const default_id = try graph.field(pool, fields[index], "default_value")
+            const default_value = try graph.get(pool, default_id)
+            if default_value.kind != 0:
+                const value = try graph.number(pool, default_id)
+                if value < 0 or value >= len(raw_nodes):
+                    fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid constructor default")
+                const name = try graph.field(pool, fields[index], "name")
+                initializers.append(record_construct.Initializer(name=name, value=value, default=True))
+    return initializers

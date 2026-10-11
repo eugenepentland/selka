@@ -1,0 +1,165 @@
+import syntax_value
+import syntax_problem
+import graph
+import variant_construct
+
+record Fixture:
+    pool: syntax_value.Pool
+    nodes: int[]
+    fields: int[]
+    request: variant_construct.Input
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const left = try syntax_value.span(mut pool, 0, 4)
+    const right = try syntax_value.span(mut pool, 5, 10)
+    const name = try syntax_value.span(mut pool, 11, 15)
+    const first = try syntax_value.span(mut pool, 16, 17)
+    const second = try syntax_value.span(mut pool, 18, 19)
+    const zero = try syntax_value.integer(mut pool, 0)
+    const one = try syntax_value.integer(mut pool, 1)
+    const left_field = try syntax_value.object(mut pool, ["name", "default_value"], [left, zero])
+    const right_field = try syntax_value.object(mut pool, ["name", "default_value"], [right, one])
+    const first_node = try syntax_value.object(mut pool, ["span"], [first])
+    const second_node = try syntax_value.object(mut pool, ["span"], [second])
+    const span = try syntax_value.span(mut pool, 11, 20)
+    const request = variant_construct.Input(source=b"left right Pair 3 4 z", name=name, span=span, arguments=[], argument_names=[])
+    return Fixture(pool=pool, nodes=[first_node, second_node], fields=[left_field, right_field], request=request)
+
+
+public func test_omitted_defaults_keep_declaration_order_and_raw_ids() -> bool fails syntax_value.Problem:
+    const fixture = try fresh()
+    mut problems: syntax_problem.Diagnostic[] = []
+    const fields = try variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems)
+    return len(fields) == 2 and fields[0].value == 0 and fields[1].value == 1 and fields[0].default and fields[1].default and len(problems) == 0
+
+
+public func test_named_source_order_precedes_trailing_default() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const right = try graph.field(fixture.pool, fixture.fields[1], "name")
+    fixture.request.arguments = [0]
+    fixture.request.argument_names = [right]
+    mut problems: syntax_problem.Diagnostic[] = []
+    const fields = try variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems)
+    return len(fields) == 2 and fields[0].name == right and fields[0].value == 0 and not fields[0].default and fields[1].value == 0 and fields[1].default
+
+
+public func test_duplicate_labels_fail_before_expression_typing() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try graph.field(fixture.pool, fixture.fields[0], "name")
+    fixture.request.arguments = [0, 1]
+    fixture.request.argument_names = [left, left]
+    mut problems: syntax_problem.Diagnostic[] = []
+    match variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_DUPLICATE_FIELD" and problem.start == 0 and problem.end == 4 and len(problems) == 0
+
+
+public func test_positional_repairs_cover_each_operand_in_written_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    fixture.request.arguments = [0, 1]
+    mut problems: syntax_problem.Diagnostic[] = []
+    const outcome = variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems)
+    match outcome:
+        case Ok(value):
+            return False
+        case Err(problem):
+            if problem.code != "E_NAMED_FIELDS" or problem.start != 11 or problem.end != 20:
+                return False
+    if len(problems) != 1:
+        return False
+    const edits = problems[0].notes.edits
+    return len(edits) == 2 and edits[0].start == 16 and edits[0].end == 16 and edits[0].text == b"left=" and edits[1].start == 18 and edits[1].text == b"right="
+
+
+public func test_arity_precedes_named_repairs() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    fixture.request.arguments = [0, 1, 0]
+    mut problems: syntax_problem.Diagnostic[] = []
+    const outcome = variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems)
+    match outcome:
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_ARITY" and problem.start == 11 and problem.end == 20 and len(problems) == 0
+
+
+public func test_unknown_keyword_lists_fields_lexically_before_defaults() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const unknown = try syntax_value.span(mut fixture.pool, 20, 21)
+    fixture.fields = [fixture.fields[1], fixture.fields[0]]
+    fixture.request.arguments = [1]
+    fixture.request.argument_names = [unknown]
+    mut problems: syntax_problem.Diagnostic[] = []
+    match variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_UNKNOWN_FIELD" and problem.start == 20 and problem.end == 21 and problem.message == "field does not exist on this record type; declared fields: left, right"
+
+
+public func test_required_omission_remains_for_engine_resolution() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const absent = try syntax_value.absent(mut fixture.pool)
+    const left = try graph.field(fixture.pool, fixture.fields[0], "name")
+    const required = try syntax_value.object(mut fixture.pool, ["name", "default_value"], [left, absent])
+    fixture.fields = [required]
+    mut problems: syntax_problem.Diagnostic[] = []
+    const fields = try variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems)
+    return len(fields) == 0 and len(problems) == 0
+
+
+public func test_mixed_keyword_repairs_only_unlabelled_operand() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const absent = try syntax_value.absent(mut fixture.pool)
+    const left = try graph.field(fixture.pool, fixture.fields[0], "name")
+    fixture.request.arguments = [0, 1]
+    fixture.request.argument_names = [left, absent]
+    mut problems: syntax_problem.Diagnostic[] = []
+    match variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems):
+        case Ok(value):
+            return False
+        case Err(problem):
+            if problem.code != "E_NAMED_FIELDS":
+                return False
+    return len(problems) == 1 and len(problems[0].notes.edits) == 1 and problems[0].notes.edits[0].start == 18 and problems[0].notes.edits[0].text == b"right="
+
+
+public func test_invalid_label_shape_is_transport_failure() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try graph.field(fixture.pool, fixture.fields[0], "name")
+    fixture.request.argument_names = [left]
+    mut problems: syntax_problem.Diagnostic[] = []
+    match variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_invalid_operand_precedes_named_repairs() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    fixture.request.arguments = [2]
+    mut problems: syntax_problem.Diagnostic[] = []
+    match variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(problems) == 0
+
+
+public func test_invalid_default_is_transport_failure() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const left = try graph.field(fixture.pool, fixture.fields[0], "name")
+    const invalid = try syntax_value.integer(mut fixture.pool, 2)
+    const field = try syntax_value.object(mut fixture.pool, ["name", "default_value"], [left, invalid])
+    fixture.fields = [field]
+    mut problems: syntax_problem.Diagnostic[] = []
+    match variant_construct.bind(fixture.pool, fixture.nodes, fixture.fields, fixture.request, mut problems):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
