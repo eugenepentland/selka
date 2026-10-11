@@ -1,0 +1,5 @@
+func extract(value: int?) -> int:
+    return value.unwrap_or(0)
+
+func main() -> int:
+    return extract(Some(7))

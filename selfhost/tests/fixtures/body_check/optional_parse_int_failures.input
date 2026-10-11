@@ -1,0 +1,11 @@
+func main() -> int:
+    match parse_int("bad"):
+        case Some(_):
+            return 0
+        case None:
+            pass
+    match parse_int("9223372036854775808"):
+        case Some(_):
+            return 0
+        case None:
+            return 7

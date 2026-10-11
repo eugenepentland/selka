@@ -246,18 +246,22 @@ class BodyQualificationTests(unittest.TestCase):
         inventory=json.loads((D.FIXTURES/'b5_inventory.json').read_text())
         cases,donors=set(inventory['cases']),set(inventory['donors'])
         names=cases|donors
-        self.assertEqual(len(inventory['cases']),34)
-        self.assertEqual(len(cases),34)
+        self.assertEqual(len(inventory['cases']),39)
+        self.assertEqual(len(cases),39)
         self.assertEqual(donors,{'variant_import_dep.my'})
-        self.assertEqual(len(names),35)
+        self.assertEqual(len(names),40)
         self.assertEqual(names-set(manifest),donors)
         self.assertTrue(all((D.FIXTURES/Path(name).with_suffix('.input')).is_file() for name in names))
-        self.assertEqual(inventory['counts'],{'success':18,'diagnostic':14,'profile':2})
+        self.assertEqual(inventory['counts'],{'success':21,'diagnostic':14,'profile':4})
+        demand = (D.FIXTURES/'optional_parse_int_demand.input').read_text()
+        self.assertNotIn('?', demand)
+        self.assertNotIn('Option', demand)
+        self.assertIn('parse_int', demand)
         self.assertEqual(manifest['record_union_profile.my']['result'],7)
         self.assertEqual(manifest['variant_recursive_lists.my']['result'],7)
         self.assertEqual(manifest['variant_boxed_recursive_profile.my']['status'],2)
         self.assertEqual(manifest['variant_generic_profile.my']['status'],2)
-        self.assertEqual(sum(manifest[name]['status']==0 for name in names&set(manifest)),18)
+        self.assertEqual(sum(manifest[name]['status']==0 for name in names&set(manifest)),21)
         self.assertEqual(sum(manifest[name]['status']==1 for name in names&set(manifest)),14)
 
     def test_managed_measurement_edits_preserve_text_and_change_byte_length(self):
@@ -273,7 +277,7 @@ class BodyQualificationTests(unittest.TestCase):
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         refusals=[n for n,v in manifest.items() if v['status']==2]
-        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','profile_text_repeat.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my'})
+        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','profile_text_repeat.my','record_generic_profile.my','record_invariant_profile.my','variant_generic_profile.my','variant_boxed_recursive_profile.my','record_invariant_unused.my','record_invariant_imported.my','optional_methods_profile.my','optional_narrowing_profile.my'})
         self.assertEqual(manifest['profile_managed.my']['result'], 1)
         self.assertTrue(all((D.FIXTURES/Path(n).with_suffix('.input')).is_file() for n in manifest))
         self.assertTrue(manifest['library.my']['library'])
