@@ -590,5 +590,119 @@
     "typed": true,
     "library": false,
     "result": 7
+  },
+  "record_alias_import.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_call_return_list.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_constructor_defaults.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_constructor_named_order.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_duplicate_field_error.my": {
+    "status": 1,
+    "boundary": "record-body",
+    "code": "E_DUPLICATE_FIELD"
+  },
+  "record_field_type_error.my": {
+    "status": 1,
+    "boundary": "record-body",
+    "code": "E_TYPE"
+  },
+  "record_generic_profile.my": {
+    "status": 2,
+    "boundary": "record-body"
+  },
+  "record_invariant_profile.my": {
+    "status": 2,
+    "boundary": "record-body"
+  },
+  "record_list_path_snapshot.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_missing_field_error.my": {
+    "status": 1,
+    "boundary": "record-body",
+    "code": "E_INCOMPLETE_CONSTRUCTION"
+  },
+  "record_mut_parameter_snapshot.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_nested_snapshot.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_private_import_error.my": {
+    "status": 1,
+    "boundary": "record-body",
+    "code": "E_PRIVATE_SYMBOL"
+  },
+  "record_readonly_field_error.my": {
+    "status": 1,
+    "boundary": "record-body",
+    "code": "E_IMMUTABLE"
+  },
+  "record_receiver_overlap_error.my": {
+    "status": 1,
+    "boundary": "record-body",
+    "code": "E_MUTATION_OVERLAP"
+  },
+  "record_refreshed_receiver.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_union_profile.my": {
+    "status": 2,
+    "boundary": "record-body"
+  },
+  "record_unknown_field_error.my": {
+    "status": 1,
+    "boundary": "record-body",
+    "code": "E_UNKNOWN_FIELD"
+  },
+  "record_unknown_member_error.my": {
+    "status": 1,
+    "boundary": "record-body",
+    "code": "E_UNKNOWN_FIELD"
+  },
+  "record_recursive_lists.my": {
+    "status": 0,
+    "boundary": "record-body",
+    "typed": true,
+    "result": 7
+  },
+  "record_invariant_unused.my": {
+    "status": 2,
+    "boundary": "global-invariant-preflight"
+  },
+  "record_invariant_imported.my": {
+    "status": 2,
+    "boundary": "global-invariant-preflight"
   }
 }

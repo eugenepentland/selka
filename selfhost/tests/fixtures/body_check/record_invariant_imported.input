@@ -1,0 +1,4 @@
+import record_invariant_dependency
+
+func main() -> int:
+    return 7

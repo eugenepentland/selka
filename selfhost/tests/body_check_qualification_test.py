@@ -15,29 +15,31 @@ class BodyQualificationTests(unittest.TestCase):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         n=len(manifest)+2*sum(bool(v.get('typed')) and not v.get('library') for v in manifest.values())+sum('result' in v for v in manifest.values())+16
         return (f'body_check qualification: {n} workflows, {n*2} comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
-                'body_check transport: 1 valid, 16 malformed; 0 failed, 0 skipped\n'
-                'body_check forged replies: 16 rejected; 0 failed, 0 skipped\n'
+                'body_check transport: 1 valid, 17 malformed; 0 failed, 0 skipped\n'
+                'body_check forged replies: 24 rejected; 0 failed, 0 skipped\n'
                 'body_check publication: 2 host failures; 0 failed, 0 skipped\n')
 
     def test_gate_rejects_incomplete_or_duplicate_verdicts(self):
         good=self.summary();G.require_summary(good)
-        for bad in (good+good,good.replace('30 warm','29 warm'),good.replace('4 live','0 live'),good.replace('16 malformed','15 malformed'),good.replace('16 rejected','8 rejected'),good.replace('2 host','1 host'),good.replace('0 skipped','1 skipped')):
+        for bad in (good+good,good.replace('30 warm','29 warm'),good.replace('4 live','0 live'),good.replace('17 malformed','16 malformed'),good.replace('24 rejected','8 rejected'),good.replace('2 host','1 host'),good.replace('0 skipped','1 skipped')):
             with self.assertRaises(RuntimeError):G.require_summary(bad)
 
     def test_frame_binds_whole_request(self):
         payload=b'raw body\x00'+ 'éλ'.encode();frame=D.frame(payload)
         self.assertEqual(frame[:8],b'SLKBCK01')
-        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,3,0,len(payload)))
+        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,4,0,len(payload)))
         self.assertEqual(frame[32:64],D.F.hashlib.sha256(payload).digest())
         self.assertEqual(frame[64:],payload)
 
     def test_package_authentication_requires_all_seven(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);artifact=root/'artifact';artifact.write_bytes(b'fixture')
-            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,3)]:
+            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,4)]:
                 (root/(name+'.json')).write_text(json.dumps(dict(format=1,component=name,protocol=protocol,schema=schema,artifact='artifact',sha256=D.F.digest(artifact))))
             self.assertEqual(len(D.packages(root)),7)
-            manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=1;manifest.write_text(json.dumps(value))
+            manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=3;manifest.write_text(json.dumps(value))
+            with self.assertRaisesRegex(RuntimeError,'invalid qualified identity'):D.packages(root)
+            value['schema']=1;manifest.write_text(json.dumps(value))
             self.assertEqual(len(D.packages(root,body_schema=1)),7)
             with self.assertRaisesRegex(RuntimeError,'invalid qualified identity'):D.packages(root)
             value['schema']=True;manifest.write_text(json.dumps(value))
@@ -134,6 +136,52 @@ class BodyQualificationTests(unittest.TestCase):
             for index, (a, b) in enumerate(zip(before, after)):
                 self.assertEqual(b, dict(a, integer=value) if index == target else a)
 
+    def test_record_forgery_targets_duplicate_out_of_bounds_read_and_update_indices(self):
+        rows = []
+        def add(kind, integer=0, data=b'', children=(), names=()):
+            rows.append((kind, integer, data, children, names))
+            return len(rows)-1
+        def record(**fields):
+            return add(5, children=list(fields.values()), names=[key.encode() for key in fields])
+        def tagged(name, child):
+            return add(7, data=name, children=[child])
+        first, second, projection, update = [add(1, value) for value in (0, 1, 0, 1)]
+        initializers = [record(index=first), record(index=second)]
+        constructor_node = record(data=tagged(b'record', add(6, children=initializers)))
+        field_node = record(data=tagged(b'field', record(index=projection)))
+        update_node = record(data=tagged(b'update', record(fields=add(6, children=[record(index=update)]))))
+        batch = record(nodes=add(6, children=[constructor_node, field_node, update_node]))
+        root = tagged(b'success', record(batch=batch))
+        payload = bytearray(b'SLKBKR01' + struct.pack('<II', len(rows), root))
+        for kind, value, data, children, names in rows:
+            payload.extend(struct.pack('<BqI', kind, value, len(data)) + data + struct.pack('<I', len(children)))
+            for child in children:
+                payload.extend(struct.pack('<I', child))
+            payload.extend(struct.pack('<I', len(names)))
+            for name in names:
+                payload.extend(struct.pack('<I', len(name)) + name)
+        original = bytes(payload)
+        variants = D.mutate_records(original)
+        self.assertEqual(len(set(variants)), 4)
+        before, _ = D.graph_rows(original)
+        for changed, (target, value) in zip(variants, [(first, 1), (first, 2), (projection, 2147483647), (update, 2147483647)]):
+            after, actual_root = D.graph_rows(changed)
+            self.assertEqual(actual_root, root)
+            self.assertEqual(len(changed), len(original))
+            self.assertEqual(after[target]['integer'], value)
+            for index, (a, b) in enumerate(zip(before, after)):
+                self.assertEqual(b, dict(a, integer=value) if index == target else a)
+
+    def test_record_manifest_promotes_recursive_lists_and_keeps_global_invariant_refusals(self):
+        manifest = json.loads((D.FIXTURES/'manifest.json').read_text())
+        self.assertNotIn('record_recursive_profile.my', manifest)
+        self.assertEqual(manifest['record_recursive_lists.my']['result'], 7)
+        self.assertTrue(manifest['record_recursive_lists.my']['typed'])
+        self.assertEqual(manifest['record_invariant_unused.my']['status'], 2)
+        self.assertEqual(manifest['record_invariant_imported.my']['status'], 2)
+        self.assertNotIn('Box', (D.FIXTURES/'record_invariant_unused.input').read_text().split('func main', 1)[1])
+        self.assertIn('@invariant', (D.FIXTURES/'record_invariant_dependency.input').read_text())
+
     def test_managed_measurement_edits_preserve_text_and_change_byte_length(self):
         import measure_managed_body_adoption as M
         self.assertIn('é😀ab'.encode(),M.HELPER)
@@ -147,7 +195,7 @@ class BodyQualificationTests(unittest.TestCase):
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         refusals=[n for n,v in manifest.items() if v['status']==2]
-        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','profile_text_repeat.my'})
+        self.assertEqual(set(refusals),{'profile_generic.my','profile_lambda.my','profile_division.my','profile_chained_comparison.my','profile_range_stride.my','profile_integer_suffix.my','profile_text_method.my','profile_text_repeat.my','record_generic_profile.my','record_invariant_profile.my','record_union_profile.my','record_invariant_unused.my','record_invariant_imported.my'})
         self.assertEqual(manifest['profile_managed.my']['result'], 1)
         self.assertTrue(all((D.FIXTURES/Path(n).with_suffix('.input')).is_file() for n in manifest))
         self.assertTrue(manifest['library.my']['library'])

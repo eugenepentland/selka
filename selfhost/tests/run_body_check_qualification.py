@@ -18,7 +18,7 @@ COMPONENT = 'body-check'
 
 def frame(payload):
     identity = b'bodytest' + F.hashlib.sha256(payload).digest()
-    return b'SLKBCK01' + struct.pack('<IIII', 1, 3, 0, len(payload)) + identity + payload
+    return b'SLKBCK01' + struct.pack('<IIII', 1, 4, 0, len(payload)) + identity + payload
 
 
 def blob(value):
@@ -36,9 +36,9 @@ def transport(binary, work, env, valid):
     request.write_bytes(valid)
     status, stdout, stderr = F.execute([binary, '--exchange', request], env, work, 30)
     F.require(status == 0 and not stderr and stdout[:8] == b'SLKBCK01' and stdout[24:64] == valid[24:64], 'valid body exchange failed')
-    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, 3, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
+    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, 4, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
     malformed = [b'', valid[:63], valid[:-1], valid+b'X', b'BADMAGIC'+valid[8:]]
-    for offset,value in ((8,2),(12,1),(12,2),(16,1),(20,67108864)):
+    for offset,value in ((8,2),(12,1),(12,2),(12,3),(16,1),(20,67108864)):
         changed=bytearray(valid);struct.pack_into('<I',changed,offset,value);malformed.append(bytes(changed))
     payload=valid[64:]
     malformed.extend([frame(b'BADMAGIC'+payload[8:]), frame(payload[:-1])])
@@ -152,7 +152,45 @@ def mutate_lists(payload):
     return variants
 
 
-def packages(directory, body_schema=3):
+def mutate_records(payload):
+    """Corrupt record-only structure in an otherwise authentic owned batch."""
+    rows, root = graph_rows(payload)
+    F.require(rows[root]['kind'] == 7 and rows[root]['data'] == b'success', 'record capture is not success')
+    def field(node, name):
+        row = rows[node]
+        F.require(row['kind'] == 5 and name in row['names'], 'missing record field ' + repr(name))
+        return row['children'][row['names'].index(name)]
+    output = rows[root]['children'][0]
+    batch = field(output, b'batch')
+    nodes = rows[field(batch, b'nodes')]['children']
+    constructors, projections, updates = [], [], []
+    for node in nodes:
+        data = rows[field(node, b'data')]
+        if data['data'] == b'record':
+            entries = rows[data['children'][0]]['children']
+            if len(entries) >= 2:
+                constructors.append(entries)
+        elif data['data'] == b'field':
+            projections.append(data['children'][0])
+        elif data['data'] == b'update':
+            updates.extend(rows[field(data['children'][0], b'fields')]['children'])
+    F.require(constructors and projections and updates, 'record capture lacks constructor/read/update coverage')
+    entries = constructors[0]
+    first, second = field(entries[0], b'index'), field(entries[1], b'index')
+    F.require(rows[first]['integer'] != rows[second]['integer'], 'authentic initializer indices duplicate')
+    targets = [(first, rows[second]['integer']), (first, len(entries)),
+               (field(projections[0], b'index'), 2147483647),
+               (field(updates[0], b'index'), 2147483647)]
+    variants = []
+    for target, value in targets:
+        F.require(rows[target]['kind'] == 1, 'record field index is not integer')
+        changed = bytearray(payload)
+        struct.pack_into('<q', changed, rows[target]['integer_at'], value)
+        variants.append(bytes(changed))
+    return variants
+
+
+def packages(directory, body_schema=4):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
                 'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), 'type-interface': (1, 1), COMPONENT: (1, body_schema)}
@@ -344,10 +382,11 @@ def capture_exchange(args,q,private,real,source,mode='component',mutate=False):
     return result,request.read_bytes(),reply.read_bytes()
 
 
-def forged_replies(args,q,private,success,list_success):
+def forged_replies(args,q,private,success,list_success,record_success):
     checked=0
     cases = [('main.my', payload) for payload in mutate_success(success[64:])]
     cases.extend(('profile_managed.my', payload) for payload in mutate_lists(list_success[64:]))
+    cases.extend(('record_nested_snapshot.my', payload) for payload in mutate_records(record_success[64:]))
     for case,(source,payload) in enumerate(cases):
         path=q.work/f'forged-body-{case}.bin';path.write_bytes(payload)
         for mode in q.modes:
@@ -403,7 +442,9 @@ def main():
                              environment('component', args.component_dir, q.empty_path),request)
         list_captured, _, list_reply = capture_exchange(args, q, private, real, 'profile_managed.my')
         F.require(list_captured == (0, b'', b''), 'authentic inferred list capture failed')
-        forged = forged_replies(args, q,private,reply,list_reply)
+        record_captured, _, record_reply = capture_exchange(args, q, private, real, 'record_nested_snapshot.my')
+        F.require(record_captured == (0, b'', b''), 'authentic nested record capture failed')
+        forged = forged_replies(args, q,private,reply,list_reply,record_reply)
         publication = publication_checks(args, q)
         edit = coordinator_edit(args, q) if args.edit_check else None
         report = {'host_sha256': host, 'packages': manifests, 'workflows': workflows,

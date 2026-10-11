@@ -1,0 +1,6 @@
+@invariant(self.value >= 0, "nonnegative")
+record Box:
+    value: int
+
+func main() -> int:
+    return 7
