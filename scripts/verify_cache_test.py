@@ -48,6 +48,10 @@ elif phase=='prepare':
         (package/(name+'.json')).write_text(json.dumps({{'artifact':name}}))
 elif (root/'.failure').exists():
     raise SystemExit(int((root/'.failure').read_text()))
+elif (root/'.hang-gate').exists():
+    import time
+    (root/'.gate-started').touch()
+    time.sleep(30)
 '''
 
 
@@ -99,7 +103,7 @@ class VerificationCoordinator(unittest.TestCase):
     def save_plan(self):
         self.write('gate-contract.json', json.dumps(self.plan))
 
-    def admit(self, root, kind, argv, env, unchanged, timings=None):
+    def admit(self, root, kind, argv, env, unchanged, timings=None, **controls):
         self.admissions.append((kind, argv))
         if kind == 'gate' and self.before_gate:
             self.before_gate()
@@ -117,9 +121,9 @@ class VerificationCoordinator(unittest.TestCase):
                             'worker_seconds': 0.0, 'observed_held_seconds': 0.0, 'elapsed_seconds': 0.0})
         return status, 0.0
 
-    def execute(self, options=None, force=False, shared=None):
+    def execute(self, options=None, force=False, shared=None, **controls):
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            return coordinator.execute(self.root, self.cache, self.zig, options or ['-j3'], force, shared)
+            return coordinator.execute(self.root, self.cache, self.zig, options or ['-j3'], force, shared, **controls)
 
     def test_shared_success_reuses_after_private_action_receipts_removed(self):
         shared = self.root / '.shared-evidence'
@@ -256,6 +260,89 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(self.admissions, [])
         self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
         self.assertEqual([len(self.events(phase)) for phase in ['plan', 'prepare', 'gate']], [1, 1, 1])
+
+    def test_fixture_invalidation_names_changed_dependency(self):
+        self.assertEqual(self.execute(), 0)
+        first = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(first['actions'][0]['invalidation']['status'], 'unknown')
+        self.input.write_text('changed fixture')
+        self.assertEqual(self.execute(), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertIn({'kind': 'file_content_changed', 'name': 'inputs/unit/fixture.txt'},
+                      report['actions'][0]['invalidation']['changes'])
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+
+    def test_corrupt_diagnostics_and_advisory_budget_do_not_invalidate_success(self):
+        self.assertEqual(self.execute(), 0)
+        (self.cache / 'diagnostics/unit.json').write_text('not valid JSON')
+        (self.cache / 'diagnostics/docs.json').unlink()
+        self.admissions.clear()
+        self.assertEqual(self.execute(warn_after=1e-12), 0)
+        self.assertEqual(self.admissions, [])
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertTrue(report['loop_budget']['exceeded'])
+        self.assertFalse(report['loop_budget']['enforced'])
+
+    def test_execution_deadline_change_invalidates_success_and_is_explained(self):
+        self.assertEqual(self.execute(gate_timeout=60), 0)
+        self.admissions.clear()
+        self.assertEqual(self.execute(gate_timeout=30), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertIn({'kind': 'common_changed', 'name': 'execution_limits'},
+                      report['actions'][0]['invalidation']['changes'])
+
+    def test_invalid_deadlines_fail_before_admission(self):
+        for value in (0, -1, True, float('inf'), float('nan')):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.execute(gate_timeout=value)
+        self.assertEqual(self.admissions, [])
+        self.assertEqual(self.receipts(), [])
+
+    def test_preparation_timeout_writes_incomplete_report(self):
+        with patch.object(coordinator, 'prepare', side_effect=coordinator.VerificationError('timed out', 124)):
+            with self.assertRaises(coordinator.VerificationError) as raised:
+                self.execute(build_timeout=1)
+        self.assertEqual(raised.exception.status, 124)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertFalse(report['success'])
+        self.assertEqual(report['stage'], 'preparation')
+        self.assertEqual(report['status'], 124)
+        self.assertEqual(self.receipts(), [])
+
+    def test_report_storage_failure_preserves_timeout_and_success(self):
+        original = coordinator.atomic_record
+        def write(path, value):
+            if path.name == 'last-run.json':
+                raise OSError('diagnostic storage unavailable')
+            original(path, value)
+        with patch.object(coordinator, 'atomic_record', side_effect=write):
+            with patch.object(coordinator, 'prepare', side_effect=coordinator.VerificationError('timed out', 124)):
+                with self.assertRaises(coordinator.VerificationError) as raised:
+                    self.execute(build_timeout=1)
+            self.assertEqual(raised.exception.status, 124)
+            self.assertEqual(self.execute(), 0)
+            self.assertEqual(len(self.receipts()), 2)
+            self.admissions.clear()
+            self.assertEqual(self.execute(), 0)
+            self.assertEqual(self.admissions, [])
+
+    def test_real_admitted_timeout_never_publishes_and_next_request_recovers(self):
+        environment = {'MYLANG_SLOT_DIR': str(self.root / '.private-slots'),
+                       'MYLANG_BUILD_MEM': '0', 'MYLANG_GATE_MEM': '0',
+                       'MYLANG_SLOT_POLL': '1', 'MYLANG_SLOT_SETTLE': '0', 'MYLANG_TIMING_CPUS': ''}
+        self.write('.hang-gate', 'yes')
+        with patch.dict(os.environ, environment), patch.object(coordinator, 'run_admitted', REAL_ADMISSION):
+            self.assertEqual(self.execute(gate_timeout=.5), 124)
+            report = coordinator.read_record(self.cache / 'last-run.json')
+            self.assertFalse(report['success'])
+            self.assertTrue(report['admissions'][-1]['timed_out'])
+            self.assertTrue((self.root / '.gate-started').exists())
+            self.assertEqual(self.receipts(), [])
+            (self.root / '.hang-gate').unlink()
+            self.assertEqual(self.execute(gate_timeout=.5), 0)
+            self.assertEqual(len(self.receipts()), 2)
 
     def test_always_fresh_action_runs_on_warm_request_without_reusing_its_success(self):
         self.plan['groups'].append(group('fresh', ['inputs/unit/'], False))

@@ -160,6 +160,10 @@ pub const verification_cache = [_][]const u8{
     "scripts/fuzz_campaign_store.py",
     "scripts/verify_cache.py",
     "scripts/verification_snapshot.py",
+    "scripts/verification_process.py",
+    "scripts/verification_process_test.py",
+    "scripts/verification_report.py",
+    "scripts/verification_report_test.py",
     "scripts/verification_artifacts.py",
     "scripts/verify_cache_test.py",
     "scripts/verification_snapshot_test.py",
@@ -185,6 +189,8 @@ pub const fuzz_campaign = [_][]const u8{
     "scripts/fuzz_coverage_test.py",
     "scripts/verify_cache.py",
     "scripts/verification_snapshot.py",
+    "scripts/verification_process.py",
+    "scripts/verification_report.py",
     "scripts/build-slot.sh",
     "tests/differential_corpus.py",
     "tests/test_differential_corpus.py",
@@ -212,6 +218,8 @@ pub const juice_cache = [_][]const u8{
     "scripts/fuzz_campaign_store.py",
     "scripts/verify_cache.py",
     "scripts/verification_snapshot.py",
+    "scripts/verification_process.py",
+    "scripts/verification_report.py",
     "scripts/build-slot.sh",
 };
 

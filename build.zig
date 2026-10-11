@@ -875,7 +875,7 @@ pub fn build(b: *std.Build) void {
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
     const verification_tests = b.step("test-verification-cache", "Verify action receipt admission and immutable input snapshots");
-    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py" }) |script| {
+    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py" }) |script| {
         const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
         verification_run.addArgs(&.{ "python3", script });
         verification_tests.dependOn(&verification_run.step);

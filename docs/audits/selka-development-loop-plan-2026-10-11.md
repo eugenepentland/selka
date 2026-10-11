@@ -1,6 +1,8 @@
 # Selka development loop improvement plan
 
-Date: 11 October 2026. Status: proposed; implementation has not started.
+Date: 11 October 2026. Status: implementation started with DL1 instrumentation,
+DL2 command-deadline plumbing and the first reviewed DL3 test boundary.
+Full calibration, broader dependency splits and later waves remain open.
 Baseline: local `main` at `e935448025873afc0740b345acf77b7e4f09dda3`.
 
 Make ordinary compiler edits cheap to build and verify, keep expensive checks

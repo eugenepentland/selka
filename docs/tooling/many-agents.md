@@ -120,6 +120,9 @@ the gate slot. Missing and freshness-required actions share one normal FIFO
 gate invocation, retaining the build graph's dependency and memory scheduling.
 New unregistered checks force execution of the original complete gate.
 
+Optional admitted-command deadlines, advisory loop targets, bounded logs and
+dependency explanations are described in [development loop measurements](development-loop.md).
+
 The output distinguishes `reused`, `execute`, and `fresh`. Guardian, git-history
 checks, input-coverage membership checks, generated-output validation, and guest suites with execution-time effect
 decisions remain fresh. Guest suites retain their compiler-managed per-test
