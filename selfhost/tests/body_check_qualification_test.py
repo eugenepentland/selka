@@ -38,6 +38,8 @@ class BodyQualificationTests(unittest.TestCase):
                 (root/(name+'.json')).write_text(json.dumps(dict(format=1,component=name,protocol=protocol,schema=schema,artifact='artifact',sha256=D.F.digest(artifact))))
             self.assertEqual(len(D.packages(root)),7)
             manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=1;manifest.write_text(json.dumps(value))
+            with self.assertRaisesRegex(RuntimeError,'invalid qualified identity'):D.packages(root)
+            value['schema']=True;manifest.write_text(json.dumps(value))
             with self.assertRaisesRegex(RuntimeError,'noninteger'):D.packages(root)
             manifest.unlink()
             with self.assertRaises(FileNotFoundError):D.packages(root)
