@@ -1,0 +1,25 @@
+record Metrics:
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+    f: int
+
+
+func score(item: Metrics, count: int) -> int:
+    mut total = 0
+    for i in range(count):
+        total += item.a + item.b + item.c + item.d + item.e + item.f + i
+    return total
+
+
+func probe(n: int) -> int:
+    const item = Metrics(a=n, b=n + 1, c=n + 2, d=n + 3, e=n + 4, f=n + 5)
+    return score(item, n)
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

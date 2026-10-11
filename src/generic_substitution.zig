@@ -83,7 +83,8 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *Catalog, src: Source, sin
     // declared with the prelude but materialized on its first mention, so a
     // module-local declaration of that name still wins its own scope.
     const name = src.text(span);
-    if (std.mem.eql(u8, name, @import("nominal_templates.zig").byte_buffer_name) and !(catalog.module_names != null and try catalog.module_names.?.topLevel(span)))
+    const lazy_builtin = std.mem.eql(u8, name, @import("nominal_templates.zig").byte_buffer_name) or std.mem.eql(u8, name, "TextView") or std.mem.eql(u8, name, "ByteView");
+    if (lazy_builtin and !(catalog.module_names != null and try catalog.module_names.?.topLevel(span)))
         if (try nominal_catalog.materializePrelude(catalog, name, span)) |ty| return ty;
     return catalog.resolve(src, span, sink);
 }

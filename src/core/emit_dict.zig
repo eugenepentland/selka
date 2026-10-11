@@ -74,7 +74,10 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
             const value = if (shape.value == .void) "null" else try slot(Context, c, out, shape.value, operands[1], stride - value_offset);
             try out.print(arena, "  {s} = call ptr @myl_core_dict_insert(ptr {s}, i64 {s}, ptr {s}, ptr {s}, i1 {s})\n", .{ name, try c.value(inst.a), try c.value(inst.b), key, value, if (c.verifyMode()) "true" else "false" });
         },
-        .dict_remove => try out.print(arena, "  {s} = call ptr @myl_core_dict_remove(ptr {s}, i64 {s})\n", .{ name, try c.value(inst.a), try c.value(inst.b) }),
+        .dict_remove => {
+            const taken = (inst.data & @import("flags.zig").dict_take_mask) >> 56;
+            try out.print(arena, "  {s} = call ptr @myl_core_dict_remove_parts(ptr {s}, i64 {s}, i32 {d})\n", .{ name, try c.value(inst.a), try c.value(inst.b), taken });
+        },
         .dict_entries => try out.print(arena, "  {s} = call i64 @myl_core_dict_entries(ptr {s})\n", .{ name, try c.value(inst.a) }),
         .dict_entry_live => try out.print(arena, "  {s} = call zeroext i1 @myl_core_dict_live(ptr {s}, i64 {s})\n", .{ name, try c.value(inst.a), try c.value(inst.b) }),
         .dict_copy, .dict_clear => try out.print(arena, "  {s} = call ptr @{s}(ptr {s})\n", .{ name, if (inst.op == .dict_copy) "myl_core_dict_copy" else "myl_core_dict_clear", try c.value(inst.a) }),
@@ -389,8 +392,8 @@ fn unionKeySame(comptime Context: type, c: Context, out: *@import("std").ArrayLi
 
 fn textHashDefinition(comptime Context: type, c: Context, out: *@import("std").ArrayList(u8), symbol: []const u8) Error!void {
     try out.print(c.a(), "define internal i64 {s}.hash(ptr %text) alwaysinline nounwind {{\nentry:\n", .{symbol});
+    try out.print(c.a(), "  %kind_at = getelementptr inbounds i8, ptr %text, i64 {d}\n", .{c.module().kindOffset()});
     try out.appendSlice(c.a(),
-        \\  %kind_at = getelementptr inbounds i8, ptr %text, i64 4
         \\  %kind = load i32, ptr %kind_at, align 4
         \\  %hashed_bit = and i32 %kind, 512
         \\  %hashed = icmp ne i32 %hashed_bit, 0

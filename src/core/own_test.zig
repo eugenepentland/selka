@@ -9,6 +9,9 @@ const print = @import("print.zig");
 const driver = @import("driver.zig");
 const support = @import("test_support.zig");
 const options = @import("core_test_options");
+const effects = @import("effects.zig");
+const facts = @import("facts.zig");
+const promotion = @import("promote.zig");
 
 const Hand = support.Hand;
 
@@ -554,6 +557,227 @@ test "a wrong length bound behind a stack list is caught by the verify build" {
     const sabotaged = try stackRun(arena.allocator(), root, "sabotage", &.{ "--release", "--sabotage-facts" });
     try std.testing.expectEqual(@as(u8, 1), sabotaged.run.term.exited);
     try std.testing.expect(contains(sabotaged.run.stderr, "error[R_CORE_FACT]"));
+}
+
+const stack_borrowing =
+    \\func total(xs: int[]) -> int:
+    \\    mut answer = 0
+    \\    for x in xs:
+    \\        answer += x
+    \\    return answer
+    \\
+    \\func forwarded(xs: int[]) -> int:
+    \\    return total(xs)
+    \\
+    \\func both(xs: int[], ys: int[]) -> int:
+    \\    return total(xs) + total(ys)
+    \\
+    \\func borrowed_caller(seed: int) -> int:
+    \\    mut xs = [seed, seed + 1, seed + 2]
+    \\    mut alias = xs
+    \\    return forwarded(alias) + both(xs, alias)
+    \\
+    \\func looped(seed: int) -> int:
+    \\    mut answer = 0
+    \\    for i in range(4):
+    \\        mut xs = [seed + i, seed]
+    \\        answer += forwarded(xs)
+    \\    return answer
+    \\
+    \\func read_then_fill(seed: int) -> int:
+    \\    mut xs = [seed]
+    \\    mut before = total(xs)
+    \\    xs.append(seed + 1)
+    \\    return before + total(xs)
+    \\
+    \\func snapshot(seed: int) -> int:
+    \\    mut xs = [seed, seed + 1]
+    \\    mut before = xs
+    \\    xs.append(seed + 2)
+    \\    return total(before) * 10 + total(xs)
+    \\
+    \\func returned(xs: int[]) -> int[]:
+    \\    if total(xs) < 0:
+    \\        return xs
+    \\    return xs
+    \\
+    \\func returned_caller(seed: int) -> int:
+    \\    mut xs = [seed, seed + 1]
+    \\    return total(returned(xs)) + total(xs)
+    \\
+    \\func keep_second(read: int[], kept: int[]) -> int[][]:
+    \\    return [kept]
+    \\
+    \\func stored_caller(seed: int) -> int:
+    \\    mut xs = [seed, seed + 1]
+    \\    mut nested = keep_second(xs, xs)
+    \\    return total(nested[0]) + total(xs)
+    \\
+    \\func grow(mut xs: int[]):
+    \\    xs.append(9)
+    \\
+    \\func mutated_caller(seed: int) -> int:
+    \\    mut xs = [seed]
+    \\    grow(mut xs)
+    \\    return total(xs)
+    \\
+    \\func indirect_caller(read: func(int[]) -> int, seed: int) -> int:
+    \\    mut xs = [seed]
+    \\    return read(xs)
+    \\
+    \\func joined(flag: bool) -> int:
+    \\    mut xs = [1, 2]
+    \\    if flag:
+    \\        xs = [3, 4]
+    \\    return total(xs)
+    \\
+    \\func strings(xs: str[]) -> int:
+    \\    mut answer = 0
+    \\    for x in xs:
+    \\        answer += len(x)
+    \\    return answer
+    \\
+    \\func managed_elements() -> int:
+    \\    return strings(["one", "two"])
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(borrowed_caller(3), looped(3), read_then_fill(3), snapshot(3))
+    \\    out.print(returned_caller(3), stored_caller(3), mutated_caller(3), indirect_caller(total, 3))
+    \\    out.print(joined(False), joined(True), managed_elements())
+    \\    return 0
+    \\
+;
+
+/// Run promotion directly, before inlining can erase a call boundary under test.
+fn stackLists(a: std.mem.Allocator, module: *ir.Module, name: []const u8, summaries: ?*const effects.Summaries) !u32 {
+    for (module.functions.items) |*function| {
+        if (!std.mem.eql(u8, function.name, name)) continue;
+        const known = try facts.analyze(a, function, .{ .mark = false });
+        const promoted = try promotion.promote(a, module, function, &known, .{ .effects = summaries });
+        return promoted.lists;
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec: NEW-CORE-STACK-2
+test "stack borrowing promotes loop readers, forwarding and repeated ordinary arguments without inlining" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(a, stack_borrowing, &refusal);
+    const summaries = try effects.analyze(a, &module);
+    // Missing proof is conservative, even for a direct call with no mut parameter.
+    try std.testing.expectEqual(@as(u32, 0), try stackLists(a, &module, "borrowed_caller", null));
+    // One safe occurrence cannot hide the second argument's store. Returned aliases,
+    // mut/indirect calls, managed children, general phis and old snapshots still escape.
+    const cases = [_]struct { name: []const u8, expected: u32 }{
+        .{ .name = "borrowed_caller", .expected = 1 },
+        .{ .name = "looped", .expected = 1 },
+        .{ .name = "read_then_fill", .expected = 1 },
+        .{ .name = "returned_caller", .expected = 0 },
+        .{ .name = "stored_caller", .expected = 0 },
+        .{ .name = "mutated_caller", .expected = 0 },
+        .{ .name = "indirect_caller", .expected = 0 },
+        .{ .name = "managed_elements", .expected = 0 },
+        .{ .name = "joined", .expected = 0 },
+        .{ .name = "snapshot", .expected = 0 },
+    };
+    for (cases) |case| {
+        try std.testing.expectEqual(case.expected, try stackLists(a, &module, case.name, &summaries));
+    }
+}
+
+// spec-case: NEW-CORE-STACK-2
+test "stack borrowing preserves snapshots and repeated loop instances in debug release and verify builds" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    const modes = [_]?@import("passes.zig").Mode{ null, .trusted, .verify };
+    for (modes) |mode| {
+        var module = try support.buildSource(a, stack_borrowing, &refusal);
+        const run = if (mode) |selected| blk: {
+            const result = try support.runPasses(a, &module, selected);
+            const checked = try support.runOwned(a, &module, .{ .release = true, .verify = selected == .verify, .own = false, .analysis = support.analysis(&result) });
+            const caller = llvmFunction(checked.llvm, "@\"my.borrowed_caller\"(");
+            try std.testing.expect(contains(caller, "alloca [56 x i8], align 32"));
+            try std.testing.expect(!contains(caller, "@myl_core_list_new("));
+            break :blk checked;
+        } else try support.runOwned(a, &module, .{});
+        try std.testing.expectEqual(@as(u8, 0), run.status);
+        try std.testing.expectEqualStrings("36 30 10 82\n14 14 12 3\n3 7 6\n", run.stdout);
+        try std.testing.expectEqualStrings("", run.stderr);
+    }
+}
+
+const stack_borrow_trap =
+    \\func last(xs: int[], index: int) -> int:
+    \\    mut answer = 0
+    \\    for x in xs:
+    \\        answer += x
+    \\    return answer + xs[index]
+    \\
+    \\func main(out: Stream) -> int:
+    \\    out.print(17)
+    \\    mut xs = [1, 2]
+    \\    return last(xs, 2)
+    \\
+;
+
+// spec-case: NEW-CORE-STACK-2
+test "stack borrowing keeps a helper bounds trap after earlier output" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: @import("build.zig").Refusal = .{};
+    var module = try support.buildSource(a, stack_borrow_trap, &refusal);
+    const result = try support.runPasses(a, &module, .verify);
+    const run = try support.runOwned(a, &module, .{ .release = true, .verify = true, .own = false, .leakcheck = false, .analysis = support.analysis(&result) });
+    try std.testing.expectEqual(@as(u8, 1), run.status);
+    try std.testing.expectEqualStrings("17\n", run.stdout);
+    try std.testing.expect(contains(run.stderr, "error[R_LIST_BOUNDS]"));
+    try std.testing.expect(contains(llvmFunction(run.llvm, "@\"my.main\"("), "alloca [48 x i8], align 32"));
+}
+
+/// Independent read-only list constructions in one frame; capacities are counts
+/// of actual pushes, not untrusted `list_new` reserve requests.
+fn stackBudgetFunction(a: std.mem.Allocator, module: *ir.Module, name: []const u8, element: ir.Type, capacities: []const u32) !void {
+    const list = try module.intern(a, .{ .list = element });
+    var h = try Hand.init(a, module, name, .{ .params = &.{}, .ret = .u64 });
+    const zero = try h.int(.u64, 0);
+    const one = try h.int(element, 1);
+    var total = zero;
+    for (capacities) |capacity| {
+        var value = try h.emit(.{ .op = .list_new, .ty = list, .a = zero });
+        for (0..capacity) |_| value = try h.emit(.{ .op = .list_push, .ty = list, .a = value, .b = one });
+        const length = try h.emit(.{ .op = .list_len, .ty = .u64, .a = value });
+        total = try h.emit(.{ .op = .add, .ty = .u64, .a = total, .b = length });
+    }
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = total });
+    _ = try h.finish();
+}
+
+// spec: NEW-CORE-STACK-3
+test "stack budget counts headers alignment and all constructions separately in each function" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{};
+    // 508 i64s plus the header fill 4096 bytes: exactly two fit; even an
+    // empty list's header no longer fits. A later function gets a fresh budget.
+    try stackBudgetFunction(a, &module, "exact", .i64, &.{ 508, 508, 0 });
+    try stackBudgetFunction(a, &module, "reset", .i64, &.{ 508, 508 });
+    // The original element limit stays: 513 i64s do not qualify. One 512-list
+    // does, but its header prevents another from fitting within the frame budget.
+    try stackBudgetFunction(a, &module, "large", .i64, &.{ 513, 512, 512 });
+    // One byte and a header round up to 64 bytes each, including padding.
+    const small: [129]u32 = @splat(1);
+    try stackBudgetFunction(a, &module, "aligned", .i8, &small);
+    try std.testing.expectEqual(@as(u32, 2), try stackLists(a, &module, "exact", null));
+    try std.testing.expectEqual(@as(u32, 2), try stackLists(a, &module, "reset", null));
+    try std.testing.expectEqual(@as(u32, 1), try stackLists(a, &module, "large", null));
+    try std.testing.expectEqual(@as(u32, 128), try stackLists(a, &module, "aligned", null));
 }
 
 const handed_over =

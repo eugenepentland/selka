@@ -41,6 +41,8 @@ pub const Prepared = struct {
     pub fn key(self: *Prepared, a: std.mem.Allocator, selection: llvm.Selection) Error!Digest {
         var hash = std.crypto.hash.Blake3.init(.{});
         value(&hash, "core-emission-input-v2");
+        value(&hash, self.canon.module.single_owner);
+        value(&hash, self.canon.module.zero_rc);
         value(&hash, self.options.target);
         value(&hash, self.options.verify);
         value(&hash, self.options.counters);

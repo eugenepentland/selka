@@ -1,0 +1,17 @@
+import filesystem
+func write(fs: Filesystem, fail: bool) -> Result[int, str]:
+    with fs.open("log.txt", "w") as file:
+        _ = file.write("saved")
+        if fail:
+            return Err("failed")
+        return Ok(7)
+func main(out: Stream) -> int:
+    const fs = filesystem.memory()
+    match write(fs, True):
+        case Ok(value):
+            out.print(value)
+        case Err(message):
+            out.print(message)
+    with fs.open("log.txt", "r") as file:
+        out.print(file.read())
+    return 0

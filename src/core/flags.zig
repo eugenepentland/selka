@@ -82,11 +82,17 @@ pub const place_copy: u64 = 1 << 60;
 /// Managed indexed reads in a nested assignment take the parent's slot owner.
 pub const place_read: u64 = 1 << 60;
 
+/// A dictionary pop transfers the key (bit 0) or value (bit 1) before removal.
+pub const dict_take_key: u64 = 1 << 56;
+pub const dict_take_value: u64 = 1 << 57;
+pub const dict_take_mask: u64 = dict_take_key | dict_take_value;
+
 /// Whether an indexed read transfers its managed slot into a nested update. A `list_get_field`
 /// of a path of at most four steps carries the mark next to its path (CE2-B, `xs[i].items.append(v)`).
 pub fn transferredRead(inst: ir.Inst) bool {
     return switch (inst.op) {
-        .list_get, .dict_entry_value => inst.data == place_read,
+        .list_get => inst.data == place_read,
+        .dict_entry_key, .dict_entry_value => inst.data == place_read or inst.data & dict_take_mask != 0,
         .list_get_field => inst.data & 0xf <= 4 and inst.data & place_read != 0,
         else => false,
     };

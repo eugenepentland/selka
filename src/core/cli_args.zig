@@ -166,6 +166,11 @@ const Parser = struct {
         const build = &self.request.build;
         if (eql(arg, "--release")) {
             try build.mode.select(&self.explicit_mode, .release);
+        } else if (eql(arg, "--experimental-single-owner")) {
+            build.show.codegen.single_owner = true;
+        } else if (eql(arg, "--experimental-zero-rc")) {
+            build.show.codegen.single_owner = true;
+            build.show.codegen.zero_rc = true;
         } else if (eql(arg, "--optimize-debug")) {
             try build.mode.select(&self.explicit_mode, .optimized_debug);
         } else if (eql(arg, "--unoptimized")) {

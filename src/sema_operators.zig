@@ -456,7 +456,7 @@ fn checkValueIndex(comptime Checker: type, self: *Checker, node: ast.Node, acces
             out.data = .{ .cast = try b.node(receiver.shape.buffer.?, .{ .index = .{ .base = base, .index = index_value } }) };
             return;
         }
-        out.ty = if (receiver.collection.kind == .string) receiver_type else receiver.shape.buffer.?;
+        out.ty = if (receiver.shape.builtin == .borrowed_view) try collections.preludeType(&self.catalog, "str", node.span) else if (receiver.collection.kind == .string) receiver_type else receiver.shape.buffer.?;
         out.data = .{ .index = .{ .base = base, .index = index_value } };
         return;
     }

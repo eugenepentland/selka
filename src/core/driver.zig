@@ -39,7 +39,7 @@ pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
     @embedFile("runtime/core_text.c") ++ "\n" ++
     @embedFile("runtime/core_sort.c") ++ "\n" ++ @embedFile("runtime/core_number.c") ++ "\n" ++
     @embedFile("runtime/core_io.c") ++ "\n" ++ @embedFile("runtime/core_durable.c") ++ "\n" ++ @embedFile("runtime/core_host.c") ++ "\n" ++
-    @embedFile("runtime/core_bytes.c") ++ "\n" ++ @embedFile("runtime/core_values.c") ++ "\n" ++ @embedFile("runtime/core_test.c") ++ "\n" ++ @embedFile("runtime/core_tasks.c");
+    @embedFile("runtime/core_bytes.c") ++ "\n" ++ @embedFile("runtime/core_values.c") ++ "\n" ++ @embedFile("runtime/core_owned_copy.c") ++ "\n" ++ @embedFile("runtime/core_test.c") ++ "\n" ++ @embedFile("runtime/core_tasks.c");
 
 /// One build: tools, directories, the program and how to optimize it.
 pub const Request = struct {
@@ -182,8 +182,13 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
     const local_lease = if (places.cacheable and !std.mem.eql(u8, places.shared, places.local)) try work_claim.lease(allocator, io, places.local) else null;
     defer if (local_lease) |file| file.close(io);
     var needs: Dependencies = .{};
-    for (request.units) |unit| needs = .{ .number = needs.number or unit.dependencies.number, .math = needs.math or unit.dependencies.math, .counting = needs.counting or unit.dependencies.counting };
-    const runtime = try runtimeFor(allocator, needs.counting, environ, log);
+    for (request.units) |unit| needs = .{
+        .number = needs.number or unit.dependencies.number,
+        .math = needs.math or unit.dependencies.math,
+        .counting = needs.counting or unit.dependencies.counting,
+        .zero_rc = needs.zero_rc or unit.dependencies.zero_rc,
+    };
+    const runtime = try runtimeForMode(allocator, needs.counting, environ, log, needs.zero_rc);
     const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .mode = request.mode, .runtime = runtime.abi };
     var objects: std.ArrayList(Object) = .empty;
     try objects.append(allocator, try runtimeObject(native, places.shared, runtime));
@@ -312,20 +317,25 @@ test "shared program identity retains exact native inputs and linker environment
     try std.testing.expect(!std.mem.eql(u8, &explicit, &sharedProgramKey(@splat(1), &environment)));
 }
 
-const Dependencies = struct { number: bool = false, math: bool = false, counting: bool = false };
+const Dependencies = @import("emission_cache.zig").Dependencies;
 
 /// The runtime source a build compiles and its digest: the ordinary runtime, or for a
 /// unit emitted with `--counters` the counting runtime (`count_runtime.zig`).
 const Runtime = struct { source: []const u8, abi: Digest };
 
 fn runtimeFor(allocator: std.mem.Allocator, counting: bool, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8)) Error!Runtime {
-    const source = if (!counting) runtime_source else count_runtime.source(allocator, runtime_source) catch |err| switch (err) {
+    return runtimeForMode(allocator, counting, environment, log, false);
+}
+
+fn runtimeForMode(allocator: std.mem.Allocator, counting: bool, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8), zero_rc: bool) Error!Runtime {
+    const base_source = if (!counting) runtime_source else count_runtime.source(allocator, runtime_source) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.AnchorMissing => {
             try log.appendSlice(allocator, "error: the counting runtime no longer matches the runtime source\n");
             return error.ToolFailed;
         },
     };
+    const source = if (zero_rc) try std.mem.concat(allocator, u8, &.{ "#define MYL_ZERO_RC 1\n", base_source }) else base_source;
     var abi: Digest = undefined;
     var hash = std.crypto.hash.Blake3.init(.{});
     hash.update(source);

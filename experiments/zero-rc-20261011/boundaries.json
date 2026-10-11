@@ -1,0 +1,18 @@
+{
+  "experiments/rc-census-20261010/samples/21_dict_unique.my": {
+    "status": 1,
+    "diagnostics": "21_dict_unique.my:2:9: error[E_SINGLE_OWNER_UNSUPPORTED]: dictionaries and sets are outside the single-owner prototype\n      mut values: dict[int, int] = {}\n          ^\n"
+  },
+  "experiments/rc-census-20261010/samples/22_dict_snapshot.my": {
+    "status": 1,
+    "diagnostics": "22_dict_snapshot.my:2:9: error[E_SINGLE_OWNER_UNSUPPORTED]: dictionaries and sets are outside the single-owner prototype\n      mut values: dict[int, int] = {}\n          ^\n"
+  },
+  "experiments/rc-census-20261010/samples/23_dict_managed.my": {
+    "status": 1,
+    "diagnostics": "23_dict_managed.my:2:9: error[E_SINGLE_OWNER_UNSUPPORTED]: dictionaries and sets are outside the single-owner prototype\n      mut values: dict[int, str] = {}\n          ^\n"
+  },
+  "experiments/rc-census-20261010/samples/25_text_snapshot.my": {
+    "status": 1,
+    "diagnostics": "25_text_snapshot.my:7:9: error[E_SINGLE_OWNER_MOVED]: 'text' was moved or is unavailable on this path; use .copy() when both values are needed\n          text += \"z\"\n          ^\n"
+  }
+}

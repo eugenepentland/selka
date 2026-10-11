@@ -1,0 +1,31 @@
+{
+  "compiler_sha256": "5e5898e2fa575f548b1e712a7ab37e27dfef8c78e3a218dc0bd0020922e9c136",
+  "harness_sha256": "65c2c265f5597ba1d4565a1f9284976e4b32cfed60af00fd87371e92b43e6cc9",
+  "refusals": {
+    "moved-key": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-containers-20261011/boundaries-final/moved-key.my:5:16: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed\n      return len(key)\n                 ^\n",
+      "source_sha256": "7fe01ff37f81defedc43498ac864683f1e2c38ab5f37849b28285d60dbd0223c"
+    },
+    "borrowed-value": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-containers-20261011/boundaries-final/borrowed-value.my:3:19: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value\n      const value = values[1]\n                    ^\n",
+      "source_sha256": "37ae2f26f5df8c7b5e216645f0c0f8c368042c9d692d025d0152ec656463cb6f"
+    },
+    "overlapping-dictionary": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-containers-20261011/boundaries-final/overlapping-dictionary.my:6:27: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return change(values, mut values)\n                            ^\n",
+      "source_sha256": "21bf4f042c36884734ad1841b501b6791a929fca1e0a1d3cd7a5bb819d9d8c30"
+    },
+    "escaped-pattern": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-containers-20261011/boundaries-final/escaped-pattern.my:6:20: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n              return text\n                     ^\n",
+      "source_sha256": "9243fcb21850020e36b29843beaec213eb8bd81c9b101b637a5b671820f06d59"
+    },
+    "duplicate-recursive-child": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-containers-20261011/boundaries-final/duplicate-recursive-child.my:6:46: error[E_SINGLE_OWNER_MOVED]: 'child' was moved or is unavailable on this path; use .copy() when both values are needed\n      const tree = Tree.pair(left=child, right=child)\n                                               ^\n",
+      "source_sha256": "6752bb4a2b9ed3c4d8c15efb4b67b9894fb5f890c37c60e3333fab51814f9ee2"
+    }
+  }
+}

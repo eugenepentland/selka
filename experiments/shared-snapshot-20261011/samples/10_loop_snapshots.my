@@ -1,0 +1,23 @@
+func sum_values(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        total += value
+    return total
+
+
+func probe(n: int) -> int:
+    mut values: int[] = []
+    mut history: int[][] = []
+    for i in range(n):
+        values.append(n + i)
+        history.append(values.snapshot())
+    mut total = 0
+    for snapshot in history:
+        total += sum_values(snapshot)
+    return total
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0
+

@@ -1,0 +1,93 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %4 = iconst bool 1
+  branch 1:bool, b1, b2
+b1: ; preds b0
+  %7 = iconst bool 0
+  branch 0:bool, b3, b5
+b2: ; preds b0 b4
+  %29 = phi u64 0:u64, %30
+  %32 = list_new list[i64] %29
+  jump b9
+b3: ; preds b1
+  %10 = cmp.lt bool 8:i64, 0:i64
+  branch %10, b6, b8
+b4: ; preds b7 b5
+  %30 = phi u64 %31, %26
+  jump b2
+b5: ; preds b1
+  %25 = sub.proven i64 8:i64, 0:i64
+  %26 = convert.proven u64 %25
+  jump b4
+b6: ; preds b3
+  %12 = sub.exact i64 8:i64, 0:i64
+  %13 = convert.exact u64 %12
+  jump b7
+b7: ; preds b6 b8
+  %31 = phi u64 %13, %22
+  jump b4
+b8: ; preds b3
+  %15 = convert.exact u64 8:i64
+  %17 = add.exact i64 0:i64, 1:i64
+  %18 = neg.exact i64 %17
+  %19 = convert.exact u64 %18
+  %20 = add.exact u64 %15, %19
+  %22 = add.exact u64 %20, 1:u64
+  jump b7
+b9: ; preds b2 b11
+  %34 = phi i64 0:i64, %44
+  %40 = phi list[i64] %32, %41
+  %36 = cmp.lt bool %34, 8:i64
+  branch %36, b10, b12
+b10: ; preds b9
+  %39 = add.proven i64 param0, %34
+  %41 = list_push list[i64] %40, %39
+  jump b11
+b11: ; preds b10
+  %44 = add.proven i64 %34, 1:i64
+  jump b9
+b12: ; preds b9
+  %56 = add.proven i64 param0, 8:i64
+  %64 = list_copy list[i64] %40
+  %57 = list_push list[i64] %64, %56
+  %59 = call i64 sum_values(%40)
+  release %40
+  %60 = mul.exact i64 10:i64, %59
+  %61 = call i64 sum_values(%57)
+  release %57
+  %62 = add.exact i64 %60, %61
+  ret %62
+fn sum_values(list[i64]) -> i64
+b0:
+  %3 = list_len u64 param0
+  %4 = convert.proven i64 %3
+  jump b1
+b1: ; preds b0 b3
+  %6 = phi i64 0:i64, %16
+  %12 = phi i64 0:i64, %13
+  %8 = cmp.lt bool %6, %4
+  branch %8, b2, b4
+b2: ; preds b1
+  %11 = list_get.proven i64 param0, %6
+  %13 = add.exact i64 %12, %11
+  jump b3
+b3: ; preds b2
+  %16 = add.proven i64 %6, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %12
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %4=[1,1] %7=[0,0] %25=[8,8] %26=[8,8] %29=[8,8] %30=[8,8] %34=[0,8] %35=[-9223372036854775808,9223372036854775807] %36=[0,1] %38=[-9223372036854775808,9223372036854775807] %39=[0,140737488355335] %44=[1,8] %46=[-9223372036854775808,9223372036854775807] %47=[-9223372036854775808,9223372036854775807] %49=[-9223372036854775808,9223372036854775807] %50=[-9223372036854775808,9223372036854775807] %52=[-9223372036854775808,9223372036854775807] %53=[-9223372036854775808,9223372036854775807] %56=[8,140737488355336] %59=[-9223372036854775808,9223372036854775807] %60=[-9223372036854775808,9223372036854775807] %61=[-9223372036854775808,9223372036854775807] %62=[-9223372036854775808,9223372036854775807]
+list probe %32: settled=true length=%-1 len=[0,0]
+list probe %40: settled=true length=%2 elements=[0,140737488355335] len=[0,140737488355328]
+list probe %41: settled=true length=%-1 elements=[0,140737488355335] len=[1,140737488355328]
+list probe %57: settled=true length=%-1 elements=[0,140737488355336] len=[1,140737488355328]
+facts sum_values: %3=[0,140737488355328] %4=[0,140737488355328] %6=[0,140737488355328] %7=[-9223372036854775808,9223372036854775807] %8=[0,1] %11=[-9223372036854775808,9223372036854775807] %12=[-9223372036854775808,9223372036854775807] %13=[-9223372036854775808,9223372036854775807] %16=[1,140737488355328]
+list sum_values %11: settled=true length=%-1

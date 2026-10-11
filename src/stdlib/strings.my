@@ -15,9 +15,9 @@ public enum Error:
 public func message(error: Error) -> str:
     match error:
         case Error.Invalid(value=detail):
-            return detail
+            return detail.copy()
         case Error.Overflow(value=detail):
-            return detail
+            return detail.copy()
 
 
 # The thirty-six digits used by bases up to 36, in value order.
@@ -122,7 +122,7 @@ public func lines(text: str) -> str[]:
         if piece.endswith("\r"):
             out.append(piece[0:len(piece) - 1])
         else:
-            out.append(piece)
+            out.append(piece.copy())
     return out
 
 
@@ -135,7 +135,7 @@ public func repeat(text: str, times: int) -> Result[str, Error]:
         return Err(Error.Invalid(value="repeat count must not be negative"))
     if times == 0 or len(text) == 0:
         return Ok("")
-    mut out = text
+    mut out = text.copy()
     mut copies = 1
     while copies <= times - copies:
         out = out + out
@@ -150,7 +150,7 @@ public func pad_left(text: str, width: int, fill: str) -> Result[str, Error]:
     if len(fill) != 1:
         return Err(Error.Invalid(value="pad fill must be exactly one character"))
     if len(text) >= width:
-        return Ok(text)
+        return Ok(text.copy())
     const padding = try repeat(fill, width - len(text))
     return Ok(padding + text)
 
@@ -160,7 +160,7 @@ public func pad_right(text: str, width: int, fill: str) -> Result[str, Error]:
     if len(fill) != 1:
         return Err(Error.Invalid(value="pad fill must be exactly one character"))
     if len(text) >= width:
-        return Ok(text)
+        return Ok(text.copy())
     const padding = try repeat(fill, width - len(text))
     return Ok(text + padding)
 
@@ -306,6 +306,6 @@ public func chr(code: int) -> Result[str, Error]:
         values.append(128 + code % 64)
     match bytes(values).decode():
         case Ok(text):
-            return Ok(text)
+            return Ok(text.copy())
         case Err(_):
             return Err(Error.Invalid(value="chr could not encode the code point"))

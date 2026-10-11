@@ -1,0 +1,97 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %1 = call list[record{str, list[i64]}] make_entries(param0)
+  %2 = call i64 score(%1)
+  release %1
+  ret %2
+fn make_entries(i64) -> list[record{str, list[i64]}]
+b0:
+  %2 = list_new list[record{str, list[i64]}] param0
+  jump b1
+b1: ; preds b0 b3
+  %5 = phi i64 0:i64, %23
+  %19 = phi list[record{str, list[i64]}] %2, %20
+  %7 = cmp.lt bool %5, param0
+  branch %7, b2, b4
+b2: ; preds b1
+  %11 = add.exact i64 %5, param0
+  %12 = call str myl_core_str_from_i64(%11)
+  %27 = str_len u64 str0
+  %28 = str_view_of str_view str0, 0:u64, %27
+  %29 = str_from_view str %28
+  %13 = str_append str %29, %12
+  release %12
+  %15 = list_new list[i64] 2:i64
+  %16 = list_push list[i64] %15, %5
+  %17 = list_push list[i64] %16, param0
+  %18 = record_make record{str, list[i64]} %13, %17
+  %20 = list_push list[record{str, list[i64]}] %19, %18
+  jump b3
+b3: ; preds b2
+  %23 = add.proven i64 %5, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %19
+fn score(list[record{str, list[i64]}]) -> i64
+b0:
+  %3 = list_len u64 param0
+  %4 = convert.proven i64 %3
+  jump b1
+b1: ; preds b0 b3
+  %6 = phi i64 0:i64, %41
+  %12 = phi i64 0:i64, %32
+  %8 = cmp.lt bool %6, %4
+  branch %8, b2, b4
+b2: ; preds b1
+  %11 = list_get.proven record{str, list[i64]} param0, %6
+  %13 = record_get str %11, field0
+  %14 = call u64 myl_core_str_chars(%13)
+  %15 = convert.exact i64 %14
+  %16 = record_get list[i64] %11, field1
+  %17 = list_len u64 %16
+  %18 = convert.proven i64 %17
+  %19 = add.exact i64 %15, %18
+  %20 = add.exact i64 %12, %19
+  %23 = list_len u64 %16
+  %24 = convert.proven i64 %23
+  jump b5
+b3: ; preds b8
+  %41 = add.proven i64 %6, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %12
+b5: ; preds b2 b7
+  %26 = phi i64 0:i64, %36
+  %32 = phi i64 %20, %33
+  %28 = cmp.lt bool %26, %24
+  branch %28, b6, b8
+b6: ; preds b5
+  %31 = list_get.proven i64 %16, %26
+  %33 = add.exact i64 %32, %31
+  jump b7
+b7: ; preds b6
+  %36 = add.proven i64 %26, 1:i64
+  jump b5
+b8: ; preds b5
+  jump b3
+fn myl_core_str_from_i64(i64) -> str extern
+fn myl_core_str_chars(str) -> u64 extern
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %2=[-9223372036854775808,9223372036854775807]
+facts make_entries: %5=[0,9223372036854775807] %6=[-9223372036854775808,9223372036854775807] %7=[0,1] %10=[-9223372036854775808,9223372036854775807] %11=[1,9223372036854775807] %23=[1,9223372036854775807]
+list make_entries %2: settled=true length=%-1 len=[0,0]
+list make_entries %15: settled=true length=%-1 len=[0,0]
+list make_entries %16: settled=true length=%-1 elements=[0,9223372036854775806] len=[1,1]
+list make_entries %17: settled=true length=%-1 elements=[0,9223372036854775807] len=[2,2]
+list make_entries %19: settled=true length=%0 len=[0,140737488355328]
+list make_entries %20: settled=true length=%-1 len=[1,140737488355328]
+facts score: %3=[0,140737488355328] %4=[0,140737488355328] %6=[0,140737488355328] %7=[-9223372036854775808,9223372036854775807] %8=[0,1] %12=[-9223372036854775808,9223372036854775807] %14=[0,18446744073709551615] %15=[0,9223372036854775807] %17=[0,140737488355328] %18=[0,140737488355328] %19=[0,9223372036854775807] %20=[-9223372036854775808,9223372036854775807] %23=[0,140737488355328] %24=[0,140737488355328] %26=[0,140737488355328] %27=[-9223372036854775808,9223372036854775807] %28=[0,1] %31=[-9223372036854775808,9223372036854775807] %32=[-9223372036854775808,9223372036854775807] %33=[-9223372036854775808,9223372036854775807] %36=[1,140737488355328] %39=[-9223372036854775808,9223372036854775807] %41=[1,140737488355328] %43=[-9223372036854775808,9223372036854775807]
+list score %11: settled=true length=%-1
+list score %31: settled=true length=%-1

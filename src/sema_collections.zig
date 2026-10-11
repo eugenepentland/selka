@@ -545,6 +545,7 @@ fn checkFormat(comptime Checker: type, self: *Checker, node: ast.Node, parts: []
 fn narrowedCollection(comptime Checker: type, self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?typed.LocalId {
     const owner = call.owner orelse return null;
     const slot = self.active.get(self.src.text(owner)) orelse return null;
+    if (std.mem.eql(u8, self.src.text(call.name), "copy")) return slot;
     const shape = self.narrowedOption(slot) orelse return null;
     if (!shape.element.isAggregate() or !self.catalog.records[shape.element.recordIndex()].isCollection()) return null;
     return slot;
@@ -553,9 +554,10 @@ fn checkNarrowedMethod(comptime Checker: type, self: *Checker, node: ast.Node, s
     const call = node.data.call;
     try call_arguments.positional(call, self.sink);
     if (call.type_arguments.len != 0) return self.sink.fail("E_ARITY", node.span, "collection methods do not take explicit type arguments");
-    const shape = self.narrowedOption(slot).?;
+    const receiver_type = if (self.narrowedOption(slot)) |shape| shape.element else self.locals.items[@backingInt(slot)].ty;
+    const family = if (receiver_type.isAggregate()) self.catalog.records[receiver_type.recordIndex()].collection.kind else null;
     const kind = buffer_operations.methodFor(self.src.text(call.name), call.arguments.len) orelse
-        return self.sink.fail(eCollectionMethod, call.name, try self.unknownMethodMessage(self.catalog.records[shape.element.recordIndex()].collection.kind, shape.element));
+        return self.sink.fail(eCollectionMethod, call.name, try self.unknownMethodMessage(family, if (receiver_type.isAggregate()) receiver_type else null));
     var value: typed.Node = .{ .span = call.owner.?, .ty = .unit, .data = .unit };
     try self.checkName(.{ .span = call.owner.?, .data = .{ .name = call.owner.? } }, call.owner.?, &value);
     const base: typed.NodeId = @fromBackingInt(self.nodes.items.len);
@@ -635,7 +637,7 @@ fn checkCollectionMethod(comptime Checker: type, self: *Checker, node: ast.Node,
     // `checkListAccess` reads the same cached checked node.
     const base = try self.expressionWithTemporaries(call.base, temporaries);
     const owner_type = self.nodes.items[@backingInt(base)].ty;
-    if (prelude.optionShape(owner_type, self.catalog.records) != null)
+    if (!std.mem.eql(u8, name, "copy") and prelude.optionShape(owner_type, self.catalog.records) != null)
         return checkOptionMethod(Checker, self, node, base, call.name, call.arguments, temporaries);
     if (owner_type == .stream_cap) return self.checkStreamReceiverMethod(node, base, temporaries);
     switch (owner_type) {
@@ -749,6 +751,13 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
     const temporaries = call.temporaries;
     const owner_type = self.nodes.items[@backingInt(base)].ty;
     const managed_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
+    if (kind == .copy and !managed_owner) {
+        if (inputs.len != 0) return self.sink.fail("E_ARITY", node.span, "copy takes no arguments");
+        if (owner_type.capabilityIndex() != null or owner_type.isFile() or typed.moveOnly(owner_type, self.catalog.records))
+            return self.sink.fail(eCollectionMethod, node.span, "resource and move-only values cannot be copied");
+        if (!owner_type.isAggregate()) return self.nodes.items[@backingInt(base)];
+        return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, &.{}, false);
+    }
     const dictionary = managed_owner and self.catalog.records[owner_type.recordIndex()].collection.kind == .dictionary;
     if (managed_owner) kind = buffer_operations.forFamily(kind, self.catalog.records[owner_type.recordIndex()].collection.kind);
     if (typed.setRecord(self.catalog.records, owner_type) != null)
@@ -760,7 +769,7 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
         return checkManagedAccess(Checker, self, node, .{ .base = base, .kind = kind, .inputs = inputs }, temporaries);
     }
     if (switch (kind) {
-        .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .clear => true,
+        .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => true,
         else => false,
     }) return checkListMethod(Checker, self, node, .{ .base = base, .kind = kind, .inputs = inputs, .temporaries = temporaries });
     const supported = switch (kind) {
@@ -841,7 +850,7 @@ fn checkListMethod(comptime Checker: type, self: *Checker, node: ast.Node, call:
             arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
             try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[0])].ty, .expected = element, .span = node.span, .kind = kind, .names = names });
         },
-        .pop, .reverse, .sort, .copy, .clear => {},
+        .pop, .reverse, .sort, .copy, .snapshot, .clear => {},
         else => return self.sink.fail(eCollectionMethod, node.span, unsupported_list),
     }
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, false);
@@ -874,7 +883,7 @@ fn checkManagedAccess(comptime Checker: type, self: *Checker, node: ast.Node, op
     const names = try self.signatureNames(owner_type);
     const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
     for (operation.inputs, arguments, 0..) |input, *argument, index| {
-        const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or operation.kind == .view or
+        const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or operation.kind == .view or operation.kind == .borrow_view or
             operation.kind == .parse_int_range or operation.kind == .parse_float_range or operation.kind == .scalar_count_range or widthArgument(operation.kind) or
             (operation.kind == .find_any and index == 1) or
             (buffer_operations.search(operation.kind) != null and index > 0)) or
@@ -948,7 +957,7 @@ fn checkTextDictionary(comptime Checker: type, self: *Checker, operation: @Field
     for (operation.arguments, arguments) |input, *argument| argument.* = self.resolved[@backingInt(input)].?;
     const dictionary = schema.collection.kind == .dictionary;
     const byte_string = schema.collection.kind == .bytes;
-    const output_element = if (dictionary or byte_string) element else local.ty;
+    const output_element = if (dictionary or byte_string) element else if (schema.shape.builtin == .borrowed_view) try collections.preludeType(&self.catalog, "str", operation.owner) else local.ty;
     if (try checkPythonText(Checker, self, operation, owner, out, arguments)) return;
     switch (operation.kind) {
         .length => out.ty = .i64,
@@ -978,7 +987,7 @@ fn checkTextDictionary(comptime Checker: type, self: *Checker, operation: @Field
         },
         // A view shares the receiver's octets, `copy` materializes them and
         // `scalar_count` measures them.
-        .view, .copy, .scalar_count, .scalar_count_range, .parse_int_range, .parse_float_range => if (!try checkByteViewMethod(Checker, self, operation, owner, schema, arguments, out))
+        .view, .borrow_view, .copy, .scalar_count, .scalar_count_range, .parse_int_range, .parse_float_range => if (!try checkByteViewMethod(Checker, self, operation, owner, schema, arguments, out))
             return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
         .buffer_reserve, .buffer_append_byte, .buffer_append_range, .buffer_append_utf8, .buffer_append_int, .buffer_append_float => try checkByteBufferMethod(Checker, self, operation, owner, arguments, out),
         .read, .write, .get, .contains => {
@@ -1020,6 +1029,11 @@ fn checkTextDictionary(comptime Checker: type, self: *Checker, operation: @Field
 fn checkByteViewMethod(comptime Checker: type, self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, schema: typed.Record, arguments: []const typed.NodeId, out: *typed.Node) Error!bool {
     const owner_type = self.locals.items[@backingInt(owner)].ty;
     switch (operation.kind) {
+        .borrow_view => {
+            if (schema.collection.kind != .string and schema.collection.kind != .bytes) return self.sink.fail(eCollectionMethod, operation.owner, "borrow requires text or bytes");
+            for (arguments) |argument| try self.requireInteger(self.nodes.items[@backingInt(argument)].ty, operation.owner);
+            out.ty = try collections.preludeType(&self.catalog, if (schema.collection.kind == .string) "TextView" else "ByteView", operation.owner);
+        },
         .view => {
             if (!isImmutableBytes(schema)) return self.sink.fail(eCollectionMethod, operation.owner, "view requires an immutable bytes receiver");
             for (arguments) |argument| try self.requireInteger(self.nodes.items[@backingInt(argument)].ty, operation.owner);
@@ -1031,8 +1045,8 @@ fn checkByteViewMethod(comptime Checker: type, self: *Checker, operation: @Field
                 try checkDictionaryBufferMethod(Checker, self, operation, owner, out);
                 return true;
             }
-            if (!isImmutableBytes(schema)) return self.sink.fail(eCollectionMethod, operation.owner, "copy requires an immutable bytes receiver");
-            out.ty = owner_type;
+            if (schema.collection.kind != .string and schema.collection.kind != .bytes) return self.sink.fail(eCollectionMethod, operation.owner, "copy requires text or bytes");
+            out.ty = if (schema.shape.builtin == .borrowed_view) try collections.preludeType(&self.catalog, if (schema.collection.kind == .string) "str" else "bytes", operation.owner) else owner_type;
         },
         .scalar_count, .scalar_count_range, .parse_int_range, .parse_float_range => {
             if (schema.collection.kind != .bytes) return false;
@@ -1116,6 +1130,16 @@ fn checkDictionaryBufferMethod(comptime Checker: type, self: *Checker, operation
 fn checkBufferOperation(comptime Checker: type, self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), out: *typed.Node) Error!void {
     const owner = try self.resolve(operation.owner);
     const local = &self.locals.items[@backingInt(owner)];
+    const collection = local.ty.isAggregate() and self.catalog.records[local.ty.recordIndex()].isCollection();
+    if (operation.kind == .copy and !collection) {
+        if (operation.arguments.len != 0) return self.sink.fail("E_ARITY", out.span, "copy takes no arguments");
+        if (local.ty.capabilityIndex() != null or local.ty.isFile() or typed.moveOnly(local.ty, self.catalog.records))
+            return self.sink.fail(eCollectionMethod, out.span, "resource and move-only values cannot be copied");
+        local.usage.reads += 1;
+        out.ty = local.ty;
+        out.data = if (!local.ty.isAggregate()) .{ .local = owner } else .{ .buffer_operation = .{ .kind = .copy, .owner = owner, .arguments = &.{} } };
+        return;
+    }
     if (!local.ty.isAggregate() or !self.catalog.records[local.ty.recordIndex()].isCollection()) return self.sink.fail(eListType, operation.owner, needs_list);
     local.usage.reads += 1;
     if (operation.kind.mutates()) {
@@ -1146,7 +1170,7 @@ fn checkBufferOperation(comptime Checker: type, self: *Checker, _: ast.Node, ope
         return self.sink.fail(eCellEquality, operation.owner, "list membership over Cell-bearing values requires equality, which Cell does not define");
     switch (operation.kind) {
         .append, .read, .write, .length, .capacity, .contains, .iteration_check => {},
-        .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .clear => {
+        .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => {
             try checkListBufferMethod(Checker, self, operation, owner, out);
             return;
         },

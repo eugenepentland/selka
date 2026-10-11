@@ -142,10 +142,14 @@ myl_block *myl_core_buffer_append_spelled(myl_block *buffer, const unsigned char
    reference released. The builder emits these as one call between the read of a `mut`
    place's buffer and its write-back, so the ownership pass takes the field over. */
 static myl_block *core_buffer_owned(myl_block *buffer) {
+#ifdef MYL_ZERO_RC
+    return buffer;
+#else
     if (count_is_unique(buffer)) return buffer;
     myl_block *copy = myl_core_buffer_copy(buffer);
     myl_core_release(buffer);
     return copy;
+#endif
 }
 /* `buffer.append_range(source, start, end)`: the octets `source[start:end]` when the range
    is valid, else nothing (the caller reports the validity it computed separately). */

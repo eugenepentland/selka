@@ -1,0 +1,26 @@
+func append_batch(values: int[], base: int, width: int) -> int[]:
+    mut result = values
+    for offset in range(width):
+        result.append(base + offset)
+    return result
+
+
+func score(values: int[]) -> int:
+    mut total = len(values)
+    for value in values:
+        total += value
+    return total
+
+
+func probe(n: int) -> int:
+    const width = n % 3 + 1
+    mut values: int[] = []
+    for i in range(n):
+        values = append_batch(values, n + i, width)
+    return score(values)
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

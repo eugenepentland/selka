@@ -1,6 +1,7 @@
 //! `mylang-core check`: exercise the same front-end session as build/test, with
 //! optional complete typed trees for profiling their hydration separately.
 const std = @import("std");
+const single_owner_contract = @import("single_owner.zig");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
 const project_entry = @import("project_entry.zig");
@@ -15,6 +16,8 @@ const Options = struct {
     stats: bool = false,
     timings: bool = false,
     no_cache: bool = false,
+    single_owner: bool = false,
+    zero_rc: bool = false,
 };
 
 /// Check one file, emitting diagnostics or opt-in work/timing receipts.
@@ -34,7 +37,7 @@ pub fn run(given: std.process.Init, args: []const []const u8) Error!u8 {
         try session.enableCache(init.gpa, options.cache);
         try session.enableSharedCache(init.environ_map);
     }
-    if (!options.typed) session.validationOnly();
+    if (!options.typed and !options.single_owner) session.validationOnly();
     var profile = language.timings.Profile.init(init.io, options.timings, .compiler);
     session.setProfile(&profile);
     const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
@@ -50,6 +53,10 @@ pub fn run(given: std.process.Init, args: []const []const u8) Error!u8 {
             return status;
         },
     };
+    if (options.single_owner and !try single_owner_contract.validateMode(allocator, checked.program, checked.src, .text, &report, options.zero_rc)) {
+        try write(init.io, report.items);
+        return 1;
+    }
     profile.counts = .{
         .modules = if (session.single != null) 1 else session.project.modules.items.len,
         .source_bytes = checked.src.bytes.len,
@@ -80,6 +87,11 @@ fn parse(args: []const []const u8) ?Options {
         const arg = args[index];
         if (std.mem.eql(u8, arg, "--typed")) {
             options.typed = true;
+        } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
+            options.single_owner = true;
+        } else if (std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+            options.single_owner = true;
+            options.zero_rc = true;
         } else if (std.mem.eql(u8, arg, "--stats")) {
             options.stats = true;
         } else if (std.mem.eql(u8, arg, "--timings=json")) {

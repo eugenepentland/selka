@@ -20,7 +20,7 @@ public enum Error:
 public func message(error: Error) -> str:
     match error:
         case Error.Malformed(value=detail):
-            return detail
+            return detail.copy()
 
 
 # One byte offset inside the UTF-8 form of a document, updated through mut Scanner.
@@ -55,18 +55,18 @@ public func number(value: float) -> Json effects():
 
 
 # A JSON string.
-public func text(value: str) -> Json effects():
-    return Json.text(value=value)
+public func text(value: str) -> Json:
+    return Json.text(value=value.copy())
 
 
 # A JSON array of values.
-public func array(items: Json[]) -> Json effects():
-    return Json.array(value=items)
+public func array(items: Json[]) -> Json:
+    return Json.array(value=items.copy())
 
 
 # A JSON object; iteration and rendering follow insertion order.
-public func object(fields: dict[str, Json]) -> Json effects():
-    return Json.object(value=fields)
+public func object(fields: dict[str, Json]) -> Json:
+    return Json.object(value=fields.copy())
 
 
 # The RFC 8259 name of a value's kind.
@@ -165,10 +165,10 @@ public func as_float(value: Json) -> float? effects():
 
 
 # The string carried by a value, if it is one.
-public func as_str(value: Json) -> str? effects():
+public func as_str(value: Json) -> str?:
     match value:
         case Json.text(value=body):
-            return Some(body)
+            return Some(body.copy())
         case Json.null:
             return None
         case Json.boolean(value=_):
@@ -184,10 +184,10 @@ public func as_str(value: Json) -> str? effects():
 
 
 # The elements of an array value, if it is one.
-public func as_list(value: Json) -> Json[]? effects():
+public func as_list(value: Json) -> Json[]?:
     match value:
         case Json.array(value=items):
-            return Some(items)
+            return Some(items.copy())
         case Json.null:
             return None
         case Json.boolean(value=_):
@@ -203,10 +203,10 @@ public func as_list(value: Json) -> Json[]? effects():
 
 
 # The members of an object value, if it is one.
-public func as_dict(value: Json) -> dict[str, Json]? effects():
+public func as_dict(value: Json) -> dict[str, Json]?:
     match value:
         case Json.object(value=fields):
-            return Some(fields)
+            return Some(fields.copy())
         case Json.null:
             return None
         case Json.boolean(value=_):
@@ -222,30 +222,25 @@ public func as_dict(value: Json) -> dict[str, Json]? effects():
 
 
 # The member of an object under a key, if both the object and the key exist.
-public func get(value: Json, key: str) -> Json? effects():
+public func get(value: Json, key: str) -> Json?:
     match as_dict(value):
         case Some(fields):
             if key not in fields:
                 return None
-            return Some(fields[key])
+            return Some(fields[key].copy())
         case None:
             return None
 
 
 # The element of an array at an index, if both the array and the index exist.
-public func at(value: Json, index: int) -> Json? effects():
+public func at(value: Json, index: int) -> Json?:
     match as_list(value):
         case Some(items):
             if index < 0 or index >= len(items):
                 return None
-            return Some(items[index])
+            return Some(items[index].copy())
         case None:
             return None
-
-
-# A scanner positioned at the start of a UTF-8 document.
-func scanner_of(data: bytes) -> Scanner:
-    return Scanner(data=data, position=0)
 
 
 # Whether the scanner has consumed every byte.
@@ -282,7 +277,7 @@ func parse_error(scanner: Scanner, reason: str) -> str:
         case Ok(rendered):
             return reason + " at byte " + rendered
         case Err(_):
-            return reason
+            return reason.copy()
 
 
 # Whether a byte is an ASCII decimal digit.
@@ -329,7 +324,7 @@ func append_code_point(mut out: byte_buffer, code: int):
 func decoded(values: byte_buffer) -> Result[str, str]:
     match bytes(values).decode():
         case Ok(rendered):
-            return Ok(rendered)
+            return Ok(rendered.copy())
         case Err(_):
             return Err("JSON string is not valid UTF-8")
 
@@ -504,7 +499,7 @@ func read_literal(mut scanner: Scanner, word: bytes, value: Json) -> Result[Json
     if scanner.data[start:start + len(word)] != word:
         return Err(parse_error(scanner, "unknown JSON literal"))
     scanner.position = start + len(word)
-    return Ok(value)
+    return Ok(value.copy())
 
 
 # One array body, with the opening bracket under the cursor.
@@ -514,7 +509,7 @@ func read_array(mut scanner: Scanner, depth: int) -> Result[Json, str]:
     skip_whitespace(mut scanner)
     if peek(scanner) == 93:
         advance(mut scanner)
-        return Ok(array(items))
+        return Ok(Json.array(value=items))
     while not at_end(scanner):
         const item = try read_value(mut scanner, depth + 1)
         items.append(item)
@@ -522,7 +517,7 @@ func read_array(mut scanner: Scanner, depth: int) -> Result[Json, str]:
         mut byte = peek(scanner)
         if byte == 93:
             advance(mut scanner)
-            return Ok(array(items))
+            return Ok(Json.array(value=items))
         if byte != 44:
             return Err(parse_error(scanner, "expected ',' or ']' in JSON array"))
         advance(mut scanner)
@@ -553,14 +548,14 @@ func read_object(mut scanner: Scanner, depth: int) -> Result[Json, str]:
     skip_whitespace(mut scanner)
     if peek(scanner) == 125:
         advance(mut scanner)
-        return Ok(object(fields))
+        return Ok(Json.object(value=fields))
     while not at_end(scanner):
         _ = try read_member(mut scanner, mut fields, depth)
         skip_whitespace(mut scanner)
         mut byte = peek(scanner)
         if byte == 125:
             advance(mut scanner)
-            return Ok(object(fields))
+            return Ok(Json.object(value=fields))
         if byte != 44:
             return Err(parse_error(scanner, "expected ',' or '}' in JSON object"))
         advance(mut scanner)
@@ -579,7 +574,7 @@ func read_value(mut scanner: Scanner, depth: int) -> Result[Json, str]:
         return read_array(mut scanner, depth)
     if byte == 34:
         const value = try read_string(mut scanner)
-        return Ok(text(value))
+        return Ok(Json.text(value=value))
     if byte == 116:
         return read_literal(mut scanner, b"true", boolean(True))
     if byte == 102:
@@ -595,7 +590,7 @@ func read_value(mut scanner: Scanner, depth: int) -> Result[Json, str]:
 
 # One complete RFC 8259 document, rejecting anything after the top-level value.
 public func loads(source: str) -> Result[Json, Error]:
-    mut scanner = scanner_of(source.encode())
+    mut scanner = Scanner(data=source.encode(), position=0)
     mut value = try read_value(mut scanner, 1)
     skip_whitespace(mut scanner)
     if not at_end(scanner):
@@ -711,7 +706,7 @@ public func dumps(value: Json) -> str:
     write_value(mut out, value)
     match bytes(out).decode():
         case Ok(rendered):
-            return rendered
+            return rendered.copy()
         case Err(_):
             # Every fragment above is ASCII or the encoding of a valid str.
             assert False

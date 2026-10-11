@@ -1,0 +1,490 @@
+{
+  "compiler_sha256": "3482abac69776d3fcd2ef6c41a3e550fb17fea193c296ad7442e9beebc1c3b41",
+  "comparison": "Same candidate, release mode; RC uses original fixture sources. Parallel RC fallback is sequential. Task peaks use MYLANG_THREADS=1.",
+  "suites": {
+    "library": {
+      "byte_builder": {
+        "rc": {
+          "allocations": 71,
+          "reallocations": 7,
+          "managed_bytes_allocated_including_growth": 353384,
+          "peak_managed_bytes": 331256,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 44,
+            "unique_test": 36
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 93,
+          "reallocations": 7,
+          "managed_bytes_allocated_including_growth": 355048,
+          "peak_managed_bytes": 331256,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "codecs": {
+        "rc": {
+          "allocations": 127,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 26448,
+          "peak_managed_bytes": 1704,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 23,
+            "release": 86,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 185,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 31632,
+          "peak_managed_bytes": 1896,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "integer_extrema": {
+        "rc": {
+          "allocations": 0,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 0,
+          "peak_managed_bytes": 0,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 0,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 0,
+          "peak_managed_bytes": 0,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "json": {
+        "rc": {
+          "allocations": 446,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 32032,
+          "peak_managed_bytes": 9792,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 262,
+            "release": 484,
+            "unique_test": 218
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 2559,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 173376,
+          "peak_managed_bytes": 8096,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "math": {
+        "rc": {
+          "allocations": 0,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 0,
+          "peak_managed_bytes": 0,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 4,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 0,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 0,
+          "peak_managed_bytes": 0,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "path": {
+        "rc": {
+          "allocations": 94,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 5856,
+          "peak_managed_bytes": 544,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 19,
+            "release": 152,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 23,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 130,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 8160,
+          "peak_managed_bytes": 704,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "pool": {
+        "rc": {
+          "allocations": 63,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 4704,
+          "peak_managed_bytes": 1216,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 9,
+            "release": 43,
+            "unique_test": 325
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 67,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 4960,
+          "peak_managed_bytes": 1280,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "sort": {
+        "rc": {
+          "allocations": 23,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 1888,
+          "peak_managed_bytes": 352,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 6,
+            "release": 12,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 1,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 42,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 3200,
+          "peak_managed_bytes": 576,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "strings": {
+        "rc": {
+          "allocations": 95,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 6304,
+          "peak_managed_bytes": 288,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 8,
+            "release": 229,
+            "unique_test": 29
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 6,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 112,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 7392,
+          "peak_managed_bytes": 352,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "time_random": {
+        "rc": {
+          "allocations": 19,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 1216,
+          "peak_managed_bytes": 288,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 1,
+            "release": 21,
+            "unique_test": 1015
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 19,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 1216,
+          "peak_managed_bytes": 288,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      }
+    },
+    "tasks": {
+      "parallel_map": {
+        "rc": {
+          "allocations": 405,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 29392,
+          "peak_managed_bytes": 14480,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 64,
+            "release": 69,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 260,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 882,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 65200,
+          "peak_managed_bytes": 29968,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      },
+      "parallel_outcome": {
+        "rc": {
+          "allocations": 483,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 35248,
+          "peak_managed_bytes": 8680,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 131,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 212,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        },
+        "release": {
+          "allocations": 1067,
+          "reallocations": 0,
+          "managed_bytes_allocated_including_growth": 80208,
+          "peak_managed_bytes": 19848,
+          "live_bytes_at_exit": 0,
+          "emitted_rc_events": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc_events": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -838,7 +838,28 @@ myl_block *myl_core_s2_sort_keyed(myl_block *source, myl_block *keys, uint64_t s
     int ok=s2_sort_list_sort_keyed(&v,&s,&k,shape,offsets,reverse);
     /* The numeric engine overwrites keys with packed words: release their
        original managed references only on the untouched text/tuple path. */
+#ifdef MYL_ZERO_RC
+    myl_core_drop_owned(key_copy);
+#else
     myl_core_release(key_copy);
+#endif
     if (!ok) _Exit(1);
     return values;
 }
+
+#ifdef MYL_ZERO_RC
+/* Both arguments are independent compiler-created owners. Move elements along
+   permutation cycles; numeric scratch may overwrite keys, which have no managed
+   children on that path. Text/tuple keys stay intact until their direct drop. */
+myl_block *myl_core_owned_sort_keyed(myl_block *values, myl_block *keys,
+        uint64_t shape, uint64_t offsets, bool reverse, uint64_t strides) {
+    size_t size = (size_t)(strides & UINT32_MAX), key_size = (size_t)(strides >> 32);
+    s2_sort_element element = {size}, key_element = {key_size};
+    s2_sort_list v = {(size_t)values->len, (size_t)values->cap, 0, block_data(values), &element};
+    s2_sort_list k = {(size_t)keys->len, (size_t)keys->cap, 0, block_data(keys), &key_element};
+    int ok = s2_sort_list_sort_keyed(&v, &v, &k, shape, offsets, reverse);
+    myl_core_drop_owned(keys);
+    if (!ok) _Exit(1);
+    return values;
+}
+#endif

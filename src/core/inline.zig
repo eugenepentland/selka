@@ -16,6 +16,7 @@ const facts = @import("facts.zig");
 const proof = @import("inline_proof.zig");
 const cfg = @import("inline_cfg.zig");
 const origins = @import("inline_origins.zig");
+const destination = @import("destination.zig");
 
 /// Inlining only allocates.
 pub const Error = demand_ir.Error;
@@ -33,31 +34,33 @@ pub fn inlineLeavesCounted(arena: std.mem.Allocator, module: *ir.Module, provena
 /// Reclaim proof facts after each caller while retaining cloned IR and provenance.
 pub fn inlineLeavesCountedWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table, counts: ?[]u32) Error!u32 {
     const leaves = try withParametersCountedWithScratch(arena, backing, module, &.{}, provenance, counts);
-    const helpers = try inlineCfg(arena, module, provenance, counts);
+    const helpers = try inlineCfg(arena, backing, module, provenance, counts);
     return leaves + helpers;
 }
 
 /// Apply bounded consuming CFG cloning once, before the caller parameter pass.
-fn inlineCfg(arena: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table, counts: ?[]u32) Error!u32 {
+fn inlineCfg(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, provenance: *origins.Table, counts: ?[]u32) Error!u32 {
+    var scratch = std.heap.ArenaAllocator.init(backing);
+    defer scratch.deinit();
     var count: u32 = 0;
     for (module.functions.items, 0..) |caller, index| {
         if (caller.signature.linkage != .internal) continue;
-        const changed = try cfgCaller(arena, module, @intCast(index), provenance);
+        const changed = try cfgCallerDemandWithScratch(arena, scratch.allocator(), module, @intCast(index), provenance, null);
         count += changed;
         if (counts) |local| local[index] += changed;
+        _ = scratch.reset(.retain_capacity);
     }
     return count;
 }
 
-/// Apply the existing CFG round to one caller in module mutation order.
-pub fn cfgCaller(arena: std.mem.Allocator, module: *ir.Module, index: u32, provenance: *origins.Table) Error!u32 {
-    return cfgCallerDemand(arena, module, index, provenance, null);
-}
-
-/// Resolve a callee only when an uncached CFG inline trial examines its body.
-pub fn cfgCallerDemand(arena: std.mem.Allocator, module: *ir.Module, index: u32, provenance: *origins.Table, demand: ?*demand_ir.Context) Error!u32 {
+/// Constructor eligibility facts are temporary; only cloned IR and ancestry use
+/// the output arena. Cached callers supply the stage's reclaimable scratch arena.
+pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.Allocator, module: *ir.Module, index: u32, provenance: *origins.Table, demand: ?*demand_ir.Context) Error!u32 {
+    var trials = std.heap.ArenaAllocator.init(scratch);
+    defer trials.deinit();
     const caller = &module.functions.items[index];
     var count: u32 = 0;
+    var constructor_instructions: usize = 0;
     var b: usize = 0;
     while (b < caller.blocks.items.len) : (b += 1) {
         var at: usize = 0;
@@ -67,9 +70,18 @@ pub fn cfgCallerDemand(arena: std.mem.Allocator, module: *ir.Module, index: u32,
             if (call.op != .call or call.a.index() == index) continue;
             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
             const callee = &module.functions.items[call.a.index()];
-            if (!cfg.qualifies(callee)) continue;
+            const helper = cfg.qualifies(callee);
+            if (!helper) {
+                // Each clone adds at most the callee's instructions and a jump.
+                // Do not let many small builders cause unbounded caller growth.
+                if (callee.insts.items.len + 1 > destination.max_caller_instructions - constructor_instructions) continue;
+                const constructs = try destination.qualifies(trials.allocator(), module, callee);
+                _ = trials.reset(.retain_capacity);
+                if (!constructs) continue;
+            }
             var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
             try cfg.splice(arena, caller, callee, b, at, &clone);
+            if (!helper) constructor_instructions += callee.insts.items.len + 1;
             count += 1;
             break;
         }

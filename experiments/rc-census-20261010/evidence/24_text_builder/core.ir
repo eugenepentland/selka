@@ -1,0 +1,43 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  jump b1
+b1: ; preds b0 b3
+  %4 = phi i64 0:i64, %13
+  %8 = phi str str0, %10
+  %6 = cmp.lt bool %4, param0
+  branch %6, b2, b4
+b2: ; preds b1
+  %23 = is_unique bool %8
+  branch %23, b5, b6
+b3: ; preds b5
+  %13 = add.proven i64 %4, 1:i64
+  jump b1
+b4: ; preds b1
+  %16 = call u64 myl_core_str_chars(%8)
+  %17 = convert.exact i64 %16
+  %18 = mul.exact i64 17:i64, %17
+  %20 = call i64 myl_core_str_find(%8, str2)
+  release %8
+  %21 = add.exact i64 %18, %20
+  ret %21
+b5: ; preds b2 b6
+  %32 = phi str %8, %29
+  %10 = str_append str %32, str1
+  jump b3
+b6: ; preds b2
+  %27 = str_len u64 %8
+  %28 = str_view_of str_view %8, 0:u64, %27
+  %29 = str_from_view str %28
+  release %8
+  jump b5
+fn myl_core_str_chars(str) -> u64 extern
+fn myl_core_str_find(str, str) -> i64 extern
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %4=[0,140737488355328] %5=[-9223372036854775808,9223372036854775807] %6=[0,1] %13=[1,140737488355328] %16=[0,18446744073709551615] %17=[0,9223372036854775807] %18=[0,9223372036854775807] %20=[-9223372036854775808,9223372036854775807] %21=[-9223372036854775808,9223372036854775807]

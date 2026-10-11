@@ -1,0 +1,18 @@
+enum Tree:
+    leaf(items: dict[str, str[]])
+    node(child: Tree)
+func score(tree: Tree) -> int:
+    match tree:
+        case Tree.leaf(items=items):
+            return len(items["key-1"][0])
+        case Tree.node(child=child):
+            return 1 + score(child)
+func main(out: Stream) -> int:
+    mut tree = Tree.leaf(items={"key-" + str(1): ["value-" + str(1)]})
+    for i in range(200):
+        tree = Tree.node(child=tree)
+    mut original = [tree]
+    const saved = original.copy()
+    original.clear()
+    out.print(score(saved[0]))
+    return 0

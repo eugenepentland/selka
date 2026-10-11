@@ -1,0 +1,30 @@
+record Entry:
+    label: str
+    values: int[]
+
+
+func make_entries(n: int) -> Entry[]:
+    mut entries: Entry[] = []
+    for i in range(n):
+        entries.append(Entry(label="row:" + str(i + n), values=[i, n]))
+    return entries
+
+
+func score(entries: Entry[]) -> int:
+    mut total = 0
+    for entry in entries:
+        total += len(entry.label) + len(entry.values)
+        for value in entry.values:
+            total += value
+    return total
+
+
+func probe(n: int) -> int:
+    const entries = make_entries(n)
+    return score(entries)
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

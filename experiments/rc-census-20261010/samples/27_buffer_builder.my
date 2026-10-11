@@ -1,0 +1,14 @@
+func probe(n: int) -> int:
+    mut buffer = byte_buffer([])
+    for i in range(3 * n):
+        _ = buffer.append_byte((17 * i + n) % 256)
+    mut total = 0
+    for i in range(len(buffer)):
+        total += (i + 1) * buffer[i]
+    return total
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

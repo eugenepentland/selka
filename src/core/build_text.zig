@@ -76,7 +76,7 @@ pub fn operation(comptime Context: type, context: Context, node: Operation, ty: 
         .parse_int, .parse_float, .parse_int_range, .parse_float_range, .number_format, .hex, .from_hex, .float_round => return number(Context, context, node, ty, span),
         .split_whitespace => return context.effectCall("myl_core_str_split_whitespace", &.{receiver_type}, ty, &.{receiver}, span),
         .to_list => return context.runtimeCall("myl_core_bytes_to_list", &.{receiver_type}, ty, &.{receiver}, span),
-        .copy => return receiver,
+        .copy => return if (context.module().zero_rc) @import("single_owner_copy.zig").copy(Context, context, receiver, span) else receiver,
         else => return context.mb.refuse(@tagName(node.kind), span),
     }
 }

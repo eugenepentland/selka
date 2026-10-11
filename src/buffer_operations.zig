@@ -176,6 +176,11 @@ pub const Kind = enum {
     text_repr,
     /// A str slice whose upper endpoint was omitted; its long suffix may share.
     text_tail,
+    /// Explicit list sharing: later writes preserve both logical values with COW.
+    snapshot,
+    /// A nonowning text/byte range, checked by the zero-RC source contract.
+    borrow_view,
+
     /// Return the required source argument count for this buffer builtin.
     pub fn arity(self: Kind) usize {
         return switch (self) {
@@ -183,7 +188,7 @@ pub const Kind = enum {
             .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .split_whitespace, .text_ord => 0,
             .is_digit, .is_alpha, .is_space, .parse_int, .parse_float => 0,
             .scalar_count => 0,
-            .pop, .reverse, .sort, .copy, .clear, .items => 0,
+            .pop, .reverse, .sort, .copy, .snapshot, .clear, .items => 0,
             .buffer_reserve, .buffer_append_byte, .buffer_append_utf8, .buffer_append_int => 1,
             .buffer_append_float => 1,
             .count, .zfill => 1,
@@ -195,7 +200,7 @@ pub const Kind = enum {
             .number_format, .float_round => 2,
             .set_add, .set_discard, .set_union, .set_intersection, .set_difference, .set_symmetric_difference => 1,
             .set_subset, .set_superset, .set_disjoint => 1,
-            .write, .resize, .reserve, .get, .slice, .text_tail, .find_any, .view => 2,
+            .write, .resize, .reserve, .get, .slice, .text_tail, .find_any, .view, .borrow_view => 2,
             .sort_keyed => 3,
             .parse_int_range, .parse_float_range, .scalar_count_range => 2,
             .slice_step => 3,
@@ -231,8 +236,8 @@ pub const Kind = enum {
             .text_ord, .text_chr, .text_format, .number_format, .float_round => false,
             .is_digit, .is_alpha, .is_space, .parse_int, .parse_float => false,
             .parse_int_range, .parse_float_range => false,
-            .view, .scalar_count, .scalar_count_range => false,
-            .copy, .items, .index_of => false,
+            .view, .borrow_view, .scalar_count, .scalar_count_range => false,
+            .copy, .snapshot, .items, .index_of => false,
             .set_union, .set_intersection, .set_difference, .set_symmetric_difference => false,
             .set_subset, .set_superset, .set_disjoint => false,
             else => true,
@@ -268,7 +273,7 @@ const methods = [_]Method{
     .{ .spelling = "append_range", .kind = .buffer_append_range, .buffer = true },
     .{ .spelling = "append_utf8", .kind = .buffer_append_utf8, .buffer = true },
     .{ .spelling = "clear", .kind = .clear, .list = true, .dictionary = true, .set = true },
-    .{ .spelling = "copy", .kind = .copy, .list = true, .dictionary = true, .bytes = true, .set = true },
+    .{ .spelling = "copy", .kind = .copy, .list = true, .dictionary = true, .string = true, .bytes = true, .buffer = true, .set = true },
     .{ .spelling = "count", .kind = .count, .string = true, .bytes = true },
     .{ .spelling = "decode", .kind = .decode, .bytes = true },
     .{ .spelling = "difference", .kind = .set_difference, .set = true },
@@ -309,6 +314,7 @@ const methods = [_]Method{
     .{ .spelling = "scalar_count", .kind = .scalar_count, .bytes = true },
     .{ .spelling = "scalar_count_range", .kind = .scalar_count_range, .bytes = true },
     .{ .spelling = "setdefault", .kind = .setdefault, .dictionary = true },
+    .{ .spelling = "snapshot", .kind = .snapshot, .list = true },
     .{ .spelling = "sort", .kind = .sort, .list = true },
     .{ .spelling = "split", .kind = .split, .string = true, .bytes = true },
     .{ .spelling = "splitlines", .kind = .splitlines, .string = true },
@@ -318,6 +324,7 @@ const methods = [_]Method{
     .{ .spelling = "to_list", .kind = .to_list, .bytes = true },
     .{ .spelling = "union", .kind = .set_union, .set = true },
     .{ .spelling = "update", .kind = .update, .dictionary = true, .set = true },
+    .{ .spelling = "borrow", .kind = .borrow_view, .string = true, .bytes = true, .buffer = true },
     .{ .spelling = "view", .kind = .view, .bytes = true },
     .{ .spelling = "upper", .kind = .upper, .string = true },
     .{ .spelling = "values", .kind = .values, .dictionary = true },
@@ -473,6 +480,7 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
         .to_list => try allocator.dupe(u8, "() -> list[int]"),
         .scalar_count => try allocator.dupe(u8, "() -> Result[int, str]"),
         .scalar_count_range => try allocator.dupe(u8, "(start: int, end: int) -> Result[int, str]"),
+        .borrow_view => try std.fmt.allocPrint(allocator, span_signature, .{if (names.family == .string) "TextView" else "ByteView"}),
         .view, .slice, .text_tail => try std.fmt.allocPrint(allocator, span_signature, .{receiver}),
         .find_any => try std.fmt.allocPrint(allocator, "(values: {s}, start: int) -> int", .{receiver}),
         .slice_step => try std.fmt.allocPrint(allocator, "(start: int, end: int, step: int) -> {s}", .{receiver}),
@@ -489,7 +497,7 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
         .pop_at => try std.fmt.allocPrint(allocator, index_signature, .{element}),
         .index_of => try std.fmt.allocPrint(allocator, "(value: {s}) -> int", .{element}),
         .reverse, .sort, .clear, .iteration_check => try allocator.dupe(u8, "() -> None"),
-        .copy => try std.fmt.allocPrint(allocator, fresh_signature, .{receiver}),
+        .copy, .snapshot => try std.fmt.allocPrint(allocator, fresh_signature, .{receiver}),
         .contains => if (dictionary) try std.fmt.allocPrint(allocator, "(key: {s}) -> bool", .{key}) else try std.fmt.allocPrint(allocator, "(value: {s}) -> bool", .{element}),
         .keys => try std.fmt.allocPrint(allocator, fresh_list_signature, .{key}),
         .values, .items => try std.fmt.allocPrint(allocator, fresh_list_signature, .{element}),
@@ -575,7 +583,7 @@ pub fn unionMethodSpellings(allocator: std.mem.Allocator) std.mem.Allocator.Erro
 /// arity and element rules live in the checker rather than the eager desugaring.
 pub fn vocabulary(kind: Kind) bool {
     return switch (kind) {
-        .extend, .insert, .pop, .remove, .index_of, .reverse, .sort, .copy, .clear => true,
+        .extend, .insert, .pop, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => true,
         .items, .update, .setdefault, .pop_key, .pop_default => true,
         else => false,
     };
@@ -600,7 +608,7 @@ pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
     if (trim(kind) != null or kind == .text_repr) return true;
     return switch (kind) {
         .append, .split, .join, .keys, .values, .slice, .text_tail, .slice_step => true,
-        .extend, .insert, .items, .copy, .update, .setdefault => true,
+        .extend, .insert, .items, .copy, .snapshot, .update, .setdefault => true,
         .encode, .decode, .to_list, .hex, .from_hex => true,
         .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .zfill => true,
         .split_whitespace, .text_chr, .text_format, .number_format => true,

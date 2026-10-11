@@ -1,14 +1,15 @@
 //! Stack promotion of lists that never escape (docs/design/new-core-s1.md §6.3).
 //!
 //! A list built in the function whose every use is a read (`list_len`, `list_get`,
-//! `list_get_field`), whose only updates are the pushes that fill it, and whose
+//! `list_get_field`, or a direct call proved to borrow without counting), whose only
+//! updates are the pushes that fill it, and whose
 //! capacity the facts bound by a constant lives in an entry-block `alloca` instead of
 //! a heap block: its count is never touched, nothing releases it and it never grows.
 //! Two fill shapes qualify:
 //! - a straight chain `list_new → push → push …` (capacity: the number of pushes);
 //! - a counted fill loop the fact pass recognized (`list_new` entering a header phi
 //!   whose back edge is one push of it per iteration): capacity `hi(bound)`.
-//! Anything else that touches a value of the web (a call, a return, a store into a
+//! Anything else that touches a value of the web (an unproved call, a return, a store into a
 //! container, record, union or box, a phi of another shape, another update) makes it
 //! escape. Element types that hold blocks are left alone (a stack list releases no
 //! children). The `alloca` is reused across iterations of enclosing loops safely: no
@@ -23,6 +24,7 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const origins = @import("inline_origins.zig");
 const facts = @import("facts.zig");
+const effects = @import("effects.zig");
 
 /// The pass only allocates.
 pub const Error = std.mem.Allocator.Error;
@@ -36,10 +38,24 @@ pub const capacity_assert: u64 = 2;
 /// The most bytes of elements a promoted list may take on the stack.
 pub const max_stack_bytes: u64 = 4096;
 
+/// Bound this optimization's contribution to one frame, including headers and
+/// alignment. Keep most of the runtime's 32 KiB frame reservation for other slots;
+/// this is not a bound on the function's complete native frame.
+pub const max_function_stack_bytes: u64 = 8 * 1024;
+
+/// Proofs and source ancestry available to stack promotion.
+pub const Options = struct {
+    verify: bool = false,
+    provenance: ?origins.Context = null,
+    effects: ?*const effects.Summaries = null,
+};
+
 /// Promote every qualifying list of `f`; returns the promoted values (every value of
 /// each web: the `list_new`, its pushes and the loop phi) and how many lists.
-pub fn promote(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, known: *const facts.Facts, verify: bool, provenance: ?origins.Context) Error!Promoted {
+pub fn promote(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, known: *const facts.Facts, options: Options) Error!Promoted {
     var out: Promoted = .{};
+    var stack_bytes: u64 = 0;
+    const reads: Reads = .{ .module = module, .function = f, .summaries = options.effects };
     const users = try usersOf(arena, f);
     const count = f.insts.items.len;
     for (0..count) |i| {
@@ -48,13 +64,18 @@ pub fn promote(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Functi
         const element = module.compound(inst.ty).list;
         if (module.managed(element)) continue;
         const ref: ir.Ref = @fromBackingInt(@intCast(i));
-        const web = try webOf(arena, f, users, known, ref) orelse continue;
-        if (web.capacity * @max(1, module.size(element)) > max_stack_bytes) continue;
+        const web = try webOf(arena, reads, users, known, ref) orelse continue;
+        const stride = @max(1, module.size(element));
+        if (web.capacity > max_stack_bytes / stride) continue;
+        // `stackList` emits a 32-byte header in a 32-byte-aligned entry alloca.
+        const bytes = std.mem.alignForward(u64, 32 + web.capacity * stride, 32);
+        if (bytes > max_function_stack_bytes - stack_bytes) continue;
+        stack_bytes += bytes;
         f.insts.items[i].data = web.capacity + 1;
         for (web.pushes) |push| f.insts.items[push.index()].data = stack_push;
         for (web.values) |value| try out.values.put(arena, @backingInt(value), {});
         out.lists += 1;
-        if (verify) for (web.pushes) |push| try assertRoom(arena, f, push, web.capacity, provenance);
+        if (options.verify) for (web.pushes) |push| try assertRoom(arena, f, push, web.capacity, options.provenance);
     }
     return out;
 }
@@ -94,17 +115,45 @@ fn usersOf(arena: std.mem.Allocator, f: *const ir.Function) Error!Users {
     return users;
 }
 
-/// Whether `user` only reads list `value` (and does not keep it).
-fn reads(f: *const ir.Function, user: ir.Ref, value: ir.Ref) bool {
-    const inst = f.inst(user);
-    return switch (inst.op) {
-        .list_len, .list_get, .list_get_field => f.resolve(inst.a) == value and (inst.b == .none or f.resolve(inst.b) != value),
-        else => false,
-    };
-}
+/// Uses that neither consume, count nor preserve a list beyond the use.
+const Reads = struct {
+    module: *const ir.Module,
+    function: *const ir.Function,
+    summaries: ?*const effects.Summaries,
+
+    fn accepts(self: Reads, user: ir.Ref, value: ir.Ref) bool {
+        const f = self.function;
+        const inst = f.inst(user);
+        return switch (inst.op) {
+            .list_len, .list_get, .list_get_field => f.resolve(inst.a) == value and (inst.b == .none or f.resolve(inst.b) != value),
+            .call => self.call(inst, value),
+            else => false,
+        };
+    }
+
+    fn call(self: Reads, inst: ir.Inst, value: ir.Ref) bool {
+        const summaries = self.summaries orelse return false;
+        if (inst.a == .none or inst.a.index() >= self.module.functions.items.len) return false;
+        const callee = &self.module.functions.items[inst.a.index()];
+        if (callee.signature.linkage != .internal or inst.a.index() >= summaries.params.len) return false;
+        const arguments = self.function.operands(inst.data);
+        if (arguments.len != callee.signature.params.len) return false;
+        var found = false;
+        for (arguments, 0..) |argument, i| {
+            if (self.function.resolve(argument) != value) continue;
+            // Each occurrence must borrow: the same list can also be passed to a
+            // consuming parameter or through another SSA name in this call.
+            if (i >= 64 or (callee.signature.owned | callee.signature.consumes) & (@as(u64, 1) << @intCast(i)) != 0) return false;
+            if (i >= summaries.params[inst.a.index()].len or !summaries.of(inst.a.index(), i).borrow_only) return false;
+            found = true;
+        }
+        return found;
+    }
+};
 
 /// The web of `list` when it qualifies, else null.
-fn webOf(arena: std.mem.Allocator, f: *const ir.Function, users: Users, known: *const facts.Facts, list: ir.Ref) Error!?Web {
+fn webOf(arena: std.mem.Allocator, reads: Reads, users: Users, known: *const facts.Facts, list: ir.Ref) Error!?Web {
+    const f = reads.function;
     var values: std.ArrayList(ir.Ref) = .empty;
     var pushes: std.ArrayList(ir.Ref) = .empty;
     try values.append(arena, list);
@@ -115,7 +164,7 @@ fn webOf(arena: std.mem.Allocator, f: *const ir.Function, users: Users, known: *
     while (true) {
         var next: ?ir.Ref = null;
         for (users[current.index()].items) |user| {
-            if (reads(f, user, current) or user == filling) continue;
+            if (reads.accepts(user, current) or user == filling) continue;
             if (next != null) return null;
             next = user;
         }

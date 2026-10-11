@@ -1,0 +1,29 @@
+record Bucket:
+    stamp: int
+    items: int[]
+
+
+func extend(mut bucket: Bucket, count: int):
+    for i in range(count):
+        bucket.items.append(i + 1)
+    bucket.stamp += count
+
+
+func score(bucket: Bucket) -> int:
+    mut total = bucket.stamp
+    for value in bucket.items:
+        total += value
+    return total
+
+
+func probe(n: int) -> int:
+    const saved = Bucket(stamp=n, items=[n, n + 1])
+    mut current = Bucket(stamp=saved.stamp, items=saved.items.copy())
+    extend(mut current, n)
+    return score(saved) * 1000 + score(current)
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

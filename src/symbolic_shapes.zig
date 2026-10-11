@@ -211,8 +211,8 @@ pub const Context = struct {
         if (declaration.builtin_name) |name| {
             if (std.mem.eql(u8, name, "dict")) return .dictionary;
             if (std.mem.eql(u8, name, "set")) return .dictionary;
-            if (std.mem.eql(u8, name, "str")) return .string;
-            if (std.mem.eql(u8, name, "bytes")) return .bytes;
+            if (std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "TextView")) return .string;
+            if (std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "ByteView")) return .bytes;
             // The mutable octet buffer is the byte family too: generic bodies see
             // the same element kind and the same read operations.
             if (std.mem.eql(u8, name, "byte_buffer")) return .bytes;

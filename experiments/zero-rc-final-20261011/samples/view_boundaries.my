@@ -1,0 +1,14 @@
+func main(out: Stream) -> int:
+    const text = "abcdefghλijklmnop😀qrstuv" + str(7)
+    const view = text.borrow(0, 999)
+    mut checks = 0
+    for start in range(-30, 31):
+        const part = view.borrow(start, start + 9)
+        const expected = text[start:start + 9]
+        assert part.copy() == expected
+        if len(part) > 0:
+            assert part[0] == expected[0]
+            assert part[-1] == expected[-1]
+        checks += 1
+    out.print(checks)
+    return 0

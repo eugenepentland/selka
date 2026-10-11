@@ -27,8 +27,22 @@
 //! carry it, putting a field back into the record it came from or returning the parameter
 //! as its own final value reads nothing, a call reads its callee's reads, and any other
 //! use reads the whole path. Count updates and uniqueness tests read nothing.
+//!
+//! **Borrow-only** is a separate, stricter proof for ordinary internal list parameters
+//! with unmanaged elements: every use reads the length or unmanaged element data, or
+//! forwards to another proven borrow-only parameter. It permits neither escape nor
+//! temporary ownership/count operations, so callers may lend stack lists. Copies are
+//! resolved; managed phis, updates, returns, stores and opaque calls do not qualify.
+//! Proofs start false and only become true after all callees qualify; a recursive proof
+//! cycle cannot establish itself. Dependency-validated reused summaries preserve proofs.
+//!
+//! **Consumes** records a separate local profitability proof for passing an ordinary
+//! list updater its input with one owned reference (`consume.zig`). It does not by
+//! itself change the calling convention: the pipeline must establish a closed set
+//! of direct callers and install the whole module's masks before ownership insertion.
 const std = @import("std");
 const ir = @import("ir.zig");
+const consume = @import("consume.zig");
 
 /// The analysis only allocates.
 pub const Error = std.mem.Allocator.Error;
@@ -150,6 +164,11 @@ pub const Paths = struct {
 
 /// What a function may do to one parameter.
 pub const Effect = struct {
+    /// An ordinary internal list parameter is only read, without keeping, counting,
+    /// updating or exposing its block. Stronger than no escape or empty writes.
+    borrow_only: bool = false,
+    /// A local updater-returner candidate; a separate closed-call check enables it.
+    consumes: bool = false,
     /// Paths whose values the function's behaviour may depend on.
     reads: Paths = .{},
     /// For a `mut` parameter, paths its final value may differ in.
@@ -260,9 +279,10 @@ pub fn analyzeReused(arena: std.mem.Allocator, module: *const ir.Module, reused:
         };
         slot.* = try arena.alloc(Effect, f.signature.params.len);
         const opaque_body = f.signature.linkage != .internal or f.blocks.items.len == 0;
+        const consuming = try consume.candidates(arena, module, f);
         answers.* = .{ opaque_body, opaque_body };
         for (slot.*, 0..) |*effect, i| {
-            effect.* = .{};
+            effect.* = .{ .consumes = i < 64 and consuming & (@as(u64, 1) << @intCast(i)) != 0 };
             if (!opaque_body) continue;
             effect.reads = .all();
             if (finalOf(module, f.signature, i) != null) {
@@ -377,6 +397,10 @@ const FunctionPass = struct {
         if (new_true or new_false) grew = true;
         may.* = .{ may[0] or answered[0], may[1] or answered[1] };
         for (effects, 0..) |*effect, param| {
+            if (!effect.borrow_only and self.borrowOnly(param)) {
+                effect.borrow_only = true;
+                grew = true;
+            }
             const final = finalOf(self.module, self.f.signature, param) orelse continue;
             var walk: Walk = .{ .pass = self, .param = @intCast(param), .final = final };
             if (try walk.returns(&effect.writes, null)) grew = true;
@@ -385,6 +409,43 @@ const FunctionPass = struct {
             if (try walk.returns(&effect.when_false, false)) grew = true;
         }
         return grew;
+    }
+
+    /// A stack-list borrower may not even temporarily own the list: a managed phi
+    /// retains its inputs during ownership insertion despite not necessarily escaping.
+    fn borrowOnly(self: FunctionPass, param: usize) bool {
+        if (!ordinaryList(self.module, self.f.signature, param)) return false;
+        for (self.f.insts.items, 0..) |inst, index| {
+            if (inst.op != .param or inst.data != param) continue;
+            const value: ir.Ref = @fromBackingInt(@intCast(index));
+            for (self.users[index]) |user| {
+                if (!self.borrowUse(self.f.inst(user), value)) return false;
+            }
+        }
+        return true;
+    }
+
+    fn borrowUse(self: FunctionPass, inst: ir.Inst, value: ir.Ref) bool {
+        return switch (inst.op) {
+            .list_len, .list_get, .list_get_field => !self.module.managed(inst.ty) and inst.ty != .str_view and
+                self.f.resolve(inst.a) == value and self.f.resolve(inst.b) != value,
+            .call => self.borrowCall(inst, value),
+            else => false,
+        };
+    }
+
+    /// Check every occurrence: one safe argument does not excuse another argument
+    /// that hands over, keeps or otherwise uses the very same block.
+    fn borrowCall(self: FunctionPass, inst: ir.Inst, value: ir.Ref) bool {
+        const callee = inst.a.index();
+        if (callee >= self.module.functions.items.len) return false;
+        const signature = self.module.functions.items[callee].signature;
+        for (self.f.operands(inst.data), 0..) |argument, param| {
+            if (self.f.resolve(argument) != value) continue;
+            if (!ordinaryList(self.module, signature, param)) return false;
+            if (!self.summaries.of(callee, param).borrow_only) return false;
+        }
+        return true;
     }
 
     /// Whether the function may answer `True` and whether it may answer `False`.
@@ -436,6 +497,14 @@ const FunctionPass = struct {
         while (work.pop()) |value| try flow.visit(value);
     }
 };
+
+/// Only these parameters admit stack-backed list inputs under the strict proof.
+fn ordinaryList(module: *const ir.Module, signature: ir.Signature, param: usize) bool {
+    if (signature.linkage != .internal or param >= signature.params.len or param >= 64) return false;
+    if ((signature.owned | signature.consumes) & (@as(u64, 1) << @intCast(param)) != 0) return false;
+    const ty = signature.params[param];
+    return module.kind(ty) == .list and !module.managed(module.compound(ty).list);
+}
 
 /// The forward walk of `FunctionPass.readsOf`.
 const Flow = struct {

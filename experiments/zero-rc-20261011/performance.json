@@ -1,0 +1,546 @@
+{
+  "host": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+  "cpu": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "method": "9 paired alternating runs after 2 warmups; counters and leak checks disabled; RSS from GNU time; shared host",
+  "harness_sha256": "1ce322eefc47b3d85284cb37caa2c83e1592213a28cab790c4f2c1e12f562afa",
+  "cases": {
+    "15_managed_elements": {
+      "n": 1000000,
+      "lanes": {
+        "before": {
+          "source_sha256": "5de957674f79030a04aa2d25089be2abd8786e9995615c3b93aab95999b36456",
+          "binary_sha256": "e4e648d303a24885f2ebd4b8593ecc5130cd657fc2dc52c72f076f05d383bd8e",
+          "runs": [
+            {
+              "elapsed_ns": 91115370,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 92957292,
+              "max_rss_kib": 142172,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 97154734,
+              "max_rss_kib": 142172,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 89473801,
+              "max_rss_kib": 142172,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 88733045,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 138290631,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 131100115,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 94730087,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 103209213,
+              "max_rss_kib": 142168,
+              "stdout": "1500012500000\n"
+            }
+          ],
+          "compile": {
+            "cold": 116262509,
+            "warm": 13270059
+          },
+          "check": {
+            "cold": 7594541,
+            "warm": 5922966
+          },
+          "median_ns": 94730087,
+          "min_ns": 88733045,
+          "max_ns": 138290631,
+          "median_max_rss_kib": 142332
+        },
+        "after": {
+          "source_sha256": "5de957674f79030a04aa2d25089be2abd8786e9995615c3b93aab95999b36456",
+          "binary_sha256": "b2b4a797aeb292ef051dfa5c81ba3661e031d424e9264645ad3f0f578cd3e9a2",
+          "runs": [
+            {
+              "elapsed_ns": 117780418,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 113161184,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 114735374,
+              "max_rss_kib": 142328,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 118844130,
+              "max_rss_kib": 142172,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 103754555,
+              "max_rss_kib": 142152,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 155351195,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 115861180,
+              "max_rss_kib": 142332,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 119547109,
+              "max_rss_kib": 142172,
+              "stdout": "1500012500000\n"
+            },
+            {
+              "elapsed_ns": 126986517,
+              "max_rss_kib": 142280,
+              "stdout": "1500012500000\n"
+            }
+          ],
+          "compile": {
+            "cold": 114610356,
+            "warm": 14475541
+          },
+          "check": {
+            "cold": 6925087,
+            "warm": 5414751
+          },
+          "median_ns": 117780418,
+          "min_ns": 103754555,
+          "max_ns": 155351195,
+          "median_max_rss_kib": 142328
+        }
+      },
+      "elapsed_ratio": 1.2433263995630026
+    },
+    "24_text_builder": {
+      "n": 10000000,
+      "lanes": {
+        "before": {
+          "source_sha256": "46451d502f3e6f00aaa1aea79f8c0a2d7db80f90a7778f3e2589f4b5d47c3691",
+          "binary_sha256": "65e97dc3a92e31332bb3c221da61119e841bfe08c1a917949fcd5968bab0cbe9",
+          "runs": [
+            {
+              "elapsed_ns": 129679691,
+              "max_rss_kib": 67232,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 132851359,
+              "max_rss_kib": 67120,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 132282988,
+              "max_rss_kib": 67116,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 132828409,
+              "max_rss_kib": 67112,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 107491474,
+              "max_rss_kib": 66956,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 86174154,
+              "max_rss_kib": 67076,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 95464196,
+              "max_rss_kib": 66968,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 106422267,
+              "max_rss_kib": 66960,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 81810434,
+              "max_rss_kib": 67120,
+              "stdout": "510000002\n"
+            }
+          ],
+          "compile": {
+            "cold": 90229191,
+            "warm": 8429655
+          },
+          "check": {
+            "cold": 4367523,
+            "warm": 3429604
+          },
+          "median_ns": 107491474,
+          "min_ns": 81810434,
+          "max_ns": 132851359,
+          "median_max_rss_kib": 67112
+        },
+        "after": {
+          "source_sha256": "46451d502f3e6f00aaa1aea79f8c0a2d7db80f90a7778f3e2589f4b5d47c3691",
+          "binary_sha256": "d37b9bd7f42c5bcd4e3b60ea51c52b82d4249a29becf2d46dd64fa6fe21e6974",
+          "runs": [
+            {
+              "elapsed_ns": 129278120,
+              "max_rss_kib": 67100,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 133652227,
+              "max_rss_kib": 67116,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 134517020,
+              "max_rss_kib": 67112,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 85519794,
+              "max_rss_kib": 67156,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 85883876,
+              "max_rss_kib": 67060,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 92302292,
+              "max_rss_kib": 67096,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 115954777,
+              "max_rss_kib": 66960,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 98137371,
+              "max_rss_kib": 67032,
+              "stdout": "510000002\n"
+            },
+            {
+              "elapsed_ns": 130240392,
+              "max_rss_kib": 67112,
+              "stdout": "510000002\n"
+            }
+          ],
+          "compile": {
+            "cold": 95266220,
+            "warm": 13737185
+          },
+          "check": {
+            "cold": 6684877,
+            "warm": 4341801
+          },
+          "median_ns": 115954777,
+          "min_ns": 85519794,
+          "max_ns": 134517020,
+          "median_max_rss_kib": 67100
+        }
+      },
+      "elapsed_ratio": 1.0787346445728339
+    },
+    "25_text_snapshot": {
+      "n": 10000000,
+      "lanes": {
+        "before": {
+          "source_sha256": "ac0beb46e2ad79ccba4ca75cf6fbb24dc7948942ecadb2ce0c562314b925f843",
+          "binary_sha256": "7780f852188abf1e4c8491a34433191f43f79fe6ca973b663c83af5f88f36bf8",
+          "runs": [
+            {
+              "elapsed_ns": 172303881,
+              "max_rss_kib": 118868,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 271087173,
+              "max_rss_kib": 118864,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 230335262,
+              "max_rss_kib": 118864,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 272428498,
+              "max_rss_kib": 118856,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 177340102,
+              "max_rss_kib": 118864,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 227683137,
+              "max_rss_kib": 118648,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 184846005,
+              "max_rss_kib": 118788,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 190407687,
+              "max_rss_kib": 118836,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 222562568,
+              "max_rss_kib": 118864,
+              "stdout": "3069999999\n"
+            }
+          ],
+          "compile": {
+            "cold": 114225785,
+            "warm": 13716180
+          },
+          "check": {
+            "cold": 5200035,
+            "warm": 4345550
+          },
+          "median_ns": 222562568,
+          "min_ns": 172303881,
+          "max_ns": 272428498,
+          "median_max_rss_kib": 118864
+        },
+        "after": {
+          "source_sha256": "f6f415d2c198581066ab0d7844cd87e358005914a071123a27b5bc76e24af1d9",
+          "binary_sha256": "767cef360b2c47ce422b92131679ac7c73b7be129856ba2b86d0db395af27935",
+          "runs": [
+            {
+              "elapsed_ns": 248475046,
+              "max_rss_kib": 89688,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 192214537,
+              "max_rss_kib": 89656,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 251599018,
+              "max_rss_kib": 89580,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 254168193,
+              "max_rss_kib": 89580,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 245509512,
+              "max_rss_kib": 89576,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 210177914,
+              "max_rss_kib": 89688,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 185833714,
+              "max_rss_kib": 89380,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 176292620,
+              "max_rss_kib": 89480,
+              "stdout": "3069999999\n"
+            },
+            {
+              "elapsed_ns": 150559007,
+              "max_rss_kib": 89552,
+              "stdout": "3069999999\n"
+            }
+          ],
+          "compile": {
+            "cold": 88792999,
+            "warm": 10611842
+          },
+          "check": {
+            "cold": 6071958,
+            "warm": 4624978
+          },
+          "median_ns": 210177914,
+          "min_ns": 150559007,
+          "max_ns": 254168193,
+          "median_max_rss_kib": 89580
+        }
+      },
+      "elapsed_ratio": 0.9443542815339909
+    },
+    "27_buffer_builder": {
+      "n": 10000000,
+      "lanes": {
+        "before": {
+          "source_sha256": "62150b82c8c070e82b69dcc540ed585f2e4e758dabfe9ef58e06fe9f9f5186a0",
+          "binary_sha256": "eba6518647d0e4125951df3fef27eb2b0e0958d47333d6bd921266b2d7650484",
+          "runs": [
+            {
+              "elapsed_ns": 85997295,
+              "max_rss_kib": 30808,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 97525005,
+              "max_rss_kib": 30924,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 91030049,
+              "max_rss_kib": 30968,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 91308091,
+              "max_rss_kib": 30812,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 85689369,
+              "max_rss_kib": 30972,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 88215221,
+              "max_rss_kib": 30972,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 91389722,
+              "max_rss_kib": 30968,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 87583720,
+              "max_rss_kib": 30972,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 92720003,
+              "max_rss_kib": 30924,
+              "stdout": "57375002549995904\n"
+            }
+          ],
+          "compile": {
+            "cold": 111250160,
+            "warm": 8360951
+          },
+          "check": {
+            "cold": 4881803,
+            "warm": 5413827
+          },
+          "median_ns": 91030049,
+          "min_ns": 85689369,
+          "max_ns": 97525005,
+          "median_max_rss_kib": 30968
+        },
+        "after": {
+          "source_sha256": "62150b82c8c070e82b69dcc540ed585f2e4e758dabfe9ef58e06fe9f9f5186a0",
+          "binary_sha256": "d1c4483be66256c736b36bc8cd5dbbee3e4056c95904b16e754f0576d122df2f",
+          "runs": [
+            {
+              "elapsed_ns": 81052999,
+              "max_rss_kib": 30812,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 73466418,
+              "max_rss_kib": 30812,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 84550246,
+              "max_rss_kib": 30812,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 68177956,
+              "max_rss_kib": 30652,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 72667053,
+              "max_rss_kib": 30808,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 75960880,
+              "max_rss_kib": 30652,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 82070992,
+              "max_rss_kib": 30920,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 111675435,
+              "max_rss_kib": 30972,
+              "stdout": "57375002549995904\n"
+            },
+            {
+              "elapsed_ns": 84841549,
+              "max_rss_kib": 30808,
+              "stdout": "57375002549995904\n"
+            }
+          ],
+          "compile": {
+            "cold": 112973668,
+            "warm": 12942346
+          },
+          "check": {
+            "cold": 4611544,
+            "warm": 5513732
+          },
+          "median_ns": 81052999,
+          "min_ns": 68177956,
+          "max_ns": 111675435,
+          "median_max_rss_kib": 30812
+        }
+      },
+      "elapsed_ratio": 0.8903982793637736
+    }
+  },
+  "compilers": {
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/shared-snapshot-20261011/candidate/bin/mylang",
+      "sha256": "a02b4b1c34b6d52977a544245e832c896f5a00645182987f3fd217d5ee08483c"
+    },
+    "compiler": {
+      "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-20261011/candidate/bin/mylang",
+      "sha256": "b10dffb2501e7f631bdc7b8fc5dc68cbbb7bed9d67d434a68d11a4913b89c7bb"
+    }
+  }
+}

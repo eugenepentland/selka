@@ -1,0 +1,28 @@
+func sum_values(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        total += value
+    return total
+
+
+func double_values(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        total += value * 2
+    return total
+
+
+func apply(values: int[], reader: func(int[]) -> int) -> int:
+    return reader(values)
+
+
+func probe(n: int) -> int:
+    const values = [n, n + 1, n + 2, n + 3]
+    const reader = if (n % 2 == 0) then (sum_values) else (double_values)
+    return apply(values, reader)
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

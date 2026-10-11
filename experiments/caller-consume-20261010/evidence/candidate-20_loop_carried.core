@@ -1,0 +1,50 @@
+fn probe(i64) -> i64
+b0:
+  %2 = floor_rem.proven i64 param0, 3:i64
+  %4 = add.proven i64 %2, 1:i64
+  %6 = list_new list[i64] 0:i64
+  jump b1
+b1: ; preds b0 b3
+  %9 = phi i64 0:i64, %20
+  %13 = phi list[i64] %6, %17
+  %11 = cmp.lt bool %9, param0
+  branch %11, b2, b4
+b2: ; preds b1
+  %15 = add.proven i64 param0, %9
+  %17 = call list[i64] append_batch(%13, %15, %4)
+  jump b3
+b3: ; preds b2
+  %20 = add.proven i64 %9, 1:i64
+  jump b1
+b4: ; preds b1
+  %22 = call i64 score(%13)
+  release %13
+  ret %22
+
+fn append_batch(list[i64], i64, i64) -> list[i64]
+b0:
+  jump b5
+b1: ; preds b7 b3
+  %5 = phi i64 0:i64, %15
+  %11 = phi list[i64] %24, %12
+  %7 = cmp.lt bool %5, param2
+  branch %7, b2, b4
+b2: ; preds b1
+  %10 = add.exact i64 param1, %5
+  %12 = list_push list[i64] %11, %10
+  jump b3
+b3: ; preds b2
+  %15 = add.proven i64 %5, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %11
+b5: ; preds b0
+  %18 = is_unique bool param0
+  branch %18, b7, b6
+b6: ; preds b5
+  %21 = list_copy list[i64] param0
+  release param0
+  jump b7
+b7: ; preds b5 b6
+  %24 = phi list[i64] param0, %21
+  jump b1

@@ -333,7 +333,11 @@ static void value_render(core_render_buffer *output, const core_value_shape *sha
         memcpy(&value, at, 8);
         myl_block *text = myl_core_str_from_f64(value);
         value_render_bytes(output, block_data(text), (size_t)text->len);
+#ifdef MYL_ZERO_RC
+        myl_core_drop_owned(text);
+#else
         myl_core_release(text);
+#endif
         break;
     }
     case 3: value_render_octets(output, value_block(at), shape->aux != 0, depth); break;

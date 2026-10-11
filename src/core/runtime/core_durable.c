@@ -214,7 +214,7 @@ static int core_durable_listing(CoreDurablePath *path, int64_t limit, myl_block 
         core_io_list_add(&list, core_io_string((unsigned char *)entry->d_name, length, 1));
     }
     if (closedir(directory) && !status) status = 3;
-    if (status) myl_core_release(list);
+    if (status) core_io_drop(list);
     else *out = list;
     return status;
 }

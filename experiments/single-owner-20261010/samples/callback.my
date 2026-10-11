@@ -1,0 +1,23 @@
+func total(values: int[]) -> int:
+    mut answer = 0
+    for value in values:
+        answer += value
+    return answer
+
+func doubled(values: int[]) -> int:
+    return total(values) * 2
+
+func apply(values: int[], reader: func(int[]) -> int) -> int:
+    return reader(values)
+
+func sum_from(values: int[], index: int) -> int:
+    if index == len(values):
+        return 0
+    return values[index] + sum_from(values, index + 1)
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    const values = [n, n + 1, n + 2, n + 3]
+    const reader = if n % 2 == 0 then total else doubled
+    out.print(apply(values, reader), sum_from(values, 0))
+    return 0

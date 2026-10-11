@@ -2,6 +2,7 @@
 //! the existing front end as the `mylang` Zig module and owns everything below
 //! `typed.Program`: the Core IR, its facts, LLVM emission and the native build.
 const std = @import("std");
+const single_owner_contract = @import("single_owner.zig");
 const frontend = @import("frontend.zig");
 const project_entry = @import("project_entry.zig");
 const typed_dump = @import("typed_dump.zig");
@@ -22,6 +23,7 @@ const shared_cache_dir_flag = "--shared-cache-dir";
 const usage =
     \\usage: mylang build FILE.my -o OUT [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
     \\Default: optimized debug; --optimize-debug is a compatibility alias; --unoptimized disables optimization.
+    \\Experimental: --experimental-single-owner or --experimental-zero-rc on build, run, check and dump-ir.
     \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
     \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
     \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
@@ -67,7 +69,22 @@ pub fn main(init: std.process.Init) !u8 {
 /// `coverage`, from `args` (argv, the program name first). Anything else prints the usage.
 pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
-    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) return dumpIr(init, args[2], args.len == 4 and std.mem.eql(u8, args[3], "--facts"));
+    if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) {
+        var with_facts = false;
+        var single_owner = false;
+        var zero_rc = false;
+        for (args[3..]) |arg| {
+            if (std.mem.eql(u8, arg, "--facts")) {
+                with_facts = true;
+            } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
+                single_owner = true;
+            } else if (std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+                single_owner = true;
+                zero_rc = true;
+            } else return 2;
+        }
+        return dumpIr(init, args[2], with_facts, single_owner, zero_rc);
+    }
     if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
     try std.Io.File.stderr().writeStreamingAll(init.io, usage);
     return 2;
@@ -96,15 +113,19 @@ fn dumpTyped(init: std.process.Init, path: []const u8, filter: ?[]const u8) !u8 
     return 0;
 }
 
-fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool) !u8 {
+fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool, single_owner: bool, zero_rc: bool) !u8 {
     const allocator = init.arena.allocator();
     var report: std.ArrayList(u8) = .empty;
     const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
     const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
+    if (single_owner and !try single_owner_contract.validateMode(allocator, checked.program, checked.src, .text, &report, zero_rc)) {
+        try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
+        return 1;
+    }
     var refusal: build.Refusal = .{};
-    var module = build.buildModuleSource(allocator, checked.program, checked.src, &refusal) catch |err| switch (err) {
+    var module = build.buildExecutable(allocator, .{ .program = checked.program, .source = checked.src, .single_owner = single_owner, .zero_rc = zero_rc }, &refusal) catch |err| switch (err) {
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
             const text = try std.fmt.allocPrint(allocator, "{s}:{d}:{d}: error[E_CORE_UNSUPPORTED]: the new core does not support {s} yet\n", .{ at.path, at.line, at.column, refusal.reason });
@@ -184,6 +205,11 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--release")) {
             options.mode.select(&explicit_mode, .release) catch return 2;
+        } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
+            options.show.codegen.single_owner = true;
+        } else if (std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+            options.show.codegen.single_owner = true;
+            options.show.codegen.zero_rc = true;
         } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
             options.mode.select(&explicit_mode, .optimized_debug) catch return 2;
         } else if (std.mem.eql(u8, arg, "--unoptimized")) {
@@ -192,11 +218,10 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             // Project configuration and graph checks are always applied.
         } else if (std.mem.eql(u8, arg, "--mode") and has_value) {
             index += 1;
-            if (std.mem.eql(u8, args[index], "ReleaseFast")) {
-                options.mode.select(&explicit_mode, .release) catch return 2;
-            } else if (std.mem.eql(u8, args[index], "Debug")) {
-                options.mode.select(&explicit_mode, .optimized_debug) catch return 2;
-            } else return 2;
+            const modes = std.StaticStringMap(@import("build_mode.zig").Mode).initComptime(.{
+                .{ "ReleaseFast", .release }, .{ "Debug", .optimized_debug },
+            });
+            options.mode.select(&explicit_mode, modes.get(args[index]) orelse return 2) catch return 2;
         } else if (std.mem.eql(u8, arg, "--no-facts")) {
             options.facts = .off;
         } else if (std.mem.eql(u8, arg, "--generic-vectors")) {
@@ -476,8 +501,9 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
                 if (!live) continue;
                 for (block.insts.items) |ref| exact += @intFromBool(function.inst(ref).check == .exact);
             }
-            // Lists the release build would put on the stack (`promote.zig`).
-            const stack = try @import("promote.zig").promote(allocator, &outcome.module.?, &function, &known, false, null);
+            // Intraprocedural promotion: coverage builds each function alone, so
+            // calls without a borrowing summary remain conservative.
+            const stack = try @import("promote.zig").promote(allocator, &outcome.module.?, &function, &known, .{});
             try out.print(keep, "ok {s}\tproven={d} exact={d} stack={d}\n", .{ outcome.name, known.proven, exact, stack.lists });
         }
     }

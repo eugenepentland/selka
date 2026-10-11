@@ -169,6 +169,7 @@ pub const Index = struct {
         if (text_declaration.builtin_name != null) text_declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u32 } }});
         try self.addByteString();
         try self.addByteBuffer();
+        try self.addBorrowedViews();
         try self.addBuiltin("dict", 2, .buffer);
         try self.addBuiltin("set", 1, .buffer);
         try self.addDictionaryViews();
@@ -216,6 +217,15 @@ pub const Index = struct {
             if (declaration.builtin_name != null) declaration.fields = try allocator.dupe(Field, &.{
                 .{ .name = empty, .ty = .{ .application = mapping }, .builtin_name = "mapping" },
             });
+        }
+    }
+    fn addBorrowedViews(self: *Index) Error!void {
+        for ([_][]const u8{ "TextView", "ByteView" }, [_]typed.Type{ .u32, .u8 }) |name, element| {
+            try self.addBuiltin(name, 0, .buffer);
+            const id = self.names.get(name) orelse continue;
+            const declaration = &self.declarations.items[id];
+            if (declaration.builtin_name == null) continue;
+            declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = element } }});
         }
     }
     fn addCell(self: *Index) Error!void {

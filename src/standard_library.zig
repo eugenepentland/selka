@@ -14,6 +14,7 @@ const modules = [_]Module{
     .{ .path = "math.my", .text = @embedFile("stdlib/math.my") },
     .{ .path = "memo.my", .text = @embedFile("stdlib/memo.my") },
     .{ .path = "network.my", .text = @embedFile("stdlib/network.my") },
+    .{ .path = "parallel.my", .text = @embedFile("stdlib/parallel.my") },
     .{ .path = "path.my", .text = @embedFile("stdlib/path.my") },
     .{ .path = "persistent_memo.my", .text = @embedFile("stdlib/persistent_memo.my") },
     .{ .path = "pool.my", .text = @embedFile("stdlib/pool.my") },

@@ -1,0 +1,17 @@
+func segment(source: str, start: int) -> str:
+    return source[start:start + 3]
+
+
+func probe(n: int) -> int:
+    mut text = ""
+    for i in range(n + 2):
+        text += "aλz"
+    const part = segment(text, n)
+    text = "discarded"
+    return 100 * len(part) + ord(part[0])
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

@@ -1,0 +1,73 @@
+{
+  "compiler_sha256": "94033136a95aa40d57e6fa43d545afcaab1d9da3de38b1b420b642942a03c1e3",
+  "harness_sha256": "d0ea14b50cf02ae04c4725de948317c43ab35650bd7b32f69fe06b0cbe74ba90",
+  "refusals": {
+    "default-mode": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/default-mode.my:3:18: error[E_CORE_UNSUPPORTED]: the new core does not support borrowed views require --experimental-zero-rc yet\n",
+      "source_sha256": "bf703a9b1ee9058ced0846bfea7ea64fa66688e194dae35bfe94bb8d0cd07844"
+    },
+    "unsupported-method": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/unsupported-method.my:4:5: error[E_ZERO_RC_VIEW_ESCAPE]: a view must borrow from a known local owner or view parameter\n      const changed = part.upper()\n      ^\n",
+      "source_sha256": "833af5a281aaf3f16ffd2d561b14fdaa4ad5ce52f915d2e1d5db97aaf7b883d1"
+    },
+    "implicit-conversion": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/implicit-conversion.my:4:19: error[E_ZERO_RC_VIEW_UNSUPPORTED]: view conversions require an explicit .copy()\n      const saved = str(part)\n                    ^\n",
+      "source_sha256": "b5f590bfaa2686c2aaa73827730ebcf07437c34fdbd449d1213fcf5ab4b61d62"
+    },
+    "aggregate-storage": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/aggregate-storage.my:4:19: error[E_ZERO_RC_VIEW_ESCAPE]: borrowed views require zero-RC mode and cannot be stored inside aggregates\n      const views = [part]\n                    ^\n",
+      "source_sha256": "896601b323d2b8fc0be62dad2ea8af75f4cec54d9ccfdbc2117f3d0b9404a6dc"
+    },
+    "binary-operation": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/binary-operation.my:4:12: error[E_TYPE]: numeric conversion requires an integer or float\n      return int(part == part)\n             ^\n",
+      "source_sha256": "7b095a5c720cac5f5dc8731234b8c2debc3266fee0af3d3a5bf61d29b99e7c04"
+    }
+  },
+  "traps": {
+    "text--99/--unoptimized": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/text--99.my:4:18: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/text--99.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "binary_sha256": "af9ffe30d822bb0e50801e7e4e4ebe4c63c301f0882357439da68aa74691c89c"
+    },
+    "text--99/--release": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/text--99.my:4:18: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/text--99.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "binary_sha256": "401d7de6abb1a192f697a033aca88aced19e822574a0c2e9970298bafb8cb4a4"
+    },
+    "text-3/--unoptimized": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/text-3.my:4:18: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/text-3.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "binary_sha256": "86c770995c72741ce557fb27702114e27e23599f4784893bca81f68eef2ffbff"
+    },
+    "text-3/--release": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/text-3.my:4:18: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/text-3.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "binary_sha256": "bdcef383584325c98ac02f4d611fb7f0c7d5506bbea7cc61649068e853507bf8"
+    },
+    "bytes--99/--unoptimized": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/bytes--99.my:4:18: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/bytes--99.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "binary_sha256": "53a7a0f9bda956e3ab33be6d43daa1bf7f608f163ea96772fe8a69aef1c52da0"
+    },
+    "bytes--99/--release": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/bytes--99.my:4:18: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/bytes--99.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "binary_sha256": "ef15f44cabb7a40218bae9c9f2b9998ae7a19196da2b6b2e4955e6074173f1ac"
+    },
+    "bytes-3/--unoptimized": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/bytes-3.my:4:18: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/bytes-3.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "binary_sha256": "8ccdb4066d44772f755ec1470ab0d3420f58e870250c34d97a194f907a21ef91"
+    },
+    "bytes-3/--release": {
+      "status": 1,
+      "stderr": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/bytes-3.my:4:18: error[R_TEXT_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/boundaries/bytes-3.my:4:18\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n",
+      "binary_sha256": "5d8eb764ada038271490ca99f5dc80cf84214cccd9751234ea1e45c5008fea8a"
+    }
+  }
+}

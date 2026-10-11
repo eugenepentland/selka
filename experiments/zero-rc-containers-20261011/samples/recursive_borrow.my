@@ -1,0 +1,13 @@
+enum Expr:
+    text(value: str)
+    add(left: Expr, right: Expr)
+func evaluate(e: Expr) -> int:
+    match e:
+        case Expr.text(value=v):
+            return len(v)
+        case Expr.add(left=l, right=r):
+            return evaluate(l) + evaluate(r)
+func main(out: Stream) -> int:
+    const tree = Expr.add(left=Expr.text(value="one-" + str(1)), right=Expr.text(value="two-" + str(2)))
+    out.print(evaluate(tree))
+    return 0

@@ -195,7 +195,7 @@ pub const RecordShape = struct {
     buffer: ?Type = null,
     resource: ?external_resources.Kind = null,
     /// Declaration identity for builtin records with special transfer policies.
-    builtin: enum { none, cell, live_view } = .none,
+    builtin: enum { none, cell, live_view, borrowed_view } = .none,
     /// An anonymous tuple: positional fields no source can name, taken apart by
     /// destructuring only. It keeps the plain record representation, so
     /// construction, field reads, equality and layout are the record ones.
@@ -708,7 +708,7 @@ pub const LocalUsage = struct {
 /// value is captured in at entry, whose initializer must be effect-free;
 /// `contract_value` holds the value a contract clause is checked against
 /// (`result`, or an invariant's `self`).
-pub const LocalOrigin = enum { local, parameter, iteration, collection_copy, contract_old, contract_value };
+pub const LocalOrigin = enum { local, parameter, iteration, collection_copy, contract_old, contract_value, pattern };
 
 /// Checked function signature, local/reference metadata, effects, and body identity.
 pub const Function = struct {
@@ -831,4 +831,9 @@ fn providerFields(schema: Record, records: []const Record, operation: provider_c
         if (!found) return null;
     }
     return slots;
+}
+
+/// The nonowning text/byte span types, recognized by injected identity.
+pub fn isBorrowedView(records: []const Record, ty: Type) bool {
+    return ty.isAggregate() and ty.recordIndex() < records.len and records[ty.recordIndex()].shape.builtin == .borrowed_view;
 }

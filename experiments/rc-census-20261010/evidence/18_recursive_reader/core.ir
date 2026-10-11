@@ -1,0 +1,52 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %2 = list_new list[i64] 4:i64
+  %3 = list_push list[i64] %2, param0
+  %5 = add.proven i64 param0, 1:i64
+  %6 = list_push list[i64] %3, %5
+  %8 = add.proven i64 param0, 2:i64
+  %9 = list_push list[i64] %6, %8
+  %11 = add.proven i64 param0, 3:i64
+  %12 = list_push list[i64] %9, %11
+  %14 = call i64 sum_from(%12, 0:i64)
+  release %12
+  ret %14
+fn sum_from(list[i64], i64) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = cmp.eq bool param1, %3
+  branch %4, b1, b2
+b1: ; preds b0
+  ret 0:i64
+b2: ; preds b0
+  %9 = cmp.lt bool param1, 0:i64
+  branch %9, b3, b4
+b3: ; preds b2
+  %11 = list_len u64 param0
+  %12 = convert.proven i64 %11
+  %13 = add.proven i64 %12, param1
+  jump b4
+b4: ; preds b2 b3
+  %15 = phi i64 param1, %13
+  %17 = list_get.exact i64 param0, %15
+  %21 = add.exact i64 param1, 1:i64
+  %22 = call i64 sum_from(param0, %21)
+  %23 = add.exact i64 %17, %22
+  ret %23
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %5=[1,140737488355329] %8=[2,140737488355330] %11=[3,140737488355331] %14=[-9223372036854775808,9223372036854775807]
+list probe %2: settled=true length=%-1 len=[0,0]
+list probe %3: settled=true length=%-1 elements=[0,140737488355328] len=[1,1]
+list probe %6: settled=true length=%-1 elements=[0,140737488355329] len=[2,2]
+list probe %9: settled=true length=%-1 elements=[0,140737488355330] len=[3,3]
+list probe %12: settled=true length=%-1 elements=[0,140737488355331] len=[4,4]
+facts sum_from: %1=[-9223372036854775807,9223372036854775807] %2=[0,140737488355328] %3=[0,140737488355328] %4=[0,1] %9=[0,1] %11=[0,140737488355328] %12=[0,140737488355328] %13=[-9223372036854775807,140737488355327] %15=[-9223372036854775807,9223372036854775807] %17=[-9223372036854775808,9223372036854775807] %19=[-9223372036854775808,9223372036854775807] %21=[-9223372036854775806,9223372036854775807] %22=[-9223372036854775808,9223372036854775807] %23=[-9223372036854775808,9223372036854775807]
+list sum_from %17: settled=true length=%-1

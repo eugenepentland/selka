@@ -1,0 +1,162 @@
+{
+  "version": "cost-v1",
+  "functions": [
+    {
+      "name": "main",
+      "counts": {
+        "checks": {
+          "kept": 0,
+          "proved": 1
+        },
+        "updates": {
+          "in_place": 0,
+          "tested": 0,
+          "copied": 0
+        },
+        "allocation": {
+          "sites": 0,
+          "unresolved_calls": 0
+        },
+        "rc": {
+          "retains": 0,
+          "releases": 0,
+          "elided_pairs": 0,
+          "stack_lists": 0
+        },
+        "inlined_calls": 0,
+        "loops": {
+          "unswitched": 0,
+          "versioned": 0,
+          "vector_plans": 0,
+          "unknown": 0
+        },
+        "llvm_vectorized_loops": null
+      }
+    },
+    {
+      "name": "probe",
+      "counts": {
+        "checks": {
+          "kept": 4,
+          "proved": 5
+        },
+        "updates": {
+          "in_place": 4,
+          "tested": 1,
+          "copied": 0
+        },
+        "allocation": {
+          "sites": 8,
+          "unresolved_calls": 0
+        },
+        "rc": {
+          "retains": 0,
+          "releases": 3,
+          "elided_pairs": 0,
+          "stack_lists": 0
+        },
+        "inlined_calls": 0,
+        "loops": {
+          "unswitched": 0,
+          "versioned": 0,
+          "vector_plans": 0,
+          "unknown": 0
+        },
+        "llvm_vectorized_loops": null
+      }
+    },
+    {
+      "name": "choose",
+      "counts": {
+        "checks": {
+          "kept": 1,
+          "proved": 0
+        },
+        "updates": {
+          "in_place": 0,
+          "tested": 0,
+          "copied": 0
+        },
+        "allocation": {
+          "sites": 0,
+          "unresolved_calls": 0
+        },
+        "rc": {
+          "retains": 2,
+          "releases": 0,
+          "elided_pairs": 0,
+          "stack_lists": 0
+        },
+        "inlined_calls": 0,
+        "loops": {
+          "unswitched": 0,
+          "versioned": 0,
+          "vector_plans": 0,
+          "unknown": 0
+        },
+        "llvm_vectorized_loops": null
+      }
+    },
+    {
+      "name": "score",
+      "counts": {
+        "checks": {
+          "kept": 1,
+          "proved": 3
+        },
+        "updates": {
+          "in_place": 0,
+          "tested": 0,
+          "copied": 0
+        },
+        "allocation": {
+          "sites": 0,
+          "unresolved_calls": 0
+        },
+        "rc": {
+          "retains": 0,
+          "releases": 0,
+          "elided_pairs": 0,
+          "stack_lists": 0
+        },
+        "inlined_calls": 0,
+        "loops": {
+          "unswitched": 0,
+          "versioned": 0,
+          "vector_plans": 0,
+          "unknown": 1
+        },
+        "llvm_vectorized_loops": null
+      }
+    }
+  ],
+  "totals": {
+    "checks": {
+      "kept": 6,
+      "proved": 9
+    },
+    "updates": {
+      "in_place": 4,
+      "tested": 1,
+      "copied": 0
+    },
+    "allocation": {
+      "sites": 8,
+      "unresolved_calls": 0
+    },
+    "rc": {
+      "retains": 2,
+      "releases": 3,
+      "elided_pairs": 0,
+      "stack_lists": 0
+    },
+    "inlined_calls": 0,
+    "loops": {
+      "unswitched": 0,
+      "versioned": 0,
+      "vector_plans": 0,
+      "unknown": 1
+    },
+    "llvm_vectorized_loops": null
+  }
+}

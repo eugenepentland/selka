@@ -1,0 +1,20 @@
+func make_rows(n: int) -> int[][]:
+    mut rows: int[][] = []
+    for i in range(n):
+        const row = [i, i + 1, i + 2]
+        rows.append(row)
+    return rows
+
+func score(rows: int[][]) -> int:
+    mut result = 0
+    for row in rows:
+        for value in row:
+            result += value
+    return result
+
+func main(args: str[], out: Stream) -> int:
+    const rows = make_rows(len(args) * 100)
+    mut changed = rows.snapshot()
+    changed[0].append(9)
+    out.print(score(rows), score(changed))
+    return 0

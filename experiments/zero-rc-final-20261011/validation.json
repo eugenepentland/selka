@@ -1,0 +1,72 @@
+{
+  "schema": "zero-rc-final-validation-v1",
+  "branch": "codex/borrow-call-stack-20261010",
+  "base": "1d202d41bfff888ee91354f706cb74e860dc4b94",
+  "prototype_complete": true,
+  "general_language_rollout_complete": false,
+  "candidate": {
+    "prefix": ".tmp/zero-rc-final-20261011/candidate",
+    "files": {
+      "bin/mylang": "b8a00892fcc41313ff1589447766d84496db6f53099edc56a10afc34710cceb7",
+      "libexec/mylang/components/cache-plan-32b041751efe201cad0ff392831ec2d2218849ecbe2f1b156b11e850cb80e3df": "32b041751efe201cad0ff392831ec2d2218849ecbe2f1b156b11e850cb80e3df",
+      "libexec/mylang/components/cache-plan.json": "3a07446b118859f9db6896d7989d3b63627f7aa450de17b71fc58e36a898bee8",
+      "libexec/mylang/components/test-index-9a87d7f926b1ffd5661b93aaf27e60e88ace01a59790239c98993810e157cb17": "9a87d7f926b1ffd5661b93aaf27e60e88ace01a59790239c98993810e157cb17",
+      "libexec/mylang/components/test-index.json": "d69b4dd88908f8935d40991b08f578bbe31bc845e855674a0d2525e0115ef6b7",
+      "tools/selka-components": "6f5e4801af72c41978492e26897c2b35e97f7c171ae39daa1e750562c648097c"
+    }
+  },
+  "zig": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "checks": {
+    "core": {
+      "path": ".tmp/zero-rc-stage6-core-final.log",
+      "sha256": "a56cd3389e2351d8114cada2cec32e4f14c6cb2a3fd8532e4a11fa1f07236e3f",
+      "passed": 898,
+      "status": 0
+    },
+    "frontend": {
+      "path": ".tmp/zero-rc-stage6-frontend.log",
+      "sha256": "3e87fe57a3e0021bce11bd1d2aad1a3e509389a01ee07475a741cf2b7cbf53c5",
+      "passed": 83,
+      "status": 0
+    },
+    "guardian": {
+      "path": ".tmp/zero-rc-stage6-guardian-final.log",
+      "sha256": "4008023046c59b5b4725436608bd056e821a945fa844a4814c144c791ffc3b5e",
+      "passed": 88,
+      "scope": "whole-tree",
+      "status": 0
+    },
+    "sample_executions": 470,
+    "sample_programs": 48,
+    "census_supported": 30,
+    "census_allocating_workloads": 23,
+    "task_counted_executions": 212,
+    "task_thread_sanitized_executions": 206,
+    "resource_lifetime_refusals": 5,
+    "unmodified_library_fixtures_supported": 3,
+    "unmodified_library_fixtures_surveyed": 10
+  },
+  "reports": {
+    "abi.json": "c3444130e2aa4f796303581d72346d6b995956b18513a411ce4f7624ee571847",
+    "boundaries.json": "d783e910e5ee9babdfc5b4120f0916c57d459f288da4daad8ec7eadf029d91d5",
+    "performance.json": "1411b633c8b39eb3a5b0ef7a2813c436b6ca168328c46d36697af358c05dd8bc",
+    "qualification.json": "e7ae1ced8091fb8ebf6181f9ca9acd8db161ae5c4b1aa1f09d55fa71137a80b1",
+    "results.json": "ba91550a4316a1d04e5b78824ce20f1f60155c39a1e3654c0234a746601aa1d7",
+    "source-sha256-final.json": "d8e741a1ef2d962cbc0adf7f70a03a74842d1dcbc45c46677847066a4be28d99",
+    "tasks.json": "3bbc6b01a5d4d7988df28203b2e27261bed29da37a8650e3511d5a5acee3f598"
+  },
+  "limits": [
+    "Prototype subset: remaining library fixtures need ownership migrations and further helper admission.",
+    "Tasks use backend fixtures; source syntax and borrowed captures are not implemented.",
+    "Heap allocation and destruction remain; managed counters exclude native allocations.",
+    "Microbenchmarks do not demonstrate general runtime or compile-time improvement."
+  ],
+  "notes": [
+    "The final compiler/runtime sources remained unchanged during qualification. Test-only count-header guard updates were followed by a clean full Core run.",
+    "First full Core run passed 896/897; the header pattern in its C guard required updating after removing the count member. Final run passed all 898, including a new zero-RC negative compilation guard.",
+    "Earlier harness failures and raw outputs are preserved but excluded from final passing counts."
+  ]
+}

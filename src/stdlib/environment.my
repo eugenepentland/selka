@@ -6,7 +6,6 @@
 public func fixed(values: dict[str, str]) -> Environment:
     mut pairs = ""
     for name in values:
-        mut value = values[name]
-        assert "\x00" not in name and "\x00" not in value, "environment names and values cannot contain NUL"
-        pairs = pairs + name + "\x00" + value + "\x00"
+        assert "\x00" not in name and "\x00" not in values[name], "environment names and values cannot contain NUL"
+        pairs = pairs + name + "\x00" + values[name] + "\x00"
     return __stand_in[Environment](pairs)

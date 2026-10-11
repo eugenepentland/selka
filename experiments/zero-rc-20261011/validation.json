@@ -1,0 +1,68 @@
+{
+  "stage": "0: plan and audit only; no compiler changes or new sample executions",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/shared-snapshot-20261011/candidate/bin/mylang",
+    "sha256": "a02b4b1c34b6d52977a544245e832c896f5a00645182987f3fd217d5ee08483c"
+  },
+  "artifacts": {
+    "audit.py": "36e0707f6622782d94df1df6489064c4ec2928ef55fc65efa4a0d5eaa6ce1bdb",
+    "README.md": "2cfdcab84f13b185d8f197ecc381efb5554df55a6d03837d72cdff641f186c81",
+    "baseline.json": "da0ac0e41f5a2e3296b573e0fff40dc256756e8121fbe99ae27cac94199292c0"
+  },
+  "prior_validation_sha256": "8c580db586d1601b19474714f812976bbb0c30feef35d36e2f0b6bb7e0c2b64c",
+  "baseline_summary": {
+    "runs": 54,
+    "observed_rc_free_runs": 0,
+    "managed_leak_free_runs": 54
+  },
+  "audit_behavior_checks": [
+    {
+      "name": "reject_real_startup_teardown_rc",
+      "exit": 1
+    },
+    {
+      "name": "accept_direct_frees_without_rc",
+      "exit": 0
+    },
+    {
+      "name": "reject_managed_leak",
+      "exit": 1
+    },
+    {
+      "name": "reject_emitted_rc_in_main",
+      "exit": 1
+    },
+    {
+      "name": "reject_missing_counter",
+      "exit": 2
+    },
+    {
+      "name": "reject_unknown_schema",
+      "exit": 2
+    },
+    {
+      "name": "reject_inconsistent_site_totals",
+      "exit": 2
+    },
+    {
+      "name": "reject_inconsistent_function_totals",
+      "exit": 2
+    },
+    {
+      "name": "reject_negative_count",
+      "exit": 2
+    },
+    {
+      "name": "reject_missing_input",
+      "exit": 2
+    },
+    {
+      "name": "reject_empty_directory",
+      "exit": 2
+    },
+    {
+      "name": "reject_full_current_baseline",
+      "exit": 1
+    }
+  ]
+}

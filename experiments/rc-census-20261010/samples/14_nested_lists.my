@@ -1,0 +1,27 @@
+func make_rows(n: int) -> int[][]:
+    mut rows: int[][] = []
+    for i in range(n):
+        mut row: int[] = []
+        for j in range(3):
+            row.append(i + j)
+        rows.append(row)
+    return rows
+
+
+func score(rows: int[][]) -> int:
+    mut total = 0
+    for row in rows:
+        for value in row:
+            total += value
+    return total
+
+
+func probe(n: int) -> int:
+    const rows = make_rows(n)
+    return score(rows)
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

@@ -197,7 +197,11 @@ static void dict_release_part(const core_dict_descriptor *desc, unsigned char *e
     for (int32_t r = 0; r < layout[1]; ++r) {
         int32_t offset = layout[3 + 2 * r];
         if ((offset < (int32_t)desc->value_offset && !key) || (offset >= (int32_t)desc->value_offset && !value)) continue;
+#ifdef MYL_ZERO_RC
+        myl_core_drop_owned(reference_at(layout, entry, r));
+#else
         myl_core_release(reference_at(layout, entry, r));
+#endif
     }
 }
 
@@ -212,7 +216,10 @@ myl_block *myl_core_dict_set(myl_block *dict, int64_t entry, const void *value) 
 myl_block *myl_core_dict_insert(myl_block *dict, int64_t probe, const void *key, const void *value, bool verify) {
     core_dict_meta *meta = dict_meta(dict);
     uint64_t hash = dict_hash(meta->desc, key);
-    if (verify && (probe >= 0 || !count_is_unique(dict))) abort();
+    if (verify && probe >= 0) abort();
+#ifndef MYL_ZERO_RC
+    if (verify && !count_is_unique(dict)) abort();
+#endif
     if (!meta->index && dict->len >= DICT_SMALL) {
         /* Crossing the small-table boundary builds the first index after append. */
     } else if (meta->index && meta->index->used * 2 >= meta->index->slots) {
@@ -246,7 +253,7 @@ myl_block *myl_core_dict_insert(myl_block *dict, int64_t probe, const void *key,
     return dict;
 }
 
-myl_block *myl_core_dict_remove(myl_block *dict, int64_t entry) {
+myl_block *myl_core_dict_remove_parts(myl_block *dict, int64_t entry, unsigned taken) {
     core_dict_meta *meta = dict_meta(dict);
     if (!meta->dead) {
         meta->dead = calloc(((size_t)dict->cap + 7) / 8, 1);
@@ -275,11 +282,15 @@ myl_block *myl_core_dict_remove(myl_block *dict, int64_t entry) {
         }
         meta->index->dead++;
     }
-    dict_release_part(meta->desc, dict_entry(dict, (uint64_t)entry), true, true);
+    dict_release_part(meta->desc, dict_entry(dict, (uint64_t)entry), !(taken & 1u), !(taken & 2u));
     memset(dict_entry(dict, (uint64_t)entry), 0, meta->desc->stride);
     meta->dead[(uint64_t)entry >> 3] |= (unsigned char)(1u << (entry & 7));
     dict->len--;
     return dict;
+}
+
+myl_block *myl_core_dict_remove(myl_block *dict, int64_t entry) {
+    return myl_core_dict_remove_parts(dict, entry, 0);
 }
 
 uint64_t myl_core_dict_entries(const myl_block *dict) { return dict_meta(dict)->elen; }
@@ -292,7 +303,7 @@ int64_t myl_core_dict_ordinal(const myl_block *dict, uint64_t ordinal) {
     abort();
 }
 
-myl_block *myl_core_dict_copy(const myl_block *dict) {
+static myl_block *core_dict_copy_storage(const myl_block *dict) {
     core_dict_meta *meta = dict_meta(dict);
     myl_block *copy = myl_core_dict_new((uint64_t)dict->cap, meta->desc);
     core_dict_meta *other = dict_meta(copy);
@@ -312,13 +323,24 @@ myl_block *myl_core_dict_copy(const myl_block *dict) {
         if (!other->index) out_of_memory();
         memcpy(other->index, meta->index, bytes);
     }
+    return copy;
+}
+
+myl_block *myl_core_dict_copy(const myl_block *dict) {
+    core_dict_meta *meta = dict_meta(dict);
+#ifdef MYL_ZERO_RC
+    /* Compiler-directed deep copying uses the private storage helper. A COW
+       copy with owned children has no valid zero-RC contract. */
+    if (meta->desc->layout && meta->desc->layout[1]) abort();
+#endif
+    myl_block *copy = core_dict_copy_storage(dict);
+#ifndef MYL_ZERO_RC
     if (meta->desc->layout) for (uint64_t i = 0; i < meta->elen; ++i) {
         if (!dict_live(meta, i)) continue;
-        for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
-            myl_block *child = reference_at(meta->desc->layout, dict_entry(copy, i), r);
-            count_retain(child);
-        }
+        for (int32_t r = 0; r < meta->desc->layout[1]; ++r)
+            count_retain(reference_at(meta->desc->layout, dict_entry(copy, i), r));
     }
+#endif
     return copy;
 }
 
@@ -342,7 +364,11 @@ myl_block *myl_core_dict_clear(myl_block *dict) {
 static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context) {
     core_dict_meta *meta = dict_meta(dict);
     if (!meta->desc->layout || meta->desc->layout[1] == 0) return;
+#ifndef MYL_ZERO_RC
     core_layout_release release = visit == core_release_child ? layout_release(meta->desc->layout, 0) : NULL;
+#else
+    core_layout_release release = NULL;
+#endif
     for (uint64_t i = 0; i < meta->elen; ++i) {
         if (!dict_live(meta, i)) continue;
         if (release) { release(dict_entry(dict, i), context); continue; }

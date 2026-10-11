@@ -1,0 +1,42 @@
+fn probe(i64) -> i64
+b0:
+  jump b2
+b1: ; preds b6
+  %2 = call i64 sum_values(%15)
+  ret %2
+b2: ; preds b0
+  %5 = list_new list[i64] 0:i64
+  jump b3
+b3: ; preds b2 b5
+  %9 = phi i64 0:i64, %19
+  %15 = phi list[i64] %5, %16
+  %11 = cmp.lt bool %9, 8:i64
+  branch %11, b4, b6
+b4: ; preds b3
+  %14 = add.proven i64 param0, %9
+  %16 = list_push list[i64] %15, %14
+  jump b5
+b5: ; preds b4
+  %19 = add.proven i64 %9, 1:i64
+  jump b3
+b6: ; preds b3
+  jump b1
+
+fn make_values(i64) -> list[i64]
+b0:
+  %2 = list_new list[i64] 0:i64
+  jump b1
+b1: ; preds b0 b3
+  %6 = phi i64 0:i64, %16
+  %12 = phi list[i64] %2, %13
+  %8 = cmp.lt bool %6, 8:i64
+  branch %8, b2, b4
+b2: ; preds b1
+  %11 = add.exact i64 param0, %6
+  %13 = list_push list[i64] %12, %11
+  jump b3
+b3: ; preds b2
+  %16 = add.proven i64 %6, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %12

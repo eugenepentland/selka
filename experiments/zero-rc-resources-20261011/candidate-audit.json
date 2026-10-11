@@ -1,0 +1,743 @@
+{
+  "schema": "mylang-zero-rc-audit-v1",
+  "audit_sha256": "36e0707f6622782d94df1df6489064c4ec2928ef55fc65efa4a0d5eaa6ce1bdb",
+  "scope": "Whole execution, including main and startup/teardown (<outside>).",
+  "limitations": [
+    "Existing counters do not cover every runtime reference-count read or check.",
+    "Zero observed events does not prove that unexecuted paths contain no RC.",
+    "Emitted and runtime RC columns can overlap; do not sum them.",
+    "Memory measures managed blocks, not RSS or all allocator storage."
+  ],
+  "summary": {
+    "runs": 25,
+    "observed_rc_free_runs": 25,
+    "managed_leak_free_runs": 25
+  },
+  "runs": [
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/early_return/debug/counts-0.json",
+      "counter_sha256": "5f70e74f85777d94ff586a3d86c1e10952e61ece656c34f9d82cb12b0ad40210",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 5,
+      "memory": {
+        "allocs": 7,
+        "alloc_bytes": 576,
+        "frees": 7,
+        "reallocs": 0,
+        "peak_live_bytes": 416,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/early_return/no_facts/counts-0.json",
+      "counter_sha256": "c51a91bf3f09bbc539c15dd6a5d0a177ec3e5d2e95290d090101718269afeaa5",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 5,
+      "memory": {
+        "allocs": 7,
+        "alloc_bytes": 576,
+        "frees": 7,
+        "reallocs": 0,
+        "peak_live_bytes": 416,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/early_return/optimized_debug/counts-0.json",
+      "counter_sha256": "5f70e74f85777d94ff586a3d86c1e10952e61ece656c34f9d82cb12b0ad40210",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 5,
+      "memory": {
+        "allocs": 7,
+        "alloc_bytes": 576,
+        "frees": 7,
+        "reallocs": 0,
+        "peak_live_bytes": 416,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/early_return/release/counts-0.json",
+      "counter_sha256": "c51a91bf3f09bbc539c15dd6a5d0a177ec3e5d2e95290d090101718269afeaa5",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 5,
+      "memory": {
+        "allocs": 7,
+        "alloc_bytes": 576,
+        "frees": 7,
+        "reallocs": 0,
+        "peak_live_bytes": 416,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/early_return/verify/counts-0.json",
+      "counter_sha256": "c51a91bf3f09bbc539c15dd6a5d0a177ec3e5d2e95290d090101718269afeaa5",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 5,
+      "memory": {
+        "allocs": 7,
+        "alloc_bytes": 576,
+        "frees": 7,
+        "reallocs": 0,
+        "peak_live_bytes": 416,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/foreign_scalar/debug/counts-0.json",
+      "counter_sha256": "4bf0e9ee947e575d6f679bc32690f2c9c7e3d18d384c7f5f7cc7fe25f9d1ae15",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/foreign_scalar/no_facts/counts-0.json",
+      "counter_sha256": "4bf0e9ee947e575d6f679bc32690f2c9c7e3d18d384c7f5f7cc7fe25f9d1ae15",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/foreign_scalar/optimized_debug/counts-0.json",
+      "counter_sha256": "4bf0e9ee947e575d6f679bc32690f2c9c7e3d18d384c7f5f7cc7fe25f9d1ae15",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/foreign_scalar/release/counts-0.json",
+      "counter_sha256": "4bf0e9ee947e575d6f679bc32690f2c9c7e3d18d384c7f5f7cc7fe25f9d1ae15",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/foreign_scalar/verify/counts-0.json",
+      "counter_sha256": "4bf0e9ee947e575d6f679bc32690f2c9c7e3d18d384c7f5f7cc7fe25f9d1ae15",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_readonly/debug/counts-0.json",
+      "counter_sha256": "250001d68c7c0946e8432bbb2d6ce11f3b65cd8f35ce409b40a0d441eeb65e54",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 4,
+        "alloc_bytes": 352,
+        "frees": 4,
+        "reallocs": 0,
+        "peak_live_bytes": 352,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_readonly/no_facts/counts-0.json",
+      "counter_sha256": "250001d68c7c0946e8432bbb2d6ce11f3b65cd8f35ce409b40a0d441eeb65e54",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 4,
+        "alloc_bytes": 352,
+        "frees": 4,
+        "reallocs": 0,
+        "peak_live_bytes": 352,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_readonly/optimized_debug/counts-0.json",
+      "counter_sha256": "250001d68c7c0946e8432bbb2d6ce11f3b65cd8f35ce409b40a0d441eeb65e54",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 4,
+        "alloc_bytes": 352,
+        "frees": 4,
+        "reallocs": 0,
+        "peak_live_bytes": 352,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_readonly/release/counts-0.json",
+      "counter_sha256": "250001d68c7c0946e8432bbb2d6ce11f3b65cd8f35ce409b40a0d441eeb65e54",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 4,
+        "alloc_bytes": 352,
+        "frees": 4,
+        "reallocs": 0,
+        "peak_live_bytes": 352,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_readonly/verify/counts-0.json",
+      "counter_sha256": "250001d68c7c0946e8432bbb2d6ce11f3b65cd8f35ce409b40a0d441eeb65e54",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 4,
+        "alloc_bytes": 352,
+        "frees": 4,
+        "reallocs": 0,
+        "peak_live_bytes": 352,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_scopes/debug/counts-0.json",
+      "counter_sha256": "0ec798c2b74a1d6eb6e23b0b348ff9120a61904111081a9a0b66b816a099f9cc",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 14,
+      "memory": {
+        "allocs": 31,
+        "alloc_bytes": 2304,
+        "frees": 31,
+        "reallocs": 0,
+        "peak_live_bytes": 608,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_scopes/no_facts/counts-0.json",
+      "counter_sha256": "0ec798c2b74a1d6eb6e23b0b348ff9120a61904111081a9a0b66b816a099f9cc",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 14,
+      "memory": {
+        "allocs": 31,
+        "alloc_bytes": 2304,
+        "frees": 31,
+        "reallocs": 0,
+        "peak_live_bytes": 608,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_scopes/optimized_debug/counts-0.json",
+      "counter_sha256": "ac09d83ef467044a4e06ff88dac1b31cbbbe1becc2e19d23308e42a15edd1885",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 14,
+      "memory": {
+        "allocs": 31,
+        "alloc_bytes": 2304,
+        "frees": 31,
+        "reallocs": 0,
+        "peak_live_bytes": 608,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_scopes/release/counts-0.json",
+      "counter_sha256": "ac09d83ef467044a4e06ff88dac1b31cbbbe1becc2e19d23308e42a15edd1885",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 14,
+      "memory": {
+        "allocs": 31,
+        "alloc_bytes": 2304,
+        "frees": 31,
+        "reallocs": 0,
+        "peak_live_bytes": 608,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/native_scopes/verify/counts-0.json",
+      "counter_sha256": "ef0581ab10ec285e5066fdb3548ad5a5ab976bfa92f1730353c7b772c1d638d4",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 14,
+      "memory": {
+        "allocs": 31,
+        "alloc_bytes": 2304,
+        "frees": 31,
+        "reallocs": 0,
+        "peak_live_bytes": 608,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/nested_error/debug/counts-0.json",
+      "counter_sha256": "99e58b6d85d3aaa7da68ee0746a9ab29dd1eb0dd295b0d3d4d0d9505b0409848",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 11,
+      "memory": {
+        "allocs": 22,
+        "alloc_bytes": 1760,
+        "frees": 22,
+        "reallocs": 0,
+        "peak_live_bytes": 800,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/nested_error/no_facts/counts-0.json",
+      "counter_sha256": "4a0a3a6177dbba81529a02664aba6e87f55a135f81f608f77687bc84f81c4af3",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 11,
+      "memory": {
+        "allocs": 22,
+        "alloc_bytes": 1760,
+        "frees": 22,
+        "reallocs": 0,
+        "peak_live_bytes": 800,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/nested_error/optimized_debug/counts-0.json",
+      "counter_sha256": "fe573b222f32243cc1e6adfdc7026806a7f700afcbd482315fbab4788b3cb9ff",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 11,
+      "memory": {
+        "allocs": 22,
+        "alloc_bytes": 1760,
+        "frees": 22,
+        "reallocs": 0,
+        "peak_live_bytes": 800,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/nested_error/release/counts-0.json",
+      "counter_sha256": "7fee4add36f6ef6b231330b075fe47ef05fe84598b7ba35d79162c7539d61a30",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 11,
+      "memory": {
+        "allocs": 22,
+        "alloc_bytes": 1760,
+        "frees": 22,
+        "reallocs": 0,
+        "peak_live_bytes": 800,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    {
+      "counter_file": ".tmp/zero-rc-resources-20261011/measurements-final/nested_error/verify/counts-0.json",
+      "counter_sha256": "07273f46cafb1e911c5d439246fd504cf673f5f3bf3b2a7dce9851f01934887f",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 11,
+      "memory": {
+        "allocs": 22,
+        "alloc_bytes": 1760,
+        "frees": 22,
+        "reallocs": 0,
+        "peak_live_bytes": 800,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    }
+  ]
+}

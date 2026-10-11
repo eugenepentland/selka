@@ -1,0 +1,63 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %4 = add.proven i64 param0, 2:i64
+  jump b1
+b1: ; preds b0 b3
+  %6 = phi i64 0:i64, %15
+  %10 = phi str str0, %12
+  %8 = cmp.lt bool %6, %4
+  branch %8, b2, b4
+b2: ; preds b1
+  %38 = is_unique bool %10
+  branch %38, b7, b8
+b3: ; preds b7
+  %15 = add.proven i64 %6, 1:i64
+  jump b1
+b4: ; preds b1
+  %36 = add.proven i64 param0, 3:i64
+  %37 = str_slice str %10, param0, %36
+  release %10
+  %21 = call u64 myl_core_str_chars(%37)
+  %22 = convert.exact i64 %21
+  %23 = mul.exact i64 100:i64, %22
+  %25 = call u64 myl_core_str_index_offset(%37, 0:i64)
+  %26 = str_char.exact str %37, %25
+  release %37
+  %27 = call u64 myl_core_str_chars(%26)
+  %29 = cmp.eq bool %27, 1:u64
+  branch %29, b5, b6
+b5: ; preds b4
+  %32 = call i64 myl_core_text_ord(%26)
+  release %26
+  %33 = add.exact i64 %23, %32
+  ret %33
+b6: ; preds b4
+  unreachable
+b7: ; preds b2 b8
+  %47 = phi str %10, %44
+  %12 = str_append str %47, str1
+  jump b3
+b8: ; preds b2
+  %42 = str_len u64 %10
+  %43 = str_view_of str_view %10, 0:u64, %42
+  %44 = str_from_view str %43
+  release %10
+  jump b7
+fn segment(str, i64) -> str
+b0:
+  %3 = add.exact i64 param1, 3:i64
+  %4 = str_slice str param0, param1, %3
+  ret %4
+fn myl_core_str_chars(str) -> u64 extern
+fn myl_core_str_index_offset(str, i64) -> u64 runtime
+fn myl_core_text_ord(str) -> i64 extern
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %4=[2,140737488355330] %6=[0,140737488355330] %7=[-9223372036854775808,9223372036854775807] %8=[0,1] %15=[1,140737488355330] %17=[-9223372036854775808,9223372036854775807] %21=[0,18446744073709551615] %22=[0,9223372036854775807] %23=[0,9223372036854775807] %25=[0,18446744073709551615] %27=[0,18446744073709551615] %29=[0,1] %32=[-9223372036854775808,9223372036854775807] %33=[-9223372036854775808,9223372036854775807] %36=[3,140737488355331]
+facts segment: %3=[-9223372036854775805,9223372036854775807]

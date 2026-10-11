@@ -1,0 +1,122 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %3 = mul.proven i64 3:i64, param0
+  %5 = cmp.lt bool 0:i64, %3
+  branch %5, b1, b2
+b1: ; preds b0
+  %8 = iconst bool 0
+  branch 0:bool, b3, b5
+b2: ; preds b0 b4
+  %30 = phi u64 0:u64, %31
+  %33 = list_new list[i64] %30
+  jump b9
+b3: ; preds b1
+  %11 = cmp.lt bool %3, 0:i64
+  branch %11, b6, b8
+b4: ; preds b7 b5
+  %31 = phi u64 %32, %27
+  jump b2
+b5: ; preds b1
+  %26 = sub.proven i64 %3, 0:i64
+  %27 = convert.proven u64 %26
+  jump b4
+b6: ; preds b3
+  %13 = sub.exact i64 %3, 0:i64
+  %14 = convert.exact u64 %13
+  jump b7
+b7: ; preds b6 b8
+  %32 = phi u64 %14, %23
+  jump b4
+b8: ; preds b3
+  %16 = convert.exact u64 %3
+  %18 = add.exact i64 0:i64, 1:i64
+  %19 = neg.exact i64 %18
+  %20 = convert.exact u64 %19
+  %21 = add.exact u64 %16, %20
+  %23 = add.exact u64 %21, 1:u64
+  jump b7
+b9: ; preds b2 b11
+  %35 = phi i64 0:i64, %45
+  %41 = phi list[i64] %33, %42
+  %37 = cmp.lt bool %35, %3
+  branch %37, b10, b12
+b10: ; preds b9
+  %40 = add.proven i64 %35, param0
+  %42 = list_push list[i64] %41, %40
+  jump b11
+b11: ; preds b10
+  %45 = add.proven i64 %35, 1:i64
+  jump b9
+b12: ; preds b9
+  %57 = list_len u64 %41
+  %58 = convert.proven i64 %57
+  %60 = list_new list[i64] 0:i64
+  jump b13
+b13: ; preds b12 b15
+  %62 = phi i64 0:i64, %79
+  %73 = phi list[i64] %60, %83
+  %64 = cmp.lt bool %62, %58
+  branch %64, b14, b16
+b14: ; preds b13
+  %67 = list_get.proven i64 %41, %62
+  %69 = floor_rem.proven i64 %67, 3:i64
+  %71 = cmp.eq bool %69, 0:i64
+  branch %71, b17, b18
+b15: ; preds b18
+  %79 = add.proven i64 %62, 1:i64
+  jump b13
+b16: ; preds b13
+  release %41
+  %86 = list_len u64 %73
+  %87 = convert.proven i64 %86
+  jump b19
+b17: ; preds b14
+  %74 = list_push list[i64] %73, %67
+  jump b18
+b18: ; preds b14 b17
+  %83 = phi list[i64] %73, %74
+  jump b15
+b19: ; preds b16 b21
+  %89 = phi i64 0:i64, %112
+  %93 = phi i64 0:i64, %108
+  %91 = cmp.lt bool %89, %87
+  branch %91, b20, b22
+b20: ; preds b19
+  %95 = add.proven i64 %89, 1:i64
+  %98 = iconst bool 0
+  branch 0:bool, b23, b24
+b21: ; preds b24
+  %112 = add.proven i64 %89, 1:i64
+  jump b19
+b22: ; preds b19
+  release %73
+  ret %93
+b23: ; preds b20
+  %100 = list_len u64 %73
+  %101 = convert.exact i64 %100
+  %102 = add.exact i64 %101, %89
+  jump b24
+b24: ; preds b20 b23
+  %104 = phi i64 %89, %102
+  %106 = list_get.proven i64 %73, %104
+  %107 = mul.exact i64 %95, %106
+  %108 = add.exact i64 %93, %107
+  jump b21
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %3=[0,422212465065984] %5=[0,1] %8=[0,0] %26=[1,422212465065984] %27=[1,422212465065984] %30=[0,422212465065984] %31=[1,422212465065984] %35=[0,422212465065984] %36=[-9223372036854775808,9223372036854775807] %37=[0,1] %39=[-9223372036854775808,9223372036854775807] %40=[0,562949953421311] %45=[1,422212465065984] %47=[-9223372036854775808,9223372036854775807] %48=[-9223372036854775808,9223372036854775807] %50=[-9223372036854775808,9223372036854775807] %51=[-9223372036854775808,9223372036854775807] %53=[-9223372036854775808,9223372036854775807] %54=[-9223372036854775808,9223372036854775807] %57=[0,140737488355328] %58=[0,140737488355328] %62=[0,140737488355328] %63=[-9223372036854775808,9223372036854775807] %64=[0,1] %67=[0,562949953421311] %69=[0,2] %71=[0,1] %77=[-9223372036854775808,9223372036854775807] %79=[1,140737488355328] %81=[-9223372036854775808,9223372036854775807] %86=[0,140737488355328] %87=[0,140737488355328] %89=[0,140737488355328] %90=[-9223372036854775808,9223372036854775807] %91=[0,1] %93=[-9223372036854775808,9223372036854775807] %95=[1,140737488355328] %98=[0,0] %104=[0,140737488355327] %106=[-9223372036854775808,9223372036854775807] %107=[-9223372036854775808,9223372036854775807] %108=[-9223372036854775808,9223372036854775807] %110=[-9223372036854775808,9223372036854775807] %112=[1,140737488355328] %114=[-9223372036854775808,9223372036854775807]
+list probe %33: settled=true length=%-1 len=[0,0]
+list probe %41: settled=true length=%3 elements=[0,562949953421311] len=[0,140737488355328]
+list probe %42: settled=true length=%-1 elements=[0,562949953421311] len=[1,140737488355328]
+list probe %60: settled=true length=%-1 len=[0,0]
+list probe %67: settled=true length=%-1
+list probe %73: settled=true length=%-1 len=[0,140737488355328]
+list probe %74: settled=true length=%-1 len=[1,140737488355328]
+list probe %83: settled=true length=%-1 len=[0,140737488355328]
+list probe %106: settled=true length=%-1

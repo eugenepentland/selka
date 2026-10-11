@@ -247,12 +247,23 @@ fn digest(a: std.mem.Allocator, text: []const u8) ![]const u8 {
 pub fn unit(name: []const u8, path: []const u8, kind: Kind, text: []const u8) Unit {
     const math = std.mem.indexOf(u8, text, "llvm.sin.f64") != null or std.mem.indexOf(u8, text, "llvm.cos.f64") != null;
     const counting = std.mem.indexOf(u8, text, "@myl_count_current") != null;
-    return .{ .name = name, .source_path = path, .kind = kind, .llvm = text, .dependencies = .{ .number = number_runtime.needed(text), .math = math, .counting = counting } };
+    return .{
+        .name = name,
+        .source_path = path,
+        .kind = kind,
+        .llvm = text,
+        .dependencies = .{
+            .number = number_runtime.needed(text),
+            .math = math,
+            .counting = counting,
+            .zero_rc = std.mem.indexOf(u8, text, "; mylang-zero-rc-v2\n") != null,
+        },
+    };
 }
 
 fn emissionArtifact(text: []const u8) cache.Artifact {
     const dependencies = unit("", "", .program, text);
-    return .{ .text = text, .number = dependencies.dependencies.number, .math = dependencies.dependencies.math, .counting = dependencies.dependencies.counting };
+    return .{ .text = text, .number = dependencies.dependencies.number, .math = dependencies.dependencies.math, .counting = dependencies.dependencies.counting, .zero_rc = dependencies.dependencies.zero_rc };
 }
 
 /// Reuse completed LLVM by canonical inputs; changed units render in bounded batches.
@@ -313,7 +324,7 @@ pub fn emitCached(allocator: std.mem.Allocator, backing: std.mem.Allocator, modu
                 .source_path = job.group.path,
                 .kind = job.group.kind,
                 .llvm = text,
-                .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting },
+                .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting, .zero_rc = artifact.zero_rc },
                 .artifact = if (context.native_handles) .{ .store = context.store, .key = job.key } else null,
             });
             if (context.counts) |counts| {
@@ -342,7 +353,7 @@ fn emissionNameDigest(a: std.mem.Allocator, job: *const EmissionJob, text_digest
 fn receiptArtifact(key: key_policy.Digest, artifact: cache.Artifact) cache.Receipt {
     var text_digest: key_policy.Digest = undefined;
     std.crypto.hash.Blake3.hash(artifact.text, &text_digest, .{});
-    return .{ .artifact = key, .text_digest = text_digest, .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting } };
+    return .{ .artifact = key, .text_digest = text_digest, .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting, .zero_rc = artifact.zero_rc } };
 }
 
 fn emitUncached(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, deferred: ?*const deferred_facts.Table) Error![]Unit {
@@ -485,7 +496,7 @@ const EmissionJob = struct {
         const a = self.scratch.allocator();
         if (self.receipt_hit) |record| {
             if (self.context.native_handles) {
-                self.artifact = .{ .text = "", .number = record.dependencies.number, .math = record.dependencies.math, .counting = record.dependencies.counting };
+                self.artifact = .{ .text = "", .number = record.dependencies.number, .math = record.dependencies.math, .counting = record.dependencies.counting, .zero_rc = record.dependencies.zero_rc };
                 self.hit = true;
                 return;
             }

@@ -1,0 +1,91 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %1 = call list[list[i64]] make_rows(param0)
+  %2 = call i64 score(%1)
+  release %1
+  ret %2
+fn make_rows(i64) -> list[list[i64]]
+b0:
+  %2 = list_new list[list[i64]] 0:i64
+  jump b1
+b1: ; preds b0 b3
+  %5 = phi i64 0:i64, %31
+  %27 = phi list[list[i64]] %2, %28
+  %7 = cmp.lt bool %5, param0
+  branch %7, b2, b4
+b2: ; preds b1
+  %10 = list_new list[i64] 0:i64
+  jump b5
+b3: ; preds b8
+  %31 = add.proven i64 %5, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %27
+b5: ; preds b2 b7
+  %14 = phi i64 0:i64, %24
+  %20 = phi list[i64] %10, %21
+  %16 = cmp.lt bool %14, 3:i64
+  branch %16, b6, b8
+b6: ; preds b5
+  %19 = add.exact i64 %5, %14
+  %21 = list_push list[i64] %20, %19
+  jump b7
+b7: ; preds b6
+  %24 = add.proven i64 %14, 1:i64
+  jump b5
+b8: ; preds b5
+  %28 = list_push list[list[i64]] %27, %20
+  jump b3
+fn score(list[list[i64]]) -> i64
+b0:
+  %3 = list_len u64 param0
+  %4 = convert.proven i64 %3
+  jump b1
+b1: ; preds b0 b3
+  %6 = phi i64 0:i64, %32
+  %28 = phi i64 0:i64, %22
+  %8 = cmp.lt bool %6, %4
+  branch %8, b2, b4
+b2: ; preds b1
+  %11 = list_get.proven list[i64] param0, %6
+  %13 = list_len u64 %11
+  %14 = convert.proven i64 %13
+  jump b5
+b3: ; preds b8
+  %32 = add.proven i64 %6, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %28
+b5: ; preds b2 b7
+  %16 = phi i64 0:i64, %26
+  %22 = phi i64 %28, %23
+  %18 = cmp.lt bool %16, %14
+  branch %18, b6, b8
+b6: ; preds b5
+  %21 = list_get.proven i64 %11, %16
+  %23 = add.exact i64 %22, %21
+  jump b7
+b7: ; preds b6
+  %26 = add.proven i64 %16, 1:i64
+  jump b5
+b8: ; preds b5
+  jump b3
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %2=[-9223372036854775808,9223372036854775807]
+facts make_rows: %5=[0,9223372036854775807] %6=[-9223372036854775808,9223372036854775807] %7=[0,1] %14=[0,3] %15=[-9223372036854775808,9223372036854775807] %16=[0,1] %18=[-9223372036854775808,9223372036854775807] %19=[0,9223372036854775807] %24=[1,3] %31=[1,9223372036854775807] %33=[-9223372036854775808,9223372036854775807]
+list make_rows %2: settled=true length=%-1 len=[0,0]
+list make_rows %10: settled=true length=%-1 len=[0,0]
+list make_rows %20: settled=true length=%12 elements=[0,9223372036854775807] len=[0,140737488355328]
+list make_rows %21: settled=true length=%-1 elements=[0,9223372036854775807] len=[1,140737488355328]
+list make_rows %27: settled=true length=%-1 len=[0,140737488355328]
+list make_rows %28: settled=true length=%-1 len=[1,140737488355328]
+facts score: %3=[0,140737488355328] %4=[0,140737488355328] %6=[0,140737488355328] %7=[-9223372036854775808,9223372036854775807] %8=[0,1] %13=[0,140737488355328] %14=[0,140737488355328] %16=[0,140737488355328] %17=[-9223372036854775808,9223372036854775807] %18=[0,1] %21=[-9223372036854775808,9223372036854775807] %22=[-9223372036854775808,9223372036854775807] %23=[-9223372036854775808,9223372036854775807] %26=[1,140737488355328] %28=[-9223372036854775808,9223372036854775807] %30=[-9223372036854775808,9223372036854775807] %32=[1,140737488355328] %34=[-9223372036854775808,9223372036854775807]
+list score %11: settled=true length=%-1
+list score %21: settled=true length=%-1

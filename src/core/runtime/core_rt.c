@@ -93,7 +93,9 @@ static const unsigned char *os_map_self(size_t *size) {
 /* ---- blocks ------------------------------------------------------------------ */
 
 typedef struct {
+#ifndef MYL_ZERO_RC
     uint32_t count;
+#endif
     uint32_t kind;
     int64_t len;
     int64_t cap;
@@ -106,17 +108,23 @@ enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
 #define MYL_SATURATED UINT32_MAX
 #define MYL_SHARED UINT32_C(0x80000000)
 #define MYL_PLAIN_MAX UINT32_C(0x7ffffffe)
+#define MYL_STATIC_STORAGE (1u << 23)
+#ifdef MYL_ZERO_RC
+#define MYL_STATIC_HEADER MYL_STATIC_STORAGE |
+#else
+#define MYL_STATIC_HEADER MYL_SATURATED,
+#endif
 
 /* SHARED-COUNTS-1: only unpublished/plain blocks may use non-atomic writes.
    A count read can race with shared retains/releases, even a uniqueness test.
    C's relaxed load is the weakest available atomic load; the LLVM emitter uses
    unordered so its loop-invariant uniqueness tests can still be hoisted. */
+#ifndef MYL_ZERO_RC
 static uint32_t count_load(const myl_block *block) {
     return __atomic_load_n(&block->count, __ATOMIC_RELAXED);
 }
 
 static bool count_is_unique(const myl_block *block) { return count_load(block) == 1; }
-static bool count_can_cache(const myl_block *block) { return count_load(block) < MYL_SHARED; }
 
 /* A plain aggregate becoming immortal must first mark its descendants:
    later publication stops at an immortal root, just as at a shared root. */
@@ -184,6 +192,24 @@ __attribute__((cold, noinline, preserve_most)) static void count_free_shared(myl
 
 __attribute__((cold, noinline, preserve_most)) void myl_core_release_slow(myl_block *block) {
     if (count_release_shared(block)) count_free_shared(block);
+}
+
+#endif
+/* The zero-RC ABI has no count member. Alignment still rounds its header to
+   32 bytes; its kind moves to offset zero. LLVM and the runtime agree on both. */
+_Static_assert(sizeof(myl_block) == MYL_HEADER, "managed header size");
+#ifdef MYL_ZERO_RC
+_Static_assert(offsetof(myl_block, kind) == 0, "owned header kind");
+#pragma GCC poison count_load count_is_unique count_retain count_release
+#pragma GCC poison myl_core_retain_slow myl_core_release_slow myl_core_share myl_core_release
+#pragma GCC poison core_release_child myl_core_release_child_pending retain_block
+#endif
+static bool core_text_can_cache(const myl_block *block) {
+#ifdef MYL_ZERO_RC
+    return !(block->kind & MYL_STATIC_STORAGE);
+#else
+    return count_load(block) < MYL_SHARED;
+#endif
 }
 
 static unsigned char *block_data(myl_block *block) { return (unsigned char *)block + MYL_HEADER; }
@@ -364,7 +390,9 @@ static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
         *room = data;
         core_live_add(1);
     }
+    #ifndef MYL_ZERO_RC
     block->count = 1;
+    #endif
     block->kind = kind | (class << MYL_CLASS_SHIFT);
     block->len = 0;
     block->reserved = 0;
@@ -598,6 +626,10 @@ void myl_core_print_str(int64_t fd, myl_block *text) {
     stream_write(stream_for(fd), block_data(text), (size_t)text->len);
 }
 
+void myl_core_print_view(int64_t fd, const unsigned char *data, uint64_t len) {
+    stream_write(stream_for(fd), data, (size_t)len);
+}
+
 void myl_core_print_sep(int64_t fd) { stream_write(stream_for(fd), " ", 1); }
 
 void myl_core_print_end(int64_t fd) {
@@ -659,9 +691,11 @@ myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
 }
 
 /* One more owner of `block` (D4: a count that reaches the saturated value stays there). */
+#ifndef MYL_ZERO_RC
 static void retain_block(myl_block *block) {
     count_retain(block);
 }
+#endif
 
 /* A fresh copy of `list` with room for one more element: the copy arm of a
    copy-on-write update (`own.zig`), so the original block stays intact. The
@@ -672,6 +706,10 @@ myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {
     copy->len = list->len;
     copy->reserved = list->reserved;
     myl_layout *layout = layout_of(list);
+#ifdef MYL_ZERO_RC
+    /* Managed element copies use the compiler's deep-copy adapter. */
+    if (layout && layout[1]) abort();
+#else
     if (layout) {
         for (int64_t i = 0; i < list->len; ++i) {
             const unsigned char *element = block_data(list) + i * (int64_t)layout[0];
@@ -681,6 +719,7 @@ myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {
             }
         }
     }
+#endif
     return copy;
 }
 
@@ -717,7 +756,9 @@ myl_block *myl_core_box_new(int64_t size) {
    Each occurrence is visited, including aliases; guards exclude inactive arms. */
 typedef void (*core_child_visitor)(myl_block *, void *);
 static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context);
+#ifndef MYL_ZERO_RC
 __attribute__((always_inline)) static inline void core_release_child(myl_block *child, void *context);
+#endif
 static void core_dict_finalize(myl_block *dict);
 static void core_task_finalize(myl_block *block);
 static void core_tasks_quiesce(void);
@@ -736,6 +777,7 @@ __attribute__((always_inline)) static inline void core_children(myl_block *block
     if (!layout || layout[1] == 0) return;
     /* A guardless pointer list needs no per-element indirect callback. The
        ordinary child release still handles null, shared and saturated counts. */
+#ifndef MYL_ZERO_RC
     if (visit == core_release_child && kind == MYL_KIND_LIST &&
         layout[0] == sizeof(myl_block *) && layout[1] == 1 &&
         layout[2] == -1 && layout[3] == 0 && layout[4] == 0) {
@@ -747,6 +789,9 @@ __attribute__((always_inline)) static inline void core_children(myl_block *block
         return;
     }
     core_layout_release release = visit == core_release_child ? layout_release(layout, 0) : NULL;
+#else
+    core_layout_release release = NULL;
+#endif
     int64_t count = element_count(block);
     for (int64_t i = 0; i < count; ++i) {
         const unsigned char *element = block_data(block) + i * (int64_t)layout[0];
@@ -758,6 +803,7 @@ __attribute__((always_inline)) static inline void core_children(myl_block *block
     }
 }
 
+#ifndef MYL_ZERO_RC
 __attribute__((always_inline)) static inline void core_release_child(myl_block *child, void *context) {
     myl_block **pending = context;
     if (count_release(child)) {
@@ -815,6 +861,37 @@ void myl_core_share(myl_block *root) {
 /* Drop one owner of `block` out of line: the C entry's `args` and `main`'s error. */
 void myl_core_release(myl_block *block) {
     if (count_release(block)) myl_core_free_block(block);
+}
+
+#endif
+
+/* Zero-RC owners are destroyed directly. Static leaves have a storage-kind tag.
+   The pending chain reuses dying headers and requires no allocation or count. */
+static void core_owned_child(myl_block *child, void *context) {
+    if (!child || (child->kind & MYL_STATIC_STORAGE)) return;
+    myl_block **pending = context;
+    child->cap = (int64_t)(intptr_t)*pending;
+    *pending = child;
+}
+void myl_core_drop_owned(myl_block *block) {
+    myl_block *pending = NULL;
+    core_owned_child(block, &pending);
+    while (pending) {
+        myl_block *dying = pending;
+        pending = (myl_block *)(intptr_t)dying->cap;
+        unsigned kind = kind_of(dying);
+        if (kind != MYL_KIND_LIST && kind != MYL_KIND_STR && kind != MYL_KIND_BYTES && kind != MYL_KIND_BOX && kind != MYL_KIND_DICT && kind != 5u && kind != 6u && kind != 7u && kind != 8u && kind != 9u && kind != 10u) abort();
+        core_task_finalize(dying);
+        core_io_finalize(dying);
+        core_children(dying, core_owned_child, &pending);
+        if (kind == MYL_KIND_DICT) core_dict_finalize(dying);
+        block_free(dying);
+    }
+}
+myl_block *myl_core_owned_octets_copy(myl_block *source) {
+    myl_block *copy = str_from((const char *)block_data(source), (size_t)source->len);
+    copy->kind = (copy->kind & ~MYL_KIND_MASK) | kind_of(source);
+    return copy;
 }
 
 /* ---- error traces (ERROR-TRACE-1..5) -------------------------------------------

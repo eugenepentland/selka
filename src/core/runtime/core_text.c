@@ -66,7 +66,7 @@ uint32_t myl_core_span_hash(const unsigned char *bytes, uint64_t length) {
 uint32_t myl_core_str_hash(const myl_block *text) {
     if (text->kind & MYL_TEXT_HASHED) return (uint32_t)text->reserved;
     uint32_t folded = myl_core_span_hash((const unsigned char *)text + MYL_HEADER, (uint64_t)text->len);
-    if (count_can_cache(text)) {
+    if (core_text_can_cache(text)) {
         myl_block *mutable = (myl_block *)text;
         mutable->reserved = (int64_t)(((uint64_t)text->reserved & UINT64_C(0xffffffff00000000)) | folded);
         mutable->kind |= MYL_TEXT_HASHED;
@@ -101,7 +101,7 @@ uint64_t myl_core_str_chars(const myl_block *text) {
     uint64_t scalars = 0;
     core_text_walked += (uint64_t)text->len;
     for (int64_t i = 0; i < text->len; ++i) scalars += (bytes[i] & 0xc0) != 0x80;
-    if (count_can_cache(text) && scalars <= UINT32_MAX) {
+    if (core_text_can_cache(text) && scalars <= UINT32_MAX) {
         myl_block *mutable = (myl_block *)text;
         mutable->reserved = (int64_t)((scalars << 32) | (uint32_t)text->reserved);
         mutable->kind |= MYL_TEXT_SCALARS;
@@ -128,7 +128,7 @@ static bool core_cursor_get(const myl_block *text, core_anchor *cursor) {
 }
 
 static void core_cursor_set(const myl_block *text, core_anchor cursor) {
-    if (!count_can_cache(text) || text->len < 256 || text->len > UINT32_MAX || cursor.scalar > UINT32_MAX) return;
+    if (!core_text_can_cache(text) || text->len < 256 || text->len > UINT32_MAX || cursor.scalar > UINT32_MAX) return;
     myl_block *mutable = (myl_block *)text;
     uint64_t packed = cursor.scalar << 32 | cursor.at;
     if (!(text->kind & MYL_TEXT_CURSOR)) {
@@ -230,17 +230,17 @@ uint32_t myl_core_ir_str_code(myl_block *text, uint64_t offset) {
 
 /* Runtime table of immortal one-byte scalars. Initialized before its first use. */
 static struct { myl_block header; unsigned char data[32]; } core_ascii[128];
-static bool core_ascii_ready;
-static myl_block *core_ascii_char(unsigned char ch) {
-    if (!core_ascii_ready) {
-        for (unsigned i = 0; i < 128; ++i) {
-            core_ascii[i].header = (myl_block){MYL_SATURATED, MYL_KIND_STR | MYL_TEXT_ASCII | MYL_TEXT_SCALARS, 1, 1, INT64_C(1) << 32};
-            core_ascii[i].data[0] = (unsigned char)i;
-            core_ascii[i].header.reserved |= myl_core_str_hash(&core_ascii[i].header);
-            core_ascii[i].header.kind |= MYL_TEXT_HASHED;
-        }
-        core_ascii_ready = true;
+static pthread_once_t core_ascii_once = PTHREAD_ONCE_INIT;
+static void core_ascii_initialize(void) {
+    for (unsigned i = 0; i < 128; ++i) {
+        core_ascii[i].header = (myl_block){MYL_STATIC_HEADER MYL_KIND_STR | MYL_TEXT_ASCII | MYL_TEXT_SCALARS, 1, 1, INT64_C(1) << 32};
+        core_ascii[i].data[0] = (unsigned char)i;
+        core_ascii[i].header.reserved |= myl_core_str_hash(&core_ascii[i].header);
+        core_ascii[i].header.kind |= MYL_TEXT_HASHED;
     }
+}
+static myl_block *core_ascii_char(unsigned char ch) {
+    pthread_once(&core_ascii_once, core_ascii_initialize);
     return &core_ascii[ch].header;
 }
 
@@ -307,7 +307,11 @@ static inline void core_text_copy_short(unsigned char *output, const unsigned ch
 
 static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned char *bytes, int64_t count, bool ascii) {
     int64_t len = a->len + count;
+#ifdef MYL_ZERO_RC
+    if (a->kind & MYL_STATIC_STORAGE) a = myl_core_owned_octets_copy(a);
+#else
     if (!count_is_unique(a)) myl_core_s2_unsupported(-1);
+#endif
     if ((a->kind & (MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == MYL_TEXT_CURSOR) a->cap = a->len;
     a->kind &= ~(MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
     if (len > a->cap) {
@@ -587,7 +591,15 @@ myl_block *myl_core_bytes_slice(myl_block *text, int64_t start, int64_t end) {
     return out;
 }
 
-myl_block *myl_core_text_encode(myl_block *text) { retain_block(text); return text; }
+myl_block *myl_core_text_encode(myl_block *text) {
+#ifdef MYL_ZERO_RC
+    myl_block *copy = myl_core_owned_octets_copy(text);
+    copy->kind = (copy->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+    return copy;
+#else
+    retain_block(text); return text;
+#endif
+}
 int64_t myl_core_bytes_find(myl_block *text, myl_block *needle) { return core_text_find_bytes(text, needle, 0); }
 
 uint64_t myl_core_str_index_offset(myl_block *text, int64_t index) {
@@ -1151,4 +1163,66 @@ myl_block *myl_core_text_repr(myl_block *source, bool bytes) {
     core_repr_render(input, &output);
     core_text_publish(result);
     return result;
+}
+
+/* Borrowed spans contain no header, owner, or reference count. The compiler
+   validates their source relationships before lowering, in every build mode. */
+typedef struct { const unsigned char *data; uint64_t len; } core_borrowed_span;
+int64_t myl_core_view_chars(const unsigned char *data, uint64_t len) {
+    int64_t chars = 0;
+    for (uint64_t i = 0; i < len; i++) chars += (data[i] & 0xc0) != 0x80;
+    return chars;
+}
+static uint64_t core_view_offset(const unsigned char *data, uint64_t len, uint64_t scalar) {
+    uint64_t at = 0, seen = 0;
+    /* Skip bounded ASCII words without needing an owner or cached metadata.
+       Non-ASCII prefixes fall back to the scalar walk, including partial tails. */
+    while (len - at >= 8 && scalar - seen >= 8) {
+        uint64_t word;
+        memcpy(&word, data + at, sizeof word);
+        if (word & UINT64_C(0x8080808080808080)) break;
+        at += 8; seen += 8;
+    }
+    while (at < len && seen < scalar) {
+        ++at;
+        while (at < len && (data[at] & 0xc0) == 0x80) ++at;
+        ++seen;
+    }
+    return at;
+}
+core_borrowed_span myl_core_view_slice(const unsigned char *data, uint64_t len, int64_t start, int64_t end, bool text) {
+    /* Positive text endpoints only need a bounded prefix scan. Counting the
+       entire owner on every small slice would make this quadratic in its size. */
+    if (!text || start < 0 || end < 0) {
+        int64_t count = text ? myl_core_view_chars(data, len) : (int64_t)len;
+        start = core_text_clamp(start, count);
+        end = core_text_clamp(end, count);
+    }
+    if (end < start) end = start;
+    uint64_t first = text ? core_view_offset(data, len, (uint64_t)start) : (uint64_t)start;
+    uint64_t last = text ? core_view_offset(data + first, len - first, (uint64_t)(end - start)) + first : (uint64_t)end;
+    return (core_borrowed_span){data + first, last - first};
+}
+uint64_t myl_core_view_index(const unsigned char *data, uint64_t len, int64_t index, bool text) {
+    if (index < 0) index += text ? myl_core_view_chars(data, len) : (int64_t)len;
+    if (index < 0) return len;
+    return text ? core_view_offset(data, len, (uint64_t)index) : (uint64_t)index;
+}
+myl_block *myl_core_view_char(const unsigned char *data, uint64_t len, uint64_t offset) {
+    uint64_t end = offset + 1;
+    while (end < len && (data[end] & 0xc0) == 0x80) ++end;
+    if (end == offset + 1) return core_ascii_char(data[offset]);
+    return str_from((const char *)data + offset, (size_t)(end - offset));
+}
+uint8_t myl_core_view_byte(const unsigned char *data, uint64_t len, uint64_t offset) {
+    (void)len;
+    return data[offset];
+}
+myl_block *myl_core_view_copy_text(const unsigned char *data, uint64_t len) {
+    return myl_core_ir_str_from_view(data, len);
+}
+myl_block *myl_core_view_copy_bytes(const unsigned char *data, uint64_t len) {
+    myl_block *copy = myl_core_ir_str_from_view(data, len);
+    copy->kind = (copy->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+    return copy;
 }
