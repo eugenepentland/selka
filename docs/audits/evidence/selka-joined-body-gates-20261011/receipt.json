@@ -1,0 +1,246 @@
+{
+  "format": 1,
+  "source_base": "5dfe4c3217a9924a4889e5716b8266112e8764ce",
+  "scope": "Joined source integration and harness preflight only; installed joined compiler gate pending",
+  "python_tests": 130,
+  "guardian": 88,
+  "qualified_seed_check": true,
+  "build_graph_configured": true,
+  "required_closure_source_operations": 4575,
+  "required_operations_source_operations": 3048,
+  "required_operations_malformed_replies": 489,
+  "required_operations_authentic_replays": 8,
+  "source_sha256": {
+    "build.zig": "32c92d0dfa4d93c3de349a4a1fbe93c5e5ffd8b9904e82a655f90c1bebdbdab5",
+    "build_test_inputs.zig": "d541f5a09d385960f5a4b20a6d5be06cd0fd18c6758144fd0cfd013fe459f5db",
+    "selfhost/test_body_closure.py": "d819842290a34a68b9ea4cd5265749ae20720aeda7ee69c5f88376a7ed4a010d",
+    "selfhost/tests/body_closure_gate_test.py": "d4080eb1d36296a3cbba20fdfa3ed9d87a9b47535bc900b98249e12fdff5870d",
+    "selfhost/tests/body_sequence_admission_test.py": "03cb1fe70952ac835a7833c7276aa9f02307ed7a195ce851ab15642e17dda8d3",
+    "selfhost/tests/fixtures/body_sequence_candidate/inventory.json": "10d8145b67a2e941441335cb2bccbf2f3858c7592f38a75fdea87b47a37a245a",
+    "selfhost/tests/fixtures/body_sequence_hostile/inventory.json": "b1b8a3db740a9d03b39a9469afc94247e6cd8ace0784fdac2601bc3b9b2a69f7",
+    "selfhost/tests/run_body_generic_admission.py": "dcfd67a85a0a97118ac677e015a3e51b1f3fb20dfa78ed00d2e6f30b62f58fc3",
+    "selfhost/tests/run_body_sequence_admission.py": "fd838f2c67d1c423a642c1657d941f0073c915a79ebcdbcf962dae006c167b5e",
+    "selfhost/tests/run_body_sequence_hostile.py": "770bcd05ff5926899cd3263435bbbe63a775da42abc6c324dac991c1af0fbe72",
+    "selfhost/test_body_operations.py": "3409bae76c0c59d2bca090a92e1ff2755f78542a0c6d269e9ba480d128e0a7af",
+    "selfhost/tests/body_operations_gate_test.py": "710151d54799edadb79c151a77932cb88b766ef7fd3bb63fc61cec17b7237890"
+  },
+  "artifacts": [
+    {
+      "name": "wave-integration-phase1.json.gz",
+      "sha256": "f78722f8eb1231d8303f4f89f4a89a31bc8cb18eac2dd141350db0cf867fa121",
+      "archive_sha256": "50156296bd3bd284e2c7c04f85f500d79c3c66f21dcb62b99b7f1cb044177f3c",
+      "bytes": 1787,
+      "archive_bytes": 587
+    },
+    {
+      "name": "wave-integration-phase1.log.gz",
+      "sha256": "5afe1067b564849b6c44e8d400f8274b22a2842221de182ced0c8023e071fec7",
+      "archive_sha256": "dcb74922f41870b389ac39768383eba3e5a5dcd43c132077ee1081dcbcd92983",
+      "bytes": 53493,
+      "archive_bytes": 4743
+    },
+    {
+      "name": "wave-integration-phase1.py.gz",
+      "sha256": "a0d6acd747a3ff61bb395b88d281742f115d987e05ab9dd8d812a428e7111a2b",
+      "archive_sha256": "1669a87bfacb4a0aa44b8f670190ac66e04020e7d7513e248583a020d8a8025e",
+      "bytes": 1645,
+      "archive_bytes": 808
+    },
+    {
+      "name": "wave-integration-phase2.json.gz",
+      "sha256": "a9d36359b3db105fca303e5ced7d51eecf07120be6ee1f6e365e9328e240c0fd",
+      "archive_sha256": "a296d628ca32981eef312c50a00ea73c528e5f133c809cd47f6d0070edc3c316",
+      "bytes": 856,
+      "archive_bytes": 353
+    },
+    {
+      "name": "wave-integration-phase2.log.gz",
+      "sha256": "45434db217dd7f9c1561a75b3689de4b7b3836136c0032da289237d1f67f9f4e",
+      "archive_sha256": "6ecab406bf858ade8177b313b0ce0d53dc9f7aa7a9d232f3306a5684a497eaa8",
+      "bytes": 1608,
+      "archive_bytes": 484
+    },
+    {
+      "name": "wave-integration-phase2.py.gz",
+      "sha256": "9748c43c8ed977352f5e4bad8fb25b24e7c0270cf35769c68d32d00f5be57a82",
+      "archive_sha256": "ec8c70e5bfac95c45547432042e9eec0c62967e3f623143536bb1708d67123f9",
+      "bytes": 1348,
+      "archive_bytes": 708
+    },
+    {
+      "name": "wave-integration-phase3-conflict.diff.gz",
+      "sha256": "00d38f7bb49f09a94f306c1315dcc213b2ffed95cc0a1b8d9ce2e99803646448",
+      "archive_sha256": "df38a1c8a1f0c9dc73b17c8e6dc6b47cc6c25ed2f95fc024b5b74ad4dd512ad8",
+      "bytes": 514,
+      "archive_bytes": 286
+    },
+    {
+      "name": "wave-integration-phase3-continue.json.gz",
+      "sha256": "2cb434e40f6026582f2158eae79d0c8a55a7fb9287bc2fec0f0a181db30e80cf",
+      "archive_sha256": "372257acefedc2c401293592602df04db3ce186d5414a36384e17ad4a2e32122",
+      "bytes": 1167,
+      "archive_bytes": 468
+    },
+    {
+      "name": "wave-integration-phase3-continue.log.gz",
+      "sha256": "00c3af504bd726194039e21063914982990447fcad90f792c71e72b4a25cf9df",
+      "archive_sha256": "ff73f99621545893820dda2dce29f32c145b60f62331ad88f67348d14aa8fa35",
+      "bytes": 47508,
+      "archive_bytes": 3298
+    },
+    {
+      "name": "wave-integration-phase3.json.gz",
+      "sha256": "99c217ce96c2413132bf81ce285c038e041a3ccb15253f08571e63dba569dd3e",
+      "archive_sha256": "4057e69c7c64da762186af732ba1e5408ed98a20585e8d50d4294f672bd90dfe",
+      "bytes": 37198,
+      "archive_bytes": 2379
+    },
+    {
+      "name": "wave-integration-phase3.log.gz",
+      "sha256": "dfce89d6f07fa55de75ca94aa002b36e5eee132538046885d6ece589b898c248",
+      "archive_sha256": "ab0deb1a88fc6284d22f1e88549a1308af7c740669437f1da63e4ca11a00b951",
+      "bytes": 5389,
+      "archive_bytes": 977
+    },
+    {
+      "name": "wave-integration-phase3.py.gz",
+      "sha256": "d4a0927801565c0926f73c6dcfb09114269b8e1789f68fb758c7ec56e7ef676e",
+      "archive_sha256": "4749c367241298d978fae46706ebf05474170bff7e0867c7c4a3dcc3d2edefb4",
+      "bytes": 1479,
+      "archive_bytes": 736
+    },
+    {
+      "name": "wave-integration-phase4-conflict.diff.gz",
+      "sha256": "7d5f817d60c3483382cf1ea9e228fb75e74a46728944597f7605661932442210",
+      "archive_sha256": "0335b03acc9ea031c2c1f73c1868045fd0b244c9b94bc3341db937bbac9ae071",
+      "bytes": 653,
+      "archive_bytes": 339
+    },
+    {
+      "name": "wave-integration-phase4-continue.json.gz",
+      "sha256": "fafc09616ca2d3c90b69c9867e97eaf9b575a0f8467d267f4aa0513f70e36245",
+      "archive_sha256": "d03822af28f57dba76b1f961078d243406a1d5c58441911276647275b6aa094c",
+      "bytes": 1159,
+      "archive_bytes": 420
+    },
+    {
+      "name": "wave-integration-phase4-continue.log.gz",
+      "sha256": "590a62d79a8b599def1daff3e6cb0ae2fa11bff78d48887efef80c5a804281b1",
+      "archive_sha256": "69a94ea39a9e64c08758521e45fc6baedf8ca5a44a8883bc1d767e91aea6690a",
+      "bytes": 3827,
+      "archive_bytes": 1000
+    },
+    {
+      "name": "wave-integration-phase4.json.gz",
+      "sha256": "f202ab25b75bacf16e3731a9e4d5b0fbff520eafa7eb2242abad75aa6e2faa02",
+      "archive_sha256": "045732344888cb7580ee45505db43246e606c23a8a3522670016a5a93921f469",
+      "bytes": 2613,
+      "archive_bytes": 751
+    },
+    {
+      "name": "wave-integration-phase4.log.gz",
+      "sha256": "cfe87740dfb168573a4067d3888e575aae68f8fdeb343c756cb9f223f78415e3",
+      "archive_sha256": "48c61e952c760780c00ad75a7515e7de704c07a64fd9b1140fabd5531be5c583",
+      "bytes": 20565,
+      "archive_bytes": 2477
+    },
+    {
+      "name": "wave-integration-phase4.py.gz",
+      "sha256": "d0cf714b956a985aa013b9d985e7c78a370d3cae9d005a4d558205c8ceb8c3f0",
+      "archive_sha256": "86a340d84161379a28e813f245960642be40a04959423dba28f22d23d62d821d",
+      "bytes": 1719,
+      "archive_bytes": 920
+    },
+    {
+      "name": "wave-joined-build-help.log.gz",
+      "sha256": "7420e414f7eba80c148e1904901a238ebd4bae597f9000e7a2be696ae397da39",
+      "archive_sha256": "54e79355445ca5eacadfc6380682f22c3fe981758b31928f9e25856bd569c490",
+      "bytes": 20594,
+      "archive_bytes": 6379
+    },
+    {
+      "name": "wave-joined-gates-commit.py.gz",
+      "sha256": "a3d860109049fd5eed88c6bfe1f50f40c9ebfafe325fee18600b7f3d88f60d1b",
+      "archive_sha256": "cd8046be1f7fc900d507321b9ec3b1856ec55c9452b14ccff44c97ab287d0001",
+      "bytes": 6386,
+      "archive_bytes": 2602
+    },
+    {
+      "name": "wave-joined-preflight-before-flags-fix-python.log.gz",
+      "sha256": "0f887a0ecebb0de782ff11d88fe39123114e72a9b8349e56d8b1e813a1e07e60",
+      "archive_sha256": "04189ae3d03e46c643e6225c3de68d6b6d35e1f44a5e2aa6098153334182b431",
+      "bytes": 924,
+      "archive_bytes": 348
+    },
+    {
+      "name": "wave-joined-preflight-before-flags-fix.json.gz",
+      "sha256": "965e5aa28c44af47d1e92e8e24eaa601fb71dc260c845c776958f1da62f28721",
+      "archive_sha256": "db8304c79b1112a5094047c24744225ca4585e4802bb262a614aeeafe3145d58",
+      "bytes": 198546,
+      "archive_bytes": 66268
+    },
+    {
+      "name": "wave-joined-preflight-before-flags-fix.log.gz",
+      "sha256": "a5ad612e9d1b382a5561811d2a85623bb5574898a63bbbd7c9f8dccdc3bc949e",
+      "archive_sha256": "297e14a2ba16bcea68f4887833221aaab92d4251ff4df7350f4f10e1660b5d66",
+      "bytes": 984,
+      "archive_bytes": 387
+    },
+    {
+      "name": "wave-joined-preflight-diff.log.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 0,
+      "archive_bytes": 20
+    },
+    {
+      "name": "wave-joined-preflight-format.log.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 0,
+      "archive_bytes": 20
+    },
+    {
+      "name": "wave-joined-preflight-guardian.log.gz",
+      "sha256": "a21ff532f0a7405e4f9bde9f1c867b8248c4b77d1dddb7c5a16b6c203969cfb2",
+      "archive_sha256": "39f59163ebbdda591de6104a2ce840fc1a5baefeb564b63cbaec23dd9830c610",
+      "bytes": 404,
+      "archive_bytes": 185
+    },
+    {
+      "name": "wave-joined-preflight-python.log.gz",
+      "sha256": "9d938cef5195ee7abebd1a6e87c3f904ac014968f6bc97c25cab29a8a2fd8a8d",
+      "archive_sha256": "1e712b63d194a8f1d9190679af4743c83802b4a586cc544fb03c9b1f389acf6d",
+      "bytes": 230,
+      "archive_bytes": 57
+    },
+    {
+      "name": "wave-joined-preflight-seed-check.log.gz",
+      "sha256": "64580e095b830fe3aec4d7ec29305e82442b5175417aba31bc8bef0c902288aa",
+      "archive_sha256": "d34607686490268d037236f4c5c3c63feab2b94db254d6a8ee3fae80bd33cdd6",
+      "bytes": 4624,
+      "archive_bytes": 687
+    },
+    {
+      "name": "wave-joined-preflight.json.gz",
+      "sha256": "5d42f2edbc2ac1dc63c26c1675259f3c649fbb04c64e44bca565821f4e3fdf9d",
+      "archive_sha256": "30c792315758982b714a217b19f2e3546256a6829f07cf33902862fde50fcd0c",
+      "bytes": 199971,
+      "archive_bytes": 66543
+    },
+    {
+      "name": "wave-joined-preflight.log.gz",
+      "sha256": "2a9c537fce8ebc869780e6e4a31ff70cb7d411161f8762a2433658f129ca4215",
+      "archive_sha256": "6c23780a73b0263411a6573947d145db73ea0b89c92c7d4522d9de12c927bd33",
+      "bytes": 91,
+      "archive_bytes": 104
+    },
+    {
+      "name": "wave-joined-preflight.py.gz",
+      "sha256": "f1ff8dab8b869368d594b562a90d6ea9ddfacbadafac559a80abcd0c98d310d4",
+      "archive_sha256": "74352d5ec81e37852efbbee80a3d0dea74ca579a55bf18ffe22800317df15648",
+      "bytes": 2006,
+      "archive_bytes": 1018
+    }
+  ]
+}

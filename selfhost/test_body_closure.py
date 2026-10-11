@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mandatory constant, array, iteration and chain admission through installed producers."""
+"""Mandatory body-language admission through installed producers."""
 import argparse
 import json
 from pathlib import Path
@@ -13,9 +13,13 @@ import run_body_constant_admission as C
 import run_body_structural_admission as S
 import run_body_iteration_admission as I
 import run_body_chained_admission as K
+import run_body_comprehension_admission as P
+import run_body_text_methods_admission as T
+import run_body_generic_admission as G
 import run_body_structural_hostile as H
 
-LANES = {'constants': C, 'structural': S, 'iteration': I, 'chained': K}
+LANES = {'constants': C, 'structural': S, 'iteration': I, 'chained': K,
+         'comprehension': P, 'text': T, 'generic': G}
 
 
 def expected(name):
@@ -52,6 +56,11 @@ def require_source(name, report, release):
     for row in records:
         D.F.require(row.get('source_sha256') == manifest[row['name']]['source_sha256'],
                     name + ' source identity differs')
+        if row['phase'] == 'runtime':
+            command = row.get('command', [])
+            D.F.require(bool(command) and ('--release' in command) is release
+                        and ('--verify-facts' in command) is release,
+                        name + ' actual runtime flags differ')
         triple = (row['status'], bytes.fromhex(row['stdout_hex']), bytes.fromhex(row['stderr_hex']))
         by_phase.setdefault((row['name'], row['phase']), {})[row['mode']] = triple
     for (source, phase), modes in by_phase.items():
@@ -92,7 +101,9 @@ def main():
     before = {'compiler_sha256': D.F.digest(args.compiler), 'packages': D.packages(args.component_dir)}
     total = 0
     for name, release in [('constants', False), ('constants', True),
-                          ('structural', True), ('iteration', True), ('chained', True)]:
+                          ('structural', True), ('iteration', True), ('chained', True),
+                          ('comprehension', False), ('comprehension', True),
+                          ('text', False), ('text', True), ('generic', False), ('generic', True)]:
         report_path = args.report_dir / (name + ('-release' if release else '-normal') + '.json')
         command = [sys.executable, Path(LANES[name].__file__).resolve(), *common, '--report', report_path]
         if release:

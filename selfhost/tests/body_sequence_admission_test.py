@@ -18,7 +18,7 @@ class SequenceAdmissionTests(unittest.TestCase):
 
     def test_missing_extra_profile_reordered_and_dropped_trap_fail(self):
         manifest, inventory = S.selection()
-        for change in ('missing', 'extra', 'profile', 'order', 'trap', 'runtime', 'notes', 'width'):
+        for change in ('missing', 'extra', 'profile', 'order', 'trap', 'runtime', 'notes', 'width', 'schema'):
             altered, selected = copy.deepcopy(manifest), copy.deepcopy(inventory)
             if change == 'missing':
                 altered.pop('sum_u64.my')
@@ -34,8 +34,10 @@ class SequenceAdmissionTests(unittest.TestCase):
                 altered['sum_u64.my'].pop('runtime')
             elif change == 'notes':
                 altered['sorted_cmp_keyword.my']['diagnostics'] = []
-            else:
+            elif change == 'width':
                 selected['integer_widths'] = ['int']
+            else:
+                selected['schema'] = S.SCHEMA - 1
             with self.subTest(change=change), self.assertRaises(RuntimeError):
                 S.require_selection(altered, selected)
 

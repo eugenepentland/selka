@@ -1,5 +1,5 @@
 {
-  "schema": 10,
+  "schema": 11,
   "source_sha256": "e1c905cce0ae85a4efd6210ebb3ee03396765543b987e28876c9a3740f8668e8",
   "hostile_names": [
     "copy_readonly_receiver",

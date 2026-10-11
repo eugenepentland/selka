@@ -91,7 +91,7 @@ def check_command(entry):
 
 def expected_operations(manifest, modes):
     # Each fixture checks; each successful fixture additionally dumps typed and
-    # runs a generated release program with facts and leak checks enabled.
+    # runs a generated program in the requested guest mode with leak checks enabled.
     return (len(manifest) + 2 * sum(s['status'] == 0 for s in manifest.values())) * len(modes)
 
 
@@ -117,7 +117,7 @@ def main():
               'release_facts_leaks': args.release, 'native_controls': args.native_controls, 'native_body_schema': args.native_body_schema, 'modes': list(modes),
               'expected_operations': expected_operations(manifest, modes),
               **before, **COUNTS, 'donors': inventory['donors'], 'records': [],
-              'runtime_flags': ['--release', '--verify-facts', 'MYL_CORE_LEAKCHECK=1'],
+              'runtime_flags': (['--release', '--verify-facts'] if args.release else []) + ['MYL_CORE_LEAKCHECK=1'],
               'typed_oracle': 'full canonical batch/catalog shadow comparison; dump-typed supplements',
               'qualified_seed_sha256': None}
     args.report.parent.mkdir(parents=True, exist_ok=True)
@@ -170,11 +170,13 @@ def main():
             F.require(native[0] == 0 and native[1] and native[2] == b'', 'empty/failed native typed output')
             for mode in modes[1:]:
                 require_match(native, run(name, mode, 'typed', command))
-            command = ['run-project', entry, '--no-cache', '--release', '--verify-facts', '--print-result',
+            command = ['run-project', entry, '--no-cache', '--print-result',
                        '--cache-dir', work / 'guest-cache', f'--zig={args.zig}']
+            if args.release:
+                command.extend(['--release', '--verify-facts'])
             for mode in modes:
                 result = run(name, mode, 'runtime', command)
-                F.require(result == (7, b'7\n', b''), 'B11 generated release/fact/leak behavior differs')
+                F.require(result == (7, b'7\n', b''), 'B11 generated behavior differs')
     require_identity(args, before)
     F.require(len(report['records']) == expected_operations(manifest, modes), 'incomplete B11 operation accounting')
     report.update(complete=True, selected_admission='pending' if args.native_controls else 'passed',

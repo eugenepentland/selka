@@ -11,7 +11,7 @@ import run_body_dictionary_hostile as H
 import run_body_library_join as J
 
 F = D.F
-SCHEMA = 10
+SCHEMA = D.SCHEMA
 SOURCE = Path(__file__).with_name('fixtures') / 'body_sequence_hostile/main.input'
 NAMES = ('copy_readonly_receiver', 'second_readonly_receiver', 'nonunit_result',
          'short_arity', 'long_arity', 'source_type', 'keys_type', 'reverse_type',

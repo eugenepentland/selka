@@ -10,7 +10,7 @@ import run_body_check_qualification as D
 import run_body_numeric_admission as N
 
 F = D.F
-SCHEMA = 10
+SCHEMA = D.SCHEMA
 MODES = ('reference', 'shadow', 'component')
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_sequence_candidate'
 COUNTS = {'fixtures': 126, 'success': 97, 'diagnostic': 29, 'runtime_traps': 10, 'profiles': 0}
@@ -18,6 +18,7 @@ WIDTHS = ('i8', 'i16', 'i32', 'int', 'u8', 'u16', 'u32', 'u64')
 
 
 def require_selection(manifest, inventory):
+    F.require(inventory['schema'] == SCHEMA, 'ordinary sequence schema differs')
     F.require(inventory['counts'] == COUNTS and len(manifest) == COUNTS['fixtures'],
               'incomplete ordinary sequence inventory')
     F.require(inventory['source_cases'] == list(manifest), 'sequence source order changed')

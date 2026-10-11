@@ -22,7 +22,8 @@ def source_report(name, release=True):
             status = 8 if name == 'constants' and source == 'source_while.my' else 7
             stdout = (str(status) + '\n').encode()
         report['records'].append(dict(name=source, mode=mode, phase=phase, status=status,
-            stdout_hex=stdout.hex(), stderr_hex='', source_sha256=manifest[source]['source_sha256']))
+            stdout_hex=stdout.hex(), stderr_hex='', source_sha256=manifest[source]['source_sha256'],
+            command=['compiler', 'run-project', source] + (['--release', '--verify-facts'] if release else [])))
     return report
 
 
@@ -37,7 +38,8 @@ def hostile_report():
 class ClosureGateTests(unittest.TestCase):
     def test_closed_operation_counts(self):
         self.assertEqual({name: len(G.expected(name)[1]) for name in G.LANES},
-                         {'constants': 1422, 'structural': 222, 'iteration': 228, 'chained': 219})
+                         {'constants': 1422, 'structural': 222, 'iteration': 228, 'chained': 219,
+                          'comprehension': 294, 'text': 117, 'generic': 120})
         for name in G.LANES:
             G.require_source(name, source_report(name), True)
         G.require_source('constants', source_report('constants', False), False)
@@ -66,6 +68,10 @@ class ClosureGateTests(unittest.TestCase):
             with self.assertRaises(RuntimeError): G.require_source(name, report, True)
             report = source_report(name); report['records'][0]['source_sha256'] = '0' * 64
             with self.assertRaises(RuntimeError): G.require_source(name, report, True)
+            report = source_report(name, False)
+            runtime = next(row for row in report['records'] if row['phase'] == 'runtime')
+            runtime['command'].extend(['--release', '--verify-facts'])
+            with self.assertRaises(RuntimeError): G.require_source(name, report, False)
 
     def test_matching_counters_cannot_hide_different_transcripts(self):
         for name in G.LANES:

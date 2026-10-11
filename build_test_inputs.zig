@@ -294,3 +294,9 @@ pub const body_closure_admission = [_][]const u8{"selfhost/"};
 
 /// Fail-closed body closure accounting reads the source selections and their shared oracle helpers.
 pub const body_closure_admission_self = [_][]const u8{"selfhost/"};
+
+/// Installed filesystem/sequence operations and generic reply validation use full component sources.
+pub const body_operations_admission = [_][]const u8{"selfhost/"};
+
+/// Source and hostile operation inventories and their accounting harnesses.
+pub const body_operations_admission_self = [_][]const u8{"selfhost/"};
