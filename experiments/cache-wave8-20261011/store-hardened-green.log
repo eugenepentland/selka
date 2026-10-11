@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 2174, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2174 after 5s
+1/2 test_shared_store.test.shared test store checks exact identities rejects corrupt records and recovers interrupted publication...OK
+2/2 test_shared_store.test.shared test store preserves foreign formats and permanent lock ownership...OK
+All 2 tests passed.

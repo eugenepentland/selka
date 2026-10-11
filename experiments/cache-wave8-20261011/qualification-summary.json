@@ -1,0 +1,68 @@
+{
+  "schema": "selka-wave8-native-qualification-v1",
+  "result": "passed",
+  "step": "test-core",
+  "filter": "test_runner_portable_test",
+  "exit_status": 0,
+  "tests": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0
+  },
+  "build_steps": {
+    "passed": 12,
+    "total": 12
+  },
+  "installed_compiler": {
+    "path": "zig-out/bin/mylang",
+    "sha256": "5dda36c6f6809ded3a8ed9c775cb6e9ecf86a7d047e5501c74a3a9c72af9c829"
+  },
+  "integration_source": {
+    "path": "src/core/test_runner_portable_test.zig",
+    "sha256": "ccdc1cf4f34c7f54b2102e7423c59ab66e7bab1ef3b5ca1ba5cec23729d07a74"
+  },
+  "log": {
+    "path": "experiments/cache-wave8-20261011/portable-final.log",
+    "sha256": "6d7c39937811b548e02552f36f1734bd66bf6376421c94faf025ee6110cb50ac",
+    "normalization": "Trailing blank lines at EOF removed for repository whitespace checks; test output otherwise unchanged."
+  },
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "test-core",
+    "-Dtest-filter=test_runner_portable_test",
+    "--summary",
+    "all"
+  ],
+  "environment_overrides": {
+    "TMPDIR": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave8/tmp",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+  },
+  "invocations": {
+    "direct_cli": 46,
+    "count_method": "source-derived completed assertion paths, not subprocess telemetry",
+    "directory_fanout_children_excluded": true
+  },
+  "acceptance": [
+    "cross-root cold/warm sharing with private-cache deletion",
+    "affected dependency failure, unrelated reuse and revert",
+    "exact case-file sharing, changed cases failure and configuration validation",
+    "force, fact verification, leak checking and no-cache execute",
+    "Debug/Release separation and keyed environment invalidation/revert",
+    "in-root embed mutation and revert",
+    "identity queries and environment authority refuse sharing; unsupported Host remains refused",
+    "directory explicit-path forwarding",
+    "record corruption misses and refills",
+    "two simultaneous native publishers",
+    "absolute source literals remain exact",
+    "escaping source symlink cannot publish shared success",
+    "embed symlink escape retains diagnostic",
+    "configured bad shared format rejects warm local manifest"
+  ],
+  "boundary": "Native same-machine success transport only; no timing, remote-machine, or power-loss claim."
+}

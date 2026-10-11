@@ -1,0 +1,21 @@
+build-slot: build slot 1, FIFO ticket 2172 after 0s
+src/core/test_shared_store.zig:82:36: error: no field or member function named 'dupeZ' in 'mem.Allocator'
+        const name = try self.arena.dupeZ(u8, try self.path(".lock"));
+                         ~~~~~~~~~~^~~~~~
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/mem/Allocator.zig:1:1: note: struct declared here
+//! The standard memory allocation interface.
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+referenced by:
+    test.shared test store preserves foreign formats and permanent lock ownership: src/core/test_shared_store.zig:201:32
+src/core/test_shared_store.zig:99:36: error: no field or member function named 'dupeZ' in 'mem.Allocator'
+        const name = try self.arena.dupeZ(u8, file_path);
+                         ~~~~~~~~~~^~~~~~
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/mem/Allocator.zig:1:1: note: struct declared here
+//! The standard memory allocation interface.
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/test_shared_store.zig:184:23: error: no field or member function named 'dupeZ' in 'mem.Allocator'
+    const fifo = try a.dupeZ(u8, path);
+                     ~^~~~~~
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/mem/Allocator.zig:1:1: note: struct declared here
+//! The standard memory allocation interface.
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

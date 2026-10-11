@@ -40,6 +40,15 @@ store. Native frontend packs, linked-program caches and revision indexes remain
 private. `--shared-cache-dir` does not merge these formats or share Zig's local
 cache. Each worktree still requires its own `ZIG_LOCAL_CACHE_DIR`.
 
+The native `mylang test --shared-cache-dir DIR` command also accepts a shared
+root, using the independent `native-tests-v1` namespace for portable ordinary
+test successes. It does not use this developer store's blob/receipt or retention
+format. The Python collector below does not collect native test receipts. Remove
+that disposable namespace only while its users are stopped; never unlink its
+permanent `.lock` while a command may use it. See
+[guest tests](guest-tests.md#reusing-unaffected-results) for the supported subset
+and environment setup. Native tests, including shared lookup, require no Python.
+
 ## Publication and compatibility
 
 The store declares its format explicitly. An unknown, damaged or unversioned

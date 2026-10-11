@@ -45,6 +45,51 @@ pub fn campaignSettings(context: Context, inputs: *std.ArrayList(Dependency)) Er
     return indexed;
 }
 
+/// Validated project-relative paths for a separate portable receipt domain.
+pub const PortablePaths = struct { entry: []const u8, configuration: ?[]const u8 = null, policy: ?[]const u8 = null, cases: ?[]const u8 = null };
+
+/// Bind portable execution settings without changing ordinary local receipt bytes.
+/// Callers must first prove these paths and every source dependency stay in root.
+pub fn portableSettings(context: Context, paths: PortablePaths) Error!Digest {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    field(&hash, "core-test-portable-settings-v1");
+    field(&hash, frontend.compiler_identity);
+    const bound = context.identity.cache_plan orelse return error.ComponentUnavailable;
+    field(&hash, &bound.identity);
+    field(&hash, &context.identity.tool.digest);
+    field(&hash, &context.identity.tool.native_target);
+    field(&hash, paths.entry);
+    field(&hash, try std.json.Stringify.valueAlloc(context.arena, .{
+        .mode = context.options.build.mode,
+        .facts = context.options.build.facts,
+        .vectors = context.options.build.show.codegen.generic_vectors,
+        .frames = context.options.build.show.codegen.trap_frames,
+        .counters = context.options.build.show.codegen.counters,
+        .seed = context.options.properties.seed,
+        .runs = context.options.properties.runs,
+        .timeout = context.options.controls.timeout_ms,
+        .steps = context.options.controls.max_steps,
+        .call_frames = context.options.controls.ceilings.frames,
+        .memory = context.options.controls.ceilings.memory,
+    }, .{}));
+    optionalPath(&hash, "cases", paths.cases);
+    if (paths.cases != null) field(&hash, context.case_bytes);
+    optionalPath(&hash, "configuration", paths.configuration);
+    if (context.entry.configuration) |configured| field(&hash, configured.bytes);
+    optionalPath(&hash, "policy", paths.policy);
+    if (context.entry.configuration) |configured| if (configured.policy) |policy| field(&hash, policy.bytes);
+    try environmentSettings(context, &hash);
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+fn optionalPath(hash: *std.crypto.hash.Blake3, role: []const u8, path: ?[]const u8) void {
+    field(hash, role);
+    field(hash, if (path != null) "present" else "absent");
+    if (path) |value| field(hash, value);
+}
+
 fn settingsWithBudget(context: Context, inputs: *std.ArrayList(Dependency), domain: []const u8, runs: u32) Error!Digest {
     const a = context.arena;
     var hash = std.crypto.hash.Blake3.init(.{});
@@ -90,6 +135,14 @@ fn settingsWithBudget(context: Context, inputs: *std.ArrayList(Dependency), doma
         std.crypto.hash.Blake3.hash(bytes, &digest, .{});
         try inputs.append(a, .{ .path = link, .digest = digest });
     }
+    try environmentSettings(context, &hash);
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+fn environmentSettings(context: Context, hash: *std.crypto.hash.Blake3) Error!void {
+    const a = context.arena;
     var environment: std.ArrayList([]const u8) = .empty;
     var entries = context.environment.iterator();
     while (entries.next()) |item| {
@@ -97,10 +150,7 @@ fn settingsWithBudget(context: Context, inputs: *std.ArrayList(Dependency), doma
         try environment.append(a, try std.fmt.allocPrint(a, "{s}={s}", .{ item.key_ptr.*, item.value_ptr.* }));
     }
     std.mem.sort([]const u8, environment.items, {}, before);
-    for (environment.items) |item| field(&hash, item);
-    var digest: Digest = undefined;
-    hash.final(&digest);
-    return digest;
+    for (environment.items) |item| field(hash, item);
 }
 
 /// The C compiler and Zig toolchain inputs a receipt keys besides every `MYL_` and
@@ -111,7 +161,7 @@ const toolchain_variables = [_][]const u8{
 };
 /// `MYLANG_` variables that place caches, size the worker pool or choose which
 /// process runs a test, and so change no outcome.
-const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", tool_ticket.hint, "MYLANG_TEST_ISOLATE", "MYLANG_TEST_CHILDREN" };
+const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", tool_ticket.hint, "MYLANG_TEST_ISOLATE", "MYLANG_TEST_CHILDREN", options.shared_cache_variable };
 
 /// Whether a variable can change a test's outcome. A shell's `_` and `OLDPWD` or a
 /// terminal's variables cannot; a test that reads the environment is never reused.

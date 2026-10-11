@@ -17,7 +17,7 @@ mylang test FILE.my|DIR [--release | --unoptimized | --optimize-debug] [--json] 
     [--no-cache] [--force] [--jobs N] [--cases PATH] [--max-steps N] [--max-frames N]
     [--max-memory SIZE] [--timeout-ms N] [--seed N] [--property-runs N]
     [--property-policy legacy|indexed-v1] [--link FILE.c]
-    [--verify-facts | --no-facts] [--cache-dir DIR] [--zig PATH]
+    [--verify-facts | --no-facts] [--cache-dir DIR] [--shared-cache-dir DIR] [--zig PATH]
 ```
 
 The command discovers `test_` functions in the project's reachable public
@@ -537,6 +537,44 @@ directory. A later run that computes the same identity reports `cached` instead
 of building and executing the test. Failures, traps and timeouts never become
 receipts, so they always run again.
 
+`--shared-cache-dir DIR` opts into a second receipt store for ordinary project
+tests across compatible worktrees. `MYLANG_TEST_SHARED_CACHE` supplies the same
+setting when the flag is absent; an empty environment value disables it. The
+explicit flag wins, accepts `--shared-cache-dir=DIR`, and rejects an empty path.
+Directory runs forward the setting to their workers. With neither setting,
+receipts stay private. This option does not change build or run caches.
+
+Use a dedicated shared root, preferably outside the worktrees. Native test
+receipts live under `DIR/native-tests-v1`; `--cache-dir` still holds the private
+frontend, graph, executable and whole-report caches. Shared reuse requires a
+compatible compiler, toolchain, execution settings and the test's complete
+validated dependency closure. A different checkout location alone need not
+rerun an otherwise identical eligible test. Unknown or unsupported identities
+run normally, and missing or corrupt receipts are misses. The cache location
+does not change a test's execution identity. An explicitly selected unusable
+store reports an error. `--force` bypasses shared hits; `--no-cache` disables
+shared lookup and publication even when the environment selects a store.
+
+From the repository root, these two runs use separate private caches and the
+same shared receipts:
+
+```bash
+test_cache=$(mktemp -d)
+trap 'rm -rf "$test_cache"' EXIT
+mylang test examples/testing/main.my --cache-dir "$test_cache/private-a" --shared-cache-dir "$test_cache/shared"
+mylang test examples/testing/main.my --cache-dir "$test_cache/private-b" --shared-cache-dir "$test_cache/shared"
+```
+
+Shared receipts currently cover zero-argument `bool` tests under the legacy
+property policy, with effects limited to managed allocation and mutation.
+External providers, native links, provider overlays, `function_digest` and
+error traces remain private. Project sources, configuration, cases and embedded
+assets must stay inside the project root. Configuration and cases bytes, embedded
+values and literal strings remain part of the identity. Fact verification, leak
+checks and loader overrides also run without shared receipts. The `native-tests-v1`
+namespace has its own format,
+separate from developer verification and fuzz evidence stores.
+
 A receipt's identity (NEW-CORE-S4-TEST-3) is:
 
 - **the test's program** (NEW-CORE-S4-TEST-6): the Core IR of the functions the
@@ -554,7 +592,7 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
 - **the environment variables that can change an outcome**
   (NEW-CORE-S4-TEST-5): every `MYL_` and `MYLANG_` variable except
   `MYLANG_JOBS`, `MYLANG_CORE_RUNTIME_CACHE`, `MYLANG_TEST_ISOLATE` and
-  `MYLANG_TEST_CHILDREN`, and the C compiler and Zig
+  `MYLANG_TEST_CHILDREN`, `MYLANG_TEST_SHARED_CACHE`, and the C compiler and Zig
   toolchain inputs (`CPATH`, `C_INCLUDE_PATH`, `LIBRARY_PATH`, `ZIG`,
   `ZIG_LIB_DIR`, `SOURCE_DATE_EPOCH` and the like). A shell's `_` or `OLDPWD`,
   a terminal's variables or a wrapper such as `time` leave receipts valid.

@@ -17,6 +17,7 @@ const cli_run = @import("cli_run.zig");
 
 /// The flag naming the build cache directory.
 const cache_dir_flag = "--cache-dir";
+const shared_cache_dir_flag = "--shared-cache-dir";
 
 const usage =
     \\usage: mylang build FILE.my -o OUT [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
@@ -41,6 +42,7 @@ const test_usage =
     \\  --seed N --property-runs N              property test inputs (runs: 1 to 1000000)
     \\  --property-policy legacy|indexed-v1    property generation and range reuse policy
     \\  --force --no-cache --cache-dir DIR      rerun every test / use a private cache / cache location
+    \\  --shared-cache-dir DIR                 opt-in compatible project test receipts (else MYLANG_TEST_SHARED_CACHE)
     \\  --link FILE.c (repeatable) --zig PATH
     \\
 ;
@@ -315,8 +317,12 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     // NEW-CORE-S5-AFFECTED-1: the two switches only mean something together.
     if (affected != (options.controls.against != null)) return testUsage(init, "--affected and --against REF go together");
     options.build.links = links.items;
+    options.shared_cache = @import("test_runner_options.zig").sharedCache(options.shared_cache, init.environ_map);
     // NEW-CORE-S5-NO-CACHE-1: run against a private cache, removed afterwards.
-    if (no_cache) options.build.cache = try cli_run.privateCache(init, options.build.cache);
+    if (no_cache) {
+        options.build.cache = try cli_run.privateCache(init, options.build.cache);
+        options.shared_cache = "";
+    }
     defer if (no_cache) cli_run.discard(init.io, options.build.cache);
     return test_runner.run(init, options);
 }
@@ -344,12 +350,17 @@ fn invalidValue(init: std.process.Init, args: []const []const u8, start: usize, 
 
 /// Whether `arg` is a `mylang test` flag that reads the next argument as its value.
 fn takesValue(arg: []const u8) bool {
-    const valued = [_][]const u8{ "--filter", "--cases", "--jobs", "--mode", "--max-steps", "--max-frames", "--max-memory", "--timeout-ms", "--seed", "--property-runs", "--property-policy", "--link", "--zig", cache_dir_flag, "--against" };
+    const valued = [_][]const u8{
+        "--filter",     "--cases",      "--jobs",              "--mode",          "--max-steps",       "--max-frames",
+        "--max-memory", "--timeout-ms", "--seed",              "--property-runs", "--property-policy", "--link",
+        "--zig",        cache_dir_flag, shared_cache_dir_flag, "--against",
+    };
     for (valued) |name| if (std.mem.eql(u8, arg, name)) return true;
     return false;
 }
 
 fn testControls(options: *test_runner.Options, args: []const []const u8, index: *usize, explicit_mode: *bool) error{Usage}!bool {
+    if (try sharedCacheFlag(options, args, index)) return true;
     const arg = args[index.*];
     const has_value = index.* + 1 < args.len;
     if (std.mem.eql(u8, arg, "--mode") and has_value) {
@@ -390,6 +401,15 @@ fn testControls(options: *test_runner.Options, args: []const []const u8, index: 
         options.controls.ceilings.memory = @import("memory_budget").parse(text) catch return error.Usage;
         options.controls.ceilings.explicit_memory = true;
     } else return false;
+    return true;
+}
+
+fn sharedCacheFlag(options: *test_runner.Options, args: []const []const u8, index: *usize) error{Usage}!bool {
+    const start = index.*;
+    const directory = flagValue(args, index, shared_cache_dir_flag) orelse return false;
+    if (options.shared_cache != null or directory.len == 0) return error.Usage;
+    if (index.* != start and std.mem.startsWith(u8, directory, "--")) return error.Usage;
+    options.shared_cache = directory;
     return true;
 }
 

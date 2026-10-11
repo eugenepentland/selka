@@ -927,6 +927,40 @@ schema version alone is not enough to keep results across compiler bug fixes.
 This is how a tooling-only change can eventually avoid invalidating unrelated
 compilation and verification work while the compiler becomes progressively Selka.
 
+### Wave 8 — Shared ordinary project test successes
+
+Extend the Wave 6 storage boundary to native `mylang test` commands. Each
+worktree retains its private frontend, revision indexes, executables and report
+manifests. An explicit `--shared-cache-dir` or `MYLANG_TEST_SHARED_CACHE` selects
+the shared success store; installing or using the compiler remains Python-free.
+
+Derive separate portable keys from freshly checked reachable code. Normalize
+only source locations proved to be inside the project root, retaining logical
+file names, line/column positions and literal string values. Bind compiler,
+runtime, actual toolchain/CPU, planner, execution settings, configuration and
+case inputs. Embedded fixture bytes remain part of the checked program. Unknown
+portability, live effects and observable error or callable-identity traces must
+not receive portable success receipts.
+
+Look up and publish bounded checksummed success records with atomic replacement
+and process locks. An explicit unusable store is an error; a missing or corrupt
+receipt causes execution. Validate the requesting worktree's sources and tools
+before accepting results. Generate diagnostics and reports from that worktree.
+Force bypasses shared reuse; `--no-cache` disables shared participation.
+
+Qualify two independent roots with private caches, dependency edits and reverts,
+changed fixtures and execution settings, exclusions, directory fanout, corrupt
+storage and concurrent publishers. The implementation boundary and evidence live
+under [`cache-wave8-20261011`](../../experiments/cache-wave8-20261011/PLAN.md).
+
+### Proposed follow-ups — Waves 9 and 10
+
+**Wave 9** extends compatible sharing to immutable frontend and linked-program
+artifacts, preserving worktree-local mutable indexes. **Wave 10** reduces repeated
+warm validation and admission overhead through retained validated graph state and
+coordination of duplicate concurrent work. These follow-ups require their own
+qualification; a shared storage directory alone does not establish either one.
+
 ## Qualification and observable success
 
 Use a controlled edit matrix against an independent forced execution. Begin

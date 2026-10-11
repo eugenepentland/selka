@@ -58,6 +58,31 @@ fn contains(haystack: []const u8, needle: []const u8) bool {
     return std.mem.indexOf(u8, haystack, needle) != null;
 }
 
+// spec-case: NEW-CORE-TEST-SHARED-1
+test "shared test cache flag rejects missing empty and repeated values and stays test specific" {
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const context: Context = .{ .arena = arena.allocator(), .root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()) };
+    const invalid = [_][]const []const u8{
+        &.{ "test", "missing.my", "--shared-cache-dir" },
+        &.{ "test", "missing.my", "--shared-cache-dir", "" },
+        &.{ "test", "missing.my", "--shared-cache-dir=" },
+        &.{ "test", "missing.my", "--shared-cache-dir", "--force" },
+        &.{ "test", "missing.my", "--shared-cache-dir", "one", "--shared-cache-dir=two" },
+    };
+    for (invalid) |arguments| {
+        const result = try context.compiler(arguments);
+        try std.testing.expectEqual(@as(u8, 2), result.status);
+        try std.testing.expect(contains(result.stderr, "usage: mylang test"));
+        try std.testing.expect(contains(result.stderr, "--shared-cache-dir"));
+    }
+    const build = try context.compiler(&.{ "build", "missing.my", "-o", "out", "--shared-cache-dir", "one" });
+    try std.testing.expectEqual(@as(u8, 2), build.status);
+    try std.testing.expect(contains(build.stderr, "usage: mylang build"));
+}
+
 const affected_before =
     \\
     \\

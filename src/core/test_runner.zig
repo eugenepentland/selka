@@ -31,6 +31,8 @@ const root_share = @import("test_runner_shared.zig");
 const batch_entry = @import("test_runner_batch.zig");
 const directory_runner = @import("test_runner_directory.zig");
 const receipt = @import("test_runner_receipt.zig");
+const portable = @import("test_runner_portable.zig");
+const shared_store = @import("test_shared_store.zig");
 const test_keys = @import("test_runner_identity.zig");
 const callable_digest = @import("callable_digest.zig");
 const tool_identity = @import("tool_identity.zig");
@@ -136,6 +138,7 @@ const Started = union(enum) { done: ?u8, ready: Ready };
 /// Read, resolve and configure the entry and replay its recorded report when one
 /// holds.
 fn start(init: std.process.Init, requested: Options, setup: Setup) Error!Started {
+    try validateShared(init, requested);
     var options = requested;
     const allocator = init.arena.allocator();
     var problems: std.ArrayList(u8) = .empty;
@@ -356,7 +359,15 @@ const GroupRun = struct {
         }
         const selected = try select(init, context.options, program, cases, self.cases, self.selection);
         const items = selected.items;
+        const sharing: PortableRun = .{
+            .context = context,
+            .checked = program,
+            .guard = .{ .context = context, .inputs = out.before.items, .backing = init.gpa },
+            .providers = group.providers.len != 0,
+        };
+        try sharing.restore(items);
         try execute(init, context.options, program, items, self.selection.permits, .{ .context = context, .inputs = out.before.items, .backing = init.gpa });
+        try sharing.publish(items);
         if (identity) |known| for (items) |*item| {
             item.verdict.identity = known;
         };
@@ -364,6 +375,73 @@ const GroupRun = struct {
         if (items.len != 0) if (selected.work) |work| try out.works.append(a, .{ .first = out.chosen.items.len, .work = work });
         try out.chosen.appendSlice(a, items);
         return null;
+    }
+};
+
+fn validateShared(init: std.process.Init, options: Options) Error!void {
+    const directory = options_module.sharedCache(options.shared_cache, init.environ_map) orelse return;
+    _ = shared_store.Store.open(init.arena.allocator(), init.io, directory) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        const message = try std.fmt.allocPrint(init.arena.allocator(), "error: shared test cache {s}: {s}\n", .{ directory, @errorName(err) });
+        try writeAll(init, std.Io.File.stderr(), message);
+        return err;
+    };
+}
+
+const PortableRun = struct {
+    context: receipt.Context,
+    checked: frontend.Checked,
+    guard: run_tests.Campaign,
+    providers: bool,
+
+    fn store(self: PortableRun) Error!?shared_store.Store {
+        const directory = options_module.sharedCache(self.context.options.shared_cache, self.context.environment) orelse return null;
+        if (self.providers or !portable.eligible(self.context)) return null;
+        const shared = try shared_store.Store.open(self.context.arena, self.context.io, directory);
+        return shared;
+    }
+
+    fn key(self: PortableRun, a: std.mem.Allocator, case: discover.Case) Error!?[32]u8 {
+        var context = self.context;
+        context.arena = a;
+        return portable.key(context, self.checked, case);
+    }
+
+    fn restore(self: PortableRun, items: []Selected) Error!void {
+        const shared = try self.store() orelse return;
+        if (!try self.guard.unchanged()) return error.SourceChanged;
+        for (items) |*item| {
+            if (!item.ready) continue;
+            var scratch = std.heap.ArenaAllocator.init(self.guard.backing);
+            defer scratch.deinit();
+            const identity = try self.key(scratch.allocator(), item.case) orelse continue;
+            if (self.context.options.controls.force) {
+                try shared.invalidate(identity);
+                continue;
+            }
+            if (!try shared.hit(identity)) continue;
+            item.verdict = .{ .name = item.case.name, .status = .cached };
+            item.ready = false;
+            item.identity = identity;
+            item.key_method = "portable-reachable-ir";
+            item.cache_reason = "shared-receipt-hit";
+        }
+        if (!try self.guard.unchanged()) return error.SourceChanged;
+    }
+
+    fn publish(self: PortableRun, items: []const Selected) Error!void {
+        const shared = try self.store() orelse return;
+        var scratch = std.heap.ArenaAllocator.init(self.guard.backing);
+        defer scratch.deinit();
+        const a = scratch.allocator();
+        var identities: std.ArrayList([32]u8) = .empty;
+        for (items) |item| {
+            if (item.verdict.status != .passed) continue;
+            if (try self.key(a, item.case)) |identity| try identities.append(a, identity);
+        }
+        if (identities.items.len == 0) return;
+        if (!try self.guard.unchanged()) return error.SourceChanged;
+        for (identities.items) |identity| try shared.save(identity);
     }
 };
 

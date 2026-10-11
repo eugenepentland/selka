@@ -399,6 +399,8 @@ fn pool(init: std.process.Init, fanout: Fanout, queue: Queue) Error!void {
     var environment = try init.environ_map.clone(a);
     defer environment.deinit();
     try environment.put(tool_ticket.hint, "1");
+    if (fanout.controls.shared_cache) |directory| if (directory.len == 0)
+        try environment.put(options.shared_cache_variable, "");
     var shared = queue;
     const worker: Worker = .{ .init = init, .fanout = fanout, .environment = &environment, .queue = &shared };
     const threads = try a.alloc(std.Thread, @max(1, shared.workers) - 1);
@@ -522,6 +524,8 @@ fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []
     if (ceilings.explicit_memory) try arguments.appendSlice(a, &.{ "--max-memory", try std.fmt.allocPrint(a, "{d}", .{ceilings.memory}) });
     try arguments.appendSlice(a, &.{ "--property-runs", try std.fmt.allocPrint(a, "{d}", .{opts.properties.runs}) });
     try arguments.appendSlice(a, &.{ "--property-policy", opts.properties.policy.name() });
+    if (opts.shared_cache) |directory| if (directory.len != 0)
+        try arguments.appendSlice(a, &.{ "--shared-cache-dir", directory });
     if (opts.build.mode == .release) try arguments.append(a, "--release");
     if (opts.build.mode == .debug) try arguments.append(a, "--unoptimized");
     if (opts.build.facts == .verify) try arguments.append(a, "--verify-facts");
@@ -531,6 +535,28 @@ fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []
     if (opts.properties.seed) |seed| try arguments.appendSlice(a, &.{ "--seed", try std.fmt.allocPrint(a, "{d}", .{seed}) });
     for (opts.build.links) |link| try arguments.appendSlice(a, &.{ "--link", link });
     return arguments.items;
+}
+
+// spec-case: NEW-CORE-TEST-SHARED-1
+test "shared test cache directory arguments retain separate private cache and omit disabled sharing" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var fanout: Fanout = .{
+        .compiler = "mylang",
+        .directory = "unused",
+        .controls = .{ .path = "suite", .build = .{ .zig = "zig", .cache = "/private-store" }, .shared_cache = "/shared-store" },
+        .jobs = 2,
+        .ticket = "unused",
+        .run_root = undefined,
+        .identity = undefined,
+    };
+    const forwarded = try std.mem.join(a, "\n", try argv(a, fanout, "suite/main.my"));
+    try std.testing.expect(std.mem.indexOf(u8, forwarded, "--shared-cache-dir\n/shared-store") != null);
+    try std.testing.expect(std.mem.indexOf(u8, forwarded, "--cache-dir\n/private-store\n") != null);
+    fanout.controls.shared_cache = "";
+    const disabled = try std.mem.join(a, "\n", try argv(a, fanout, "suite/main.my"));
+    try std.testing.expect(std.mem.indexOf(u8, disabled, "--shared-cache-dir") == null);
 }
 
 fn summarize(init: std.process.Init, opts: options.Options, selection: Selection, outcomes: []const Outcome, tool_unchanged: bool) Error!u8 {

@@ -1,0 +1,4 @@
+build-slot: build slot 2, FIFO ticket 2166 after 0s
+1/2 test_shared_store.test.shared test store checks exact identities rejects corrupt records and recovers interrupted publication...OK
+2/2 test_shared_store.test.shared test store preserves foreign formats and permanent lock ownership...OK
+All 2 tests passed.

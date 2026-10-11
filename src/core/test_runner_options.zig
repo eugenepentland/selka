@@ -71,7 +71,31 @@ pub const Options = struct {
     build: pipeline.Options,
     properties: PropertyOptions = .{},
     controls: Controls = .{},
+    /// Opt-in shared test receipts; empty explicitly disables environment selection.
+    shared_cache: ?[]const u8 = null,
 };
+
+/// Environment opt-in for compatible project test receipts, separate from build caches.
+pub const shared_cache_variable = "MYLANG_TEST_SHARED_CACHE";
+
+/// Resolve explicit placement before the environment; empty text disables sharing.
+pub fn sharedCache(requested: ?[]const u8, environment: *const std.process.Environ.Map) ?[]const u8 {
+    const directory = requested orelse environment.get(shared_cache_variable) orelse return null;
+    return if (directory.len == 0) null else directory;
+}
+
+// spec-case: NEW-CORE-TEST-SHARED-1
+test "shared test cache placement honors explicit override and empty suppression before environment" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    try std.testing.expectEqual(@as(?[]const u8, null), sharedCache(null, &environment));
+    try environment.put(shared_cache_variable, "environment-store");
+    try std.testing.expectEqualStrings("environment-store", sharedCache(null, &environment).?);
+    try std.testing.expectEqualStrings("explicit-store", sharedCache("explicit-store", &environment).?);
+    try std.testing.expectEqual(@as(?[]const u8, null), sharedCache("", &environment));
+    try environment.put(shared_cache_variable, "");
+    try std.testing.expectEqual(@as(?[]const u8, null), sharedCache(null, &environment));
+}
 
 /// Resolve one bounded worker width: --jobs or MYLANG_JOBS when given, else the
 /// available CPUs capped by how many test ceilings (each plus the address-space

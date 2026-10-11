@@ -92,6 +92,11 @@
       "summary": "A native test run reuses receipts for cases whose sources and compiler identity did not change.",
       "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
     },
+    "shared-project-test-results": {
+      "kind": "tooling",
+      "summary": "Opt-in native test storage shares verified deterministic successes across compatible project roots while keeping source checking, diagnostics and mutable caches local.",
+      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
     "parallel-guest-test-directories": {
       "kind": "tooling",
       "summary": "`mylang test` runs a whole directory of `.my` programs as parallel child commands sharing one cache, with one merged summary.",

@@ -1,0 +1,64 @@
+build-slot: build slot 1, FIFO ticket 2189 after 0s
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test-core
++- run test 10 pass, 2 fail (12 total)
+guardian/test: test wall 13.93s; slowest over 50ms:
+guardian/test:   2.66s  test_runner_portable_test.test.portable shared receipts bind mode settings and keyed environment while force facts leak and no-cache execute
+guardian/test:   2.00s  test_runner_portable_test.test.portable shared receipts honor configuration and cases before trusting a foreign success
+guardian/test:   1.60s  test_runner_portable_test.test.portable shared receipts refuse introspection environment authority and unsupported Host input
+guardian/test:   1.36s  test_runner_portable_test.test.portable shared receipts cross roots and sharedKeys invalidate only reachable dependency edits
+guardian/test:   1.11s  test_runner_portable_test.test.portable shared receipt Store.hit corruption misses and refills verified successes
+guardian/test:   1.08s  test_runner_portable_test.test.portable shared receipts refuse an escaping source symlink before publication
+guardian/test:   1.05s  test_runner_portable_test.test.portable shared receipts cannot hide embedded asset mutations
+guardian/test:   0.73s  test_runner_portable_test.test.portable shared receipts forward through directory fanout without private report replay
+guardian/test:   0.72s  test_runner_portable_test.test.portable shared receipt Store.save simultaneous publishers produce replayable successes
+guardian/test:   0.59s  test_runner_portable_test.test.portable shared receipts preserve absolute path literals as ordinary values
+guardian/test: FAIL — 2 failed of 12
+guardian/test: RESULT {"passed":10,"failed":2,"skipped":0}
+error: 'test_runner_portable_test.test.portable shared receipts forward through directory fanout without private report replay' failed:
+       guardian/test: 12 test(s) selected by filter: "test_runner_portable_test"
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_portable_test.zig:99:5: 0x12d5e16 in item (root_test.zig)
+           return error.MissingTestVerdict;
+           ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_portable_test.zig:108:71: 0x12d6062 in verdict (root_test.zig)
+           try std.testing.expectEqualStrings(expected, value.text(value.get(try item(result.report, name), "status")));
+                                                                             ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_portable_test.zig:112:5: 0x12dc544 in shared (root_test.zig)
+           try verdict(result, name, "cached");
+           ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_portable_test.zig:306:5: 0x12e3169 in test.portable shared receipts forward through directory fanout without private report replay (root_test.zig)
+           try shared(warm, "first::test_first");
+           ^
+error: 'test_runner_portable_test.test.portable validateShared rejects a bad configured format before warm private manifest replay' failed:
+       expected 1, found 2
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x128dfb4 in expectEqualInner__anon_43535 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x128e975 in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/src/core/test_runner_portable_test.zig:457:5: 0x128ea1a in test.portable validateShared rejects a bad configured format before warm private manifest replay (root_test.zig)
+           try std.testing.expectEqual(@as(u8, 1), rejected.status);
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components ./.zig-cache/o/af0c0527f007ea362f3b4db3763b0298/test --guardian-filter=test_runner_portable_test --cache-dir=./.zig-cache --seed=0x4ac1944e --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 10/12 tests passed (2 failed)
+test-core transitive failure
++- run test 10 pass, 2 fail (12 total)
+   +- compile test debug native success 379ms MaxRSS:195M
+   |  +- WriteFile cached
+   |  +- compile obj juice_bytes_hash fast native cached 7ms MaxRSS:36M
+   |  +- compile obj juice_bytes_hash fast native (reused)
+   |  +- run exe build-identity (build_identity) cached
+   |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:36M
+   |  +- options success
+   |  |  +- compile exe mylang debug native cached 6ms MaxRSS:41M
+   |  |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |  |     +- WriteFile (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:37M
+   |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+   +- run exe selka-components success 401ms
+      +- compile exe selka-components safe native cached 6ms MaxRSS:37M

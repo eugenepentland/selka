@@ -1,0 +1,24 @@
+{
+  "base_commit": "eb3c86a33e71700bc45d528f53f5388423604048",
+  "compiler_sha256": "18aac77b0843236b95e93dbc7ef7c8214f7992fc4e58aed4f879e124903e1ee8",
+  "files": {
+    "SPEC.md": "e9918fe920e6e37221cb352a0ff9a22b83574755c18af2ada36b60c2486260fc",
+    "docs/audits/selka-toolchain-cache-plan-2026-10-10.md": "a2d86c46a9dee4118bd3d3845f1fef4170607bcd039d364444bd45ca59e11fa2",
+    "docs/tooling/cache-retention.md": "b964e158cea55918e537fad71a7025d259658780a7862167a07801844816ac27",
+    "docs/tooling/guest-tests.md": "9d548d9e7004f5e0ca003272508b921dd56ba243b5480c8ec573fe0c513ad9e3",
+    "docs/tooling/native-build.md": "4e5b6dcd8c27b1d00e761c2d26f3e5924cf0371a7098933c366d1230be9b72cc",
+    "src/core/cli_flags_test.zig": "a2f54ff05c47ac32fcdf3e05cfc06a9e377bce0761f2bee80dc998e81a2c58d4",
+    "src/core/main.zig": "9df8e14ebf36ed39143e3c50e3dbb7296fb044f7c8820477ec324e7e89f32ea0",
+    "src/core/root_test.zig": "cae6d7ddddce39fb2e8b8061d2ec5094416883a5adfcfd548d017cb28dea99fe",
+    "src/core/test_runner.zig": "4356e3e8cec287666fb766afe7328047642d21ff6e97b5da5049900d11e87538",
+    "src/core/test_runner_directory.zig": "77f0d31b4d97f619f06ff5769d7b5739018c7300510e7ed91918419bf90c5cd8",
+    "src/core/test_runner_options.zig": "362ce1c0cf8940c4977bb2086a8da70dd07da5aa29014ec6fb2f8ae6eafd6597",
+    "src/core/test_runner_portable.zig": "3426ed0fb8a3b2aa4620878eb4a4945ce5cd4415b1374a442a0f0f4602620416",
+    "src/core/test_runner_portable_test.zig": "ccdc1cf4f34c7f54b2102e7423c59ab66e7bab1ef3b5ca1ba5cec23729d07a74",
+    "src/core/test_runner_receipt.zig": "a1e3516dbf0e5f6830bda1cc7f221e9b06581223df01747182675620ed2bc466",
+    "src/core/test_shared_store.zig": "c54380570a66bb99e3e5bf4dd804222d31166dc9d96bca5ce8826aca475e8ea6",
+    "src/features.json": "4e6fceda7c92f2d45164086179591e9753051352d6136577f18d2a9dc5cecc48"
+  },
+  "focused_compiler_sha256": "5dda36c6f6809ded3a8ed9c775cb6e9ecf86a7d047e5501c74a3a9c72af9c829",
+  "compiler_note": "The full gate prepared a compiler containing the final embedded documentation. The focused-run compiler hash is retained separately; all recorded source/documentation hashes stayed unchanged during full verification."
+}

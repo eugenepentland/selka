@@ -252,6 +252,12 @@ current directory:
 | `replay-v1/` | one replay record per entry and settings (below) |
 | `tests/receipts-v2/`, `tests/manifests-v2/` | `mylang test` result receipts ([guest tests](guest-tests.md#reusing-unaffected-results)) |
 
+`mylang test --shared-cache-dir DIR` additionally shares eligible ordinary test
+successes across project roots; `MYLANG_TEST_SHARED_CACHE` supplies the same
+opt-in. Its separate portable identities and `DIR/native-tests-v1` namespace do
+not relocate these private frontend, executable or report-manifest caches. See
+[shared test results](guest-tests.md#reusing-unaffected-results) for eligibility.
+
 **Replay.** A build records every file it read — each module source, embedded file,
 generated interface file, `--link` source and depfile header — with the digest of
 the bytes it used, under a key of the compiler's identity, the flags, the working

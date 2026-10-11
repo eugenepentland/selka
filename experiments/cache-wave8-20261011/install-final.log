@@ -1,0 +1,28 @@
+build-slot: build slot 1, FIFO ticket 2198 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 60/653 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 6 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2041 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 60 file(s) in scope
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+Build Summary: 14/14 steps succeeded
+install success
++- install mylang success
+|  +- compile exe mylang debug native cached 7ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:37M
+|  |  +- WriteFile cached
+|  |  +- compile obj juice_bytes_hash fast native cached 7ms MaxRSS:37M
+|  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:38M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- install generated to selka-components cached
+|  +- compile exe selka-components safe native cached 7ms MaxRSS:37M
++- run exe selka-components success 389ms
+|  +- compile exe selka-components safe native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)

@@ -52,6 +52,9 @@ comptime {
     _ = @import("value_emit_test.zig");
     _ = @import("ce_records_test.zig");
     _ = @import("test_runner_test.zig");
+    _ = @import("test_shared_store.zig");
+    _ = @import("test_runner_portable.zig");
+    _ = @import("test_runner_portable_test.zig");
     _ = @import("project_entry.zig");
     _ = @import("test_runner_options.zig");
     _ = @import("test_runner_directory.zig");
