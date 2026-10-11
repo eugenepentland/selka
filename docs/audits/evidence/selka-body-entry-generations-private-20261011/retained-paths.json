@@ -1391,6 +1391,454 @@
     "frame_bytes": 27840,
     "original_archive_sha256": null
   },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-00-request.bin.gz": {
+    "archive": "frames/1a588ffbd57d0c18005001d616ee4f14187d27a331602e248c8bdbf287ab2941.bin.gz",
+    "archive_sha256": "1a588ffbd57d0c18005001d616ee4f14187d27a331602e248c8bdbf287ab2941",
+    "header_hex": "534c4b42434b3031010000000700000000000000ba74030006a9440bf13d9489b90d3b7f6d518561cb0f28df4f1731568866fe28dae4aa096381043c69590afd",
+    "frame_sha256": "23f9234b065a0f2b55e6414b35786ccc13f18d8246206b83344cbf9c6b74e227",
+    "frame_bytes": 226554,
+    "original_archive_sha256": "33175f96f3af0d133c5f7dcdbc38f19948ffe6d97aa5e5ae43fc277885364980"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-00-reply.bin.gz": {
+    "archive": "frames/a720199d227747b5870cb4528dde84054a769979b027bfa6284fdf16bec15650.bin.gz",
+    "archive_sha256": "a720199d227747b5870cb4528dde84054a769979b027bfa6284fdf16bec15650",
+    "header_hex": "534c4b42434b3031010000000700000001000000a05b080006a9440bf13d9489b90d3b7f6d518561cb0f28df4f1731568866fe28dae4aa096381043c69590afd",
+    "frame_sha256": "a26ed1ecef086d01cc8640f3b13c64a4395ff0ecd4e75891c9f01e7613a91584",
+    "frame_bytes": 547808,
+    "original_archive_sha256": "cc34b151386b060b3a88d9b855f5b9aa73d86f9bac5a9751c476183d1b1f6801"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-01-request.bin.gz": {
+    "archive": "frames/1a588ffbd57d0c18005001d616ee4f14187d27a331602e248c8bdbf287ab2941.bin.gz",
+    "archive_sha256": "1a588ffbd57d0c18005001d616ee4f14187d27a331602e248c8bdbf287ab2941",
+    "header_hex": "534c4b42434b3031010000000700000000000000ba7403004189027b9f878a2db90d3b7f6d518561cb0f28df4f1731568866fe28dae4aa096381043c69590afd",
+    "frame_sha256": "77243ef616330c407e77fa7ba188aafa272c820a3f4dced25034aa58c68e6466",
+    "frame_bytes": 226554,
+    "original_archive_sha256": "c1aabb0b8c8272f44237093b4277e07c00749cec67eb11fdb587b11c5d9cabab"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-01-reply.bin.gz": {
+    "archive": "frames/a720199d227747b5870cb4528dde84054a769979b027bfa6284fdf16bec15650.bin.gz",
+    "archive_sha256": "a720199d227747b5870cb4528dde84054a769979b027bfa6284fdf16bec15650",
+    "header_hex": "534c4b42434b3031010000000700000001000000a05b08004189027b9f878a2db90d3b7f6d518561cb0f28df4f1731568866fe28dae4aa096381043c69590afd",
+    "frame_sha256": "1d5df4eff76e973fb0a956928cf2109b4401131c9316b507ab397667c9780ce0",
+    "frame_bytes": 547808,
+    "original_archive_sha256": "73c039739b7ae318f01ca6845071cf8d3b96a146925c7b1c9686168dba34f76e"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-02-request.bin.gz": {
+    "archive": "frames/18582c3b673c9db8a5ac4f38a15e30367433fc99525aaecb665c2eb24b5d2ef3.bin.gz",
+    "archive_sha256": "18582c3b673c9db8a5ac4f38a15e30367433fc99525aaecb665c2eb24b5d2ef3",
+    "header_hex": "534c4b42434b30310100000007000000000000005f8b1000e7e8aadd350967cd5e8924180f935e8cb398f0407c551b6990fbc03940dad71ae52c7f598cf90a4e",
+    "frame_sha256": "14afd737660b59ab95a6aff16ba99862078cad278db3a076b87528ca0711e029",
+    "frame_bytes": 1084319,
+    "original_archive_sha256": "4d08335a1b326281332835313c450bc3075ec8bd45ddb755b384e278cb1648c6"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-02-reply.bin.gz": {
+    "archive": "frames/e11c7a4cac4bb8e20dfcd04b59f6309761c6af025cfd6f1d7b9170b80f1dcae2.bin.gz",
+    "archive_sha256": "e11c7a4cac4bb8e20dfcd04b59f6309761c6af025cfd6f1d7b9170b80f1dcae2",
+    "header_hex": "534c4b42434b3031010000000700000001000000e5562e00e7e8aadd350967cd5e8924180f935e8cb398f0407c551b6990fbc03940dad71ae52c7f598cf90a4e",
+    "frame_sha256": "db190182ccab7d2ef006f56de9f8aea0eb5c690e68edbc51089cd82426b1200b",
+    "frame_bytes": 3036965,
+    "original_archive_sha256": "4ef425b9963644a3a17753051e60d46c70b18f54636d72dbbffc4c051986d1c8"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-03-request.bin.gz": {
+    "archive": "frames/18582c3b673c9db8a5ac4f38a15e30367433fc99525aaecb665c2eb24b5d2ef3.bin.gz",
+    "archive_sha256": "18582c3b673c9db8a5ac4f38a15e30367433fc99525aaecb665c2eb24b5d2ef3",
+    "header_hex": "534c4b42434b30310100000007000000000000005f8b10003698c04e5dfb2c1b5e8924180f935e8cb398f0407c551b6990fbc03940dad71ae52c7f598cf90a4e",
+    "frame_sha256": "b7cfc809c5f4461f90a22577f00a368e98bf2c4dbbfe318d2abc50bdb4e7d1ff",
+    "frame_bytes": 1084319,
+    "original_archive_sha256": "1c64e0d044af2722570b42c23ee44ae5ae378f1901c629d90606b90a81deca45"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-03-reply.bin.gz": {
+    "archive": "frames/e11c7a4cac4bb8e20dfcd04b59f6309761c6af025cfd6f1d7b9170b80f1dcae2.bin.gz",
+    "archive_sha256": "e11c7a4cac4bb8e20dfcd04b59f6309761c6af025cfd6f1d7b9170b80f1dcae2",
+    "header_hex": "534c4b42434b3031010000000700000001000000e5562e003698c04e5dfb2c1b5e8924180f935e8cb398f0407c551b6990fbc03940dad71ae52c7f598cf90a4e",
+    "frame_sha256": "9ca29fbbaf1e6eba4a533907dd18aa864500d08116850dbf4b48e4dbc9fa46ad",
+    "frame_bytes": 3036965,
+    "original_archive_sha256": "5c0850910c37b1a64848b6b9895b9854e6f5199bef69a4b324c2fcae7ca9c027"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-04-request.bin.gz": {
+    "archive": "frames/a7a6b830917529b33fb52acad980dbf8967e95de72ce8a270795952ba8a91881.bin.gz",
+    "archive_sha256": "a7a6b830917529b33fb52acad980dbf8967e95de72ce8a270795952ba8a91881",
+    "header_hex": "534c4b42434b30310100000007000000000000002c0a1600d84af0ab2d08adfb6166c06c71dccf73aa30e3821ea0225bc8621c1da5a6e12bfb30a1935c4c2a86",
+    "frame_sha256": "f0607dccd5e2431d32a18a8742a173797a86220a95e4e4d99ca92b3f347ffaa1",
+    "frame_bytes": 1444460,
+    "original_archive_sha256": "e42cbd629121cf5a810ac80f833de82f05528441d20d0a4b5ba27fbaf7ab5d4d"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-04-reply.bin.gz": {
+    "archive": "frames/d22829f2275ca9776a284f153a444725346a031a92b754ee20feb5e2404fba4d.bin.gz",
+    "archive_sha256": "d22829f2275ca9776a284f153a444725346a031a92b754ee20feb5e2404fba4d",
+    "header_hex": "534c4b42434b30310100000007000000010000007ffb2900d84af0ab2d08adfb6166c06c71dccf73aa30e3821ea0225bc8621c1da5a6e12bfb30a1935c4c2a86",
+    "frame_sha256": "ca9e604951dd2097351ec1975380a83897c0b24c693fe912a639ad5d6c48dd2b",
+    "frame_bytes": 2751423,
+    "original_archive_sha256": "0319333b17a0524f9ca665d0bccb7c808df750b687c9b5a8a10a0a803dec067a"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-05-request.bin.gz": {
+    "archive": "frames/a7a6b830917529b33fb52acad980dbf8967e95de72ce8a270795952ba8a91881.bin.gz",
+    "archive_sha256": "a7a6b830917529b33fb52acad980dbf8967e95de72ce8a270795952ba8a91881",
+    "header_hex": "534c4b42434b30310100000007000000000000002c0a160010a28f0ae713fb8f6166c06c71dccf73aa30e3821ea0225bc8621c1da5a6e12bfb30a1935c4c2a86",
+    "frame_sha256": "82a17ae14c198c545957c2282fb16b3bd6ba38501a08ec09139808d3a69585d8",
+    "frame_bytes": 1444460,
+    "original_archive_sha256": "885aedd6dae44d03c6f4aaf5cc4bad819d86a7db8ce8a0cd3fdb0c770b24b1d2"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-05-reply.bin.gz": {
+    "archive": "frames/d22829f2275ca9776a284f153a444725346a031a92b754ee20feb5e2404fba4d.bin.gz",
+    "archive_sha256": "d22829f2275ca9776a284f153a444725346a031a92b754ee20feb5e2404fba4d",
+    "header_hex": "534c4b42434b30310100000007000000010000007ffb290010a28f0ae713fb8f6166c06c71dccf73aa30e3821ea0225bc8621c1da5a6e12bfb30a1935c4c2a86",
+    "frame_sha256": "4c117e8ee58e8e6b3fd65747d087f98dcfab179a44f769d285c5183a86d2d212",
+    "frame_bytes": 2751423,
+    "original_archive_sha256": "1f05c0804c148acaae6d4948326aefc5998faa037a84d146ac96773e5e146735"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-06-request.bin.gz": {
+    "archive": "frames/738149f5974920d4fb4a29d65254e48b12835ded1ab9d55f2f7a219d01c08d25.bin.gz",
+    "archive_sha256": "738149f5974920d4fb4a29d65254e48b12835ded1ab9d55f2f7a219d01c08d25",
+    "header_hex": "534c4b42434b30310100000007000000000000003082b100f39f401f155c7293912a575090d4a1b7b7ce678074eb817b4897ea5b38d5c6e43dbdd4e5c6956d72",
+    "frame_sha256": "f8983178023de7670e45535798ff602ded64fd5313530d8f7a700e2de629f0e6",
+    "frame_bytes": 11633264,
+    "original_archive_sha256": "3e25cd06fe97171ee791c034a5f07086675966cb633808bde47e93526d5c2c10"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-06-reply.bin.gz": {
+    "archive": "frames/add3368dbb1b1c254aa59b93d9661811a4dff521b04f5533f0270d31792415c1.bin.gz",
+    "archive_sha256": "add3368dbb1b1c254aa59b93d9661811a4dff521b04f5533f0270d31792415c1",
+    "header_hex": "534c4b42434b303101000000070000000100000088227401f39f401f155c7293912a575090d4a1b7b7ce678074eb817b4897ea5b38d5c6e43dbdd4e5c6956d72",
+    "frame_sha256": "1adc8fe95adcdf0dd3891e259c2529eca4a4ac2d69654dc280beda5faa31c6c7",
+    "frame_bytes": 24388296,
+    "original_archive_sha256": "4d3a350d88ea682341fc7a430ff515321fa58e3da40209b7a0cd25ac30f440a1"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-07-request.bin.gz": {
+    "archive": "frames/738149f5974920d4fb4a29d65254e48b12835ded1ab9d55f2f7a219d01c08d25.bin.gz",
+    "archive_sha256": "738149f5974920d4fb4a29d65254e48b12835ded1ab9d55f2f7a219d01c08d25",
+    "header_hex": "534c4b42434b30310100000007000000000000003082b100b847229e830547a6912a575090d4a1b7b7ce678074eb817b4897ea5b38d5c6e43dbdd4e5c6956d72",
+    "frame_sha256": "4e8123369974e9d08550cec0abfa8f5a09bbd8af77205746449ca195d63907d1",
+    "frame_bytes": 11633264,
+    "original_archive_sha256": "37c586bcec06364b5d84bf3b6736052da369d0a932b99ec22e46941dbdf4efa4"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-07-reply.bin.gz": {
+    "archive": "frames/add3368dbb1b1c254aa59b93d9661811a4dff521b04f5533f0270d31792415c1.bin.gz",
+    "archive_sha256": "add3368dbb1b1c254aa59b93d9661811a4dff521b04f5533f0270d31792415c1",
+    "header_hex": "534c4b42434b303101000000070000000100000088227401b847229e830547a6912a575090d4a1b7b7ce678074eb817b4897ea5b38d5c6e43dbdd4e5c6956d72",
+    "frame_sha256": "99c43f3491ba4fe039ca566d28675a2be1b890ef609ec5d49180da5c593deac7",
+    "frame_bytes": 24388296,
+    "original_archive_sha256": "f8f1051dd576f74d2cfaa8d7652dc2ab3d26e3b7fe9ffad63d52b41aeac6f912"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-08-request.bin.gz": {
+    "archive": "frames/b799c08ca634662a8a577bc731d07033b64188c4dc0c00eca59edfd0576cd5b3.bin.gz",
+    "archive_sha256": "b799c08ca634662a8a577bc731d07033b64188c4dc0c00eca59edfd0576cd5b3",
+    "header_hex": "534c4b42434b30310100000007000000000000005b5e1400f9570503cb475d06362aa252b8fde1022d82fdcfc99756f02e970ce84b45c7f99888f87d6b642316",
+    "frame_sha256": "663e108558f45cb3a9de8ea2ad3e95a87291062f7931f42a0eb33724b3365270",
+    "frame_bytes": 1334939,
+    "original_archive_sha256": "58229798ee4ad0e7b1c858b9085bef9fff9ac4be6e77ccfc529c32acea5998c8"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-08-reply.bin.gz": {
+    "archive": "frames/70fee6e457804a2fa53979a3155ceb733db6319eb3b367e11d41521b1a24411a.bin.gz",
+    "archive_sha256": "70fee6e457804a2fa53979a3155ceb733db6319eb3b367e11d41521b1a24411a",
+    "header_hex": "534c4b42434b3031010000000700000001000000e0152100f9570503cb475d06362aa252b8fde1022d82fdcfc99756f02e970ce84b45c7f99888f87d6b642316",
+    "frame_sha256": "2c6775b929885e6cb97b98a5edb7b61fba6ee895153824b756de358ce2251cab",
+    "frame_bytes": 2168352,
+    "original_archive_sha256": "e4dc1a9f896e6587c37045e3935bccf05a203af4721cdf517276f0cf33a5de33"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-09-request.bin.gz": {
+    "archive": "frames/b799c08ca634662a8a577bc731d07033b64188c4dc0c00eca59edfd0576cd5b3.bin.gz",
+    "archive_sha256": "b799c08ca634662a8a577bc731d07033b64188c4dc0c00eca59edfd0576cd5b3",
+    "header_hex": "534c4b42434b30310100000007000000000000005b5e1400b76a8a95420bd784362aa252b8fde1022d82fdcfc99756f02e970ce84b45c7f99888f87d6b642316",
+    "frame_sha256": "42b596c2b6e7dc745b5f3867c12221564601fb4fbef018d503ccc4e3988bc5b2",
+    "frame_bytes": 1334939,
+    "original_archive_sha256": "e97213d3216bc42f312ba56ef78cf04dc95bc58a6819e1cb40afff730a0cd957"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-09-reply.bin.gz": {
+    "archive": "frames/70fee6e457804a2fa53979a3155ceb733db6319eb3b367e11d41521b1a24411a.bin.gz",
+    "archive_sha256": "70fee6e457804a2fa53979a3155ceb733db6319eb3b367e11d41521b1a24411a",
+    "header_hex": "534c4b42434b3031010000000700000001000000e0152100b76a8a95420bd784362aa252b8fde1022d82fdcfc99756f02e970ce84b45c7f99888f87d6b642316",
+    "frame_sha256": "21df2c0a4cbff907bb92124735a78a3c7a70cb4c5120c972be55be923fb7f3c2",
+    "frame_bytes": 2168352,
+    "original_archive_sha256": "3d0936e1ebfad82230f9ad50de59426a47201bc6d9e05b7af34cdc5cce73fc6e"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-10-request.bin.gz": {
+    "archive": "frames/2a65dd088e4de0c2a0c4ff1598ef8c6dd905e494bd61b6834e7da5a3b4c3da21.bin.gz",
+    "archive_sha256": "2a65dd088e4de0c2a0c4ff1598ef8c6dd905e494bd61b6834e7da5a3b4c3da21",
+    "header_hex": "534c4b42434b3031010000000700000000000000dc803900115e1785047bf10d560f49540349e6822acc1c3637b473ced00209d6e6ca47055c5a2791eb602ce9",
+    "frame_sha256": "5c79b6d90bbeaea1f37a3ff9f8ff1476a342e3186002c2905eeb609fc0f9b952",
+    "frame_bytes": 3768604,
+    "original_archive_sha256": "8557994e187371f442f4f8d60c524da51297e783b38bdfa80e56d222b99c517c"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-10-reply.bin.gz": {
+    "archive": "frames/25e4a4ee03eea8fe0eea7e39acb084f9ef2d48d2f8bfa868bd3cf4594a7bafdd.bin.gz",
+    "archive_sha256": "25e4a4ee03eea8fe0eea7e39acb084f9ef2d48d2f8bfa868bd3cf4594a7bafdd",
+    "header_hex": "534c4b42434b303101000000070000000100000028766f00115e1785047bf10d560f49540349e6822acc1c3637b473ced00209d6e6ca47055c5a2791eb602ce9",
+    "frame_sha256": "0cfb02dcf84902aa3c6149718b656fe980975d74921639b0b68658e5261aa3af",
+    "frame_bytes": 7304808,
+    "original_archive_sha256": "775003f609da2894a4035a4a2b11839370de08d566694ce1f68f935d2ae4bf95"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-11-request.bin.gz": {
+    "archive": "frames/2a65dd088e4de0c2a0c4ff1598ef8c6dd905e494bd61b6834e7da5a3b4c3da21.bin.gz",
+    "archive_sha256": "2a65dd088e4de0c2a0c4ff1598ef8c6dd905e494bd61b6834e7da5a3b4c3da21",
+    "header_hex": "534c4b42434b3031010000000700000000000000dc80390077613ccf9773d2b9560f49540349e6822acc1c3637b473ced00209d6e6ca47055c5a2791eb602ce9",
+    "frame_sha256": "5fce0791fd9d8a6c1f657868aeb050b96d050365d8a4bd1a9b02a96c7318a819",
+    "frame_bytes": 3768604,
+    "original_archive_sha256": "e237ab928f6ecd5d4f92d0f7aa00fc6dd6957caa596800a7870cdea7f4af7385"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-11-reply.bin.gz": {
+    "archive": "frames/25e4a4ee03eea8fe0eea7e39acb084f9ef2d48d2f8bfa868bd3cf4594a7bafdd.bin.gz",
+    "archive_sha256": "25e4a4ee03eea8fe0eea7e39acb084f9ef2d48d2f8bfa868bd3cf4594a7bafdd",
+    "header_hex": "534c4b42434b303101000000070000000100000028766f0077613ccf9773d2b9560f49540349e6822acc1c3637b473ced00209d6e6ca47055c5a2791eb602ce9",
+    "frame_sha256": "d7dbffb265c4f8baa40bb28661d7df7906319729febb39f02c06c656e86e9bd2",
+    "frame_bytes": 7304808,
+    "original_archive_sha256": "055f32508316c39cef1ce95d3c13d306299d4b83488b83b5ae7e1cad70894bd5"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-12-request.bin.gz": {
+    "archive": "frames/db8fe59717c62856f48024ed09a03cce03db42e6b8f2abc9c037b0063b42c571.bin.gz",
+    "archive_sha256": "db8fe59717c62856f48024ed09a03cce03db42e6b8f2abc9c037b0063b42c571",
+    "header_hex": "534c4b42434b3031010000000700000000000000cdc839012732c2d6436bf2d7840d1366a9bd5387cde59c1a7932a6143c9e35f99aa6849ddea1ba82e251b2f8",
+    "frame_sha256": "fa5e4f6666f3159c99408d4fb9ecc3d5a899209e87a80237a6a67882ab5e726b",
+    "frame_bytes": 20564237,
+    "original_archive_sha256": "ce08f6b889e2b4520a837da1926aae86c7d2cad589f328da952afb93c0809673"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-12-reply.bin.gz": {
+    "archive": "frames/7031f222e377f07d58bb9e7e6d4e46159d280dd81a7c730f25ee76319e9ed667.bin.gz",
+    "archive_sha256": "7031f222e377f07d58bb9e7e6d4e46159d280dd81a7c730f25ee76319e9ed667",
+    "header_hex": "534c4b42434b3031010000000700000001000000ff4580022732c2d6436bf2d7840d1366a9bd5387cde59c1a7932a6143c9e35f99aa6849ddea1ba82e251b2f8",
+    "frame_sha256": "b01092aa1ad17817f28ed088ed993a107c8f1e662522c0519d7843273e8c738a",
+    "frame_bytes": 41961023,
+    "original_archive_sha256": "7aa3951e51979b3f23f99fbdb65397381dbc759efea3cf1fa5635c4e7b0faf10"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-13-request.bin.gz": {
+    "archive": "frames/db8fe59717c62856f48024ed09a03cce03db42e6b8f2abc9c037b0063b42c571.bin.gz",
+    "archive_sha256": "db8fe59717c62856f48024ed09a03cce03db42e6b8f2abc9c037b0063b42c571",
+    "header_hex": "534c4b42434b3031010000000700000000000000cdc83901bea32e035ab0b6a5840d1366a9bd5387cde59c1a7932a6143c9e35f99aa6849ddea1ba82e251b2f8",
+    "frame_sha256": "8d2364d0d28ed5f1065a61272dbac0ce1ce8a9b1cc5fa4da799a6b3cef0e842f",
+    "frame_bytes": 20564237,
+    "original_archive_sha256": "0cb8fe0fa66dccb5b91c00d774173e92a4a773fc1a561a26774db295567022ad"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-13-reply.bin.gz": {
+    "archive": "frames/7031f222e377f07d58bb9e7e6d4e46159d280dd81a7c730f25ee76319e9ed667.bin.gz",
+    "archive_sha256": "7031f222e377f07d58bb9e7e6d4e46159d280dd81a7c730f25ee76319e9ed667",
+    "header_hex": "534c4b42434b3031010000000700000001000000ff458002bea32e035ab0b6a5840d1366a9bd5387cde59c1a7932a6143c9e35f99aa6849ddea1ba82e251b2f8",
+    "frame_sha256": "fe253cebc20a67ebe2728c4c5e01c8dd1270fcff9a2a6c42ac6f030aa376b4b7",
+    "frame_bytes": 41961023,
+    "original_archive_sha256": "b8a3d60a551056fa42f70c8aa6053dbe23982461f3a328fe65c66b6dafc82bf1"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-14-request.bin.gz": {
+    "archive": "frames/1a588ffbd57d0c18005001d616ee4f14187d27a331602e248c8bdbf287ab2941.bin.gz",
+    "archive_sha256": "1a588ffbd57d0c18005001d616ee4f14187d27a331602e248c8bdbf287ab2941",
+    "header_hex": "534c4b42434b3031010000000700000000000000ba740300f9d9b39008619fbeb90d3b7f6d518561cb0f28df4f1731568866fe28dae4aa096381043c69590afd",
+    "frame_sha256": "22a559379f9f61dae0b0f10e1223bed359dd0acf71e7dce34162c333918dfe37",
+    "frame_bytes": 226554,
+    "original_archive_sha256": "adeec5576a3ff276589e53dcbbb130f3cffdeebcd57b44cdc894e235070cc2dc"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-14-reply.bin.gz": {
+    "archive": "frames/a720199d227747b5870cb4528dde84054a769979b027bfa6284fdf16bec15650.bin.gz",
+    "archive_sha256": "a720199d227747b5870cb4528dde84054a769979b027bfa6284fdf16bec15650",
+    "header_hex": "534c4b42434b3031010000000700000001000000a05b0800f9d9b39008619fbeb90d3b7f6d518561cb0f28df4f1731568866fe28dae4aa096381043c69590afd",
+    "frame_sha256": "82eae5e690b6e99c344d08b3ff7dd5c488c4c85e168aa6c912e297aa17f2d177",
+    "frame_bytes": 547808,
+    "original_archive_sha256": "21612d9b480808eea2c709eedcba9dc2de4b7cb99cf564f375eda22606d8368a"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-15-request.bin.gz": {
+    "archive": "frames/1a588ffbd57d0c18005001d616ee4f14187d27a331602e248c8bdbf287ab2941.bin.gz",
+    "archive_sha256": "1a588ffbd57d0c18005001d616ee4f14187d27a331602e248c8bdbf287ab2941",
+    "header_hex": "534c4b42434b3031010000000700000000000000ba740300a23ba06087650daab90d3b7f6d518561cb0f28df4f1731568866fe28dae4aa096381043c69590afd",
+    "frame_sha256": "095688dd26ccfccf12e2726c83127c88b8bfecf0ec58421e4449e40ee14a5df6",
+    "frame_bytes": 226554,
+    "original_archive_sha256": "3f98c2b4ae74f26029d94d6a1622743db13f33da0e52c54fe60fb9ff3b616ae8"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-15-reply.bin.gz": {
+    "archive": "frames/a720199d227747b5870cb4528dde84054a769979b027bfa6284fdf16bec15650.bin.gz",
+    "archive_sha256": "a720199d227747b5870cb4528dde84054a769979b027bfa6284fdf16bec15650",
+    "header_hex": "534c4b42434b3031010000000700000001000000a05b0800a23ba06087650daab90d3b7f6d518561cb0f28df4f1731568866fe28dae4aa096381043c69590afd",
+    "frame_sha256": "2932c64ccf3e6033a27a1e5795bba14472fa88e0b0bea674a46ae9d88e3c4aa0",
+    "frame_bytes": 547808,
+    "original_archive_sha256": "144ad99a728592ddfcb9f453f50cfa585a1b22a82a8b192fc8a948b9143d5e41"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-16-request.bin.gz": {
+    "archive": "frames/18582c3b673c9db8a5ac4f38a15e30367433fc99525aaecb665c2eb24b5d2ef3.bin.gz",
+    "archive_sha256": "18582c3b673c9db8a5ac4f38a15e30367433fc99525aaecb665c2eb24b5d2ef3",
+    "header_hex": "534c4b42434b30310100000007000000000000005f8b10005734c155a21a2f125e8924180f935e8cb398f0407c551b6990fbc03940dad71ae52c7f598cf90a4e",
+    "frame_sha256": "c1bf7d3a449df0c4b02a5b9113b871d553b96e5d92f4feb0cc239bb347ab660b",
+    "frame_bytes": 1084319,
+    "original_archive_sha256": "d78fe3f74608d6db01a89f71c396f3733b0c583d83c3b605d5d5ad14ab4bf17b"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-16-reply.bin.gz": {
+    "archive": "frames/e11c7a4cac4bb8e20dfcd04b59f6309761c6af025cfd6f1d7b9170b80f1dcae2.bin.gz",
+    "archive_sha256": "e11c7a4cac4bb8e20dfcd04b59f6309761c6af025cfd6f1d7b9170b80f1dcae2",
+    "header_hex": "534c4b42434b3031010000000700000001000000e5562e005734c155a21a2f125e8924180f935e8cb398f0407c551b6990fbc03940dad71ae52c7f598cf90a4e",
+    "frame_sha256": "dcd4a70bc8d0c3dc2f8d431be3eda4be35d651c0e62d3a785ce1a2d0eec055c2",
+    "frame_bytes": 3036965,
+    "original_archive_sha256": "f22f5483ba4daca4108e2a919b57de2816d1156c141f3f6d33539187b4a2bb74"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-17-request.bin.gz": {
+    "archive": "frames/18582c3b673c9db8a5ac4f38a15e30367433fc99525aaecb665c2eb24b5d2ef3.bin.gz",
+    "archive_sha256": "18582c3b673c9db8a5ac4f38a15e30367433fc99525aaecb665c2eb24b5d2ef3",
+    "header_hex": "534c4b42434b30310100000007000000000000005f8b1000af096816078f3a505e8924180f935e8cb398f0407c551b6990fbc03940dad71ae52c7f598cf90a4e",
+    "frame_sha256": "9f4a28b1c3d3d5293c09587bfd9df55a8796cd81c1fdb0fb841ae9aef5f4c8a0",
+    "frame_bytes": 1084319,
+    "original_archive_sha256": "58c93fee3f3d72060ac7eeb8656275292552a4879ffc3e090662ffc614cb402d"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-17-reply.bin.gz": {
+    "archive": "frames/e11c7a4cac4bb8e20dfcd04b59f6309761c6af025cfd6f1d7b9170b80f1dcae2.bin.gz",
+    "archive_sha256": "e11c7a4cac4bb8e20dfcd04b59f6309761c6af025cfd6f1d7b9170b80f1dcae2",
+    "header_hex": "534c4b42434b3031010000000700000001000000e5562e00af096816078f3a505e8924180f935e8cb398f0407c551b6990fbc03940dad71ae52c7f598cf90a4e",
+    "frame_sha256": "ef045dd2753eca59c2c6edae9f6975aaa2a3210eee941d02f9223d4c63ddcad0",
+    "frame_bytes": 3036965,
+    "original_archive_sha256": "d602b44357a070143ba36ce037128dbf1a5168d77cd669859cd1d5a8efe10a4b"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-18-request.bin.gz": {
+    "archive": "frames/a7a6b830917529b33fb52acad980dbf8967e95de72ce8a270795952ba8a91881.bin.gz",
+    "archive_sha256": "a7a6b830917529b33fb52acad980dbf8967e95de72ce8a270795952ba8a91881",
+    "header_hex": "534c4b42434b30310100000007000000000000002c0a1600290f7c9cfbaa33fd6166c06c71dccf73aa30e3821ea0225bc8621c1da5a6e12bfb30a1935c4c2a86",
+    "frame_sha256": "af24fc102fd1a550d5cac0b9ae2f2292dcd2f1f14d7e7462e2eebe0d6811c41c",
+    "frame_bytes": 1444460,
+    "original_archive_sha256": "bdc25a094571e94a915394f002fc0c003859482f396667e3690c974846001e33"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-18-reply.bin.gz": {
+    "archive": "frames/d22829f2275ca9776a284f153a444725346a031a92b754ee20feb5e2404fba4d.bin.gz",
+    "archive_sha256": "d22829f2275ca9776a284f153a444725346a031a92b754ee20feb5e2404fba4d",
+    "header_hex": "534c4b42434b30310100000007000000010000007ffb2900290f7c9cfbaa33fd6166c06c71dccf73aa30e3821ea0225bc8621c1da5a6e12bfb30a1935c4c2a86",
+    "frame_sha256": "f5ad06f55c2d3dce834fec4ca152f67c7f587df9ccc3cb78b5d1e4c0e3ec3d18",
+    "frame_bytes": 2751423,
+    "original_archive_sha256": "51cfbb275860a3569df88404620e4a9762b5aabb4b0cc21576184feb5c08aff3"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-19-request.bin.gz": {
+    "archive": "frames/a7a6b830917529b33fb52acad980dbf8967e95de72ce8a270795952ba8a91881.bin.gz",
+    "archive_sha256": "a7a6b830917529b33fb52acad980dbf8967e95de72ce8a270795952ba8a91881",
+    "header_hex": "534c4b42434b30310100000007000000000000002c0a16008cff1ba932f8854b6166c06c71dccf73aa30e3821ea0225bc8621c1da5a6e12bfb30a1935c4c2a86",
+    "frame_sha256": "0132241798918e4f53642c6fb6ab155b1f02985897e1a97ebb95bb5111cd86ce",
+    "frame_bytes": 1444460,
+    "original_archive_sha256": "10db41e61bab3d26fc2da7980db97fc116fb58177d04f0ca32bb4b857e571ad2"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-19-reply.bin.gz": {
+    "archive": "frames/d22829f2275ca9776a284f153a444725346a031a92b754ee20feb5e2404fba4d.bin.gz",
+    "archive_sha256": "d22829f2275ca9776a284f153a444725346a031a92b754ee20feb5e2404fba4d",
+    "header_hex": "534c4b42434b30310100000007000000010000007ffb29008cff1ba932f8854b6166c06c71dccf73aa30e3821ea0225bc8621c1da5a6e12bfb30a1935c4c2a86",
+    "frame_sha256": "ff5c497c6a549581ddea36a6a27f8ce3f5f737d6d07072c216f3a7cfa1d36f81",
+    "frame_bytes": 2751423,
+    "original_archive_sha256": "efdcf361a175e6892d4deba11ffa21e8f9615f204a0fc9e78eca252da337627f"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-20-request.bin.gz": {
+    "archive": "frames/738149f5974920d4fb4a29d65254e48b12835ded1ab9d55f2f7a219d01c08d25.bin.gz",
+    "archive_sha256": "738149f5974920d4fb4a29d65254e48b12835ded1ab9d55f2f7a219d01c08d25",
+    "header_hex": "534c4b42434b30310100000007000000000000003082b10005c482c833a6b9f4912a575090d4a1b7b7ce678074eb817b4897ea5b38d5c6e43dbdd4e5c6956d72",
+    "frame_sha256": "127bf9fe1bc5e479d33626f0a94654db82c18c23dc4562a652dbde622bed55c6",
+    "frame_bytes": 11633264,
+    "original_archive_sha256": "e491f560fc3d0d3314a0720fbd43add6e0619b66849e352df8e6ecc95129e447"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-20-reply.bin.gz": {
+    "archive": "frames/add3368dbb1b1c254aa59b93d9661811a4dff521b04f5533f0270d31792415c1.bin.gz",
+    "archive_sha256": "add3368dbb1b1c254aa59b93d9661811a4dff521b04f5533f0270d31792415c1",
+    "header_hex": "534c4b42434b30310100000007000000010000008822740105c482c833a6b9f4912a575090d4a1b7b7ce678074eb817b4897ea5b38d5c6e43dbdd4e5c6956d72",
+    "frame_sha256": "b03cfc3d4ea4c19fc05b9b855b71f44da01db91ed72ad7bf8bd4a5fc6a0c1ed1",
+    "frame_bytes": 24388296,
+    "original_archive_sha256": "19ce0095ce67e3fa0236a73ab104a35a5833a346f8d496b67d69cc0a21bce456"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-21-request.bin.gz": {
+    "archive": "frames/738149f5974920d4fb4a29d65254e48b12835ded1ab9d55f2f7a219d01c08d25.bin.gz",
+    "archive_sha256": "738149f5974920d4fb4a29d65254e48b12835ded1ab9d55f2f7a219d01c08d25",
+    "header_hex": "534c4b42434b30310100000007000000000000003082b10060f097db40060272912a575090d4a1b7b7ce678074eb817b4897ea5b38d5c6e43dbdd4e5c6956d72",
+    "frame_sha256": "3702acbe768db99e4bf9cba775a7fe61b02718ffceda52eb70f06608f0a2a5de",
+    "frame_bytes": 11633264,
+    "original_archive_sha256": "16e098939a34d7428b9ea5eabea9e5fe7b73271a1786f85e3404173d12344941"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-21-reply.bin.gz": {
+    "archive": "frames/add3368dbb1b1c254aa59b93d9661811a4dff521b04f5533f0270d31792415c1.bin.gz",
+    "archive_sha256": "add3368dbb1b1c254aa59b93d9661811a4dff521b04f5533f0270d31792415c1",
+    "header_hex": "534c4b42434b30310100000007000000010000008822740160f097db40060272912a575090d4a1b7b7ce678074eb817b4897ea5b38d5c6e43dbdd4e5c6956d72",
+    "frame_sha256": "50dfcd16a3ddc0643eec5353fafcd369bc5a5b3ea64e7fe731cdf56aaa95590a",
+    "frame_bytes": 24388296,
+    "original_archive_sha256": "b7c86fa67ba2af08845d0d27b6596dd60b460033aef4bb44d85fb90e01c11b11"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-22-request.bin.gz": {
+    "archive": "frames/b799c08ca634662a8a577bc731d07033b64188c4dc0c00eca59edfd0576cd5b3.bin.gz",
+    "archive_sha256": "b799c08ca634662a8a577bc731d07033b64188c4dc0c00eca59edfd0576cd5b3",
+    "header_hex": "534c4b42434b30310100000007000000000000005b5e14003fd02b31c6fbcc1e362aa252b8fde1022d82fdcfc99756f02e970ce84b45c7f99888f87d6b642316",
+    "frame_sha256": "8addf26858be9f907ca6fe9cbb619f727358d4a243e4daf6df68926d62561e19",
+    "frame_bytes": 1334939,
+    "original_archive_sha256": "2293fe9374488c41572ff66ea22770ab49c2219616448e73a468f16621926a50"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-22-reply.bin.gz": {
+    "archive": "frames/70fee6e457804a2fa53979a3155ceb733db6319eb3b367e11d41521b1a24411a.bin.gz",
+    "archive_sha256": "70fee6e457804a2fa53979a3155ceb733db6319eb3b367e11d41521b1a24411a",
+    "header_hex": "534c4b42434b3031010000000700000001000000e01521003fd02b31c6fbcc1e362aa252b8fde1022d82fdcfc99756f02e970ce84b45c7f99888f87d6b642316",
+    "frame_sha256": "8c7fc50a0b4c52d32aa7018b72de3a49bd59f0b1c886fea6d4fe7cea19c56094",
+    "frame_bytes": 2168352,
+    "original_archive_sha256": "cd690e9dec1eb025291909772d743543bb050f1b1bbc81de7aef542204312c93"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-23-request.bin.gz": {
+    "archive": "frames/b799c08ca634662a8a577bc731d07033b64188c4dc0c00eca59edfd0576cd5b3.bin.gz",
+    "archive_sha256": "b799c08ca634662a8a577bc731d07033b64188c4dc0c00eca59edfd0576cd5b3",
+    "header_hex": "534c4b42434b30310100000007000000000000005b5e140070e371725a06b291362aa252b8fde1022d82fdcfc99756f02e970ce84b45c7f99888f87d6b642316",
+    "frame_sha256": "8b568f330cb2ffb0cc3c3c963b5c3eb0eb7a12d62e188b992af91bf3e3cb934e",
+    "frame_bytes": 1334939,
+    "original_archive_sha256": "a2997c4559d3a0aa51d5b420b1ed7b42d7efc67cfcf2d62b838dddeab0b603b5"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-23-reply.bin.gz": {
+    "archive": "frames/70fee6e457804a2fa53979a3155ceb733db6319eb3b367e11d41521b1a24411a.bin.gz",
+    "archive_sha256": "70fee6e457804a2fa53979a3155ceb733db6319eb3b367e11d41521b1a24411a",
+    "header_hex": "534c4b42434b3031010000000700000001000000e015210070e371725a06b291362aa252b8fde1022d82fdcfc99756f02e970ce84b45c7f99888f87d6b642316",
+    "frame_sha256": "5edf7fd4cf2520505755fc9ffcf463866f31ae436d8a5af2be5ec39a671fd94b",
+    "frame_bytes": 2168352,
+    "original_archive_sha256": "43eaf660e03812987deb20a98c846d7e19f2465a0bc750ba30e3a6f07ad84475"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-24-request.bin.gz": {
+    "archive": "frames/2a65dd088e4de0c2a0c4ff1598ef8c6dd905e494bd61b6834e7da5a3b4c3da21.bin.gz",
+    "archive_sha256": "2a65dd088e4de0c2a0c4ff1598ef8c6dd905e494bd61b6834e7da5a3b4c3da21",
+    "header_hex": "534c4b42434b3031010000000700000000000000dc803900beeb4ae5f5fc69d9560f49540349e6822acc1c3637b473ced00209d6e6ca47055c5a2791eb602ce9",
+    "frame_sha256": "5f70ddc743684d50efe743b3638c8c4ce4ee180b5c34dfe35861eb75cdf242b9",
+    "frame_bytes": 3768604,
+    "original_archive_sha256": "e623c047e341b7b4bc395468e6ea2a5229ff7f6ab07a8a23cfb17b540ec1ea17"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-24-reply.bin.gz": {
+    "archive": "frames/25e4a4ee03eea8fe0eea7e39acb084f9ef2d48d2f8bfa868bd3cf4594a7bafdd.bin.gz",
+    "archive_sha256": "25e4a4ee03eea8fe0eea7e39acb084f9ef2d48d2f8bfa868bd3cf4594a7bafdd",
+    "header_hex": "534c4b42434b303101000000070000000100000028766f00beeb4ae5f5fc69d9560f49540349e6822acc1c3637b473ced00209d6e6ca47055c5a2791eb602ce9",
+    "frame_sha256": "35699f8be11e31063ad66167c00fbd7dc6681380fc77f42733418155a059f611",
+    "frame_bytes": 7304808,
+    "original_archive_sha256": "462a5132961b4643672f2f443cd56f143c6a269197a29108c1c69b8f558c7d00"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-25-request.bin.gz": {
+    "archive": "frames/2a65dd088e4de0c2a0c4ff1598ef8c6dd905e494bd61b6834e7da5a3b4c3da21.bin.gz",
+    "archive_sha256": "2a65dd088e4de0c2a0c4ff1598ef8c6dd905e494bd61b6834e7da5a3b4c3da21",
+    "header_hex": "534c4b42434b3031010000000700000000000000dc80390070c998034a6baf19560f49540349e6822acc1c3637b473ced00209d6e6ca47055c5a2791eb602ce9",
+    "frame_sha256": "77436987eef3c017de5628eb61dea3cd785256beda47b513f1707dd83712ce6a",
+    "frame_bytes": 3768604,
+    "original_archive_sha256": "a02a3fbb7f9bbe847c9d919116ffdcbb0298ecc1e9c5dbd1afc28e4ceb1943c1"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-25-reply.bin.gz": {
+    "archive": "frames/25e4a4ee03eea8fe0eea7e39acb084f9ef2d48d2f8bfa868bd3cf4594a7bafdd.bin.gz",
+    "archive_sha256": "25e4a4ee03eea8fe0eea7e39acb084f9ef2d48d2f8bfa868bd3cf4594a7bafdd",
+    "header_hex": "534c4b42434b303101000000070000000100000028766f0070c998034a6baf19560f49540349e6822acc1c3637b473ced00209d6e6ca47055c5a2791eb602ce9",
+    "frame_sha256": "eb4ba31f474d964afca3505d622600b2b68d0f11f5df3d9b6cfa31c29a26a77d",
+    "frame_bytes": 7304808,
+    "original_archive_sha256": "a45cefbf1faa2d53575eaaa46cb140b6d055119ea05f3139c4ef94d889e1ce60"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-26-request.bin.gz": {
+    "archive": "frames/db8fe59717c62856f48024ed09a03cce03db42e6b8f2abc9c037b0063b42c571.bin.gz",
+    "archive_sha256": "db8fe59717c62856f48024ed09a03cce03db42e6b8f2abc9c037b0063b42c571",
+    "header_hex": "534c4b42434b3031010000000700000000000000cdc839013a7349540c46d7a7840d1366a9bd5387cde59c1a7932a6143c9e35f99aa6849ddea1ba82e251b2f8",
+    "frame_sha256": "bde4e288d9a0de9d9b8fc1afec66e53895987ed6d6b6fce0d754787792a80d04",
+    "frame_bytes": 20564237,
+    "original_archive_sha256": "79e4c7506f8d77207a3f4033e34b8784a5052abc6343ccc9c1168aeff91b40ef"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-26-reply.bin.gz": {
+    "archive": "frames/7031f222e377f07d58bb9e7e6d4e46159d280dd81a7c730f25ee76319e9ed667.bin.gz",
+    "archive_sha256": "7031f222e377f07d58bb9e7e6d4e46159d280dd81a7c730f25ee76319e9ed667",
+    "header_hex": "534c4b42434b3031010000000700000001000000ff4580023a7349540c46d7a7840d1366a9bd5387cde59c1a7932a6143c9e35f99aa6849ddea1ba82e251b2f8",
+    "frame_sha256": "c7169d4db3cef580499e6e35eac850b71ecc5641debc62dd30da4795e50a2c15",
+    "frame_bytes": 41961023,
+    "original_archive_sha256": "6244a33babe5eb1984cd3d5742cb5eb485179c9b0ef918eec944a16c32bb36e5"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-27-request.bin.gz": {
+    "archive": "frames/db8fe59717c62856f48024ed09a03cce03db42e6b8f2abc9c037b0063b42c571.bin.gz",
+    "archive_sha256": "db8fe59717c62856f48024ed09a03cce03db42e6b8f2abc9c037b0063b42c571",
+    "header_hex": "534c4b42434b3031010000000700000000000000cdc8390134a3c8a44c2d46ce840d1366a9bd5387cde59c1a7932a6143c9e35f99aa6849ddea1ba82e251b2f8",
+    "frame_sha256": "05eae72c7ea2a478d69df09d252f2977afae61efe391d194cf5de711517d2517",
+    "frame_bytes": 20564237,
+    "original_archive_sha256": "f6af0ff3e5194a393a1db0bddd7d5421830f7cd4e0e80360aaa74996d1dba9ca"
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-composed-generations/work/capture-27-reply.bin.gz": {
+    "archive": "frames/7031f222e377f07d58bb9e7e6d4e46159d280dd81a7c730f25ee76319e9ed667.bin.gz",
+    "archive_sha256": "7031f222e377f07d58bb9e7e6d4e46159d280dd81a7c730f25ee76319e9ed667",
+    "header_hex": "534c4b42434b3031010000000700000001000000ff45800234a3c8a44c2d46ce840d1366a9bd5387cde59c1a7932a6143c9e35f99aa6849ddea1ba82e251b2f8",
+    "frame_sha256": "1f8b77651dfd195b49633ba9bf694517723b5ba67ae57ebafb8939782fc98eeb",
+    "frame_bytes": 41961023,
+    "original_archive_sha256": "9203e51c8ec39807ba98aa83761677011d538210f3f61701f9a5eda3375e55a7"
+  },
   "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b7-private-entry-generations/fresh-qetw52xw/runtime-requests/test-index.bin": {
     "archive": "frames/36bb49fb026f6198eeb2091036bccaecfb2a3668ded57c536d733531e32b0ac1.bin.gz",
     "archive_sha256": "36bb49fb026f6198eeb2091036bccaecfb2a3668ded57c536d733531e32b0ac1",

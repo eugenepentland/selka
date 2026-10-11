@@ -28,6 +28,7 @@ def main():
     for name in ('composed-frontend-check.py', 'composed-frontend-check.log', 'composed-frontend-check.json.gz'):
         shutil.copyfile(WORK/'b7-entry-prepared-evidence'/name, OUT/name)
     paths = {}
+    payload_archives = {}
 
     def retain_frame(path, expected, archive_sha=None):
         original = path.read_bytes()
@@ -42,14 +43,20 @@ def main():
         # payloads once. Reconstruction must reproduce each complete frame hash.
         header = raw[:64] if raw.startswith(b'SLKBCK01') and len(raw) >= 64 else b''
         payload = raw[len(header):]
-        compressed = gzip.compress(payload, mtime=0)
-        name = 'frames/'+digest(compressed)+'.bin.gz'
-        target = OUT/name
-        if target.exists():
-            assert target.read_bytes() == compressed
+        payload_sha = digest(payload)
+        if payload_sha in payload_archives:
+            name, compressed_sha = payload_archives[payload_sha]
         else:
-            target.write_bytes(compressed)
-        paths[str(path)] = {'archive': name, 'archive_sha256': digest(compressed),
+            compressed = gzip.compress(payload, mtime=0)
+            compressed_sha = digest(compressed)
+            name = 'frames/'+compressed_sha+'.bin.gz'
+            target = OUT/name
+            if target.exists():
+                assert target.read_bytes() == compressed
+            else:
+                target.write_bytes(compressed)
+            payload_archives[payload_sha] = name, compressed_sha
+        paths[str(path)] = {'archive': name, 'archive_sha256': compressed_sha,
                             'header_hex': header.hex(), 'frame_sha256': expected,
                             'frame_bytes': len(raw), 'original_archive_sha256': archive_sha}
 
@@ -68,6 +75,22 @@ def main():
         first, second = report['generations']
         generations[lane] = {name: first['packages'][name]['sha256'] == second['packages'][name]['sha256']
                              for name in first['packages']}
+    composed_path = WORK/'b7-composed-generations/report.json'
+    composed = json.loads(composed_path.read_text())
+    assert composed['complete'] and composed['operations'] == 119 and len(composed['captures']) == 28
+    assert composed['failed'] == composed['skipped'] == 0
+    assert composed['identity']['host'] == reports['release']['identity']['host']
+    assert composed['identity']['sources'] == reports['release']['identity']['sources']
+    parent = reports['release']['generations'][-1]['packages']
+    for generation in composed['generations']:
+        assert all(generation['packages'][name]['sha256'] == parent[name]['sha256'] for name in parent)
+    for capture in composed['captures']:
+        for direction in ('request', 'reply'):
+            retain_frame(Path(capture[direction+'_path']), capture[direction+'_sha256'],
+                         capture[direction+'_archive_sha256'])
+    (OUT/'composed-generations.json.gz').write_bytes(gzip.compress(composed_path.read_bytes(), mtime=0))
+    shutil.copyfile(WORK/'b7-composed-generations.py', OUT/'composed-generations.py')
+    shutil.copyfile(WORK/'b7-composed-generations.log', OUT/'composed-generations.log')
     invocation = Path(reports['normal']['captures'][0]['request_path']).parent.parent
     requests = invocation/'runtime-requests'
     inventory = json.loads((requests/'requests.json').read_text())
@@ -101,6 +124,9 @@ def main():
                'lanes': ['normal', 'release/facts/leaks'], 'operations_per_lane': 349,
                'captures_per_lane': 35, 'resource_forgeries_per_lane': 15,
                'identical_generation_artifacts': generations, 'frozen_source_files': len(sources),
+               'composed_frontend_generations': {'operations': 119, 'fresh_body_exchanges': 28,
+                    'generations': [3, 4], 'all_seven_binaries_identical_to_release_parent': True,
+                    'selected_modes': composed['selected_modes']},
                'retained_paths': len(paths), 'unique_archives': len({v['archive'] for v in paths.values()}),
                'frame_storage': 'Every complete frame reconstructs as bytes.fromhex(header_hex) + gzip.decompress(archive); all original frame hashes verified. Original gzip-container hashes are provenance only.'}
     (OUT/'summary.json').write_text(json.dumps(summary, indent=2)+'\n')

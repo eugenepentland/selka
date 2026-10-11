@@ -245,21 +245,26 @@ complete Selka compiler and requires compile time, test time and generated
 runtime to stay within 1.5 times the Zig implementation. This is an acceptance
 requirement for the completed compiler, not a claim about the current pilots.
 
-The last qualified boundary is B5, recorded in
-[the variant/failure body audit](selka-body-variants-2026-10-11.md). Seven packages build
-with the unchanged qualified seed; ordinary scalar, text, byte, list and
-nongeneric record/variant bodies and admitted checked Result/Option failures
-use Selka checking without native body fallback. Complete typed metadata,
-ordered List/Result/Option recipes and final catalog schemas match native
-checking. The full gate passes 131/131 steps, 199 pure tests per mode and all
-three installed 388-workflow matrices. B6 pure-library closure and B7 resource
-support are in progress in separate Sol lanes. The compiler still cannot check
-its own complete source, and neither a complete compiler
-nor a bootstrap fixed point is proven.
+The last functionally qualified boundary is B6, recorded in
+[the byte/buffer and pure-library audit](selka-body-bytes-buffer-contract-2026-10-11.md).
+Seven packages build with the unchanged qualified seed. Ordinary scalar, text,
+byte, list, nongeneric record/variant, admitted checked Result/Option and actual
+pure-library bodies use Selka checking without native body fallback. The full
+gate passes 136/136 steps, 253 pure tests per mode, all three installed
+443-workflow matrices, and 213 actual-library operations plus four forged-reply
+rejections. Complete typed metadata and catalog schemas match native checking.
 
-| Remaining stage | Completion evidence |
+[Private B7 proofs](evidence/selka-body-entry-generations-private-20261011/README.md)
+now rebuild all seven component entries through two normal and two release
+generations, then two further release generations with all frontend boundaries
+selected together. Binaries are byte-identical across corresponding generations.
+B7 still needs root integration and qualification. The native catalog, later
+semantic passes, backend and compiler driver remain in use; a complete Selka
+compiler and full-compiler bootstrap fixed point remain unproven.
+
+| Stage | Completion evidence |
 | --- | --- |
-| B6 pure compiler libraries | Byte/string and list slicing, conversions, byte-buffer construction/mutation/snapshots, iteration, comprehensions, conditional expressions and literal managed/scalar constants cover the actual compiler helper closures. Complete native typed metadata and diagnostics match; existing pure tests pass in debug and release with fact/leak checks. Synthetic fixtures alone do not qualify those sources or executable entrypoints. |
+| B6 pure compiler libraries — functionally qualified | Byte/string and list slicing, admitted conversions, byte-buffer construction/mutation/snapshots, iteration, comprehensions, conditional expressions and literal managed/scalar constants cover the actual compiler helper closures. Complete native typed metadata and diagnostics match; actual library admission and pure tests pass in debug and release with fact/leak checks. Executable entrypoints belong to B7. |
 | B7 capabilities and scoped resources | Filesystem/Stream signatures, file opening/reading, stream output and scoped file cleanup cover all seven component entrypoints. The selected Selka body checker checks and builds the actual component source closures without native body fallback, preserving capability, ownership and cleanup metadata. This is component-source bootstrap coverage, not a complete compiler bootstrap. |
 | Remaining body language | Other collections, generic specialization, callbacks, scalar widths, additional resources, contracts and all remaining forms cover the current language. Unsupported profile refusals cannot count as success. |
 | Remaining semantic ownership | Selka owns declaration/catalog construction, entry handling, effects/origins, contracts, codecs and warnings, with diagnostics and accepted/rejected programs matching the native reference. |
@@ -273,10 +278,10 @@ self-hosting requires Selka ownership of the compiler, not rewriting those
 dependencies. The native implementation remains an independent qualification
 oracle during migration; selected production paths must not silently fall back.
 
-The latest qualified [B5 performance measurements](selka-body-variants-2026-10-11.md#isolated-performance)
+The latest completed [B6 performance measurements](selka-body-bytes-buffer-contract-2026-10-11.md)
 fail 30 of 36 strict median/p95 rows. Compile/check/test medians are approximately
-5.3–9.2 times native; the six short generated-runtime rows pass. Both sides use
-the same B5 ReleaseFast host, with only the candidate body checker selected as a
+6.1–10.4 times native; the six short generated-runtime rows pass. Both sides use
+the same B6 ReleaseFast host, with only the candidate body checker selected as a
 component. These are component measurements with warm shared native units, not
 whole-compiler or cold-toolchain benchmarks. Performance work therefore runs
 alongside feature coverage, with exact mode/cache provenance and behavior checks.

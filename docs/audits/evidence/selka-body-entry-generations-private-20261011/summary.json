@@ -31,7 +31,25 @@
     }
   },
   "frozen_source_files": 194,
-  "retained_paths": 188,
+  "composed_frontend_generations": {
+    "operations": 119,
+    "fresh_body_exchanges": 28,
+    "generations": [
+      3,
+      4
+    ],
+    "all_seven_binaries_identical_to_release_parent": true,
+    "selected_modes": {
+      "LEXER": "component",
+      "PARSER": "component",
+      "DECLARATION": "component",
+      "TYPE_INTERFACE": "component",
+      "BODY_CHECK": "component",
+      "TEST_INDEX": "component",
+      "CACHE_PLAN": "component"
+    }
+  },
+  "retained_paths": 244,
   "unique_archives": 45,
   "frame_storage": "Every complete frame reconstructs as bytes.fromhex(header_hex) + gzip.decompress(archive); all original frame hashes verified. Original gzip-container hashes are provenance only."
 }
