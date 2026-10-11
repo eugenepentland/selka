@@ -3521,6 +3521,11 @@ func stream_call(mut state: State, span: int, call: int, slot: int) -> Expressio
     mut split = io_arguments.Arguments(values=[], separator=-1, terminator=-1)
     if name == b"print":
         split = try io_arguments.split(state.syntax.pool, state.syntax.source, call)
+    else:
+        _ = try io_arguments.positional(state.syntax.pool, call)
+        if len(arguments) != 1:
+            const rejection = try problem(state, span, "E_ARITY", "stream.write takes one str or bytes argument")
+            fail rejection
     mut checked: int[] = []
     for argument in arguments:
         const raw = try graph.number(state.syntax.pool, argument)
@@ -3535,10 +3540,6 @@ func stream_call(mut state: State, span: int, call: int, slot: int) -> Expressio
     const local = try syntax_value.integer(mut state.batch.pool, slot)
     const receiver = try emission.node(mut state.batch, state.syntax.pool, owner_span, 18, b"local", local)
     if name == b"write":
-        _ = try resource_positional(state, call)
-        if len(arguments) != 1:
-            const rejection = try problem(state, span, "E_ARITY", "stream.write takes one str or bytes argument")
-            fail rejection
         const value = checked[0]
         const ty_id = try graph.field(state.batch.pool, state.batch.nodes[value], "ty")
         const ty = try graph.number(state.batch.pool, ty_id)

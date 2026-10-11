@@ -253,3 +253,40 @@ public func test_standalone_function_name_does_not_shadow_capability_type() -> b
     const fs_type = try engine.type_at(mut state, fs)
     const stream_type = try engine.type_at(mut state, stream)
     return fs_type == 11 and stream_type == 18
+
+
+func stream_rejection(keyword: bool) -> syntax_value.Problem fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"out write unknown label"
+    const owner = try syntax_value.span(mut state.syntax.pool, 0, 3)
+    const slot = try locals.add(mut state.scope, b"out", owner, 18, False, b"parameter")
+    const method = try syntax_value.span(mut state.syntax.pool, 4, 9)
+    const unknown = try syntax_value.span(mut state.syntax.pool, 10, 17)
+    const operand = try node(mut state, b"name", unknown, 10, 17)
+    const argument = try syntax_value.integer(mut state.syntax.pool, operand)
+    const arguments = try syntax_value.sequence(mut state.syntax.pool, [argument, argument])
+    mut labels: int[] = []
+    if keyword:
+        const label = try syntax_value.span(mut state.syntax.pool, 18, 23)
+        labels.append(label)
+    const argument_names = try syntax_value.sequence(mut state.syntax.pool, labels)
+    const types = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["name", "owner", "arguments", "argument_names", "type_arguments"], [method, owner, arguments, argument_names, types])
+    const raw = try node(mut state, b"call", payload, 0, 23)
+    match engine.expression(mut state, raw):
+        case Ok(value):
+            fail syntax_value.Problem(code="P_TEST", start=0, end=0, message="stream diagnostic was not emitted")
+        case Err(problem):
+            if len(state.batch.nodes) != 0 or state.scope.locals[slot].usage.reads != 0:
+                fail syntax_value.Problem(code="P_TEST", start=0, end=0, message="stream receiver or operand checked before call validation")
+            return problem
+
+
+public func test_stream_write_arity_precedes_unknown_operands_and_receiver_read() -> bool fails syntax_value.Problem:
+    const problem = try stream_rejection(False)
+    return problem.code == "E_ARITY" and problem.start == 0 and problem.end == 23 and problem.message == "stream.write takes one str or bytes argument"
+
+
+public func test_stream_write_keyword_precedes_arity_and_uses_call_name() -> bool fails syntax_value.Problem:
+    const problem = try stream_rejection(True)
+    return problem.code == "E_CALL_ARGUMENT" and problem.start == 4 and problem.end == 9 and problem.message == "keyword arguments require a declared function or record constructor"
