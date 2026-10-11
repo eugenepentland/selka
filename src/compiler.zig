@@ -37,6 +37,8 @@ pub const module_interface_oracle = @import("module_interface_oracle.zig");
 pub const syntax_cache = @import("syntax_cache.zig");
 /// Persistent content-addressed frontend reuse for ordinary one-shot commands.
 pub const frontend_cache = @import("frontend_cache.zig");
+/// Optional immutable artifact transport across compatible local worktrees.
+pub const shared_artifact_store = @import("shared_artifact_store.zig");
 /// Bounded plain-data encoding shared by frontend and Core stage artifacts.
 pub const persist_codec = @import("persist_codec.zig");
 pub const project = @import("project.zig");

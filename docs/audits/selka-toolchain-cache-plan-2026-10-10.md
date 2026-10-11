@@ -953,13 +953,43 @@ changed fixtures and execution settings, exclusions, directory fanout, corrupt
 storage and concurrent publishers. The implementation boundary and evidence live
 under [`cache-wave8-20261011`](../../experiments/cache-wave8-20261011/PLAN.md).
 
-### Proposed follow-ups — Waves 9 and 10
+### Wave 9 — Shared immutable compiler artifacts
 
-**Wave 9** extends compatible sharing to immutable frontend and linked-program
-artifacts, preserving worktree-local mutable indexes. **Wave 10** reduces repeated
-warm validation and admission overhead through retained validated graph state and
-coordination of duplicate concurrent work. These follow-ups require their own
-qualification; a shared storage directory alone does not establish either one.
+`MYLANG_COMPILER_SHARED_CACHE` opts compatible worktrees into a native,
+Python-free `compiler-artifacts-v1` store for ordinary parsed syntax, qualified
+ordinary typed bodies and exact linked programs. Private caches, mutable
+indexes, whole-check verdicts, summary inventories and executable copies remain
+per worktree. Source/literal bytes are never rewritten for portability.
+
+Syntax binds compiler/contract, parser authority, exact bytes and body start.
+Typed reuse also proves logical module origins, binds exact merged source
+layout and reconstructs references against fresh declarations. The layout
+binding is conservative because serialized bodies can contain catalog ordinals;
+private per-function incremental keys remain unchanged. Typed transport requires
+complete concrete requests and binds all fresh embedded-input proofs; warm demand
+requests with prior summaries stay private. Shared programs bind
+exact ordered objects, compiler and qualified linker identity/environment.
+Foreign links and unqualified tools bypass shared programs. Frontend checking,
+lowering and emission still precede shared executable lookup.
+
+Length-bounded checksummed records use atomic publication. Reads take no
+publication lock; staging and hashing precede a permanent per-key lock, which
+only covers comparison and replacement. Corruption is a miss; valid same-key
+disagreement is an explicit determinism error. Configured storage failures are
+visible before private replay. `--no-cache` and `--verify-cache` suppress the new
+shared tiers. This namespace has no online collection/lease protocol yet; its
+permanent locks may only be cleared while all users are stopped.
+
+Two-root qualification, source/configuration/embed edits, diagnostic paths,
+corruption, bypasses and concurrent empty-PATH commands are specified in
+[`cache-wave9-20261011/PLAN.md`](../../experiments/cache-wave9-20261011/PLAN.md).
+
+### Proposed follow-up — Wave 10
+
+Reduce repeated warm validation and admission overhead through retained
+validated graph state and coordination of duplicate concurrent work. This
+requires its own qualification; sharing immutable artifacts does not eliminate
+discovery, validation, hashing or duplicate simultaneous computation.
 
 ## Qualification and observable success
 

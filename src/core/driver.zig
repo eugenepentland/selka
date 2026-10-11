@@ -28,6 +28,8 @@ const sanitize_llvm = @import("sanitize_llvm.zig");
 const Digest = unit_cache.Digest;
 const query_store = @import("stage_store.zig");
 const stage_metrics = @import("stage_metrics.zig");
+const language = @import("mylang");
+const shared_artifacts = language.shared_artifact_store;
 
 /// The runtime C source, compiled into every program.
 pub const runtime_source = @embedFile("runtime/core_rt.c") ++ "\n" ++
@@ -79,6 +81,8 @@ pub const Outcome = struct {
     counts: Counts = .{},
     /// The program came from the program store: no tool linked it.
     program_reused: bool = false,
+    /// A verified shared artifact supplied the local program store entry.
+    program_shared: bool = false,
     /// The program store entry the output was copied from (proved toolchains only).
     program: ?unit_cache.Found = null,
     /// The `--link` sources and the headers their depfiles listed, with the bytes
@@ -182,15 +186,27 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
     if (needs.number) try objects.append(allocator, .{ .path = try number_runtime.object(allocator, io, places.shared), .digest = number_runtime.digest() });
     outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
     const sanitizer = linkSanitizer(request.mode == .release, request.links.len);
-    const program_key = programKey(settings, objects.items, needs.math, sanitizer);
+    const program_key = programKey(settings, objects.items, needs.math, sanitizer, environ);
     const programs: unit_cache.Store = .{ .directory = try std.fs.path.join(allocator, &.{ places.local, "programs-v1" }) };
+    var shared = try SharedProgram.open(native, request, program_key);
+    defer if (shared) |*store| store.store.deinit();
     if (places.cacheable) if (try programs.lookup(allocator, io, program_key, "")) |found| {
+        if (shared) |*store| try store.publish(native, found.path);
         try publishOutput(native, found.path, request.output);
         outcome.program_reused = true;
         outcome.program = found;
         return outcome;
     };
     const linked = try std.fs.path.join(allocator, &.{ staging, "program" });
+    if (shared) |*store| if (try store.restore(native, linked)) {
+        try native.guard.check(log);
+        const restored = try programs.publish(allocator, io, program_key, "", linked);
+        try publishOutput(native, restored.path, request.output);
+        outcome.program_reused = true;
+        outcome.program_shared = true;
+        outcome.program = restored;
+        return outcome;
+    };
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(allocator, &.{ guest.path, "cc", request.mode.level(), "-target", target_policy.native_link_target });
     try argv.appendSlice(allocator, target.cpu_flags);
@@ -209,9 +225,74 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
         return outcome;
     }
     const published = try programs.publish(allocator, io, program_key, "", linked);
+    if (shared) |*store| try store.publish(native, published.path);
     try publishOutput(native, published.path, request.output);
     outcome.program = published;
     return outcome;
+}
+
+// Exact artifact transport preserves every source path and literal in the
+// object keys. Module projects already use logical paths; absolute single-file
+// provenance differs across roots and therefore cannot hit another root's key.
+const SharedProgram = struct {
+    store: shared_artifacts.Store,
+    key: Digest,
+
+    fn open(native: Native, request: Request, exact: Digest) Error!?SharedProgram {
+        if (!native.guard.identity.cacheable or request.verify or request.links.len != 0) return null;
+        const directory = shared_artifacts.selected(native.environment) orelse return null;
+        const store = shared_artifacts.Store.open(native.arena, native.io, directory) catch |err| return failed(native, err);
+        return .{ .store = store, .key = sharedProgramKey(exact, native.environment) };
+    }
+
+    fn restore(self: *SharedProgram, native: Native, destination: []const u8) Error!bool {
+        return self.store.restore(.program, self.key, destination) catch |err| return failed(native, err);
+    }
+
+    fn publish(self: *SharedProgram, native: Native, path: []const u8) Error!void {
+        try native.guard.check(native.log);
+        _ = self.store.publishFile(.program, self.key, path) catch |err| return failed(native, err);
+    }
+
+    fn failed(native: Native, err: anyerror) Error {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        native.log.print(native.arena, "error: compiler shared program cache: {s}\n", .{@errorName(err)}) catch return error.OutOfMemory;
+        return if (err == error.DeterminismMismatch) error.ToolFailed else error.WriteFailed;
+    }
+};
+
+fn sharedProgramKey(exact: Digest, environment: *const std.process.Environ.Map) Digest {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    unit_cache.field(&hash, "core-shared-program-v1");
+    unit_cache.field(&hash, @import("build_identity").compiler_identity);
+    unit_cache.field(&hash, &exact);
+    linkEnvironmentInto(&hash, environment);
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "shared program identity retains exact native inputs and linker environment without worktree bookkeeping" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var environment: std.process.Environ.Map = .init(arena.allocator());
+    defer environment.deinit();
+    const original = sharedProgramKey(@splat(1), &environment);
+    try std.testing.expect(!std.mem.eql(u8, &original, &sharedProgramKey(@splat(2), &environment)));
+    try environment.put("PWD", "receiving-worktree");
+    try environment.put("ZIG_LOCAL_CACHE_DIR", "private-staging");
+    try environment.put(shared_artifacts.environment_variable, "another-shared-store");
+    try std.testing.expectEqual(original, sharedProgramKey(@splat(1), &environment));
+    try environment.put("SOURCE_DATE_EPOCH", "1");
+    try std.testing.expect(!std.mem.eql(u8, &original, &sharedProgramKey(@splat(1), &environment)));
+    const dated = sharedProgramKey(@splat(1), &environment);
+    try environment.put("SOURCE_DATE_EPOCH", "2");
+    try std.testing.expect(!std.mem.eql(u8, &dated, &sharedProgramKey(@splat(1), &environment)));
+    try environment.put("ZERO_AR_DATE", "");
+    const explicit = sharedProgramKey(@splat(1), &environment);
+    _ = environment.swapRemove("ZERO_AR_DATE");
+    try std.testing.expect(!std.mem.eql(u8, &explicit, &sharedProgramKey(@splat(1), &environment)));
 }
 
 const Dependencies = struct { number: bool = false, math: bool = false, counting: bool = false };
@@ -405,9 +486,9 @@ fn linkSanitizer(release: bool, foreign: usize) []const u8 {
 
 /// The program store key: the link command's settings and every linked object's
 /// bytes, in link order.
-fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool, sanitizer: []const u8) Digest {
+fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool, sanitizer: []const u8, environment: *const std.process.Environ.Map) Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
-    unit_cache.field(&hash, "core-program-v1");
+    unit_cache.field(&hash, "core-program-v2");
     unit_cache.field(&hash, sanitizer);
     unit_cache.field(&hash, unit_cache.format);
     unit_cache.field(&hash, settings.mode.level());
@@ -417,9 +498,48 @@ fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool
     unit_cache.field(&hash, &settings.tool);
     for (objects) |object| unit_cache.field(&hash, &object.digest);
     unit_cache.field(&hash, if (math) "-lm" else "");
+    linkEnvironmentInto(&hash, environment);
     var digest: Digest = undefined;
     hash.final(&digest);
     return digest;
+}
+
+fn linkEnvironmentInto(hash: *std.crypto.hash.Blake3, environment: *const std.process.Environ.Map) void {
+    // These linker controls can affect output bytes without changing an object.
+    // Tool injection is already refused by the captured tool's cacheability guard.
+    for ([_][]const u8{ "SOURCE_DATE_EPOCH", "ZERO_AR_DATE" }) |name| {
+        unit_cache.field(hash, name);
+        unit_cache.field(hash, if (environment.get(name) != null) "present" else "absent");
+        unit_cache.field(hash, environment.get(name) orelse "");
+    }
+}
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "local programs cannot relabel a warm executable after a linker environment change" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const store: unit_cache.Store = .{ .directory = root };
+    const settings: unit_cache.Settings = .{ .tool = @splat(1), .cpu = @splat(2), .runtime = @splat(3) };
+    const objects = [_]Object{.{ .path = "unit.o", .digest = @splat(4) }};
+    const first = programKey(settings, &objects, false, "", &environment);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "staged", .data = "linked-program" });
+    _ = try store.publish(a, std.testing.io, first, "", try std.fs.path.join(a, &.{ root, "staged" }));
+    try std.testing.expect((try store.lookup(a, std.testing.io, first, "")) != null);
+    try environment.put("SOURCE_DATE_EPOCH", "1");
+    const changed = programKey(settings, &objects, false, "", &environment);
+    try std.testing.expect(!std.mem.eql(u8, &first, &changed));
+    try std.testing.expect((try store.lookup(a, std.testing.io, changed, "")) == null);
+    try environment.put("ZERO_AR_DATE", "1");
+    try std.testing.expect(!std.mem.eql(u8, &changed, &programKey(settings, &objects, false, "", &environment)));
+    _ = environment.swapRemove("SOURCE_DATE_EPOCH");
+    _ = environment.swapRemove("ZERO_AR_DATE");
+    try std.testing.expect((try store.lookup(a, std.testing.io, programKey(settings, &objects, false, "", &environment), "")) != null);
 }
 
 /// Copy a finished program to the requested output path (`copyOutput`).

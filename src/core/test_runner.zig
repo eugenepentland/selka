@@ -72,7 +72,8 @@ const SelectionContext = struct { receipt: receipt.Context, base: [32]u8, permit
 /// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable
 /// or an invalid cases file or provider fixture, 3 nothing selected or every selected test skipped.
 pub fn run(init: std.process.Init, requested: Options) Error!u8 {
-    return runRequested(init, requested) catch |err| {
+    const compilation_init = try @import("compiler_sharing.zig").prepare(init, requested.build.show.verify_cache or requested.build.show.compiler_cache_disabled);
+    return runRequested(compilation_init, requested) catch |err| {
         if (err == error.ComponentUnavailable) return 2;
         if (err == error.SourceChanged) {
             try writeAll(init, std.Io.File.stderr(), "error: SourceChanged: a property campaign input changed during execution\n");
@@ -207,7 +208,10 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     var session = frontend.Session.init(init.gpa, init.io, located.root);
     defer session.deinit();
     located.configure(&session);
-    if (view == null) try session.enableCache(init.gpa, options.build.cache);
+    if (view == null) {
+        try session.enableCache(init.gpa, options.build.cache);
+        try session.enableSharedCache(init.environ_map);
+    }
     const entry_text: EntryText = .{ .overlay = try headerlessTest(allocator, located, bytes), .stub = !definesMain(bytes) };
     entry_text.apply(&session, entry_text.overlay);
     const provider_sets = case_settings.providerSets(allocator, configured_cases, options.filter) catch |err| return casesFailure(init, err);
@@ -342,6 +346,7 @@ const GroupRun = struct {
             const overlays = try std.mem.concat(a, frontend.Provider, &.{ group.providers, self.entry.overlay });
             located.configure(&provider_session);
             try provider_session.enableCache(init.gpa, context.options.build.cache);
+            try provider_session.enableSharedCache(init.environ_map);
             self.entry.apply(&provider_session, overlays);
             program = checkEntry(&provider_session, a, located, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
             try writeAll(init, std.Io.File.stderr(), problems.items);
@@ -480,6 +485,7 @@ fn validateProviders(init: std.process.Init, options: Options, located: project_
     defer production.deinit();
     located.configure(&production);
     try production.enableCache(init.gpa, options.build.cache);
+    try production.enableSharedCache(init.environ_map);
     entry_text.apply(&production, entry_text.overlay);
     production.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 1);
     for (sets) |set| {
@@ -489,6 +495,7 @@ fn validateProviders(init: std.process.Init, options: Options, located: project_
         defer replacement.deinit();
         located.configure(&replacement);
         try replacement.enableCache(init.gpa, options.build.cache);
+        try replacement.enableSharedCache(init.environ_map);
         entry_text.apply(&replacement, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
         replacement.declare(a, located.name, &problems) catch |err| return checkFailure(init, err, problems.items, 2);
         for (set) |provider| if (try keeps(a, &production, &replacement, provider.path)) |refused| return checkFailure(init, error.IncompatibleProvider, refused, 2);
@@ -523,6 +530,7 @@ fn providerGraph(init: std.process.Init, options: Options, located: project_entr
     var problems: std.ArrayList(u8) = .empty;
     located.configure(session);
     try session.enableCache(init.gpa, options.build.cache);
+    try session.enableSharedCache(init.environ_map);
     entry_text.apply(session, try std.mem.concat(a, frontend.Provider, &.{ set, entry_text.overlay }));
     if (checkEntry(session, a, located, &problems)) |checked| {
         try writeAll(init, std.Io.File.stderr(), problems.items);

@@ -5,6 +5,7 @@ const language = @import("compiler.zig");
 const ast = @import("ast.zig");
 const source = @import("source.zig");
 const cache_key = @import("cache_key.zig");
+const shared_artifacts = @import("shared_artifact_store.zig");
 const Cache = language.frontend_cache.Cache;
 
 const Files = struct {
@@ -26,6 +27,94 @@ fn load(project: *language.project.Project, files: *Files) !void {
 
 fn openCache(root: []const u8) Cache {
     return Cache.init(t.allocator, t.io, root, "test-identity");
+}
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "shared frontend syntax crosses absolute roots while verdicts and summaries stay private" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const left = try std.fs.path.join(t.allocator, &.{ root, "left" });
+    defer t.allocator.free(left);
+    const right = try std.fs.path.join(t.allocator, &.{ root, "right" });
+    defer t.allocator.free(right);
+    const shared_root = try std.fs.path.join(t.allocator, &.{ root, "shared" });
+    defer t.allocator.free(shared_root);
+    var shared = try shared_artifacts.Store.open(t.allocator, t.io, shared_root);
+    defer shared.deinit();
+    var writer = openCache(left);
+    defer writer.deinit();
+    writer.setSharedStore(&shared);
+    var reader = openCache(right);
+    defer reader.deinit();
+    reader.setSharedStore(&shared);
+    var original = try language.Compilation.init(t.allocator, left, "func main() -> i64:\n    return 7\n");
+    defer original.deinit();
+    try original.parseCached(&writer);
+    var moved = try language.Compilation.init(t.allocator, right, original.src.bytes);
+    defer moved.deinit();
+    try moved.parseCached(&reader);
+    try t.expectEqual(@as(usize, 1), reader.statistics.syntax.hits);
+    try t.expectEqual(@as(usize, 0), reader.statistics.syntax.misses);
+    try t.expectEqualStrings("main", moved.src.text(moved.syntax.?.functions[0].name));
+    try t.expectError(error.NotFound, reader.read(reader.syntaxKey(moved.src, 0)));
+    var files: Files = .{};
+    var loaded = language.project.Project.init(t.allocator);
+    defer loaded.deinit();
+    try load(&loaded, &files);
+    try writer.rememberVerdict(&loaded, .text, "left-root warning\n");
+    try writer.rememberSummaries(&loaded, "private request summary");
+    try t.expect(try reader.lookupVerdict(t.allocator, &loaded, .text) == null);
+    try t.expect(try reader.lookupSummaries(&loaded) == null);
+}
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "shared frontend syntax rejects changed inputs and parser authority" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const local = try std.fs.path.join(t.allocator, &.{ root, "local" });
+    defer t.allocator.free(local);
+    var shared = try shared_artifacts.Store.open(t.allocator, t.io, root);
+    defer shared.deinit();
+    var cache = openCache(local);
+    defer cache.deinit();
+    cache.setSharedStore(&shared);
+    var original = try language.Compilation.init(t.allocator, "left.my", "func main() -> i64:\n    return 7\n");
+    defer original.deinit();
+    try original.parseCached(&cache);
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    var changed = original.src;
+    changed.path = "right.my";
+    try t.expect((try cache.lookupSyntax(arena.allocator(), changed, 0)) != null);
+    try t.expect(try cache.lookupSyntax(arena.allocator(), changed, 1) == null);
+    changed.bytes = "func main() -> i64:\n    return 8\n";
+    try t.expect(try cache.lookupSyntax(arena.allocator(), changed, 0) == null);
+    changed.bytes = original.src.bytes;
+    changed.trusted_intrinsics = true;
+    try t.expect(try cache.lookupSyntax(arena.allocator(), changed, 0) == null);
+    changed.trusted_intrinsics = false;
+    changed.path = "@stdlib/right.my";
+    try t.expect(try cache.lookupSyntax(arena.allocator(), changed, 0) == null);
+    changed.path = "right.my";
+    cache.identity = "another-compiler";
+    try t.expect(try cache.lookupSyntax(arena.allocator(), changed, 0) == null);
+    cache.identity = "test-identity";
+    const base = cache_key.Contract.default;
+    var variants: [6]cache_key.Contract = .{ base, base, base, base, base, base };
+    variants[0].bootstrap_language = "changed";
+    variants[1].target = "changed";
+    variants[2].runtime_abi = "changed";
+    variants[3].effects = "changed";
+    variants[4].flags = "changed";
+    variants[5].compiler_identity = "changed";
+    for (variants) |variant| {
+        cache.contract = variant;
+        try t.expect(try cache.lookupSyntax(arena.allocator(), changed, 0) == null);
+    }
 }
 
 // spec-case: FRONTEND-CACHE-1

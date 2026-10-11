@@ -1,0 +1,78 @@
+{
+  "schema": "selka-wave9-native-qualification-v1",
+  "baseline": "8bb95ab0c",
+  "branch": "codex/selka-cache-wave9",
+  "qualification_scope": "Actual independent A/B source/config/cwd/private roots, immutable shared compiler artifacts, and direct frontend commands. Existing native object sharing alone does not satisfy assertions.",
+  "test_source": {
+    "path": "src/core/compiler_shared_cache_test.zig",
+    "sha256": "dc05e3f31e76ef28b286a7c6b2d9daad52e3e0671f04b0336a53c925c7ee1669",
+    "test_count": 9
+  },
+  "receipts": [
+    {
+      "path": "experiments/cache-wave9-20261011/qualification-focused.log",
+      "sha256": "f49b7f7575740064bf00364499cc46dc548bca0446f42a137c43e3e255983211",
+      "exit_status": 0,
+      "test_filter": "shared compiler artifacts",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "build_steps_succeeded": 12,
+      "build_steps_total": 12
+    },
+    {
+      "path": "experiments/cache-wave9-20261011/qualification-frontend-rerun.log",
+      "sha256": "74d611da8df5142f79cb842ff8be697b276e99ab11b452b730cbeb011a250b97",
+      "exit_status": 0,
+      "test_filter": "shared compiler frontend commands",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "build_steps_succeeded": 12,
+      "build_steps_total": 12
+    }
+  ],
+  "guardian": {
+    "path": "experiments/cache-wave9-20261011/guardian-qualification-final.log",
+    "sha256": "5eb0f30fdc324389a05d393a1c7398e49b38abe0df37fa7314958c566d3346e2",
+    "exit_status": 0,
+    "checks_passed": 88,
+    "coverage": "Diff-scoped 76 of 658 source files for 50 per-file checks; 38 whole-tree checks. Not full-tree Guardian verification."
+  },
+  "environment": {
+    "zig_version": "0.17.0-dev.1683+5ceec001b",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.zig-cache",
+    "TMPDIR": "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/.mylang-cache/cache-wave9/tmp",
+    "admission": "scripts/build-slot.sh build",
+    "shared_opt_in": "MYLANG_COMPILER_SHARED_CACHE"
+  },
+  "assertions": [
+    "B syntax_hits=2 and typed reused>0 with no receiving private cache",
+    "B program_shared=true, program=reused, compiled=0, processes=0 and units>0",
+    "Dependency edit changes native output; revert restores the prior shared program",
+    "Release/debug, native layout and SOURCE_DATE_EPOCH distinguish native programs; fresh project byte limits reject before reuse",
+    "Same-size embedded asset changes alter output; exact absolute path literals remain source values",
+    "Headerless B trap and failed A/B source checks retain receiving source paths",
+    "Intact-header payload checksum corruption in syntax/typed/program tiers misses and refills; abandoned temporary files cannot become hits",
+    "Opt-out, no-cache and verification controls suppress compiler sharing; no-cache/verify create no unused shared store",
+    "Concurrent actual compiler publishers with separate allocators/private caches publish reusable artifacts under an empty PATH",
+    "Direct check-project shares syntax across roots, retains verdicts privately, validates malformed format before warm verdict replay and bypasses it under no-cache without mutation"
+  ],
+  "evidence_limits": [
+    "Eight native tests passed before Guardian helper/style refactors and explicit effect/budget fixture metadata were added; the direct frontend test passed with the final helper. The parent final full gate covers the final combined source.",
+    "Producer embed/native environment guards were still being finalized by their owners; the parent records final compiler identity and installed/full-gate receipts.",
+    "No timing, speedup, cross-machine reuse or net-new installed-command claim is made here."
+  ],
+  "guardian_feedback_written": false,
+  "final_gate": {
+    "path": "experiments/cache-wave9-20261011/verification-final.json",
+    "sha256": "6eb7f3c795283cdc893907e9fabe83f1c153ce7a01b28f0f9c772746643c8da4",
+    "success": true,
+    "inputs_stable": true,
+    "selected_groups": 42,
+    "build_steps_succeeded": 126,
+    "compiler_sha256": "c6dd56dde509e28e83852df767cae4ae6b81e3bfed8a6eafb456f7cd0214e718",
+    "log_sha256": "41bbe6acbac247bd091284861c4fc0ed40e2b83f2e3abc398c6ef9d61712386d"
+  }
+}

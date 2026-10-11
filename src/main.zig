@@ -339,8 +339,24 @@ fn run(init: Context, parsed: Parsed) !u8 {
     const friction = startFriction(init, parsed, &friction_storage);
     const friction_start = if (friction != null) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     defer if (friction) |recorder| recorder.deinit();
+    var shared_store: ?language.shared_artifact_store.Store = null;
+    if (!parsed.no_cache) {
+        if (language.shared_artifact_store.selected(init.environ)) |directory| {
+            shared_store = language.shared_artifact_store.Store.open(init.gpa, init.io, directory) catch |err| {
+                const message = try std.fmt.allocPrint(init.gpa, "error: shared compiler cache: {s}\n", .{@errorName(err)});
+                defer init.gpa.free(message);
+                try init.text(message);
+                return err;
+            };
+        }
+    }
+    defer if (shared_store) |*store| store.deinit();
     var frontend_cache = openFrontendCache(init, parsed);
     var semantic_store = openSemanticStore(init, parsed);
+    if (shared_store) |*store| {
+        if (frontend_cache) |*cache| cache.setSharedStore(store);
+        if (semantic_store) |*cache| cache.setSharedStore(store);
+    }
     var observation: RunObservation = .{ .executed = executedStages() };
     observation.work.command = @tagName(parsed.command);
     var command_init = init;

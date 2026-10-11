@@ -84,6 +84,21 @@ pub const Session = struct {
         self.cache.?.bind();
     }
 
+    /// Attach immutable compiler artifacts after the private cache has its final address.
+    pub fn enableSharedCache(self: *Session, environment: *const std.process.Environ.Map) error{ OutOfMemory, WriteFailed }!void {
+        const directory = language.shared_artifact_store.selected(environment) orelse return;
+        const state = if (self.cache) |*cache| cache else return;
+        if (state.shared != null) return;
+        state.shared = language.shared_artifact_store.Store.open(state.semantic.allocator, self.files.io, directory) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            var buffer: [256]u8 = undefined;
+            const text = std.fmt.bufPrint(&buffer, "error: shared compiler cache: {s}\n", .{@errorName(err)}) catch return error.WriteFailed;
+            std.Io.File.stderr().writeStreamingAll(self.files.io, text) catch return error.WriteFailed;
+            return error.WriteFailed;
+        };
+        state.bind();
+    }
+
     /// Configure loader budgets and the entry's module name for project paths.
     pub fn configureProject(self: *Session, options: language.project.Options, entry: ?[]const u8) void {
         self.graph.settings.options = options;
@@ -307,6 +322,25 @@ pub const Session = struct {
         return error.SourceError;
     }
 };
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "enableSharedCache rejects unusable configured storage after opening private caches" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "blocked", .data = "regular-file" });
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put(language.shared_artifact_store.environment_variable, try std.fs.path.join(a, &.{ root, "blocked" }));
+    var session = Session.init(std.testing.allocator, std.testing.io, root);
+    defer session.deinit();
+    try session.enableCache(std.testing.allocator, try std.fs.path.join(a, &.{ root, "private" }));
+    try std.testing.expectError(error.WriteFailed, session.enableSharedCache(&environment));
+    try std.testing.expect(session.cache.?.shared == null);
+}
 
 /// Split a path such as `dir/prog.my` into the loader's root directory and
 /// module name (`dir`, `prog`).

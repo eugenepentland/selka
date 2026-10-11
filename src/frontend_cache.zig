@@ -19,6 +19,7 @@ const codec = @import("persist_codec.zig");
 const diagnostic_output = @import("diagnostic_output.zig");
 const project = @import("project.zig");
 const cache_key = @import("cache_key.zig");
+const shared_artifacts = @import("shared_artifact_store.zig");
 
 /// Bump when the on-disk layout or a stored serializer changes; older files miss.
 pub const format_version = "mylang-frontend-cache-v7";
@@ -71,6 +72,8 @@ const Runtime = struct {
     policy_identity: ?[]const u8 = null,
     /// Whether this run stored an entry, so `finish` has a directory to trim.
     stored: bool = false,
+    /// Optional immutable transport; rendered warnings and summaries stay local.
+    shared: ?*shared_artifacts.Store = null,
 };
 
 /// One bounded, caller-serialized directory of immutable entries.
@@ -152,6 +155,11 @@ pub const Cache = struct {
         self.runtime.policy_identity = owned;
     }
 
+    /// Borrow the process-owned immutable artifact store for parsed syntax only.
+    pub fn setSharedStore(self: *Cache, store: ?*shared_artifacts.Store) void {
+        self.runtime.shared = store;
+    }
+
     /// The directory holding entries for this compiler identity.
     fn namespace(self: *Cache) ![]const u8 {
         const tag = std.fmt.bytesToHex(self.identityHash(), .lower);
@@ -170,37 +178,54 @@ pub const Cache = struct {
 
     /// Copy parsed module syntax for an exact path/bytes/body-start match, or null.
     /// The returned program owns all of its storage through `allocator`.
-    pub fn lookupSyntax(self: *Cache, allocator: std.mem.Allocator, src: source.Source, body_start: usize) error{OutOfMemory}!?ast.Program {
+    pub fn lookupSyntax(self: *Cache, allocator: std.mem.Allocator, src: source.Source, body_start: usize) error{ OutOfMemory, InternalError }!?ast.Program {
         const key = syntaxKey(self, src, body_start);
         // Decoding copies everything it keeps, so the payload is decoded in
         // place in the file buffer rather than copied out of it first.
         const entry = self.readEntry(key) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.Damaged => {
-                self.statistics.syntax.misses += 1;
                 self.statistics.damaged += 1;
-                return null;
+                return self.lookupSharedSyntax(allocator, src, body_start);
             },
             else => {
-                self.statistics.syntax.misses += 1;
-                return null;
+                return self.lookupSharedSyntax(allocator, src, body_start);
             },
         };
         defer self.runtime.allocator.free(entry.bytes);
         const program = decodeSyntax(allocator, entry.payload) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
-                self.statistics.syntax.misses += 1;
                 self.statistics.damaged += 1;
-                return null;
+                return self.lookupSharedSyntax(allocator, src, body_start);
             },
         };
         self.statistics.syntax.hits += 1;
         return program;
     }
 
+    fn lookupSharedSyntax(self: *Cache, allocator: std.mem.Allocator, src: source.Source, body_start: usize) error{ OutOfMemory, InternalError }!?ast.Program {
+        const store = if (portableSyntax(src)) self.runtime.shared else null;
+        const payload = if (store) |shared| shared.load(self.runtime.allocator, .syntax, self.sharedSyntaxKey(src, body_start)) catch |err| return sharedError(shared, err) else null;
+        if (payload) |bytes| {
+            defer self.runtime.allocator.free(bytes);
+            const program = decodeSyntax(allocator, bytes) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                else => {
+                    self.statistics.damaged += 1;
+                    self.statistics.syntax.misses += 1;
+                    return null;
+                },
+            };
+            self.statistics.syntax.hits += 1;
+            return program;
+        }
+        self.statistics.syntax.misses += 1;
+        return null;
+    }
+
     /// Retain parsed syntax under its exact path/bytes/body-start key.
-    pub fn rememberSyntax(self: *Cache, src: source.Source, body_start: usize, syntax: ast.Program) error{OutOfMemory}!void {
+    pub fn rememberSyntax(self: *Cache, src: source.Source, body_start: usize, syntax: ast.Program) error{ OutOfMemory, InternalError }!void {
         const key = syntaxKey(self, src, body_start);
         var writer = codec.Writer.init(self.runtime.allocator);
         defer writer.deinit();
@@ -219,6 +244,9 @@ pub const Cache = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return,
         };
+        if (portableSyntax(src)) {
+            if (self.runtime.shared) |shared| _ = shared.save(.syntax, self.sharedSyntaxKey(src, body_start), writer.bytes.items) catch |err| return sharedError(shared, err);
+        }
         const stored = self.write(key, writer.bytes.items) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => {
@@ -338,6 +366,24 @@ pub const Cache = struct {
         frame(&hash, src.path);
         frame(&hash, src.bytes);
         hash.update(std.mem.asBytes(&body_start));
+        var out: [32]u8 = undefined;
+        hash.final(&out);
+        return out;
+    }
+
+    // StoredSyntax owns spans and literals only. Paths are deliberately absent;
+    // parser authority is excluded before using this separate transport key.
+    fn sharedSyntaxKey(self: *Cache, src: source.Source, body_start: usize) [32]u8 {
+        var hash = std.crypto.hash.sha2.Sha256.init(.{});
+        frame(&hash, "portable-parsed-syntax-v1");
+        frame(&hash, format_version);
+        frame(&hash, self.identity);
+        const contract = self.contractHex();
+        hash.update(&contract);
+        frame(&hash, src.bytes);
+        var start: [8]u8 = undefined;
+        std.mem.writeInt(u64, &start, body_start, .little);
+        hash.update(&start);
         var out: [32]u8 = undefined;
         hash.final(&out);
         return out;
@@ -559,6 +605,16 @@ const StoredSyntax = struct {
     attributes: []const ast.DeclarationAttributes = &.{},
     docstrings: []const ast.DeclarationDoc = &.{},
 };
+
+fn portableSyntax(src: source.Source) bool {
+    return !src.trusted_intrinsics and !std.mem.startsWith(u8, src.path, "@stdlib/");
+}
+
+fn sharedError(store: *shared_artifacts.Store, err: anyerror) error{ OutOfMemory, InternalError } {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    store.reportFailure(err);
+    return error.InternalError;
+}
 
 fn decodeSyntax(allocator: std.mem.Allocator, payload: []const u8) !ast.Program {
     var reader = codec.Reader.init(allocator, payload);

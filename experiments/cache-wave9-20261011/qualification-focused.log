@@ -1,0 +1,45 @@
+build-slot: FIFO ticket 2367, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2367, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 3, FIFO ticket 2367 after 90s
+242ca9304f75c3cd6d95a1d6a3e5f4158cb4b4298146667aeb8d6a718c72e4be
+a9f0cb7abdbbaefb3ddb84c5639301e7d4219fcca68a0f2a61f9aec9fd231863
+test-core
++- run test w
+guardian/test: 8 test(s) selected by filter: "shared compiler artifacts"
+guardian/test: SLOW  5.71s  compiler_shared_cache_test.test.shared compiler artifacts follow dependency edits and recover an immutable reverted program
+guardian/test: SLOW  10.85s  compiler_shared_cache_test.test.shared compiler artifacts bind native mode environment and enforce fresh project configuration
+guardian/test: SLOW  5.77s  compiler_shared_cache_test.test.shared compiler artifacts invalidate same-size embedded bytes and preserve exact path literals
+guardian/test: SLOW  5.02s  compiler_shared_cache_test.test.shared compiler artifacts preserve receiving diagnostic and trap paths
+guardian/test: SLOW  5.14s  compiler_shared_cache_test.test.shared compiler artifacts honor opt out no-cache and verification suppression
+guardian/test: test wall 45.52s; slowest over 50ms:
+guardian/test:   10.85s  compiler_shared_cache_test.test.shared compiler artifacts bind native mode environment and enforce fresh project configuration
+guardian/test:   5.77s  compiler_shared_cache_test.test.shared compiler artifacts invalidate same-size embedded bytes and preserve exact path literals
+guardian/test:   5.71s  compiler_shared_cache_test.test.shared compiler artifacts follow dependency edits and recover an immutable reverted program
+guardian/test:   5.14s  compiler_shared_cache_test.test.shared compiler artifacts honor opt out no-cache and verification suppression
+guardian/test:   5.02s  compiler_shared_cache_test.test.shared compiler artifacts preserve receiving diagnostic and trap paths
+guardian/test:   4.69s  compiler_shared_cache_test.test.shared compiler artifacts restore frontend bodies and linked programs across independent roots
+guardian/test:   4.60s  compiler_shared_cache_test.test.shared compiler artifacts accept concurrent publishers and remain Python free under an empty PATH
+guardian/test:   3.70s  compiler_shared_cache_test.test.shared compiler artifacts reject corruption and partial publication before verified refill
+guardian/test: PASS — 8 passed
+guardian/test: RESULT {"passed":8,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/zig-out/libexec/mylang/components ./.zig-cache/o/5e6572afea1ee6db3dbda13d73eea097/test "--guardian-filter=shared compiler artifacts" --cache-dir=./.zig-cache --seed=0x8da22bff --listen=-
+
+Build Summary: 12/12 steps succeeded; 8/8 tests passed
+test-core success
++- run test 8 pass (8 total) 45s MaxRSS:167M
+   +- compile test debug native success 609ms MaxRSS:190M
+   |  +- WriteFile cached
+   |  +- compile obj juice_bytes_hash fast native cached 6ms MaxRSS:41M
+   |  +- compile obj juice_bytes_hash fast native (reused)
+   |  +- run exe build-identity (build_identity) success 54ms
+   |  |  +- compile exe build-identity debug native cached 5ms MaxRSS:41M
+   |  +- options success
+   |  |  +- compile exe mylang debug native success 6s MaxRSS:546M
+   |  |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |  |     +- WriteFile (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:42M
+   |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+   +- run exe selka-components success 601ms
+      +- compile exe selka-components safe native cached 6ms MaxRSS:41M

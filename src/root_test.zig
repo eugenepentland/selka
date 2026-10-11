@@ -95,6 +95,7 @@ test {
     _ = @import("declaration_hints_test.zig");
     _ = @import("headerless_import_test.zig");
     _ = @import("frontend_cache_test.zig");
+    _ = @import("shared_artifact_store_test.zig");
     _ = @import("check_cache_test.zig");
     _ = @import("semantic_cache_test.zig");
     _ = @import("check_scale_test.zig");

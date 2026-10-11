@@ -27,6 +27,7 @@ pub const State = struct {
     request: language.semantic_summary.Request = .{ .body_policy = .concrete },
     contract: []const u8,
     identity: [32]u8,
+    shared: ?language.shared_artifact_store.Store = null,
 
     /// Open stores under the core cache root with a separate value-semantics
     /// contract. No persisted encoding changes; existing shared codecs are used.
@@ -61,6 +62,10 @@ pub const State = struct {
         self.semantic.context.persistent = &self.store;
         self.semantic.context.retain_summary_trees = true;
         self.frontend.identity = &self.identity;
+        if (self.shared) |*store| {
+            self.frontend.setSharedStore(store);
+            self.store.setSharedStore(store);
+        }
     }
 
     /// Release retained bodies and owned store paths; durable entries stay.
@@ -69,6 +74,7 @@ pub const State = struct {
         self.frontend.finish();
         self.frontend.deinit();
         self.store.deinit();
+        if (self.shared) |*store| store.deinit();
         self.semantic.allocator.free(self.contract);
     }
 

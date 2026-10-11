@@ -116,7 +116,8 @@ pub const QueryOptions = struct {
 };
 
 /// Check current sources and reuse only exact compiler-query inputs.
-pub fn outputWithQuery(init: std.process.Init, request: Request, policy: QueryOptions) Error!Output {
+pub fn outputWithQuery(given: std.process.Init, request: Request, policy: QueryOptions) Error!Output {
+    const init = try @import("compiler_sharing.zig").prepare(given, !policy.enabled or policy.verify);
     const a = init.arena.allocator();
     var store = try storage.Store.init(init.gpa, init.io, policy.cache);
     defer store.deinit();
@@ -128,7 +129,10 @@ pub fn outputWithQuery(init: std.process.Init, request: Request, policy: QueryOp
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
     entry.configure(&session);
-    if (policy.enabled and !policy.verify) try session.enableCache(init.gpa, policy.cache);
+    if (policy.enabled and !policy.verify) {
+        try session.enableCache(init.gpa, policy.cache);
+        try session.enableSharedCache(init.environ_map);
+    }
     const checked = session.checkFile(a, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     entry.validate(a, &session, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     var refusal: build.Refusal = .{};

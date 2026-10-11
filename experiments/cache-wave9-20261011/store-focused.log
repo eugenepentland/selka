@@ -1,0 +1,5 @@
+build-slot: build slot 1, FIFO ticket 2387 after 0s
+1/3 shared_artifact_store_test.test.shared compiler store checks domains corruption conflicts and special files...OK
+2/3 shared_artifact_store_test.test.shared compiler store streams large files under a small allocation ceiling...OK
+3/3 shared_artifact_store_test.test.shared compiler store rejects foreign formats and retains permanent lock ownership...OK
+All 3 tests passed.

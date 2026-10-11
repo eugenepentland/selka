@@ -9,6 +9,8 @@ comptime {
     _ = @import("runtime_threads_test.zig");
     _ = @import("durable_test.zig");
     _ = @import("pipeline.zig");
+    _ = @import("compiler_sharing.zig");
+    _ = @import("frontend.zig");
     _ = @import("shared_counts_test.zig");
     _ = @import("frontend_test.zig");
     _ = @import("demand_build_test.zig");
@@ -55,6 +57,7 @@ comptime {
     _ = @import("test_shared_store.zig");
     _ = @import("test_runner_portable.zig");
     _ = @import("test_runner_portable_test.zig");
+    _ = @import("compiler_shared_cache_test.zig");
     _ = @import("project_entry.zig");
     _ = @import("test_runner_options.zig");
     _ = @import("test_runner_directory.zig");

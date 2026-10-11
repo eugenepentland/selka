@@ -396,7 +396,7 @@ const Queue = struct {
 /// in root order, whatever order the children finish in.
 fn pool(init: std.process.Init, fanout: Fanout, queue: Queue) Error!void {
     const a = init.arena.allocator();
-    var environment = try init.environ_map.clone(a);
+    var environment = try childEnvironment(init, fanout.controls.build.show);
     defer environment.deinit();
     try environment.put(tool_ticket.hint, "1");
     if (fanout.controls.shared_cache) |directory| if (directory.len == 0)
@@ -413,6 +413,17 @@ fn pool(init: std.process.Init, fanout: Fanout, queue: Queue) Error!void {
     worker.run();
     for (threads[0..started]) |thread| thread.join();
     if (shared.failure) |err| return err;
+}
+
+fn childEnvironment(init: std.process.Init, policy: @import("pipeline.zig").Show) error{OutOfMemory}!std.process.Environ.Map {
+    var environment = try init.environ_map.clone(init.arena.allocator());
+    if (policy.compiler_cache_disabled or policy.verify_cache) {
+        const name = language.shared_artifact_store.environment_variable;
+        if (init.minimal.environ.getPosix(name)) |original| {
+            try environment.put(name, original);
+        } else _ = environment.swapRemove(name);
+    }
+    return environment;
 }
 
 /// One worker of `pool`: it runs roots until the queue is empty or a child could not start.
@@ -531,10 +542,47 @@ fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []
     if (opts.build.facts == .verify) try arguments.append(a, "--verify-facts");
     if (opts.build.facts == .off) try arguments.append(a, "--no-facts");
     if (opts.controls.force) try arguments.append(a, "--force");
+    if (opts.build.show.compiler_cache_disabled or opts.build.show.verify_cache) try arguments.append(a, "--no-cache");
     if (opts.controls.against) |reference| try arguments.appendSlice(a, &.{ "--affected", "--against", reference });
     if (opts.properties.seed) |seed| try arguments.appendSlice(a, &.{ "--seed", try std.fmt.allocPrint(a, "{d}", .{seed}) });
     for (opts.build.links) |link| try arguments.appendSlice(a, &.{ "--link", link });
     return arguments.items;
+}
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "directory compiler suppression forwards policy while retaining the original guest environment" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const original = [_:null]?[*:0]const u8{"MYLANG_COMPILER_SHARED_CACHE=guest-visible-cache"};
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put(language.shared_artifact_store.environment_variable, "");
+    const init: std.process.Init = .{
+        .minimal = .{ .environ = .{ .block = .{ .slice = &original } }, .args = .{ .vector = &.{} } },
+        .arena = &arena,
+        .gpa = std.testing.allocator,
+        .io = std.testing.io,
+        .environ_map = &environment,
+        .preopens = .empty,
+    };
+    var child = try childEnvironment(init, .{ .compiler_cache_disabled = true });
+    defer child.deinit();
+    try std.testing.expectEqualStrings("guest-visible-cache", child.get(language.shared_artifact_store.environment_variable).?);
+    try std.testing.expectEqualStrings("", environment.get(language.shared_artifact_store.environment_variable).?);
+    const fanout: Fanout = .{
+        .compiler = "mylang",
+        .directory = "unused",
+        .controls = .{ .path = "suite", .build = .{ .zig = "zig", .show = .{ .compiler_cache_disabled = true } } },
+        .jobs = 1,
+        .ticket = "unused",
+        .run_root = undefined,
+        .identity = undefined,
+    };
+    const arguments = try std.mem.join(a, "\n", try argv(a, fanout, "suite/main.my"));
+    try std.testing.expect(std.mem.indexOf(u8, arguments, "--no-cache") != null);
+    const compiled = try @import("compiler_sharing.zig").prepare(init, true);
+    try std.testing.expectEqualStrings("guest-visible-cache", compiled.minimal.environ.getPosix(language.shared_artifact_store.environment_variable).?);
 }
 
 // spec-case: NEW-CORE-TEST-SHARED-1

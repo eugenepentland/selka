@@ -25,6 +25,7 @@ const source = @import("source.zig");
 const codec = @import("persist_codec.zig");
 const owned = @import("semantic_entry.zig");
 const cache_key = @import("cache_key.zig");
+const shared_artifacts = @import("shared_artifact_store.zig");
 
 /// On-disk format version. Bump for any layout, tag or validation change.
 pub const format_version = "semantic-cache-v6";
@@ -98,6 +99,10 @@ pub const Retained = struct {
 pub const Root = struct {
     path: []const u8,
     owned: bool = false,
+    /// Optional process-owned immutable transport for path-free ordinary bodies.
+    shared: ?*shared_artifacts.Store = null,
+    /// Exact source/catalog layout supplied before this request's hydration.
+    shared_source: ?[32]u8 = null,
 };
 /// Versioned compiler contract that isolates one durable namespace.
 pub const Context = struct {
@@ -161,6 +166,17 @@ pub const Store = struct {
         if (self.root.owned) self.allocator.free(self.root.path);
     }
 
+    /// Borrow an immutable artifact store; all retained catalogs remain private.
+    pub fn setSharedStore(self: *Store, store: ?*shared_artifacts.Store) void {
+        self.root.shared = store;
+        self.root.shared_source = null;
+    }
+
+    /// Bind immutable typed payloads to a proven logical source/catalog layout.
+    pub fn setSharedSource(self: *Store, digest: ?[32]u8) void {
+        self.root.shared_source = digest;
+    }
+
     /// Stable key for one declaration under one dependency context.
     fn entryKey(self: *const Store, stable_key: []const u8, context: [32]u8) [32]u8 {
         var hash = std.crypto.hash.sha2.Sha256.init(.{});
@@ -189,7 +205,10 @@ pub const Store = struct {
     /// Decode at most one exact stable-key/context entry. Every malformed or
     /// version-incompatible file is a miss and never reaches the caller.
     pub fn lookup(self: *Store, allocator: std.mem.Allocator, stable_key: []const u8, context: [32]u8) error{ OutOfMemory, InternalError }!?owned.Entry {
-        const payload = (try self.readPayload(stable_key, context)) orelse return null;
+        const previous_misses = self.statistics.misses;
+        const local_payload = try self.readPayload(stable_key, context);
+        const from_shared = local_payload == null;
+        const payload = local_payload orelse (try self.readSharedBody(stable_key, context)) orelse return null;
         defer self.allocator.free(payload);
         var arena = std.heap.ArenaAllocator.init(allocator);
         var accepted = false;
@@ -203,7 +222,9 @@ pub const Store = struct {
         if (!self.valid(body)) return self.reject();
         if (!std.mem.eql(u8, body.meta.identity.key, stable_key)) return self.reject();
         if (!std.mem.eql(u8, &body.meta.identity.context, &context)) return self.reject();
+        if (from_shared and !portableBody(body)) return self.reject();
 
+        self.statistics.misses = previous_misses;
         self.statistics.hits += 1;
         accepted = true;
         return .{
@@ -215,6 +236,25 @@ pub const Store = struct {
             .source = .{ .old_len = body.source_bytes.old_len, .body_bytes = body.source_bytes.body, .region_bytes = body.source_bytes.region, .modules = body.source_bytes.modules, .trailing_bytes = body.source_bytes.trailing },
             .meta = body.meta,
         };
+    }
+
+    fn readSharedBody(self: *Store, stable_key: []const u8, context: [32]u8) error{ OutOfMemory, InternalError }!?[]u8 {
+        const shared = self.root.shared orelse return null;
+        if (!portableFunctionKey(stable_key)) return null;
+        const key = self.sharedBodyKey(stable_key, context) orelse return null;
+        return shared.load(self.allocator, .typed, key) catch |err| return sharedFailure(shared, err);
+    }
+
+    fn sharedBodyKey(self: *Store, stable_key: []const u8, context: [32]u8) ?[32]u8 {
+        const layout = self.root.shared_source orelse return null;
+        var hash = std.crypto.hash.sha2.Sha256.init(.{});
+        frame(&hash, "portable-typed-body-v1");
+        const key = self.entryKey(stable_key, context);
+        hash.update(&key);
+        hash.update(&layout);
+        var digest: [32]u8 = undefined;
+        hash.final(&digest);
+        return digest;
     }
 
     /// Decode one abstract-checked symbolic entry. Uses the same header,
@@ -393,25 +433,31 @@ pub const Store = struct {
         return true;
     }
 
-    /// Publish one entry atomically. Write failures are cache bypasses, never
-    /// command failures; only allocation failure is returned to the caller.
-    pub fn put(self: *Store, entry: *const owned.Entry) error{OutOfMemory}!bool {
+    /// Publish one entry atomically. Private write failures bypass retention;
+    /// configured shared-store failures are reported and fail the request.
+    pub fn put(self: *Store, entry: *const owned.Entry) error{ OutOfMemory, InternalError }!bool {
         if (!self.validOwned(entry)) {
             self.statistics.bypassed += 1;
             return false;
         }
         var payload = codec.Writer.init(self.allocator);
         defer payload.deinit();
-        payload.write(StoredBody, .{
+        const body: StoredBody = .{
             .meta = entry.meta,
             .function = entry.function,
             .nodes = entry.nodes,
             .statements = entry.statements,
             .range = entry.range,
             .source_bytes = .{ .old_len = entry.source.old_len, .body = entry.source.body_bytes, .region = entry.source.region_bytes, .modules = entry.source.modules, .trailing = entry.source.trailing_bytes },
-        }) catch |err| switch (err) {
+        };
+        payload.write(StoredBody, body) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
         };
+        if (self.root.shared) |shared| {
+            if (portableBody(body)) {
+                if (self.sharedBodyKey(entry.meta.identity.key, entry.meta.identity.context)) |key| _ = shared.save(.typed, key, payload.bytes.items) catch |err| return sharedFailure(shared, err);
+            }
+        }
         return self.publishPayload(entry.meta.identity.key, entry.meta.identity.context, payload.bytes.items);
     }
 
@@ -727,6 +773,44 @@ pub const Store = struct {
         self.statistics.retained.bytes = total;
     }
 };
+
+// Shared bodies keep their complete identities. A pathname fallback is never
+// shortened into a module name, and external source proofs remain local.
+fn portableFunctionKey(key: []const u8) bool {
+    var parts = std.mem.splitScalar(u8, key, '\x1f');
+    if (!std.mem.eql(u8, parts.next() orelse return false, "fn")) return false;
+    const module = parts.next() orelse return false;
+    if (module.len == 0 or std.mem.endsWith(u8, module, ".my")) return false;
+    var components = std.mem.splitScalar(u8, module, '.');
+    while (components.next()) |component| {
+        if (component.len == 0) return false;
+        if (!(std.ascii.isAlphabetic(component[0]) or component[0] == '_')) return false;
+        for (component) |byte| if (!(std.ascii.isAlphanumeric(byte) or byte == '_')) return false;
+    }
+    const owner = parts.next() orelse return false;
+    const name = parts.next() orelse return false;
+    if (name.len == 0 or parts.next() != null) return false;
+    return pathFree(owner) and pathFree(name);
+}
+
+fn pathFree(name: []const u8) bool {
+    return std.mem.indexOfAny(u8, name, "/\\") == null;
+}
+
+fn portableBody(body: StoredBody) bool {
+    if (!portableFunctionKey(body.meta.identity.key) or body.source_bytes.modules.len != 0) return false;
+    for (body.meta.function_refs) |reference| {
+        if (reference.template != null or !portableFunctionKey(reference.key)) return false;
+    }
+    for (body.meta.record_refs) |reference| if (!pathFree(reference.key)) return false;
+    return true;
+}
+
+fn sharedFailure(store: *shared_artifacts.Store, err: anyerror) error{ OutOfMemory, InternalError } {
+    if (err == error.OutOfMemory) return error.OutOfMemory;
+    store.reportFailure(err);
+    return error.InternalError;
+}
 
 fn takeString(reader: *codec.Reader) ![]const u8 {
     const length = try reader.integer(u64);

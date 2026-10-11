@@ -177,6 +177,7 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     var links: std.ArrayList([]const u8) = .empty;
     var explicit_mode = false;
     var path: ?[]const u8 = null;
+    var no_cache = false;
     var index: usize = 0;
     while (index < args.len) : (index += 1) {
         const arg = args[index];
@@ -202,13 +203,7 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             options.show.codegen.generic_vectors = true;
         } else if (trapFrames(arg)) |frames| {
             options.show.codegen.trap_frames = frames;
-        } else if (std.mem.eql(u8, arg, "--stats")) {
-            options.show.stats = true;
-        } else if (std.mem.eql(u8, arg, "--verify-cache")) {
-            options.show.verify_cache = true;
-        } else if (std.mem.eql(u8, arg, "--cache-report")) {
-            options.show.cache_report = .text;
-        } else if (std.mem.eql(u8, arg, "--verify-facts")) {
+        } else if (buildOutputFlag(&options, &no_cache, arg)) {} else if (std.mem.eql(u8, arg, "--verify-facts")) {
             options.facts = .verify;
         } else if (sabotageFlag(arg)) |mode| {
             options.facts = mode;
@@ -244,12 +239,28 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         return 2;
     }
     var report: std.ArrayList(u8) = .empty;
-    const status = pipeline.build(init, source, options, &report) catch |err| switch (err) {
+    if (no_cache) options.cache = try cli_run.privateCache(init, options.cache);
+    defer if (no_cache) cli_run.discard(init.io, options.cache);
+    const compilation_init = try @import("compiler_sharing.zig").prepare(init, no_cache or options.show.verify_cache);
+    const status = pipeline.build(compilation_init, source, options, &report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => 1,
     };
     if (report.items.len != 0) try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
     return status;
+}
+
+fn buildOutputFlag(options: *pipeline.Options, no_cache: *bool, arg: []const u8) bool {
+    if (std.mem.eql(u8, arg, "--stats")) {
+        options.show.stats = true;
+    } else if (std.mem.eql(u8, arg, "--verify-cache")) {
+        options.show.verify_cache = true;
+    } else if (std.mem.eql(u8, arg, "--no-cache")) {
+        no_cache.* = true;
+    } else if (std.mem.eql(u8, arg, "--cache-report")) {
+        options.show.cache_report = .text;
+    } else return false;
+    return true;
 }
 
 const mode_conflict = "--release, --unoptimized and --optimize-debug/--mode Debug are mutually exclusive";
@@ -322,9 +333,11 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     if (no_cache) {
         options.build.cache = try cli_run.privateCache(init, options.build.cache);
         options.shared_cache = "";
+        options.build.show.compiler_cache_disabled = true;
     }
     defer if (no_cache) cli_run.discard(init.io, options.build.cache);
-    return test_runner.run(init, options);
+    const compilation_init = try @import("compiler_sharing.zig").prepare(init, no_cache or options.build.show.verify_cache);
+    return test_runner.run(compilation_init, options);
 }
 
 fn propertyRuns(text: []const u8) ?u32 {

@@ -1,0 +1,31 @@
+Failure excerpt from the initial full gate. The complete initial log remains
+in private iteration logs; verification-initial.json records its failed status.
+
+   +- python3 scripts/fuzz_coverage_test.py failure
+.......................E.
+======================================================================
+ERROR: test_timeout_kills_spawned_engine_process_group (__main__.LibFuzzerWorker.test_timeout_kills_spawned_engine_process_group)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_coverage_test.py", line 337, in test_timeout_kills_spawned_engine_process_group
+    self.assert_stopped(int(child_pid.read_text()))
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/.codex/worktrees/selka-selfhost-wave1/mylang/scripts/fuzz_coverage_test.py", line 344, in assert_stopped
+    state = path.read_text().split(') ', 1)[1].split()[0]
+            ~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 788, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 772, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/proc/3335699/stat'
+
+----------------------------------------------------------------------
+Ran 25 tests in 9.289s
+
+FAILED (errors=1)
+error: process exited with code 1 (expected exited with code 0)
+
+Build Summary: 123/126 steps succeeded (1 failed); 2724/27343 tests passed (24619 skipped)
+verification: FAIL; 0 reused, 42 selected; build admitted 0.000s, gate admitted 671.347s

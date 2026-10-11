@@ -161,7 +161,7 @@ const toolchain_variables = [_][]const u8{
 };
 /// `MYLANG_` variables that place caches, size the worker pool or choose which
 /// process runs a test, and so change no outcome.
-const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", tool_ticket.hint, "MYLANG_TEST_ISOLATE", "MYLANG_TEST_CHILDREN", options.shared_cache_variable };
+const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", "MYLANG_COMPILER_SHARED_CACHE", tool_ticket.hint, "MYLANG_TEST_ISOLATE", "MYLANG_TEST_CHILDREN", options.shared_cache_variable };
 
 /// Whether a variable can change a test's outcome. A shell's `_` and `OLDPWD` or a
 /// terminal's variables cannot; a test that reads the environment is never reused.

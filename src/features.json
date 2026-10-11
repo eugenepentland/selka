@@ -97,6 +97,11 @@
       "summary": "Opt-in native test storage shares verified deterministic successes across compatible project roots while keeping source checking, diagnostics and mutable caches local.",
       "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
     },
+    "shared-compiler-artifacts": {
+      "kind": "tooling",
+      "summary": "Opt-in native storage shares compatible immutable syntax, ordinary typed bodies and exact linked programs across worktrees, with private indexes, fresh validation and per-key publication locks.",
+      "doc": "docs/tooling/native-build.md#shared-compiler-artifacts"
+    },
     "parallel-guest-test-directories": {
       "kind": "tooling",
       "summary": "`mylang test` runs a whole directory of `.my` programs as parallel child commands sharing one cache, with one merged summary.",

@@ -18,8 +18,9 @@ const Options = struct {
 };
 
 /// Check one file, emitting diagnostics or opt-in work/timing receipts.
-pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
+pub fn run(given: std.process.Init, args: []const []const u8) Error!u8 {
     const options = parse(args) orelse return 2;
+    const init = try @import("compiler_sharing.zig").prepare(given, options.no_cache);
     const allocator = init.arena.allocator();
     var report: std.ArrayList(u8) = .empty;
     const entry = project_entry.resolve(allocator, init.io, options.path, &report) catch |err| {
@@ -29,7 +30,10 @@ pub fn run(init: std.process.Init, args: []const []const u8) Error!u8 {
     };
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
-    if (!options.no_cache) try session.enableCache(init.gpa, options.cache);
+    if (!options.no_cache) {
+        try session.enableCache(init.gpa, options.cache);
+        try session.enableSharedCache(init.environ_map);
+    }
     if (!options.typed) session.validationOnly();
     var profile = language.timings.Profile.init(init.io, options.timings, .compiler);
     session.setProfile(&profile);

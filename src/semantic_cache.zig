@@ -10,6 +10,7 @@ const owned = @import("semantic_entry.zig");
 const interfaces = @import("interfaces.zig");
 const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
+const embed = @import("embed.zig");
 const generic_cache = @import("generic_cache.zig");
 const generic_specializations = @import("generic_specializations.zig");
 const timings = @import("timings.zig");
@@ -353,7 +354,11 @@ pub const Cache = struct {
         // Demand requests decode only bodies their host cannot replace, after
         // summary planning; Session.lookup retains the ordinary lazy miss path.
         const lazy_trees = if (self.context.summaries) |request| request.policy.demand != null else false;
+        // A cold demand request has no prior stand-ins and retains every tree.
+        // Warm demand/facts requests may omit trees and change snapshot ordinals.
+        const complete_shared = needs_trees and if (self.context.summaries) |request| !lazy_trees or request.previous == null else true;
         if (self.context.persistent) |persistent| {
+            if (persistent.root.shared != null) persistent.setSharedSource(if (complete_shared) sharedSourceDigest(src, self.resolution) else null);
             if (self.entries.len == 0 and needs_trees and !lazy_trees) {
                 const io_start = if (profile) |p| p.now() else std.Io.Timestamp.zero;
                 try self.loadPersistent(persistent, prepared);
@@ -887,6 +892,36 @@ pub const Session = struct {
     }
 };
 
+// Ordinary local keys intentionally survive unrelated edits. Immutable typed
+// snapshots additionally bind the complete source and logical module layout,
+// because saved source offsets and catalog ordinals change with those edits.
+fn sharedSourceDigest(src: source.Source, resolution: ?*interfaces.Index) ?[32]u8 {
+    const index = resolution orelse return null;
+    if (src.origins.len == 0 or src.origins.len != index.project.modules.items.len) return null;
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    hash.update("portable-typed-source-layout-v1");
+    var lengths: [16]u8 = undefined;
+    std.mem.writeInt(u64, lengths[0..8], src.bytes.len, .little);
+    std.mem.writeInt(u64, lengths[8..16], src.origins.len, .little);
+    hash.update(&lengths);
+    hash.update(src.bytes);
+    for (src.origins, index.project.modules.items) |origin, module| {
+        if (!std.mem.eql(u8, origin.original.bytes, module.src.bytes)) return null;
+        var coordinates: [24]u8 = undefined;
+        std.mem.writeInt(u64, coordinates[0..8], origin.start, .little);
+        std.mem.writeInt(u64, coordinates[8..16], origin.original.bytes.len, .little);
+        std.mem.writeInt(u64, coordinates[16..24], module.name.len, .little);
+        hash.update(&coordinates);
+        hash.update(module.name);
+        // Embedded contents can change while all source text stays identical.
+        // Fold every module's fresh input proofs, including unrelated bodies.
+        embed.hashInto(&hash, origin.original.embeds);
+    }
+    var digest: [32]u8 = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
 /// Whether one entry's stored body bytes are the trailing slice of its stored
 /// region bytes, which is the shape `Entry.create` always writes: a region runs
 /// from the declaration's first byte to the end of its body. When it holds, and
@@ -911,7 +946,7 @@ fn bodyIsRegionSuffix(identity: owned.Identity, region: source.Span, body: sourc
 /// the store inventories the namespace once and then only converges on its
 /// byte/entry bounds by bounded-slack reconciliation, so populating N bodies
 /// costs O(N) filesystem inventory instead of O(N^2).
-fn persistFresh(cache: *Cache, fresh: []const bool) error{OutOfMemory}!void {
+fn persistFresh(cache: *Cache, fresh: []const bool) error{ OutOfMemory, InternalError }!void {
     const persistent = cache.context.persistent orelse return;
     var any_fresh = false;
     for (fresh) |is_fresh| {

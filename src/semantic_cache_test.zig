@@ -7,8 +7,199 @@ const native = @import("native_execute.zig");
 const semantic_key = @import("semantic_key.zig");
 const cache_key = @import("cache_key.zig");
 const semantic_store = @import("semantic_store.zig");
+const shared_artifacts = @import("shared_artifact_store.zig");
 const Cache = language.semantic_cache.Cache;
 const edited_path = "edited.my";
+
+const SharedMain = struct {
+    bytes: []const u8,
+    embedded: []const u8 = &.{},
+    prior_demand: bool = false,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, _: []const u8, _: usize) language.project.ReadError![]u8 {
+        const self: *SharedMain = @ptrCast(@alignCast(context.?));
+        return allocator.dupe(u8, self.bytes);
+    }
+    fn readEmbed(context: ?*anyopaque, allocator: std.mem.Allocator, _: []const u8, _: []const u8, _: usize) std.mem.Allocator.Error!@import("embed.zig").Read {
+        const self: *SharedMain = @ptrCast(@alignCast(context.?));
+        return .{ .status = .ok, .contents = try allocator.dupe(u8, self.embedded) };
+    }
+};
+
+const SharedBodyWork = struct { checked: usize, reused: usize };
+fn sharedBodyRequest(root: []const u8, shared: ?*shared_artifacts.Store, contract: cache_key.Contract, mutation: []const u8, bytes: []const u8) !SharedBodyWork {
+    return sharedBodyInputs(root, shared, contract, mutation, .{ .bytes = bytes });
+}
+
+fn sharedBodyInputs(root: []const u8, shared: ?*shared_artifacts.Store, contract: cache_key.Contract, mutation: []const u8, inputs: SharedMain) !SharedBodyWork {
+    var store = semantic_store.Store.init(t.allocator, t.io, root, contract, mutation);
+    defer store.deinit();
+    store.setSharedStore(shared);
+    const fingerprint = try contract.fingerprint(t.allocator);
+    defer t.allocator.free(fingerprint);
+    var cache = Cache.initWithContract(t.allocator, 4 << 20, fingerprint);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    cache.context.mutation_contract = mutation;
+    var previous: language.semantic_summary.Index = .{};
+    var request: language.semantic_summary.Request = .{ .body_policy = .concrete };
+    if (inputs.prior_demand) {
+        request.previous = &previous;
+        request.policy.demand = .{ .context = &previous, .allow = refuseSharedDemand };
+        cache.context.summaries = &request;
+        cache.context.retain_summary_trees = true;
+    }
+    var files = inputs;
+    var loaded = language.project.Project.init(t.allocator);
+    defer loaded.deinit();
+    try loaded.load(.{ .context = &files, .read = SharedMain.read, .embed = SharedMain.readEmbed }, "main", .{});
+    loaded.modules.items[0].src.path = try std.fs.path.join(loaded.arena.allocator(), &.{ root, "main.my" });
+    var index = try language.interfaces.build(&loaded);
+    var cached = try language.project_compile.Compilation.init(&index);
+    try cached.checkWithCache(&cache);
+    var fresh = try language.project_compile.Compilation.init(&index);
+    try fresh.check();
+    try t.expectEqual(fresh.program.?.functions.len, cached.program.?.functions.len);
+    for (fresh.program.?.functions, cached.program.?.functions) |left, right| {
+        const expected = semantic_key.contractDigest(left);
+        const restored = semantic_key.contractDigest(right);
+        try t.expectEqualSlices(u8, &expected, &restored);
+    }
+    try t.expectEqual(fresh.diagnostics.items.items.len, cached.diagnostics.items.items.len);
+    for (fresh.diagnostics.items.items, cached.diagnostics.items.items) |left, right| {
+        const expected = try language.diagnostic_output.render(t.allocator, left, fresh.src, .json);
+        defer t.allocator.free(expected);
+        const restored = try language.diagnostic_output.render(t.allocator, right, cached.src, .json);
+        defer t.allocator.free(restored);
+        try t.expectEqualStrings(expected, restored);
+    }
+    return .{ .checked = cache.statistics.checked, .reused = cache.statistics.reused };
+}
+
+fn refuseSharedDemand(_: *const anyopaque, _: []const u8, _: [32]u8, _: [32]u8) bool {
+    return false;
+}
+
+const shared_body_source =
+    \\func fresh() -> i64[]:
+    \\    return [1, 2]
+    \\func bump(mut xs: i64[]) -> i64:
+    \\    mut unused = 7
+    \\    xs[0] = xs[0] + 1
+    \\    return xs[0]
+    \\func main() -> i64:
+    \\    return 0
+;
+
+fn unprovenSharedRequest(root: []const u8, shared: *shared_artifacts.Store) !SharedBodyWork {
+    var store = semantic_store.Store.init(t.allocator, t.io, root, cache_key.Contract.default, language.semantic_cache.mutation_contract_version);
+    defer store.deinit();
+    store.setSharedStore(shared);
+    var cache = Cache.init(t.allocator, 4 << 20);
+    defer cache.deinit();
+    cache.context.persistent = &store;
+    var compilation = try language.Compilation.init(t.allocator, root, shared_body_source);
+    defer compilation.deinit();
+    try compilation.checkWithCache(&cache);
+    return .{ .checked = cache.statistics.checked, .reused = cache.statistics.reused };
+}
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "shared typed bodies cross absolute project roots and reconstruct fresh contracts" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const left = try std.fs.path.join(t.allocator, &.{ root, "left" });
+    defer t.allocator.free(left);
+    const right = try std.fs.path.join(t.allocator, &.{ root, "right" });
+    defer t.allocator.free(right);
+    const partial = try std.fs.path.join(t.allocator, &.{ root, "partial" });
+    defer t.allocator.free(partial);
+    var shared = try shared_artifacts.Store.open(t.allocator, t.io, root);
+    defer shared.deinit();
+    const contract = cache_key.Contract.default;
+    const mutation = language.semantic_cache.mutation_contract_version;
+    const cold = try sharedBodyRequest(left, &shared, contract, mutation, shared_body_source);
+    const warm = try sharedBodyRequest(right, &shared, contract, mutation, shared_body_source);
+    try t.expectEqual(@as(usize, 3), cold.checked);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 3), warm.reused);
+    const warmed_demand = try sharedBodyInputs(partial, &shared, contract, mutation, .{ .bytes = shared_body_source, .prior_demand = true });
+    try t.expectEqual(@as(usize, 3), warmed_demand.checked);
+    try t.expectEqual(@as(usize, 0), warmed_demand.reused);
+    // An unrelated declaration changes ordinals/source length, so its complete
+    // immutable image uses a different layout key rather than conflicting.
+    const added = try sharedBodyRequest(right, &shared, contract, mutation, shared_body_source ++ "\nfunc extra() -> i64:\n    return 9\n");
+    try t.expectEqual(@as(usize, 4), added.checked);
+    try t.expectEqual(@as(usize, 0), added.reused);
+    // An unproven standalone pathname stays intact and never becomes a shared
+    // logical-module identity by removing an absolute prefix.
+    const standalone_left = try unprovenSharedRequest(left, &shared);
+    const standalone_right = try unprovenSharedRequest(right, &shared);
+    try t.expectEqual(@as(usize, 3), standalone_left.checked);
+    try t.expectEqual(@as(usize, 3), standalone_right.checked);
+    try t.expectEqual(@as(usize, 0), standalone_right.reused);
+}
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "shared typed bodies reject changed contract and mutation versions" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const left = try std.fs.path.join(t.allocator, &.{ root, "left" });
+    defer t.allocator.free(left);
+    const right = try std.fs.path.join(t.allocator, &.{ root, "right" });
+    defer t.allocator.free(right);
+    var shared = try shared_artifacts.Store.open(t.allocator, t.io, root);
+    defer shared.deinit();
+    const base = cache_key.Contract.default;
+    const mutation = language.semantic_cache.mutation_contract_version;
+    const cold = try sharedBodyRequest(left, &shared, base, mutation, shared_body_source);
+    try t.expectEqual(@as(usize, 3), cold.checked);
+    var variants: [6]cache_key.Contract = .{ base, base, base, base, base, base };
+    variants[0].bootstrap_language = "changed";
+    variants[1].target = "changed";
+    variants[2].runtime_abi = "changed";
+    variants[3].effects = "changed";
+    variants[4].flags = "changed";
+    variants[5].compiler_identity = "changed";
+    for (variants) |variant| {
+        const changed = try sharedBodyRequest(right, &shared, variant, mutation, shared_body_source);
+        try t.expectEqual(@as(usize, 3), changed.checked);
+        try t.expectEqual(@as(usize, 0), changed.reused);
+    }
+    const changed_mutation = try sharedBodyRequest(right, &shared, base, "another-mutation-contract", shared_body_source);
+    try t.expectEqual(@as(usize, 3), changed_mutation.checked);
+    try t.expectEqual(@as(usize, 0), changed_mutation.reused);
+}
+
+// spec-case: COMPILER-SHARED-CACHE-1
+test "shared typed bodies require every fresh embedded input proof" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    const left = try std.fs.path.join(t.allocator, &.{ root, "left" });
+    defer t.allocator.free(left);
+    const right = try std.fs.path.join(t.allocator, &.{ root, "right" });
+    defer t.allocator.free(right);
+    const edited = try std.fs.path.join(t.allocator, &.{ root, "edited" });
+    defer t.allocator.free(edited);
+    var shared = try shared_artifacts.Store.open(t.allocator, t.io, root);
+    defer shared.deinit();
+    const contract = cache_key.Contract.default;
+    const mutation = language.semantic_cache.mutation_contract_version;
+    const bytes = "func main() -> i64:\n    return len(embed_bytes(\"data.bin\"))\nfunc leaf() -> i64:\n    return 9\n";
+    const cold = try sharedBodyInputs(left, &shared, contract, mutation, .{ .bytes = bytes, .embedded = "abc" });
+    const warm = try sharedBodyInputs(right, &shared, contract, mutation, .{ .bytes = bytes, .embedded = "abc" });
+    const changed = try sharedBodyInputs(edited, &shared, contract, mutation, .{ .bytes = bytes, .embedded = "abcd" });
+    try t.expectEqual(@as(usize, 2), cold.checked);
+    try t.expectEqual(@as(usize, 2), warm.reused);
+    try t.expectEqual(@as(usize, 0), warm.checked);
+    try t.expectEqual(@as(usize, 2), changed.checked);
+    try t.expectEqual(@as(usize, 0), changed.reused);
+}
 
 fn specializationRecords(allocator: std.mem.Allocator) ![]u8 {
     var text: std.ArrayList(u8) = .empty;

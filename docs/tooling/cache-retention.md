@@ -36,9 +36,10 @@ success eviction and be replayed against a changed target. Juice materializes
 verified raw records and executable copies into the requesting worktree.
 
 Native unit/runtime objects already use their own shared content-addressed
-store. Native frontend packs, linked-program caches and revision indexes remain
-private. `--shared-cache-dir` does not merge these formats or share Zig's local
-cache. Each worktree still requires its own `ZIG_LOCAL_CACHE_DIR`.
+store. Optional native compiler-artifact sharing has its own namespace and
+environment variable, described below; revision indexes stay private.
+`--shared-cache-dir` does not merge these formats or share Zig's local cache.
+Each worktree still requires its own `ZIG_LOCAL_CACHE_DIR`.
 
 The native `mylang test --shared-cache-dir DIR` command also accepts a shared
 root, using the independent `native-tests-v1` namespace for portable ordinary
@@ -48,6 +49,29 @@ that disposable namespace only while its users are stopped; never unlink its
 permanent `.lock` while a command may use it. See
 [guest tests](guest-tests.md#reusing-unaffected-results) for the supported subset
 and environment setup. Native tests, including shared lookup, require no Python.
+
+## Native compiler artifacts
+
+`MYLANG_COMPILER_SHARED_CACHE=DIR` selects the independent
+`DIR/compiler-artifacts-v1` namespace for supported syntax, typed bodies and
+linked executables. Private mutable indexes and materialized executables remain
+in each requesting worktree. See [compiler caches](caches.md#shared-compiler-artifacts)
+for eligibility and [native builds](native-build.md#shared-compiler-artifacts)
+for usage. The same root may hold `native-tests-v1`; their formats stay separate.
+
+Native artifacts are disposable, bounded to 128 MiB per payload and protected
+by checksummed records and atomic rename. Staging/hashing precedes a permanent
+per-key publication lock; no build work holds that lock. A conflicting valid
+same-key result raises `DeterminismMismatch` and preserves the existing record;
+this namespace does not implement the developer evidence store's conflict
+poisoning or pin/lease protocol. It is for trusted local producers.
+
+The Python collector does **not** collect this namespace, and it has no total
+retention budget yet. Clear `compiler-artifacts-v1` only while all users of it
+are stopped. Never remove its `.lock` or per-key `.blob.lock` files while a
+command may hold or wait for them. An already materialized private executable
+does not depend on shared storage, and subsequent misses rebuild correctly.
+This cache makes no application-journal or power-loss durability guarantee.
 
 ## Publication and compatibility
 

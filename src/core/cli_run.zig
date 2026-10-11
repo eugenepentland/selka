@@ -97,7 +97,8 @@ pub fn run(init: std.process.Init, request: cli_args.Request, command: []const u
     options.output = try std.fs.path.join(a, &.{ absolute, std.fs.path.stem(request.path) });
     // `--no-cache` builds through a cache private to this run, removed with its directory.
     if (request.no_cache) options.cache = try privateCache(init, absolute);
-    _ = pipeline.buildRun(init, request.path, options, budget, &report) catch |err| {
+    const compilation_init = try @import("compiler_sharing.zig").prepare(init, request.no_cache or options.show.verify_cache);
+    _ = pipeline.buildRun(compilation_init, request.path, options, budget, &report) catch |err| {
         try emit(init, report.items, json);
         return switch (err) {
             error.OutOfMemory => error.OutOfMemory,

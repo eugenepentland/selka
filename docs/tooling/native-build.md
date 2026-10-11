@@ -271,12 +271,47 @@ build removes, so Zig's own cache keeps no second copy of objects or programs.
 `scripts/prune-caches.sh` evicts the per-user store (by last read, then to a size
 cap) and each worktree's `programs-v1`, `foreign-v1` and `replay-v1`.
 
+## Shared compiler artifacts
+
+Compatible worktrees can also share immutable frontend artifacts and linked
+programs by setting `MYLANG_COMPILER_SHARED_CACHE`. Each worktree keeps its own
+private cache and executable copies. The native compiler implements this store;
+installation and use need no Python.
+
+```bash
+export MYLANG_COMPILER_SHARED_CACHE="$HOME/.cache/mylang/compiler-artifacts"
+mylang build app/main.my -o app.bin --cache-dir .mylang-cache/private --report
+```
+
+The namespace is `compiler-artifacts-v1`, separate from test-success receipts.
+The shared program key binds the compiler, exact ordered object bytes and
+qualified toolchain/link settings, including `SOURCE_DATE_EPOCH` and
+`ZERO_AR_DATE`. Existing logical module paths can produce identical objects
+across roots. Absolute source provenance may change their bytes and miss;
+source paths and literal strings are never rewritten to manufacture a hit.
+Foreign `--link` inputs and unqualified tools do not use shared programs.
+
+With an empty private cache, a hit still performs frontend validation, lowering
+and emission, then copies the verified program through the private program
+store. When the per-user object store also hits, no compiler or linker process
+starts. `cache-report-v1` reports `program: "reused"`, `program_shared: true`,
+zero `compiled` and zero `processes`. A subsequent private replay reports
+`program_shared: false`; it does not claim another shared lookup.
+
+The [frontend sharing contract](caches.md#shared-compiler-artifacts) describes
+syntax/body eligibility and fresh validation. `--no-cache` and `--verify-cache`
+disable all shared compiler-artifact lookup and publication. An explicitly
+configured invalid store fails before a private replay can hide it. Corrupt
+individual records instead cause correct fresh work. See
+[retention](cache-retention.md#native-compiler-artifacts) before deleting entries.
+
 ## Reports
 
 - **`--report`** (on `build`, `build --run`, `run` and `run-project`) prints one
   `cache-report-v1` JSON line on stderr: the units linked, served by the object
   store, compiled and verified, the tool processes started, and whether the program
   was `linked`, `reused` from the program store or `replayed` (every count 0).
+  `program_shared` identifies an actual shared linked-program restore.
 - **`--cache-report`** prints the same as one `mylang-core: cache:` text line.
 - **`--stats`** prints what the release passes did: calls inlined, loops unswitched,
   versioned and vectorized, checks proved, and the ownership plan's in-place
@@ -305,12 +340,14 @@ The old back end's `qbe-build-v1` and `work-report-v1` build reports, its
 
 **`--verify-cache`** recompiles every unit the object store served and fails the
 build, naming the unit, when a fresh object's bytes differ from the cached one. It
-never replays. Use it when you suspect the store, or after changing the emitter.
+never replays or uses the shared compiler-artifact tier. Use it when you suspect
+the store, or after changing the emitter.
 
 **`--no-cache`** (on `build`, `build --run`, `run`, `run-project` and `test`) builds
 through an empty private cache that is removed when the command ends: nothing is
 read from or published to the replay, program, foreign-object, front-end or
-test-receipt stores. The per-user object store is still used. Status, output and
+test-receipt stores, including the shared compiler-artifact tier. The per-user
+object store is still used. Status, output and
 diagnostics are those of the same command with caches.
 
 ```console

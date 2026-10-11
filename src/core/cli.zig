@@ -162,7 +162,8 @@ fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     if (request.no_cache) options.cache = try cli_run.privateCache(init, options.cache);
     defer if (request.no_cache) cli_run.discard(init.io, options.cache);
     var report: std.ArrayList(u8) = .empty;
-    const status = pipeline.build(init, request.path, options, &report) catch |err| switch (err) {
+    const compilation_init = try @import("compiler_sharing.zig").prepare(init, request.no_cache or options.show.verify_cache);
+    const status = pipeline.build(compilation_init, request.path, options, &report) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.SourceError, error.Unsupported => 1,
         error.PolicyDenied => 3,

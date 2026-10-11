@@ -341,7 +341,11 @@ class LibFuzzerWorker(unittest.TestCase):
         path = Path('/proc') / str(pid) / 'stat'
         deadline = time.monotonic() + 2
         while path.exists() and time.monotonic() < deadline:
-            state = path.read_text().split(') ', 1)[1].split()[0]
+            try:
+                state = path.read_text().split(') ', 1)[1].split()[0]
+            except FileNotFoundError:
+                # Reaping between the existence check and read is successful cleanup.
+                return
             if state == 'Z':
                 return
             time.sleep(0.01)

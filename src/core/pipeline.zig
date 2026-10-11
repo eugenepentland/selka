@@ -68,6 +68,8 @@ pub const Show = struct {
     /// (`mylang-core`), or every diagnostic, warnings included, as the `mylang` CLI
     /// prints them in `text` or `json` (`--diagnostics=json`, NEW-CORE-S5-CLI-1).
     diagnostics: Diagnostics = .errors,
+    /// Forward command-level compiler artifact suppression to test compiler children.
+    compiler_cache_disabled: bool = false,
 };
 
 /// Code-generation choices that change the executable without changing the program.
@@ -112,7 +114,8 @@ pub fn resolveEntry(init: std.process.Init, path: []const u8, report: *std.Array
 }
 
 fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8)) Error!u8 {
-    const request: BuildRequest = .{ .init = init, .path = path, .options = options, .budget = budget, .report = report };
+    const prepared = try @import("compiler_sharing.zig").prepare(init, options.show.verify_cache or options.show.compiler_cache_disabled);
+    const request: BuildRequest = .{ .init = prepared, .path = path, .options = options, .budget = budget, .report = report };
     return @import("build_retry.zig").run(request, report, BuildRequest.attempt);
 }
 
@@ -156,7 +159,10 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         if (options.show.diagnostics != .errors) session.setFormat(if (options.show.diagnostics == .json) .json else .text);
         const drop_debug = options.mode == .release and budget == null;
         var demand = try lowering_demand.Context.init(lowered_arena.allocator(), &storage, entry.path, drop_debug);
-        if (!options.show.verify_cache) try session.enableCache(init.gpa, options.cache);
+        if (!options.show.verify_cache) {
+            try session.enableCache(init.gpa, options.cache);
+            try session.enableSharedCache(init.environ_map);
+        }
         var frontend_profile = language.timings.Profile.init(init.io, options.show.cache_report != .off, .compiler);
         session.setProfile(&frontend_profile);
         if (demand_enabled) session.configureDemand(demand.callback());
@@ -323,6 +329,7 @@ fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver
             .processes = c.processes,
             .stages = stages,
             .storage = storage,
+            .program_shared = if (outcome) |built| built.program_shared else false,
         }, .{}) catch return error.OutOfMemory;
         try report.print(allocator, "{s}\n", .{record});
         return;

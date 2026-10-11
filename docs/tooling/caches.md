@@ -136,6 +136,58 @@ $ mylang check-project app/main.my --explain-invalidation --report --cache-dir=.
 {"version":"frontend-cache-v1","syntax_hits":2,"syntax_misses":0,...,"stages":{"load_source":{"hits":1,"misses":0},"lex_parse":{"hits":1,"misses":0},"resolve_interface":{"hits":1,"misses":0}}}
 ```
 
+## Shared compiler artifacts
+
+Set `MYLANG_COMPILER_SHARED_CACHE` to one dedicated local directory to share
+immutable compiler artifacts between compatible worktrees. Keep each worktree's
+`--cache-dir` and `ZIG_LOCAL_CACHE_DIR` separate. This is independent of
+`MYLANG_TEST_SHARED_CACHE`, which shares eligible test successes.
+
+```bash
+export MYLANG_COMPILER_SHARED_CACHE="$HOME/.cache/mylang/compiler-artifacts"
+mylang build app/main.my -o app.bin --cache-dir .mylang-cache/private --report
+```
+
+The optional store uses `compiler-artifacts-v1/{syntax,typed,program}`. Ordinary
+parsed syntax can move between paths because its serializer contains source
+spans and bytes, not the original pathname. Compiler and contract identity,
+exact source bytes and body start still match; trusted intrinsic and standard
+library parsing remain private. Declarations, imports and policy resolve fresh.
+
+Ordinary typed bodies share only when logical module identities and the current
+source origins can be proved. They retain the existing remap-or-miss validation
+against fresh declarations and catalogs. Their shared key additionally binds
+the exact merged source bytes and ordered logical source layout because the
+serialized body can contain layout indexes. This deliberately loses shared
+typed-body hits after an unrelated source edit; the more precise private
+incremental keys are unchanged. Unproved standalone paths, generic-template
+references and unsupported metadata use fresh/private checking. Effects,
+mutation validation, diagnostics and embedded inputs retain their fresh checks.
+Typed transport also requires complete concrete bodies: validation-only checks
+and warm demand requests with previous summaries keep using private retention.
+A first build in an empty worktree can share because no prior summaries can
+omit any body. All fresh embedded-input proofs join the shared layout identity.
+
+Whole-check verdicts, rendered warnings, summaries, revision indexes and
+invalidation baselines stay private. `check-session` retains its existing
+in-process caches. Native linked programs can share when their exact objects
+and linker identity match; see [native builds](native-build.md#shared-compiler-artifacts).
+A shared program hit still follows frontend checking, lowering and emission.
+
+Shared records carry their kind, key, bounded length and BLAKE3 checksum. Missing
+or corrupt records miss and refill; valid different bytes for the same key raise
+`DeterminismMismatch`. A configured unusable or unknown-format store is an error,
+including before private replay. `--no-cache` and native `--verify-cache` suppress
+shared lookup and publication. Individual payloads above 128 MiB stay private.
+File publication and materialization stream through a fixed buffer.
+
+No cache lock spans parsing, checking, code generation or linking. Records are
+staged and hashed before taking a per-key publication lock; comparing an
+existing record happens under that key's lock. Reads use opened immutable files
+without locks. The directory lock covers only format initialization. Use trusted
+local producers and follow [retention guidance](cache-retention.md#native-compiler-artifacts)
+when clearing this disposable store.
+
 ## Check summaries
 
 A project check keeps one more record in the frontend cache: one slot per
