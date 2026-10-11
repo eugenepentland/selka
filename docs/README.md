@@ -105,7 +105,8 @@ dated records and plans, not descriptions of the language you can rely on:
   [named constraints](named-constraints-proposal.md) (with its
   [implementation plan](named-constraints-implementation.md) and
   [handoff](named-constraints-handoff.md)), [MVP audit](mvp-audit.md).
-- Working on the compiler: [where tests live](tooling/test-layout.md),
+- Working on the compiler: [new machine / SSH setup](tooling/remote-development.md),
+  [where tests live](tooling/test-layout.md),
   [documentation gates](tooling/documentation-gate.md),
   [frontend redesign and migration decisions](audits/frontend-syntax-redesign-2026-10-09.md).
 - Directories: [`audits/`](audits/) (dated audits and lane reports),

@@ -10,6 +10,9 @@ would confirm it. The working language name and `.my` extension are provisional.
 
 ## Start here
 
+- **Developing the compiler on a new machine?** Follow the
+  [remote development setup](docs/tooling/remote-development.md): GitHub clones,
+  pinned Zig and Guardian, shell configuration, builds, tests, and agent worktrees.
 - **Writing mylang?** Read [the one-page primer](docs/primer.md): the language
   for a Python programmer, every example checked by `mylang doctest`. The user
   guides also ship inside the compiler, so they are there outside this
