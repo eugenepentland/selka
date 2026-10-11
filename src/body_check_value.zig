@@ -49,6 +49,12 @@ pub const ResultRecipe = struct { id: typed.Type, success: typed.Type, failure: 
 pub const OptionRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
 /// Dictionary and projection schemas retain both canonical type arguments.
 pub const DictionaryRecipe = struct { id: typed.Type, key: typed.Type, value: typed.Type, span: source.Span };
+/// Anonymous native tuples have zero declaration spans and ordered element identities.
+pub const TupleRecipe = struct { id: typed.Type, elements: []const typed.Type };
+/// Numeric fixed arrays retain their concrete length and original specialization site.
+pub const ArrayRecipe = struct { id: typed.Type, element: typed.Type, length: usize, span: source.Span };
+/// Structural appends share the same global first-demand order as nominal recipes.
+pub const StructuralRecipe = union(enum) { tuple: TupleRecipe, array: ArrayRecipe };
 /// All append decisions share one native first-demand order.
 pub const CatalogRecipe = union(enum) {
     list: ListRecipe,
@@ -56,6 +62,7 @@ pub const CatalogRecipe = union(enum) {
     option: OptionRecipe,
     byte_buffer: BufferRecipe,
     collection: CollectionRecipe,
+    structural: StructuralRecipe,
 };
 /// Grouped collection append roles preserve the qualified seven-field profile.
 pub const CollectionRecipe = union(enum) {
@@ -69,7 +76,7 @@ pub const CollectionRecipe = union(enum) {
 /// Exact next runtime identity selected by any append recipe.
 pub fn recipeId(recipe: CatalogRecipe) typed.Type {
     return switch (recipe) {
-        .collection => |item| switch (item) {
+        inline .collection, .structural => |item| switch (item) {
             inline else => |entry| entry.id,
         },
         inline else => |item| item.id,
@@ -78,6 +85,10 @@ pub fn recipeId(recipe: CatalogRecipe) typed.Type {
 /// First source demand retained independently of recipe family.
 pub fn recipeSpan(recipe: CatalogRecipe) source.Span {
     return switch (recipe) {
+        .structural => |item| switch (item) {
+            .tuple => .{ .start = 0, .end = 0 },
+            .array => |entry| entry.span,
+        },
         .collection => |item| switch (item) {
             inline else => |entry| entry.span,
         },

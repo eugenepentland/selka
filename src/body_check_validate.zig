@@ -9,6 +9,7 @@ const source = @import("source.zig");
 const list_validate = @import("body_check_list_validate.zig");
 const record_validate = @import("body_check_record_validate.zig");
 const resources = @import("body_check_resource_validate.zig");
+const structural = @import("body_check_structural_validate.zig");
 /// Invalid producer values and allocation failures remain host failures.
 pub const Error = error{ ComponentProtocol, OutOfMemory };
 /// Maximum scalar expression or statement table length.
@@ -273,6 +274,11 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
         .array => |items| try arrayNode(graph, node.ty, items),
         .length => |operand| try lengthNode(graph, node.ty, operand),
         .index => |operation| try indexNode(graph, node.ty, operation),
+        .replace => |operation| {
+            const shape = fixedArray(graph.context.catalog, node.ty) orelse return error.ComponentProtocol;
+            if (try nodeType(graph, operation.base) != node.ty or try nodeType(graph, operation.value) != shape.element) return error.ComponentProtocol;
+            try arrayIndex(graph, shape, operation.index, operation.from_end);
+        },
         .wrap => |operand| {
             if (!numeric.floating(graph.context.catalog, node.ty) or try nodeType(graph, operand) != .u64) return error.ComponentProtocol;
         },
@@ -354,9 +360,16 @@ fn scalarStatement(graph: *Graph, statement: typed.Statement) Error!void {
         .loop => |loop| if (try nodeType(graph, loop.condition) != .bool) return error.ComponentProtocol,
         .assertion => |assertion| if (try nodeType(graph, assertion.condition) != .bool) return error.ComponentProtocol,
         .initialize, .assign => |store| {
-            if (store.element or @backingInt(store.slot) >= graph.locals) return error.ComponentProtocol;
+            if (@backingInt(store.slot) >= graph.locals) return error.ComponentProtocol;
             const local = graph.tables.functions[graph.function].scope.locals[@backingInt(store.slot)];
             if (local.ty.isFile() or try nodeType(graph, store.value) != local.ty) return error.ComponentProtocol;
+            if (store.element) {
+                if (statement.data != .assign) return error.ComponentProtocol;
+                if (!local.mutable or !local.ty.isAggregate()) return error.ComponentProtocol;
+                const schema = graph.context.catalog.records[local.ty.recordIndex()];
+                if (!structural.array(schema) and !record_validate.ordinary(schema)) return error.ComponentProtocol;
+                if (schema.contract.requires_handling or schema.contract.move_only) return error.ComponentProtocol;
+            }
         },
         .with_scope => {},
         .match => |item| try matchStatement(graph, item),
@@ -550,7 +563,8 @@ fn recordSchema(graph: *Graph, ty: typed.Type) Error!typed.Record {
     if (!ty.isAggregate() or ty.recordIndex() >= graph.context.catalog.records.len) return error.ComponentProtocol;
     if (!graph.context.accepted[ty.recordIndex()]) return error.ComponentProtocol;
     const record = graph.context.catalog.records[ty.recordIndex()];
-    if (!record_validate.ordinary(record)) {
+    if (structural.array(record) and record.shape.array.?.key != null) return record;
+    if (!record_validate.ordinary(record) and !structural.tuple(record)) {
         const entry = dictionaries.identify(graph.context.catalog, ty) orelse return error.ComponentProtocol;
         if (entry.kind != .dict_keys and entry.kind != .dict_values and entry.kind != .dict_items) return error.ComponentProtocol;
     }
@@ -613,6 +627,11 @@ fn matchStatement(graph: *Graph, item: @FieldType(@FieldType(typed.Statement, "d
     }
 }
 fn arrayNode(graph: *Graph, ty: typed.Type, items: []const typed.NodeId) Error!void {
+    if (fixedArray(graph.context.catalog, ty)) |shape| {
+        if (items.len != shape.length) return error.ComponentProtocol;
+        for (items) |item| if (try nodeType(graph, item) != shape.element) return error.ComponentProtocol;
+        return;
+    }
     if (dictionaries.identify(graph.context.catalog, ty)) |entry| {
         if (entry.kind != .dict and entry.kind != .set) return error.ComponentProtocol;
         if (items.len % 2 != 0) return error.ComponentProtocol;
@@ -636,7 +655,7 @@ fn lengthNode(graph: *Graph, ty: typed.Type, operand: typed.NodeId) Error!void {
     const owner = try nodeType(graph, operand);
     const dictionary = dictionaries.identify(graph.context.catalog, owner);
     if (ty != .i64) return error.ComponentProtocol;
-    if (sequenceElement(graph.context.catalog, owner) == null) {
+    if (sequenceElement(graph.context.catalog, owner) == null and fixedArray(graph.context.catalog, owner) == null) {
         const entry = dictionary orelse return error.ComponentProtocol;
         if (entry.kind != .dict and entry.kind != .set) return error.ComponentProtocol;
     }
@@ -644,6 +663,11 @@ fn lengthNode(graph: *Graph, ty: typed.Type, operand: typed.NodeId) Error!void {
 
 fn indexNode(graph: *Graph, ty: typed.Type, operation: @FieldType(@FieldType(typed.Node, "data"), "index")) Error!void {
     const owner = try nodeType(graph, operation.base);
+    if (fixedArray(graph.context.catalog, owner)) |shape| {
+        if (ty != shape.element) return error.ComponentProtocol;
+        try arrayIndex(graph, shape, operation.index, operation.from_end);
+        return;
+    }
     if (operation.from_end) return error.ComponentProtocol;
     if (dictionaries.identify(graph.context.catalog, owner)) |entry| {
         if (entry.kind != .dict) return error.ComponentProtocol;
@@ -654,4 +678,15 @@ fn indexNode(graph: *Graph, ty: typed.Type, operation: @FieldType(@FieldType(typ
         const expected = if (text != null and owner == text.?.id) owner else element;
         if (ty != expected or try nodeType(graph, operation.index) != .i64) return error.ComponentProtocol;
     }
+}
+fn fixedArray(catalog: value.Catalog, ty: typed.Type) ?typed.Array {
+    if (!ty.isAggregate() or ty.recordIndex() >= catalog.records.len) return null;
+    const record = catalog.records[ty.recordIndex()];
+    return if (structural.array(record)) record.shape.array else null;
+}
+fn arrayIndex(graph: *Graph, shape: typed.Array, index: typed.NodeId, from_end: bool) Error!void {
+    const actual = try nodeType(graph, index);
+    if (shape.key) |key| {
+        if (actual != key or from_end) return error.ComponentProtocol;
+    } else if (!actual.isInteger()) return error.ComponentProtocol;
 }

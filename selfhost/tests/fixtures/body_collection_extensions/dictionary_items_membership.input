@@ -1,0 +1,5 @@
+func main() -> int:
+    const values = {1: 2, 3: 4}
+    for item in values.items():
+        assert item in values.items()
+    return 7

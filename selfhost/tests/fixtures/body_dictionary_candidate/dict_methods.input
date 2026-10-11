@@ -1,0 +1,13 @@
+func main() -> int:
+    mut mapping = {"a": 1}
+    assert mapping.get("missing", 9) == 9
+    assert mapping.setdefault("a", 2) == 1
+    assert mapping.setdefault("b", 3) == 3
+    mapping.update({"a": 4, "c": 5})
+    assert list(mapping.keys()) == ["a", "b", "c"]
+    assert mapping.pop("b") == 3
+    assert mapping.pop("missing", 8) == 8
+    assert mapping["a"] == 4
+    mapping.clear()
+    assert len(mapping) == 0
+    return 7

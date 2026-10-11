@@ -1,0 +1,13 @@
+record Key:
+    id: int
+    label: str
+
+
+func main() -> int:
+    const first = Key(id=1, label="é")
+    const equal = Key(id=1, label="é")
+    mut mapping = {first: 7}
+    mapping[equal] = 8
+    assert len(mapping) == 1 and mapping[first] == 8
+    assert list(mapping.keys())[0] == first
+    return 7

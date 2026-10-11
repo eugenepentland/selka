@@ -6,9 +6,16 @@ const source = @import("source.zig");
 const lists = @import("body_check_list_validate.zig");
 const records = @import("body_check_record_validate.zig");
 const dictionaries = @import("body_check_dictionary_validate.zig");
+const structural = @import("body_check_structural_validate.zig");
 /// Allocation failure or invalid catalog recipe/template authority.
 pub const Error = lists.Error;
-const Key = struct { kind: enum { list, result, option, byte_buffer, dict, set, dict_item, dict_keys, dict_values, dict_items }, first: typed.Type, second: typed.Type = .unit };
+const Key = struct {
+    kind: enum { list, result, option, byte_buffer, dict, set, dict_item, dict_keys, dict_values, dict_items, tuple, array },
+    first: typed.Type,
+    second: typed.Type = .unit,
+    length: usize = 0,
+    elements: [8]typed.Type = @splat(.unit),
+};
 /// Validate native template declaration authority without supplying annotation answers.
 pub fn bases(input: value.Input) Error!void {
     try dictionaries.bases(input.catalog);
@@ -72,14 +79,24 @@ fn cases(a: std.mem.Allocator, input: value.Input, recipe: value.CatalogRecipe) 
     }
     return output;
 }
-fn key(recipe: value.CatalogRecipe) Key {
+fn key(recipe: value.CatalogRecipe) Error!Key {
     return switch (recipe) {
         .list => |item| .{ .kind = .list, .first = item.element },
         .byte_buffer => .{ .kind = .byte_buffer, .first = .unit },
         .result => |item| .{ .kind = .result, .first = item.success, .second = item.failure },
         .option => |item| .{ .kind = .option, .first = item.element },
         .collection => |item| collectionKey(item),
+        .structural => |item| switch (item) {
+            .tuple => |entry| try tupleKey(entry.elements),
+            .array => |entry| .{ .kind = .array, .first = entry.element, .length = entry.length },
+        },
     };
+}
+fn tupleKey(elements: []const typed.Type) Error!Key {
+    if (elements.len < 2 or elements.len > 8) return error.ComponentProtocol;
+    var result: Key = .{ .kind = .tuple, .first = .unit, .length = elements.len };
+    @memcpy(result.elements[0..elements.len], elements);
+    return result;
 }
 fn collectionKey(recipe: value.CollectionRecipe) Key {
     return switch (recipe) {
@@ -88,6 +105,15 @@ fn collectionKey(recipe: value.CollectionRecipe) Key {
     };
 }
 fn existing(item: value.Catalog, record: typed.Record) ?Key {
+    if (structural.tuple(record)) {
+        var result: Key = .{ .kind = .tuple, .first = .unit, .length = record.fields.len };
+        for (record.fields, 0..) |field, index| result.elements[index] = field.ty;
+        return result;
+    }
+    if (structural.array(record)) {
+        const shape = record.shape.array.?;
+        return .{ .kind = .array, .first = shape.element, .second = shape.key orelse .unit, .length = shape.length };
+    }
     if (dictionaries.identify(item, record.id)) |entry| return .{ .kind = switch (entry.kind) {
         .dict => .dict,
         .set => .set,
@@ -154,15 +180,21 @@ pub fn expanded(a: std.mem.Allocator, input: value.Input, recipes: []const value
         const id = value.recipeId(recipe);
         const at = value.recipeSpan(recipe);
         if (@backingInt(id) != typed.Type.record_base + input.catalog.base_count + index) return error.ComponentProtocol;
-        if (at.start > at.end or at.end > input.context.source.len or !allowed_sites.contains(at)) return error.ComponentProtocol;
-        const item_key = key(recipe);
+        const anonymous_tuple = recipe == .structural and recipe.structural == .tuple;
+        if (!anonymous_tuple) {
+            if (at.start > at.end or at.end > input.context.source.len) return error.ComponentProtocol;
+            if (!allowed_sites.contains(at)) return error.ComponentProtocol;
+        }
+        const item_key = try key(recipe);
         const duplicate = try known.getOrPut(a, item_key);
         if (duplicate.found_existing) return error.ComponentProtocol;
         duplicate.value_ptr.* = id;
         try dependencies(input.catalog, recipe, item_key, id);
         depths[id.recordIndex()] = try recipeDepth(recipe, item_key, depths);
         var schema: typed.Record = .{ .id = id, .name = "", .declaration = at, .fields = &.{} };
-        if (recipe == .list) {
+        if (recipe == .structural) {
+            schema = try structural.schema(a, schemas[0..id.recordIndex()], recipe.structural);
+        } else if (recipe == .list) {
             if (!input.catalog.list_available) return error.ComponentProtocol;
             schema.managed = true;
             schema.collection.kind = .list;
@@ -211,6 +243,11 @@ fn dependency(ty: typed.Type, id: typed.Type) Error!void {
 
 fn recipeDepth(recipe: value.CatalogRecipe, item_key: Key, depths: []const usize) Error!usize {
     var result: usize = if (recipe == .byte_buffer) 1 else 2;
+    if (recipe == .structural and recipe.structural == .tuple) {
+        for (recipe.structural.tuple.elements) |element| if (element.isAggregate()) {
+            result = @max(result, 1 + depths[element.recordIndex()]);
+        };
+    }
     if (item_key.first.isAggregate()) result = 1 + depths[item_key.first.recordIndex()];
     if (pairRecipe(recipe) and item_key.second.isAggregate()) result = @max(result, 1 + depths[item_key.second.recordIndex()]);
     if (result > 256) return error.ComponentProtocol;
@@ -218,6 +255,10 @@ fn recipeDepth(recipe: value.CatalogRecipe, item_key: Key, depths: []const usize
 }
 
 fn dependencies(catalog: value.Catalog, recipe: value.CatalogRecipe, item: Key, id: typed.Type) Error!void {
+    if (recipe == .structural and recipe.structural == .tuple) {
+        for (recipe.structural.tuple.elements) |element| try dependency(element, id);
+        return;
+    }
     if (recipe == .result and item.first.isFile()) {
         const string = catalog.string orelse return error.ComponentProtocol;
         if (item.second != string.id) return error.ComponentProtocol;

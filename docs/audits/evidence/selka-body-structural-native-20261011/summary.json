@@ -1,0 +1,38 @@
+{
+  "scope": "Native schema10 structural body boundary preparation; no installed Selka producer qualification",
+  "base_commit": "aa7243caf863205866924cbb63db7157c13d8793",
+  "schema": 10,
+  "structural_tests": 8,
+  "focused_result": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "includes_unnamed_blocks": 7
+  },
+  "regression_command": "scripts/build-slot.sh build /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test-units '-Dtest-filter=body' fmt-check --summary all",
+  "regression_result": {
+    "exit_code": 0,
+    "build_steps_passed": 24,
+    "build_steps_total": 24,
+    "passed": 206,
+    "failed": 0,
+    "skipped": 0
+  },
+  "prior_failures": [
+    "Initial broad run: enum table .record admission omission plus two obsolete schema9 test expectations",
+    "First combined focused/format run: 15 tests passed but Guardian complexity, condition and line-length checks failed"
+  ],
+  "integration_requirements": [
+    "Apply atop coherent numeric schema9 and native canonical set-key snapshot donor 5a18be34b",
+    "Merge Selka tuple/array implementation and activate adapter/coordinator schema10 together",
+    "Run actual schema10 installed component/shadow parity, 30-fixture 222-operation structural admission and 13 hostile reply refusals",
+    "Run complete integrated repository gate"
+  ],
+  "not_proven": [
+    "Whole-language body admission",
+    "Remaining native semantic owners",
+    "Selka Core/LLVM/backend and driver ownership",
+    "Whole compiler bootstrap",
+    "1.5x compile/test/runtime performance"
+  ]
+}

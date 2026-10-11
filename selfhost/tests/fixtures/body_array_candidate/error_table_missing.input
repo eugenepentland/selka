@@ -1,0 +1,8 @@
+enum Status:
+    ok
+    missing
+    failed
+
+func main() -> int:
+    const values: [Status]int = {Status.ok: 1, Status.missing: 2}
+    return values[Status.ok]

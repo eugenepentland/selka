@@ -1,0 +1,4 @@
+func main() -> int:
+    const buffer = byte_buffer([65])
+    _ = buffer.append_byte(66)
+    return 7

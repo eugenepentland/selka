@@ -1,0 +1,11 @@
+func grow(mut value: dict[int, int]?) -> Unit:
+    if value is None:
+        return
+    value[1] = 7
+
+
+func main() -> int:
+    mut value: dict[int, int]? = Some({1: 2})
+    grow(mut value)
+    assert value.unwrap_or({1: 0})[1] == 7
+    return 7

@@ -1,0 +1,8 @@
+func main() -> int:
+    mut squares = {x: x * x for x in range(4)}
+    assert squares[3] == 9
+    const values = [for key in squares yield squares[key] + 1]
+    assert values == [1, 2, 5, 10]
+    const selected = {key: value + 2 for key, value in squares.items() if key > 1}
+    assert list(selected.keys()) == [2, 3] and selected[3] == 11
+    return 7

@@ -1,0 +1,4 @@
+func main() -> int:
+    const raw = b"abc"[::2]
+    _ = raw
+    return 7

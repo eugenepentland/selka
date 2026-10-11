@@ -1,0 +1,5 @@
+func byte_buffer(values: int[]) -> int:
+    return values[0]
+
+func main() -> int:
+    return byte_buffer([7])

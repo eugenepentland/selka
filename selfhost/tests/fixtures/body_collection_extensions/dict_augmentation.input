@@ -1,0 +1,5 @@
+func main() -> int:
+    mut values = {"a": 1}
+    values["a"] += 6
+    assert values["a"] == 7
+    return 7

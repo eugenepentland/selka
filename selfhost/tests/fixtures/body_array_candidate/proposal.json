@@ -1,0 +1,50 @@
+{
+  "array_alias.my": {
+    "status": 0,
+    "result": 7
+  },
+  "array_bytes.my": {
+    "status": 0,
+    "result": 7
+  },
+  "array_copy.my": {
+    "status": 0,
+    "result": 7
+  },
+  "array_empty.my": {
+    "status": 0,
+    "result": 7
+  },
+  "array_negative.my": {
+    "status": 0,
+    "result": 7
+  },
+  "error_array_element.my": {
+    "status": 1,
+    "result": null
+  },
+  "error_array_long.my": {
+    "status": 1,
+    "result": null
+  },
+  "error_array_short.my": {
+    "status": 1,
+    "result": null
+  },
+  "error_table_duplicate.my": {
+    "status": 1,
+    "result": null
+  },
+  "error_table_key.my": {
+    "status": 1,
+    "result": null
+  },
+  "error_table_missing.my": {
+    "status": 1,
+    "result": null
+  },
+  "table_copy.my": {
+    "status": 0,
+    "result": 7
+  }
+}

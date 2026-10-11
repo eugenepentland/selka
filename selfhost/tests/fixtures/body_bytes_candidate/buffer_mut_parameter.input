@@ -1,0 +1,10 @@
+func append(mut value: byte_buffer) -> Unit:
+    _ = value.append_byte(66)
+
+func main() -> int:
+    mut buffer = byte_buffer([65])
+    const before = bytes(buffer)
+    append(mut buffer)
+    if before != b"A" or bytes(buffer) != b"AB":
+        return 0
+    return 7

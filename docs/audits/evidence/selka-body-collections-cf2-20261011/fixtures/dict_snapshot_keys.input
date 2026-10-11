@@ -1,0 +1,9 @@
+func main() -> int:
+    mut mapping = {"a": 10, "b": 20}
+    const keys = list(mapping.keys())
+    const values = list(mapping.values())
+    mapping["b"] = 3
+    mapping["c"] = 4
+    assert keys == ["a", "b"] and values == [10, 20]
+    assert list(mapping.keys()) == ["a", "b", "c"]
+    return 7

@@ -1,0 +1,3 @@
+func main() -> int:
+    const values: FixedArray[int, 1] = FixedArray[int, 1]([7, 8])
+    return values[0]

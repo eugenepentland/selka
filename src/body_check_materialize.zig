@@ -6,6 +6,7 @@ const typed = @import("typed.zig");
 const value = @import("body_check_value.zig");
 const lists = @import("body_check_list_validate.zig");
 const record_validate = @import("body_check_record_validate.zig");
+const structural = @import("body_check_structural_validate.zig");
 const buffer_name = @import("nominal_templates.zig").byte_buffer_name;
 const Native = @import("type_catalog.zig").Catalog;
 pub const Error = lists.Error;
@@ -98,13 +99,17 @@ pub fn project(a: std.mem.Allocator, native: Native) Error!value.Catalog {
     try lists.catalog(a, output);
     return output;
 }
-/// Observe native append decisions and recover their original semantic intern sites.
+/// Observe native append decisions in arena storage, retaining sites and ordered tuple members.
 pub fn added(a: std.mem.Allocator, native: Native, base_count: usize) Error![]const value.CatalogRecipe {
     if (base_count > native.records.len or native.records.len > lists.limit) return error.ComponentProtocol;
     const state = native.templates.store orelse return error.ComponentProtocol;
     const output = try a.alloc(value.CatalogRecipe, native.records.len - base_count);
     errdefer a.free(output);
     for (native.records[base_count..], output) |record, *item| {
+        if (try structural.recipe(a, record)) |recipe| {
+            item.* = recipe;
+            continue;
+        }
         const id = state.semantic(record.id) orelse return error.ComponentProtocol;
         if (@backingInt(id) >= state.graph.nodes.items.len) return error.ComponentProtocol;
         const site = state.graph.nodes.items[@backingInt(id)].site;
@@ -146,16 +151,26 @@ pub fn apply(a: std.mem.Allocator, native: *Native, input: value.Input, recipes:
                 .set => |entry| collectionApply(native, input.catalog, .set, .{ .id = entry.id, .key = entry.element, .value = .unit, .span = entry.span }),
                 inline else => |entry, tag| collectionApply(native, input.catalog, @field(dictionaries.Kind, @tagName(tag)), entry),
             },
+            .structural => |item| switch (item) {
+                .tuple => |entry| native.tupleType(entry.elements),
+                .array => |entry| native.instantiateArray(a, entry.element, entry.length, entry.span, (native.templates.store orelse return error.ComponentProtocol).context.sink),
+            },
         } catch |err| return switch (err) {
             error.OutOfMemory => error.OutOfMemory,
             else => error.ComponentProtocol,
         };
         const expected = value.recipeId(recipe);
         if (id != expected or native.records.len != before + 1) return error.ComponentProtocol;
-        const observed = try added(a, native.*, before);
-        defer a.free(observed);
-        if (!std.meta.eql(recipe, observed[0])) return error.ComponentProtocol;
+        const observed = try added(arena.allocator(), native.*, before);
+        if (!equalRecipe(recipe, observed[0])) return error.ComponentProtocol;
     }
+}
+fn equalRecipe(left: value.CatalogRecipe, right: value.CatalogRecipe) bool {
+    if (left == .structural and left.structural == .tuple) {
+        if (right != .structural or right.structural != .tuple) return false;
+        return left.structural.tuple.id == right.structural.tuple.id and std.mem.eql(typed.Type, left.structural.tuple.elements, right.structural.tuple.elements);
+    }
+    return std.meta.eql(left, right);
 }
 /// Compare the entire canonical native schemas, not pointer identity or selected fields.
 pub fn equalCatalog(a: std.mem.Allocator, left: []const typed.Record, right: []const typed.Record) Error!bool {

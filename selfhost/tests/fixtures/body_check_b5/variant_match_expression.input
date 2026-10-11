@@ -1,0 +1,11 @@
+enum Choice:
+    pair(left: int, right: int)
+    empty
+
+func main() -> int:
+    const value = match Choice.pair(left=3, right=4):
+        case Choice.pair(left=left, right=right):
+            yield left + right
+        case Choice.empty:
+            yield 0
+    return value

@@ -1,0 +1,9 @@
+public type Mapping = dict[str, int]
+
+
+public func make() -> Mapping:
+    return {"a": 1}
+
+
+func hidden() -> Mapping:
+    return {"a": 7}

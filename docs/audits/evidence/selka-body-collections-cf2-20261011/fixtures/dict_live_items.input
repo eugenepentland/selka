@@ -1,0 +1,11 @@
+func main() -> int:
+    mut mapping = {"a": 10, "b": 20}
+    mut result = 0
+    for key, value in mapping.items():
+        if key == "a":
+            mapping["b"] = 2
+            continue
+        result += value
+        break
+    assert result == 2
+    return 7

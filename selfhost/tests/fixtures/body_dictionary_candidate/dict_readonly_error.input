@@ -1,0 +1,6 @@
+func change(mapping: dict[str, int]) -> Unit:
+    mapping["a"] = 2
+
+
+func main() -> int:
+    return 7

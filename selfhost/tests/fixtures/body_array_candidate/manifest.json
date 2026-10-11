@@ -1,0 +1,137 @@
+{
+  "array_alias.my": {
+    "status": 0,
+    "source_sha256": "06f4ef1b25a4e0a2fc85951d5fd21027fbbe0eeee918eef4898bee51f88df9c5",
+    "diagnostics": []
+  },
+  "array_bytes.my": {
+    "status": 0,
+    "source_sha256": "b1f709b131d43b4ff77304363d95a3a636c6c52faeb475d63da75ee4b2d9e984",
+    "diagnostics": []
+  },
+  "array_copy.my": {
+    "status": 0,
+    "source_sha256": "62573ee347bdcd360f571b96a1d57a0fcc8f94bf08689a48b82c8619d495c36f",
+    "diagnostics": []
+  },
+  "array_empty.my": {
+    "status": 0,
+    "source_sha256": "c7993411e54ac542ba8a1f2a3d52261b99650efae865784d9ef40b0f00c8728e",
+    "diagnostics": []
+  },
+  "array_negative.my": {
+    "status": 0,
+    "source_sha256": "d5c74e72569ea8df3a887dbed5d67caee22947f932f8b2b1c03e01376a9c1ed1",
+    "diagnostics": []
+  },
+  "error_array_element.my": {
+    "status": 1,
+    "source_sha256": "2c4fd84a48ccfd8fb4a0d30d93eb8ecee36447e72d7ea062874e9a1cc27e5c3f",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected int, found bool",
+        "bytes": {
+          "start": 82,
+          "end": 86
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_array_long.my": {
+    "status": 1,
+    "source_sha256": "ac68377818bede2c03dae1c0029a91f290dbde7ff0d5b3f9ba4db6b7df2c4814",
+    "diagnostics": [
+      {
+        "code": "E_ARRAY_LENGTH",
+        "message": "list literal has 2 element(s); the expected fixed array holds exactly 1",
+        "bytes": {
+          "start": 59,
+          "end": 85
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_array_short.my": {
+    "status": 1,
+    "source_sha256": "b8adae63555844cda6651f4c4fac7004ce933eeadb05911eafcfc58beb049d4f",
+    "diagnostics": [
+      {
+        "code": "E_ARRAY_LENGTH",
+        "message": "list literal has 1 element(s); the expected fixed array holds exactly 2",
+        "bytes": {
+          "start": 59,
+          "end": 82
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_table_duplicate.my": {
+    "status": 1,
+    "source_sha256": "34bf00c7d459b4215fdb334ab8ed74ea8151e7dedc67088890007636ebb23769",
+    "diagnostics": [
+      {
+        "code": "E_DUPLICATE_KEY",
+        "message": "named entry is initialized more than once",
+        "bytes": {
+          "start": 118,
+          "end": 120
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_table_key.my": {
+    "status": 1,
+    "source_sha256": "18548eb330b01273b2a1181c4e19d359e0998b1a4d8559983c4b17024ab08821",
+    "diagnostics": [
+      {
+        "code": "E_TABLE_KEY",
+        "message": "table entry keys name a case of the table's key enum, such as `Kind.first`",
+        "bytes": {
+          "start": 97,
+          "end": 98
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "error_table_missing.my": {
+    "status": 1,
+    "source_sha256": "0de55508695e3c26435bdb2fb4093f79c33184294be004e5509da8e2b7c2b69e",
+    "diagnostics": [
+      {
+        "code": "E_INCOMPLETE_TABLE",
+        "message": "missing initializer for key `failed` of `[error_table_missing::Status]i64`",
+        "bytes": {
+          "start": 96,
+          "end": 129
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "missing entry declared here",
+            "bytes": {
+              "start": 36,
+              "end": 42
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "table_copy.my": {
+    "status": 0,
+    "source_sha256": "1e24434b683067d6d3bf22db2db978ee367cfe5d3bc86df5f8679e9bf5985749",
+    "diagnostics": []
+  }
+}

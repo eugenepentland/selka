@@ -1,0 +1,9 @@
+func main() -> int:
+    mut mapping = {"a": 10, "bb": 20}
+    const entries = list(mapping.items())
+    assert entries[0].key == "a" and entries[1].value == 20
+    mut total = 0
+    for item in entries:
+        total += len(item.key) + item.value
+    assert total == 33
+    return 7

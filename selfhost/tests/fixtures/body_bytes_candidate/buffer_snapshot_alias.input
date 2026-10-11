@@ -1,0 +1,9 @@
+func main() -> int:
+    mut buffer = byte_buffer([65])
+    mut alias = buffer
+    const snapshot = bytes(buffer)
+    _ = alias.append_byte(66)
+    _ = buffer.append_byte(67)
+    if snapshot != b"A" or bytes(alias) != b"AB" or bytes(buffer) != b"AC":
+        return 0
+    return 7

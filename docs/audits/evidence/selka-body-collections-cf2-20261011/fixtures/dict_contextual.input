@@ -1,0 +1,7 @@
+func main() -> int:
+    mut mapping: dict[str, u8] = {"a": 7}
+    mapping["b"] = 8
+    const empty: dict[str, u8] = {}
+    assert int(mapping.get("a", 0)) == 7 and len(empty) == 0
+    assert len(list(empty.items())) == 0
+    return 7

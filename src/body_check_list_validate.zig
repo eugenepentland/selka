@@ -4,6 +4,7 @@ const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const records = @import("body_check_record_validate.zig");
+const structural = @import("body_check_structural_validate.zig");
 pub const Error = error{ OutOfMemory, ComponentProtocol };
 pub const limit = 65536;
 
@@ -28,7 +29,10 @@ fn leaf(initial: value.Catalog, ty: typed.Type) bool {
     if (@import("body_check_dictionary_validate.zig").identify(initial, ty)) |entry| {
         if (entry.kind == .dict or entry.kind == .set) return true;
     }
-    if (ty.isAggregate() and ty.recordIndex() < initial.records.len) return records.ordinary(initial.records[ty.recordIndex()]) or records.variant(initial.records[ty.recordIndex()]);
+    if (ty.isAggregate() and ty.recordIndex() < initial.records.len) {
+        const record = initial.records[ty.recordIndex()];
+        return records.ordinary(record) or records.variant(record) or structural.tuple(record) or structural.array(record);
+    }
     return false;
 }
 fn descriptor(initial: value.Catalog, item: value.Sequence, expected: typed.Type) Error!void {

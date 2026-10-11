@@ -1,0 +1,9 @@
+func main() -> int:
+    mut mapping = {"a": 10, "b": 20, "c": 30}
+    mut result = 0
+    for value in mapping.values():
+        if value == 10:
+            mapping["b"] = 2
+        result += value
+    assert result == 42
+    return 7

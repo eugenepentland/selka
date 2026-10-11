@@ -1,0 +1,7 @@
+# B6 candidate controls
+
+This isolated corpus is not part of the B5 installed manifest. It proposes 21 B6 cases: 11 generated successes, eight ordered source diagnostics, and two native-valid deferred profiles (encode/decode). Every native success and refusal control returned 7 under release/fact/leak execution; error controls returned 1 and their exact messages, byte spans, notes and repair edits are pinned in proposal.json.
+
+The selected schema-6 producer has not qualified these cases. The helper admission inventory names actual library roots and existing pure tests. It is a required future admission checklist, not executed selected-mode evidence. Package main functions still depend on capabilities/resources reserved for B7. Signature/generic/contract retained seams also remain; importing an actual helper does not establish full compiler bootstrap.
+
+Sources exercise scalar-indexed Unicode text slices versus octet-indexed bytes, omitted/clamped/negative endpoints and expression evaluation order. Buffer cases cover fresh conversion, length/index, reserve/append, COW aliases, immutable snapshots, mutable parameters, self-overlap and failure-without-update. A user function named byte_buffer must retain ordinary call resolution. Source-error controls preserve invalid arity/type precedence before immutability where native does so; indexed write remains refused. No encode/decode support is asserted.

@@ -1,0 +1,11 @@
+import collection_donor
+
+
+type Alias = collection_donor.Mapping
+
+
+func main() -> int:
+    mut mapping: Alias = collection_donor.make()
+    mapping["b"] = 2
+    assert list(mapping.keys()) == ["a", "b"]
+    return 7

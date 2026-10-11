@@ -1,0 +1,487 @@
+{
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_alias_import.request.bin": {
+    "archive": "frames/dict_alias_import.request.bin.gz",
+    "sha256": "d72204b2ff8c010436c2f15eb23c16c7098fd883f9bd6ba360be87bdc8d3b9da",
+    "bytes": 23030
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_alias_import.reply.bin": {
+    "archive": "frames/dict_alias_import.reply.bin.gz",
+    "sha256": "50ae16a7ff21afcba5bff5838142e384de0126ddba6bc5b4137ca698a5481ec9",
+    "bytes": 30206
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_comprehension.request.bin": {
+    "archive": "frames/dict_comprehension.request.bin.gz",
+    "sha256": "de088092923ea108b8bf569af4f51576e2095efbfcc3b94a04b8ce068a917e27",
+    "bytes": 29471
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_comprehension.reply.bin": {
+    "archive": "frames/dict_comprehension.reply.bin.gz",
+    "sha256": "2d90dc20d98a0ba334292c0a23a8f33d04711e49b1f3f87aa3f7f113e945f1dd",
+    "bytes": 80482
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_contextual.request.bin": {
+    "archive": "frames/dict_contextual.request.bin.gz",
+    "sha256": "c735cd582a0cd31834a628fd1d7f797027a130afbffeacccd35f1f5a667fd3f4",
+    "bytes": 21437
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_contextual.reply.bin": {
+    "archive": "frames/dict_contextual.reply.bin.gz",
+    "sha256": "f37a7cb4d701f63aa6ddf3d249bbc9af7ea9b9d3093017693570dea702e4978d",
+    "bytes": 29424
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_cow_nested.request.bin": {
+    "archive": "frames/dict_cow_nested.request.bin.gz",
+    "sha256": "5b56d7a2448a0949b384d720fccd006d41b6a582d12d453685592538ebaa4d9a",
+    "bytes": 25170
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_cow_nested.reply.bin": {
+    "archive": "frames/dict_cow_nested.reply.bin.gz",
+    "sha256": "d17d8bfe1cd33d0a387734074193de43512353ac9296ac7f0e33f0be982194e4",
+    "bytes": 48394
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_get_arity_error.request.bin": {
+    "archive": "frames/dict_get_arity_error.request.bin.gz",
+    "sha256": "4654879bb19aea1266d029572054acfebb81dae8c67e30c7eb4f079bd308e8aa",
+    "bytes": 10676
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_get_arity_error.reply.bin": {
+    "archive": "frames/dict_get_arity_error.reply.bin.gz",
+    "sha256": "7e0d800f8c33087c3d2c9372e55d706adc73c703909f37443e05ce2ba08d21f5",
+    "bytes": 934
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_items.request.bin": {
+    "archive": "frames/dict_items.request.bin.gz",
+    "sha256": "d89a799497f5502b85f1862ea82f02860ff8d808e876cfb4a264785b4e078b93",
+    "bytes": 22276
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_items.reply.bin": {
+    "archive": "frames/dict_items.reply.bin.gz",
+    "sha256": "98d5ce274687fdc921c7c5d0f84e0915cae004bdda0f0b705c77c61c34cee015",
+    "bytes": 50345
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_key_type_error.request.bin": {
+    "archive": "frames/dict_key_type_error.request.bin.gz",
+    "sha256": "67e070852dbb15ec1ae7edb0002007e40a151c353fc4312fe475e2983d3dd86a",
+    "bytes": 10657
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_key_type_error.reply.bin": {
+    "archive": "frames/dict_key_type_error.reply.bin.gz",
+    "sha256": "3df5cc8832445a395bc9fa32854d1e5918208d9b1ea37df989e51650c16fca32",
+    "bytes": 617
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_live_items.request.bin": {
+    "archive": "frames/dict_live_items.request.bin.gz",
+    "sha256": "e1c98e2bb9a2efd760dd052b5f5d6a9d2adbdaa2e7fc0abfb324674475ff5a0a",
+    "bytes": 18783
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_live_items.reply.bin": {
+    "archive": "frames/dict_live_items.reply.bin.gz",
+    "sha256": "93cd3eb28fbbf55da4e2acb631727b025cd7473cff709f7e422e9ed380c6064b",
+    "bytes": 32271
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_live_values.request.bin": {
+    "archive": "frames/dict_live_values.request.bin.gz",
+    "sha256": "bf6dcc04075c03ca607adcce6e52f625b43dbf4ebb4ddadc16017c6683f94b35",
+    "bytes": 18702
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_live_values.reply.bin": {
+    "archive": "frames/dict_live_values.reply.bin.gz",
+    "sha256": "c134c0cfc11d41d2889a39041352867a1c73a8f48a4c7d01566cfbcccac6e4f4",
+    "bytes": 28294
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_methods.request.bin": {
+    "archive": "frames/dict_methods.request.bin.gz",
+    "sha256": "cbd7568a21d67b40078b69328125c738137c3af11d61805e66c3ca5a7dfd4595",
+    "bytes": 30329
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_methods.reply.bin": {
+    "archive": "frames/dict_methods.reply.bin.gz",
+    "sha256": "950f23b2e3d0fb27c3864078401067282acf8ead3fc6a2b836a87788ce05a486",
+    "bytes": 42423
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_mut_parameter.request.bin": {
+    "archive": "frames/dict_mut_parameter.request.bin.gz",
+    "sha256": "0917e8dec5b3a3274bc4186a055974b042565d5b30e8e48dd9b3de3289cc96d2",
+    "bytes": 26563
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_mut_parameter.reply.bin": {
+    "archive": "frames/dict_mut_parameter.reply.bin.gz",
+    "sha256": "e595807e3858611c8be4b69b5e69157b3a4756fc483fc0b36362932cde263e9b",
+    "bytes": 23928
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_order.request.bin": {
+    "archive": "frames/dict_order.request.bin.gz",
+    "sha256": "409bd8de336e06f44a12fa12b193cd4f75fb05896339364f450af9708f820d5f",
+    "bytes": 20017
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_order.reply.bin": {
+    "archive": "frames/dict_order.reply.bin.gz",
+    "sha256": "cc60abbe2b77237e4f32d4a3a459ce590710d7d969c486125e011e8c684ec754",
+    "bytes": 43076
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_private_import_error.request.bin": {
+    "archive": "frames/dict_private_import_error.request.bin.gz",
+    "sha256": "156a9bc9ab3eb35224ab33a7365a3ae109a97a51cbb95064a23d9defbae4576b",
+    "bytes": 17761
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_private_import_error.reply.bin": {
+    "archive": "frames/dict_private_import_error.reply.bin.gz",
+    "sha256": "80baa86bcd693ab6194a2aee3a7cfb2522371ebf4b7ae5a8d29e0a68dcbc30b3",
+    "bytes": 834
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_readonly_error.request.bin": {
+    "archive": "frames/dict_readonly_error.request.bin.gz",
+    "sha256": "7920301c147aeee9fda7159a1c2a5e8a6737e8ee5852a0182af3781728790af2",
+    "bytes": 13996
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_readonly_error.reply.bin": {
+    "archive": "frames/dict_readonly_error.reply.bin.gz",
+    "sha256": "2895fdbe427863c43b8a15f09751e2559245c5eb2c14a56b32d3c76cca3404cc",
+    "bytes": 681
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_snapshot_keys.request.bin": {
+    "archive": "frames/dict_snapshot_keys.request.bin.gz",
+    "sha256": "3c23d3e0015ee4e9e7a9d98bae1a4c95de7c8a67e52f6dedbaeda003d776e989",
+    "bytes": 23659
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_snapshot_keys.reply.bin": {
+    "archive": "frames/dict_snapshot_keys.reply.bin.gz",
+    "sha256": "72f47f346045b3339e1638011c2dcb06d8bcbb1e123ce97c623a2e1c0e6d4dc0",
+    "bytes": 67391
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_structural_key.request.bin": {
+    "archive": "frames/dict_structural_key.request.bin.gz",
+    "sha256": "a635b2f635ce0af19719b732b770b2e5651ecc85b77bc5c9d3d6409e8db2dfc7",
+    "bytes": 24597
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_structural_key.reply.bin": {
+    "archive": "frames/dict_structural_key.reply.bin.gz",
+    "sha256": "b62dd1b6ecc667a9aee8a486b3ce50120822e96dcf30f6f8e9eb911cc95d7b39",
+    "bytes": 34971
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_unhashable_error.request.bin": {
+    "archive": "frames/dict_unhashable_error.request.bin.gz",
+    "sha256": "a4c92d946b6713b97587f4d573f7a60b22f84cea3846177bba44dfa1efbd2317",
+    "bytes": 11676
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_unhashable_error.reply.bin": {
+    "archive": "frames/dict_unhashable_error.reply.bin.gz",
+    "sha256": "ca905089c3275c3ab5db472ceff29d593bf179374bdce341566866c930a8d635",
+    "bytes": 789
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_value_type_error.request.bin": {
+    "archive": "frames/dict_value_type_error.request.bin.gz",
+    "sha256": "018474747e3cd2715e44f354bdc8de5b5af677a244b449e50220aea4e9d8afcd",
+    "bytes": 11679
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_value_type_error.reply.bin": {
+    "archive": "frames/dict_value_type_error.reply.bin.gz",
+    "sha256": "6fc47d192d32bae0402c282c9e8f9980299295ca7b5e141d12c3c3e84ce79580",
+    "bytes": 617
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_view_cow_managed.request.bin": {
+    "archive": "frames/dict_view_cow_managed.request.bin.gz",
+    "sha256": "f78006c5960559c1ddcedf8cb4802d08c2181d6bcdf9e7bb137afa8f9d27bf6f",
+    "bytes": 24467
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/dict_view_cow_managed.reply.bin": {
+    "archive": "frames/dict_view_cow_managed.reply.bin.gz",
+    "sha256": "66317f5ba4c78d1f477357f4a27faba67fb7d79e3ed015a713f1eb5cdd37d716",
+    "bytes": 60325
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_branch_join.request.bin": {
+    "archive": "frames/option_branch_join.request.bin.gz",
+    "sha256": "788413d9b27c7889d40f509a24a641d9ba81e584a9f8495a765385a741fd8048",
+    "bytes": 23529
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_branch_join.reply.bin": {
+    "archive": "frames/option_branch_join.reply.bin.gz",
+    "sha256": "e6d5ed34ae7b7e6516cf32bac99588e1b25b29748f281206b155dddad8dcd369",
+    "bytes": 25197
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_copy_context.request.bin": {
+    "archive": "frames/option_copy_context.request.bin.gz",
+    "sha256": "10829fe634f87bf0a5067ae1e50de9fcfcdc783284e542fdc5749be071d1cc6b",
+    "bytes": 18286
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_copy_context.reply.bin": {
+    "archive": "frames/option_copy_context.reply.bin.gz",
+    "sha256": "e1a1e451e75c8d3545d5f5567a40c3af9f9cb79d2259256943f452f389f3340e",
+    "bytes": 23396
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_default_type_error.request.bin": {
+    "archive": "frames/option_default_type_error.request.bin.gz",
+    "sha256": "e81a91851af2b65f513895f0229216f0bc39877a47d93fce6a4ea396dfa6be42",
+    "bytes": 12862
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_default_type_error.reply.bin": {
+    "archive": "frames/option_default_type_error.reply.bin.gz",
+    "sha256": "9e788f7869d66dca8fe71e848875ce22c3b019e0f56e5d26123f5ab3afddb58d",
+    "bytes": 661
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_eager.request.bin": {
+    "archive": "frames/option_eager.request.bin.gz",
+    "sha256": "c94679edb0d78196e89b0081d5b0af3731d373c410b65e9763c1f04f36eadd4c",
+    "bytes": 32224
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_eager.reply.bin": {
+    "archive": "frames/option_eager.reply.bin.gz",
+    "sha256": "4566a81cc330fe675576418dee5f75fb3c73a7325d559bb3d30f083b40a14ae3",
+    "bytes": 57013
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_loop_narrow.request.bin": {
+    "archive": "frames/option_loop_narrow.request.bin.gz",
+    "sha256": "6d76705d167309e35cae73361b8e1437afd2a1369271a3d0fda033934c98b3b8",
+    "bytes": 18722
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_loop_narrow.reply.bin": {
+    "archive": "frames/option_loop_narrow.reply.bin.gz",
+    "sha256": "f1317aa51328fcc037f60643b9a6759af5c9d3e9eee0b3cb4618023a40e2f131",
+    "bytes": 19397
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_managed_narrow.request.bin": {
+    "archive": "frames/option_managed_narrow.request.bin.gz",
+    "sha256": "41c7b0bba00c48b34c727195c7c732f9df7988f807dab8f285bd5fdcf08e125f",
+    "bytes": 25998
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_managed_narrow.reply.bin": {
+    "archive": "frames/option_managed_narrow.reply.bin.gz",
+    "sha256": "9d2aee6af137c044a32b549acd0f3c26dd24c70b6a8430ab1698cdb1c86ee344",
+    "bytes": 46115
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_methods.request.bin": {
+    "archive": "frames/option_methods.request.bin.gz",
+    "sha256": "1f0762640da1bda6825a349f1648e966d299f1a6199c7038aff41e7e2605909e",
+    "bytes": 22302
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_methods.reply.bin": {
+    "archive": "frames/option_methods.reply.bin.gz",
+    "sha256": "57264b3977942104384f57eef36c02836915395dd310c2d5ff1028c496020b71",
+    "bytes": 35402
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_mut_call_error.request.bin": {
+    "archive": "frames/option_mut_call_error.request.bin.gz",
+    "sha256": "688362b8cea5ba87ac1e0728193261acdf2002061c0502fc45e7920795a43344",
+    "bytes": 19009
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_mut_call_error.reply.bin": {
+    "archive": "frames/option_mut_call_error.reply.bin.gz",
+    "sha256": "6e5f6aead323f063c0b28b8a98eacdb17213916b3b0b02f2b505e19a796a51a6",
+    "bytes": 618
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_rebind_error.request.bin": {
+    "archive": "frames/option_rebind_error.request.bin.gz",
+    "sha256": "0ee0ca01660ca39b67a7847d2b1089a86af217dbd0ed12f6de087f8ad8da73a6",
+    "bytes": 15544
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/option_rebind_error.reply.bin": {
+    "archive": "frames/option_rebind_error.reply.bin.gz",
+    "sha256": "97b03fbb28d43b6e322c4b1e7aef19e0dc31980c9b7803601244f9de834a33b4",
+    "bytes": 618
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_comprehension.request.bin": {
+    "archive": "frames/set_comprehension.request.bin.gz",
+    "sha256": "e0672465ddc95d9ae9f04178b10699b945b6234468139b3f0078c9667bea1a41",
+    "bytes": 24969
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_comprehension.reply.bin": {
+    "archive": "frames/set_comprehension.reply.bin.gz",
+    "sha256": "9c721da906661950e22ee0e925eb867a31e340ff43944f8a98c9290275f4e2f1",
+    "bytes": 69578
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_cow_mut.request.bin": {
+    "archive": "frames/set_cow_mut.request.bin.gz",
+    "sha256": "be8721e66a31c6997c8d236a192867b6e410ab491364a1bff912f74d02cab3c8",
+    "bytes": 22475
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_cow_mut.reply.bin": {
+    "archive": "frames/set_cow_mut.reply.bin.gz",
+    "sha256": "f41733d261189843437fa01d766104c7192c57e60d998cdda835246b24622968",
+    "bytes": 34524
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_methods.request.bin": {
+    "archive": "frames/set_methods.request.bin.gz",
+    "sha256": "1eda73882e5dfa32c435d1f529baf729a4db2c986ccc5f6b8e0d67e6e67a0816",
+    "bytes": 26472
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_methods.reply.bin": {
+    "archive": "frames/set_methods.reply.bin.gz",
+    "sha256": "4422a33f0dcb65240156016394569001de6212daffd98283aa6ec883a8b40701",
+    "bytes": 44775
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_operators.request.bin": {
+    "archive": "frames/set_operators.request.bin.gz",
+    "sha256": "0e549585a459b0b980c74b7aec7aaad75056acc69cbf5fa9851be2cbe6a70ab8",
+    "bytes": 25729
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_operators.reply.bin": {
+    "archive": "frames/set_operators.reply.bin.gz",
+    "sha256": "cc953be6c08ee8aabb11d633ba9ca562c9128834c60b2f8d851ffaecceaf4ea6",
+    "bytes": 106396
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_order.request.bin": {
+    "archive": "frames/set_order.request.bin.gz",
+    "sha256": "d23d45fa94283117341030a5130a84a080c410fc48fb2476f1892d93da95b577",
+    "bytes": 17941
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_order.reply.bin": {
+    "archive": "frames/set_order.reply.bin.gz",
+    "sha256": "6d429dc390b4877e5b5148fa1136770a5d2087a8625556b2c5740f4cd5d3080b",
+    "bytes": 29356
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_unhashable_error.request.bin": {
+    "archive": "frames/set_unhashable_error.request.bin.gz",
+    "sha256": "8de17ae5a207cdad818712319a2bff465664b92dcae98687c61b2b6fd0511c42",
+    "bytes": 11385
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/lexer-b8/candidate-replay-cf2/set_unhashable_error.reply.bin": {
+    "archive": "frames/set_unhashable_error.reply.bin.gz",
+    "sha256": "ac097d0220f6f0a7634c1ad2aef80d0896645d2188e984d8a404801840236b75",
+    "bytes": 789
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/capture-request-component.bin": {
+    "archive": "frames/hostile.request.bin.gz",
+    "sha256": "4c50b0dffa2361a46cfb053a19c1b2842699fef44802573b20a8980d877eba50",
+    "bytes": 63162
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/capture-reply-component.bin": {
+    "archive": "frames/hostile.reply.bin.gz",
+    "sha256": "1df736a71b1116cdd955262140867d14f56d8fb6bad3a37337ebf5a1897e295e",
+    "bytes": 144687
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/recipe_gap.bin": {
+    "archive": "frames/hostile.recipe_gap.bin.gz",
+    "sha256": "4afa99befa99e7e181e96d97b465350a0c5e0db090f7eec3a2d5d649b8edbc89",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/recipe_duplicate.bin": {
+    "archive": "frames/hostile.recipe_duplicate.bin.gz",
+    "sha256": "e4ca6a1713a3e3b5730e530c2ae612a66db4b2a7194172f2d1f44e69446e6a00",
+    "bytes": 144779
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/recipe_reorder.bin": {
+    "archive": "frames/hostile.recipe_reorder.bin.gz",
+    "sha256": "6914d7e0d793921b0eb8fe8e8c4afd682e5a344186e4478c480b0010264a1209",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/recipe_unhashable_key.bin": {
+    "archive": "frames/hostile.recipe_unhashable_key.bin.gz",
+    "sha256": "877a3ab77bfe48a511d005a1c6fc7e5620c2cbdff4a86ea76d8c5025e1c1a4a2",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/recipe_site.bin": {
+    "archive": "frames/hostile.recipe_site.bin.gz",
+    "sha256": "19707f9f3b3262325ee2a879a372c0f7277abb8da97561029c98876a59b98d5b",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/view_missing_mapping.bin": {
+    "archive": "frames/hostile.view_missing_mapping.bin.gz",
+    "sha256": "15647975d21208a682a47ee6b57d92434a40e6cf6364f5049ae7f150b95a3b86",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/view_forward_mapping.bin": {
+    "archive": "frames/hostile.view_forward_mapping.bin.gz",
+    "sha256": "c87204966d1fdceaa77aad2adea4483fd718d439e12b8f021f265f466df2621d",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/dict_set_distinction.bin": {
+    "archive": "frames/hostile.dict_set_distinction.bin.gz",
+    "sha256": "3b542ba69b25ea090a08115e7bf6e2a68ed101929756d8a07e73378b629957f5",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/dictionary_odd.bin": {
+    "archive": "frames/hostile.dictionary_odd.bin.gz",
+    "sha256": "568d50ace937ab1d6257f7709fcec1d1e42e3f51eb4a8f1d68a9e32409df4503",
+    "bytes": 144619
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/dictionary_key_type.bin": {
+    "archive": "frames/hostile.dictionary_key_type.bin.gz",
+    "sha256": "d00ea28a40938c4114941df23d77753ad5050a1125cde5e2ffc80abb7636fa1b",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/dictionary_value_type.bin": {
+    "archive": "frames/hostile.dictionary_value_type.bin.gz",
+    "sha256": "aee6a2837d53d115a1bd3f8fe7cacaa452270778ec0880168b956997497bff97",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/set_nonunit_write.bin": {
+    "archive": "frames/hostile.set_nonunit_write.bin.gz",
+    "sha256": "317e7382c72f5450d9f79097923f664d49f33b62fb75777d24dfba7629bc3137",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/read_result.bin": {
+    "archive": "frames/hostile.read_result.bin.gz",
+    "sha256": "d2f2c22e8a4a6a27d0e64c69d084076edf0ea3df2f561d74822c3bda12be21e9",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/get_fallback_type.bin": {
+    "archive": "frames/hostile.get_fallback_type.bin.gz",
+    "sha256": "52380c778b4711f7f4be2eaef544c6d6c962eef9cde6d804d96dc4543995899d",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/get_arity.bin": {
+    "archive": "frames/hostile.get_arity.bin.gz",
+    "sha256": "af246525d09fbfcf02de0ceb9dd8e05ca909f9aae88635291f30185559b2c4ef",
+    "bytes": 144619
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/contains_result.bin": {
+    "archive": "frames/hostile.contains_result.bin.gz",
+    "sha256": "7ba9d70061d372fa29adb141532895137de2c307c3c9a46e2d0fc714b57d0e81",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/length_result.bin": {
+    "archive": "frames/hostile.length_result.bin.gz",
+    "sha256": "51fca5165b61aa6359a35797bc4bd8e1dbeb0843b9931294271405e3933e2dcc",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/write_key_type.bin": {
+    "archive": "frames/hostile.write_key_type.bin.gz",
+    "sha256": "9bcd86190f0b841eb032712c97fd83f607be8df08cbd9184247ef434035827ff",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/write_value_type.bin": {
+    "archive": "frames/hostile.write_value_type.bin.gz",
+    "sha256": "3714491492e36c28ca42b57fd4950fde09f2fb4635aa5871e70ca2ad899482ec",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/write_readonly_owner.bin": {
+    "archive": "frames/hostile.write_readonly_owner.bin.gz",
+    "sha256": "2e071f8bc629a06d22859a6e77422032b8d33e7c600fbc763b8351a593e16a59",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/foreign_operand.bin": {
+    "archive": "frames/hostile.foreign_operand.bin.gz",
+    "sha256": "f64f7ee5f8e71c8463b37033658381bc466b9398b8d0ff2ff7f7f8698e5bacb9",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/view_mapping.bin": {
+    "archive": "frames/hostile.view_mapping.bin.gz",
+    "sha256": "12ff924434a87ba35753e65fb8a06d18beccb354fa65680712bf50a9946e0b76",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/item_field_index.bin": {
+    "archive": "frames/hostile.item_field_index.bin.gz",
+    "sha256": "e5e9c9481d1127e361e027c577f02f19c6630ed05c35249472dd256fb235ba0c",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/item_field_value.bin": {
+    "archive": "frames/hostile.item_field_value.bin.gz",
+    "sha256": "19128c65163769a0d57b24bc8d768c46ac8e782751aaa92c9db89c3376b4f4f4",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/option_some_type.bin": {
+    "archive": "frames/hostile.option_some_type.bin.gz",
+    "sha256": "95856d4fe9a28ae3a472e27059057879e63545c0eca878f87b8a26b627cacdec",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/option_some_missing.bin": {
+    "archive": "frames/hostile.option_some_missing.bin.gz",
+    "sha256": "14bcdf75d98024fcf1fa04303d24be59433e13a08ac3d550344092adbdb10ab9",
+    "bytes": 144623
+  },
+  "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b8-cf2-hostile-corrected-evidence/option_none_payload.bin": {
+    "archive": "frames/hostile.option_none_payload.bin.gz",
+    "sha256": "803aae478355710e70747da17fce8fc163bcd43dc2951a27938237d8dd0e26b3",
+    "bytes": 144623
+  }
+}

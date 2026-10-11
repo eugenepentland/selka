@@ -1,0 +1,8 @@
+func make() -> set[int]:
+    return {1, 2}
+
+
+func main() -> int:
+    assert make().union({2, 3}) == {1, 2, 3}
+    assert make().issubset({1, 2, 3})
+    return 7

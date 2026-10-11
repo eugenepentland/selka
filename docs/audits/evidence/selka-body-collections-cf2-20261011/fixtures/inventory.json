@@ -1,0 +1,47 @@
+{
+  "source_cases": [
+    "dict_alias_import.my",
+    "dict_comprehension.my",
+    "dict_contextual.my",
+    "dict_cow_nested.my",
+    "dict_get_arity_error.my",
+    "dict_items.my",
+    "dict_key_type_error.my",
+    "dict_live_items.my",
+    "dict_live_values.my",
+    "dict_methods.my",
+    "dict_mut_parameter.my",
+    "dict_order.my",
+    "dict_private_import_error.my",
+    "dict_readonly_error.my",
+    "dict_snapshot_keys.my",
+    "dict_structural_key.my",
+    "dict_unhashable_error.my",
+    "dict_value_type_error.my",
+    "dict_view_cow_managed.my",
+    "option_branch_join.my",
+    "option_copy_context.my",
+    "option_default_type_error.my",
+    "option_eager.my",
+    "option_loop_narrow.my",
+    "option_managed_narrow.my",
+    "option_methods.my",
+    "option_mut_call_error.my",
+    "option_rebind_error.my",
+    "set_comprehension.my",
+    "set_cow_mut.my",
+    "set_methods.my",
+    "set_operators.my",
+    "set_order.my",
+    "set_unhashable_error.my"
+  ],
+  "counts": {
+    "fixtures": 34,
+    "success": 24,
+    "diagnostic": 10,
+    "profiles": 0
+  },
+  "donors": {
+    "collection_donor.my": "0400500d3923490e62c2e70dfb89a4b6caa109d5107c30f615b49b94784e6cdc"
+  }
+}

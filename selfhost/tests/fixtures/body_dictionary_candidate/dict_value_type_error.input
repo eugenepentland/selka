@@ -1,0 +1,4 @@
+func main() -> int:
+    mut mapping = {"a": 1}
+    mapping["a"] = "bad"
+    return 7

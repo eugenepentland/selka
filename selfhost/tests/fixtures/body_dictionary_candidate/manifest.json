@@ -1,0 +1,276 @@
+{
+  "dict_alias_import.my": {
+    "source_sha256": "a71dcf6aa4615d3aa0db854f91d6ee5c51732a08f15fa3daa61af95401d63975",
+    "status": 0
+  },
+  "dict_comprehension.my": {
+    "source_sha256": "da43ddfd8eaeda712ceb7afd34ade238151d320625ebd55ab66633c87c58c13a",
+    "status": 0
+  },
+  "dict_contextual.my": {
+    "source_sha256": "1f19bfe25596f4601794062d9fb8766a46e401bb2df706a46e2c4ad6ceefc1fd",
+    "status": 0
+  },
+  "dict_cow_nested.my": {
+    "source_sha256": "25d206e73074a28bf91de689711bc443753537acf36c9710dfbde0651b4032fc",
+    "status": 0
+  },
+  "dict_get_arity_error.my": {
+    "source_sha256": "c008fa44b5c55aa25640a1b931a8be1e16dcca8ad202c40786370fe26d35d900",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`dict[str, int].get(key: str, default: int) -> int` takes 2 arguments, but this call passes 1",
+        "bytes": {
+          "start": 60,
+          "end": 76
+        },
+        "notes": [
+          {
+            "role": "alternative",
+            "message": "a dictionary `get` always takes its fallback: `d.get(key, default)`",
+            "bytes": {
+              "start": 68,
+              "end": 71
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "dict_items.my": {
+    "source_sha256": "68537c09727837870ed928fec19fa30e59390b9b7a128671e0175397967aaa47",
+    "status": 0
+  },
+  "dict_key_type_error.my": {
+    "source_sha256": "02a0c65a246954edd2f57f4d153e6b3a585693ea8545411ec3bb28e79ce307ae",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected str, found int",
+        "bytes": {
+          "start": 60,
+          "end": 70
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "dict_live_items.my": {
+    "source_sha256": "d459057a5897eaca5424b05d8e3b9b1a9fe81327d6c8952bf189d7baaf6d0912",
+    "status": 0
+  },
+  "dict_live_values.my": {
+    "source_sha256": "946cee58d2ade98410a9cf9dd44ae06fcae1103f3d8cb13bd912f965794eeae7",
+    "status": 0
+  },
+  "dict_methods.my": {
+    "source_sha256": "883ea9f5ab0aace3f0f370282b895350f4c920e58a2cbd263c9424b0b450902c",
+    "status": 0
+  },
+  "dict_mut_parameter.my": {
+    "source_sha256": "6703596508163a635be2c497dcdc8b4f2bfaf34ee564d63d86538d3c6a4b79af",
+    "status": 0
+  },
+  "dict_order.my": {
+    "source_sha256": "310c028c80920c59da6e64904e6a0d004647df03bdcf379ec3b50fe295e545c9",
+    "status": 0
+  },
+  "dict_private_import_error.my": {
+    "source_sha256": "afef43fcaab6ea83992981dbd598c2addb9e468c491c8f5848e641bf4ef8ab7a",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_PRIVATE_SYMBOL",
+        "message": "declaration is private to its module",
+        "bytes": {
+          "start": 57,
+          "end": 80
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "declaration is here",
+            "bytes": {
+              "start": 97,
+              "end": 103
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "dict_readonly_error.my": {
+    "source_sha256": "912cc5025f18ab1061df74db2c74e2215b3662867276530d80698f0840accadc",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_IMMUTABLE",
+        "message": "this binding and its nested data are read-only; declare it with `mut` to update it",
+        "bytes": {
+          "start": 50,
+          "end": 57
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "dict_snapshot_keys.my": {
+    "source_sha256": "e63770cbd93f41f69fb649c17e384e9326971ae746fb0ffaa79d82c46ed91b57",
+    "status": 0
+  },
+  "dict_structural_key.my": {
+    "source_sha256": "ede2ad57fcefc11765236f679349a7facd91d541c17cbc0737a9287a5ecbcf99",
+    "status": 0
+  },
+  "dict_unhashable_error.my": {
+    "source_sha256": "7d242a981b27b5d51dfc116cbab6834684e009e1962968b5b55bca7bc52cd2b3",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_DICT_KEY",
+        "message": "`int[]` cannot be a dictionary key: a list, dict, set, byte_buffer or class value is a shared reference whose contents can change after it is stored; use a record, tuple, str or bytes instead",
+        "bytes": {
+          "start": 63,
+          "end": 71
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "dict_value_type_error.my": {
+    "source_sha256": "89b3f13f29e98fef587995f033bc431a3d040843c22c7aa1aedac45a4f534ef9",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected int, found str",
+        "bytes": {
+          "start": 51,
+          "end": 71
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "dict_view_cow_managed.my": {
+    "source_sha256": "5fc819cadbae5ecc20a9c2cae61b4a1c8dcfee9d90b06023597f16676b17b75b",
+    "status": 0
+  },
+  "option_branch_join.my": {
+    "source_sha256": "5fc25010759f23c0dd98fe1520d289e5e5c1d3bc48b7bbd2a9f9ed252f55f4bf",
+    "status": 0
+  },
+  "option_copy_context.my": {
+    "source_sha256": "c1f5a6e5bf9ec5abdb309638188b1a718d617e0820f272f21559e2b6ebeb5b61",
+    "status": 0
+  },
+  "option_default_type_error.my": {
+    "source_sha256": "d740483f976071e5a05e531b0fd5317d5559b9ef92f45d5e333976c433cee39a",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "`unwrap_or` default must be `int` (the Option's payload), found str",
+        "bytes": {
+          "start": 79,
+          "end": 84
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "option_eager.my": {
+    "source_sha256": "2e25eba6ed2ac8ef944968387fe64944595a51f97c7f83f5ebd6c126dad38306",
+    "status": 0
+  },
+  "option_loop_narrow.my": {
+    "source_sha256": "cc26d056253842a94c7920b37f6087c966739a87c327d1b09abef94108e406cc",
+    "status": 0
+  },
+  "option_managed_narrow.my": {
+    "source_sha256": "f3f859f2cfb45f8440716117902fe0ecc9290827cc4a7015d2feb92575414d21",
+    "status": 0
+  },
+  "option_methods.my": {
+    "source_sha256": "43499abb816a1e7ce7ee64a8071b6c9184c4fb3142d1bf790f8b21b3dc87129c",
+    "status": 0
+  },
+  "option_mut_call_error.my": {
+    "source_sha256": "1a0e318342d8b9021952e9736d58b09860910ebba4054cabf5fe8a6e52da0b4c",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected int?, found int",
+        "bytes": {
+          "start": 183,
+          "end": 184
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "option_rebind_error.my": {
+    "source_sha256": "43c58698d43cffb442dfa2d61e6d469f566e9a4d672a3775bb5aed2305efb2f8",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected int?, found int",
+        "bytes": {
+          "start": 123,
+          "end": 124
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "set_comprehension.my": {
+    "source_sha256": "926ce50ce32cb0e4d8d43bbb41dcbe4c8c27c5889c174fae023844b85a5da339",
+    "status": 0
+  },
+  "set_cow_mut.my": {
+    "source_sha256": "d739bf2683ad1d50b19e451cd76dfe7e3330ff383330b8fd5fb68b82c0b5eaf4",
+    "status": 0
+  },
+  "set_methods.my": {
+    "source_sha256": "9138407cad5db2f5fca4ba9957bed854b4290ab7914ce2c9c104f6a9f4aa9733",
+    "status": 0
+  },
+  "set_operators.my": {
+    "source_sha256": "89c6110a015ec3e5c80a2eb6240653202f115a243091de941e2dca547214cf43",
+    "status": 0
+  },
+  "set_order.my": {
+    "source_sha256": "cde4694390bbea6a30e96c3b4e5f15090e91de487a76ffc5dfe6181a929b04ba",
+    "status": 0
+  },
+  "set_unhashable_error.my": {
+    "source_sha256": "f67f331cdfef10b2fc4396f567e1142211b41a1509dc89112d7c41f6f149463a",
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_SET_ELEMENT",
+        "message": "`int[]` cannot be a set element: a list, dict, set, byte_buffer or class value is a shared reference whose contents can change after it is stored; use a record, tuple, str or bytes instead",
+        "bytes": {
+          "start": 64,
+          "end": 71
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  }
+}

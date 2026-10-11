@@ -4,6 +4,7 @@ const dictionaries = @import("body_check_dictionary_validate.zig");
 const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
+const structural = @import("body_check_structural_validate.zig");
 pub const Error = error{ OutOfMemory, ComponentProtocol };
 /// Ordinary copyable value records; specialized, boxed and owned schemas require another closure.
 pub fn ordinary(record: typed.Record) bool {
@@ -25,7 +26,7 @@ pub fn variant(record: typed.Record) bool {
     return true;
 }
 fn valueRecord(record: typed.Record) bool {
-    return ordinary(record) or variant(record);
+    return ordinary(record) or variant(record) or structural.tuple(record) or structural.array(record);
 }
 /// Dense retained prefix remains separate from producer-added list identities.
 pub fn catalog(item: value.Catalog) Error!void {
@@ -36,6 +37,20 @@ pub fn catalog(item: value.Catalog) Error!void {
         if (@backingInt(record.id) != typed.Type.record_base + index) return error.ComponentProtocol;
         if (record.fields.len > 65536 - fields) return error.ComponentProtocol;
         fields += record.fields.len;
+        if (record.shape.tuple and !structural.tupleLayout(record)) return error.ComponentProtocol;
+        if (record.shape.array) |shape| {
+            if (shape.element.isAggregate() and shape.element.recordIndex() >= item.base_count) return error.ComponentProtocol;
+            if (shape.key) |key| {
+                if (!key.isAggregate() or key.recordIndex() >= item.records.len) return error.ComponentProtocol;
+                const enumeration = item.records[key.recordIndex()];
+                if (!enumeration.isEnum()) return error.ComponentProtocol;
+                if (shape.length != enumeration.shape.variants.?.cases.len or record.fields.len != shape.length) return error.ComponentProtocol;
+                for (record.fields, enumeration.shape.variants.?.cases) |field, entry| {
+                    if (field.ty != shape.element) return error.ComponentProtocol;
+                    if (!std.mem.eql(u8, field.name, entry.name) or !std.meta.eql(field.declaration, entry.declaration)) return error.ComponentProtocol;
+                }
+            }
+        }
         if (record.shape.variants) |shape| {
             if (shape.cases.len > 65536 - cases) return error.ComponentProtocol;
             cases += shape.cases.len;
@@ -87,6 +102,7 @@ fn policyMode(a: std.mem.Allocator, item: value.Catalog, hashable: bool) Error![
         const collection = dictionaries.identify(item, record.id);
         if (!valueRecord(record) and collection == null) continue;
         if (collection) |entry| try collectionDependencies(&builder, item, index, entry);
+        if (record.shape.array) |shape| try arrayDependencies(&builder, index, shape);
         for (record.fields) |field| try builder.dependency(index, field.ty);
         if (record.shape.variants) |shape| for (shape.cases) |item_case| {
             if (item_case.payload) |payload| {
@@ -239,6 +255,14 @@ fn layouts(a: std.mem.Allocator, item: value.Catalog) Error!void {
     for (item.records, 0..) |record, parent| {
         if (!valueRecord(record)) continue;
         total += 1;
+        if (record.shape.array) |shape| if (shape.length != 0 and shape.element.isAggregate() and shape.element.recordIndex() < item.records.len) {
+            const child = shape.element.recordIndex();
+            if (valueRecord(item.records[child])) {
+                counts[parent] += 1;
+                try edges.append(a, .{ .parent = parent, .next = heads[child] });
+                heads[child] = edges.items.len - 1;
+            }
+        };
         for (record.fields) |field| {
             if (!field.ty.isAggregate() or field.ty.recordIndex() >= item.records.len) continue;
             const child = field.ty.recordIndex();
@@ -309,6 +333,10 @@ fn variants(a: std.mem.Allocator, request: value.Input) Error!void {
     }
 }
 
+fn arrayDependencies(builder: *Builder, index: usize, shape: typed.Array) Error!void {
+    if (shape.length != 0) try builder.dependency(index, shape.element);
+    if (shape.key) |key| try builder.dependency(index, key);
+}
 fn collectionDependencies(builder: *Builder, item: value.Catalog, index: usize, entry: dictionaries.Descriptor) Error!void {
     if (entry.kind != .dict and entry.kind != .set) return;
     try builder.dependency(index, entry.key);

@@ -1,0 +1,10 @@
+func present(value: int?) -> int?:
+    const number = try value
+    return number + 1
+
+func main() -> int:
+    match present(Some(6)):
+        case Some(number):
+            return number
+        case None:
+            return 0

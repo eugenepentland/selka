@@ -1,0 +1,4 @@
+func main() -> int:
+    const key = [1, 2]
+    const mapping = {key: 7}
+    return len(mapping)

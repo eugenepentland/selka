@@ -242,4 +242,5 @@ comptime {
 
 comptime {
     _ = @import("body_check_numeric_test.zig");
+    _ = @import("body_check_structural_test.zig");
 }

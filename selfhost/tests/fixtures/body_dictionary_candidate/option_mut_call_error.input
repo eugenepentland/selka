@@ -1,0 +1,10 @@
+func clear(mut value: int?) -> Unit:
+    value = None
+
+
+func main() -> int:
+    mut value: int? = Some(7)
+    if value is None:
+        return 0
+    clear(mut value)
+    return value + 1

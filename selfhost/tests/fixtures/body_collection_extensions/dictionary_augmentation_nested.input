@@ -1,0 +1,9 @@
+record Box:
+    values: dict[str, int]
+
+
+func main() -> int:
+    mut box = Box(values={"a": 1})
+    box.values["a"] += 6
+    assert box.values["a"] == 7
+    return 7

@@ -1,0 +1,23 @@
+enum Failure:
+    bad
+    empty
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure.bad
+    if value == 0:
+        fail Failure.empty
+    return value
+
+func main() -> int:
+    const result = parse(7)
+    match result:
+        case Ok(value):
+            pass
+        case Err(_):
+            pass
+    match result:
+        case Ok(value):
+            return value
+        case Err(_):
+            return 0

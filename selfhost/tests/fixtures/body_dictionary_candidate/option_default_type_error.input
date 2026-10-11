@@ -1,0 +1,3 @@
+func main() -> int:
+    const value: int? = Some(7)
+    return value.unwrap_or("bad")
