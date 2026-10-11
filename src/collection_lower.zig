@@ -55,7 +55,7 @@ fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) 
     if (operations.trim(kind) != null) return owner;
     if (kind == .text_repr) return preludeType(catalog, "str", span);
     return switch (kind) {
-        .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
+        .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill, .copy => owner,
         .splitlines, .split_whitespace => listType(catalog, owner, span),
         .text_ord => .i64,
         .text_chr, .text_format, .number_format => preludeType(catalog, "str", span),
@@ -98,14 +98,27 @@ fn bytesOperationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Sp
     };
 }
 
+/// View materialization and text indexing produce ordinary owned values.
+fn viewOwnedResult(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!?typed.Type {
+    const schema = catalog.records[owner.recordIndex()];
+    if (schema.shape.builtin != .borrowed_view) return null;
+    if (kind != .copy and !(kind == .read and schema.collection.kind == .string)) return null;
+    const result = try preludeType(catalog, if (schema.collection.kind == .string) "str" else "bytes", span);
+    return result;
+}
+
 /// Resolve a managed operation output without conflating list, text, and map schemas.
 pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
+    const collection = owner.isAggregate() and catalog.records[owner.recordIndex()].isCollection();
+    if (kind == .copy and !collection) return owner;
     const schema = catalog.records[owner.recordIndex()];
     const element = schema.shape.buffer.?;
+    if (kind == .borrow_view) return preludeType(catalog, if (schema.collection.kind == .string) "TextView" else "ByteView", span);
+    if (try viewOwnedResult(catalog, owner, kind, span)) |result| return result;
     if (schema.collection.kind == .list) return switch (kind) {
         .read, .pop, .pop_at => element,
         .index_of => .i64,
-        .copy => owner,
+        .copy, .snapshot => owner,
         .contains => .bool,
         .length, .capacity => .u64,
         .append, .write, .iteration_check => .unit,
@@ -126,7 +139,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         // A set's `pop` removes and answers its most recently added element.
         .pop => if (schema.collection.set) schema.collection.key.? else error.InternalError,
         .write, .update, .clear => if (dictionary) .unit else error.InternalError,
-        .copy => if (dictionary) owner else error.InternalError,
+        .copy => owner,
         .items => if (dictionary) listType(catalog, element, span) else error.InternalError,
         .key_at => if (dictionary) schema.collection.key.? else error.InternalError,
         .value_at => if (dictionary) element else error.InternalError,
@@ -295,7 +308,7 @@ pub fn Builder(comptime Checker: type) type {
                 arguments[1] = try self.read(value_slot);
             }
             try statements.append(self.checker.allocator, init);
-            const list_receiver = self.checker.catalog.records[ty.recordIndex()].collection.kind == .list;
+            const list_receiver = ty.isAggregate() and self.checker.catalog.records[ty.recordIndex()].collection.kind == .list;
             if (list_receiver and (kind == .read or kind == .write or kind == .pop_at)) arguments[0] = try self.index(owner, arguments[0], false);
             const result = if (signed_length) try self.length(owner) else try self.operation(owner, kind, arguments);
             return self.block(statements.items, result);

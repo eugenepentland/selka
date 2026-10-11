@@ -1,0 +1,7 @@
+extern func readonly_counts(host: Host) -> int effects(host)
+func main(fs: Filesystem, host: Host, out: Stream) -> int:
+    with fs.read_only() as readonly:
+        with readonly.open("one.txt", "r") as file:
+            assert True
+    out.print(readonly_counts(host))
+    return 0

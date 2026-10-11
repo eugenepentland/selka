@@ -21,11 +21,11 @@ fn contains(text: []const u8, needle: []const u8) bool {
 /// What one run of a `test/core` fixture printed and the counters it wrote.
 const Counted = struct { stdout: []const u8, stderr: []const u8, status: u8, counts: std.json.Value };
 
-/// Build `test/core/<fixture>` with `flags` and run it with `arguments`, its
+/// Build `test/core/<fixture>` (or an absolute source path) with `flags` and run it with `arguments`, its
 /// counters written to `<root>/<label>.json`.
 fn counted(a: std.mem.Allocator, root: []const u8, fixture: []const u8, flags: []const []const u8, arguments: []const []const u8) !Counted {
-    const source = try std.fmt.allocPrint(a, "{s}/{s}", .{ options.fixtures, fixture });
-    const label = try std.fmt.allocPrint(a, "{s}{d}{d}", .{ fixture[0 .. fixture.len - 3], flags.len, arguments.len });
+    const source = if (std.fs.path.isAbsolute(fixture)) fixture else try std.fmt.allocPrint(a, "{s}/{s}", .{ options.fixtures, fixture });
+    const label = try std.fmt.allocPrint(a, "{s}{d}{d}", .{ std.fs.path.stem(std.fs.path.basename(fixture)), flags.len, arguments.len });
     const binary = try std.fs.path.join(a, &.{ root, label });
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", binary, "--cache-dir", root });
@@ -85,6 +85,243 @@ fn calls(counts: std.json.Value, function: []const u8) i64 {
         if (std.mem.eql(u8, row.object.get("name").?.string, function)) return row.object.get("calls").?.integer;
     }
     return -1;
+}
+
+fn functionCount(counts: std.json.Value, function: []const u8, name: []const u8) i64 {
+    for (counts.object.get("functions").?.array.items) |row| {
+        if (std.mem.eql(u8, row.object.get("name").?.string, function)) return row.object.get(name).?.integer;
+    }
+    return -1;
+}
+
+const borrowed_stack_source =
+    \\func fold(values: int[]) -> int:
+    \\    mut total = 0
+    \\    for value in values:
+    \\        total += value
+    \\    return total
+    \\
+    \\func through_call(seed: int) -> int:
+    \\    mut values = [seed, seed + 1, seed + 2]
+    \\    return fold(values)
+    \\
+    \\func local_only(seed: int) -> int:
+    \\    mut values = [seed, seed + 1, seed + 2]
+    \\    mut total = 0
+    \\    for value in values:
+    \\        total += value
+    \\    return total
+    \\
+    \\func returned(seed: int) -> int[]:
+    \\    mut values: int[] = []
+    \\    for i in range(3):
+    \\        values.append(seed + i)
+    \\    return values
+    \\
+    \\func returned_runtime(seed: int, count: int) -> int[]:
+    \\    mut values: int[] = []
+    \\    for i in range(count):
+    \\        values.append(seed + i)
+    \\    return values
+    \\
+    \\func main(args: str[], out: Stream) -> int:
+    \\    const seed = len(args) + 3
+    \\    const a = through_call(seed)
+    \\    const b = local_only(seed)
+    \\    const kept = returned(seed)
+    \\    const dynamic = returned_runtime(seed, seed)
+    \\    out.print(a, b, kept[2], len(dynamic))
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-STACK-2
+test "stack borrowing and caller constructors eliminate allocation while runtime-sized returned storage stays managed" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "borrowed.my", .data = borrowed_stack_source });
+    const source = try std.fs.path.join(a, &.{ root, "borrowed.my" });
+    const plain = try counted(a, root, source, &.{}, &.{});
+    try std.testing.expectEqualStrings("12 12 5 3\n", plain.stdout);
+    try std.testing.expectEqual(@as(u8, 0), plain.status);
+    const modes = [_][]const []const u8{ &.{"--counters"}, &.{ "--counters", "--release" }, &.{ "--counters", "--release", "--verify-facts" } };
+    for (modes) |flags| {
+        const result = try counted(a, root, source, flags, &.{});
+        try std.testing.expectEqualStrings(plain.stdout, result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        for ([_][]const u8{ "through_call", "local_only" }) |function| {
+            try std.testing.expectEqual(@as(i64, 1), calls(result.counts, function));
+            try std.testing.expectEqual(@as(i64, 0), functionCount(result.counts, function, "allocs"));
+            try std.testing.expectEqual(@as(i64, 0), functionCount(result.counts, function, "alloc_bytes"));
+            try std.testing.expectEqual(@as(i64, 0), functionCount(result.counts, function, "list_copies"));
+            try std.testing.expectEqual(@as(i64, 0), executed(result.counts, "retain", function));
+            try std.testing.expectEqual(@as(i64, 0), executed(result.counts, "release", function));
+            try std.testing.expectEqual(@as(i64, 0), executed(result.counts, "release_unique", function));
+        }
+        try std.testing.expectEqual(@as(i64, 1), calls(result.counts, "fold"));
+        // The constructor is now physically in main; counter attribution follows
+        // the caller, while the dynamic constructor still executes its own call.
+        try std.testing.expectEqual(@as(i64, -1), calls(result.counts, "returned"));
+        try std.testing.expectEqual(@as(i64, 0), functionCount(result.counts, "main", "allocs"));
+        try std.testing.expectEqual(@as(i64, 0), functionCount(result.counts, "main", "alloc_bytes"));
+        try std.testing.expectEqual(@as(i64, 0), executed(result.counts, "retain", "returned"));
+        try std.testing.expectEqual(@as(i64, 0), executed(result.counts, "release", "returned"));
+        try std.testing.expectEqual(@as(i64, 0), executed(result.counts, "release_unique", "returned"));
+        try std.testing.expect(functionCount(result.counts, "returned_runtime", "allocs") > 0);
+        try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", "live_bytes_at_exit" }));
+    }
+    const unoptimized = try counted(a, root, source, &.{ "--counters", "--unoptimized" }, &.{});
+    try std.testing.expectEqualStrings(plain.stdout, unoptimized.stdout);
+    try std.testing.expect(functionCount(unoptimized.counts, "through_call", "allocs") > 0);
+    try std.testing.expect(functionCount(unoptimized.counts, "local_only", "allocs") > 0);
+    try std.testing.expect(functionCount(unoptimized.counts, "returned", "allocs") > 0);
+}
+
+const unique_tree_source =
+    \\func probe(n: int) -> int:
+    \\    mut pages: int[][][] = []
+    \\    for i in range(n):
+    \\        mut rows: int[][] = []
+    \\        rows.append([i, i + 1])
+    \\        rows.append([])
+    \\        pages.append(rows)
+    \\    const saved = pages.copy()
+    \\    pages = [[[n]], [[n + 1]]]
+    \\    mut popped = pages.pop()
+    \\    popped.append([9])
+    \\    popped.clear()
+    \\    if n % 2 == 0:
+    \\        pages.clear()
+    \\    return len(pages) * 100 + len(saved[0][0]) * 10 + len(saved) + saved[0][0][1]
+    \\func main(args: str[], out: Stream) -> int:
+    \\    out.print(probe(len(args)))
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-SINGLE-OWNER-2
+test "single owner nested cleanup has no runtime RC after replacement pop clear and branches" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "tree.my", .data = unique_tree_source });
+    const source = try std.fs.path.join(a, &.{ root, "tree.my" });
+    const modes = [_][]const []const u8{
+        &.{ "--counters", "--unoptimized", "--experimental-single-owner" },
+        &.{ "--counters", "--release", "--experimental-single-owner" },
+        &.{ "--counters", "--release", "--verify-facts", "--experimental-single-owner" },
+    };
+    for (modes) |flags| {
+        for ([_][]const []const u8{ &.{ "x", "x" }, &.{ "x", "x", "x" } }, [_][]const u8{ "23\n", "124\n" }) |arguments, answer| {
+            const result = try counted(a, root, source, flags, arguments);
+            try std.testing.expectEqual(@as(u8, 0), result.status);
+            try std.testing.expectEqualStrings(answer, result.stdout);
+            try std.testing.expectEqualStrings("", result.stderr);
+            try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", "live_bytes_at_exit" }));
+            for (result.counts.object.get("functions").?.array.items) |row| {
+                const name = row.object.get("name").?.string;
+                if (std.mem.eql(u8, name, "<outside>")) continue;
+                try std.testing.expectEqual(@as(i64, 0), row.object.get("runtime_retains").?.integer);
+                try std.testing.expectEqual(@as(i64, 0), row.object.get("runtime_releases").?.integer);
+                try std.testing.expectEqual(@as(i64, 0), executed(result.counts, "retain", name));
+                try std.testing.expectEqual(@as(i64, 0), executed(result.counts, "release", name));
+            }
+            try std.testing.expect(field(result.counts, &.{ "kinds", "release_unique", "count" }) > 0);
+        }
+    }
+}
+
+// spec-case: NEW-CORE-ZERO-RC-2
+// spec: NEW-CORE-ZERO-RC-ABI-1
+test "zero RC whole program includes startup arguments and nested text cleanup" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "owned.my", .data =
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut texts: str[] = []
+        \\    for arg in args:
+        \\        texts.append(arg.copy())
+        \\    mut text = ""
+        \\    for i in range(20):
+        \\        text += "aλ"
+        \\    const saved = text.copy()
+        \\    const part = saved[0:1]
+        \\    out.print(len(texts), len(saved), part[0])
+        \\    return 0
+    });
+    const source = try std.fs.path.join(a, &.{ root, "owned.my" });
+    for ([_][]const []const u8{
+        &.{ "--counters", "--unoptimized", "--experimental-zero-rc" },
+        &.{ "--counters", "--release", "--verify-facts", "--experimental-zero-rc" },
+    }) |flags| {
+        const result = try counted(a, root, source, flags, &.{ "hello", "λ" });
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("2 40 a\n", result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        for ([_][]const u8{ "runtime_retains", "runtime_releases", "shared_retains", "shared_releases", "live_bytes_at_exit" }) |name| {
+            try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", name }));
+        }
+        for ([_][]const u8{ "retain", "release", "unique_test" }) |name| {
+            try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "kinds", name, "count" }));
+        }
+        try std.testing.expect(field(result.counts, &.{ "totals", "allocs" }) > 0);
+        try std.testing.expect(field(result.counts, &.{ "kinds", "release_unique", "count" }) > 0);
+    }
+}
+
+fn snapshotSource(comptime method: []const u8, comptime sharing: []const u8) []const u8 {
+    return
+    \\func main(args: str[], out: Stream) -> int:
+    \\    mut rows: int[][] = []
+    \\    for i in range(len(args) * 10):
+    \\        rows.append([i, i + 1])
+    \\
+    ++ sharing ++ "    mut saved = rows." ++ method ++ "()\n" ++
+        \\    saved[0].append(9)
+        \\    out.print(len(rows[0]), len(saved[0]))
+        \\    return 0
+        \\
+    ;
+}
+
+// spec-case: NEW-CORE-SINGLE-OWNER-4
+test "single owner snapshots avoid eager child allocations while copy stays eager in shared families" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const sources = [_][]const u8{
+        snapshotSource("snapshot", ""),
+        snapshotSource("copy", ""),
+        snapshotSource("copy", "    const shared = rows.snapshot()\n    assert len(shared) == len(rows)\n"),
+    };
+    var results: [3]Counted = undefined;
+    for (sources, &results, 0..) |source, *result, index| {
+        const name = try std.fmt.allocPrint(a, "snapshot-{d}.my", .{index});
+        try directory.dir.writeFile(std.testing.io, .{ .sub_path = name, .data = source });
+        result.* = try counted(a, root, try std.fs.path.join(a, &.{ root, name }), &.{ "--counters", "--release", "--experimental-single-owner" }, &.{ "x", "x", "x", "x" });
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("2 3\n", result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", "live_bytes_at_exit" }));
+    }
+    const path = &.{ "totals", "allocs" };
+    try std.testing.expect(field(results[0].counts, path) < field(results[1].counts, path));
+    try std.testing.expectEqual(field(results[1].counts, path), field(results[2].counts, path));
+    try std.testing.expectEqual(@as(i64, 2), field(results[0].counts, &.{ "totals", "list_copies" }));
+    try std.testing.expectEqual(@as(i64, 40), field(results[2].counts, &.{ "totals", "list_copies" }));
 }
 
 // spec: NEW-CORE-COUNTERS-1
@@ -328,4 +565,43 @@ test "cost --counters adds the checks each function executed, by kind, to its ro
     try std.testing.expect(contains(text.items, "checks: bounds 6, overflow 12, division 4, shift 3, other 1\n"));
     const json = try std.json.Stringify.valueAlloc(a, section[1], .{});
     try std.testing.expect(contains(json, "\"checks\":{\"bounds\":6,\"overflow\":0,\"division\":0,\"shift\":0,\"other\":0}"));
+}
+
+// spec-case: NEW-CORE-ZERO-RC-VIEWS-1
+test "zero RC views repeated borrowing performs no managed allocations or RC" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "views.my", .data =
+        \\func part(source: TextView, start: int) -> TextView noalloc:
+        \\    return source.borrow(start, start + 3)
+        \\func main(out: Stream) -> int:
+        \\    const text = "aλ🙂z1234"
+        \\    const full = text.borrow(0, len(text))
+        \\    mut total = 0
+        \\    for i in range(10000):
+        \\        const view = part(full, i % 5)
+        \\        total += len(view)
+        \\    out.print(total)
+        \\    return 0
+    });
+    const source = try std.fs.path.join(a, &.{ root, "views.my" });
+    for ([_][]const []const u8{
+        &.{ "--counters", "--unoptimized", "--experimental-zero-rc" },
+        &.{ "--counters", "--release", "--verify-facts", "--experimental-zero-rc" },
+    }) |flags| {
+        const result = try counted(a, root, source, flags, &.{});
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("30000\n", result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        for ([_][]const u8{ "allocs", "reallocs", "runtime_retains", "runtime_releases", "shared_retains", "shared_releases", "live_bytes_at_exit" }) |name| {
+            try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", name }));
+        }
+        for ([_][]const u8{ "retain", "release", "unique_test" }) |name| {
+            try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "kinds", name, "count" }));
+        }
+    }
 }

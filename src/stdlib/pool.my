@@ -51,10 +51,10 @@ public func insert[T: copy + storable](mut store: Pool[T], value: T) -> Handle[T
     if top > 0:
         mut slot = store.free[top - 1]
         store.counters[0] = top - 1
-        store.slots[slot] = value
+        store.slots[slot] = value.copy()
         store.live[slot] = True
         return Handle[T](index=slot, generation=store.generations[slot])
-    store.slots.append(value)
+    store.slots.append(value.copy())
     store.generations.append(0)
     store.live.append(True)
     return Handle[T](index=len(store.slots) - 1, generation=0)
@@ -64,14 +64,14 @@ public func insert[T: copy + storable](mut store: Pool[T], value: T) -> Handle[T
 public func get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> T?:
     if not occupied(store, handle):
         return None
-    return Some(store.slots[handle.index])
+    return Some(store.slots[handle.index].copy())
 
 
 # Replace the value a handle names, reporting whether the handle was live.
 public func set[T: copy + storable](mut store: Pool[T], handle: Handle[T], value: T) -> bool:
     if not occupied(store, handle):
         return False
-    store.slots[handle.index] = value
+    store.slots[handle.index] = value.copy()
     return True
 
 

@@ -1,0 +1,29 @@
+{
+  "compiler_sha256": "3482abac69776d3fcd2ef6c41a3e550fb17fea193c296ad7442e9beebc1c3b41",
+  "runs": {
+    "parallel_map/release": {
+      "binary_sha256": "49b9cca987b34041c8cb4dd82b1fe76c37878fb8a4d38399a1fdc97fae07582b",
+      "executions": 100,
+      "min_peak": 29776,
+      "max_peak": 29968
+    },
+    "parallel_map/tsan": {
+      "binary_sha256": "44cb312d57de53d05dfeb4f986667a595e456640bcaedfc6b9280a4797681639",
+      "executions": 100,
+      "min_peak": null,
+      "max_peak": null
+    },
+    "parallel_outcome/release": {
+      "binary_sha256": "6f0b759667477495adfa9b6329e6f6c594b3a758db55033f730952ac72ed5903",
+      "executions": 100,
+      "min_peak": 19784,
+      "max_peak": 19848
+    },
+    "parallel_outcome/tsan": {
+      "binary_sha256": "9cdb8467673871556aea48a375f28b8436df972a7f481481c5ee0a4d937fac01",
+      "executions": 100,
+      "min_peak": null,
+      "max_peak": null
+    }
+  }
+}

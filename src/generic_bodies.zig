@@ -3,6 +3,8 @@ const call_arguments = @import("call_arguments.zig");
 const embed = @import("embed.zig");
 const eResultDiscard = diagnostic.result_discard;
 const fixed_array_name = "FixedArray";
+const text_view_name = "TextView";
+const byte_view_name = "ByteView";
 const ePatternPayload = diagnostic.pattern_payload;
 const eMatchYield = "E_MATCH_YIELD";
 const std = @import("std");
@@ -309,6 +311,14 @@ const Checker = struct {
         return symbolic.array(value, self.catalog.records) orelse self.sink.fail("E_TYPE", span, "operation requires a fixed array value");
     }
     fn concreteType(self: *Checker, span: source.Span) Error!Symbolic {
+        const name = self.src.text(span);
+        const view_name = std.mem.eql(u8, name, text_view_name) or std.mem.eql(u8, name, byte_view_name);
+        if (view_name and !(self.catalog.module_names != null and try self.catalog.module_names.?.topLevel(span))) {
+            const store = self.catalog.templates.store.?;
+            if (store.index.names.get(name)) |declaration| {
+                if (store.index.declarations.items[declaration].builtin_name != null) return self.shapes().nominal(declaration, &.{});
+            }
+        }
         return .{ .concrete = try self.catalog.resolve(self.src, span, self.sink) };
     }
     fn moveOnly(self: *Checker, value: Symbolic) Error!bool {
@@ -702,7 +712,7 @@ const Checker = struct {
         if (dictionary_views.symbolicKind(self.catalog, owner)) |kind| if (kind != .item)
             return dictionary_views.symbolicElement(self.shapes(), try dictionary_views.symbolicOwner(self.shapes(), owner, span), kind, span);
         const kind = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, span, "operation requires a managed list, string, or dictionary");
-        if (kind == .string) return owner;
+        if (kind == .string) return if (self.borrowedView(owner)) try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("str").?, &.{}) else owner;
         return (try self.shapes().container(owner, span)).?.element;
     }
     /// Element bound by ordinary iteration: dictionary keys, view projections,
@@ -1060,12 +1070,22 @@ const Checker = struct {
         const mode = buffer_operations.search(operation.kind).?;
         return .{ .concrete = if (mode == .prefix or mode == .suffix) .bool else .i64 };
     }
+    fn valueOperation(self: *Checker, owner: Symbolic, kind: BufferKind, arguments: usize, span: source.Span) Error!Symbolic {
+        if (kind != .copy) return self.sink.fail(eListType, span, "operation requires a managed collection");
+        return self.copyValue(owner, arguments, span);
+    }
+    fn copyValue(self: *Checker, owner: Symbolic, arguments: usize, span: source.Span) Error!Symbolic {
+        if (arguments != 0) return self.sink.fail("E_ARITY", span, "copy takes no arguments");
+        try self.supports(owner, .copy, span);
+        self.seedEffect(.managed_allocation);
+        return owner;
+    }
     fn collectionOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span, owner_node: ?ast.NodeId = null }) Error!Symbolic {
         if (self.shapes().isSet(owner)) {
             const input = if (operation.owner_node) |node_id| self.parameterIndex(node_id, 0) else null;
             return self.setOperation(owner, .{ .kind = operation.kind, .inputs = operation.inputs, .span = operation.span, .input = input });
         }
-        const family = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, operation.span, "operation requires a managed collection");
+        const family = self.shapes().collectionKind(owner) orelse return self.valueOperation(owner, operation.kind, operation.inputs.len, operation.span);
         const element = try self.collectionElement(owner, operation.span);
         const key = if (family == .dictionary) try self.shapes().collectionKey(owner, operation.span) else element;
         const kind = buffer_operations.forFamily(operation.kind, family);
@@ -1077,6 +1097,7 @@ const Checker = struct {
         const output: Symbolic = switch (kind) {
             .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
             .view, .slice => owner,
+            .borrow_view => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get(if (family == .string) text_view_name else byte_view_name).?, &.{}),
             .is_digit, .is_alpha, .is_space => .{ .concrete = .bool },
             .count => .{ .concrete = .i64 },
             .length => .{ .concrete = .i64 },
@@ -1087,7 +1108,8 @@ const Checker = struct {
             .append, .write => .{ .concrete = .unit },
             .keys, .values, .split => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{if (kind == .keys) key else if (kind == .split) owner else element}),
             .join => owner,
-            .copy => if (family == .list) owner else return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
+            .copy => try self.copiedCollection(owner),
+            .snapshot => if (family == .list) owner else return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
             .sort => sorted: {
                 if (family != .list or !self.sortable(element)) return self.sink.fail("E_COLLECTION_METHOD", operation.span, "sort requires an integer, float, str or bytes element type");
                 break :sorted .{ .concrete = .unit };
@@ -1101,7 +1123,7 @@ const Checker = struct {
         if (family == .string and (kind == .write or kind == .append or kind == .get)) return self.sink.fail("E_TEXT_IMMUTABLE", operation.span, "strings are immutable");
         if (family != .string and (kind == .split or kind == .join)) return self.sink.fail(eListType, operation.span, "split and join require str");
         if (family != .dictionary and (kind == .keys or kind == .values or kind == .get)) return self.sink.fail(eListType, operation.span, "mapping operation requires a dictionary");
-        const range_bound = kind == .view or kind == .slice or kind == .parse_int_range or kind == .parse_float_range;
+        const range_bound = kind == .view or kind == .borrow_view or kind == .slice or kind == .parse_int_range or kind == .parse_float_range;
         for (operation.inputs, 0..) |input, index| {
             const indexed = index == 0 and (kind == .read or kind == .write);
             const integer = family != .dictionary and (range_bound or indexed);
@@ -1178,6 +1200,20 @@ const Checker = struct {
         if (method.arguments.len == 0 and (kind == .parse_int or kind == .parse_float))
             if (try self.immediateNumericRange(method.base, kind, node.span)) |output| return output;
         return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
+    }
+    /// An explicit copy of a view yields its corresponding owned collection.
+    fn copiedCollection(self: *Checker, owner: Symbolic) Error!Symbolic {
+        if (!self.borrowedView(owner)) return owner;
+        const name = if (self.shapes().collectionKind(owner) == .string) "str" else "bytes";
+        return self.shapes().nominal(self.catalog.templates.store.?.index.names.get(name).?, &.{});
+    }
+    /// Identify prototype views by their builtin declaration, not a source alias.
+    fn borrowedView(self: *Checker, value: Symbolic) bool {
+        if (value == .concrete) return typed.isBorrowedView(self.catalog.records, value.concrete);
+        if (value != .nominal) return false;
+        const declaration = self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration];
+        const name = declaration.builtin_name orelse return false;
+        return std.mem.eql(u8, name, text_view_name) or std.mem.eql(u8, name, byte_view_name);
     }
     /// Whether a symbolic byte collection is the immutable `bytes` builtin and
     /// can therefore be read through a range without observing later mutation.
@@ -1295,7 +1331,7 @@ const Checker = struct {
     fn managedMethod(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
         if (input_call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
             const receiver = if (self.option_facts.has(slot)) try self.optionElement(self.locals.items[slot].ty, owner) else self.locals.items[slot].ty;
-            if (self.shapes().managed(receiver)) {
+            if (self.shapes().managed(receiver) or std.mem.eql(u8, self.src.text(input_call.name), "copy")) {
                 if (keywordSort(self, input_call)) {
                     const sorted = try self.keyedSort(receiver, .{ .arguments = input_call.arguments, .names = input_call.argument_names, .span = span });
                     return sorted;
@@ -2218,6 +2254,7 @@ const Checker = struct {
     }
     fn bufferValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "buffer_operation")) Error!Symbolic {
         const owner = try self.local(operation.owner);
+        if (operation.kind == .copy) return self.collectionOperation(owner.ty, .{ .kind = .copy, .inputs = operation.arguments, .span = operation.owner });
         if (!self.shapes().managed(owner.ty)) return self.sink.fail(eListType, operation.owner, "operation requires a managed collection value binding");
         const shape = (try self.shapes().container(owner.ty, operation.owner)) orelse return self.sink.fail(eListType, operation.owner, "operation requires a managed collection value binding");
         const element = shape.element;

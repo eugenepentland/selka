@@ -1,0 +1,136 @@
+import pool
+
+record Node:
+    label: str
+    weight: int
+
+
+func value_of(store: pool.Pool[int], handle: pool.Handle[int]) -> int:
+    match pool.get(store, handle):
+        case Some(value):
+            return value
+        case None:
+            return 0 - 1
+
+
+func lifecycle() -> int:
+    mut seed: int[] = []
+    mut store = pool.create(seed)
+    mut first = pool.insert(mut store, 10)
+    mut second = pool.insert(mut store, 20)
+    if pool.count(store) != 2 or pool.capacity(store) != 2:
+        return 1
+    if value_of(store, first) != 10 or value_of(store, second) != 20:
+        return 2
+    if not pool.occupied(store, first) or not pool.set(mut store, first, 11):
+        return 3
+    if value_of(store, first) != 11:
+        return 4
+    if not pool.remove(mut store, first) or pool.remove(mut store, first):
+        return 5
+    if value_of(store, first) != 0 - 1 or pool.set(mut store, first, 99):
+        return 6
+    if pool.occupied(store, first) or pool.count(store) != 1:
+        return 7
+    mut third = pool.insert(mut store, 30)
+    if pool.capacity(store) != 2 or value_of(store, third) != 30:
+        return 8
+    if value_of(store, first) != 0 - 1:
+        return 9
+    return 0
+
+
+func sharing() -> int:
+    mut store = pool.create([1, 2, 3])
+    if pool.count(store) != 3:
+        return 20
+    mut alias = store.copy()
+    _ = pool.insert(mut alias, 40)
+    if pool.count(store) != 3 or pool.capacity(store) != 3:
+        return 21
+    if pool.count(alias) != 4 or pool.capacity(alias) != 4:
+        return 21
+    mut live = pool.handles(alias)
+    mut total = 0
+    for handle in live:
+        total += value_of(alias, handle)
+    if len(live) != 4 or total != 46:
+        return 22
+    mut other: int[] = []
+    mut outside = pool.create(other)
+    mut foreign = pool.insert(mut outside, 7)
+    mut removed = pool.handles(alias)[0]
+    _ = pool.remove(mut alias, removed)
+    if pool.count(alias) != 3 or pool.count(store) != 3:
+        return 23
+    if value_of(outside, foreign) != 7:
+        return 24
+    return 0
+
+
+func records() -> int:
+    mut empty: Node[] = []
+    mut store = pool.create(empty)
+    mut handle = pool.insert(mut store, Node(label="a", weight=2))
+    match pool.get(store, handle):
+        case Some(node):
+            if node.label != "a" or node.weight != 2:
+                return 30
+        case None:
+            return 31
+    if not pool.set(mut store, handle, Node(label="b", weight=3)):
+        return 32
+    match pool.get(store, handle):
+        case Some(node):
+            if node.label != "b":
+                return 33
+        case None:
+            return 34
+    if not pool.remove(mut store, handle):
+        return 35
+    match pool.get(store, handle):
+        case Some(_):
+            return 36
+        case None:
+            _ = 0
+    return 0
+
+
+func churn() -> int:
+    mut seed: int[] = []
+    mut store = pool.create(seed)
+    mut handles: pool.Handle[int][] = []
+    mut index = 0
+    while index < 32:
+        handles.append(pool.insert(mut store, index))
+        index += 1
+    index = 0
+    while index < 32:
+        if index % 2 == 0:
+            if not pool.remove(mut store, handles[index]):
+                return 40
+        index += 1
+    if pool.count(store) != 16 or pool.capacity(store) != 32:
+        return 41
+    index = 0
+    while index < 16:
+        _ = pool.insert(mut store, 100 + index)
+        index += 1
+    if pool.capacity(store) != 32 or pool.count(store) != 32:
+        return 42
+    index = 0
+    while index < 32:
+        if index % 2 == 0 and pool.occupied(store, handles[index]):
+            return 43
+        if index % 2 == 1 and not pool.occupied(store, handles[index]):
+            return 44
+        index += 1
+    return 0
+
+
+func main() -> int:
+    mut checks = [lifecycle(), sharing(), records(), churn()]
+    for value in checks:
+        if value != 0:
+            return value
+    return 42

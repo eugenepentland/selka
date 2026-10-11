@@ -1,0 +1,11 @@
+func probe(n: int) -> int:
+    mut total = 0
+    for i in range(8):
+        total += n + i
+    return total
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0
+

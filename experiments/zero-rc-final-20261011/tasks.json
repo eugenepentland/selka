@@ -1,0 +1,377 @@
+{
+  "fixtures": {
+    "exit-debug.ll": "78c987fc2ec6bc0aa2ace4fccf9015f5d65c4f0be704f91c0187d8799c41c87c",
+    "take-debug": "3207818f5f15101a3eb0418a2a19c0d072eb70206fb136e1d38535349a874ea5",
+    "exit-debug": "59a4e146b15bfe188eb53f361dbc3674e3cff7e7222ae31dc7a1b84c2f68e0c9",
+    "exit-tsan.ll": "59cad5a9be6f64619e043a284a6f07115e2c6e89d3e3c42efc36e25bb1b7ad98",
+    "take-tsan": "b9e64ae248217e0604174144725c712e3d14009f01d0a122cb58c5174ddf3b3e",
+    "exit-tsan": "e1c2543c07d3b23f0a95ccc767e952b3ce9e31813672e53eb94ef901310db273",
+    "take-debug.ll": "c59550c60834f09db02d8594d994d63e77fdb6689cf1cc10be34bc8cf7a3692f",
+    "take-release.ll": "9a68e7948ea1e5dcd6107af14feaeb870a0ebd3f45a342ad265bf6749cb7b1e8",
+    "take-tsan.ll": "752fecfb2e8437bb274530daec32ec16a7150c182e5b264cd688b8866bca6df8",
+    "exit-release": "8d7800ba202a9fd2a4a54e5b5586662a76df14a6141a0bd3f42d9ad8146e9964",
+    "take-release": "ed2e30ceca12276f6aa03bdb62774beb384d79b6ec0061873c771f90a6dfefb5",
+    "exit-release.ll": "8dfd1ab82374c8e286c324f1c43130f5585b6036dc62f43bec90ad4a73ecccfd"
+  },
+  "initial_counter_audits": {
+    "counts-exit-debug-1.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-exit-debug-1.json",
+      "counter_sha256": "6273e0362ab668c3b091d890444e588336af07cef1d72aed0ed3b48c5974e771",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 129,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17824,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-exit-debug-2.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-exit-debug-2.json",
+      "counter_sha256": "8dc369891c5176654ab14a03d5c15c8fb95a8a6bd480ca6b2c9cb0c7ace7d668",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 129,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 18208,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-exit-debug-8.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-exit-debug-8.json",
+      "counter_sha256": "02022582350a0fabedaf10abb2111fff2c9b0567fc6ef20ff338fb8e3cf04ed8",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 129,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17824,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-exit-release-1.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-exit-release-1.json",
+      "counter_sha256": "22d0403ff7789e4d06f23b98d7e5d843585475df466831d4ede153ca5c7f6402",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 129,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17824,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-exit-release-2.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-exit-release-2.json",
+      "counter_sha256": "89609097e3d24f310e3a95c48cab89f0970fbaeaca1d4f4d0bef41005c47c452",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 129,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 19104,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-exit-release-8.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-exit-release-8.json",
+      "counter_sha256": "5606be46fa2c1f78c0d58fba50d47af686bba73abc1f7969a64bb9169cc8b232",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 129,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17888,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-take-debug-1.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-take-debug-1.json",
+      "counter_sha256": "7bd3d4292c19cf2c9f4639b44390b6dfb46191279d7e6e8f7b5cd0faec26818b",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 160,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17824,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-take-debug-2.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-take-debug-2.json",
+      "counter_sha256": "4e5550bf899c2796f551871e8c61b094b5ea3e90bb9a270402aa146fcefc2d37",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 160,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17824,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-take-debug-8.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-take-debug-8.json",
+      "counter_sha256": "4e5550bf899c2796f551871e8c61b094b5ea3e90bb9a270402aa146fcefc2d37",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 160,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17824,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-take-release-1.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-take-release-1.json",
+      "counter_sha256": "021447538978e14e22e1ba1c1a74c66f79ccacc431598ea0260d9322c76b97f0",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 160,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17824,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-take-release-2.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-take-release-2.json",
+      "counter_sha256": "38ab19ed90047472d0ab99c0b83a0894994047ccdfa1d5f3fb7f32482ea27792",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 160,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 18720,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "counts-take-release-8.json": {
+      "counter_file": ".tmp/zero-rc-final-20261011/task-fixtures/counts-take-release-8.json",
+      "counter_sha256": "0a48222a99decacbbfa4c4b2f0ca6f5033fe310355069f44cce54066edb20670",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 160,
+      "memory": {
+        "allocs": 623,
+        "alloc_bytes": 42752,
+        "frees": 623,
+        "reallocs": 0,
+        "peak_live_bytes": 17824,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    }
+  },
+  "repetitions": {
+    "runs": 400,
+    "counted": 200,
+    "thread_sanitized": 200,
+    "threads": 8
+  },
+  "totals": {
+    "counted": 212,
+    "thread_sanitized": 206
+  },
+  "repetition_manifest_sha256": "3fce4e163349e4d29ce473037709c65592c99f8a1c74b8247e007652b2c6201c"
+}

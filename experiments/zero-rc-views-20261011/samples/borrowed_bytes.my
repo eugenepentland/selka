@@ -1,0 +1,19 @@
+func segment(source: ByteView, start: int) -> ByteView:
+    return source.borrow(start, start + 16)
+
+func probe(n: int) -> int:
+    mut buffer = byte_buffer([])
+    for i in range(64):
+        _ = buffer.append_byte(i)
+    const data = bytes(buffer)
+    const full = data.borrow(0, len(data))
+    mut total = 0
+    for i in range(n):
+        const part = segment(full, i % 16)
+        total += len(part) + part[0]
+    return total
+
+func main(args: str[], out: Stream) -> int:
+    const n = (len(args) + 1) * 1000
+    out.print(probe(n))
+    return 0

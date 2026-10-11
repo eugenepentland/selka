@@ -1,0 +1,25 @@
+func choose(left: int[], right: int[], n: int) -> int[]:
+    if n % 2 == 0:
+        return left.copy()
+    return right.copy()
+
+
+func score(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        total += value
+    return total
+
+
+func probe(n: int) -> int:
+    const left = [n, n + 1]
+    const right = [n * 2, n * 2 + 1]
+    mut selected = choose(left, right, n)
+    selected.append(n + 2)
+    return score(left) * 100 + score(right) * 10 + score(selected)
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

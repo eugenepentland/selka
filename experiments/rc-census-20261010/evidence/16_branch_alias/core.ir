@@ -1,0 +1,83 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %2 = list_new list[i64] 2:i64
+  %3 = list_push list[i64] %2, param0
+  %5 = add.proven i64 param0, 1:i64
+  %6 = list_push list[i64] %3, %5
+  %8 = list_new list[i64] 2:i64
+  %10 = mul.proven i64 param0, 2:i64
+  %11 = list_push list[i64] %8, %10
+  %13 = mul.proven i64 param0, 2:i64
+  %15 = add.proven i64 %13, 1:i64
+  %16 = list_push list[i64] %11, %15
+  %17 = call list[i64] choose(%6, %16, param0)
+  %19 = add.proven i64 param0, 2:i64
+  %31 = is_unique bool %17
+  branch %31, b1, b2
+b1: ; preds b0 b2
+  %37 = phi list[i64] %17, %34
+  %20 = list_push list[i64] %37, %19
+  %21 = call i64 score(%6)
+  release %6
+  %23 = mul.exact i64 %21, 100:i64
+  %24 = call i64 score(%16)
+  release %16
+  %26 = mul.exact i64 %24, 10:i64
+  %27 = add.exact i64 %23, %26
+  %28 = call i64 score(%20)
+  release %20
+  %29 = add.exact i64 %27, %28
+  ret %29
+b2: ; preds b0
+  %34 = list_copy list[i64] %17
+  release %17
+  jump b1
+fn choose(list[i64], list[i64], i64) -> list[i64]
+b0:
+  %4 = floor_rem.exact i64 param2, 2:i64
+  %6 = cmp.eq bool %4, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  retain param0
+  ret param0
+b2: ; preds b0
+  retain param1
+  ret param1
+fn score(list[i64]) -> i64
+b0:
+  %3 = list_len u64 param0
+  %4 = convert.proven i64 %3
+  jump b1
+b1: ; preds b0 b3
+  %6 = phi i64 0:i64, %16
+  %12 = phi i64 0:i64, %13
+  %8 = cmp.lt bool %6, %4
+  branch %8, b2, b4
+b2: ; preds b1
+  %11 = list_get.proven i64 param0, %6
+  %13 = add.exact i64 %12, %11
+  jump b3
+b3: ; preds b2
+  %16 = add.proven i64 %6, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %12
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[-9223372036854775808,9223372036854775807]
+facts probe: %0=[0,140737488355328] %5=[1,140737488355329] %10=[0,281474976710656] %13=[0,281474976710656] %15=[1,281474976710657] %19=[2,140737488355330] %21=[-9223372036854775808,9223372036854775807] %23=[-9223372036854775808,9223372036854775807] %24=[-9223372036854775808,9223372036854775807] %26=[-9223372036854775808,9223372036854775807] %27=[-9223372036854775808,9223372036854775807] %28=[-9223372036854775808,9223372036854775807] %29=[-9223372036854775808,9223372036854775807]
+list probe %2: settled=true length=%-1 len=[0,0]
+list probe %3: settled=true length=%-1 elements=[0,140737488355328] len=[1,1]
+list probe %6: settled=true length=%-1 elements=[0,140737488355329] len=[2,2]
+list probe %8: settled=true length=%-1 len=[0,0]
+list probe %11: settled=true length=%-1 elements=[0,281474976710656] len=[1,1]
+list probe %16: settled=true length=%-1 elements=[0,281474976710657] len=[2,2]
+list probe %20: settled=true length=%-1
+facts choose: %4=[0,1] %6=[0,1]
+facts score: %3=[0,140737488355328] %4=[0,140737488355328] %6=[0,140737488355328] %7=[-9223372036854775808,9223372036854775807] %8=[0,1] %11=[-9223372036854775808,9223372036854775807] %12=[-9223372036854775808,9223372036854775807] %13=[-9223372036854775808,9223372036854775807] %16=[1,140737488355328]
+list score %11: settled=true length=%-1

@@ -9,7 +9,8 @@
 //! `list_get_field`, `record_get`, `union_payload`, `box_get`, valid while that
 //! parent is) or *immortal* (string constants, `undef`). A consuming use (an update's
 //! list, a stored value, a returned value, a phi operand on its edge) takes one owner;
-//! every other use borrows. Calls borrow their arguments.
+//! every other use borrows. Calls borrow ordinary arguments and take one owner
+//! for source `mut` or compiler-inferred consuming parameters.
 //!
 //! **Phase A, copy on write** (§5). Each in-place update (`list_push`, `list_set`,
 //! `list_pop`) of list `a` takes one form:
@@ -137,7 +138,7 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     var stats: Stats = .{};
     var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
     if (options.facts) |known| {
-        const promoted = try promotion.promote(arena, module, f, known, options.verify, marks.origin);
+        const promoted = try promotion.promote(arena, module, f, known, .{ .verify = options.verify, .provenance = marks.origin, .effects = options.effects });
         marks.stack = promoted.values;
         stats.promoted = promoted.lists;
         reserveFills(f, known);
@@ -368,10 +369,10 @@ const Analysis = struct {
         for (f.insts.items, 0..) |instruction, i| {
             if (!self.module.managed(instruction.ty) and instruction.ty != .str_view) continue;
             self.class[i] = switch (instruction.op) {
-                // A `mut` parameter is handed over by value (`Signature.owned`).
+                // Source `mut` and inferred consuming parameters both receive one count.
                 .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
                 .str_const, .undef => .immortal,
-                .call => if (self.encodedSource(instruction)) |source| blk: {
+                .call => if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| blk: {
                     self.parent[i] = source;
                     break :blk .borrowed;
                 } else .owned,
@@ -395,9 +396,17 @@ const Analysis = struct {
         }
     }
 
+    fn viewSource(self: *const Analysis, instruction: ir.Inst) ?ir.Ref {
+        if (!self.module.zero_rc or instruction.ty != .str_view) return null;
+        const index = self.module.functions.items[instruction.a.index()].signature.viewSource() orelse return null;
+        return self.f.resolve(self.f.operands(instruction.data)[index]);
+    }
+
     /// `encode()` changes only the source type. Its byte reads keep the text alive;
     /// an escaping byte value is retained by the ordinary borrowed-value rules.
     fn encodedSource(self: *const Analysis, instruction: ir.Inst) ?ir.Ref {
+        // The owned runtime materializes bytes; only the RC ABI aliases text.
+        if (self.module.zero_rc) return null;
         const callee = self.module.functions.items[instruction.a.index()];
         if (callee.signature.linkage != .extern_c or callee.signature.ret != .bytes) return null;
         if (!std.mem.eql(u8, callee.name, @import("flags.zig").text_encode_symbol)) return null;
@@ -471,7 +480,7 @@ const Analysis = struct {
         try list.append(self.storage.scratch, use);
     }
 
-    /// Whether operand `k` of a call is an argument the callee takes over (a `mut` one).
+    /// Whether operand `k` of a call is an argument the callee takes over.
     fn handedOver(self: *const Analysis, instruction: ir.Inst, k: usize) bool {
         if (instruction.op == .call_indirect) {
             if (k == 0) return false;
@@ -660,7 +669,7 @@ const Analysis = struct {
 
 /// Whether parameter `index` of a function with `signature` is passed owned.
 fn ownedParameter(signature: ir.Signature, index: u64) bool {
-    return index < 64 and signature.owned & (@as(u64, 1) << @intCast(index)) != 0;
+    return index < 64 and (signature.owned | signature.consumes) & (@as(u64, 1) << @intCast(index)) != 0;
 }
 
 /// Whether operand `k` (in `valueOperands` order) of `instruction` is consumed.
@@ -687,6 +696,10 @@ fn isUpdate(op: ir.Op) bool {
 /// from an allocation, a copy or another update (or phis of those), and no use
 /// before shares it.
 fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
+    // Only families outside explicit snapshots have a single-owner guarantee.
+    // Snapshot families use the existing COW proof and count tests.
+    if (a.module.zero_rc and a.module.isBlock(a.inst(value).ty)) return true;
+    if (a.module.exclusiveList(a.inst(value).ty)) return true;
     return uniqueWeb(a, value, site, &.{});
 }
 
@@ -767,6 +780,9 @@ fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
             else => return false,
         }
     }
+    for (values.items) |value| {
+        if (try sharesChildren(a, value)) return false;
+    }
     for (a.f.insts.items, 0..) |inst, index| {
         if (inst.op != .list_get or !a.module.managed(inst.ty) or flags.transferredRead(inst)) continue;
         if (std.mem.indexOfScalar(ir.Ref, values.items, a.f.resolve(inst.a)) == null) continue;
@@ -778,6 +794,26 @@ fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
         }
     }
     return true;
+}
+
+/// Copying a parent shares children on both sides, including the original parent.
+/// Inspect prospective COW copies too: phase A has not rewritten those updates yet.
+fn sharesChildren(a: *const Analysis, value: ir.Ref) Error!bool {
+    for (a.uses[value.index()].items) |use| {
+        if (use.onEdge()) {
+            if (use.consume > 1 or a.liveInto(value, use.succ)) return true;
+            continue;
+        }
+        const ref = a.f.blocks.items[use.block].insts.items[use.pos];
+        const inst = a.inst(ref);
+        if (inst.op == .call or inst.op == .call_indirect) return true;
+        if (use.consume > 1 or (use.consume != 0 and a.liveAfter(value, use.block, use.pos))) return true;
+        if (inst.op == .list_copy) {
+            if (inst.data != flags.place_copy or !a.counted(value) or a.liveAfter(value, use.block, use.pos)) return true;
+            if (!try staticallyUnique(a, value, ref)) return true;
+        }
+    }
+    return false;
 }
 
 fn addUnique(arena: std.mem.Allocator, values: *std.ArrayList(ir.Ref), ref: ir.Ref) Error!void {
@@ -1153,12 +1189,12 @@ fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
             },
             .in_place => {
                 stats.in_place += 1;
-                if (options.verify) try assertUnique(e, site.update);
+                if (options.verify and !a.module.zero_rc) try assertUnique(e, site.update);
                 if (detach) f.insts.items[site.update.index()].op = .copy;
             },
         }
     }
-    if (options.verify) {
+    if (options.verify and !a.module.zero_rc) {
         var reads: std.ArrayList(ir.Ref) = .empty;
         for (f.blocks.items) |block| for (block.insts.items) |ref| {
             if (flags.transferredRead(f.inst(ref))) try reads.append(a.storage.scratch, ref);
@@ -1881,7 +1917,7 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
             const extra = use.consume - @intFromBool(!a.liveInto(ref, use.succ));
             for (0..extra) |_| try actions.append(a.storage.scratch, .{ .place = .{ .edge = .{ .from = use.block, .to = use.succ } }, .op = .retain, .value = ref });
         } else {
-            // A call that both takes the value (`mut`) and borrows it gets a second owner.
+            // A call that both takes the value and borrows it gets a second owner.
             const moves = !a.liveAfter(ref, use.block, use.pos) and use.borrow == 0;
             const extra = use.consume - @intFromBool(moves);
             const at = f.blocks.items[use.block].insts.items[use.pos];
@@ -1899,7 +1935,7 @@ fn countOwned(a: *Analysis, ref: ir.Ref, actions: *std.ArrayList(Action)) Error!
         if (last) |pos| {
             const consumed = for (a.uses[ref.index()].items) |use| {
                 const here = !use.onEdge() and use.block == b and use.pos == pos;
-                // A use that also borrows the value (a `mut` call reading it too) does not move it.
+                // A use that also borrows the value does not move it.
                 if (here and use.consume > 0 and use.borrow == 0) break true;
             } else false;
             if (consumed) continue;

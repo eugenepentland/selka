@@ -1,0 +1,16 @@
+func segment(source: TextView, start: int) -> TextView:
+    return source.borrow(start, start + 16)
+
+func probe(n: int) -> int:
+    const text = "abcdefghijklmnopqrstuvwxyz0123456789" + str(n)
+    const full = text.borrow(0, len(text))
+    mut total = 0
+    for i in range(n):
+        const part = segment(full, i % 16)
+        total += len(part) + ord(part[0])
+    return total
+
+func main(args: str[], out: Stream) -> int:
+    const n = (len(args) + 1) * 1000
+    out.print(probe(n))
+    return 0

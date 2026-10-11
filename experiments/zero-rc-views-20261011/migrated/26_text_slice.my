@@ -1,0 +1,19 @@
+func segment(source: TextView, start: int) -> TextView:
+    return source.borrow(start, start + 3)
+
+
+func probe(n: int) -> int:
+    mut text = ""
+    for i in range(n + 2):
+        text += "aλz"
+    const full = text.borrow(0, len(text))
+    const part = segment(full, n)
+    const score = 100 * len(part) + ord(part[0])
+    text = "discarded"
+    return score
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

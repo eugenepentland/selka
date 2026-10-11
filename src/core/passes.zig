@@ -704,6 +704,11 @@ fn prepareEffects(arena: std.mem.Allocator, module: *ir.Module, cache: ?*cache_m
         if (green_body) slot.* = entry.demand.effect;
     };
     const summaries = try effects.analyzeReused(arena, module, reused_effects);
+    // Install the internal calling convention before any ownership body runs.
+    // The proof survives omitted bodies; the closed catalog guard is checked anew.
+    // Source `mut` result fields remain described solely by Signature.owned.
+    const changed_convention = installConsuming(module, &summaries);
+    if (changed_convention) if (cache) |context| try context.prepare(arena);
     if (cache) |context| {
         context.lazy.finals = try arena.alloc(?cache_mod.FinalMetadata, module.functions.items.len);
         @memset(context.lazy.finals, null);
@@ -714,6 +719,22 @@ fn prepareEffects(arena: std.mem.Allocator, module: *ir.Module, cache: ?*cache_m
         entry.demand.effect = try effects.retain(arena, .{ .params = params_effect, .may = answers });
     };
     return summaries;
+}
+
+fn installConsuming(module: *ir.Module, summaries: *const effects.Summaries) bool {
+    const closed = @import("consume.zig").closed(module);
+    var changed = false;
+    for (module.functions.items, summaries.params, 0..) |*function, params, index| {
+        var mask: u64 = 0;
+        if (closed and index != module.entry and function.signature.linkage == .internal) {
+            for (params, 0..) |effect, param| {
+                if (param < 64 and effect.consumes) mask |= @as(u64, 1) << @intCast(param);
+            }
+        }
+        changed = changed or function.signature.consumes != mask;
+        function.signature.consumes = mask;
+    }
+    return changed;
 }
 
 fn retainEmissionEffects(arena: std.mem.Allocator, module: *ir.Module, cache: ?*cache_mod.Context, shortcut: ?*shortcut_mod.Index, result: *Result) Error!void {
@@ -970,7 +991,7 @@ fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *i
         };
         if (changed == null) {
             changed = if (stage == .inline_cfg)
-                try inline_leaves.cfgCallerDemand(arena, module, @intCast(index), provenance, cache.lazy.raw)
+                try inline_leaves.cfgCallerDemandWithScratch(arena, work.allocator(), module, @intCast(index), provenance, cache.lazy.raw)
             else
                 try inline_leaves.leafCallerDemand(arena, work.allocator(), module, @intCast(index), params, .{ .provenance = provenance, .raw = cache.lazy.raw });
             cache.changed(index);

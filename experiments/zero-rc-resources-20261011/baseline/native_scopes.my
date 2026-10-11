@@ -1,0 +1,25 @@
+extern func resource_counts(host: Host) -> int effects(host)
+func work(fs: Filesystem, mode: int) -> Result[int, str]:
+    const logs = fs.dir("logs")
+    with logs.open("one.txt", "w") as file:
+        _ = file.write("saved")
+        if mode == 1:
+            return Ok(7)
+        if mode == 2:
+            _ = try fs.read_text("missing.txt")
+    return Ok(3)
+func main(fs: Filesystem, host: Host, out: Stream) -> int:
+    for mode in range(3):
+        match work(fs, mode):
+            case Ok(value):
+                out.print(value)
+            case Err(message):
+                out.print(len(message) > 0)
+    for index in range(4):
+        with fs.open("loop.txt", "w") as file:
+            _ = file.write("saved")
+            if index == 0:
+                continue
+            break
+    out.print(resource_counts(host))
+    return 0

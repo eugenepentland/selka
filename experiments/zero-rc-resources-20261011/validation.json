@@ -1,0 +1,62 @@
+{
+  "schema": "zero-rc-stage4-validation-v1",
+  "base_commit": "1d202d41bfff888ee91354f706cb74e860dc4b94",
+  "candidate": {
+    "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-resources-20261011/candidate-final/bin/mylang",
+    "sha256": "bad22d1c2affae641bc0d0497687f01d3c2ebf68fc04c193225f9bb17aa9d2db"
+  },
+  "qualification": {
+    "candidate_executions": 25,
+    "rc_baseline_executions": 3,
+    "rc_free": 25,
+    "managed_leak_free": 25,
+    "lifetime_refusals": 5
+  },
+  "checks": {
+    "core-before-entry-fix": {
+      "path": ".tmp/zero-rc-resources-core.log",
+      "sha256": "12aab8df844f0b87d1c41bbb9e8ede3828aade990fb924d18e81bbdc5b110795",
+      "passed": 887
+    },
+    "frontend": {
+      "path": ".tmp/zero-rc-resources-frontend.log",
+      "sha256": "91e0a444c697aa4c061ede66257e48e00604224a9eee4996e3940c263f51a37f",
+      "passed": 27
+    },
+    "entry-and-tasks": {
+      "path": ".tmp/zero-rc-tasks-focused.log",
+      "sha256": "171748a31a4b56ef8684c9cf742ee0716625440e6e2ec92736d822559a719dd5",
+      "passed": 5
+    },
+    "guardian-final": {
+      "path": ".tmp/zero-rc-tasks-guardian.log",
+      "sha256": "4008023046c59b5b4725436608bd056e821a945fa844a4814c144c791ffc3b5e",
+      "passed": 88
+    },
+    "install-final": {
+      "path": ".tmp/zero-rc-resources-install-final.log",
+      "sha256": "30d94edcb6e5281fb66b77973040a456cb3b89d32fd5d7365a8449c8b7f8a2ac",
+      "passed": null
+    },
+    "matrix-final": {
+      "path": ".tmp/zero-rc-resources-measure-final.log",
+      "sha256": "f03278b60b8514c47b27501022be5292a2e86db7199e6a10b8086505d0c3297d",
+      "passed": 25
+    },
+    "boundaries-final": {
+      "path": ".tmp/zero-rc-resources-boundaries-final.log",
+      "sha256": "b6246c2f06e8c664ae0dbdb2a09fe23aced54538d36cdbb65189db7f2553b1d6",
+      "passed": 5
+    }
+  },
+  "source_snapshot": {
+    "path": "experiments/zero-rc-resources-20261011/source-sha256-final.json",
+    "sha256": "a916993f67fa3b7ae1351bfad62a03de622ae9b43584cacd5c29b9bc71a80797"
+  },
+  "artifacts": {
+    "results.json": "95f9605844249812af17eba2a724040215439e92b3b93166492d70ad320737e9",
+    "boundaries.json": "b5799bdfa166d084e2ca5e5771f19afb03cec423e4c4a3da7a5637a2525ddcff",
+    "candidate-audit.json": "4c48b64f760491953ce250077f79984cc41e3d33e4564ac3dc6752c6f111a871"
+  },
+  "validation_order": "Full Core/frontend checks preceded final entry-provider fix. Final entry regression and task tests passed; gated final candidate then passed all 25 resource executions and 5 refusals. Earlier failed candidate remains preserved."
+}

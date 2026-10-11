@@ -1,0 +1,133 @@
+[
+  {
+    "id": "01_scalar",
+    "title": "Scalar loop control",
+    "category": "scalar",
+    "intent": "Establish the scalar control for summing eight runtime-derived values without a source collection.",
+    "expected": {
+      "4": "60\n",
+      "11": "116\n"
+    },
+    "oracle": "Sum n+i for i=0..7: 8*n+28.",
+    "focus": "probe performs the same eight-value sum as cases 02–05 without constructing a list.",
+    "source": "samples/01_scalar.my"
+  },
+  {
+    "id": "02_local_list",
+    "title": "Bounded list consumed locally",
+    "category": "list_construction",
+    "intent": "Positive control for existing intrafunction bounded-list promotion; inspect emitted allocation rather than assume it survives LLVM.",
+    "expected": {
+      "4": "60\n",
+      "11": "116\n"
+    },
+    "oracle": "Eight elements n through n+7 sum to 8*n+28.",
+    "focus": "probe constructs and reads one fixed-eight list entirely within the same function.",
+    "source": "samples/02_local_list.my"
+  },
+  {
+    "id": "03_borrowed_reader",
+    "title": "Bounded list passed to a reader",
+    "category": "list_construction",
+    "intent": "Positive control for the strict borrowed-call promotion prototype, using a looped reader instead of a scalar leaf.",
+    "expected": {
+      "4": "60\n",
+      "11": "116\n"
+    },
+    "oracle": "sum_values reads n through n+7 without mutation: 8*n+28.",
+    "focus": "probe constructs the bounded list; sum_values is the ordinary list-parameter call boundary to inspect.",
+    "source": "samples/03_borrowed_reader.my"
+  },
+  {
+    "id": "04_returned_list",
+    "title": "Construction helper returns a list",
+    "category": "list_construction",
+    "intent": "Compare a constructor that returns its storage with the local and caller-created forms; measure the actual retained construction boundary.",
+    "expected": {
+      "4": "60\n",
+      "11": "116\n"
+    },
+    "oracle": "make_values creates n through n+7; their sum is 8*n+28.",
+    "focus": "make_values returns its constructed list to probe, which passes it to sum_values.",
+    "source": "samples/04_returned_list.my"
+  },
+  {
+    "id": "05_mut_destination",
+    "title": "Caller-created mutable destination",
+    "category": "list_construction",
+    "intent": "Exercise the proposed caller-initializes/helper-mutates pattern with the same values as the returned-list case; observe any inlining or allocation elimination.",
+    "expected": {
+      "4": "60\n",
+      "11": "116\n"
+    },
+    "oracle": "The empty destination receives n through n+7; its sum is 8*n+28.",
+    "focus": "probe creates the empty list before fill_values mutates it; sum_values reads the completed destination.",
+    "source": "samples/05_mut_destination.my"
+  },
+  {
+    "id": "06_dynamic_list",
+    "title": "Runtime-sized list",
+    "category": "list_construction",
+    "intent": "Control for a list whose capacity depends on runtime input rather than a small compile-time bound.",
+    "expected": {
+      "4": "22\n",
+      "11": "176\n"
+    },
+    "oracle": "n values n+i for i=0..n-1 sum to n*n+n*(n-1)/2.",
+    "focus": "probe uses n as the fill-loop bound, then lends the list to the same looped reader.",
+    "source": "samples/06_dynamic_list.my"
+  },
+  {
+    "id": "07_large_list",
+    "title": "Bounded list above the promotion limit",
+    "category": "list_construction",
+    "intent": "Control for a proven constant capacity whose 600 eight-byte integers exceed the current 4096-byte per-list promotion limit.",
+    "expected": {
+      "4": "182100\n",
+      "11": "186300\n"
+    },
+    "oracle": "600 values n+i for i=0..599 sum to 600*n+599*600/2 = 600*n+179700.",
+    "focus": "probe has a fixed 4800-byte element payload before the header; sum_values remains a borrowing reader.",
+    "source": "samples/07_large_list.my"
+  },
+  {
+    "id": "08_snapshot_read",
+    "title": "Read-only alias",
+    "category": "list_aliases",
+    "intent": "Observe whether a read-only source alias adds ownership operations when neither name is consumed or mutated.",
+    "expected": {
+      "4": "120\n",
+      "11": "232\n"
+    },
+    "oracle": "Both names read the same eight-value sum, so the answer is 2*(8*n+28).",
+    "focus": "probe keeps values and snapshot live across two borrowed reads of the same logical contents.",
+    "source": "samples/08_snapshot_read.my"
+  },
+  {
+    "id": "09_snapshot_mutate",
+    "title": "Snapshot retained across append",
+    "category": "list_aliases",
+    "intent": "Require preservation of the old eight-element snapshot while a new version appends a ninth value; expose real copy-on-write and lifetime costs.",
+    "expected": {
+      "4": "672\n",
+      "11": "1295\n"
+    },
+    "oracle": "Old sum is 8*n+28; new sum is 9*n+36. Weighted result is 10*(8*n+28)+(9*n+36)=89*n+316.",
+    "focus": "probe appends after taking snapshot, then reads both versions; the weighted output detects snapshot corruption.",
+    "source": "samples/09_snapshot_mutate.my"
+  },
+  {
+    "id": "10_loop_snapshots",
+    "title": "Snapshots retained across loop iterations",
+    "category": "list_aliases",
+    "intent": "Exercise loop-carried sharing and managed children by retaining every list prefix until after construction.",
+    "expected": {
+      "4": "50\n",
+      "11": "946\n"
+    },
+    "oracle": "Prefix j contains j*n+j*(j-1)/2 for j=1..n. Summing prefixes gives n*(n+1)*(4*n-1)/6.",
+    "focus": "probe stores each version in history before the next append; the second loop reads all preserved versions through sum_values.",
+    "source": "samples/10_loop_snapshots.my"
+  }
+]
+

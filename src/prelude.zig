@@ -82,6 +82,6 @@ pub fn reservedTypeName(ty: typed.Type) ?[]const u8 {
 /// may name it without importing a declaration, exactly as it names `str`.
 pub fn scalar(name: []const u8) bool {
     if (std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "float")) return true;
-    if (std.mem.eql(u8, name, "byte_buffer")) return true;
+    if (std.mem.eql(u8, name, "byte_buffer") or std.mem.eql(u8, name, "TextView") or std.mem.eql(u8, name, "ByteView")) return true;
     return reservedType(name) != null;
 }

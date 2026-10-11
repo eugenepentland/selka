@@ -1,0 +1,12 @@
+func probe(n: int) -> int:
+    mut values = [for i in range(8) yield n + i]
+    mut total = 0
+    for value in values:
+        total += value
+    return total
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0
+

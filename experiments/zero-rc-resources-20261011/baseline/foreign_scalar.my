@@ -1,0 +1,4 @@
+extern func abs(host: Host, value: i32) -> i32 effects(host)
+func main(host: Host, out: Stream) -> int:
+    out.print(abs(host, -17i32))
+    return 0

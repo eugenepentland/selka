@@ -1,0 +1,7 @@
+{
+  "stage_2": "complete; see ../zero-rc-views-20261011/validation.json",
+  "stage_3": "complete; see validation.json and candidate-audit.json",
+  "stage_4": "in progress: audited existing resource/provider and foreign boundary lowering; implementation next",
+  "stage_5": "pending: mandatory-join task ownership",
+  "stage_6": "pending: remove RC ABI and COW, audit stdlib, enable caches, measure performance"
+}

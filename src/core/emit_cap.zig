@@ -11,7 +11,7 @@ pub fn entry(c: anytype, out: *std.ArrayList(u8), cleanup: *std.ArrayList(u8), i
         try c.externs.appendSlice(c.allocator, "declare ptr @myl_core_cap_grant(i32) nounwind\n");
     }
     try out.print(c.allocator, "  %cap{d} = call ptr @myl_core_cap_grant(i32 {d})\n", .{ index, kind });
-    try cleanup.print(c.allocator, "  call void @myl_core_release(ptr %cap{d})\n", .{index});
+    try cleanup.print(c.allocator, "  call void @{s}(ptr %cap{d})\n", .{ if (c.module.zero_rc) "myl_core_drop_owned" else "myl_core_release", index });
     return std.fmt.allocPrint(c.allocator, "ptr %cap{d}", .{index});
 }
 /// Emit the host token when main declares Host, retaining the stream-token case.

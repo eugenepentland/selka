@@ -1,0 +1,90 @@
+{
+  "15_managed_elements": {
+    "before": {
+      "frontend_ns": 5535745,
+      "core_ns": 5054910,
+      "native_including_link_ns": 98837858,
+      "link_subset_ns": 15955836,
+      "cold_build_ns": 116262509,
+      "warm_build_ns": 13270059,
+      "cold_check_ns": 7594541,
+      "warm_check_ns": 5922966
+    },
+    "after": {
+      "frontend_ns": 5668180,
+      "core_ns": 6929555,
+      "native_including_link_ns": 94384907,
+      "link_subset_ns": 18249244,
+      "cold_build_ns": 114610356,
+      "warm_build_ns": 14475541,
+      "cold_check_ns": 6925087,
+      "warm_check_ns": 5414751
+    }
+  },
+  "24_text_builder": {
+    "before": {
+      "frontend_ns": 3244346,
+      "core_ns": 2617765,
+      "native_including_link_ns": 78610026,
+      "link_subset_ns": 16579660,
+      "cold_build_ns": 90229191,
+      "warm_build_ns": 8429655,
+      "cold_check_ns": 4367523,
+      "warm_check_ns": 3429604
+    },
+    "after": {
+      "frontend_ns": 3718347,
+      "core_ns": 4153911,
+      "native_including_link_ns": 80963325,
+      "link_subset_ns": 17755563,
+      "cold_build_ns": 95266220,
+      "warm_build_ns": 13737185,
+      "cold_check_ns": 6684877,
+      "warm_check_ns": 4341801
+    }
+  },
+  "25_text_snapshot": {
+    "before": {
+      "frontend_ns": 4437655,
+      "core_ns": 6749760,
+      "native_including_link_ns": 94180902,
+      "link_subset_ns": 15737823,
+      "cold_build_ns": 114225785,
+      "warm_build_ns": 13716180,
+      "cold_check_ns": 5200035,
+      "warm_check_ns": 4345550
+    },
+    "after": {
+      "frontend_ns": 3695605,
+      "core_ns": 5065642,
+      "native_including_link_ns": 71408144,
+      "link_subset_ns": 17217844,
+      "cold_build_ns": 88792999,
+      "warm_build_ns": 10611842,
+      "cold_check_ns": 6071958,
+      "warm_check_ns": 4624978
+    }
+  },
+  "27_buffer_builder": {
+    "before": {
+      "frontend_ns": 3921049,
+      "core_ns": 3763576,
+      "native_including_link_ns": 95055187,
+      "link_subset_ns": 12970888,
+      "cold_build_ns": 111250160,
+      "warm_build_ns": 8360951,
+      "cold_check_ns": 4881803,
+      "warm_check_ns": 5413827
+    },
+    "after": {
+      "frontend_ns": 4473920,
+      "core_ns": 11933737,
+      "native_including_link_ns": 87771192,
+      "link_subset_ns": 13723468,
+      "cold_build_ns": 112973668,
+      "warm_build_ns": 12942346,
+      "cold_check_ns": 4611544,
+      "warm_check_ns": 5513732
+    }
+  }
+}

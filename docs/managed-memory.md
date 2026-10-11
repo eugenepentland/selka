@@ -57,6 +57,31 @@ are no interior pointers into managed storage.
 
 ## Releasing memory
 
+The main-derived development worktree also has an opt-in
+[`--experimental-single-owner` prototype](../experiments/single-owner-20261010/README.md).
+It changes list assignments to moves and list `.copy()` to explicit storage
+copies; ordinary builds keep the snapshot rules described on this page.
+The [migration and nested-cleanup experiment](../experiments/single-owner-followup-20261011/README.md)
+measures explicit-copy costs and compiler-generated direct cleanup of owned trees.
+The [explicit-snapshot follow-up](../experiments/shared-snapshot-20261011/README.md)
+adds list `.snapshot()` to request sharing within that prototype. It preserves
+independent values using copy-on-write; `.copy()` remains eager. For now a
+snapshot enables RC/COW for the whole Core list type and its child-list types.
+
+The separate [`--experimental-zero-rc` prototype](../experiments/zero-rc-final-20261011/README.md)
+uses one owner per dynamic allocation and compiler-inserted destruction.
+Assignments of managed values move ownership; `.copy()` requests independent
+storage. Read-only `TextView` and `BytesView` values borrow a named owner and may
+cross calls under a single-input return contract. Mutation or moving that owner
+while a view is still used is rejected. Files and dependent capabilities use
+`with` scopes. Sharing and `.snapshot()` are refused in this mode.
+
+The zero-RC runtime has no reference-count field, retain/release functions, or
+count-based uniqueness checks. Heap allocation and ordinary destruction still
+occur. The header remains 32 bytes because of alignment, and explicit copies can
+increase allocation. This is an opt-in prototype with a documented supported
+subset; ordinary builds retain the rules elsewhere on this page.
+
 A managed object is released when its last owner goes away: a local at the end of
 its last use, a temporary right after the expression that made it, a list element
 when its list is released. The compiler places every count and release
@@ -491,3 +516,110 @@ func main() -> int:
         return 4
     return doubled[0] + large[0] + widths[0] + widths[1]
 ```
+
+## Experimental zero-RC ownership
+
+`mylang run app.my --experimental-zero-rc` enables the ownership prototype.
+Lists, strings, bytes, and mutable byte buffers have one owner. Assignment,
+container insertion, and owned return move a value; ordinary parameters borrow,
+and `mut` parameters borrow exclusively. Use `.copy()` when both values must
+remain independently usable. Copies of lists also duplicate owned children in
+records and fixed arrays.
+
+```text
+mut text = "hello" + str(7)
+const saved = text.copy()
+text += "!"
+# saved remains "hello7"; text is "hello7!"
+```
+
+Cleanup directly destroys owned storage without reference counts. Literals have
+static storage; modifying a literal first creates writable storage. Heap
+allocation and growth still occur. Strings sliced in this stage produce owned
+results. The Stage 2 prototype also provides explicit borrowed ranges.
+
+This mode supports owned dictionaries, sets, recursive values, scoped resources,
+and synchronous `parallel.map`. It rejects `.snapshot()`, retained byte `.view()`,
+escaping task handles, arbitrary managed foreign calls, and unaudited runtime APIs.
+`check` validates source ownership; `build` also checks backend and runtime
+support. An unsupported shape is diagnosed instead of falling back to RC.
+The earlier `--experimental-single-owner` mode remains available separately.
+See the [prototype stages and measurements](../experiments/zero-rc-20261011/README.md).
+
+
+### Borrowed text and byte ranges (experimental Stage 2)
+
+With `--experimental-zero-rc`, `.borrow(start, end)` produces a read-only
+`TextView` from a string or `ByteView` from bytes/a byte buffer. Endpoints use
+Unicode scalar positions for text and octet positions for bytes, with negative
+indices and clamping. A view holds a pointer and length. Creating or borrowing
+another range performs no allocation or RC. `len()` reads it directly; text
+length and indexing scan UTF-8. Text character indexing returns an owned string
+and can allocate for non-ASCII characters. Byte indexing returns a scalar.
+
+```text
+func segment(source: TextView, start: int) -> TextView:
+    return source.borrow(start, start + 3)
+
+func example(out: Stream):
+    mut text = "aλz" + str(7)
+    const full = text.borrow(0, len(text))
+    const part = segment(full, 1)
+    out.print(part)                  # λz7; no substring allocation
+    const saved = part.copy()       # independent owned str
+    text += "!"
+    out.print(saved)                # allowed
+    # out.print(part)               # compile error: owner changed
+```
+
+The returned-view contract is visible in ordinary types: a function returning a
+view has exactly one immutable view parameter, and returns a view derived from
+that parameter. It cannot take `mut` parameters. No lifetime names are needed.
+The compiler keeps the backing owner alive through the last use of any derived
+view, including through function calls, without relying on inlining.
+
+Prototype limits: view bindings and parameters are immutable. Views cannot be
+stored in containers, records, callbacks, or conditional-expression bindings.
+Use branch returns in a view-returning helper instead. A loop may create fresh
+views inside its body, but cannot invalidate a view created outside the loop.
+This is conservative even when that outer view will not be used again. Supported
+operations are `.borrow()`, indexing, `len()`, `.copy()`, and text printing.
+Byte-view printing requires `.copy()`; other methods and direct view iteration
+are not yet admitted. The original byte `.view()` operation remains distinct and
+is still refused by zero-RC mode. Unsupported shapes have no RC fallback.
+
+See [Stage 2 measurements and examples](../experiments/zero-rc-views-20261011/README.md).
+
+
+### Explicit values and scoped parallel work (experimental closeout)
+
+`.copy()` also accepts records, enums, options and fixed arrays. In zero-RC mode
+it recursively duplicates owned children; scalar copies simply preserve their
+value. Resources and move-only values cannot be copied. Ordinary builds preserve
+value semantics with their existing copy-on-write behavior.
+
+```text
+import parallel
+
+func render(value: int) -> str:
+    return "item-" + str(value)
+
+func example(out: Stream):
+    const input = [1, 2, 3]
+    const output = parallel.map(input, render)
+    out.print(input[0], output[0])
+```
+
+Zero-RC map borrows each input element, runs the callbacks through the task
+scheduler, and joins every task before returning the results in input order.
+The caller can use its input again immediately. A callback returning managed
+input data must explicitly copy it; returning new data transfers it to the
+output. Nested maps, ordinary error enums, empty inputs and discarded outputs
+follow the same cleanup rules. An uncaught fatal trap terminates the process.
+
+This initial API takes a function value with one read-only parameter. It has no
+closure captures, detached work or escaping task handles, and does not support
+Unit elements. Ordinary RC builds execute the standard function sequentially.
+The prototype creates task, capture and result storage for each element; it is
+intended for testing ownership and parallel work, not for accelerating tiny
+callbacks. Heap allocation and scheduling synchronization remain.

@@ -50,3 +50,46 @@ test "list syntax rejects invalid methods element types and indices" {
         try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
     }
 }
+
+// spec-case: NEW-CORE-SINGLE-OWNER-4
+test "list snapshot preserves value semantics through generic borrowed parameters" {
+    try evaluate(
+        \\func saved[T: copy + storable](values: T[]) -> T[]:
+        \\    return values.snapshot()
+        \\func main() -> int:
+        \\    mut values = [1, 2]
+        \\    mut before = saved(values)
+        \\    values.append(3)
+        \\    before.append(4)
+        \\    return len(values) * 100 + values[2] * 10 + before[2]
+    , 334);
+}
+
+// spec-case: NEW-CORE-SINGLE-OWNER-4
+test "list snapshot takes no arguments and is absent from other collection families" {
+    const cases = [_]struct { text: []const u8, code: []const u8 }{
+        .{ .text =
+        \\func main() -> int:
+        \\    const values = [1]
+        \\    const saved = values.snapshot(2)
+        \\    return len(saved)
+        , .code = "E_ARITY" },
+        .{ .text =
+        \\func main() -> int:
+        \\    const values = {1: 2}
+        \\    const saved = values.snapshot()
+        \\    return len(saved)
+        , .code = "E_COLLECTION_METHOD" },
+        .{ .text =
+        \\func main() -> int:
+        \\    const saved = "text".snapshot()
+        \\    return len(saved)
+        , .code = "E_COLLECTION_METHOD" },
+    };
+    for (cases) |case| {
+        var compilation = try language.Compilation.init(t.allocator, "invalid-snapshot.my", case.text);
+        defer compilation.deinit();
+        try t.expectError(error.SourceError, compilation.check());
+        try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
+    }
+}

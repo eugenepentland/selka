@@ -141,11 +141,11 @@ fn prefixCall(comptime Context: type, comptime Output: type, context: Context, o
     if (digit < '1' or digit > '8') return false;
     const capacity: u32 = digit - '0';
     const slot = try context.stackSlot(32 + capacity * 16);
-    try out.print(context.a(), "  store i32 -1, ptr {s}, align 8\n", .{slot});
+    if (!module.zero_rc) try out.print(context.a(), "  store i32 -1, ptr {s}, align 8\n", .{slot});
     const kind = try context.fresh("%splitkind");
     const cap = try context.fresh("%splitcap");
     const reserved = try context.fresh("%splitreserved");
-    try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 4\n  store i32 0, ptr {s}, align 4\n", .{ kind, slot, kind });
+    try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  store i32 {d}, ptr {s}, align 4\n", .{ kind, slot, module.kindOffset(), @as(u32, if (module.zero_rc) 1 << 23 else 0), kind });
     try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 16\n  store i64 {d}, ptr {s}, align 8\n", .{ cap, slot, capacity, cap });
     try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 24\n  store i64 0, ptr {s}, align 8\n", .{ reserved, slot, reserved });
     const args = context.function.operands(inst.data);

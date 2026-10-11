@@ -4,6 +4,8 @@ const ir = @import("ir.zig");
 const emit_render = @import("emit_render.zig");
 const Out = std.ArrayList(u8);
 /// The name prefix of a structural equality adapter: `myl_core_equal_<IR type index>`.
+/// Compiler-generated independent block copy adapters terminate recursive type expansion.
+pub const copy_prefix = "myl_core_owned_copy_";
 pub const equal_prefix = "myl_core_equal_";
 /// Allocation or an unsupported representation stops this stage.
 pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
@@ -34,13 +36,19 @@ pub fn adapter(a: std.mem.Allocator, out: *Out, function: *const ir.Function) Er
 /// Whether compiler-authorized lowering supplied an equality or rendering adapter.
 pub fn generated(function: *const ir.Function) bool {
     if (function.signature.linkage != .runtime_c) return false;
-    return std.mem.startsWith(u8, function.name, equal_prefix) or std.mem.startsWith(u8, function.name, "myl_core_show_");
+    return std.mem.startsWith(u8, function.name, copy_prefix) or std.mem.startsWith(u8, function.name, equal_prefix) or std.mem.startsWith(u8, function.name, "myl_core_show_");
 }
 
 /// Emit an authorized adapter with the unit's stable symbol and linkage.
 pub fn adapterNamed(a: std.mem.Allocator, out: *Out, function: *const ir.Function, names: emit_render.AdapterNames) Error!bool {
     if (try emit_render.adapterNamed(a, out, function, names)) return true;
     if (function.signature.linkage != .runtime_c) return false;
+    if (std.mem.startsWith(u8, function.name, copy_prefix)) {
+        const number = function.name[copy_prefix.len..];
+        try out.print(a, "define {s} fastcc ptr @{s}(ptr %source) nounwind {{\nentry:\n" ++
+            "  %result = call ptr @myl_core_values_copy_box(ptr @myl.value.{s}, ptr %source)\n  ret ptr %result\n}}\n", .{ names.linkage, names.symbol, number });
+        return true;
+    }
     const prefix = equal_prefix;
     if (!std.mem.startsWith(u8, function.name, prefix)) return false;
     const number = function.name[prefix.len..];
@@ -60,6 +68,7 @@ pub fn key(comptime Context: type, c: Context, out: *Out, ty: ir.Type, symbol: [
 
 fn needed(m: *const ir.Module) bool {
     for (m.functions.items) |f| {
+        if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, copy_prefix)) return true;
         if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, equal_prefix)) return true;
         if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, "myl_core_show_")) return true;
     }
@@ -73,7 +82,8 @@ pub fn descriptors(a: std.mem.Allocator, m: *const ir.Module, out: *Out) Error!v
     try out.appendSlice(a, "%myl.value = type { i32, i32, i32, i32, ptr, ptr, ptr }\n" ++
         "declare zeroext i1 @myl_core_values_equal(ptr, ptr, ptr) nounwind\n" ++
         "declare i64 @myl_core_values_hash(ptr, ptr) nounwind\n" ++
-        "declare ptr @myl_core_values_render(ptr, ptr) nounwind\n");
+        "declare ptr @myl_core_values_render(ptr, ptr) nounwind\n" ++
+        "declare ptr @myl_core_values_copy_box(ptr, ptr) nounwind\n");
     for (0..ir.Type.first_compound) |index| try descriptor(a, m, out, @fromBackingInt(@as(u32, @intCast(index))));
     for (0..m.compounds.items.len) |index| try descriptor(a, m, out, @fromBackingInt(ir.Type.first_compound + @as(u32, @intCast(index))));
     for ([_]ir.Type{ .byte_buffer, .capability, .resource }) |ty| try descriptor(a, m, out, ty);
@@ -130,7 +140,10 @@ fn descriptor(a: std.mem.Allocator, m: *const ir.Module, out: *Out, ty: ir.Type)
             single = .{ shape.key, shape.value };
             children = &single;
         },
-        .@"fn" => kind = 10,
+        .@"fn" => {
+            kind = 10;
+            aux = 1; // Function pointers carry no ownership.
+        },
     };
     const number = @backingInt(ty);
     if (children.len != 0) {

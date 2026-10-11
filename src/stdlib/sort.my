@@ -2,24 +2,30 @@
 public func compare_strs(a: str, b: str) -> int effects():
     if a == b:
         return 0
-    if min(a, b) == a:
+    if a < b:
         return 0 - 1
     return 1
 
 
 # A new ascending list of integers; the input list is not modified.
 public func sort_ints(values: int[]) -> int[]:
-    return sorted(values)
+    mut out = values.copy()
+    out.sort()
+    return out
 
 
 # A new ascending list of floats; NaNs follow ordered values and the input is unchanged.
 public func sort_floats(values: float[]) -> float[]:
-    return sorted(values)
+    mut out = values.copy()
+    out.sort()
+    return out
 
 
 # A new list of texts in Unicode code point order; the input is not modified.
 public func sort_strs(values: str[]) -> str[]:
-    return sorted(values)
+    mut out = values.copy()
+    out.sort()
+    return out
 
 
 # A new list ordered by an integer key function; the ordering is stable and
@@ -78,13 +84,13 @@ public func max_int(values: int[]) -> int? effects():
 
 
 # Smallest text of a list in code point order, if the list has one.
-public func min_str(values: str[]) -> str? effects():
+public func min_str(values: str[]) -> str?:
     if len(values) == 0:
         return None
-    mut best = values[0]
+    mut best = values[0].copy()
     for value in values:
         if compare_strs(value, best) < 0:
-            best = value
+            best = value.copy()
     return Some(best)
 
 
@@ -105,6 +111,6 @@ public func unique_strs(values: str[]) -> str[]:
     mut out: str[] = []
     for value in values:
         if value not in seen:
-            seen[value] = True
-            out.append(value)
+            seen[value.copy()] = True
+            out.append(value.copy())
     return out

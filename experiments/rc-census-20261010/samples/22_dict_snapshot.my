@@ -1,0 +1,17 @@
+func probe(n: int) -> int:
+    mut values: dict[int, int] = {}
+    for i in range(n):
+        values[i] = i + 1
+    const snapshot = values
+    for i in range(n):
+        values[i] = values[i] + n
+    mut total = 0
+    for i in range(n):
+        total += 10 * snapshot[i] + values[i]
+    return total
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

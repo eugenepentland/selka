@@ -500,9 +500,26 @@ pub const Signature = struct {
     /// Bit `i`: parameter `i` is passed owned (a `mut` parameter, by value: the call
     /// consumes the argument, the callee owns it and returns its final value).
     owned: u64 = 0,
+    /// Compiler-inferred consuming ordinary parameters. These transfer one owner
+    /// without the source `mut` result projection or in-out ABI convention.
+    consumes: u64 = 0,
     /// Bit `i`: an extern-C `str` parameter takes a borrowed `(data, byte_length)`
     /// span and admits an SSA `str_view`. Internal functions never use this ABI.
     views: u64 = 0,
+
+    /// A view result borrows from its single view input. No body inference or
+    /// lifetime names are needed; two possible sources are an invalid signature.
+    pub fn viewSource(self: Signature) ?usize {
+        if (self.ret != .str_view) return null;
+        var found: ?usize = null;
+        for (self.params, 0..) |param, index| {
+            const span = index < 64 and self.views & (@as(u64, 1) << @intCast(index)) != 0;
+            if (param != .str_view and !span) continue;
+            if (found != null) return null;
+            found = index;
+        }
+        return found;
+    }
 };
 
 /// A function: its instructions, blocks, packed operand lists and loops.
@@ -571,12 +588,29 @@ pub const Operands = struct {
 
 /// A whole program: interned compound types and functions.
 pub const Module = struct {
+    /// Experimental source contract, validated before lowering. Earlier snapshot
+    /// builds bypass Core caches; zero-RC builds bind their mode into cache keys.
+    single_owner: bool = false,
+    zero_rc: bool = false,
+    /// Conservative type families reachable from explicit list snapshots.
+    /// These retain COW even in a single-owner module; stage caches are bypassed.
+    shared_lists: std.ArrayList(Type) = .empty,
     compounds: std.ArrayList(Compound) = .empty,
     functions: std.ArrayList(Function) = .empty,
     /// UTF-8 bytes of string constants, by `str_const` index.
     strings: std.ArrayList([]const u8) = .empty,
     /// The function `main` is, by index.
     entry: u32 = 0,
+
+    /// The count-free ABI starts with kind; the ordinary ABI starts with count.
+    pub fn kindOffset(self: *const Module) u8 {
+        return if (self.zero_rc) 0 else 4;
+    }
+
+    /// Whether the source contract guarantees one owner for every list of `ty`.
+    pub fn exclusiveList(self: *const Module, ty: Type) bool {
+        return self.single_owner and self.kind(ty) == .list and std.mem.indexOfScalar(Type, self.shared_lists.items, ty) == null;
+    }
 
     /// The interned type for `compound`; a record's or union's type list is copied.
     pub fn intern(self: *Module, allocator: std.mem.Allocator, wanted: Compound) std.mem.Allocator.Error!Type {
@@ -586,7 +620,14 @@ pub const Module = struct {
         const owned: Compound = switch (wanted) {
             .record => |fields| .{ .record = try allocator.dupe(Type, fields) },
             .@"union" => |cases| .{ .@"union" = try allocator.dupe(Type, cases) },
-            .@"fn" => |signature| .{ .@"fn" = .{ .params = try allocator.dupe(Type, signature.params), .ret = signature.ret, .linkage = signature.linkage, .owned = signature.owned, .views = signature.views } },
+            .@"fn" => |signature| .{ .@"fn" = .{
+                .params = try allocator.dupe(Type, signature.params),
+                .ret = signature.ret,
+                .linkage = signature.linkage,
+                .owned = signature.owned,
+                .consumes = signature.consumes,
+                .views = signature.views,
+            } },
             else => wanted,
         };
         try self.compounds.append(allocator, owned);
@@ -800,6 +841,8 @@ fn sameCompound(x: Compound, y: Compound) bool {
         .@"union" => |cases| std.mem.eql(Type, cases, y.@"union"),
         .dict => |dict| dict.key == y.dict.key and dict.value == y.dict.value,
         .array => |array| array.elem == y.array.elem and array.n == y.array.n,
-        .@"fn" => |signature| signature.ret == y.@"fn".ret and signature.linkage == y.@"fn".linkage and signature.owned == y.@"fn".owned and signature.views == y.@"fn".views and std.mem.eql(Type, signature.params, y.@"fn".params),
+        .@"fn" => |signature| signature.ret == y.@"fn".ret and signature.linkage == y.@"fn".linkage and
+            signature.owned == y.@"fn".owned and signature.consumes == y.@"fn".consumes and
+            signature.views == y.@"fn".views and std.mem.eql(Type, signature.params, y.@"fn".params),
     };
 }

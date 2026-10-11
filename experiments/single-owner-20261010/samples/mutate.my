@@ -1,0 +1,16 @@
+func grow(mut values: int[], n: int):
+    for i in range(n):
+        values.append(i)
+
+func sum_values(values: int[]) -> int:
+    mut result = 0
+    for value in values:
+        result += value
+    return result
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args) * 1000
+    mut values: int[] = []
+    grow(mut values, n)
+    out.print(sum_values(values))
+    return 0

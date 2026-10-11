@@ -1,0 +1,102 @@
+[
+  {
+    "id": "11_record_scalar",
+    "title": "Scalar record passed to a loop reader",
+    "category": "record_scalar",
+    "source": "samples/11_record_scalar.my",
+    "intent": "Use a six-field scalar record as a control for aggregate argument handling without managed payloads.",
+    "expected": {"4": "162\n", "11": "946\n"},
+    "oracle": "The six fields sum to 6n+15. The reader adds that sum and i for i=0..n-1, giving n(6n+15)+n(n-1)/2=(13n^2+29n)/2.",
+    "focus": "score (line 10) reads six scalar fields in a runtime-length loop; probe constructs and passes the record by value. Any scalar replacement is a valid optimization win."
+  },
+  {
+    "id": "12_record_list",
+    "title": "Returned record with a managed list field",
+    "category": "record_list",
+    "source": "samples/12_record_list.my",
+    "intent": "Observe allocation and ownership when a factory returns a record containing a runtime-sized list and another function reads its field.",
+    "expected": {"4": "40\n", "11": "726\n"},
+    "oracle": "make_batch stores the integers 1 through n and factor n. score computes n times their sum, n^2(n+1)/2.",
+    "focus": "make_batch (line 6) fills and returns Batch.items; score (line 13) borrows that field during a loop. The record and its list have different storage lifetimes."
+  },
+  {
+    "id": "13_record_snapshot",
+    "title": "Record snapshot kept across managed-field mutation",
+    "category": "record_snapshot",
+    "source": "samples/13_record_snapshot.my",
+    "intent": "Measure required snapshot preservation when a mut helper appends to a record's shared list while the original record remains observable.",
+    "expected": {"4": "13027\n", "11": "34111\n"},
+    "oracle": "The saved record scores n+(n+n+1)=3n+1. The updated record has stamp 2n and appends 1..n, so it scores 4n+1+n(n+1)/2. Print 1000 times the saved score plus the updated score.",
+    "focus": "probe (line 19) keeps saved alive across extend (line 6), which mutates current.items and current.stamp; both records are read afterwards."
+  },
+  {
+    "id": "14_nested_lists",
+    "title": "Construct and traverse nested lists",
+    "category": "nested_lists",
+    "source": "samples/14_nested_lists.my",
+    "intent": "Observe ownership transfer of fixed-width inner lists into a runtime-sized outer list, followed by nested borrowing in another function.",
+    "expected": {"4": "30\n", "11": "198\n"},
+    "oracle": "Row i contains i, i+1 and i+2, whose sum is 3i+3. Summing rows i=0..n-1 gives 3n(n+1)/2.",
+    "focus": "make_rows (line 1) inserts each inner list into rows; score (line 11) traverses both levels. Inner lists have fixed length but escape into a managed container."
+  },
+  {
+    "id": "15_managed_elements",
+    "title": "List of records with dynamic text and list fields",
+    "category": "managed_elements",
+    "source": "samples/15_managed_elements.my",
+    "intent": "Exercise managed-element insertion, field borrowing and destruction with dynamically produced strings and independently allocated integer lists.",
+    "expected": {"4": "50\n", "11": "264\n"},
+    "oracle": "Entry i has label length 4+digits(n+i), two values, and value sum n+i. Its contribution is 6+digits(n+i)+n+i. For n=4 all labels use one digit, giving 50; for n=11 all use two digits, giving 264.",
+    "focus": "make_entries (line 6) constructs Entry(label=\"row:\"+str(i+n), values=[i,n]); score (line 13) reads both managed fields. Labels are runtime text rather than only immortal literals."
+  },
+  {
+    "id": "16_branch_alias",
+    "title": "Branch-selected alias mutated beside both originals",
+    "category": "branch_alias",
+    "source": "samples/16_branch_alias.my",
+    "intent": "Expose alias joins and copy-on-write when one of two lists is selected by a runtime branch, extended, and compared with both original values.",
+    "expected": {"4": "1085\n", "11": "2808\n"},
+    "oracle": "The original sums are L=2n+1 and R=4n+1. Appending n+2 gives selected sum 3n+3 for even n or 5n+3 for odd n. Print 100L+10R+selected: 1085 and 2808.",
+    "focus": "choose (line 1) returns an input alias; probe (line 14) appends to the selected value and then reads both originals. The two input sizes exercise different branches."
+  },
+  {
+    "id": "17_indirect_reader",
+    "title": "Runtime-selected callback reads a short list",
+    "category": "indirect_reader",
+    "source": "samples/17_indirect_reader.my",
+    "intent": "Measure the ownership and allocation boundary of an indirect read-only call on a fixed-length scalar list; permit any valid devirtualization.",
+    "expected": {"4": "22\n", "11": "100\n"},
+    "oracle": "The four values n..n+3 sum to 4n+6. Even n chooses sum_values; odd n chooses double_values, so the outputs are 22 and 2*50=100.",
+    "focus": "apply (line 15) invokes a function-valued parameter; probe (line 19) selects the callback from runtime parity and constructs the four-element list."
+  },
+  {
+    "id": "18_recursive_reader",
+    "title": "Recursive reader of a short scalar list",
+    "category": "recursive_reader",
+    "source": "samples/18_recursive_reader.my",
+    "intent": "Observe how an ordinary list borrow crosses recursive calls where the current strict proof remains conservative.",
+    "expected": {"4": "22\n", "11": "50\n"},
+    "oracle": "sum_from visits each index from zero through three once and returns zero at index four. Its result is n+(n+1)+(n+2)+(n+3)=4n+6.",
+    "focus": "sum_from (line 1) forwards the same list through recursion; probe (line 7) creates a fixed-length list of runtime-dependent values."
+  },
+  {
+    "id": "19_return_field",
+    "title": "Returned managed field kept beside its parent",
+    "category": "return_field",
+    "source": "samples/19_return_field.my",
+    "intent": "Expose ownership of a list returned from a borrowed record, then mutate the extracted value while retaining the parent snapshot.",
+    "expected": {"4": "1526\n", "11": "3661\n"},
+    "oracle": "The parent's list sums to 3n+3. Appending n+3 to the extracted list produces sum 4n+6 while the parent remains unchanged. The final checksum is 100(3n+3)+(4n+6)+n=305n+306.",
+    "focus": "values_of (line 6) returns packet.values; probe (line 17) appends to that returned field and then reads packet.values and packet.id. Inlining the accessor is allowed."
+  },
+  {
+    "id": "20_loop_carried",
+    "title": "Loop-carried list rebuilt by a by-value helper",
+    "category": "loop_carried",
+    "source": "samples/20_loop_carried.my",
+    "intent": "Measure copies and reference counts when each loop iteration replaces its list with the result of an ordinary by-value batch-append helper, without retaining snapshots.",
+    "expected": {"4": "56\n", "11": "594\n"},
+    "oracle": "Let w=n%3+1. Iteration i appends n+i+j for j=0..w-1. The score adds the final length nw to the sum, giving nw(3n+w)/2. With (n,w)=(4,2) and (11,3), this is 56 and 594.",
+    "focus": "append_batch (line 1) makes a mutable local from an ordinary input and appends in a runtime-length loop; probe (line 15) carries the returned list into the next call."
+  }
+]

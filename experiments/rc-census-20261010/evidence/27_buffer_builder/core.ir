@@ -1,0 +1,93 @@
+fn main(list[str], cap) -> i64
+b0:
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = call i64 probe(%3)
+  print param1, %4
+  ret 0:i64
+fn probe(i64) -> i64
+b0:
+  %2 = list_new list[i64] 0:i64
+  %3 = call bool myl_core_bytes_valid_list(%2)
+  branch %3, b1, b2
+b1: ; preds b0
+  %6 = call byte_buffer myl_core_buffer_from_list(%2)
+  release %2
+  %9 = mul.proven i64 3:i64, param0
+  jump b3
+b2: ; preds b0
+  unreachable
+b3: ; preds b1 b5
+  %11 = phi i64 0:i64, %30
+  %26 = phi byte_buffer %6, %27
+  %13 = cmp.lt bool %11, %9
+  branch %13, b4, b6
+b4: ; preds b3
+  %16 = mul.proven i64 17:i64, %11
+  %18 = add.proven i64 %16, param0
+  %20 = floor_rem.proven i64 %18, 256:i64
+  %22 = iconst bool 1
+  %24 = iconst bool 1
+  %25 = bit_and bool 1:bool, 1:bool
+  %27 = call byte_buffer myl_core_buffer_push_checked(%26, %20)
+  jump b5
+b5: ; preds b4
+  %30 = add.proven i64 %11, 1:i64
+  jump b3
+b6: ; preds b3
+  %34 = list_len u64 %26
+  %35 = convert.proven i64 %34
+  jump b14
+b7: ; preds b16 b9
+  %37 = phi i64 0:i64, %52
+  %41 = phi i64 0:i64, %49
+  %39 = cmp.lt bool %37, %35
+  branch %39, b8, b17
+b8: ; preds b7
+  %43 = add.proven i64 %37, 1:i64
+  %46 = list_get.proven u8 %26, %37
+  %47 = convert i64 %46
+  %48 = mul.proven i64 %43, %47
+  %49 = add.exact i64 %41, %48
+  jump b9
+b9: ; preds b8
+  %52 = add.proven i64 %37, 1:i64
+  jump b7
+b10: ; preds b17 b18
+  %75 = phi i64 %41, %59
+  ret %75
+b11: ; preds b15 b13
+  %57 = phi i64 0:i64, %70
+  %59 = phi i64 0:i64, %68
+  %61 = cmp.lt bool %57, %35
+  branch %61, b12, b18
+b12: ; preds b11
+  %63 = add.proven i64 %57, 1:i64
+  %65 = list_get.proven u8 %26, %57
+  %66 = convert i64 %65
+  %67 = mul.proven i64 %63, %66
+  %68 = add.proven i64 %59, %67
+  jump b13
+b13: ; preds b12
+  %70 = add.proven i64 %57, 1:i64
+  jump b11
+b14: ; preds b6
+  %56 = cmp.lt bool %35, 257:i64
+  branch %56, b15, b16
+b15: ; preds b14
+  jump b11
+b16: ; preds b14
+  jump b7
+b17: ; preds b7
+  release %26
+  jump b10
+b18: ; preds b11
+  release %26
+  jump b10
+fn myl_core_bytes_valid_list(list[i64]) -> bool extern
+fn myl_core_buffer_from_list(list[i64]) -> byte_buffer extern
+fn myl_core_buffer_push_checked(byte_buffer, i64) -> byte_buffer extern
+fn myl_core_bytes_index_offset(byte_buffer, i64) -> u64 runtime
+facts main: %2=[0,140737488355328] %3=[0,140737488355328] %4=[0,9223372036854775807]
+facts probe: %0=[0,140737488355328] %3=[0,1] %9=[0,422212465065984] %11=[0,422212465065984] %12=[-9223372036854775808,9223372036854775807] %13=[0,1] %16=[0,7177611906121711] %17=[-9223372036854775808,9223372036854775807] %18=[0,7318349394477039] %20=[0,255] %22=[1,1] %24=[1,1] %25=[0,1] %30=[1,422212465065984] %34=[0,140737488355328] %35=[0,140737488355328] %37=[0,140737488355328] %38=[-9223372036854775808,9223372036854775807] %39=[0,1] %41=[0,9223372036854775807] %43=[1,140737488355328] %45=[-9223372036854775808,9223372036854775807] %46=[0,255] %47=[0,255] %48=[0,35888059530608640] %49=[0,9223372036854775807] %52=[1,140737488355328] %56=[0,1] %57=[0,256] %58=[-9223372036854775808,9223372036854775807] %59=[0,16776960] %61=[0,1] %63=[1,257] %64=[-9223372036854775808,9223372036854775807] %65=[0,255] %66=[0,255] %67=[0,65535] %68=[0,16842495] %70=[1,257] %75=[0,9223372036854775807]
+list probe %2: settled=true length=%-1 len=[0,0]

@@ -212,7 +212,7 @@ The label follows its call, and no other call can sit between them. This gives "
 2. **Owned but maybe shared** (a phi of owned values, a call result, a loaded element):
    `if is_unique(l): in place else: l2 = list_copy(l); release(l); update l2`.
    `is_unique` is `count == 1` from one load. A saturated count (D4) is never unique.
-3. **Borrowed** (a non-`mut` parameter, an element read through a borrow): always `list_copy` first. The callee does not own the block.
+3. **Borrowed** (an ordinary parameter without the inferred consuming convention in §6.5, or an element read through a borrow): always `list_copy` first. The callee does not own the block.
 
 `mutate_shared` takes form 2 (`snapshot = values` makes the count 2, so the first write copies). `mutate_unique` takes form 1.
 
@@ -245,8 +245,8 @@ Otherwise each step reads the current version and performs the iteration check.
 - Element and field accesses carry a different TBAA type. LLVM's GVN and DSE can then fold a `retain`/`release` pair on the same pointer with no intervening possible alias (a call or a `myl.count` store). LLVM itself removes the dead pairs this pass leaves.
 
 **Ownership states per managed SSA value:**
-- `owned` (+1): results of `*_make`, `list_new`, calls, `list_copy`, updates.
-- `borrowed`: parameters other than `mut` ones; `list_get` results of managed elements while the container is live.
+- `owned` (+1): results of `*_make`, `list_new`, calls, `list_copy`, updates; source `mut` and inferred consuming parameters (§6.5).
+- `borrowed`: ordinary parameters without the inferred consuming convention; `list_get` results of managed elements while the container is live.
 
 **Insertion rules:**
 - **Last-use move:** an owned value's last use, if it is a consuming use (update, store into a container or record, return, `mut` slot write, phi operand), takes the value without RC.
@@ -379,20 +379,55 @@ Until the verifier admits modes 2–4 and `a` on mode 3, `trace_test.zig` runs t
 
 ### 6.3 Lists on the stack (checkpoint O-2c, 2026-10-05)
 
-`promote.zig`, run by `own.zig` first in release builds (it needs the facts). A list
+`promote.zig`, run by `own.zig` first in optimized builds (it needs the facts). A list
 qualifies when it is built in the function from `list_new` by a straight chain of pushes
 or by a counted fill loop the facts recognized (`listFacts`: the header phi's length is the
 loop bound), its elements hold no blocks, every other use only reads it (`list_len`,
-`list_get`, `list_get_field`) and no read can run after a push of the version it reads
+`list_get`, `list_get_field`, or a proven borrowing call) and no read can run after a push of the version it reads
 (a CFG walk that stops at the version's definition), and its capacity (the push count, or
-`hi` of the bound's interval) is at most 4 KiB of elements. Calls, returns, stores, other
-phis and other updates make it escape (no callee analysis yet: any call escapes).
+`hi` of the bound's interval) is at most 4 KiB of elements. Promoted list storage also
+has an 8 KiB budget per function, charging the 32-byte header plus element storage
+rounded up to 32-byte alignment for each list. Returns, stores, other phis and other
+updates make it escape.
+
+Direct internal calls qualify when every occurrence of the list is an ordinary
+parameter with `effects.Effect.borrow_only`. This separate proof accepts only
+unmanaged reads and forwarding to equally proven parameters; it rejects temporary
+ownership/count operations as well as escaping aliases. Proofs start false, so
+unproved recursive call cycles stay conservative. Unknown, foreign and indirect
+calls still prevent promotion. The proof is persisted with validated effect
+summaries and included in final optimizer cache keys, including changes propagated
+through forwarding helpers (NEW-CORE-STACK-2/3/4).
+
+**Caller placement for fresh returns (2026-10-10).** `destination.zig` extends the
+CFG inline stage to small ordinary constructors, so unchanged source such as
+`xs = make_values(seed)` can construct in its caller's frame. The constructor must
+have ordinary unmanaged arguments, one fresh list with unmanaged elements, one
+return and no calls. A straight push chain or the existing counted-fill fact must
+prove at most 4 KiB of elements. Eligibility examines at most 100 body instructions,
+128 instruction slots and 20 blocks; constructor cloning adds at most 256
+instructions per caller. The proof uses reclaimable scratch facts and does not
+change the callee.
+
+`inline_cfg.splice` copies the complete construction and its source ancestry.
+Ownership then examines all caller-side uses and applies the same 8 KiB frame
+budget. A returned or stored result, a live snapshot across mutation, or an
+unsupported phi still prevents stack promotion. A temporary whose uses finish
+inside an enclosing iteration can reuse its entry alloca on the next iteration.
+Checked construction traps retain their operation order and constructor frame.
+This is bounded constructor inlining, with real caller storage when promotion
+succeeds; it introduces no destination-passing ABI for opaque or uninlined calls.
+Constructor dependencies participate in the CFG inline cache identity; cold,
+warm and deferred builds must agree after bounds or body edits
+(NEW-CORE-DEST-1/2).
+
 - *Marks:* `list_new.data = capacity + 1`, each filling push `data = 1`; the web's values
   are never counted (no retain, release or copy-on-write test).
 - *Emission:* an entry-block `alloca [32 + capacity × stride] align 32` with the block
   header (count 1, size class 0xff, `cap` = capacity) written where the `list_new` runs,
-  and pushes without the growth test. No web value reaches a phi, so an instance is dead
-  before its `list_new` runs again in an enclosing loop.
+  and pushes without the growth test. No web value reaches a phi that carries it
+  into another enclosing iteration, so an instance is dead before its `list_new`
+  runs again in that loop.
 - *Verify builds* assert `len < capacity` before each such push (`R_CORE_FACT`); the
   `--sabotage-facts` build of `test/core/rc_stack.my` (where `seed % 5` bounds a fill loop)
   is caught.
@@ -437,6 +472,39 @@ the calls inlined) runs in milliseconds; before, release copied on every call.
 **Rebinding a `mut` parameter** (`mut_rebinding`, two tests) is not ownership: V's
 write-back returns the rebound value, so `items = other` inside the callee reaches the
 caller's `items`; the old core leaves the caller's variable alone (COW-MUT-REBIND-1).
+
+### 6.5 Inferred consuming list parameters (2026-10-10)
+
+`consume.zig` recognizes an ordinary internal leaf helper that returns one of its
+unmanaged-element list parameters through copies, phis and list updates. Optimized
+builds can transfer one owner into that parameter without requiring source
+ownership annotations. This makes repeated replacement such as
+`values = append_batch(values, seed)` eligible to reuse the current block across
+an actual call boundary. The proof establishes a useful calling convention, not
+uniqueness: shared inputs still take the ordinary count test and copy path.
+
+The first policy selects at most one parameter, accepts at most 64 parameters and
+4096 instruction slots, and rejects source `mut`, calls, recursion, explicit
+reference counting, managed elements, mixed returned roots, and missing bodies
+without a dependency-validated summary. The entry point is excluded. Installation
+also requires that the module's entire compound-type catalog contains no function
+value type. This broad guard excludes indirect calls and runtime callbacks,
+including when their bodies are omitted by a warm cache.
+
+The compiler-only `Signature.consumes` mask is distinct from `Signature.owned`,
+which continues to describe source `mut` result projections and the in-out ABI.
+All conventions are installed before any ownership body runs. The existing
+liveness rules move a dead argument, retain a still-live snapshot or borrowed
+part, and add an owner when the same call both consumes and borrows the value.
+List-header caching treats these calls as potentially consuming. Source arguments
+retain value semantics, and assigning the returned list remains an ordinary
+assignment.
+
+Local eligibility is persisted in effect summaries; the function-value guard is
+checked anew for the current module. Canonical signatures and final optimizer
+identities include the installed mask. Cache tests cover body edits and adding or
+removing function values so an old convention cannot supply stale owned code
+(NEW-CORE-CONSUME-1/2).
 
 ## 7. `mut` parameters
 

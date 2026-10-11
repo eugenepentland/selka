@@ -1,0 +1,419 @@
+{
+  "host": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+  "iterations": 5000000,
+  "method": "9 alternating paired runs after 2 warmups; taskset CPU 2; GNU time RSS; counters/leak checks disabled; shared host",
+  "harness_sha256": "9cfb4ba0d3a3c6d963a395b94fb0cc584aaf563de583d83a3a15be654b4b283b",
+  "cases": {
+    "text": {
+      "iterations": 5000000,
+      "lanes": {
+        "before": {
+          "source_sha256": "6f43fd744fbc6236fcac9094c9af97d8545b22157f7ec0051d55745d8a63085d",
+          "binary_sha256": "5b2a4b0d3e10fd27b12f35e6a234d7c2c9b2f0e5f30a564e0734ae1548477e75",
+          "runs": [
+            {
+              "elapsed_ns": 154522191,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 158437858,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 157226344,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 147164189,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 147619379,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 147439103,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 147115871,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 152476515,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 154060674,
+              "max_rss_kib": 2056,
+              "stdout": "602500000\n"
+            }
+          ],
+          "compile_ns": {
+            "cold": 124777942,
+            "warm": 15252696
+          },
+          "check_ns": {
+            "cold": 10100717,
+            "warm": 6049401
+          },
+          "median_ns": 152476515,
+          "min_ns": 147115871,
+          "max_ns": 158437858,
+          "median_max_rss_kib": 2060
+        },
+        "after": {
+          "source_sha256": "9ae1c3ef2adc8a8f86cadbda765b3498e961522fcb96cf59e3ff624b0398af24",
+          "binary_sha256": "b20ba149242aa22f7a49be337839a0d8c93b35d8e84bbaa9c2c03beaa3d1d4b5",
+          "runs": [
+            {
+              "elapsed_ns": 403049132,
+              "max_rss_kib": 2056,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 407886119,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 421561040,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 415589369,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 420929500,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 422922318,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 402425136,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 424870235,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            },
+            {
+              "elapsed_ns": 437176983,
+              "max_rss_kib": 2060,
+              "stdout": "602500000\n"
+            }
+          ],
+          "compile_ns": {
+            "cold": 126318981,
+            "warm": 12613896
+          },
+          "check_ns": {
+            "cold": 7574226,
+            "warm": 6468190
+          },
+          "median_ns": 420929500,
+          "min_ns": 402425136,
+          "max_ns": 437176983,
+          "median_max_rss_kib": 2060
+        }
+      },
+      "elapsed_ratio": 2.760618577883945
+    },
+    "bytes": {
+      "iterations": 5000000,
+      "lanes": {
+        "before": {
+          "source_sha256": "848b67e1f613da96283b09893593c199f66c4fd0a3a706158c08dd9b8d501c20",
+          "binary_sha256": "b74df72b4bcede8968042c0101b1d8e13dce3ec2741c32ed9a39717c8f95493f",
+          "runs": [
+            {
+              "elapsed_ns": 88456112,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 87906105,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 90812508,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 86455925,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 88177928,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 89956523,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 87728528,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 108638504,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 87718475,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            }
+          ],
+          "compile_ns": {
+            "cold": 146295525,
+            "warm": 14996907
+          },
+          "check_ns": {
+            "cold": 7835608,
+            "warm": 6933009
+          },
+          "median_ns": 88177928,
+          "min_ns": 86455925,
+          "max_ns": 108638504,
+          "median_max_rss_kib": 2060
+        },
+        "after": {
+          "source_sha256": "b22854eef88d14341f3a34766ca823e0486ea916bdff8fbab43f52f0c184ead7",
+          "binary_sha256": "e6572cc49416a4cfe028f8ab5c7bddbbd4109bbcca1aca4fb5cc284220c448fc",
+          "runs": [
+            {
+              "elapsed_ns": 42823023,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 43744202,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 42390100,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 42810228,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 43009707,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 43039932,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 40747377,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 40965162,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            },
+            {
+              "elapsed_ns": 41774996,
+              "max_rss_kib": 2060,
+              "stdout": "117500000\n"
+            }
+          ],
+          "compile_ns": {
+            "cold": 140706291,
+            "warm": 14784224
+          },
+          "check_ns": {
+            "cold": 9930076,
+            "warm": 7475343
+          },
+          "median_ns": 42810228,
+          "min_ns": 40747377,
+          "max_ns": 43744202,
+          "median_max_rss_kib": 2060
+        }
+      },
+      "elapsed_ratio": 0.4854982303507971
+    },
+    "text_large": {
+      "iterations": 500000,
+      "lanes": {
+        "before": {
+          "source_sha256": "071afede194ec2f921428a7262f3f2779c72ff8775c3ad06cbdb381b82ea8906",
+          "binary_sha256": "d92081677ca0ac485c6a6d5110d007e8bf557a98eb00db84c73e988783c2b063",
+          "runs": [
+            {
+              "elapsed_ns": 16405863,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 16108422,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 16037505,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 18263760,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 18063060,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 22519986,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 24050358,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 22952783,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 23976007,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            }
+          ],
+          "compile_ns": {
+            "cold": 152685570,
+            "warm": 15237487
+          },
+          "check_ns": {
+            "cold": 17970891,
+            "warm": 16406966
+          },
+          "median_ns": 18263760,
+          "min_ns": 16037505,
+          "max_ns": 24050358,
+          "median_max_rss_kib": 2060
+        },
+        "after": {
+          "source_sha256": "c422ac1da0380420ef7e99f86f76b84ac5e9bc1294d2eba09d60da27d48bf5c0",
+          "binary_sha256": "087965707269ef4a45c735a937303d5a2ac1fcdc22a6f89656a17cda6cfb468a",
+          "runs": [
+            {
+              "elapsed_ns": 242343736,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 239069933,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 247507511,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 223837900,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 247725393,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 276754403,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 282204354,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 295120559,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            },
+            {
+              "elapsed_ns": 287922042,
+              "max_rss_kib": 2060,
+              "stdout": "60250000\n"
+            }
+          ],
+          "compile_ns": {
+            "cold": 151651730,
+            "warm": 14687515
+          },
+          "check_ns": {
+            "cold": 18924466,
+            "warm": 16389768
+          },
+          "median_ns": 247725393,
+          "min_ns": 223837900,
+          "max_ns": 295120559,
+          "median_max_rss_kib": 2060
+        }
+      },
+      "elapsed_ratio": 13.563767427955689
+    }
+  },
+  "tools": {
+    "compiler": {
+      "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/initial-candidate/bin/mylang",
+      "sha256": "9b28aab106ee0c5e0634eaa3b43202a2e3c30ab586ac8a87a9792eaa5bd784df",
+      "original_path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-views-20261011/candidate/bin/mylang"
+    },
+    "before": {
+      "path": "/home/epentland/ai/canopy/mylang-borrow-stack-20261010/.tmp/zero-rc-20261011/candidate/bin/mylang",
+      "sha256": "b10dffb2501e7f631bdc7b8fc5dc68cbbb7bed9d67d434a68d11a4913b89c7bb"
+    },
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+func probe(n: int) -> int:
+    const values = [for i in range(3 * n) yield i + n]
+    const filtered = [for value in values if value % 3 == 0 yield value]
+    mut total = 0
+    for i in range(len(filtered)):
+        total += (i + 1) * filtered[i]
+    return total
+
+
+func main(args: str[], out: Stream) -> int:
+    const n = len(args)
+    out.print(probe(n))
+    return 0

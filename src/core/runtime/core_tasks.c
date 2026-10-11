@@ -125,10 +125,16 @@ static void core_task_execute(core_task *task, bool parallel) {
     error_trace.origin = NULL;
     error_trace.count = 0;
     myl_block *result = myl_core_task_call(task->run, task->env);
+#ifdef MYL_ZERO_RC
+    /* The scoped group received this environment by move. The thunk borrows
+       it and must publish an independent owned result. */
+    myl_core_drop_owned(task->env);
+#else
     if (parallel) {
         myl_core_share(result);
         myl_core_release(task->env);
     }
+#endif
     task->env = NULL;
     task->result = result;
     core_running_task = saved;
@@ -263,12 +269,14 @@ __attribute__((noinline)) myl_block *myl_core_task_submit(myl_block *block, void
     task->site = (core_task_context){(uintptr_t)__builtin_return_address(0), group->site, item};
     atomic_init(&task->state, 0);
     bool parallel = core_parallel();
+#ifndef MYL_ZERO_RC
     if (parallel) {
         myl_core_share(env);
         count_retain(env);
         myl_core_share(handle);
     }
     count_retain(handle);
+#endif
     group->tasks = myl_core_list_grow(group->tasks, sizeof(myl_block *));
     ((myl_block **)block_data(group->tasks))[group->tasks->len++] = handle;
     atomic_fetch_add_explicit(&group->pending, 1, memory_order_relaxed);
@@ -298,17 +306,71 @@ myl_block *myl_core_task_result(myl_block *handle) {
         if (task) core_task_execute(task, true);
         else core_task_park(epoch);
     }
+#ifdef MYL_ZERO_RC
+    myl_block *result = wanted->result;
+    if (!result) core_io_fail("R_TASK_GROUP");
+    wanted->result = NULL;
+    return result;
+#else
     count_retain(wanted->result);
     return wanted->result;
+#endif
 }
 void myl_core_group_close(myl_block *block) {
     core_group *group = (core_group *)block_data(block);
     core_group_wait(group);
     if (group->closed) return;
     group->closed = true;
+#ifdef MYL_ZERO_RC
+    myl_core_drop_owned(group->tasks);
+#else
     myl_core_release(group->tasks);
+#endif
     group->tasks = NULL;
 }
+#ifdef MYL_ZERO_RC
+/* NEW-CORE-ZERO-RC-TASKS-1: handles never escape their group. Submit transfers
+   one capture box, take transfers one completed result, and end joins before
+   destroying untaken results. The legacy borrowed capture ABI is not admitted. */
+void myl_core_owned_task_submit(myl_block *group, void *run, myl_block *env, int64_t item) {
+    (void)myl_core_task_submit(group, run, env, item);
+}
+myl_block *myl_core_owned_group_take(myl_block *block, int64_t index) {
+    core_group *group = (core_group *)block_data(block);
+    if (group->closed || index < 0 || index >= group->tasks->len) core_io_fail("R_TASK_GROUP");
+    return myl_core_task_result(((myl_block **)block_data(group->tasks))[index]);
+}
+void myl_core_owned_group_end(myl_block *block) {
+    myl_core_group_close(block);
+    myl_core_drop_owned(block);
+}
+/* The source list remains borrowed until the mandatory join. Each leaf capture
+   contains a distinct element plus a function pointer; its managed pointers
+   borrow the source tree and are deliberately absent from the capture layout.
+   Callback results are independent owners, checked by the source compiler. */
+myl_block *myl_core_owned_map(myl_block *source, void *callback, void *run,
+        uint64_t input_size, uint64_t callback_offset, uint64_t env_size,
+        myl_block *out, uint64_t output_size) {
+    if (!source->len) return out;
+    myl_block *group = myl_core_group_open();
+    for (int64_t i = 0; i < source->len; ++i) {
+        myl_block *env = block_new(MYL_KIND_BYTES, env_size, 1);
+        env->len = (int64_t)env_size;
+        memcpy(block_data(env), block_data(source) + (size_t)i * input_size, input_size);
+        memcpy(block_data(env) + callback_offset, &callback, sizeof callback);
+        myl_core_owned_task_submit(group, run, env, i);
+    }
+    for (int64_t i = 0; i < source->len; ++i) {
+        myl_block *result = myl_core_owned_group_take(group, i);
+        memcpy(block_data(out) + (size_t)i * output_size, block_data(result), output_size);
+        ++out->len;
+        /* Transfer the payload into the output; free only its former box. */
+        block_free(result);
+    }
+    myl_core_owned_group_end(group);
+    return out;
+}
+#endif
 /* A dropped group still owns queued tasks: join before the shared child
  * iterator releases its handle list. Source lowering normally closes first. */
 static void core_task_finalize(myl_block *block) {

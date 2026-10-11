@@ -46,6 +46,7 @@ pub const Artifact = struct {
     number: bool,
     math: bool,
     counting: bool,
+    zero_rc: bool = false,
 };
 
 /// Estimate the scratch held while planning memory homes and rendering instructions.
@@ -70,6 +71,6 @@ pub fn batch(weights: []const usize, lanes: usize, budget: usize) usize {
 /// A checked compact input points at the ordinary exact-key LLVM artifact.
 pub const Receipt = struct { artifact: store.Digest, text_digest: store.Digest, dependencies: Dependencies };
 /// Runtime link dependencies recorded alongside completed LLVM identity.
-pub const Dependencies = struct { number: bool = false, math: bool = false, counting: bool = false };
+pub const Dependencies = struct { number: bool = false, math: bool = false, counting: bool = false, zero_rc: bool = false };
 /// A native receipt can serve an object without decoding its LLVM artifact.
 pub const NativeArtifact = struct { store: *const store.Store, key: store.Digest };

@@ -61,8 +61,8 @@ fn sourceAscii(comptime Context: type, comptime Output: type, context: Context, 
     const kind = try context.fresh("%viewkind");
     const bit = try context.fresh("%viewascii");
     const ascii = try context.fresh("%viewascii");
-    try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 4\n  {s} = load i32, ptr {s}, align 4\n  {s} = and i32 {s}, 256\n  {s} = icmp ne i32 {s}, 0\n", .{
-        kind_at, try context.value(borrow.a), kind, kind_at, bit, kind, ascii, bit,
+    try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i32, ptr {s}, align 4\n  {s} = and i32 {s}, 256\n  {s} = icmp ne i32 {s}, 0\n", .{
+        kind_at, try context.value(borrow.a), context.module().kindOffset(), kind, kind_at, bit, kind, ascii, bit,
     });
     return ascii;
 }
@@ -83,8 +83,12 @@ fn sliceView(comptime Context: type, comptime Output: type, context: Context, ou
     const slow = try context.fresh("sliceslow");
     const join = try context.fresh("slicejoin");
     const byte_source = context.function.inst(context.function.resolve(inst.a)).ty == .bytes;
-    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 4\n  {s} = load i32, ptr {s}, align 4\n" ++
-        "  {s} = and i32 {s}, 256\n  {s} = icmp ne i32 {s}, 0\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ kind_at, text, kind, kind_at, ascii_bit, kind, ascii, ascii_bit, if (byte_source) "true" else ascii, fast, slow, fast });
+    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i32, ptr {s}, align 4\n" ++
+        "  {s} = and i32 {s}, 256\n  {s} = icmp ne i32 {s}, 0\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{
+        kind_at,   text, context.module().kindOffset(), kind,      kind_at,
+        ascii_bit, kind, ascii,                         ascii_bit, if (byte_source) "true" else ascii,
+        fast,      slow, fast,
+    });
     const len_at = try context.fresh("%slicelen");
     const len = try context.fresh("%slicelen");
     try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 8\n  {s} = load i64, ptr {s}, align 8\n", .{ len_at, text, len, len_at });

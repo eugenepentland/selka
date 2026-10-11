@@ -1,0 +1,67 @@
+# Fixed-size construction followed by an ordinary looped reader. The local and
+# runtime-sized forms perform the same weighted fold and serve as controls.
+func fold(values: int[]) -> int:
+    mut total = 0
+    for i in range(len(values)):
+        total += (i + 1) * values[i]
+    return total
+
+
+func bounded(rounds: int, seed: int) -> int:
+    mut total = 0
+    for batch in range(rounds):
+        mut values: int[] = []
+        for j in range(16):
+            values.append((seed + batch + j * 13) % 1009)
+        total = (total + fold(values)) % 1000000007
+    return total
+
+
+func local_only(rounds: int, seed: int) -> int:
+    mut total = 0
+    for batch in range(rounds):
+        mut values: int[] = []
+        for j in range(16):
+            values.append((seed + batch + j * 13) % 1009)
+        mut part = 0
+        for i in range(len(values)):
+            part += (i + 1) * values[i]
+        total = (total + part) % 1000000007
+    return total
+
+
+func unbounded(rounds: int, seed: int, size: int) -> int:
+    mut total = 0
+    for batch in range(rounds):
+        mut values: int[] = []
+        for j in range(size):
+            values.append((seed + batch + j * 13) % 1009)
+        total = (total + fold(values)) % 1000000007
+    return total
+
+
+func number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) != 4:
+        return 2
+    const rounds = number(args[1])
+    const seed = number(args[2])
+    const size = number(args[3])
+    if rounds < 1 or rounds > 10000000 or seed < 1 or seed > 1000000 or size < 1 or size > 4096:
+        return 2
+    if args[0] == "bounded":
+        out.print(bounded(rounds, seed))
+    elif args[0] == "local":
+        out.print(local_only(rounds, seed))
+    elif args[0] == "unbounded":
+        out.print(unbounded(rounds, seed, size))
+    else:
+        return 2
+    return 0

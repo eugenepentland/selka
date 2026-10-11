@@ -5,7 +5,7 @@ const typed = @import("mylang").typed;
 /// Allocation and located source refusals from effect lowering.
 pub const Error = error{ OutOfMemory, Unsupported };
 /// A live lexical file scope and the loop depth at which it was opened.
-pub const Scope = struct { owner: ir.Ref, depth: usize };
+pub const Scope = struct { owner: ir.Ref, depth: usize, provider: ir.Ref = .none };
 
 const file_access_symbol = "myl_core_file_access";
 const stream_write_symbol = "myl_core_stream_write";
@@ -77,6 +77,9 @@ pub fn Lower(comptime Context: type) type {
         }
         fn slotField(c: Context, box: ir.Ref, field: u32, span: u32) Error!ir.Ref {
             const ty = c.module().compound(c.typeOfRef(box)).box;
+            const field_type = c.module().compound(ty).record[field];
+            if (c.module().zero_rc and c.module().isBlock(field_type))
+                return c.effectCall("myl_core_result_take_pointer", &.{ c.typeOfRef(box), .u32 }, field_type, &.{ box, try c.constant(.u32, field) }, span);
             const value = try c.emit(.{ .op = .box_get, .ty = ty, .a = box, .span = span });
             return c.emit(.{ .op = .record_get, .ty = c.module().compound(ty).record[field], .a = value, .data = field, .span = span });
         }
@@ -255,6 +258,27 @@ pub fn Lower(comptime Context: type) type {
     };
 }
 
+/// The source-level parent whose lifetime encloses a dependent scope.
+pub fn scopeProvider(node: typed.Node) ?typed.NodeId {
+    return switch (node.data) {
+        .file_access => |file| file.arguments[0],
+        .dir_resource => |dir| dir.capability,
+        .host_resource => |host| host.capability,
+        .restrict_resource => |restrict| restrict.value,
+        .environment_only => |only| only.capability,
+        else => null,
+    };
+}
+
+/// Close and drop a scoped handle while its provider is still a borrowed argument.
+pub fn closeScope(comptime Context: type, c: Context, scope: Scope, span: u32) Error!void {
+    if (c.module().zero_rc) {
+        const ty = c.typeOfRef(scope.owner);
+        const symbol = if (ty == .resource) "myl_core_owned_file_scope_end" else "myl_core_owned_cap_scope_end";
+        _ = try c.effectCall(symbol, &.{ ty, .capability }, .void, &.{ scope.owner, scope.provider }, span);
+    } else if (c.typeOfRef(scope.owner) == .resource) _ = try c.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{scope.owner}, span);
+}
+
 /// Close active file scopes crossed by a return or a loop exit, innermost first.
 pub fn closeScopes(comptime Context: type, c: Context, depth: usize, span: u32) Error!void {
     var left = c.ssa.resources.items.len;
@@ -262,8 +286,7 @@ pub fn closeScopes(comptime Context: type, c: Context, depth: usize, span: u32) 
         left -= 1;
         const scope = c.ssa.resources.items[left];
         if (scope.depth < depth) continue;
-        const owner = scope.owner;
-        _ = try c.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{owner}, span);
+        try closeScope(Context, c, scope, span);
     }
 }
 

@@ -1,0 +1,8 @@
+func observe_and_change(before: int[], mut after: int[]) -> int:
+    after.append(4)
+    return len(before)
+
+func main(out: Stream) -> int:
+    mut values = [1, 2, 3]
+    out.print(observe_and_change(values, mut values))
+    return 0

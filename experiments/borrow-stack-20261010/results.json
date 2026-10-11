@@ -1,0 +1,974 @@
+{
+  "schema": "borrow-stack-results-v1",
+  "date": "2026-10-10",
+  "baseline": {
+    "compiler_sha256": "214aa4a3900a614f9e201b1a024ed95122e993c3696c6120529dd56f7f5f73f6",
+    "compiler_source_revision": "1d202d41bfff888ee91354f706cb74e860dc4b94",
+    "compiler_source_manifest_sha256": "1566e7006b6d8e8c4e0791445d77253fd0a8da10d34d1c288848cf9da095503b"
+  },
+  "candidate": {
+    "compiler_sha256": "5ca393ede35337754edf06c0cf5551f491dc87037d3988ea4d410b0422e3db2d",
+    "compiler_source_revision": "1d202d41bfff888ee91354f706cb74e860dc4b94",
+    "compiler_source_manifest_sha256": "c0c182b1c0245abed5f8c78498501bf090648c4b2516f306d1e0bd14d2b45143",
+    "uncommitted_prototype": true
+  },
+  "toolchain": {
+    "zig_path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+    "compiler_build_mode": "ReleaseFast",
+    "guest_build_flags": [
+      "--release"
+    ]
+  },
+  "experiment_sources": {
+    "workload.my": "e076becd12e09af96811990c3ea9f2d764961104efdb3b3514a9246d664c8c5c",
+    "measure.py": "3d3490812c06bc2a55e27417d8d05ed43c1e613bb372edd1bfa9353748efbfa4"
+  },
+  "capture_parameters": {
+    "rounds": 1000000,
+    "seed": 7,
+    "size": 16,
+    "qualifications": [
+      "--release",
+      "--release --counters",
+      "--release --verify-facts"
+    ],
+    "normal_runs_leakcheck": true
+  },
+  "static_cost": {
+    "experiments/borrow-stack-20261010/workload.my": {
+      "source_sha256": "e076becd12e09af96811990c3ea9f2d764961104efdb3b3514a9246d664c8c5c",
+      "baseline": {
+        "allocation_sites": 4,
+        "stack_lists": 1,
+        "retains": 0,
+        "releases": 2,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 2,
+        "stack_lists": 2,
+        "retains": 0,
+        "releases": 1,
+        "inlined_calls": 0
+      }
+    },
+    "test/core/v_loops.my": {
+      "source_sha256": "fca2e3160e5d2d113898e450cd4533d3e08198d2c8feedde3f0bfaf741bac1a3",
+      "baseline": {
+        "allocation_sites": 15,
+        "stack_lists": 0,
+        "retains": 1,
+        "releases": 6,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 7,
+        "stack_lists": 2,
+        "retains": 1,
+        "releases": 4,
+        "inlined_calls": 0
+      }
+    },
+    "test/core/f1_overflow.my": {
+      "source_sha256": "261ec3666ea04c83b0a417deba4bfe5a0eb66120d55f2cccfef29b6502ca0acc",
+      "baseline": {
+        "allocation_sites": 18,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 7,
+        "inlined_calls": 1
+      },
+      "candidate": {
+        "allocation_sites": 7,
+        "stack_lists": 3,
+        "retains": 0,
+        "releases": 4,
+        "inlined_calls": 1
+      }
+    },
+    "test/core/rc_stack.my": {
+      "source_sha256": "a24e38157981f0e3fc3414c4baaf1cd8052d5c9fa5d41b793a5f437e11453474",
+      "baseline": {
+        "allocation_sites": 2,
+        "stack_lists": 4,
+        "retains": 0,
+        "releases": 1,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 2,
+        "stack_lists": 4,
+        "retains": 0,
+        "releases": 1,
+        "inlined_calls": 0
+      }
+    },
+    "bench/parity/micro/alloc_churn.my": {
+      "source_sha256": "74825863337c73076d95dbfd0cf3ac44e5b96e33b0d2c983a00c568bd8b7d708",
+      "baseline": {
+        "allocation_sites": 0,
+        "stack_lists": 1,
+        "retains": 0,
+        "releases": 0,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 0,
+        "stack_lists": 1,
+        "retains": 0,
+        "releases": 0,
+        "inlined_calls": 0
+      }
+    },
+    "bench/parity/micro/records.my": {
+      "source_sha256": "1a2dcd6b8c1a546b9c74716dee041c6e25925aaa773f2f5f534e167cd13c50cd",
+      "baseline": {
+        "allocation_sites": 0,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 0,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 0,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 0,
+        "inlined_calls": 0
+      },
+      "all_static_totals_equal": true
+    },
+    "bench/parity/micro/list_append_sum.my": {
+      "source_sha256": "77f823a390a0fa510dc7c17abd7906d887760097a48d6ab8ef1d9c8555a10edd",
+      "baseline": {
+        "allocation_sites": 2,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 2,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 2,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 2,
+        "inlined_calls": 0
+      },
+      "all_static_totals_equal": true
+    },
+    "bench/parity/micro/dict_count.my": {
+      "source_sha256": "a131ce57bad43436a65ae39e614bc713baf7e0efed6207070b3239c4d0a33167",
+      "baseline": {
+        "allocation_sites": 7,
+        "stack_lists": 0,
+        "retains": 1,
+        "releases": 3,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 7,
+        "stack_lists": 0,
+        "retains": 1,
+        "releases": 3,
+        "inlined_calls": 0
+      },
+      "all_static_totals_equal": true
+    },
+    "bench/parity/suite/binary_trees_recursive.my": {
+      "source_sha256": "7a2ddd95b11f192dd6f9769ee08b3fadf14a8cad31e977b1497cb64b4f571eda",
+      "baseline": {
+        "allocation_sites": 27,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 9,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 27,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 9,
+        "inlined_calls": 0
+      },
+      "all_static_totals_equal": true
+    },
+    "bench/parity/suite/text_ops.my": {
+      "source_sha256": "13cfc694b6e2653499ae29e8a9158958a278647e591a39060dba2392f9efcb61",
+      "baseline": {
+        "allocation_sites": 42,
+        "stack_lists": 0,
+        "retains": 2,
+        "releases": 36,
+        "inlined_calls": 0
+      },
+      "candidate": {
+        "allocation_sites": 42,
+        "stack_lists": 0,
+        "retains": 2,
+        "releases": 36,
+        "inlined_calls": 0
+      },
+      "all_static_totals_equal": true
+    },
+    "bench/parity/suite/nbody.my": {
+      "source_sha256": "15c18c6c0d643e7d94230c2b8dfb5a27840649f93f87e3e774387faa1ec098bd",
+      "baseline": {
+        "allocation_sites": 8,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 1,
+        "inlined_calls": 7
+      },
+      "candidate": {
+        "allocation_sites": 8,
+        "stack_lists": 0,
+        "retains": 0,
+        "releases": 1,
+        "inlined_calls": 7
+      },
+      "all_static_totals_equal": true
+    }
+  },
+  "dynamic": {
+    "workload/bounded": {
+      "arguments": [
+        "bounded",
+        "1000000",
+        "7",
+        "16"
+      ],
+      "stdout": "540397292\n",
+      "status": 0,
+      "baseline": {
+        "managed": {
+          "allocs": 3000005,
+          "alloc_bytes": 288000320,
+          "frees": 3000005,
+          "free_bytes": 288000320,
+          "peak_live_bytes": 576,
+          "live_bytes_at_exit": 0,
+          "list_grows": 2000000,
+          "list_grow_bytes": 64000000,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 5
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 1000000,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        },
+        "kernel": {
+          "name": "bounded",
+          "calls": 1,
+          "allocs": 3000000,
+          "alloc_bytes": 288000000,
+          "list_grows": 2000000,
+          "list_grow_bytes": 64000000,
+          "list_copies": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "fold_calls": 1000000
+      },
+      "candidate": {
+        "managed": {
+          "allocs": 5,
+          "alloc_bytes": 320,
+          "frees": 5,
+          "free_bytes": 320,
+          "peak_live_bytes": 320,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 5
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 0,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        },
+        "kernel": {
+          "name": "bounded",
+          "calls": 1,
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "fold_calls": 1000000
+      }
+    },
+    "workload/local": {
+      "arguments": [
+        "local",
+        "1000000",
+        "7",
+        "16"
+      ],
+      "stdout": "540397292\n",
+      "status": 0,
+      "baseline": {
+        "managed": {
+          "allocs": 5,
+          "alloc_bytes": 320,
+          "frees": 5,
+          "free_bytes": 320,
+          "peak_live_bytes": 320,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 5
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 0,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        },
+        "kernel": {
+          "name": "local_only",
+          "calls": 1,
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "fold_calls": 0
+      },
+      "candidate": {
+        "managed": {
+          "allocs": 5,
+          "alloc_bytes": 320,
+          "frees": 5,
+          "free_bytes": 320,
+          "peak_live_bytes": 320,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 5
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 0,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        },
+        "kernel": {
+          "name": "local_only",
+          "calls": 1,
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "fold_calls": 0
+      }
+    },
+    "workload/unbounded": {
+      "arguments": [
+        "unbounded",
+        "1000000",
+        "7",
+        "16"
+      ],
+      "stdout": "540397292\n",
+      "status": 0,
+      "baseline": {
+        "managed": {
+          "allocs": 1000005,
+          "alloc_bytes": 160000320,
+          "frees": 1000005,
+          "free_bytes": 160000320,
+          "peak_live_bytes": 480,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 5
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 1000000,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        },
+        "kernel": {
+          "name": "unbounded",
+          "calls": 1,
+          "allocs": 1000000,
+          "alloc_bytes": 160000000,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "fold_calls": 1000000
+      },
+      "candidate": {
+        "managed": {
+          "allocs": 1000005,
+          "alloc_bytes": 160000320,
+          "frees": 1000005,
+          "free_bytes": 160000320,
+          "peak_live_bytes": 480,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 5
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 1000000,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        },
+        "kernel": {
+          "name": "unbounded",
+          "calls": 1,
+          "allocs": 1000000,
+          "alloc_bytes": 160000000,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "fold_calls": 1000000
+      }
+    },
+    "v_loops/search": {
+      "arguments": [],
+      "stdout": "2 -1 -1\n45 0 30 0\n61 0\n",
+      "status": 0,
+      "baseline": {
+        "managed": {
+          "allocs": 7,
+          "alloc_bytes": 416,
+          "frees": 7,
+          "free_bytes": 416,
+          "peak_live_bytes": 128,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "core_events": {
+          "retain": 2,
+          "release": 9,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      },
+      "candidate": {
+        "managed": {
+          "allocs": 5,
+          "alloc_bytes": 288,
+          "frees": 5,
+          "free_bytes": 288,
+          "peak_live_bytes": 128,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "core_events": {
+          "retain": 2,
+          "release": 7,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      }
+    },
+    "f1_overflow/sum": {
+      "arguments": [
+        "unbounded"
+      ],
+      "stdout": "6\n",
+      "status": 0,
+      "baseline": {
+        "managed": {
+          "allocs": 3,
+          "alloc_bytes": 192,
+          "frees": 3,
+          "free_bytes": 192,
+          "peak_live_bytes": 192,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 2
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 1,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      },
+      "candidate": {
+        "managed": {
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 2,
+          "free_bytes": 128,
+          "peak_live_bytes": 128,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 2
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 0,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      }
+    },
+    "f1_overflow/trap": {
+      "arguments": [
+        "huge"
+      ],
+      "stdout": "",
+      "status": 1,
+      "baseline": {
+        "managed": {
+          "allocs": 3,
+          "alloc_bytes": 192,
+          "frees": 0,
+          "free_bytes": 0,
+          "peak_live_bytes": 192,
+          "live_bytes_at_exit": 192,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 0,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      },
+      "candidate": {
+        "managed": {
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 0,
+          "free_bytes": 0,
+          "peak_live_bytes": 128,
+          "live_bytes_at_exit": 128,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 0,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      }
+    },
+    "rc_stack/existing": {
+      "arguments": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "stdout": "475 16 3\n",
+      "status": 0,
+      "baseline": {
+        "managed": {
+          "allocs": 6,
+          "alloc_bytes": 384,
+          "frees": 6,
+          "free_bytes": 384,
+          "peak_live_bytes": 384,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 5
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 1,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      },
+      "candidate": {
+        "managed": {
+          "allocs": 6,
+          "alloc_bytes": 384,
+          "frees": 6,
+          "free_bytes": 384,
+          "peak_live_bytes": 384,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 5
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 1,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      }
+    },
+    "alloc_churn/existing": {
+      "arguments": [],
+      "stdout": "999739\n",
+      "status": 0,
+      "baseline": {
+        "managed": {
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "free_bytes": 0,
+          "peak_live_bytes": 0,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 0,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      },
+      "candidate": {
+        "managed": {
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "free_bytes": 0,
+          "peak_live_bytes": 0,
+          "live_bytes_at_exit": 0,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0
+        },
+        "core_events": {
+          "retain": 0,
+          "release": 0,
+          "release_unique": 0,
+          "unique_test": 0,
+          "list_copy": 0,
+          "record_copy": 0
+        }
+      }
+    }
+  },
+  "validation": {
+    "focused_releasefast": {
+      "passed": 18,
+      "failed": 0,
+      "filters": [
+        "borrow-only",
+        "stack borrowing",
+        "stack budget",
+        "lists that never escape",
+        "a wrong length bound"
+      ]
+    },
+    "guardian_production_gate": {
+      "checks_passed": 88
+    },
+    "qualified_executions_per_compiler": 24,
+    "full_core_debug": {
+      "passed": 815,
+      "failed": 0,
+      "shards": 8,
+      "build_steps_succeeded": 17,
+      "command": "scripts/build-slot.sh build zig build test-core -j2 --summary all",
+      "log": ".tmp/borrow-stack-20261010/core.log",
+      "skipped_instances": 5705,
+      "skipped_instances_note": "Each shard skips tests assigned to the other seven shards; all 815 distinct tests ran."
+    }
+  },
+  "timing": {
+    "version": "borrow-stack-timing-v1",
+    "cpu": 10,
+    "repeats": 7,
+    "clock": "whole-process wall time; fresh process per sample",
+    "rounds": 5000000,
+    "load_average": [
+      5.03466796875,
+      5.48681640625,
+      5.5537109375
+    ],
+    "controller_affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "smt_siblings": "10-11",
+    "baseline_compiler_sha256": "214aa4a3900a614f9e201b1a024ed95122e993c3696c6120529dd56f7f5f73f6",
+    "candidate_compiler_sha256": "5ca393ede35337754edf06c0cf5551f491dc87037d3988ea4d410b0422e3db2d",
+    "cases": {
+      "bounded": {
+        "samples_seconds": {
+          "baseline": [
+            0.2072777240537107,
+            0.18919532606378198,
+            0.19566879700869322,
+            0.19482941110618412,
+            0.19953801180236042,
+            0.200146151939407,
+            0.19477589591406286
+          ],
+          "candidate": [
+            0.07708043395541608,
+            0.07252120901830494,
+            0.07006070809438825,
+            0.0719193578697741,
+            0.07386519922874868,
+            0.07156819803640246,
+            0.06979659502394497
+          ]
+        },
+        "paired_ratios": [
+          0.37187032184627167,
+          0.38331395667700807,
+          0.35805764212510377,
+          0.3691401491255203,
+          0.37018109262264837,
+          0.35757968535947315,
+          0.35834308293845535
+        ],
+        "median_candidate_over_baseline": 0.3691401491255203,
+        "paired_ratio_range": [
+          0.35757968535947315,
+          0.38331395667700807
+        ]
+      },
+      "local": {
+        "samples_seconds": {
+          "baseline": [
+            0.041671023005619645,
+            0.04249333613552153,
+            0.04236321384087205,
+            0.04197066696360707,
+            0.044119718950241804,
+            0.04140329081565142,
+            0.04175356402993202
+          ],
+          "candidate": [
+            0.041445705806836486,
+            0.04206492705270648,
+            0.04119924106635153,
+            0.04497841210104525,
+            0.043825014028698206,
+            0.04228742211125791,
+            0.04176512802951038
+          ]
+        },
+        "paired_ratios": [
+          0.9945929525475586,
+          0.9899182054934743,
+          0.9725239737737387,
+          1.0716630293258433,
+          0.9933203354745762,
+          1.0213541309927052,
+          1.0002769583830033
+        ],
+        "median_candidate_over_baseline": 0.9945929525475586,
+        "paired_ratio_range": [
+          0.9725239737737387,
+          1.0716630293258433
+        ]
+      },
+      "unbounded": {
+        "samples_seconds": {
+          "baseline": [
+            0.1015094299800694,
+            0.10571463196538389,
+            0.1042128128465265,
+            0.10652129398658872,
+            0.10350389988161623,
+            0.10352473380044103,
+            0.10709097213111818
+          ],
+          "candidate": [
+            0.10546726197935641,
+            0.10274754208512604,
+            0.10103421099483967,
+            0.10436820099130273,
+            0.1135847489349544,
+            0.1045575209427625,
+            0.10413960786536336
+          ]
+        },
+        "paired_ratios": [
+          1.038989796318077,
+          0.9719330254942437,
+          0.9694989342973791,
+          0.9797872057810614,
+          1.097395837885029,
+          1.009976235672456,
+          0.9724405875955512
+        ],
+        "median_candidate_over_baseline": 0.9797872057810614,
+        "paired_ratio_range": [
+          0.9694989342973791,
+          1.097395837885029
+        ]
+      }
+    },
+    "status": "measured; exploratory shared-host observations",
+    "warmup_pairs_discarded": 1,
+    "execution_order": "alternating baseline/candidate order between pairs",
+    "timed_build": "ordinary --release, without counters, leakcheck or fact verification",
+    "host_activity": "Concurrent full Core Debug gate and unrelated selfhost work; admitted builds exclude reserved CPUs 2,3,10,11.",
+    "host": {
+      "kernel": "7.0.0-31-generic",
+      "machine": "x86_64",
+      "cpu_model": "12th Gen Intel(R) Core(TM) i7-12700H"
+    },
+    "timed_binary_sha256": {
+      "baseline": "d86859837c77b67341251417e3eb39fd3b8b99440fa1644b6217c4ae0a4284f6",
+      "candidate": "2e8bfba72ac857b44d8cffca38a8832de8c72ad6b302f0e66a56abbec0d8a598"
+    }
+  },
+  "limitations": [
+    "Allocation bytes count cumulative managed size-class blocks, not RSS or reserved heap; peak_live_bytes covers managed blocks only.",
+    "Dictionary side allocations, text scratch, stack footprint and compiler memory are not included in managed counters.",
+    "Core RC events are emitted before LLVM optimization and are distinct from runtime retain/release function counters.",
+    "A successful arithmetic-overflow trap exits without normal cleanup; its nonzero live_bytes_at_exit is not a successful-run leak.",
+    "The corpus census samples seven maintained parity cases; unchanged static costs do not establish unchanged runtime performance.",
+    "The bounded workload intentionally targets construction followed by a non-inlined loop reader; it is not an application-wide performance estimate."
+  ],
+  "raw_artifact_directory": ".tmp/borrow-stack-20261010",
+  "production_source_hashes": {
+    "src/core/effects.zig": {
+      "baseline": "4d1b9dc212bf87f67f5961ef985a60fd771a1b573287ff2e5cc4b72f16842909",
+      "candidate": "eff0404794cf1282a001b6d2b8c2ba8ae67733f52cc78220abcfe47568036586"
+    },
+    "src/core/promote.zig": {
+      "baseline": "688e05b73b1e8e28c6a9330be842e29cf9d99207b06b1c7d75dc3ba791644a4f",
+      "candidate": "058b7ded922b9706fb097ee9832c7dd5ccb81cdd07843cf707b66294f74993cd"
+    },
+    "src/core/own.zig": {
+      "baseline": "4416a80a08b7121cd339ea08a74ace88a140c463714ecaf3471c9e30b8dc4cff",
+      "candidate": "a247f83f7907a16d10178db6b75e76b2715d66a2ee8e23ab7e9730faa8fbb8cc"
+    },
+    "src/core/main.zig": {
+      "baseline": "b98fbb2f914978b7ae219c60b6dc58f6ed6d2cd8c52c955d11c18e1f92cf5b38",
+      "candidate": "1af4350385be27dabaadc43007f2015535fb8103cf6523c5f0a38c9d0e0f6808"
+    },
+    "src/core/optimization_cache.zig": {
+      "baseline": "d3b7208bf190d6a5a3045fca7de1d569cc5e8c9de18d5e1c42366a067b64320d",
+      "candidate": "be418fabdfeb706999860c6989e88bd83412976c26022ae3b0751d7fbb956ba2"
+    }
+  }
+}

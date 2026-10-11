@@ -85,8 +85,12 @@ pub fn verifyModule(arena: std.mem.Allocator, module: *const ir.Module, failure:
             failure.* = .{ .function = f.name, .reason = "invalid result type or extern span admission" };
             return error.InvalidIr;
         }
-        if (f.signature.ret == .str_view or std.mem.indexOfScalar(ir.Type, f.signature.params, .str_view) != null) {
+        if (!module.zero_rc and (f.signature.ret == .str_view or std.mem.indexOfScalar(ir.Type, f.signature.params, .str_view) != null)) {
             failure.* = .{ .function = f.name, .reason = "str_view cannot cross a function boundary" };
+            return error.InvalidIr;
+        }
+        if (f.signature.ret == .str_view and f.signature.viewSource() == null) {
+            failure.* = .{ .function = f.name, .reason = "view result requires exactly one view input" };
             return error.InvalidIr;
         }
         if (f.signature.linkage != .internal) continue;
@@ -187,7 +191,7 @@ const Verifier = struct {
         const f = self.f;
         if (f.blocks.items.len == 0) return self.fail(null, null, "a function with a body has no blocks", .{});
         for (f.signature.params) |param| if (!self.module.valid(param)) return self.fail(null, null, "parameter type is not interned", .{});
-        if (f.signature.ret == .str_view or std.mem.indexOfScalar(ir.Type, f.signature.params, .str_view) != null) return self.fail(null, null, "str_view cannot cross a function boundary", .{});
+        if (!self.module.zero_rc and (f.signature.ret == .str_view or std.mem.indexOfScalar(ir.Type, f.signature.params, .str_view) != null)) return self.fail(null, null, "str_view cannot cross a function boundary", .{});
         try self.reach();
         self.position = try self.arena.alloc(?Position, f.insts.items.len);
         @memset(self.position, null);
@@ -421,12 +425,15 @@ const Verifier = struct {
     }
 
     fn viewUses(self: *Verifier, b: usize, ref: ir.Ref, s: Shape) Error!void {
-        if (s.inst.ty == .str_view and s.inst.op != .str_view_of and s.inst.op != .str_slice_view and s.inst.op != .copy) return self.fail(b, ref, "str_view may only be defined by str_view_of or str_slice_view", .{});
+        const boundary_view = self.module.zero_rc and (s.inst.op == .param or s.inst.op == .call);
+        const local_view = s.inst.op == .str_view_of or s.inst.op == .str_slice_view or s.inst.op == .copy;
+        if (s.inst.ty == .str_view) if (!(boundary_view or local_view)) return self.fail(b, ref, "str_view may only be defined by str_view_of or str_slice_view", .{});
         const operands = self.f.valueOperands(s.inst);
         for (0..operands.len()) |i| {
             if (self.typeOf(operands.get(i)) != .str_view) continue;
             const admitted = switch (s.inst.op) {
                 .str_from_view, .str_len, .str_parse_int, .str_view_of, .copy => i == 0,
+                .ret, .print => self.module.zero_rc,
                 .dict_find => i == 1 and if (self.compoundOf(s.a, .dict)) |dict| dict.key == .str else false,
                 .call => s.inst.a.index() < self.module.functions.items.len and admittedView(self.module.functions.items[s.inst.a.index()].signature, i),
                 else => false,
@@ -436,6 +443,7 @@ const Verifier = struct {
     }
 
     fn admittedView(sig: ir.Signature, index: usize) bool {
+        if (sig.linkage == .internal and index < sig.params.len and sig.params[index] == .str_view) return true;
         return sig.linkage != .internal and index < sig.params.len and index < 64 and sig.params[index] == .str and sig.views & (@as(u64, 1) << @intCast(index)) != 0 and sig.owned & (@as(u64, 1) << @intCast(index)) == 0;
     }
 
@@ -471,7 +479,7 @@ const Verifier = struct {
             .str_append => inst.ty == .str and s.a == .str and s.b == .str,
             .str_append_char => inst.ty == .str and s.a == .str and s.b == .str and self.typesMatch(s.extra, &.{.u64}),
             .str_slice => inst.ty == .str and s.a == .str and s.b == .i64 and self.typesMatch(s.extra, &.{.i64}),
-            .str_view_of => inst.ty == .str_view and (s.a == .str or s.a == .str_view) and s.b == .u64 and self.typesMatch(s.extra, &.{.u64}),
+            .str_view_of => inst.ty == .str_view and (s.a == .str or s.a == .bytes or s.a == .byte_buffer or s.a == .str_view) and s.b == .u64 and self.typesMatch(s.extra, &.{.u64}),
             .str_slice_view => inst.ty == .str_view and (s.a == .str or s.a == .bytes) and s.b == .i64 and self.typesMatch(s.extra, &.{.i64}),
             .str_from_view => inst.ty == .str and s.a == .str_view,
             .list_sort => self.compoundOf(s.a, .list) != null and inst.ty == s.a and s.b == .bool,
@@ -502,7 +510,7 @@ const Verifier = struct {
     }
 
     fn sameSignature(a: ir.Signature, b: ir.Signature) bool {
-        return a.ret == b.ret and a.linkage == b.linkage and a.owned == b.owned and a.views == b.views and std.mem.eql(ir.Type, a.params, b.params);
+        return a.ret == b.ret and a.linkage == b.linkage and a.owned == b.owned and a.consumes == b.consumes and a.views == b.views and std.mem.eql(ir.Type, a.params, b.params);
     }
 
     /// Constants, arithmetic, comparisons and conversions; null for any other operation.

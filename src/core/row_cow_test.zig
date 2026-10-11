@@ -65,6 +65,31 @@ test "an outer list whose push may have copied it does not prove its rows unique
     try std.testing.expectEqual([2]usize{ 0, 0 }, try tests(a, program("    b.append([5, 6])\n", "")));
 }
 
+// spec-case: NEW-CORE-ROW-COW-2
+test "copying an outer list also invalidates child uniqueness through the original parent" {
+    const source =
+        \\func grow(mut rows: int[][]):
+        \\    rows[0].append(4)
+        \\func main(out: Stream) -> int:
+        \\    mut rows = [[1, 2], [3]]
+        \\    mut saved = rows.copy()
+        \\    grow(mut rows)
+        \\    saved[1].append(5)
+        \\    out.print(len(rows[0]), len(saved[0]), len(rows[1]), len(saved[1]))
+        \\    return 0
+    ;
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    inline for (.{ false, true }) |release| {
+        var refusal: @import("build.zig").Refusal = .{};
+        var module = try support.buildSource(arena.allocator(), source, &refusal);
+        const ran = try support.runOwned(arena.allocator(), &module, .{ .release = release, .verify = true });
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        try std.testing.expectEqualStrings("3 2 1 2\n", ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+    }
+}
+
 // spec-case: NEW-CORE-ROW-COW-1
 // spec-case: NEW-CORE-ROW-COW-2
 test "every aliased-row shape prints the same at debug, release and verify-facts with no leak" {

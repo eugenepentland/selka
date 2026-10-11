@@ -19,12 +19,14 @@ const flags = @import("flags.zig");
 const fuse_dict = @import("fuse_dict.zig");
 const build_dict = @import("build_dict.zig");
 const build_text = @import("build_text.zig");
+const build_view = @import("build_borrowed_view.zig");
 const build_list_methods = @import("build_list_methods.zig");
 const fuse_text = @import("fuse_text.zig");
 const build_cap = @import("build_cap.zig");
 const build_bytes = @import("build_bytes.zig");
 const build_fn = @import("build_fn.zig");
 const build_values = @import("build_values.zig");
+const single_owner_copy = @import("single_owner_copy.zig");
 const build_capture = @import("build_capture.zig");
 const lowering_cache = @import("lowering_cache.zig");
 
@@ -65,7 +67,7 @@ pub fn buildModuleSource(allocator: std.mem.Allocator, program: typed.Program, s
 /// What a module is built from: the checked program, its loaded source, and whether
 /// `debug(...)` lines are dropped, as a `build --release` executable drops them
 /// (DEBUG-LINE-1); `run`, `build --run` and `test` keep them in every mode.
-pub const Input = struct { program: typed.Program, source: ?Source = null, drop_debug: bool = false };
+pub const Input = struct { program: typed.Program, source: ?Source = null, drop_debug: bool = false, single_owner: bool = false, zero_rc: bool = false };
 
 /// Build an executable's module from `input`, rooted at the program's `main`.
 pub fn buildExecutable(allocator: std.mem.Allocator, input: Input, refusal: *Refusal) Error!ir.Module {
@@ -93,6 +95,8 @@ fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId
 pub fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) CachedError!ir.Module {
     const program = input.program;
     var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal, .discovery = .{ .enabled = cache != null } };
+    mb.module.single_owner = input.single_owner or input.zero_rc;
+    mb.module.zero_rc = input.zero_rc;
     defer mb.discovery.ids.deinit(allocator);
     defer mb.types.deinit(allocator);
     defer mb.discovery.pending.deinit(allocator);
@@ -298,6 +302,10 @@ const ModuleBuilder = struct {
         if (!ty.isAggregate()) return self.refuse(if (ty.isFile()) "file handle type" else "capability type", span);
         if (ty.recordIndex() >= records.len) return self.refuse("type", span);
         const record = records[ty.recordIndex()];
+        if (record.shape.builtin == .borrowed_view) {
+            if (!self.module.zero_rc) return self.refuse("borrowed views require --experimental-zero-rc", span);
+            return .str_view;
+        }
         if (record.isCollection()) switch (record.collection.kind) {
             .string => return .str,
             .list => {
@@ -339,6 +347,23 @@ const ModuleBuilder = struct {
 
     /// The IR index of runtime `symbol`, declared with this linkage and signature on first use.
     pub fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, linkage: ir.Linkage) Error!u32 {
+        var owned: u64 = 0;
+        var views: u64 = 0;
+        if (self.module.zero_rc) {
+            const boundary = @import("zero_rc.zig").contract(symbol) orelse
+                return self.refuse(try std.fmt.allocPrint(self.allocator, "unaudited zero-RC runtime helper {s}", .{symbol}), 0);
+            const owning_result = boundary.result == .fresh or boundary.result == .transferred;
+            const nullable_owner = self.module.kind(ret) == .@"union" and self.module.unionLayout(ret).form == .niche;
+            if (owning_result != (self.module.isBlock(ret) or nullable_owner)) return self.refuse("zero-RC runtime result contract mismatch", 0);
+            if ((boundary.result == .borrowed) != (ret == .str_view)) return self.refuse("zero-RC runtime borrow contract mismatch", 0);
+            owned = boundary.owned;
+            views = boundary.views;
+            if (owned != 0) {
+                const valid_result = boundary.result == .transferred or boundary.result == .scalar;
+                if (params.len == 0) return self.refuse("zero-RC runtime transfer contract mismatch", 0);
+                if (!self.module.isBlock(params[0]) or !valid_result) return self.refuse("zero-RC runtime transfer contract mismatch", 0);
+            }
+        }
         // One declaration per symbol and signature: a runtime function over lists of several element
         // types has a Core IR signature for each, which are one `ptr` function to LLVM.
         for (self.module.functions.items, 0..) |function, index| {
@@ -346,7 +371,7 @@ const ModuleBuilder = struct {
             if (function.signature.ret == ret and std.mem.eql(ir.Type, function.signature.params, params)) return @intCast(index);
         }
         const index: u32 = @intCast(self.module.functions.items.len);
-        try self.module.functions.append(self.allocator, .{ .name = symbol, .signature = .{ .params = try self.allocator.dupe(ir.Type, params), .ret = ret, .linkage = linkage } });
+        try self.module.functions.append(self.allocator, .{ .name = symbol, .signature = .{ .params = try self.allocator.dupe(ir.Type, params), .ret = ret, .linkage = linkage, .owned = owned, .views = views } });
         return index;
     }
 
@@ -785,10 +810,12 @@ const FnBuilder = struct {
                     const owner = try self.expression(source);
                     const variable = self.local(scope.slot);
                     try self.write(variable, self.current.?, owner);
-                    try self.ssa.resources.append(self.allocator(), .{ .owner = owner, .depth = self.loops.items.len });
+                    const provider = if (self.module().zero_rc) try self.expression(@import("build_cap.zig").scopeProvider(self.nodeOf(source)).?) else .none;
+                    const cleanup: build_cap.Scope = .{ .owner = owner, .depth = self.loops.items.len, .provider = provider };
+                    try self.ssa.resources.append(self.allocator(), cleanup);
                     try self.statement(scope.body);
                     if (self.current != null) {
-                        _ = try self.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{owner}, span);
+                        try build_cap.closeScope(@TypeOf(self), self, cleanup, span);
                     }
                     _ = self.ssa.resources.pop();
                 } else try self.statement(scope.body);
@@ -987,6 +1014,11 @@ const FnBuilder = struct {
             try self.noteAlias(slot, place);
         }
         try self.statement(arm.body);
+    }
+
+    /// Recursively materialize an independent owner using the selected contract.
+    pub fn copyOwned(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+        return single_owner_copy.copy(@TypeOf(self), self, value, span);
     }
 
     /// The type of the value `ref` stands for.
@@ -1339,16 +1371,12 @@ const FnBuilder = struct {
             .acquire_buffer => |acquire| {
                 var capacity = try self.expression(acquire.capacity);
                 const buffer_type = try self.typeOf(id);
+                if (buffer_type == .str_view) return self.mb.refuse("construct borrowed views with .borrow()", span);
                 if (buffer_type == .byte_buffer) return build_bytes.acquire(@TypeOf(self), self, capacity, span);
                 if (self.mb.module.kind(buffer_type) == .dict and self.typeOfRef(capacity) != .u64) capacity = try self.emit(.{ .op = .convert, .ty = .u64, .a = capacity, .check = .exact, .span = span });
                 return self.emit(.{ .op = if (self.mb.module.kind(buffer_type) == .dict) .dict_new else .list_new, .ty = buffer_type, .a = capacity, .span = span });
             },
-            .index => |index| {
-                const base_type = try self.typeOf(index.base);
-                if (base_type == .str or base_type == .bytes or base_type == .byte_buffer) return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, try self.typeOf(id));
-                const value = try self.arrayGet(index, span, out);
-                return if (n.ty == .unit) .none else value;
-            },
+            .index => |index| return self.indexExpression(index, n.ty, try self.typeOf(id), span, out),
             .arena_escape => |value| return self.expression(value),
             .length => |operand| return self.stringLength(operand, span),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
@@ -1554,7 +1582,7 @@ const FnBuilder = struct {
             const case = if (converted) typed.wrappingCase(records, wanted.error_type, shape.error_type) orelse return self.mb.refuse("error conversion", span) else 0;
             const naming: ir.Ref = if (converted) try self.caseName(wanted.error_type, case) else .none;
             _ = try self.emit(.{ .op = .err_trace, .ty = .void, .a = naming, .data = @backingInt(if (converted) ir.TraceMode.converted else ir.TraceMode.append), .span = span });
-            var error_value = try self.payloadOf(input, shape.error_tag, span);
+            var error_value = try self.propagatedPayload(input, shape.error_tag, span);
             if (converted) {
                 if (typed.wrappingRecord(records, wanted.error_type, case, shape.error_type)) |record| {
                     const payload_type = try self.mb.mapType(record, span);
@@ -1570,7 +1598,7 @@ const FnBuilder = struct {
             const failure = try self.emit(.{ .op = .union_make, .ty = result, .a = try self.boxFor(stored, error_value, span), .data = wanted.error_tag, .span = span });
             try self.returnValue(failure, span);
             self.current = succeeded;
-            return self.payloadOf(input, shape.ok_tag, span);
+            return self.propagatedPayload(input, shape.ok_tag, span);
         }
         const none_tag = optionNoneTag(records, input_type) orelse return self.mb.refuse("propagation of a non-result", span);
         _ = optionNoneTag(records, output) orelse return self.mb.refuse("propagation into a non-option", span);
@@ -1582,7 +1610,15 @@ const FnBuilder = struct {
         const none = try self.emit(.{ .op = .union_make, .ty = result, .data = none_tag, .span = span });
         try self.returnValue(none, span);
         self.current = succeeded;
-        return self.payloadOf(input, 1 - none_tag, span);
+        return self.propagatedPayload(input, 1 - none_tag, span);
+    }
+
+    // A propagated Result owns its active payload. Until union extraction has
+    // a consuming IR form, explicitly copy that payload before dropping the
+    // source wrapper; never synthesize a retained alias in zero-RC mode.
+    fn propagatedPayload(self: *FnBuilder, input: ir.Ref, tag: usize, span: u32) Error!ir.Ref {
+        const payload = try self.payloadOf(input, tag, span);
+        return if (self.module().zero_rc and payload != .none) self.copyOwned(payload, span) else payload;
     }
 
     /// A string constant `Union.case` naming case `case` of the union `ty`, as the old core spells it.
@@ -2121,6 +2157,10 @@ const FnBuilder = struct {
 
     fn collectionOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!?ir.Ref {
         const receiver_type = self.ssa.types.items[self.local(operation.owner)];
+        if (operation.kind == .copy) {
+            const copied = try self.copyList(operation.owner, receiver_type, span);
+            return copied;
+        }
         const collection = self.mb.module.kind(receiver_type) orelse return null;
         switch (collection) {
             .list => {
@@ -2152,12 +2192,31 @@ const FnBuilder = struct {
         return build_text.operation(@TypeOf(self), self, operation, ty, span);
     }
 
+    fn indexExpression(self: *FnBuilder, index: @FieldType(@FieldType(typed.Node, "data"), "index"), source_type: typed.Type, result: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+        const base_type = try self.typeOf(index.base);
+        if (base_type == .str_view) {
+            const text = self.mb.input.program.records[self.nodeOf(index.base).ty.recordIndex()].collection.kind == .string;
+            return build_view.indexed(@TypeOf(self), self, try self.expression(index.base), try self.expression(index.index), text, result, span);
+        }
+        if (base_type == .str or base_type == .bytes or base_type == .byte_buffer) return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, result);
+        const value = try self.arrayGet(index, span, out);
+        return if (source_type == .unit) .none else value;
+    }
+
     fn bufferOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+        const receiver_type = self.ssa.types.items[self.local(operation.owner)];
+        if (try build_view.dispatch(@TypeOf(self), self, operation, ty, receiver_type, span)) |value| return value;
         const result = try self.bufferOperationRaw(operation, ty, span, out);
         // A length is `u64` in the IR; a `len()` of a view or buffer typed `int` converts it,
         // as the plain `length` node does.
         if (operation.kind != .length or result == .none or ty == .void or self.typeOfRef(result) == ty) return result;
         return self.emit(.{ .op = .convert, .ty = ty, .a = result, .check = .exact, .span = span });
+    }
+
+    fn copyList(self: *FnBuilder, owner: typed.LocalId, receiver_type: ir.Type, span: u32) Error!ir.Ref {
+        _ = receiver_type;
+        if (self.mb.input.single_owner) return single_owner_copy.copy(@TypeOf(self), self, try self.receiverOf(owner), span);
+        return self.receiverOf(owner);
     }
 
     fn bufferOperationRaw(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
@@ -2231,8 +2290,9 @@ const FnBuilder = struct {
                 return .none;
             },
             // A copy of a value is the value: the next write to either copies (copy on write).
-            .copy => {
-                if (self.mb.module.kind(receiver_type) != .list) return self.mb.refuse("copy of a non-list", span);
+            .copy => return self.copyList(owner, receiver_type, span),
+            .snapshot => {
+                if (self.mb.input.single_owner) try @import("single_owner.zig").enableSnapshots(self.mb.allocator, &self.mb.module, receiver_type);
                 return self.receiverOf(owner);
             },
             .iteration_check => return self.iterationCheck(operation, span),
@@ -2263,8 +2323,8 @@ const FnBuilder = struct {
 
     /// Gather one owning sorted copy from the checker-built keys and exact strides.
     fn sortKeyed(self: *FnBuilder, owner: typed.LocalId, argument_nodes: []const typed.NodeId, span: u32) Error!ir.Ref {
-        const source = try self.expression(argument_nodes[0]);
-        const keys = try self.expression(argument_nodes[1]);
+        var source = try self.expression(argument_nodes[0]);
+        var keys = try self.expression(argument_nodes[1]);
         const reverse = try self.expression(argument_nodes[2]);
         if (self.current == null) return .none;
         const source_type = self.typeOfRef(source);
@@ -2272,8 +2332,13 @@ const FnBuilder = struct {
         if (self.mb.module.kind(source_type) != .list or self.mb.module.kind(keys_type) != .list) return self.mb.refuse("keyed sort of a non-list", span);
         const shape = build_fn.keyShape(self.mb.module, self.mb.module.compound(keys_type).list) orelse return self.mb.refuse("sort key type", span);
         const strides = @as(u64, self.mb.module.size(self.mb.module.compound(source_type).list)) | (@as(u64, self.mb.module.size(self.mb.module.compound(keys_type).list)) << 32);
+        if (self.mb.module.zero_rc) {
+            source = try single_owner_copy.copy(@TypeOf(self), self, source, span);
+            keys = try single_owner_copy.copy(@TypeOf(self), self, keys, span);
+        }
+        const symbol = if (self.mb.module.zero_rc) "myl_core_owned_sort_keyed" else "myl_core_s2_sort_keyed";
         const sorts: []const ir.Ref = &.{ source, keys, try self.constant(.u64, shape.shape), try self.constant(.u64, shape.offsets), reverse, try self.constant(.u64, strides) };
-        const sorted = try self.runtimeCall("myl_core_s2_sort_keyed", &.{ source_type, keys_type, .u64, .u64, .bool, .u64 }, source_type, sorts, span);
+        const sorted = try self.runtimeCall(symbol, &.{ source_type, keys_type, .u64, .u64, .bool, .u64 }, source_type, sorts, span);
         try self.writeOwner(owner, sorted, span);
         return .none;
     }
@@ -2288,6 +2353,7 @@ const FnBuilder = struct {
         }
         if (self.mb.module.kind(self.typeOfRef(value)) == .array) return self.constant(.i64, self.mb.module.compound(self.typeOfRef(value)).array.n);
         const value_type = self.typeOfRef(value);
+        if (value_type == .str_view) return build_view.length(@TypeOf(self), self, value, self.mb.input.program.records[self.nodeOf(operand).ty.recordIndex()].collection.kind == .string, span);
         if (value_type != .str and value_type != .bytes and value_type != .byte_buffer) return self.mb.refuse("length of a non-string", span);
         const chars = if (value_type != .str) try self.emit(.{ .op = .list_len, .ty = .u64, .a = value, .span = span }) else try self.stringChars(value, span);
         return self.emit(.{ .op = .convert, .ty = .i64, .a = chars, .check = .exact, .span = span });
@@ -2368,7 +2434,7 @@ const FnBuilder = struct {
             if (self.current == null) return .none;
             const source_ty = self.nodeOf(argument).ty;
             const ty = if (value == .none) .void else self.typeOfRef(value);
-            const needs_render = ty.integer() == null and ty != .bool and ty != .str;
+            const needs_render = ty.integer() == null and ty != .bool and ty != .str and ty != .str_view;
             const printable = if (value == .none or self.renderDomain(source_ty) or needs_render) try self.textOf(value, source_ty, span) else value;
             try operands.append(self.allocator(), printable);
         }
@@ -2390,6 +2456,8 @@ fn optionNoneTag(records: []const typed.Record, ty: typed.Type) ?usize {
 }
 
 fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Function) Error!ir.Function {
+    const parallel = @import("build_parallel.zig");
+    if (mb.module.zero_rc and parallel.matches(mb.input.source, checked)) return parallel.build(mb, declared);
     var b: FnBuilder = .{ .mb = mb, .function = declared, .checked = checked };
     b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
     defer b.places.deinit(mb.allocator);

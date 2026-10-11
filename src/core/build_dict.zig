@@ -61,8 +61,12 @@ fn present(comptime Context: type, b: Context, probe: ir.Ref, span: u32) Error!i
 }
 
 fn valueAt(comptime Context: type, b: Context, dict: ir.Ref, probe: ir.Ref, span: u32) Error!ir.Ref {
+    return valueAtMode(Context, b, dict, probe, false, span);
+}
+
+fn valueAtMode(comptime Context: type, b: Context, dict: ir.Ref, probe: ir.Ref, take: bool, span: u32) Error!ir.Ref {
     const value_type = b.module().compound(b.typeOfRef(dict)).dict.value;
-    return if (value_type == .void) .none else b.emit(.{ .op = .dict_entry_value, .ty = value_type, .a = dict, .b = probe, .span = span });
+    return if (value_type == .void) .none else b.emit(.{ .op = .dict_entry_value, .ty = value_type, .a = dict, .b = probe, .data = if (take and b.module().zero_rc) flags.dict_take_value else 0, .span = span });
 }
 
 /// A required lookup traps with the old core missing-key category.
@@ -103,7 +107,7 @@ pub fn put(comptime Context: type, b: Context, dict: ir.Ref, key: ir.Ref, value:
     return b.read(result, join);
 }
 
-fn selectValue(comptime Context: type, b: Context, dict: ir.Ref, probe: ir.Ref, fallback: ir.Ref, span: u32) Error!ir.Ref {
+fn selectValue(comptime Context: type, b: Context, dict: ir.Ref, probe: ir.Ref, fallback: ir.Ref, take: bool, span: u32) Error!ir.Ref {
     const ty = b.module().compound(b.typeOfRef(dict)).dict.value;
     const found = try b.newBlock();
     const missing = try b.newBlock();
@@ -113,7 +117,7 @@ fn selectValue(comptime Context: type, b: Context, dict: ir.Ref, probe: ir.Ref, 
     try b.seal(found);
     try b.seal(missing);
     b.current = found;
-    if (result) |slot| try b.write(slot, b.current.?, try valueAt(Context, b, dict, probe, span));
+    if (result) |slot| try b.write(slot, b.current.?, try valueAtMode(Context, b, dict, probe, take, span));
     try b.jump(join);
     b.current = missing;
     if (result) |slot| try b.write(slot, b.current.?, fallback);
@@ -130,7 +134,10 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
     switch (op.kind) {
         .length => return b.emit(.{ .op = .dict_len, .ty = .u64, .a = try b.receiverOf(owner), .span = span }),
         .capacity => return b.emit(.{ .op = .dict_entries, .ty = .u64, .a = try b.receiverOf(owner), .span = span }),
-        .copy => return b.receiverOf(owner),
+        .copy => {
+            const source = try b.receiverOf(owner);
+            return if (b.module().zero_rc) copy(Context, b, source, span) else source;
+        },
         .keys, .values => {
             const dict = try b.receiverOf(owner);
             const length = try b.emit(.{ .op = .dict_len, .ty = .u64, .a = dict, .span = span });
@@ -150,8 +157,8 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const index = try b.emit(.{ .op = .sub, .ty = .i64, .a = try b.emit(.{ .op = .convert, .ty = .i64, .a = length, .check = .exact }), .b = try b.constant(.i64, 1), .span = span });
             try requirePresent(Context, b, index, span);
             const entry = try b.runtimeCall(ordinal_symbol, &.{ b.typeOfRef(dict), .i64 }, .i64, &.{ dict, index }, span);
-            const value = if (ty == .void) .none else try b.emit(.{ .op = .dict_entry_key, .ty = ty, .a = dict, .b = entry, .span = span });
-            try b.writeOwner(owner, try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = entry, .span = span }), span);
+            const value = if (ty == .void) .none else try b.emit(.{ .op = .dict_entry_key, .ty = ty, .a = dict, .b = entry, .data = if (b.module().zero_rc) flags.dict_take_key else 0, .span = span });
+            try b.writeOwner(owner, try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = entry, .data = if (b.module().zero_rc) flags.dict_take_key else 0, .span = span }), span);
             return value;
         },
         .read, .get, .contains => {
@@ -163,7 +170,7 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const stored_key = try storedKey(Context, b, dict, key);
             const probe = try find(Context, b, dict, stored_key, span);
             if (op.kind == .contains) return present(Context, b, probe, span);
-            if (op.kind == .get) return selectValue(Context, b, dict, probe, fallback, span);
+            if (op.kind == .get) return selectValue(Context, b, dict, probe, fallback, false, span);
             try requirePresent(Context, b, probe, span);
             if (out) |place| place.* = try b.extendPlace(try b.placeOfLocal(owner), .{ .mapping = stored_key });
             return valueAt(Context, b, dict, probe, span);
@@ -195,13 +202,13 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const dict = try b.writableReceiverOf(owner, span);
             const probe = try find(Context, b, dict, key, span);
             if (op.kind == .pop_key) try requirePresent(Context, b, probe, span);
-            const result = if (op.kind == .pop_key) try valueAt(Context, b, dict, probe, span) else try selectValue(Context, b, dict, probe, fallback, span);
+            const result = if (op.kind == .pop_key) try valueAtMode(Context, b, dict, probe, true, span) else try selectValue(Context, b, dict, probe, fallback, true, span);
             const found = try b.newBlock();
             const join = try b.newBlock();
             try b.branch(try present(Context, b, probe, span), found, join, span);
             try b.seal(found);
             b.current = found;
-            const removed = try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .span = span });
+            const removed = try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .data = if (b.module().zero_rc) flags.dict_take_value else 0, .span = span });
             try b.writeOwner(owner, removed, span);
             try b.jump(join);
             try b.seal(join);
@@ -216,7 +223,7 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const dict = try b.writableReceiverOf(owner, span);
             const stored_key = try storedKey(Context, b, dict, key);
             const probe = try find(Context, b, dict, stored_key, span);
-            const result = try selectValue(Context, b, dict, probe, fallback, span);
+            const result = try selectValue(Context, b, dict, probe, fallback, false, span);
             const missing = try b.newBlock();
             const join = try b.newBlock();
             try b.branch(try present(Context, b, probe, span), join, missing, span);
@@ -280,6 +287,13 @@ pub fn equal(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, sp
     return b.read(result, join);
 }
 
+/// Materialize independent keys and values in insertion order.
+pub fn copy(comptime Context: type, b: Context, source: ir.Ref, span: u32) Error!ir.Ref {
+    const length = try b.emit(.{ .op = .dict_len, .ty = .u64, .a = source, .span = span });
+    const target = try b.emit(.{ .op = .dict_new, .ty = b.typeOfRef(source), .a = length, .span = span });
+    return copyEntries(Context, b, source, target, true, span);
+}
+
 fn copyEntries(comptime Context: type, b: Context, source: ir.Ref, initial: ir.Ref, keys: bool, span: u32) Error!ir.Ref {
     const m = b.module();
     const target_type = b.typeOfRef(initial);
@@ -302,8 +316,12 @@ fn copyEntries(comptime Context: type, b: Context, source: ir.Ref, initial: ir.R
     try b.seal(body);
     b.enter(body);
     const entry = try b.runtimeCall(ordinal_symbol, &.{ b.typeOfRef(source), .u64 }, .i64, &.{ source, index }, span);
-    const key = if (keys or dictionary) try b.emit(.{ .op = .dict_entry_key, .ty = shape.key, .a = source, .b = entry, .span = span }) else .none;
-    const value = if (shape.value == .void) .none else if (!keys or dictionary) try valueAt(Context, b, source, entry, span) else .none;
+    var key = if (keys or dictionary) try b.emit(.{ .op = .dict_entry_key, .ty = shape.key, .a = source, .b = entry, .span = span }) else .none;
+    var value = if (shape.value == .void) .none else if (!keys or dictionary) try valueAt(Context, b, source, entry, span) else .none;
+    if (m.zero_rc) {
+        if (key != .none) key = try b.copyOwned(key, span);
+        if (value != .none) value = try b.copyOwned(value, span);
+    }
     const list_value = if (keys) key else if (value == .none) try b.constant(.bool, 0) else value;
     const updated = if (dictionary) try put(Context, b, output, key, value, span) else try b.emit(.{ .op = .list_push, .ty = target_type, .a = output, .b = list_value, .span = span });
     try b.write(target, b.current.?, updated);
