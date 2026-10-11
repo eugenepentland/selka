@@ -84,6 +84,11 @@ def require_identity(args, expected):
     F.require(identity(args) == expected, 'B8 compiler/package deployment changed')
 
 
+def check_command(entry):
+    # Build optimization/fact flags belong to generated runtime commands.
+    return ['check-project', entry, '--no-cache', '--diagnostics=json']
+
+
 def expected_operations(manifest, modes):
     # Each fixture checks; each successful fixture additionally dumps typed and
     # runs a generated release program with facts and leak checks enabled.
@@ -148,9 +153,7 @@ def main():
         for name, spec in manifest.items():
             entry = source / name
             shutil.copyfile(FIXTURES / Path(name).with_suffix('.input'), entry)
-            command = ['check-project', entry, '--no-cache', '--diagnostics=json']
-            if args.release:
-                command += ['--release', '--verify-facts']
+            command = check_command(entry)
             native = run(name, 'reference', 'check', command)
             native_contract(native, spec)
             for mode in modes[1:]:

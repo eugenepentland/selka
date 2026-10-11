@@ -11,6 +11,12 @@ import run_body_dictionary_admission as B
 
 
 class DictionaryAdmissionTests(unittest.TestCase):
+    def test_check_command_never_inherits_unsupported_guest_build_flags(self):
+        entry = Path('/private/main.my')
+        self.assertEqual(B.check_command(entry), ['check-project', entry, '--no-cache', '--diagnostics=json'])
+        self.assertNotIn('--release', B.check_command(entry))
+        self.assertNotIn('--verify-facts', B.check_command(entry))
+
     def test_all_34_sources_24_successes_and_10_diagnostics_are_required(self):
         manifest, inventory = B.selection()
         self.assertEqual(len(manifest), 34)
