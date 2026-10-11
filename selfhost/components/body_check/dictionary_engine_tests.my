@@ -213,3 +213,38 @@ public func test_dictionary_augmented_destination_keeps_boolean_key_and_owner_or
     const read_data = try graph.field(state.batch.pool, state.batch.nodes[7], "data")
     const read_tag = try graph.get(state.batch.pool, read_data)
     return result.ty == 15 and actual_type == 1 and read_tag.data == b"buffer_operation" and len(state.scope.locals) == 5 and state.scope.locals[1].ty == dictionary.ty and state.scope.locals[2].ty == 1 and state.scope.locals[3].ty == 0 and state.scope.locals[0].usage.writes == 1
+
+
+public func test_expression_dictionary_get_roots_receiver_after_checked_operands() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = state.syntax.source + b"get"
+    const name = try syntax_value.span(mut state.syntax.pool, 11, 14)
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 14)
+    const base = try syntax_value.integer(mut state.syntax.pool, 4)
+    const key = try syntax_value.integer(mut state.syntax.pool, 0)
+    const fallback = try syntax_value.integer(mut state.syntax.pool, 1)
+    const inputs = try syntax_value.sequence(mut state.syntax.pool, [key, fallback])
+    const labels = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["base", "name", "arguments", "argument_names"], [base, name, inputs, labels])
+    const call = try node(mut state.syntax.pool, span, b"method_call", payload)
+    state.syntax.nodes.append(call)
+    const result = try engine.expression(mut state, 5)
+    const operation_data = try graph.field(state.batch.pool, state.batch.nodes[5], "data")
+    const operation = try graph.payload(state.batch.pool, operation_data)
+    const kind_id = try graph.field(state.batch.pool, operation, "kind")
+    const kind = try graph.get(state.batch.pool, kind_id)
+    return result.ty == 0 and result.id == 6 and kind.data == b"get" and len(state.scope.locals) == 1 and state.scope.locals[0].ty == 19 and len(state.scope.active) == 0
+
+
+public func test_expression_dictionary_view_preserves_checked_mapping_without_owner_local() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = state.syntax.source + b"keys"
+    const name = try syntax_value.span(mut state.syntax.pool, 11, 15)
+    const span = try syntax_value.span(mut state.syntax.pool, 0, 15)
+    const base = try syntax_value.integer(mut state.syntax.pool, 4)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const payload = try syntax_value.object(mut state.syntax.pool, ["base", "name", "arguments", "argument_names"], [base, name, empty, empty])
+    const call = try node(mut state.syntax.pool, span, b"method_call", payload)
+    state.syntax.nodes.append(call)
+    const result = try engine.expression(mut state, 5)
+    return result.ty == 20 and result.id == 6 and len(state.scope.locals) == 0 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[1].kind == "dict_keys"
