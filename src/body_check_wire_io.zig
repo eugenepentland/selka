@@ -7,9 +7,9 @@ pub const Error = logical.Error;
 pub const wire_limit = logical.value_wire_limit;
 /// Encode complete logical values without native semantic preprocessing.
 pub fn encode(a: std.mem.Allocator, comptime T: type, item: T, magic: []const u8) Error![]u8 {
-    return logical.encodeTree(a, T, item, magic);
+    return logical.encodeTreeProfile(a, T, item, magic, .body);
 }
 /// Return independent arena-owned logical values before domain validation.
 pub fn decode(a: std.mem.Allocator, comptime T: type, bytes: []const u8, magic: []const u8) Error!logical.Owned(T) {
-    return logical.decodeTree(T, a, bytes, magic);
+    return logical.decodeTreeProfile(T, a, bytes, magic, .body);
 }

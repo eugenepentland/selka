@@ -147,9 +147,9 @@ pub fn apply(a: std.mem.Allocator, native: *Native, input: value.Input, recipes:
 /// Compare the entire canonical native schemas, not pointer identity or selected fields.
 pub fn equalCatalog(a: std.mem.Allocator, left: []const typed.Record, right: []const typed.Record) Error!bool {
     const codec = @import("parser_value.zig");
-    const first = try codec.encodeTree(a, []const typed.Record, left, "SLKCAT01");
+    const first = try codec.encodeTreeProfile(a, []const typed.Record, left, "SLKCAT01", .body);
     defer a.free(first);
-    const second = try codec.encodeTree(a, []const typed.Record, right, "SLKCAT01");
+    const second = try codec.encodeTreeProfile(a, []const typed.Record, right, "SLKCAT01", .body);
     defer a.free(second);
     return std.mem.eql(u8, first, second);
 }

@@ -228,3 +228,7 @@ comptime {
     _ = @import("body_check_variant_test.zig");
     _ = @import("body_check_buffer_test.zig");
 }
+
+comptime {
+    _ = @import("body_check_policy_test.zig");
+}

@@ -91,6 +91,11 @@ class LibraryAdmissionTests(unittest.TestCase):
 
     def test_actual_test_root_inventory_is_nonempty_and_duplicate_safe(self):
         self.assertEqual((len(D.LIBRARIES),len(D.TESTS)),(9,6))
+        self.assertEqual(D.D.BODY_VALUE_LIMIT,2097152)
+        self.assertEqual(D.F.SOURCE_LIMIT,1048576)
+        env=D.D.environment('component',Path('/components'),Path('/empty'))
+        for mode in ('LEXER','PARSER','DECLARATION','TYPE_INTERFACE','TEST_INDEX','CACHE_PLAN'):
+            self.assertEqual(env['MYLANG_'+mode+'_MODE'],'reference')
         self.assertTrue(all((D.D.ROOT/'selfhost/components'/name).is_file() for name in D.LIBRARIES+D.TESTS))
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary)/'tests.my'

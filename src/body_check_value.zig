@@ -93,22 +93,22 @@ pub fn diagnostics(a: std.mem.Allocator, items: []const diagnostic.Diagnostic) l
 }
 /// Adopt independent body tables into caller-owned arena storage.
 pub fn cloneBatch(a: std.mem.Allocator, batch: Batch) logical.Error!Batch {
-    const bytes = try logical.encodeTree(a, Batch, batch, "SLKBTB01");
+    const bytes = try logical.encodeTreeProfile(a, Batch, batch, "SLKBTB01", .body);
     defer a.free(bytes);
-    return logical.decodeInto(Batch, a, bytes, "SLKBTB01");
+    return logical.decodeIntoProfile(Batch, a, bytes, "SLKBTB01", .body);
 }
 /// Publish complete decoded source diagnostics into a sink-owned arena.
 pub fn publish(sink: *diagnostic.Sink, items: []const Diagnostic) logical.Error!void {
-    const bytes = try logical.encodeTree(sink.allocator, []const Diagnostic, items, "SLKBTD01");
+    const bytes = try logical.encodeTreeProfile(sink.allocator, []const Diagnostic, items, "SLKBTD01", .body);
     defer sink.allocator.free(bytes);
-    const owned = try logical.decodeInto([]const Diagnostic, sink.allocator, bytes, "SLKBTD01");
+    const owned = try logical.decodeIntoProfile([]const Diagnostic, sink.allocator, bytes, "SLKBTD01", .body);
     for (owned) |item| try sink.items.append(sink.allocator, nativeDiagnostic(item));
 }
 /// Compare complete canonical outcomes independently of value-table ordering.
 pub fn equal(a: std.mem.Allocator, left: Outcome, right: Outcome) logical.Error!bool {
-    const lhs = try logical.encodeTree(a, Outcome, left, "SLKBKR01");
+    const lhs = try logical.encodeTreeProfile(a, Outcome, left, "SLKBKR01", .body);
     defer a.free(lhs);
-    const rhs = try logical.encodeTree(a, Outcome, right, "SLKBKR01");
+    const rhs = try logical.encodeTreeProfile(a, Outcome, right, "SLKBKR01", .body);
     defer a.free(rhs);
     return std.mem.eql(u8, lhs, rhs);
 }
