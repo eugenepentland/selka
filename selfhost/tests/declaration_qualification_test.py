@@ -28,6 +28,15 @@ class DeclarationQualificationTests(unittest.TestCase):
                 'schema': 1, 'component': 'declaration-index', 'artifact': 'producer', 'sha256': D.F.digest(binary)}))
             with self.assertRaisesRegex(RuntimeError, 'noninteger'):
                 D.packages(root)
+            for name in ('declaration-index', 'type-interface', 'body-check'):
+                (root / f'{name}.json').write_text(json.dumps({'format': 1, 'protocol': 1,
+                    'schema': 6 if name == 'body-check' else 1, 'component': name, 'artifact': 'producer', 'sha256': D.F.digest(binary)}))
+            self.assertEqual(len(D.packages(root)), 7)
+            old = json.loads((root / 'body-check.json').read_text())
+            old['schema'] = 5
+            (root / 'body-check.json').write_text(json.dumps(old))
+            with self.assertRaisesRegex(RuntimeError, 'body-check: invalid qualified identity'):
+                D.packages(root)
 
     def test_gate_requires_complete_exact_counts(self):
         good = ('declaration qualification: 30 workflows, 60 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'

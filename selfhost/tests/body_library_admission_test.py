@@ -137,6 +137,16 @@ class LibraryAdmissionTests(unittest.TestCase):
             self.assertNotIn('failed',evidence)
             self.assertIn('--no-cache',evidence['records'][0]['command'])
             self.assertEqual(evidence['compiler_sha256'],'compiler-before')
+            args.compiler=Path('zig-out/bin/mylang')
+            resolved=args.compiler.resolve()
+            with patch.object(D.argparse.ArgumentParser,'parse_args',return_value=args), \
+                 patch.object(D.F,'digest',side_effect=lambda path: 'compiler-before' if path==resolved else real_digest(path)), \
+                 patch.object(D.F,'execute',return_value=(2,b'',b'ComponentProfile')) as execute:
+                with self.assertRaisesRegex(RuntimeError,'native fixture status changed'):D.main()
+                self.assertEqual(execute.call_args.args[0][0],resolved)
+                self.assertTrue(Path(execute.call_args.args[0][0]).is_absolute())
+            evidence=json.loads(report.read_text())
+            self.assertEqual(evidence['records'][0]['command'][0],str(resolved))
             args.native_controls=False
             before={'compiler_sha256':'compiler-before','packages':{'body-check':'artifact-before'}}
             with patch.object(D.F,'digest',return_value='compiler-before'), \

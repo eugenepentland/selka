@@ -79,7 +79,7 @@ def environment(mode, components, empty):
 def packages(directory, include_declaration=True, include_type_interface=True, include_body=True):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
-                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), COMPONENT: (1, 1), 'type-interface': (1, 1), 'body-check': (1, 4)}
+                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), COMPONENT: (1, 1), 'type-interface': (1, 1), 'body-check': (1, 6)}
     for name, (protocol, schema) in versions.items():
         if name == 'body-check' and not include_body:
             continue  # Explicit historical package inventory.

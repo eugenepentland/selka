@@ -107,6 +107,10 @@ def main():
     ap.add_argument('--native-controls', action='store_true', help='only native fixture controls; selected/library admission remains pending')
     ap.add_argument('--report', type=Path, required=True)
     args = ap.parse_args()
+    for name in ('compiler', 'zig', 'builder', 'source_root', 'component_dir', 'report'):
+        value = getattr(args, name)
+        if value is not None:
+            setattr(args, name, value.resolve())
     manifest = json.loads((FIXTURES / 'manifest.json').read_text())
     require_manifest(manifest)
     records = []
