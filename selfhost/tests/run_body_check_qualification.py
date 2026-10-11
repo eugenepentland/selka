@@ -214,6 +214,8 @@ class Qualification(F.Qualification):
             else:
                 result = self.compare(name, args, spec['status'])
                 diagnostics = [json.loads(line)['diagnostic'] for line in result[2].splitlines()]
+                if 'code' in spec:
+                    F.require(any(d['code'] == spec['code'] for d in diagnostics), f'{name}: required body diagnostic missing')
                 if name == 'multi_body_errors.my':
                     F.require(len(diagnostics) == 2 and all(d['code'] == 'E_UNKNOWN_NAME' for d in diagnostics), 'independent body diagnostics were lost')
                 if name == 'warning.my':

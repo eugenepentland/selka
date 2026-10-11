@@ -1,0 +1,6 @@
+func main() -> int:
+    mut total = 0
+    for value in range(3):
+        value = value + 1
+        total = total + value
+    return total

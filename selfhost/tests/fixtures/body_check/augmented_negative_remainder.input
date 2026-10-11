@@ -1,0 +1,4 @@
+func main() -> int:
+    mut value = -5
+    value %= 3
+    return value + 6

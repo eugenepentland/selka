@@ -51,43 +51,50 @@
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_UNKNOWN_NAME"
   },
   "multi_body_errors.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_UNKNOWN_NAME"
   },
   "wrong_return.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_TYPE"
   },
   "wrong_argument.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_TYPE"
   },
   "wrong_arity.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_ARITY"
   },
   "wrong_condition.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_TYPE"
   },
   "readonly_write.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_IMMUTABLE"
   },
   "warning.my": {
     "status": 0,
@@ -99,7 +106,8 @@
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_UNKNOWN_NAME"
   },
   "profile_managed.my": {
     "status": 2,
@@ -135,19 +143,22 @@
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_PRIVATE_SYMBOL"
   },
   "nongeneric_type_arguments.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_GENERIC_ARITY"
   },
   "named_only_positional.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_KEYWORD_ONLY"
   },
   "named_only_valid.my": {
     "status": 0,
@@ -160,7 +171,8 @@
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_MUTATION_MARKER"
   },
   "mut_call_valid.my": {
     "status": 0,
@@ -173,19 +185,22 @@
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_SHADOWING"
   },
   "shadow_type.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_SHADOWING"
   },
   "shadow_parameter.my": {
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_SHADOWING"
   },
   "signed_boundaries.my": {
     "status": 0,
@@ -198,7 +213,8 @@
     "status": 1,
     "boundary": "scalar-body",
     "typed": false,
-    "library": false
+    "library": false,
+    "code": "E_INTEGER_RANGE"
   },
   "repeated_defaults.my": {
     "status": 0,
@@ -241,5 +257,52 @@
     "typed": true,
     "library": false,
     "result": 7
+  },
+  "profile_range_stride.my": {
+    "status": 2,
+    "boundary": "profile",
+    "typed": false,
+    "library": false
+  },
+  "profile_integer_suffix.my": {
+    "status": 2,
+    "boundary": "profile",
+    "typed": false,
+    "library": false
+  },
+  "readonly_range_write.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false,
+    "code": "E_IMMUTABLE"
+  },
+  "augmented_mut_parameter.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "augmented_negative_remainder.my": {
+    "status": 0,
+    "boundary": "scalar-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "augmented_float_division.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "augmented_unknown_name.my": {
+    "status": 1,
+    "boundary": "scalar-body",
+    "typed": false,
+    "library": false,
+    "code": "E_UNKNOWN_NAME"
   }
 }

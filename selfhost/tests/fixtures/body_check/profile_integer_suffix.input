@@ -1,0 +1,4 @@
+func main() -> int:
+    const value = 7u8
+    _ = value
+    return 7
