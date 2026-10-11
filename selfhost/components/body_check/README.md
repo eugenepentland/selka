@@ -52,12 +52,14 @@ envelope, named-field `SLKBKI01` request and `SLKBKR01` reply. Older body schema
 and the retained catalog descriptors. Batch fields remain
 `nodes`, `statements`, `functions`, and `ranges`.
 
-The bounded profile allows 64 MiB frames, 1,048,576 graph values, 4,194,304 graph
+The bounded profile allows 64 MiB frames, 2,097,152 graph values, 4,194,304 graph
 edges, depth 256, 1 MiB per module source, 8 MiB aggregate sources plus at most
 4096 separator bytes, and 4096 modules. Typed nodes and statements are each capped
 at 262144; functions and aggregate locals at 65536. Literal children count against
-these same typed-node and graph limits. Existing parser value helpers are
-immutable symlinks copied into coordinator snapshots. Seed and component-v1
+these same typed-node and graph limits. Body-private value helpers retain the
+canonical codec algorithms with a body-only graph ceiling; the parser component
+remains at 1,048,576 values. Other shared parser helpers remain immutable symlinks
+copied into coordinator snapshots. Seed and component-v1
 language admission remain unchanged.
 
 Pure tests are the `*_tests.my` modules in this directory. Run each with the
@@ -151,3 +153,34 @@ comprehensions, `str(int)` formatting, and `ord` remain separate pure-library
 closure work. Filesystem/Stream/File capabilities remain outside this producer.
 B6 installed qualification and performance evidence are maintained by the
 integration lane; pure tests alone do not establish those claims.
+
+## Pure-library source closure followup
+
+A separate schema-6 followup adds immutable `str` and `bytes` iteration, scalar
+`str` conversion, and `ord`. Text iteration binds one Unicode scalar as `str`;
+byte iteration retains the native u8 read and i64 widening. Rebinding the source
+retains its entry snapshot. `ord` folds a one-scalar literal and otherwise emits
+the native rooted text operation. Rendering emits a direct canonical string cast.
+
+Source-first list comprehensions over admitted lists, text, bytes, and ordinary
+i64 ranges preserve filter-before-output checking, scoped immutable bindings,
+first-demand list recipes, and hidden-local/table order. Unfiltered ranges use
+the native unsigned capacity graph, including the minimum-safe crossing-zero
+case; filtered forms reserve zero. Nested source-first comprehensions reuse the
+same lowering. Set/dictionary gathers, generator callbacks, stepped ranges, and
+wider collection families remain explicit profile refusals.
+
+Plain list slices preserve normalized and clamped endpoints, snapshot ownership,
+and the native copy-loop table order. Conditional expressions preserve branch
+initialization and pending-value joins. Managed literal `str`/`bytes` constant
+getters and imported reads retain ordinary function bodies and zero-argument
+calls. Literal i64, bool, and Unit constants retain checked body rows, then
+append the folded declaration return and fold each name use. General scalar
+constant expression evaluation and embedded literals remain outside this
+followup. Iteration through nested record/list places refreshes the same source
+path under the native mutation guards.
+
+Pure tests and authenticated developer replays are distinct from installed
+source admission. The integration lane records admission of the nine selected
+actual libraries and six actual test roots, together with full qualification.
+The frozen B6 byte profile and its evidence remain a separate baseline.

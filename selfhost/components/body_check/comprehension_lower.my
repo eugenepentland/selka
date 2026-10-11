@@ -1,0 +1,87 @@
+import syntax_value
+import emission
+import locals
+import list_lower
+import buffer_lower
+import list_iteration
+
+public record Iterable:
+    plan: list_iteration.Plan
+    source: list_iteration.SourceBody
+    output: int
+    body: int
+    reserve: bool
+    result_type: int
+
+
+public func block_statement(mut batch: emission.Batch, context: list_lower.Context, statements: int[]) -> int fails syntax_value.Problem:
+    const children = try emission.ids(mut batch, statements)
+    return try emission.statement(mut batch, context.input, context.span, False, b"block", children)
+
+
+public func loop_statement(mut batch: emission.Batch, context: list_lower.Context, loop_id: int, condition: int, body: int, step: int) -> int fails syntax_value.Problem:
+    const id = try syntax_value.integer(mut batch.pool, loop_id)
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const repeated = try syntax_value.integer(mut batch.pool, body)
+    const next = try syntax_value.integer(mut batch.pool, step)
+    const payload = try syntax_value.object(mut batch.pool, ["id", "condition", "body", "step"], [id, test, repeated, next])
+    return try emission.statement(mut batch, context.input, context.span, False, b"loop", payload)
+
+
+public func branch_statement(mut batch: emission.Batch, context: list_lower.Context, condition: int, body: int) -> int fails syntax_value.Problem:
+    const test = try syntax_value.integer(mut batch.pool, condition)
+    const yes = try syntax_value.integer(mut batch.pool, body)
+    const no = try syntax_value.absent(mut batch.pool)
+    const payload = try syntax_value.object(mut batch.pool, ["condition", "then_body", "else_body"], [test, yes, no])
+    return try emission.statement(mut batch, context.input, context.span, False, b"branch", payload)
+
+
+public func iterable(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Iterable) -> list_lower.Lowered fails syntax_value.Problem:
+    const plan = request.plan
+    const prepared = try list_iteration.source(mut batch, mut scope, context.input, plan, request.source)
+    const index = try list_lower.read(mut batch, context, plan.index, 0)
+    mut read_type = plan.request.element
+    if plan.request.owner_type == batch.facts.bytes_type:
+        read_type = 5
+    mut value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=plan.owner, kind=b"read", arguments=[index], ty=read_type))
+    if read_type == 5:
+        const widened = try buffer_lower.cast(mut batch, context, value, 0)
+        value = widened
+    const initialize = try list_lower.store(mut batch, context, plan.binding, value, True)
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", index, one, 0)
+    const advance = try list_lower.store(mut batch, context, plan.index, next, False)
+    const guard = try list_iteration.guard(mut batch, context, plan, prepared.refresh, prepared.growing)
+    const iteration = try block_statement(mut batch, context, [guard, initialize, request.body])
+    const step = try block_statement(mut batch, context, [guard, advance])
+    mut capacity = -1
+    if request.reserve:
+        const count = try list_lower.read(mut batch, context, plan.limit, 0)
+        capacity = count
+    else:
+        const empty = try list_lower.integer(mut batch, context, 0, 0)
+        capacity = empty
+    const capacity_id = try syntax_value.integer(mut batch.pool, capacity)
+    const acquire = try syntax_value.object(mut batch.pool, ["capacity"], [capacity_id])
+    const fresh = try emission.node(mut batch, context.input, context.span, request.result_type, b"acquire_buffer", acquire)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const setup_index = try list_lower.store(mut batch, context, plan.index, zero, True)
+    mut length = -1
+    if plan.request.owner_type == batch.facts.string_type or plan.request.owner_type == batch.facts.bytes_type:
+        const count = try buffer_lower.length(mut batch, context, plan.owner)
+        length = count
+    else:
+        const count = try list_lower.length(mut batch, context, plan.owner)
+        length = count
+    const setup_limit = try list_lower.store(mut batch, context, plan.limit, length, True)
+    const setup_output = try list_lower.store(mut batch, context, request.output, fresh, True)
+    const bound = try list_lower.read(mut batch, context, plan.limit, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", index, bound, 1)
+    const loop = try loop_statement(mut batch, context, plan.request.loop_id, condition, iteration, step)
+    const output = try list_lower.read(mut batch, context, request.output, request.result_type)
+    mut statements = prepared.setup
+    statements.append(setup_index)
+    statements.append(setup_limit)
+    statements.append(setup_output)
+    statements.append(loop)
+    return try list_lower.block(mut batch, context, statements, output, request.result_type)
