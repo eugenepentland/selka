@@ -219,7 +219,7 @@ class ComponentCacheTests(unittest.TestCase):
             receipt = json.loads((self.cache / "artifacts" / manifest["key"] / "receipt.json").read_text())
             flags = receipt["identity"]["flags"]
             self.assertEqual("--release" in flags, name == "body-check")
-            self.assertEqual(flags[0], "release" if name == "body-check" else "optimized-debug-default")
+            self.assertEqual(flags[0], "release" if name == "body-check" else "default-debug")
         self.invoke("--uncached")
         self.assertEqual(self.calls(), 14)
 
@@ -228,7 +228,7 @@ class ComponentCacheTests(unittest.TestCase):
         manifest = json.loads((self.install / "body-check.json").read_text())
         receipt_path = self.cache / "artifacts" / manifest["key"] / "receipt.json"
         receipt = json.loads(receipt_path.read_text())
-        receipt["identity"]["flags"] = ["optimized-debug-default", "fresh-private-cache",
+        receipt["identity"]["flags"] = ["default-debug", "fresh-private-cache",
                                         "private-zig-global-v1"]
         receipt_path.write_text(json.dumps(receipt))
         self.invoke(success=False)

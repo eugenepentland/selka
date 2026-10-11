@@ -210,7 +210,7 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
     const sources = try ctx.path(&.{ config.root, "selfhost", "components", descriptor.source });
     const tool = try std.process.executablePathAlloc(ctx.io, ctx.a);
     var flags = std.json.Array.init(ctx.a);
-    try flags.append(files.string(if (descriptor.release) "release" else "optimized-debug-default"));
+    try flags.append(files.string(if (descriptor.release) "release" else "default-debug"));
     const guest_args: []const []const u8 = if (descriptor.release) &.{"--release"} else &.{};
     for (guest_args) |arg| try flags.append(files.string(arg));
     try flags.append(files.string("fresh-private-cache"));

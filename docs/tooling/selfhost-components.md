@@ -43,9 +43,11 @@ slowdown, so a custom Zig without LLVM cannot build the coordinator. This settin
 is independent of the host's optimization mode and the seed/component recipes;
 it does not change the Zig pin or the progressive self-hosting boundary.
 The body-check recipe explicitly passes guest `--release`, independently of host
-optimization. The other six components retain the seed's default optimized-debug
-guest policy, which already optimizes each module. Guest `--release` combines the
-program into one LLVM unit and changes debug metadata. The receipt binds the
+optimization. The other six components retain the pinned seed's default debug/O0
+guest policy.
+The seed's `pipeline.Options.mode` and driver mode both default to `.debug`; this
+policy differs from newer compiler defaults. Guest `--release` enables the seed's
+optimized fact pipeline and native compilation. The receipt binds the
 selected policy and exact `--release` argument; the same argument list drives
 compilation. A ReleaseFast host alone does not select the guest policy. Production
 component builds omit `--verify-facts`; qualification exercises runtime fact and
