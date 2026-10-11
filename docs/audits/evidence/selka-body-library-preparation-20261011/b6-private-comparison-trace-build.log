@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 1994, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1994 after 5s
+Build Summary: 7/7 steps succeeded
+body-diagnostic-compiler success
++- compile exe mylang debug native success 3s MaxRSS:563M
+   +- WriteFile cached
+   +- compile obj component_sha256 safe native cached 7ms MaxRSS:36M
+   +- compile obj component_sha256 safe native (reused)
+   +- run exe build-identity (build_identity) success 34ms
+   |  +- compile exe build-identity debug native cached 7ms MaxRSS:37M
+   +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 7ms MaxRSS:37M
+

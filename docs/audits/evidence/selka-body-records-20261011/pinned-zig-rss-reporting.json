@@ -1,0 +1,20 @@
+{
+  "toolchain": "0.17.0-dev.1683+5ceec001b",
+  "finding": "The declared-RSS excess appends an error message but does not return MakeFailed; successful make is assigned success. The initial B4 run exited zero despite the diagnostic.",
+  "sources": [
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/compiler/Maker/Step.zig",
+      "sha256": "f85ebdee3ed95a2ed278af7d4c2880041f5d14b15125c8320f53b9cd87cb4f18",
+      "start_line": 291,
+      "end_line": 312,
+      "source": "            return error.MakeFailed;\n        },\n        error.Canceled => |e| return e,\n    };\n\n    if (!s.test_results.isSuccess()) {\n        return error.MakeFailed;\n    }\n\n    const max_rss = conf_step.max_rss.toBytes();\n    if (max_rss != 0 and s.result_peak_rss > max_rss) {\n        if (std.fmt.allocPrint(\n            arena,\n            \"memory usage peaked at {0B:.2} ({0d} bytes), exceeding the declared upper bound of {1B:.2} ({1d} bytes)\",\n            .{ s.result_peak_rss, max_rss },\n        )) |msg| {\n            s.oomWrap(s.result_error_msgs.append(arena, msg));\n        } else |_| s.result_oom = true;\n    }\n}\n\n/// Prepares the step for being re-evaluated."
+    },
+    {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/compiler/Maker.zig",
+      "sha256": "cc35ba1607e47f3af37b6cec1110dcb3498d9f0ce9f6b74ff79fd33513880bd8",
+      "start_line": 2588,
+      "end_line": 2601,
+      "source": "                => break .dependency_skipped,\n\n                .success => {},\n            }\n        } else if (Step.make(step_index, maker, step_prog_node)) state: {\n            break :state .success;\n        } else |err| switch (err) {\n            error.MakeFailed => .failure,\n            error.MakeSkipped => .skipped,\n            error.Canceled => |e| return e,\n        };\n\n        @atomicStore(Step.State, &make_step.state, new_state, .monotonic);\n"
+    }
+  ]
+}

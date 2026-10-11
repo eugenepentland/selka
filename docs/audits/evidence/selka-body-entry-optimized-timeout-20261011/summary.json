@@ -1,0 +1,659 @@
+{
+  "source_commit": "3e44a64df34bc06ee79b0a2f5781286a83140809",
+  "host": "ee9bc995df50cac1d29e6c3c8cfd16807862f0ce95e601e7dec57eeb4e62f0b5",
+  "body": "337e7d27b241c8699d8d754adae801a7c230be1aacb2edb54cc042e923a60a5a",
+  "full_gate_passed": false,
+  "exit_status": 1,
+  "build_summary": "136/139 steps succeeded (1 failed); 2808/28651 tests passed (25843 skipped)",
+  "guardian_verdicts": [
+    {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 143,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 43,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 44,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 47,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 43,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 143,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 143,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 150,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 143,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "guardian_totals": {
+    "passed": 2806,
+    "failed": 0,
+    "skipped": 0
+  },
+  "deployment": {
+    "body-check": {
+      "artifact": "body-check-337e7d27b241c8699d8d754adae801a7c230be1aacb2edb54cc042e923a60a5a",
+      "component": "body-check",
+      "format": 1,
+      "key": "94298c715fd1161638ad36ebbed5e722de4ac6b7753d133bc88866a7f57875aa",
+      "protocol": 1,
+      "schema": 7,
+      "sha256": "337e7d27b241c8699d8d754adae801a7c230be1aacb2edb54cc042e923a60a5a"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-a0694d355f149e74c1090d475aff88ae3d0b890a9382fbf046f0b697290e38d4",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "d06fe0aa25f330ff68451735158874bd6718b5ecad4f226e2dc84c06c285d4e9",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "a0694d355f149e74c1090d475aff88ae3d0b890a9382fbf046f0b697290e38d4"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-a8f74d1e4a4afcc3d89905d68ea103deaff7cd19257671f27766c3e1bacefee7",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "10114f711f8875feffe5ee7afcd46b10f84fc6bececbc0cfc726c3f518dd53e7",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "a8f74d1e4a4afcc3d89905d68ea103deaff7cd19257671f27766c3e1bacefee7"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-bb077168cd43fbd518ab18b43ff1f9ad4a9192dfa1e6bb0c046fc03091ca9a42",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "508ec9d4502734358e8a24bc5d99ca7c3fc259c7c404f9bcd9178276e4cc0634",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "bb077168cd43fbd518ab18b43ff1f9ad4a9192dfa1e6bb0c046fc03091ca9a42"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-f755a87c75b8377403e5945661d954e94211650f6f58ef6dde5eadef902c6a3b",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "d0acfb82c32cfd6c74f50e930f0452038fe5952572f965d1e7d71573f579b025",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "f755a87c75b8377403e5945661d954e94211650f6f58ef6dde5eadef902c6a3b"
+    },
+    "test-index": {
+      "artifact": "test-index-64a8dfd52c64a3b6ae9227159b75a9e72d192aaa80f53d2cb8195e5762698917",
+      "component": "test-index",
+      "format": 1,
+      "key": "8b24c1197259ae8fbde723fad022c52b65144e0f6bb15f766f6d8df8b2fa179d",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "64a8dfd52c64a3b6ae9227159b75a9e72d192aaa80f53d2cb8195e5762698917"
+    },
+    "type-interface": {
+      "artifact": "type-interface-cbaa679346d5afa82b48fbf9215302a5d3598f856b85260316f4c063a801c461",
+      "component": "type-interface",
+      "format": 1,
+      "key": "ff9c5782b73fb29794a2b66d63c316819d09bf208ee1b9980406752ce8e5f4e9",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "cbaa679346d5afa82b48fbf9215302a5d3598f856b85260316f4c063a801c461"
+    }
+  },
+  "main_reports": {
+    "normal": {
+      "complete": false,
+      "reason": "outer matrix command exceeded 600 seconds; no complete report"
+    },
+    "release": {
+      "complete": false,
+      "reason": "body gate stopped at normal/edit matrix; release phase not reached"
+    }
+  },
+  "report_paths": {
+    "entry-normal": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/zig-local-cache/o/3a44545139d8b9ae7046eb5dd79cb892/body-entry-admission/normal.json",
+    "entry-release": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/zig-local-cache/o/3a44545139d8b9ae7046eb5dd79cb892/body-entry-admission/release.json",
+    "library": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/zig-local-cache/o/bc9e7dd80e4171dab4bd0195ab3bd3b7/body-library-admission.json"
+  },
+  "pure_test_roots": {
+    "selfhost/components/body_check/body_tests.my": [
+      "test_integer_return_full_typed_batch",
+      "test_boolean_return_type_rejected",
+      "test_managed_signature_profile_refusal",
+      "test_malformed_body_reference_is_transport_failure",
+      "test_semantic_depth_limit_is_deliberate_profile_refusal",
+      "test_range_variable_assignment_is_native_immutable_error",
+      "test_augmented_remainder_preserves_origin_and_operator_span",
+      "test_augmented_float_division_has_exact_source_error",
+      "test_augmented_missing_name_is_unknown_name",
+      "test_augmented_unbound_after_rhs_before_operator_with_related_site",
+      "test_mut_marker_retains_inner_probe_and_emits_wrapper_span"
+    ],
+    "selfhost/components/body_check/buffer_engine_tests.my": [
+      "test_append_byte_preserves_parameter_origin_and_receiver_usage",
+      "test_readonly_append_diagnostic_before_argument_type_error",
+      "test_append_byte_argument_type_location_is_receiver",
+      "test_byte_buffer_constructor_interns_list_before_buffer_at_exact_sites",
+      "test_empty_buffer_constructor_hints_i64_list_without_extra_recipes",
+      "test_bytes_list_conversion_preserves_immutable_catalog_and_cast",
+      "test_project_qualified_function_does_not_shadow_native_bare_constructor_probe"
+    ],
+    "selfhost/components/body_check/buffer_lower_tests.my": [
+      "test_omitted_text_end_exact_tail_and_signed_length_order",
+      "test_explicit_end_preserves_nodes_without_normalization",
+      "test_bytes_omitted_end_uses_slice_not_text_tail",
+      "test_conversion_cast_retains_operand_and_target_type",
+      "test_byte_read_preserves_negative_index_without_list_normalization"
+    ],
+    "selfhost/components/body_check/buffer_type_tests.my": [
+      "test_buffer_lazy_global_order_reuse_and_leaf_depth",
+      "test_buffer_unavailable_refuses_without_catalog_mutation",
+      "test_buffer_recipe_exact_tag_and_no_type_arguments",
+      "test_buffer_basis_retained_authority_and_invalid_element",
+      "test_buffer_basis_cannot_alias_bytes_or_bypass_shadowing"
+    ],
+    "selfhost/components/body_check/codec_tests.my": [
+      "test_signed_integer_graph_roundtrip",
+      "test_graph_forward_reference_refused",
+      "test_wrong_outer_direction_refused",
+      "test_correlated_reply_header",
+      "test_schema_one_request_refused",
+      "test_schema_two_request_refused",
+      "test_schema_three_request_refused",
+      "test_schema_four_request_refused",
+      "test_schema_five_request_refused",
+      "test_schema_six_request_refused"
+    ],
+    "selfhost/components/body_check/discard_policy_tests.my": [
+      "test_explicit_pending_discard_is_allowed",
+      "test_explicit_scalar_discard_is_allowed",
+      "test_implicit_unit_is_allowed",
+      "test_scalar_discard_has_exact_statement_span_and_insertion",
+      "test_managed_nonpending_value_has_safe_insertion",
+      "test_result_bearing_value_has_no_automatic_discard_repair",
+      "test_nonboolean_discard_flag_is_rejected"
+    ],
+    "selfhost/components/body_check/engine_flow_tests.my": [
+      "test_short_circuit_checks_result_consumption_before_binary_emission"
+    ],
+    "selfhost/components/body_check/failure_lower_tests.my": [
+      "test_success_uses_reordered_ok_tag_and_exact_site",
+      "test_error_uses_reordered_err_tag_and_exact_site",
+      "test_error_widening_first_direct_case_wins",
+      "test_first_fielded_case_adds_one_record_before_variant",
+      "test_matching_error_type_is_preserved_without_nodes",
+      "test_incompatible_error_is_left_for_engine_diagnostic",
+      "test_nonunion_and_multifield_cases_do_not_widen",
+      "test_optional_injection_uses_declared_some_tag",
+      "test_nested_optional_injection_keeps_every_layer",
+      "test_existing_none_is_injected_as_some_none_without_flattening",
+      "test_incompatible_optional_does_not_emit_partial_wrappers",
+      "test_invalid_result_shape_is_transport_failure",
+      "test_out_of_bounds_typed_value_is_transport_failure",
+      "test_optional_cycle_is_bounded_without_partial_nodes"
+    ],
+    "selfhost/components/body_check/graph_projection_tests.my": [
+      "test_projection_names_and_snapshot",
+      "test_projection_invalid_ids",
+      "test_projection_wrong_kind",
+      "test_projection_duplicate_and_missing",
+      "test_projection_malformed_lengths"
+    ],
+    "selfhost/components/body_check/io_arguments_tests.my": [
+      "test_print_source_order_and_end_before_separator",
+      "test_print_positional_after_keyword_reports_call_before_value_check",
+      "test_print_duplicate_keyword_uses_keyword_span",
+      "test_print_generic_precedes_unknown_keyword_and_unknown_precedes_later_positional",
+      "test_positional_gate_rejects_even_all_absent_label_vector",
+      "test_ambient_output_preserves_alternative_and_signature_without_edits"
+    ],
+    "selfhost/components/body_check/library_closure_tests.my": [
+      "test_conditional_preserves_branch_row_order_and_hidden_local_scope",
+      "test_negative_literal_hint_controls_retained_positive_row",
+      "test_scalar_literal_getters_fold_at_use_span_without_call_or_temporary",
+      "test_managed_literal_getters_keep_unicode_and_byte_element_types"
+    ],
+    "selfhost/components/body_check/library_comprehension_tests.my": [
+      "test_counted_range_capacity_is_unsigned_and_binding_does_not_escape",
+      "test_filter_uses_zero_capacity_without_unsigned_capacity_local",
+      "test_filter_error_precedes_output_resolution_and_recipe_publication",
+      "test_noninteger_range_start_uses_native_integer_requirement_site",
+      "test_dynamic_count_does_not_hint_comprehension_as_integer"
+    ],
+    "selfhost/components/body_check/library_iteration_tests.my": [
+      "test_text_and_byte_iteration_bindings_guards_and_element_types",
+      "test_text_source_rebinding_keeps_entry_snapshot_and_no_live_refresh"
+    ],
+    "selfhost/components/body_check/library_scalar_tests.my": [
+      "test_str_scalar_and_identity_cast_preserve_operand_reference_and_scope",
+      "test_str_maximum_literal_keeps_i64_value_and_no_number_format_temporary",
+      "test_ord_unicode_single_codepoint_folds_without_temporary",
+      "test_str_arity_precedes_argument_checking",
+      "test_str_aggregate_rejection_preserves_checked_operand_and_exact_site",
+      "test_ord_nonconstant_uses_snapshot_temporary_and_exact_block_references"
+    ],
+    "selfhost/components/body_check/list_engine_tests.my": [
+      "test_inferred_nested_list_owns_type_choices_and_full_lowering",
+      "test_empty_inferred_list_has_exact_source_error",
+      "test_list_repetition_preserves_evaluation_and_hidden_loop",
+      "test_named_list_append_updates_root_without_extra_local_probe",
+      "test_list_index_boolean_uses_native_collection_diagnostic",
+      "test_expression_method_checks_receiver_before_writable_root",
+      "test_dynamic_count_does_not_hint_list_literal_as_integer"
+    ],
+    "selfhost/components/body_check/list_iteration_tests.my": [
+      "test_inert_list_walk_native_hidden_local_metadata_and_orphan_order",
+      "test_live_mut_argument_refresh_growth_guard_and_root_read_count",
+      "test_root_reassignment_copies_entry_and_retains_original_bound",
+      "test_discard_iteration_keeps_native_initialized_binder_metadata",
+      "test_nested_list_place_refreshes_ancestor_and_spills_index_once",
+      "test_readonly_copy_method_does_not_add_live_refresh",
+      "test_index_assignment_below_root_selects_live_growth_guard",
+      "test_guard_discard_encodes_node_reference_in_pool",
+      "test_initialized_record_root_refreshes_nested_field_iteration_after_mut_call",
+      "test_mut_argument_in_match_discriminator_selects_live_iteration_refresh",
+      "test_mut_argument_in_slice_bound_selects_live_iteration_refresh",
+      "test_comprehension_mut_calls_in_output_filter_and_source_select_refresh"
+    ],
+    "selfhost/components/body_check/list_lower_tests.my": [
+      "test_small_list_literal_exact_native_append_order_and_hidden_root",
+      "test_empty_list_has_capacity_acquisition_and_root_read",
+      "test_sixty_four_inert_elements_use_native_packed_array",
+      "test_one_nonconstant_prevents_packing_without_reordering",
+      "test_list_index_roots_receiver_and_normalizes_signed_index",
+      "test_list_length_preserves_unsigned_operation_then_signed_cast"
+    ],
+    "selfhost/components/body_check/list_places_tests.my": [
+      "test_nested_write_marks_only_root_and_retains_parameter_origin",
+      "test_nested_immutable_root_exact_diagnostic_without_mutating_usage",
+      "test_nonplace_root_exact_assignment_diagnostic",
+      "test_plain_write_evaluates_value_before_root_and_normalizes_index",
+      "test_augmented_write_snapshots_receiver_index_and_old_value_before_rhs",
+      "test_augmented_owner_is_reserved_before_nested_index_evaluation"
+    ],
+    "selfhost/components/body_check/list_slice_tests.my": [
+      "test_slice_clamps_both_endpoints_after_negative_normalization",
+      "test_omitted_slice_fresh_capacity_and_copy_loop_reference_order",
+      "test_slice_widens_narrow_indices_without_mutating_source_binding"
+    ],
+    "selfhost/components/body_check/list_type_tests.my": [
+      "test_list_intern_nested_reuse_and_first_site",
+      "test_list_unavailable_is_explicit_profile",
+      "test_list_depth_256_accepted_257_refused",
+      "test_recipe_graph_has_exact_provenance",
+      "test_existing_catalog_accepts_forward_dependency_without_recipes",
+      "test_existing_catalog_cycle_is_transport_not_profile"
+    ],
+    "selfhost/components/body_check/locals_flow_tests.my": [
+      "test_branch_restore_keeps_usage_and_local_identity",
+      "test_continuing_branches_require_assignment_on_both_paths",
+      "test_loop_restore_removes_body_only_assignment"
+    ],
+    "selfhost/components/body_check/mut_marker_tests.my": [
+      "test_valid_scalar_mut_alias_records_write",
+      "test_missing_marker_exact_repair",
+      "test_superfluous_marker_exact_repair",
+      "test_overlapping_marked_scalar_roots"
+    ],
+    "selfhost/components/body_check/mutation_places_tests.my": [
+      "test_distinct_fields_are_disjoint_but_root_contains_field",
+      "test_index_overlap_matches_native_known_and_uncertain_sign_rules",
+      "test_deeper_distinct_fields_override_uncertain_parent_index",
+      "test_overlap_diagnostic_uses_later_source_argument_and_exact_related_note",
+      "test_raw_index_place_uses_checked_integer_key_and_original_root"
+    ],
+    "selfhost/components/body_check/obligation_tests.my": [
+      "test_transfer_records_site_and_second_read_has_ordered_related_sites",
+      "test_synthetic_pattern_reuse_has_no_user_declaration_notes",
+      "test_loop_disagreement_uses_binding_related_site"
+    ],
+    "selfhost/components/body_check/parse_engine_tests.my": [
+      "test_free_parse_creates_real_option_recipe_and_rooted_operation",
+      "test_expression_parse_method_uses_same_rooted_lowering",
+      "test_bound_parse_method_retains_owner_site_without_extra_read_node",
+      "test_option_receiver_method_refuses_before_import_resolution"
+    ],
+    "selfhost/components/body_check/pending_flow_tests.my": [
+      "test_snapshot_is_bounded_prefix_with_independent_storage",
+      "test_restore_does_not_change_init_usage_or_new_locals",
+      "test_transfer_site_difference_is_not_path_disagreement",
+      "test_first_availability_mismatch_is_lexical_local_order",
+      "test_two_continuing_paths_require_identical_obligations",
+      "test_terminating_then_path_does_not_contribute_to_join",
+      "test_terminating_else_restores_then_sites_and_availability",
+      "test_both_terminated_paths_keep_native_last_checked_state",
+      "test_invalid_checkpoint_count_is_transport_error",
+      "test_invalid_restore_checkpoint_is_transport_error"
+    ],
+    "selfhost/components/body_check/profile_tests.my": [
+      "test_profile_exact_value_limit_and_first_excess",
+      "test_profile_first_excess_data_rejected",
+      "test_profile_first_excess_edge_rejected",
+      "test_profile_encoder_refuses_first_excess_without_pool_push"
+    ],
+    "selfhost/components/body_check/range_capacity_tests.my": [
+      "test_signed_capacity_exact_native_append_order_and_temporary",
+      "test_unsigned_capacity_uses_direct_branch_without_signed_expansion",
+      "test_crossing_zero_capacity_keeps_two_unsigned_additions_and_casts"
+    ],
+    "selfhost/components/body_check/range_tests.my": [
+      "test_range_prebody_native_append_order",
+      "test_range_hidden_limit_metadata",
+      "test_range_postbody_step_and_exact_one_plan"
+    ],
+    "selfhost/components/body_check/receiver_overlap_tests.my": [
+      "test_field_receiver_overlap_reports_exact_span_note_and_split_fix",
+      "test_disjoint_receiver_root_does_not_report_or_change_local_usage",
+      "test_unit_mutating_call_reports_overlap_without_unsafe_split_fix",
+      "test_generated_split_name_avoids_existing_source_spelling",
+      "test_effectful_or_conditional_surrounding_expression_omits_split_fix"
+    ],
+    "selfhost/components/body_check/recipe_index_tests.my": [
+      "test_kind_and_argument_order_are_distinct",
+      "test_growth_preserves_first_demand_ids_and_missing_lookup",
+      "test_duplicate_id_conflict_is_transport_not_reinterning"
+    ],
+    "selfhost/components/body_check/record_construct_tests.my": [
+      "test_omitted_defaults_keep_declaration_order_and_raw_ids",
+      "test_named_source_order_precedes_trailing_default",
+      "test_duplicate_labels_remain_for_engine_diagnostic",
+      "test_positional_repairs_cover_each_operand_in_written_order",
+      "test_arity_precedes_named_repairs",
+      "test_unknown_keyword_survives_before_defaults_for_engine_resolution",
+      "test_required_omission_remains_for_engine_resolution",
+      "test_mixed_keyword_repairs_only_unlabelled_operand"
+    ],
+    "selfhost/components/body_check/record_engine_tests.my": [
+      "test_constructor_preserves_written_field_and_node_order",
+      "test_constructor_missing_field_has_native_related_site",
+      "test_field_read_retains_record_and_field_types",
+      "test_child_error_precedes_duplicate_field_after_all_hints",
+      "test_unknown_field_hint_precedes_any_child_expression"
+    ],
+    "selfhost/components/body_check/record_index_tests.my": [
+      "test_exact_span_join_preserves_input_identity",
+      "test_reverse_4096_declarations_indexed_join",
+      "test_index_empty_and_invalid_span"
+    ],
+    "selfhost/components/body_check/record_places_tests.my": [
+      "test_plain_record_write_saves_rhs_before_refresh_and_preserves_reference_origin",
+      "test_nested_record_update_rebuilds_inner_before_outer_and_tracks_value_parameter_write",
+      "test_indexed_record_receiver_is_reserved_before_index_and_refreshes_same_slot",
+      "test_list_field_extension_keeps_refresh_and_publishes_rebuilt_record"
+    ],
+    "selfhost/components/body_check/record_qualified_tests.my": [
+      "test_qualified_alias_preserves_internal_source_bytes",
+      "test_qualified_name_excludes_separator_whitespace_and_comments",
+      "test_canonical_colon_name_and_callable_keyword"
+    ],
+    "selfhost/components/body_check/record_type_tests.my": [
+      "test_catalog_join_uses_span_not_row_order",
+      "test_generic_record_refuses_at_declaration",
+      "test_missing_or_duplicate_nominal_catalog_is_transport",
+      "test_record_list_recursive_closure_is_admitted",
+      "test_record_unsupported_leaf_propagates_to_declaration",
+      "test_direct_value_record_cycle_is_malformed"
+    ],
+    "selfhost/components/body_check/resource_engine_tests.my": [
+      "test_binary_scope_owns_read_and_preserves_operands_and_recipe_order",
+      "test_scoped_file_name_cannot_escape_as_value",
+      "test_reserved_capabilities_have_distinct_primitive_identity",
+      "test_identically_spelled_module_local_suffixes_keep_nominal_identity",
+      "test_unscoped_file_method_is_an_explicit_resource_profile_refusal",
+      "test_inactive_file_owner_resolves_reserved_type_after_scope",
+      "test_discard_file_binding_restores_previous_discard_local",
+      "test_module_aliases_do_not_shadow_capability_annotations",
+      "test_declared_symbol_still_shadows_reserved_type_authority",
+      "test_standalone_function_name_does_not_shadow_capability_type",
+      "test_stream_write_arity_precedes_unknown_operands_and_receiver_read",
+      "test_stream_write_keyword_precedes_arity_and_uses_call_name",
+      "test_free_and_method_open_operands_precede_arity",
+      "test_free_open_keywords_precede_operands_but_method_keywords_follow",
+      "test_method_open_known_operands_then_rejects_keyword_at_call_name"
+    ],
+    "selfhost/components/body_check/resource_lower_tests.my": [
+      "test_open_preserves_selected_result_shapes_mode_and_argument_order",
+      "test_scoped_read_preserves_owner_and_absent_count",
+      "test_text_read_preserves_explicit_count_and_text_flag",
+      "test_stream_write_preserves_operand_order_and_integer_result",
+      "test_print_retains_explicit_stream_null_defaults_and_no_debug",
+      "test_print_preserves_explicit_separator_and_terminator"
+    ],
+    "selfhost/components/body_check/scalar_tests.my": [
+      "test_integer_signed_boundaries",
+      "test_integer_radices_and_suffix",
+      "test_positive_minimum_refused",
+      "test_negative_overflow_refused",
+      "test_non_b1_suffix_refuses_before_magnitude_overflow",
+      "test_scalar_type_diagnostic",
+      "test_graph_preserves_names_and_bytes"
+    ],
+    "selfhost/components/body_check/sequence_tests.my": [
+      "test_utf8_codepoints_and_empty_text",
+      "test_utf8_overlong_surrogate_truncated_and_out_of_range",
+      "test_text_literal_dynamic_catalog_and_scalar_children",
+      "test_bytes_literal_and_index_cast_append_order",
+      "test_text_length_and_index_keep_managed_identity",
+      "test_absent_sequence_descriptor_refuses_only_managed_use",
+      "test_catalog_shape_validation_and_nonfixed_ids",
+      "test_managed_concat_order_and_equality_types",
+      "test_contextual_byte_literal_materializes_utf8_string",
+      "test_managed_binary_type_mismatch_names",
+      "test_managed_invalid_operator_exact_diagnostic",
+      "test_managed_augmented_assignment_preserves_full_local_metadata",
+      "test_managed_nonadd_augmentation_exact_error",
+      "test_managed_bitwise_source_operator_has_native_alternative",
+      "test_scalar_context_byte_literal_refuses_unowned_array_schema",
+      "test_explicit_int_byte_index_conversion_retains_full_cast_chain"
+    ],
+    "selfhost/components/body_check/text_repeat_tests.my": [
+      "test_text_repeat_gathers_text_then_joins_with_empty_separator",
+      "test_count_first_negative_repeat_preserves_operand_initialization_order",
+      "test_zero_repeat_retains_guarded_loop_and_empty_join"
+    ],
+    "selfhost/components/body_check/variant_construct_tests.my": [
+      "test_omitted_defaults_keep_declaration_order_and_raw_ids",
+      "test_named_source_order_precedes_trailing_default",
+      "test_duplicate_labels_fail_before_expression_typing",
+      "test_positional_repairs_cover_each_operand_in_written_order",
+      "test_arity_precedes_named_repairs",
+      "test_unknown_keyword_lists_fields_lexically_before_defaults",
+      "test_required_omission_remains_for_engine_resolution",
+      "test_mixed_keyword_repairs_only_unlabelled_operand",
+      "test_invalid_label_shape_is_transport_failure",
+      "test_invalid_operand_precedes_named_repairs",
+      "test_invalid_default_is_transport_failure"
+    ],
+    "selfhost/components/body_check/variant_patterns_tests.my": [
+      "test_flat_arms_preserve_ids_and_tables",
+      "test_empty_input_preserves_tables",
+      "test_nested_variants_preserve_source_order_and_synthetic_key",
+      "test_duplicate_nested_combinations_locate_second_body",
+      "test_missing_payload_fields_precedes_compilation",
+      "test_nested_binding_alias_emits_binding_before_original_body",
+      "test_binding_fallback_overlapping_variant_is_not_silently_accepted",
+      "test_product_matrix_reorders_labels_without_losing_rows",
+      "test_named_duplicate_preserves_previous_related_span",
+      "test_wildcard_tags_keep_declaration_order_and_share_body",
+      "test_internal_complete_wildcard_skips_before_last_rule",
+      "test_explicit_wildcard_must_be_last_even_when_complete",
+      "test_wildcard_refuses_pending_payload_at_first_uncovered_tag",
+      "test_explicit_complete_wildcard_reports_unreachable_after_body",
+      "test_exhaustiveness_reports_first_declaration_and_related_site"
+    ],
+    "selfhost/components/body_check/variant_shape_tests.my": [
+      "test_result_case_order_is_nominal_not_hardcoded",
+      "test_option_accepts_both_native_case_orders",
+      "test_scalar_is_not_a_variant_or_pending_value",
+      "test_result_ownership_comes_from_contract"
+    ],
+    "selfhost/components/body_check/variant_type_tests.my": [
+      "test_list_result_option_share_first_demand_id_order",
+      "test_recipe_encoder_is_tagged_and_preserves_parameter_roles",
+      "test_reordered_template_maps_payload_parameter_not_tag_position",
+      "test_recipe_depth_counts_new_constructors_and_retained_leaf",
+      "test_recipe_depth_retained_graph_is_a_leaf"
+    ]
+  },
+  "pure_tests_per_mode": null,
+  "pure_test_inventory_count": 286,
+  "pure_gate_complete": false,
+  "fixture_statuses": {
+    "0": 90,
+    "1": 62,
+    "2": 17
+  },
+  "generation_byte_identity": {
+    "normal": {
+      "test-index": true,
+      "cache-plan": true,
+      "lexer-pilot": true,
+      "parser-pilot": true,
+      "declaration-index": true,
+      "type-interface": true,
+      "body-check": true
+    },
+    "release": {
+      "test-index": true,
+      "cache-plan": true,
+      "lexer-pilot": true,
+      "parser-pilot": true,
+      "declaration-index": true,
+      "type-interface": true,
+      "body-check": true
+    }
+  },
+  "retained_frames": 194,
+  "unique_payload_archives": 51,
+  "source_files": 195,
+  "full_compiler_bootstrap": false,
+  "performance_acceptance": false,
+  "retained_native": [
+    "catalog",
+    "later semantic passes",
+    "Core/LLVM backend",
+    "compiler driver"
+  ]
+}

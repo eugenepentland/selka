@@ -1,0 +1,14 @@
+[
+  {
+    "path": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-variant-capture/bin/mylang",
+    "bytes": 242769762,
+    "sha256": "7d0d71974fd091a6280b0b2ff85545c815df5939c7daf14dd46cd3f5e3b4da5c",
+    "reason": "Superseded unqualified private capture host; current qualified candidate hosts, manifests, captured requests, source and reports retained."
+  },
+  {
+    "path": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-variant-parse-capture/bin/mylang",
+    "bytes": 242779725,
+    "sha256": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+    "reason": "Superseded unqualified private capture host; current qualified candidate hosts, manifests, captured requests, source and reports retained."
+  }
+]

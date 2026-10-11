@@ -1,0 +1,15 @@
+{
+  "source": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/.mylang-cache",
+  "destination": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/application-cache",
+  "before": {
+    "sha256": "ea4c7cfa14da20126e49396072b6d69551d6566572b0df11c43879eba2502e9b",
+    "files": 30512,
+    "bytes": 782307391
+  },
+  "after": {
+    "sha256": "ea4c7cfa14da20126e49396072b6d69551d6566572b0df11c43879eba2502e9b",
+    "files": 30512,
+    "bytes": 782307391
+  },
+  "reason": "Preserve application cache on separate NVMe volume after failed gate is terminal; free root filesystem."
+}

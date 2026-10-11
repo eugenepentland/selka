@@ -1,0 +1,51 @@
+{
+  "cases": [
+    "checked_consumed_error.my",
+    "checked_error_patterns.my",
+    "checked_explicit_pending_discard.my",
+    "checked_failure_list_payload.my",
+    "checked_implicit_pending_discard_error.my",
+    "checked_implicit_scalar_discard_error.my",
+    "checked_loop_consumption.my",
+    "checked_managed_result.my",
+    "checked_multi_argument_temporaries.my",
+    "checked_pending_list_annotated_error.my",
+    "checked_pending_list_error.my",
+    "checked_record_failure.my",
+    "checked_short_circuit_path_error.my",
+    "checked_short_circuit_success.my",
+    "checked_try_context_error.my",
+    "checked_try_fail.my",
+    "checked_try_live_result_error.my",
+    "checked_unhandled_error.my",
+    "checked_wrong_failure_error.my",
+    "optional_methods_profile.my",
+    "optional_narrowing_profile.my",
+    "optional_parse_int_demand.my",
+    "optional_parse_int_failures.my",
+    "optional_parse_int_methods.my",
+    "optional_try.my",
+    "variant_boxed_recursive_profile.my",
+    "variant_duplicate_pattern_error.my",
+    "variant_generic_profile.my",
+    "variant_import_alias.my",
+    "variant_incomplete_error.my",
+    "variant_loop_branch.my",
+    "variant_match_expression.my",
+    "variant_named_order.my",
+    "variant_nested_default_constructors.my",
+    "variant_payload_defaults.my",
+    "variant_payload_type_error.my",
+    "variant_record_list_snapshot.my",
+    "variant_recursive_lists.my",
+    "variant_unknown_case_error.my"
+  ],
+  "donors": [
+    "variant_import_dep.my"
+  ],
+  "counts": {
+    "success": 21,
+    "diagnostic": 14,
+    "profile": 4
+  }
+}

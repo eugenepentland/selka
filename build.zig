@@ -9,8 +9,9 @@ var verification_core_binary: ?*std.Build.Step.Compile = null;
 /// One mebibyte, the unit the resident-memory ceilings below are written in.
 const mib: u64 = 1 << 20;
 /// Resident-memory ceilings declared on the steps this build runs. The build
-/// runner schedules concurrent steps against `--maxrss` using them and fails a
-/// step whose measured peak exceeds its declaration. Only Zig compilations and
+/// runner schedules concurrent steps against `--maxrss` using them and reports a
+/// step whose measured peak exceeds its declaration. The pinned runner currently
+/// diagnoses that excess without failing the final build. Only Zig compilations and
 /// Zig test binaries report a peak back, so only those can trip a ceiling; for
 /// a driver process it is purely a concurrency budget, and it covers the
 /// children one driver runs at once rather than the largest single process
@@ -35,16 +36,21 @@ const rss = struct {
     /// peaked at 2.18G running alone (2,281,596 kB, 2026-10-05, 218 tests), so
     /// 2.5G keeps a measured ceiling with headroom.
     const shard_unit: u64 = 2560 * mib;
-    /// One shard of the CLI root, which builds far fewer guests. Observed on a
-    /// clean cache: 103M-141M for the test process, up to 1.22G for a moment
-    /// across its tree; the ceiling is a concurrency budget.
-    const shard_cli: u64 = 768 * mib;
+    /// One shard of the CLI root, including uncached component bootstrap.
+    /// The B6 pure-library body rebuild reported a 2,345,099,264-byte peak
+    /// (2026-10-11); reserve 2.5 GiB with measured headroom, matching the
+    /// unsharded CLI root and optimized component qualification drivers.
+    const shard_cli: u64 = 2560 * mib;
     /// The directory run of `tests/guest`. Observed on a clean cache
     /// (2026-09-23): `tests/guest` 1.33G.
     const guest_suite: u64 = 1536 * mib;
     /// Drivers that run the compiler a few programs at a time. Observed on a
     /// clean cache: the idiom probes 0.69G, parser hints 0.47G.
     const driver: u64 = 1024 * mib;
+    /// Qualification drivers that rebuild the optimized body component. A body
+    /// test's seed plus clang tree was sampled at 1,304,895,488 bytes (2026-10-11),
+    /// before clang's peak. Reserve 2.5 GiB across both live processes.
+    const component_driver: u64 = 2560 * mib;
     /// Drivers that compile and link many native programs at once: the parity
     /// benchmark. Observed (the retired boundary matrix): 1.29G-1.45G.
     const parity: u64 = 2048 * mib;
@@ -832,7 +838,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(pilots_step);
     const frontend_step = b.step("test-selfhost-frontend", "Qualify installed frontend consumers, warm reuse and coordinator edits");
     for ([_]bool{ false, true }) |release| {
-        const frontend_run = driver(b, if (release) "frontend workflows release/facts/leaks" else "frontend workflows and coordinator edit", rss.driver, "frontend_qualification");
+        const frontend_run = driver(b, if (release) "frontend workflows release/facts/leaks" else "frontend workflows and coordinator edit", rss.component_driver, "frontend_qualification");
         frontend_run.has_side_effects = true;
         frontend_run.addArgs(&.{ "python3", "selfhost/tests/run_frontend_qualification.py", "--component", "--zig", b.graph.zig_exe, "--compiler" });
         frontend_run.addArtifactArg(exe);
@@ -881,7 +887,7 @@ pub fn build(b: *std.Build) void {
     type_interfaces_step.dependOn(&type_interfaces_checks.step);
     test_step.dependOn(type_interfaces_step);
     const body_checks_step = b.step("test-selfhost-body-checks", "Qualify scalar and managed body checking with the verified seed and installed compiler");
-    const body_checks_run = driver(b, "scalar and managed body checking pure and installed qualification", rss.driver, "body_check_qualification");
+    const body_checks_run = driver(b, "scalar and managed body checking pure and installed qualification", rss.component_driver, "body_check_qualification");
     body_checks_run.has_side_effects = true;
     body_checks_run.addArgs(&.{ "python3", "selfhost/test_body_checks.py", "--zig", b.graph.zig_exe, "--builder" });
     body_checks_run.addArtifactArg(component_tool);
@@ -896,6 +902,63 @@ pub fn build(b: *std.Build) void {
     body_checks_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/body_check_qualification_test.py", "selfhost/tests/performance_ratio_test.py" });
     body_checks_step.dependOn(&body_checks_checks.step);
     test_step.dependOn(body_checks_step);
+    const body_libraries_step = b.step("test-selfhost-body-libraries", "Require all compiler library fixtures, nine library roots and six test roots without profile skips");
+    const body_libraries_run = driver(b, "actual compiler library admission: 213 operations", rss.driver, "body_library_admission");
+    // External qualified seed receipts and installed package bytes must be
+    // reauthenticated even when a previous action receipt is available.
+    body_libraries_run.has_side_effects = true;
+    body_libraries_run.addArgs(&.{ "python3", "selfhost/tests/run_body_library_admission.py", "--zig", b.graph.zig_exe, "--builder" });
+    body_libraries_run.addArtifactArg(component_tool);
+    body_libraries_run.addArg("--compiler");
+    body_libraries_run.addArtifactArg(exe);
+    body_libraries_run.addArg("--component-dir");
+    body_libraries_run.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    body_libraries_run.addArg("--source-root");
+    body_libraries_run.addDirectoryArg(b.path("."));
+    body_libraries_run.addArg("--report");
+    _ = body_libraries_run.addOutputFileArg("body-library-admission.json");
+    body_libraries_step.dependOn(&body_libraries_run.step);
+    // These admission selfchecks need no compiler installation or seed build.
+    const body_libraries_checks = b.addSystemCommand(&.{ "python3", "selfhost/tests/body_library_admission_test.py" });
+    body_libraries_checks.setName("actual library admission: seven adversarial selfchecks");
+    body_libraries_checks.setCwd(b.path("."));
+    body_libraries_checks.expectExitCode(0);
+    body_libraries_checks.step.max_rss = rss.script;
+    withTools(body_libraries_checks);
+    body_libraries_checks.has_side_effects = test_rerun;
+    body_libraries_checks.addFileInput(input_manifests.?.path(b, "body_library_admission_self.txt"));
+    body_libraries_checks.addFileInput(environment_manifest.?);
+    verification_registry.?.declared(&body_libraries_checks.step, "body_library_admission_self");
+    body_libraries_step.dependOn(&body_libraries_checks.step);
+    b.step("test-selfhost-body-libraries-self", "Check fail-closed compiler library admission accounting independently").dependOn(&body_libraries_checks.step);
+    test_step.dependOn(body_libraries_step);
+    const body_entries_step = b.step("test-selfhost-body-entries", "Require seven actual component entry sources and two selected generations in both guest modes");
+    const body_entries_run = driver(b, "B7 source generations: 349 operations, 35 captures and 15 resource attacks per mode", rss.component_driver, "body_entry_admission");
+    body_entries_run.has_side_effects = true;
+    body_entries_run.addArgs(&.{ "python3", "selfhost/test_body_entries.py", "--zig", b.graph.zig_exe, "--builder" });
+    body_entries_run.addArtifactArg(component_tool);
+    body_entries_run.addArg("--compiler");
+    body_entries_run.addArtifactArg(exe);
+    body_entries_run.addArg("--component-dir");
+    body_entries_run.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    body_entries_run.addArg("--source-root");
+    body_entries_run.addDirectoryArg(b.path("."));
+    body_entries_run.addArg("--report-dir");
+    _ = body_entries_run.addOutputDirectoryArg("body-entry-admission");
+    body_entries_step.dependOn(&body_entries_run.step);
+    const body_entries_checks = b.addSystemCommand(&.{ "python3", "-m", "unittest", "discover", "-s", "selfhost/tests", "-p", "body_entry*test.py" });
+    body_entries_checks.setName("B7 source admission adversarial accounting");
+    body_entries_checks.setCwd(b.path("."));
+    body_entries_checks.expectExitCode(0);
+    body_entries_checks.step.max_rss = rss.script;
+    withTools(body_entries_checks);
+    body_entries_checks.has_side_effects = test_rerun;
+    body_entries_checks.addFileInput(input_manifests.?.path(b, "body_entry_admission_self.txt"));
+    body_entries_checks.addFileInput(environment_manifest.?);
+    verification_registry.?.declared(&body_entries_checks.step, "body_entry_admission_self");
+    body_entries_step.dependOn(&body_entries_checks.step);
+    b.step("test-selfhost-body-entries-self", "Check B7 source admission accounting independently").dependOn(&body_entries_checks.step);
+    test_step.dependOn(body_entries_step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
     const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
     selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });

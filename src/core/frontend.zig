@@ -29,6 +29,7 @@ const Graph = struct {
     compilation: language.project_compile.Compilation = undefined,
     settings: Settings = .{},
     profile: ?*language.timings.Profile = null,
+    artifacts: ?language.frontend_runtime.ArtifactSession = null,
 };
 
 /// A module of a loaded project graph.
@@ -72,8 +73,13 @@ pub const Session = struct {
 
     /// Configure explicit verified frontend components for this session.
     pub fn configureFrontend(self: *Session, runtime: language.frontend_runtime.Runtime) void {
-        self.project.configureFrontend(runtime);
-        if (self.single) |*unit| unit.configureFrontend(runtime);
+        var capabilities = runtime;
+        if (capabilities.session == null) {
+            if (self.graph.artifacts == null) self.graph.artifacts = .{ .allocator = self.project.arena.child_allocator };
+            capabilities.session = &self.graph.artifacts.?;
+        }
+        self.project.configureFrontend(capabilities);
+        if (self.single) |*unit| unit.configureFrontend(capabilities);
     }
 
     /// Release the project arena and everything checked from it.
@@ -81,6 +87,7 @@ pub const Session = struct {
         if (self.cache) |*state| state.deinit();
         if (self.single) |*unit| unit.deinit();
         self.project.deinit();
+        if (self.graph.artifacts) |*artifacts| artifacts.deinit();
     }
 
     /// Enable shared syntax/body/summary reuse under `root`. Keep the session at

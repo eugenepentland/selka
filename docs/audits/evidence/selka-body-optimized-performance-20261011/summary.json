@@ -1,0 +1,195 @@
+{
+  "source_commit": "61327e5be5ad8f4bce7b007a05772a5102ad41f9",
+  "measurement_complete": true,
+  "performance_acceptance": false,
+  "full_compiler_bootstrap": false,
+  "exit_status": 1,
+  "reason": "34 of 36 strict median/p95 workload verdicts failed; shared-machine contention also prevents a clean timing comparison",
+  "workloads": 36,
+  "iterations": 20,
+  "passed_rows": 2,
+  "hosts": {
+    "baseline": {
+      "host_sha256": "d438a9e1ee8df96d8280403be5c013ec9db08c0609893c0a99edbdcfb6a5f509",
+      "packages": {
+        "body-check": {
+          "artifact": "body-check-a5bc6f28df1381cbcfbbb739f450d65605ca8c101c319e99230ce2f79163cb3b",
+          "component": "body-check",
+          "format": 1,
+          "key": "7b007e8ae70ba9cf3b51732ba18a92a6cb196b38c42762dbeb9586a4a0f9a29a",
+          "protocol": 1,
+          "schema": 7,
+          "sha256": "a5bc6f28df1381cbcfbbb739f450d65605ca8c101c319e99230ce2f79163cb3b"
+        },
+        "cache-plan": {
+          "artifact": "cache-plan-a0694d355f149e74c1090d475aff88ae3d0b890a9382fbf046f0b697290e38d4",
+          "component": "cache-plan",
+          "format": 1,
+          "key": "d06fe0aa25f330ff68451735158874bd6718b5ecad4f226e2dc84c06c285d4e9",
+          "protocol": 2,
+          "schema": 2,
+          "sha256": "a0694d355f149e74c1090d475aff88ae3d0b890a9382fbf046f0b697290e38d4"
+        },
+        "declaration-index": {
+          "artifact": "declaration-index-a8f74d1e4a4afcc3d89905d68ea103deaff7cd19257671f27766c3e1bacefee7",
+          "component": "declaration-index",
+          "format": 1,
+          "key": "10114f711f8875feffe5ee7afcd46b10f84fc6bececbc0cfc726c3f518dd53e7",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "a8f74d1e4a4afcc3d89905d68ea103deaff7cd19257671f27766c3e1bacefee7"
+        },
+        "lexer-pilot": {
+          "artifact": "lexer-pilot-bb077168cd43fbd518ab18b43ff1f9ad4a9192dfa1e6bb0c046fc03091ca9a42",
+          "component": "lexer-pilot",
+          "format": 1,
+          "key": "508ec9d4502734358e8a24bc5d99ca7c3fc259c7c404f9bcd9178276e4cc0634",
+          "protocol": 1,
+          "schema": 2,
+          "sha256": "bb077168cd43fbd518ab18b43ff1f9ad4a9192dfa1e6bb0c046fc03091ca9a42"
+        },
+        "parser-pilot": {
+          "artifact": "parser-pilot-f755a87c75b8377403e5945661d954e94211650f6f58ef6dde5eadef902c6a3b",
+          "component": "parser-pilot",
+          "format": 1,
+          "key": "d0acfb82c32cfd6c74f50e930f0452038fe5952572f965d1e7d71573f579b025",
+          "protocol": 1,
+          "schema": 2,
+          "sha256": "f755a87c75b8377403e5945661d954e94211650f6f58ef6dde5eadef902c6a3b"
+        },
+        "test-index": {
+          "artifact": "test-index-64a8dfd52c64a3b6ae9227159b75a9e72d192aaa80f53d2cb8195e5762698917",
+          "component": "test-index",
+          "format": 1,
+          "key": "8b24c1197259ae8fbde723fad022c52b65144e0f6bb15f766f6d8df8b2fa179d",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "64a8dfd52c64a3b6ae9227159b75a9e72d192aaa80f53d2cb8195e5762698917"
+        },
+        "type-interface": {
+          "artifact": "type-interface-cbaa679346d5afa82b48fbf9215302a5d3598f856b85260316f4c063a801c461",
+          "component": "type-interface",
+          "format": 1,
+          "key": "ff9c5782b73fb29794a2b66d63c316819d09bf208ee1b9980406752ce8e5f4e9",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "cbaa679346d5afa82b48fbf9215302a5d3598f856b85260316f4c063a801c461"
+        }
+      },
+      "verified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+    },
+    "candidate": {
+      "host_sha256": "d438a9e1ee8df96d8280403be5c013ec9db08c0609893c0a99edbdcfb6a5f509",
+      "packages": {
+        "body-check": {
+          "artifact": "body-check-a5bc6f28df1381cbcfbbb739f450d65605ca8c101c319e99230ce2f79163cb3b",
+          "component": "body-check",
+          "format": 1,
+          "key": "7b007e8ae70ba9cf3b51732ba18a92a6cb196b38c42762dbeb9586a4a0f9a29a",
+          "protocol": 1,
+          "schema": 7,
+          "sha256": "a5bc6f28df1381cbcfbbb739f450d65605ca8c101c319e99230ce2f79163cb3b"
+        },
+        "cache-plan": {
+          "artifact": "cache-plan-a0694d355f149e74c1090d475aff88ae3d0b890a9382fbf046f0b697290e38d4",
+          "component": "cache-plan",
+          "format": 1,
+          "key": "d06fe0aa25f330ff68451735158874bd6718b5ecad4f226e2dc84c06c285d4e9",
+          "protocol": 2,
+          "schema": 2,
+          "sha256": "a0694d355f149e74c1090d475aff88ae3d0b890a9382fbf046f0b697290e38d4"
+        },
+        "declaration-index": {
+          "artifact": "declaration-index-a8f74d1e4a4afcc3d89905d68ea103deaff7cd19257671f27766c3e1bacefee7",
+          "component": "declaration-index",
+          "format": 1,
+          "key": "10114f711f8875feffe5ee7afcd46b10f84fc6bececbc0cfc726c3f518dd53e7",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "a8f74d1e4a4afcc3d89905d68ea103deaff7cd19257671f27766c3e1bacefee7"
+        },
+        "lexer-pilot": {
+          "artifact": "lexer-pilot-bb077168cd43fbd518ab18b43ff1f9ad4a9192dfa1e6bb0c046fc03091ca9a42",
+          "component": "lexer-pilot",
+          "format": 1,
+          "key": "508ec9d4502734358e8a24bc5d99ca7c3fc259c7c404f9bcd9178276e4cc0634",
+          "protocol": 1,
+          "schema": 2,
+          "sha256": "bb077168cd43fbd518ab18b43ff1f9ad4a9192dfa1e6bb0c046fc03091ca9a42"
+        },
+        "parser-pilot": {
+          "artifact": "parser-pilot-f755a87c75b8377403e5945661d954e94211650f6f58ef6dde5eadef902c6a3b",
+          "component": "parser-pilot",
+          "format": 1,
+          "key": "d0acfb82c32cfd6c74f50e930f0452038fe5952572f965d1e7d71573f579b025",
+          "protocol": 1,
+          "schema": 2,
+          "sha256": "f755a87c75b8377403e5945661d954e94211650f6f58ef6dde5eadef902c6a3b"
+        },
+        "test-index": {
+          "artifact": "test-index-64a8dfd52c64a3b6ae9227159b75a9e72d192aaa80f53d2cb8195e5762698917",
+          "component": "test-index",
+          "format": 1,
+          "key": "8b24c1197259ae8fbde723fad022c52b65144e0f6bb15f766f6d8df8b2fa179d",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "64a8dfd52c64a3b6ae9227159b75a9e72d192aaa80f53d2cb8195e5762698917"
+        },
+        "type-interface": {
+          "artifact": "type-interface-cbaa679346d5afa82b48fbf9215302a5d3598f856b85260316f4c063a801c461",
+          "component": "type-interface",
+          "format": 1,
+          "key": "ff9c5782b73fb29794a2b66d63c316819d09bf208ee1b9980406752ce8e5f4e9",
+          "protocol": 1,
+          "schema": 1,
+          "sha256": "cbaa679346d5afa82b48fbf9215302a5d3598f856b85260316f4c063a801c461"
+        }
+      },
+      "verified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+    }
+  },
+  "modes": {
+    "BODY_CHECK": "component"
+  },
+  "cache_scope": "fresh private application caches; native units prewarmed for both hosts before timing",
+  "isolation": {
+    "compiler_gate_and_three_build_slots_reserved": true,
+    "affinity": [
+      2,
+      3,
+      10,
+      11
+    ],
+    "exclusive_machine_isolation": false,
+    "external_cpu_activity_observed": true,
+    "observer_scope": "sampled live process CPU deltas, excluding reservation-root descendants; short-lived tasks may be missed",
+    "observed_intervals": 25,
+    "overlap_intervals": 25
+  },
+  "median_ratio_ranges": {
+    "compile-fresh-application-cache": {
+      "minimum": 1.8671897372773996,
+      "maximum": 3.7026977922827724
+    },
+    "check": {
+      "minimum": 3.6216315037171998,
+      "maximum": 7.636498298711519
+    },
+    "compile-warm": {
+      "minimum": 2.733775392240663,
+      "maximum": 4.969401583059073
+    },
+    "test-cold": {
+      "minimum": 3.047279834432279,
+      "maximum": 5.356814689834196
+    },
+    "test-warm": {
+      "minimum": 6.6824012410108615,
+      "maximum": 14.682658151356659
+    },
+    "runtime": {
+      "minimum": 0.6483071329809774,
+      "maximum": 2.9296555136276545
+    }
+  }
+}

@@ -1,0 +1,6 @@
+build-slot: FIFO ticket 205, position 1; all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 205 after 5s
+body_check qualification: 443 workflows, 886 comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped
+body_check transport: 1 valid, 22 malformed; 0 failed, 0 skipped
+body_check forged replies: 92 rejected; 0 failed, 0 skipped
+body_check publication: 2 host failures; 0 failed, 0 skipped

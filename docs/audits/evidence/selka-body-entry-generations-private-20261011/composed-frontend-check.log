@@ -1,0 +1,8 @@
+build-slot: build slot 1, FIFO ticket 2194 after 0s
+body_check/main.my 0 0 True
+test_index/main.my 0 0 True
+cache_plan/main.my 0 0 True
+lexer_pilot/main.my 0 0 True
+parser_pilot/full_adapter.my 0 0 True
+declaration_index/main.my 0 0 True
+type_interface/main.my 0 0 True

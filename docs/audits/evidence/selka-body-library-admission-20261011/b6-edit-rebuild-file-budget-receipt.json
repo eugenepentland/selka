@@ -1,0 +1,25 @@
+{
+  "scope": "Isolated coordinator rebuild diagnosis only; deliberately no matrix or full-gate verdict",
+  "result": {
+    "before": {
+      "artifact": "body-check-f9b441269f2c56807e978d3eaaca2af005d4ab9de61bb834c53ee38945fa8703",
+      "component": "body-check",
+      "format": 1,
+      "key": "08f765e2cb2302d5940a572e8b05966b2a744116e2917836cb78b8de91fedbeb",
+      "protocol": 1,
+      "schema": 6,
+      "sha256": "f9b441269f2c56807e978d3eaaca2af005d4ab9de61bb834c53ee38945fa8703"
+    },
+    "after": {
+      "artifact": "body-check-aa46ead7ace975d802fd6b9e396a19fc4073a5a7eff378da34b0cf8b265095ef",
+      "component": "body-check",
+      "format": 1,
+      "key": "198c47dbf62b8b9cbc7c3a7b1bd04fc9715a53e0848bfc2cd8226f6a4cc83181",
+      "protocol": 1,
+      "schema": 6,
+      "sha256": "aa46ead7ace975d802fd6b9e396a19fc4073a5a7eff378da34b0cf8b265095ef"
+    },
+    "other_packages_unchanged": 6
+  },
+  "complete": true
+}

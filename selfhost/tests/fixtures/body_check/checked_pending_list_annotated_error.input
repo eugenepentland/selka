@@ -1,0 +1,11 @@
+enum Failure:
+    bad
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure.bad
+    return value
+
+func main() -> int:
+    const values: Result[int, Failure][] = [parse(3), parse(4)]
+    return len(values)

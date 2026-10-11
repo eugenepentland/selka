@@ -1,0 +1,47 @@
+{
+  "reason": "Move this lane own caches/temp to separate spacious build filesystem while preserving source and existing executable/protocol paths. Earlier over-cap maintenance targeted other build filesystem and did not free system volume.",
+  "moves": [
+    {
+      "old_alias": "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots",
+      "destination": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/zig-local-cache",
+      "verified_executables": {
+        "o/cfcfa4b4936bc214d58467c2c04f1dc5/selka-components": "ff6406668dca84fc068756dfa83b7ff1f03acb263dba1d930caac6b11dc8d8dc",
+        "o/b212005efec7719bce9865379e4da5b6/mylang": "fce3de8b09fc9722e841e7f6e1df453a7dfdd2382bad30eb287c6a52f9923c15",
+        "o/8f0e6276fecb488eff4238bf51098934/selka-components": "417b4068f1f5d6dd23fb059f345897090296907ffcd3f527a7649dfc1813a53a",
+        "o/956097ec1715c1fdb70fe1527a9ecca3/selka-components": "d6b2ae3ce189fa4f3816b5db7300e4c7856c7db29419b6cd8a9e4206e3b5e70f",
+        "o/731e108938f71d1fc4e03d3b629afe0c/selka-components": "0da987dd7e67aa54d5840f74a6d84074c62f56a5638fbd1ae5abed7c38d73d51",
+        "o/ab7abe260af9e0f376ac83435b28a8a2/mylang": "1847b5d437554f41c6f98ee7224135c5389b48d58bd818d57afaa4abd6d3ab9b"
+      }
+    },
+    {
+      "old_alias": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots",
+      "destination": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp",
+      "verified_executables": {
+        "adoption-release/tools/selka-components": "23f89af9f36ace4bced078647264bfb81dd3ba1515760e6eb303cc2f20d29be9",
+        "adoption-release/bin/mylang": "51c207cb030c5c5c9cf19ef041d7eeaea3ddb5924c05d991f46a665e06b97b19",
+        "body-list-release/tools/selka-components": "0da987dd7e67aa54d5840f74a6d84074c62f56a5638fbd1ae5abed7c38d73d51",
+        "body-list-release/bin/mylang": "a4b0323080cf6e247560df9e0b182baf32eb5c2dfe91873362ea424b752b83c1",
+        "body-variant-release/tools/selka-components": "d6b2ae3ce189fa4f3816b5db7300e4c7856c7db29419b6cd8a9e4206e3b5e70f",
+        "body-variant-release/bin/mylang": "5be1628129c9a7783d8db636c6dd8e4319b5befb4417f201e16e073aa6666b75",
+        "body-managed-release/tools/selka-components": "bae715d4da0da3683678ef9eeb3a992e385ff0377cc40056c0c66703bc9bb31c",
+        "body-managed-release/bin/mylang": "3c9f1f1c1806eadd21c0281b4cf216d74e2a4854415a4176e2010416b99c3496",
+        "body-variant-parse-capture/tools/selka-components": "d6b2ae3ce189fa4f3816b5db7300e4c7856c7db29419b6cd8a9e4206e3b5e70f",
+        "type-interface-release/tools/selka-components": "489e2a26c377e536e84863c35e3e8671a7061c77e4b813c5841c2222cf0985a0",
+        "type-interface-release/bin/mylang": "16d3c3bab8160aaf30ce5e9206a7259fb3d50c85d4be7b2760c65798bc161bc3",
+        "body-variant-capture/tools/selka-components": "d6b2ae3ce189fa4f3816b5db7300e4c7856c7db29419b6cd8a9e4206e3b5e70f",
+        "body-variant-debug/tools/selka-components": "d6b2ae3ce189fa4f3816b5db7300e4c7856c7db29419b6cd8a9e4206e3b5e70f",
+        "body-variant-debug/bin/mylang": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+        "declaration-release/tools/selka-components": "b770bf0b3f4f0de180b58c844ffb7ab4f513486cc73b6ef09032ff9d3c69dd65",
+        "declaration-release/bin/mylang": "9d4390768195d5b2022f7cc910c753c6dbb0e0487bf965536574cf1c07feb5ee",
+        "body-record-release/tools/selka-components": "417b4068f1f5d6dd23fb059f345897090296907ffcd3f527a7649dfc1813a53a",
+        "body-record-release/bin/mylang": "0ebf9d2dda21c47ba880ac4809c676b6320967bb3393fa318334a135651a8946",
+        "hardening-release/tools/selka-components": "2b7d782812ea1bd0a794340a4f553d71caf3f64651496d16e9522939744b2f3e",
+        "hardening-release/bin/mylang": "4f41c951fa3dd9e5b2b6f17e12cc958d91e3858734f1a3439549e4b3211bdfec",
+        "body-check-release/tools/selka-components": "d583959a4b26c8dbf89c3a1311d0c75975f0570d9e1e62f19489f0d29d0c79d3",
+        "body-check-release/bin/mylang": "20fb7facf405ff440f38703d9c600ed9cbd74af904fbeba5a45571bc159ea273"
+      }
+    }
+  ],
+  "system_free_bytes": 2464075776,
+  "build_free_bytes": 313211138048
+}

@@ -1,0 +1,11 @@
+import variant_import_dep as data
+
+type Choice = data.Choice
+
+func main() -> int:
+    const value: Choice = data.seven()
+    match value:
+        case data.Choice.value(item=item):
+            return item
+        case data.Choice.empty:
+            return 0

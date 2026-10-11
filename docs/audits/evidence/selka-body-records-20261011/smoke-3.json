@@ -1,0 +1,2192 @@
+[
+  {
+    "name": "record_alias_import.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_alias_import.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_alias_import.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_call_return_list.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_call_return_list.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_call_return_list.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_constructor_defaults.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_constructor_defaults.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_constructor_defaults.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_constructor_named_order.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_constructor_named_order.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_constructor_named_order.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_duplicate_field_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "record_field_type_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "record_generic_profile.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "record_invariant_imported.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "record_invariant_profile.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "record_invariant_unused.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "record_list_path_snapshot.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_list_path_snapshot.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_list_path_snapshot.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_missing_field_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "record_mut_parameter_snapshot.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_mut_parameter_snapshot.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_mut_parameter_snapshot.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_nested_snapshot.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_nested_snapshot.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_nested_snapshot.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_private_import_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "record_readonly_field_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "record_receiver_overlap_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "record_recursive_lists.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_recursive_lists.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_recursive_lists.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_refreshed_receiver.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_refreshed_receiver.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_refreshed_receiver.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "record_union_profile.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "record_unknown_field_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "record_unknown_member_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "augmented_float_division.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "augmented_mut_parameter.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "augmented_mut_parameter.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "augmented_mut_parameter.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "augmented_negative_remainder.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "augmented_negative_remainder.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "augmented_negative_remainder.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "augmented_unknown_name.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "bool_ops.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "bool_ops.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "bool_ops.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "branches.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "branches.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "branches.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "forward_call.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "forward_call.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "forward_call.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "imported_private_alias.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "imported_private_alias.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "imported_private_alias.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "library.my",
+    "command": "check",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_append_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "list_augmented.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_augmented.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_augmented.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_call_return.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_call_return.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_call_return.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_constant_63.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_constant_63.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_constant_63.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_constant_64.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_constant_64.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_constant_64.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_elements.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_elements.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_elements.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_empty_annotations.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_empty_annotations.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_empty_annotations.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_expression_methods.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_expression_methods.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_expression_methods.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_index_augmented.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_index_augmented.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_index_augmented.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_index_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "list_inference_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "list_intern_order.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_intern_order.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_intern_order.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration_mutation.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration_mutation.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration_mutation.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration_readonly_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "list_iteration_rebind.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration_rebind.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_iteration_rebind.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_methods.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_methods.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_methods.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_mixed_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "list_mut_calls.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_mut_calls.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_mut_calls.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_mut_marker_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "list_nested_snapshots.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_nested_snapshots.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_nested_snapshots.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_plus_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "list_readonly_error.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "list_repeat.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_repeat.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_repeat.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_repeat_augmented.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_repeat_augmented.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_repeat_augmented.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_sort.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_sort.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "list_sort.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "literal_overflow.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "managed_branch.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_branch.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_branch.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_bytes.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_bytes.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_bytes.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_bytes_default.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "managed_defaults.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_defaults.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_defaults.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_empty.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_empty.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_empty.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_import.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_import.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_import.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_mixed_concat.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "managed_mut_bytes.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_mut_bytes.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_mut_bytes.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_mut_text.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_mut_text.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_mut_text.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_return_type.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "managed_unicode.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_unicode.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_unicode.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "managed_wrong_index.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "multi_body_errors.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "mut_call_marker.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "mut_call_valid.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "mut_call_valid.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "mut_call_valid.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "mutual_recursion.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "mutual_recursion.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "mutual_recursion.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "named_argument_order.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "named_argument_order.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "named_argument_order.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "named_only_positional.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "named_only_valid.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "named_only_valid.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "named_only_valid.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "nested_loop_control.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "nested_loop_control.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "nested_loop_control.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "nongeneric_type_arguments.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "private_import.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "profile_chained_comparison.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "profile_division.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "profile_generic.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "profile_integer_suffix.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "profile_lambda.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "profile_managed.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "profile_managed.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "profile_managed.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "profile_range_stride.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "profile_text_method.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "profile_text_repeat.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 2,
+      "shadow": 2
+    }
+  },
+  {
+    "name": "range_loop.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "range_loop.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "range_loop.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "readonly_range_write.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "readonly_write.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "recursive_call.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "recursive_call.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "recursive_call.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "repeated_defaults.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "repeated_defaults.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "repeated_defaults.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "scalar_calls.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "scalar_calls.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "scalar_calls.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "shadow_function.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "shadow_parameter.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "shadow_type.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "signed_boundaries.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "signed_boundaries.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "signed_boundaries.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "signed_math.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "signed_math.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "signed_math.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "unit_assert.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "unit_assert.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "unit_assert.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "unknown_name.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "utf8_comment.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "warning.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "while_loop.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "while_loop.my",
+    "command": "dump-typed",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "while_loop.my",
+    "command": "dump-ir",
+    "passed": true,
+    "status": {
+      "reference": 0,
+      "component": 0,
+      "shadow": 0
+    }
+  },
+  {
+    "name": "wrong_argument.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "wrong_arity.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "wrong_condition.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  },
+  {
+    "name": "wrong_return.my",
+    "command": "check-project",
+    "passed": true,
+    "status": {
+      "reference": 1,
+      "component": 1,
+      "shadow": 1
+    }
+  }
+]

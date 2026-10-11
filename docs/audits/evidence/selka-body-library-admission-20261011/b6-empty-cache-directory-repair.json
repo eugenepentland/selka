@@ -1,0 +1,33 @@
+{
+  "reason": "Remove only empty historical prune directories so Zig regenerates missing executables. Failed root gate is terminal; no cached file removed.",
+  "removed": [
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/03f10862a9228e8ce87144037995524b",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/22b233b85ba0a4b272287dfcbcd0b2d1",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/24147fcd7c92c062e594070b3c9ccbeb",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/2a665c33ec38411786a48089319752f4",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/39dd75ddf808695443ddf52f3f04d18e",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/3c3df4a34d748ced565576c257e1ec93",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/3dcf67cb0c16bc6fae4284d97016bff3",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/49b5bda507598de46274a547ef932fb7",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/49efd169a082a36e4ef80ea72ba5a521",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/53257dd0c83538fb5aba2123ed660ec8",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/5f2f214c5733e2a7d5c81bb2c56772cd",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/7df6b199ec2378db742f467dcd5559c9",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/80fffb6334ba6d4042ad5267a863d1c6",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/8ce1d3184360b9c7969715cf7b9d2350",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/8d72c645510b0c9be5f979dff670047c",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/9de5b8bd6273f5d704887768601daf72",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/a65d06cc08714ce1de4b0b5556e99651",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/a6817695100fa24f1c54dbc145424d39",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/ad51685f06fecb21cc2edfb4f55bd52b",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/b28a55334fd6b2b86b5e132712d1ff40",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/ba33d4c0011ee0ad8d27e97b034a1099",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/d084ac1c7bd10321565e9eb3e548f1cd",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/d873d29278f4b418b78c4aab6754c42e",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/e9b789082bd3a9f890b5d6a82d4e9436",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/e9ee65188c9048b36e177f757598963f",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/ea953dbf386a8f2fb0f82f9039334b5d",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/eebc0fb7040a9dcf87081136c8e1dfb3",
+    "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/fec651e45c9e2d213e7e9475ced9937e"
+  ]
+}

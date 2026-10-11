@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+"""Explicit admission of real compiler libraries; never a bootstrap shortcut."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import re
+import shutil
+import tempfile
+import run_body_check_qualification as D
+import run_body_library_join as J
+
+F = D.F
+FIXTURES = Path(__file__).with_name('fixtures') / 'body_library_followup'
+LIBRARIES = (
+    'body_check/graph.my', 'body_check/codec.my', 'body_check/checking.my',
+    'parser_pilot/syntax_codec.my', 'lexer_pilot/wire.my', 'cache_plan/graph.my',
+    'cache_plan/incremental.my', 'declaration_index/codec.my', 'type_interface/codec.my',
+)
+TESTS = (
+    'declaration_index/tests.my', 'declaration_index/indexed_tests.my',
+    'type_interface/tests.my', 'parser_pilot/value_tests.my',
+    'cache_plan/tests.my', 'test_index/tests.my',
+)
+
+
+def require_manifest(manifest):
+    F.require(len(manifest) == 30 and sum(s['status'] == 0 for s in manifest.values()) == 20
+              and sum(s['status'] == 1 for s in manifest.values()) == 10,
+              'incomplete pure-library followup selection')
+    inventory = json.loads((FIXTURES / 'inventory.json').read_text())
+    F.require(set(manifest) == set(inventory['source_cases']), 'fixture inventory changed')
+    F.require({p.with_suffix('.my').name for p in FIXTURES.glob('*.input')} == set(manifest), 'unselected/missing fixture source')
+    F.require(all(type(s['status']) is int and s['status'] in (0, 1) for s in manifest.values()), 'profile refusal is not library admission')
+
+
+def stage_donors(destination):
+    inventory = json.loads((FIXTURES / 'inventory.json').read_text())
+    F.require(set(inventory['donors']) == {p.name for p in FIXTURES.glob('*.my')}, 'unselected/missing imported donor')
+    for name, digest in inventory['donors'].items():
+        original = FIXTURES / name
+        F.require(F.digest(original) == digest, 'imported donor source changed: ' + name)
+        shutil.copyfile(original, destination / name)
+
+
+def test_selection(path):
+    names = re.findall(r'^public func (test_\w+)\(', path.read_text(), re.M)
+    F.require(names and len(names) == len(set(names)), 'empty/duplicate actual library test selection')
+    return names
+
+
+def require_tests(result, expected):
+    F.test_counts(result, len(expected))
+    report = json.loads(result[1])
+    names = [test['name'].split('::')[-1].split('.')[-1] for test in report['tests']]
+    F.require(set(names) == set(expected), 'actual test identities differ from source inventory')
+    return [{'name': test['name'], 'status': test['status']} for test in report['tests']]
+
+
+
+def require_library_success(result):
+    F.require(result[0] == 0 and result[1] == b'', 'actual library check did not succeed quietly on stdout')
+    try:
+        for line in result[2].splitlines():
+            record = json.loads(line)
+            F.require(record['version'] == 'diagnostic-v1' and record['kind'] == 'diagnostic', 'not a diagnostic-v1 warning')
+            diagnostic = record['diagnostic']
+            F.require(diagnostic['severity'] == 'warning' and isinstance(diagnostic['code'], str)
+                      and diagnostic['code'].startswith('W_') and isinstance(diagnostic['message'], str), 'not a warning diagnostic')
+            location = diagnostic['location']
+            F.require(isinstance(location['path'], str), 'invalid warning path')
+            for endpoint in ('start', 'end'):
+                point = location[endpoint]
+                F.require(all(type(point[key]) is int and point[key] >= 1 for key in ('line', 'column')), 'invalid warning coordinates')
+            bounds = location['bytes']
+            F.require(type(bounds['start']) is int and type(bounds['end']) is int
+                      and 0 <= bounds['start'] <= bounds['end'], 'invalid warning byte span')
+            F.require(isinstance(diagnostic['notes'], list) and isinstance(diagnostic['stack']['frames'], list)
+                      and type(diagnostic['stack']['omitted']) is int and diagnostic['stack']['omitted'] >= 0,
+                      'invalid warning notes/stack')
+            D.diagnostic_contract(diagnostic)
+    except (ValueError, KeyError, TypeError) as error:
+        raise RuntimeError('malformed actual library warning') from error
+
+
+def require_library_match(native, selected):
+    require_library_success(native)
+    F.require(selected == native, 'actual selected library rejected/differed')
+
+
+def deployment_identity(args):
+    return {'compiler_sha256': F.digest(args.compiler),
+            'packages': None if args.native_controls else D.packages(args.component_dir)}
+
+
+def require_deployment(args, expected):
+    F.require(deployment_identity(args) == expected, 'compiler/component deployment changed during library admission')
+
+
+def join_evidence(report):
+    """Reserve fresh retained evidence for every invocation of the same gate."""
+    report.parent.mkdir(parents=True, exist_ok=True)
+    invocation = Path(tempfile.mkdtemp(prefix=report.stem + '-join-', dir=report.parent))
+    return invocation / 'exchanges'
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--compiler', type=Path, required=True)
+    ap.add_argument('--zig', type=Path, required=True)
+    ap.add_argument('--builder', type=Path, help='required for selected qualified-seed verification')
+    ap.add_argument('--source-root', type=Path, default=D.ROOT)
+    ap.add_argument('--component-dir', type=Path, required=True)
+    ap.add_argument('--native-controls', action='store_true', help='only native fixture controls; selected/library admission remains pending')
+    ap.add_argument('--report', type=Path, required=True)
+    args = ap.parse_args()
+    for name in ('compiler', 'zig', 'builder', 'source_root', 'component_dir', 'report'):
+        value = getattr(args, name)
+        if value is not None:
+            setattr(args, name, value.resolve())
+    manifest = json.loads((FIXTURES / 'manifest.json').read_text())
+    require_manifest(manifest)
+    records = []
+    join_records, join_capture = [], None
+    modes = ['reference'] if args.native_controls else ['reference', 'shadow', 'component']
+    identity = deployment_identity(args)
+    seed_sha256 = None
+    if not args.native_controls:
+        F.require(args.builder is not None, 'selected library admission requires qualified-seed builder')
+        result = F.execute([args.builder, '--root', args.source_root, '--zig', args.zig, '--seed-only'],
+                           D.coordinator_environment(), args.source_root, 600)
+        lines = result[1].decode().strip().splitlines()
+        F.require(result[0] == 0 and len(lines) == 1 and Path(lines[0]).is_file(),
+                  'qualified seed receipt verification failed')
+        seed_sha256 = F.digest(Path(lines[0]))
+    with tempfile.TemporaryDirectory(prefix='body-library-admission-') as temporary:
+        work = Path(temporary)
+        source = work / 'sources'
+        source.mkdir()
+        stage_donors(source)
+        empty = work / 'empty-path'
+        empty.mkdir()
+        def execute(mode, command, phase):
+            env = D.environment(mode, args.component_dir, empty)
+            result = F.execute([args.compiler, *command], env, work, 600)
+            records.append({'mode': mode, 'phase': phase, 'command': list(map(str, [args.compiler, *command])),
+                            'source_sha256': F.digest(Path(command[1])),
+                            'status': result[0], 'stdout': result[1].decode('utf-8', 'replace'), 'stdout_sha256': hashlib.sha256(result[1]).hexdigest(),
+                            'stderr': result[2].decode('utf-8', 'replace')})
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(json.dumps({'complete': False, 'selected_admission': 'pending',
+                                               **identity,
+                                               'records': records, 'join_forged_records': join_records,
+                                               'join_capture': join_capture}, indent=2) + '\n')
+            return result
+        for name, spec in manifest.items():
+            entry = source / name
+            original = FIXTURES / Path(name).with_suffix('.input')
+            F.require(F.digest(original) == spec['source_sha256'], 'fixture source digest changed: ' + name)
+            shutil.copyfile(original, entry)
+            command = ['check-project', entry, '--no-cache', '--diagnostics=json']
+            native = execute('reference', command, name)
+            F.require(native[0] == spec['status'] and not native[1], 'native fixture status changed: ' + name)
+            if 'diagnostics' in spec:
+                diagnostics = [D.diagnostic_contract(json.loads(line)['diagnostic']) for line in native[2].splitlines()]
+                F.require(diagnostics == spec['diagnostics'], 'native diagnostic precedence/repair changed: ' + name)
+            for mode in modes[1:]:
+                F.require(execute(mode, command, name) == native, 'selected body fixture differs: ' + name)
+            if spec['status'] == 0:
+                for mode in modes:
+                    command = ['run-project', entry, '--no-cache', '--release', '--verify-facts', '--print-result',
+                               '--cache-dir', work / ('cache-' + mode), f'--zig={args.zig}']
+                    F.require(execute(mode, command, name + '-runtime') == (7, b'7\n', b''), 'generated runtime differs: ' + name)
+        if not args.native_controls:
+            components = args.source_root / 'selfhost/components'
+            for relative in LIBRARIES:
+                command = ['check', components / relative, '--no-cache', '--diagnostics=json']
+                native = execute('reference', command, relative)
+                require_library_success(native)
+                for mode in modes[1:]:
+                    # Runtime shadow checks full typed batch/catalog, not dump text alone.
+                    require_library_match(native, execute(mode, command, relative))
+            for relative in TESTS:
+                entry = components / relative
+                expected = test_selection(entry)
+                for release in (False, True):
+                    flags = ['--release', '--verify-facts'] if release else []
+                    command = ['test', entry, '--json', '--force', '--no-cache', '--max-steps=100000000', f'--zig={args.zig}', *flags]
+                    for mode in modes:
+                        verdict = require_tests(execute(mode, command, relative + ('-release' if release else '-normal')), expected)
+                        records[-1]['tests'] = verdict
+        if not args.native_controls:
+            def checkpoint_join(verdicts, capture):
+                nonlocal join_records, join_capture
+                join_records, join_capture = list(verdicts), capture
+                args.report.write_text(json.dumps({'complete': False, 'selected_admission': 'pending',
+                    **identity, 'records': records, 'join_forged_records': join_records,
+                    'join_capture': join_capture}, indent=2) + '\n')
+            evidence = join_evidence(args.report)
+            join_records, join_capture = J.run(args, evidence, empty, checkpoint_join)
+            F.require(len(join_records) == 4, 'incomplete join forged acceptance')
+    expected_fixture_runs = (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes)
+    F.require(len(records) == expected_fixture_runs + (0 if args.native_controls else 63), 'incomplete operation accounting')
+    require_deployment(args, identity)
+    report = {'complete': True, 'scope': 'native fixture controls' if args.native_controls else 'nine libraries and six test roots; seven package entries not admitted',
+              'selected_admission': 'pending' if args.native_controls else 'passed',
+              **identity, 'qualified_seed_sha256': seed_sha256,
+              'fixtures': len(manifest), 'library_roots': 9, 'test_roots': 6,
+              'helper_runs': 0 if args.native_controls else 63,
+              'fixture_runs': (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes),
+              'operations': len(records), 'records': records,
+              'join_forged_checks': len(join_records), 'join_forged_records': join_records, 'join_capture': join_capture,
+              'failed': 0, 'skipped': 0}
+    args.report.parent.mkdir(parents=True, exist_ok=True)
+    args.report.write_text(json.dumps(report, indent=2) + '\n')
+    print(f'body library {report["selected_admission"]}: {report["fixtures"]} fixtures; {report["fixture_runs"]} fixture runs; {report["helper_runs"]} helper runs; 0 failed, 0 skipped')
+
+
+if __name__ == '__main__':
+    main()

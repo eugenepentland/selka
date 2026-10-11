@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 2288, position 1; waiting for memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2288 after 5s
+composed B7 generations: 119 operations, 28 fresh body exchanges, 2 generations of 7 byte-identical artifacts; 0 failed, 0 skipped

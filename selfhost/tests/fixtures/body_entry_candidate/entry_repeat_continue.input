@@ -1,0 +1,15 @@
+func read(fs: Filesystem) -> int fails str:
+    mut total = 0
+    for item in range(128):
+        with try fs.open("blob.bin", "rb") as file:
+            total += len(file.read(1))
+            continue
+    return total
+func main(fs: Filesystem) -> int:
+    match read(fs):
+        case Ok(value):
+            if value == 128:
+                return 7
+        case Err(_):
+            pass
+    return 0

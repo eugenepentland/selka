@@ -1,0 +1,3 @@
+import literal_constants
+func main() -> int:
+    return len(literal_constants.SECRET)

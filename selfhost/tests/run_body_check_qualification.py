@@ -14,11 +14,22 @@ import run_frontend_qualification as F
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = Path(__file__).with_name('fixtures') / 'body_check'
 COMPONENT = 'body-check'
+SCHEMA = 7
+BODY_VALUE_LIMIT = 2097152
+FORGED_CHECKS = 92
+MALFORMED_CHECKS = 22
+# Rebuilding the complete release producer invokes LLVM on the compiler itself.
+# Installed request, forged-reply, and guest workflows retain the 2 GiB default.
+COORDINATOR_ADDRESS_SPACE_BUDGET = 4 << 30
+# Compiling the complete B6 producer exceeds the ordinary 64 MiB file ceiling
+# (the inherited limit killed its seed compiler with SIGXFSZ). This allowance
+# applies only to coordinator builds; captured stdout/stderr stay OUTPUT_LIMIT.
+COORDINATOR_FILE_SIZE_BUDGET = 128 << 20
 
 
 def frame(payload):
     identity = b'bodytest' + F.hashlib.sha256(payload).digest()
-    return b'SLKBCK01' + struct.pack('<IIII', 1, 4, 0, len(payload)) + identity + payload
+    return b'SLKBCK01' + struct.pack('<IIII', 1, SCHEMA, 0, len(payload)) + identity + payload
 
 
 def blob(value):
@@ -36,19 +47,20 @@ def transport(binary, work, env, valid):
     request.write_bytes(valid)
     status, stdout, stderr = F.execute([binary, '--exchange', request], env, work, 30)
     F.require(status == 0 and not stderr and stdout[:8] == b'SLKBCK01' and stdout[24:64] == valid[24:64], 'valid body exchange failed')
-    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, 4, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
+    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, SCHEMA, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
     malformed = [b'', valid[:63], valid[:-1], valid+b'X', b'BADMAGIC'+valid[8:]]
-    for offset,value in ((8,2),(12,1),(12,2),(12,3),(16,1),(20,67108864)):
+    for offset,value in ((8,2),(12,1),(12,2),(12,3),(12,4),(12,6),(16,1),(20,67108864)):
         changed=bytearray(valid);struct.pack_into('<I',changed,offset,value);malformed.append(bytes(changed))
     payload=valid[64:]
     malformed.extend([frame(b'BADMAGIC'+payload[8:]), frame(payload[:-1])])
-    for offset,value in ((8,1048577),(12,1048576)):
+    for offset,value in ((8,BODY_VALUE_LIMIT+1),(12,BODY_VALUE_LIMIT)):
         changed=bytearray(payload);struct.pack_into('<I',changed,offset,value);malformed.append(frame(changed))
     malformed.extend(frame(value) for value in mutate_input(payload))
     for index,value in enumerate(malformed):
         request.write_bytes(value)
         status,out,err=F.execute([binary,'--exchange',request],env,work,30)
         F.require(status==2 and not out and err, f'malformed body request {index} escaped refusal')
+    F.require(len(malformed) == MALFORMED_CHECKS, 'incomplete malformed transport selection')
     return {'valid':1,'malformed':len(malformed),'request_sha256':F.hashlib.sha256(valid).hexdigest(),'request_bytes':len(valid),'failed':0,'skipped':0}
 
 
@@ -56,7 +68,7 @@ def graph_rows(payload, magic=b'SLKBKR01'):
     """Read bounded named rows for developer mutations, never production decoding."""
     F.require(len(payload)>=16 and payload[:8]==magic,'not a body outcome')
     count,root=struct.unpack_from('<II',payload,8)
-    F.require(0<count<=1048576 and root<count,'bad captured outcome root')
+    F.require(0<count<=BODY_VALUE_LIMIT and root<count,'bad captured outcome root')
     at=16;rows=[]
     def read_u32():
         nonlocal at
@@ -84,12 +96,18 @@ def mutate_input(payload):
         F.require(row['kind']==5 and name in row['names'],'missing projected input field')
         return row['children'][row['names'].index(name)]
     # Keep a complete, bounded graph while refusing wrong DTO kinds before typing.
-    targets=[field(root,b'catalog'),field(field(root,b'context'),b'source')]
+    catalog = field(root, b'catalog')
+    templates = field(catalog, b'templates')
+    buffer = field(templates, b'byte_buffer')
+    targets=[catalog,field(field(root,b'context'),b'source'),templates,buffer]
     variants=[]
     for target in targets:
         changed=bytearray(payload)
         changed[rows[target]['integer_at']-1]=1
         variants.append(bytes(changed))
+    changed=bytearray(payload)
+    struct.pack_into('<q', changed, rows[field(buffer,b'available')]['integer_at'], 2)
+    variants.append(bytes(changed))
     return variants
 
 
@@ -136,9 +154,11 @@ def mutate_lists(payload):
         F.require(row['kind'] == 5 and name in row['names'], 'missing list recipe field')
         return row['children'][row['names'].index(name)]
     output = rows[root]['children'][0]
-    recipes = rows[field(output, b'lists')]['children']
+    recipes = rows[field(output, b'recipes')]['children']
     F.require(len(recipes) == 1, 'capture must contain one inferred list recipe')
-    recipe = recipes[0]
+    recipe_tag = rows[recipes[0]]
+    F.require(recipe_tag['kind'] == 7 and recipe_tag['data'] == b'list', 'capture recipe is not a tagged list')
+    recipe = recipe_tag['children'][0]
     identity, element = field(recipe, b'id'), field(recipe, b'element')
     targets = [(identity, rows[identity]['integer'] + 1),
                (element, rows[identity]['integer']), (element, 7),
@@ -190,7 +210,7 @@ def mutate_records(payload):
     return variants
 
 
-def packages(directory, body_schema=4):
+def packages(directory, body_schema=SCHEMA):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
                 'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), 'type-interface': (1, 1), COMPONENT: (1, body_schema)}
@@ -217,6 +237,20 @@ def body_check_boundary():
         yield
     finally:
         F.FRONTENDS, F.environment, F.packages = previous
+
+
+
+def diagnostic_contract(diagnostic):
+    """Pin ordered source diagnostics and repair bytes independently of path."""
+    return {
+        'code': diagnostic['code'],
+        'message': diagnostic['message'],
+        'bytes': diagnostic['location']['bytes'],
+        'notes': [{'role': note['role'], 'message': note['message'],
+                   'bytes': note['location']['bytes']} for note in diagnostic.get('notes', [])],
+        'edits': [{'bytes': edit['bytes'], 'text': edit['text']}
+                  for edit in diagnostic.get('fix', {}).get('edits', [])],
+    }
 
 
 class Qualification(F.Qualification):
@@ -293,12 +327,18 @@ class Qualification(F.Qualification):
             else:
                 result = self.compare(name, args, spec['status'])
                 diagnostics = [json.loads(line)['diagnostic'] for line in result[2].splitlines()]
+                if 'diagnostics' in spec:
+                    F.require([diagnostic_contract(d) for d in diagnostics] == spec['diagnostics'],
+                              f'{name}: ordered diagnostic/repair contract changed')
                 if 'code' in spec:
                     F.require(any(d['code'] == spec['code'] for d in diagnostics), f'{name}: required body diagnostic missing')
                 if name == 'multi_body_errors.my':
                     F.require(len(diagnostics) == 2 and all(d['code'] == 'E_UNKNOWN_NAME' for d in diagnostics), 'independent body diagnostics were lost')
                 if name == 'warning.my':
                     F.require(any(d['code'] == 'W_UNUSED_BINDING' and d['severity'] == 'warning' for d in diagnostics), 'native warning was lost')
+            if 'library_check_status' in spec:
+                self.compare(name+'-library-check', ['check', self.source/name, '--diagnostics=json'],
+                             spec['library_check_status'])
             if spec.get('typed') and not spec.get('library'):
                 self.compare(name+'-typed', ['dump-typed', self.source / name])
                 self.compare(name+'-ir', ['dump-ir', self.source / name])
@@ -342,14 +382,20 @@ def coordinator_edit(args, q):
     installation = q.work / 'coordinator-install'
     command = [args.builder, '--root', source, '--zig', args.zig, '--install-dir', installation]
     env = coordinator_environment()
-    F.require(F.execute(command, env, q.work, 600)[0] == 0, 'private coordinator initial install failed')
+    initial = F.execute(command, env, q.work, 600,
+                        address_space_budget=COORDINATOR_ADDRESS_SPACE_BUDGET,
+                        file_size_budget=COORDINATOR_FILE_SIZE_BUDGET)
+    F.require(initial[0] == 0, f'private coordinator initial install failed: {initial!r}')
     before = packages(installation)
     path = source / 'selfhost/components/body_check/checking.my'
     marker = 'if path.data == b"body_edit_marker":'
     text = path.read_text()
     F.require(text.count(marker) == 1, 'body implementation edit hook missing/ambiguous')
     path.write_text(text.replace(marker, 'if path.data == b"body_edit_marker_changed":'))
-    F.require(F.execute(command, env, q.work, 600)[0] == 0, 'private body_check rebuild failed')
+    rebuilt = F.execute(command, env, q.work, 600,
+                        address_space_budget=COORDINATOR_ADDRESS_SPACE_BUDGET,
+                        file_size_budget=COORDINATOR_FILE_SIZE_BUDGET)
+    F.require(rebuilt[0] == 0, f'private body_check rebuild failed: {rebuilt!r}')
     after = packages(installation)
     F.require(before[COMPONENT]['key'] != after[COMPONENT]['key'] and
               before[COMPONENT]['sha256'] != after[COMPONENT]['sha256'], 'implementation edit did not rebuild body_check artifact')
@@ -357,6 +403,175 @@ def coordinator_edit(args, q):
     q.components, q.phase = installation, 'coordinator-edit'
     q.matrix()
     return {'before': before[COMPONENT], 'after': after[COMPONENT], 'other_packages_unchanged': 6}
+
+
+class CapturedGraph:
+    """Fail-closed developer view of a fully authenticated captured success."""
+    def __init__(self, payload):
+        self.payload = payload
+        self.rows, root = graph_rows(payload)
+        F.require(self.rows[root]['kind'] == 7 and self.rows[root]['data'] == b'success', 'capture is not success')
+        self.output = self.rows[root]['children'][0]
+        self.batch = self.field(self.output, b'batch')
+        self.nodes = self.items(self.field(self.batch, b'nodes'))
+        self.statements = self.items(self.field(self.batch, b'statements'))
+        self.functions = self.items(self.field(self.batch, b'functions'))
+
+    def field(self, node, name):
+        row = self.rows[node]
+        F.require(row['kind'] == 5 and name in row['names'], 'missing captured field ' + repr(name))
+        return row['children'][row['names'].index(name)]
+
+    def items(self, node):
+        F.require(self.rows[node]['kind'] == 6, 'captured list expected')
+        return self.rows[node]['children']
+
+    def tagged(self, tables, tag):
+        for item in tables:
+            data = self.rows[self.field(item, b'data')]
+            if data['kind'] == 7 and data['data'] == tag:
+                return item, data['children'][0]
+        raise RuntimeError('capture missing typed ' + repr(tag))
+
+    def integer_node(self):
+        return self.nodes.index(self.tagged(self.nodes, b'integer')[0])
+
+    def mutations(self, targets):
+        changed = []
+        for target, value in targets:
+            F.require(self.rows[target]['kind'] in (1, 2), 'mutation target is not integer/boolean')
+            result = bytearray(self.payload)
+            struct.pack_into('<q', result, self.rows[target]['integer_at'], value)
+            F.require(bytes(result) != self.payload, 'mutation did not change authentic payload')
+            changed.append(bytes(result))
+        return changed
+
+
+def mutate_variants(payload):
+    graph = CapturedGraph(payload)
+    node, variant = graph.tagged(graph.nodes, b'variant')
+    tag = graph.field(variant, b'tag')
+    value = graph.field(variant, b'value')
+    F.require(graph.rows[value]['kind'] == 1, 'capture requires a payload-bearing variant')
+    return graph.mutations([(tag, 2147483647), (value, graph.integer_node()),
+                            (graph.field(node, b'ty'), 0), (tag, 1)])
+
+
+def mutate_matches(payload):
+    graph = CapturedGraph(payload)
+    _, match = graph.tagged(graph.statements, b'match')
+    arms = graph.items(graph.field(match, b'arms'))
+    F.require(len(arms) >= 2, 'capture needs multiple match arms')
+    tag = graph.field(arms[0], b'tag')
+    other = graph.field(arms[1], b'tag')
+    slot = graph.field(arms[0], b'slot')
+    F.require(graph.rows[slot]['kind'] == 1, 'capture needs a bound payload')
+    return graph.mutations([(tag, 2147483647), (other, graph.rows[tag]['integer']),
+                            (slot, 2147483647), (graph.field(match, b'value'), graph.integer_node())])
+
+
+def mutate_propagation(payload):
+    graph = CapturedGraph(payload)
+    node, propagation = graph.tagged(graph.nodes, b'propagate')
+    return graph.mutations([(graph.field(propagation, b'value'), graph.integer_node()),
+                            (graph.field(propagation, b'output'), 0), (graph.field(node, b'ty'), 1)])
+
+
+def mutate_transfer(payload):
+    graph = CapturedGraph(payload)
+    end, available = None, None
+    for function in graph.functions:
+        scope = graph.field(function, b'scope')
+        for local in graph.items(graph.field(scope, b'locals')):
+            ownership = graph.field(local, b'ownership')
+            span = graph.field(ownership, b'transfer_span')
+            if graph.rows[span]['kind'] == 5:
+                end = graph.field(span, b'end')
+            if graph.rows[graph.field(local, b'ty')]['integer'] == 0:
+                available = graph.field(ownership, b'transfer_available')
+    F.require(end is not None and available is not None, 'capture lacks pending transfer/scalar metadata')
+    return graph.mutations([(end, 2147483647), (available, 1)])
+
+
+def mutate_catalog_recipes(payload, tag):
+    graph = CapturedGraph(payload)
+    recipes = graph.items(graph.field(graph.output, b'recipes'))
+    recipe = next((graph.rows[row]['children'][0] for row in recipes
+                   if graph.rows[row]['kind'] == 7 and graph.rows[row]['data'] == tag), None)
+    F.require(recipe is not None, 'capture has no ' + repr(tag) + ' append recipe')
+    identity = graph.field(recipe, b'id')
+    argument = graph.field(recipe, b'success' if tag == b'result' else b'element')
+    return graph.mutations([(identity, graph.rows[identity]['integer'] + 1),
+                            (argument, graph.rows[identity]['integer']), (argument, 7),
+                            (graph.field(graph.field(recipe, b'span'), b'end'), 2147483647)])
+
+def rewrite_edges(payload, changes):
+    """Re-encode bounded captured rows with explicit graph edge substitutions."""
+    rows, root = graph_rows(payload)
+    result = bytearray(payload[:16])
+    for index, row in enumerate(rows):
+        children = changes.get(index, row['children'])
+        result.extend(bytes([row['kind']]) + struct.pack('<q', row['integer']) + blob(row['data']))
+        result.extend(struct.pack('<I', len(children)))
+        result.extend(b''.join(struct.pack('<I', child) for child in children))
+        result.extend(struct.pack('<I', len(row['names'])))
+        for name in row['names']:
+            result.extend(blob(name))
+    F.require(bytes(result) != payload, 'edge mutation did not change capture')
+    return bytes(result)
+
+
+def mutate_buffers(payload):
+    """Thirteen authentic buffer recipe, cast, operation and ownership attacks."""
+    graph = CapturedGraph(payload)
+    recipes = graph.field(graph.output, b'recipes')
+    tagged_recipe = next((row for row in graph.items(recipes)
+                          if graph.rows[row]['data'] == b'byte_buffer'), None)
+    F.require(tagged_recipe is not None, 'capture has no byte_buffer append recipe')
+    recipe = graph.rows[tagged_recipe]['children'][0]
+    identity = graph.field(recipe, b'id')
+    buffer_type = graph.rows[identity]['integer']
+    casts = []
+    operations = {}
+    for index, node in enumerate(graph.nodes):
+        data = graph.rows[graph.field(node, b'data')]
+        if data['data'] == b'cast':
+            casts.append((node, data['children'][0]))
+        if data['data'] == b'buffer_operation':
+            operation = data['children'][0]
+            kind = graph.rows[graph.field(operation, b'kind')]['data']
+            operations.setdefault(kind, (node, operation))
+    append, operation = operations[b'buffer_append_range']
+    reserve, reserve_operation = operations[b'buffer_reserve']
+    arguments = graph.field(operation, b'arguments')
+    argument_rows = graph.items(arguments)
+    F.require(len(argument_rows) == 3 and len(casts) >= 2, 'capture lacks buffer operations/casts')
+    owner = graph.field(operation, b'owner')
+    locals_ = graph.items(graph.field(graph.field(graph.functions[0], b'scope'), b'locals'))
+    local = locals_[graph.rows[owner]['integer']]
+    snapshot = next(node for node, value in casts
+                    if graph.rows[graph.field(node, b'ty')]['integer'] != buffer_type
+                    and graph.rows[graph.field(graph.nodes[graph.rows[value]['integer']], b'ty')]['integer'] == buffer_type)
+    immutable_type = graph.rows[graph.field(snapshot, b'ty')]['integer']
+    byte_node = graph.nodes.index(snapshot)
+    targets = [(identity, buffer_type + 1),
+               (graph.field(graph.field(recipe, b'span'), b'end'), 2147483647),
+               (graph.field(casts[0][0], b'ty'), 0),
+               (graph.field(snapshot, b'ty'), buffer_type),
+               (graph.field(append, b'ty'), 0), (owner, len(locals_)),
+               (argument_rows[1], byte_node), (argument_rows[0], graph.integer_node()),
+               (graph.field(local, b'mutable'), 0),
+               (graph.field(local, b'ty'), immutable_type)]
+    changed = graph.mutations(targets)
+    changed.append(rewrite_edges(payload, {recipes: graph.items(recipes) + [tagged_recipe]}))
+    field_row = graph.rows[operation]
+    edges = list(field_row['children'])
+    edges[field_row['names'].index(b'arguments')] = graph.field(reserve_operation, b'arguments')
+    changed.append(rewrite_edges(payload, {operation: edges}))
+    # An otherwise valid byte constructor cannot read its operand from itself.
+    changed.extend(graph.mutations([(casts[0][1], graph.nodes.index(casts[0][0]))]))
+    F.require(len(changed) == 13, 'incomplete buffer mutation selection')
+    return changed
 
 
 def private_fixture(args,q):
@@ -375,23 +590,33 @@ def private_fixture(args,q):
 def capture_exchange(args,q,private,real,source,mode='component',mutate=False):
     env=environment(mode,private,q.empty_path)
     request=q.work/('capture-request-'+mode+'.bin');reply=q.work/('capture-reply-'+mode+'.bin')
+    request.unlink(missing_ok=True)
+    reply.unlink(missing_ok=True)
     env.update(BODY_REAL=str(real),BODY_REQUEST=str(request),BODY_CAPTURE=str(reply))
     if mutate:
         env.update(MYLANG_LEXER_MODE='component',BODY_MUTATE=str(private/'lexer-pilot.json'))
-    result=F.execute([q.compiler,'check-project',q.source/source,'--diagnostics=json'],env,q.work)
+    result=F.execute([q.compiler,'check-project',q.source/source,'--diagnostics=json','--no-cache'],env,q.work)
     return result,request.read_bytes(),reply.read_bytes()
 
 
-def forged_replies(args,q,private,success,list_success,record_success):
+def forged_replies(args,q,private,success,list_success,record_success,b5,b6):
     checked=0
     cases = [('main.my', payload) for payload in mutate_success(success[64:])]
     cases.extend(('profile_managed.my', payload) for payload in mutate_lists(list_success[64:]))
     cases.extend(('record_nested_snapshot.my', payload) for payload in mutate_records(record_success[64:]))
+    cases.extend(('variant_named_order.my', payload) for payload in mutate_variants(b5['variant_named_order.my'][64:]))
+    cases.extend(('variant_named_order.my', payload) for payload in mutate_matches(b5['variant_named_order.my'][64:]))
+    cases.extend(('checked_try_fail.my', payload) for payload in mutate_propagation(b5['checked_try_fail.my'][64:]))
+    cases.extend(('checked_loop_consumption.my', payload) for payload in mutate_transfer(b5['checked_loop_consumption.my'][64:]))
+    cases.extend(('checked_try_fail.my', payload) for payload in mutate_catalog_recipes(b5['checked_try_fail.my'][64:], b'result'))
+    cases.extend(('optional_parse_int_demand.my', payload) for payload in mutate_catalog_recipes(b5['optional_parse_int_demand.my'][64:], b'option'))
+    cases.extend(('bytes_buffer_operations.my', payload) for payload in mutate_buffers(b6[64:]))
+    F.require(len(cases) * len(q.modes) == FORGED_CHECKS, 'incomplete forged body selection')
     for case,(source,payload) in enumerate(cases):
         path=q.work/f'forged-body-{case}.bin';path.write_bytes(payload)
         for mode in q.modes:
             env=environment(mode,private,q.empty_path);env['BODY_REPLY']=str(path)
-            result=F.execute([q.compiler,'check-project',q.source/source],env,q.work)
+            result=F.execute([q.compiler,'check-project',q.source/source,'--no-cache'],env,q.work)
             F.require(result[0]==2 and not result[1] and result[2],f'{mode}: forged typed body {case} escaped rejection: {result!r}')
             checked+=1
     return checked
@@ -444,7 +669,14 @@ def main():
         F.require(list_captured == (0, b'', b''), 'authentic inferred list capture failed')
         record_captured, _, record_reply = capture_exchange(args, q, private, real, 'record_nested_snapshot.my')
         F.require(record_captured == (0, b'', b''), 'authentic nested record capture failed')
-        forged = forged_replies(args, q,private,reply,list_reply,record_reply)
+        b5 = {}
+        for source in ('variant_named_order.my', 'checked_try_fail.my', 'checked_loop_consumption.my', 'optional_parse_int_demand.my'):
+            captured, _, body_reply = capture_exchange(args, q, private, real, source)
+            F.require(captured == (0, b'', b''), 'authentic B5 capture failed: ' + source)
+            b5[source] = body_reply
+        buffer_captured, _, buffer_reply = capture_exchange(args, q, private, real, 'bytes_buffer_operations.my')
+        F.require(buffer_captured == (0, b'', b''), 'authentic B6 buffer capture failed')
+        forged = forged_replies(args, q,private,reply,list_reply,record_reply,b5,buffer_reply)
         publication = publication_checks(args, q)
         edit = coordinator_edit(args, q) if args.edit_check else None
         report = {'host_sha256': host, 'packages': manifests, 'workflows': workflows,

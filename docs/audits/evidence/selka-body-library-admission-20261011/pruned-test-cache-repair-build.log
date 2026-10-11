@@ -1,0 +1,27 @@
+build-slot: FIFO ticket 2110, position 1; all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 2110 after 5s
+Build Summary: 16/16 steps succeeded
+test-compile success
++- compile test debug native cached 12ms MaxRSS:39M
+|  +- WriteFile cached
+|  +- compile obj component_sha256 safe native cached 8ms MaxRSS:39M
+|  +- compile obj component_sha256 safe native (reused)
+|  +- run exe build-identity (build_identity) cached
+|  |  +- compile exe build-identity debug native cached 8ms MaxRSS:39M
+|  +- options cached
+|     +- compile exe mylang debug native cached 14ms MaxRSS:41M
+|        +- WriteFile (reused)
+|        +- compile obj component_sha256 safe native (reused)
+|        +- compile obj component_sha256 safe native (reused)
+|        +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|        +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 9ms MaxRSS:39M
++- compile test debug native cached 10ms MaxRSS:38M
+|  +- options cached
+|     +- compile exe mylang debug native (+5 more reused dependencies)
+|     +- compile exe selka-components safe native cached 8ms MaxRSS:40M
++- compile test debug native success 554ms MaxRSS:150M
++- compile test debug native cached 10ms MaxRSS:38M
+|  +- options (+2 more reused dependencies)
++- compile test debug native success 629ms MaxRSS:158M
++- compile test debug native cached 10ms MaxRSS:41M
+

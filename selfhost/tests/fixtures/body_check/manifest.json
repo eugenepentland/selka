@@ -129,10 +129,11 @@
     "library": false
   },
   "profile_text_repeat.my": {
-    "status": 2,
-    "boundary": "profile",
-    "typed": false,
-    "library": false
+    "status": 0,
+    "boundary": "text-repetition-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "profile_lambda.my": {
     "status": 2,
@@ -678,8 +679,11 @@
     "result": 7
   },
   "record_union_profile.my": {
-    "status": 2,
-    "boundary": "record-body"
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
   },
   "record_unknown_field_error.my": {
     "status": 1,
@@ -704,5 +708,549 @@
   "record_invariant_imported.my": {
     "status": 2,
     "boundary": "global-invariant-preflight"
+  },
+  "checked_consumed_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_error_patterns.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_failure_list_payload.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_loop_consumption.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_managed_result.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_record_failure.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_try_context_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_try_fail.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_unhandled_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_wrong_failure_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "optional_try.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_boxed_recursive_profile.my": {
+    "status": 2,
+    "boundary": "explicit-profile-refusal",
+    "typed": false,
+    "library": false
+  },
+  "variant_duplicate_pattern_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "variant_generic_profile.my": {
+    "status": 2,
+    "boundary": "explicit-profile-refusal",
+    "typed": false,
+    "library": false
+  },
+  "variant_import_alias.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_incomplete_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "variant_loop_branch.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_match_expression.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_named_order.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_payload_defaults.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_payload_type_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "variant_record_list_snapshot.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_recursive_lists.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_unknown_case_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false
+  },
+  "checked_multi_argument_temporaries.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "variant_nested_default_constructors.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_short_circuit_success.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_short_circuit_path_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_RESULT_PATH",
+        "message": "ownership or result obligation must have the same state on every continuing path",
+        "bytes": {
+          "start": 372,
+          "end": 384
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "binding declared here",
+            "bytes": {
+              "start": 327,
+              "end": 333
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "checked_explicit_pending_discard.my": {
+    "status": 0,
+    "boundary": "variant-failure-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "checked_implicit_scalar_discard_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_EXPLICIT_DISCARD_REQUIRED",
+        "message": "a standalone non-unit value requires `_ =` or result handling",
+        "bytes": {
+          "start": 59,
+          "end": 66
+        },
+        "notes": [],
+        "edits": [
+          {
+            "bytes": {
+              "start": 59,
+              "end": 59
+            },
+            "text": "_ = "
+          }
+        ]
+      }
+    ]
+  },
+  "checked_implicit_pending_discard_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_EXPLICIT_DISCARD_REQUIRED",
+        "message": "a standalone non-unit value requires `_ =` or result handling",
+        "bytes": {
+          "start": 153,
+          "end": 161
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "checked_pending_list_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_LIST_ELEMENT",
+        "message": "managed list elements must be copyable values without resources or result obligations",
+        "bytes": {
+          "start": 0,
+          "end": 0
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "checked_pending_list_annotated_error.my": {
+    "status": 1,
+    "boundary": "retained-generic-bound",
+    "typed": false,
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_GENERIC_REQUIREMENT",
+        "message": "type argument does not guarantee the nominal template's required operations",
+        "bytes": {
+          "start": 167,
+          "end": 187
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "type parameter requirements are declared here",
+            "bytes": {
+              "start": 0,
+              "end": 0
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "checked_try_live_result_error.my": {
+    "status": 1,
+    "boundary": "variant-failure-body",
+    "typed": false,
+    "library": false,
+    "diagnostics": [
+      {
+        "code": "E_RESULT_UNHANDLED",
+        "message": "result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded",
+        "bytes": {
+          "start": 213,
+          "end": 225
+        },
+        "notes": [
+          {
+            "role": "related",
+            "message": "unhandled result-bearing binding",
+            "bytes": {
+              "start": 176,
+              "end": 183
+            }
+          }
+        ],
+        "edits": []
+      }
+    ]
+  },
+  "optional_narrowing_profile.my": {
+    "status": 2,
+    "boundary": "explicit-profile-refusal"
+  },
+  "optional_methods_profile.my": {
+    "status": 2,
+    "boundary": "explicit-profile-refusal"
+  },
+  "optional_parse_int_demand.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "optional_parse_int_failures.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "optional_parse_int_methods.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_slice_unicode.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_slice_bytes.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_slice_clamped.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_slice_receiver_order.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_buffer_fresh_conversion.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_buffer_operations.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_buffer_snapshot_alias.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_buffer_mut_parameter.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_buffer_self_range.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_buffer_refused_bounds.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "bytes_buffer_immutable_error.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_IMMUTABLE",
+        "message": "collection update requires a writable binding",
+        "bytes": {
+          "start": 65,
+          "end": 71
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bytes_buffer_write_error.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_LIST_METHOD",
+        "message": "unknown method for a byte_buffer receiver; accepted methods: append_byte, append_float, append_int, append_range, append_utf8, copy, count, decode, endswith, find, find_any, hex, index, join, lstrip, parse_float, parse_float_range, parse_int, parse_int_range, reserve, rfind, rindex, rstrip, scalar_count, scalar_count_range, split, startswith, strip, to_list, view",
+        "bytes": {
+          "start": 70,
+          "end": 75
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bytes_buffer_arity_error.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`byte_buffer.append_range(data: bytes, start: int, end: int) -> bool` takes 3 arguments, but this call passes 2",
+        "bytes": {
+          "start": 63,
+          "end": 91
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bytes_buffer_range_type_error.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_COLLECTION_METHOD",
+        "message": "append_range requires a bytes or byte_buffer source",
+        "bytes": {
+          "start": 63,
+          "end": 69
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bytes_bytes_conversion_type_error.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_BYTES_CONVERSION",
+        "message": "bytes() requires an int[] or byte_buffer argument",
+        "bytes": {
+          "start": 62,
+          "end": 75
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bytes_bytes_slice_step_error.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_COLLECTION_METHOD",
+        "message": "byte strings do not support a slice step",
+        "bytes": {
+          "start": 36,
+          "end": 47
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bytes_encode_profile.my": {
+    "status": 2
+  },
+  "bytes_decode_profile.my": {
+    "status": 2
+  },
+  "bytes_buffer_arity_precedence_error.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`byte_buffer.append_range(data: bytes, start: int, end: int) -> bool` takes 3 arguments, but this call passes 2",
+        "bytes": {
+          "start": 64,
+          "end": 92
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bytes_buffer_argument_precedence_error.my": {
+    "status": 1,
+    "diagnostics": [
+      {
+        "code": "E_IMMUTABLE",
+        "message": "collection update requires a writable binding",
+        "bytes": {
+          "start": 64,
+          "end": 69
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
+  },
+  "bytes_buffer_function_shadow.my": {
+    "status": 1,
+    "library_check_status": 0,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected int, found byte_buffer",
+        "bytes": {
+          "start": 86,
+          "end": 109
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
   }
 }

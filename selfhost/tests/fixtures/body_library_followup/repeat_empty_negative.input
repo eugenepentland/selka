@@ -1,0 +1,7 @@
+func main() -> int:
+    const text = "é" * -2
+    const octets: bytes = b"\xff"
+    assert text == ""
+    assert len(octets * 0) == 0
+    assert len(-1 * octets) == 0
+    return 7

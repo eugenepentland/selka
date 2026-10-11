@@ -1,0 +1,140 @@
+{
+  "debug": {
+    "host_sha256": "e061ecf835b3c6aacec6c51ed87cd08dca7b6ba0a6a72a8994bd3f57b579cb0d",
+    "builder_sha256": "417b4068f1f5d6dd23fb059f345897090296907ffcd3f527a7649dfc1813a53a",
+    "packages": {
+      "body-check": {
+        "artifact": "body-check-63c8f23e8273eb6c1ee980e0960bc70f3975881042bb2da5bb24c1ff710e6342",
+        "component": "body-check",
+        "format": 1,
+        "key": "34e4119cc824fcf5651ec7e9be1c17653c5fc5fc0d30009e1e20015e55beb287",
+        "protocol": 1,
+        "schema": 4,
+        "sha256": "63c8f23e8273eb6c1ee980e0960bc70f3975881042bb2da5bb24c1ff710e6342"
+      },
+      "cache-plan": {
+        "artifact": "cache-plan-c0173107d16ddc7039685da526a39484f78cc449f3de567f91b616dcf0df4dc4",
+        "component": "cache-plan",
+        "format": 1,
+        "key": "cb9bc4fe1df36cea82289d796c5aa9a960efd402a628e84f608d288287506a20",
+        "protocol": 2,
+        "schema": 2,
+        "sha256": "c0173107d16ddc7039685da526a39484f78cc449f3de567f91b616dcf0df4dc4"
+      },
+      "declaration-index": {
+        "artifact": "declaration-index-f553d5b95cccabae109179ba483ba913b63addd5f7854aaf7a543945371966c1",
+        "component": "declaration-index",
+        "format": 1,
+        "key": "ad6a294aa45ae3cc008da2aafba6540879b4b064fda78bdad20c3c9078ec5b62",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "f553d5b95cccabae109179ba483ba913b63addd5f7854aaf7a543945371966c1"
+      },
+      "lexer-pilot": {
+        "artifact": "lexer-pilot-8214ccab27efac5a78effd96b793b27c3c159b93f865d3a5f6bd679c8346c59e",
+        "component": "lexer-pilot",
+        "format": 1,
+        "key": "718530ca18253d289a0905b692e767f45f20f931290c9b1c701b857d200785ac",
+        "protocol": 1,
+        "schema": 2,
+        "sha256": "8214ccab27efac5a78effd96b793b27c3c159b93f865d3a5f6bd679c8346c59e"
+      },
+      "parser-pilot": {
+        "artifact": "parser-pilot-9e36146ca0538d685ef501442da16d94a05351b3b6c675c62229c6b0f5fcc61b",
+        "component": "parser-pilot",
+        "format": 1,
+        "key": "9a8ee00dd5501546a4fafd12433d4cd0a3ec1036da617470a2ddf967ac4404e0",
+        "protocol": 1,
+        "schema": 2,
+        "sha256": "9e36146ca0538d685ef501442da16d94a05351b3b6c675c62229c6b0f5fcc61b"
+      },
+      "test-index": {
+        "artifact": "test-index-2df2082f45020f136d90edc49e39020141044d9fff0575da80b7cdb492b681e0",
+        "component": "test-index",
+        "format": 1,
+        "key": "55b03d46997ae49e76822030ed925d4f1261e8f97ac4566a5e38a9f76bbb892f",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "2df2082f45020f136d90edc49e39020141044d9fff0575da80b7cdb492b681e0"
+      },
+      "type-interface": {
+        "artifact": "type-interface-c5a41827bacf0aa4b5e759b50a2d7661887f42778383240dfca8c1d846fd7f5d",
+        "component": "type-interface",
+        "format": 1,
+        "key": "eaf4c9ec862975bf65ca5f83ebff2638794e5e6578ed9264073219616d37376f",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "c5a41827bacf0aa4b5e759b50a2d7661887f42778383240dfca8c1d846fd7f5d"
+      }
+    }
+  },
+  "release": {
+    "host_sha256": "0ebf9d2dda21c47ba880ac4809c676b6320967bb3393fa318334a135651a8946",
+    "builder_sha256": "417b4068f1f5d6dd23fb059f345897090296907ffcd3f527a7649dfc1813a53a",
+    "packages": {
+      "body-check": {
+        "artifact": "body-check-63c8f23e8273eb6c1ee980e0960bc70f3975881042bb2da5bb24c1ff710e6342",
+        "component": "body-check",
+        "format": 1,
+        "key": "34e4119cc824fcf5651ec7e9be1c17653c5fc5fc0d30009e1e20015e55beb287",
+        "protocol": 1,
+        "schema": 4,
+        "sha256": "63c8f23e8273eb6c1ee980e0960bc70f3975881042bb2da5bb24c1ff710e6342"
+      },
+      "cache-plan": {
+        "artifact": "cache-plan-c0173107d16ddc7039685da526a39484f78cc449f3de567f91b616dcf0df4dc4",
+        "component": "cache-plan",
+        "format": 1,
+        "key": "cb9bc4fe1df36cea82289d796c5aa9a960efd402a628e84f608d288287506a20",
+        "protocol": 2,
+        "schema": 2,
+        "sha256": "c0173107d16ddc7039685da526a39484f78cc449f3de567f91b616dcf0df4dc4"
+      },
+      "declaration-index": {
+        "artifact": "declaration-index-f553d5b95cccabae109179ba483ba913b63addd5f7854aaf7a543945371966c1",
+        "component": "declaration-index",
+        "format": 1,
+        "key": "ad6a294aa45ae3cc008da2aafba6540879b4b064fda78bdad20c3c9078ec5b62",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "f553d5b95cccabae109179ba483ba913b63addd5f7854aaf7a543945371966c1"
+      },
+      "lexer-pilot": {
+        "artifact": "lexer-pilot-8214ccab27efac5a78effd96b793b27c3c159b93f865d3a5f6bd679c8346c59e",
+        "component": "lexer-pilot",
+        "format": 1,
+        "key": "718530ca18253d289a0905b692e767f45f20f931290c9b1c701b857d200785ac",
+        "protocol": 1,
+        "schema": 2,
+        "sha256": "8214ccab27efac5a78effd96b793b27c3c159b93f865d3a5f6bd679c8346c59e"
+      },
+      "parser-pilot": {
+        "artifact": "parser-pilot-9e36146ca0538d685ef501442da16d94a05351b3b6c675c62229c6b0f5fcc61b",
+        "component": "parser-pilot",
+        "format": 1,
+        "key": "9a8ee00dd5501546a4fafd12433d4cd0a3ec1036da617470a2ddf967ac4404e0",
+        "protocol": 1,
+        "schema": 2,
+        "sha256": "9e36146ca0538d685ef501442da16d94a05351b3b6c675c62229c6b0f5fcc61b"
+      },
+      "test-index": {
+        "artifact": "test-index-2df2082f45020f136d90edc49e39020141044d9fff0575da80b7cdb492b681e0",
+        "component": "test-index",
+        "format": 1,
+        "key": "55b03d46997ae49e76822030ed925d4f1261e8f97ac4566a5e38a9f76bbb892f",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "2df2082f45020f136d90edc49e39020141044d9fff0575da80b7cdb492b681e0"
+      },
+      "type-interface": {
+        "artifact": "type-interface-c5a41827bacf0aa4b5e759b50a2d7661887f42778383240dfca8c1d846fd7f5d",
+        "component": "type-interface",
+        "format": 1,
+        "key": "eaf4c9ec862975bf65ca5f83ebff2638794e5e6578ed9264073219616d37376f",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "c5a41827bacf0aa4b5e759b50a2d7661887f42778383240dfca8c1d846fd7f5d"
+      }
+    }
+  }
+}

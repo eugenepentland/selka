@@ -1,0 +1,52 @@
+{
+  "b4-full-gate": {
+    "exit_status": 0,
+    "build_summary": [
+      "Build Summary: 131/131 steps succeeded; 2743/27871 tests passed (25128 skipped)"
+    ],
+    "guardian_verdicts": 29,
+    "selected_tests": {
+      "passed": 2741,
+      "failed": 0,
+      "skipped": 0
+    },
+    "memory_diagnostics": [
+      "error: memory usage peaked at 1.54GB (1538023424 bytes), exceeding the declared upper bound of 0.81GB (805306368 bytes)"
+    ]
+  },
+  "b4-full-gate-resources": {
+    "exit_status": 0,
+    "build_summary": [
+      "Build Summary: 131/131 steps succeeded; 816/6458 tests passed (5642 skipped)"
+    ],
+    "guardian_verdicts": 9,
+    "selected_tests": {
+      "passed": 816,
+      "failed": 0,
+      "skipped": 0
+    },
+    "memory_diagnostics": []
+  },
+  "implementation_commit": "a58cf7f58",
+  "resource_changes": [
+    "build.zig",
+    "docs/tooling/runtime-budgets.md"
+  ],
+  "fmt_check_exit_status": 0,
+  "whole_tree_guardian": {
+    "checks": 88,
+    "exit_status": 0
+  },
+  "pure_tests_per_mode": 121,
+  "performance": {
+    "exit_status": 1,
+    "passed": false,
+    "rows": 24,
+    "passing_rows": 4,
+    "failed_compile_check_test_rows": 20,
+    "iterations": 20,
+    "budget": 1.5
+  },
+  "stage_complete": "B4 ordinary record body checking",
+  "full_selfhosting_complete": false
+}

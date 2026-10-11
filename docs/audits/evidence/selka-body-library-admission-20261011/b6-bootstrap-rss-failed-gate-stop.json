@@ -1,0 +1,6 @@
+{
+  "pid": 2018733,
+  "command": "/bin/bash -lc env TMPDIR=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp ZIG_LOCAL_CACHE_DIR=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache scripts/build-slot.sh gate /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build test --summary all > /home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b6-repaired-full-gate.log 2>&1 ",
+  "action": "SIGINT to own failed gate process group",
+  "reason": "CLI shard5/6 passed43tests but uncached body component bootstrap caused measured2345099264 byte process-tree RSS, above declared2147483648. Preserve failure before adjusting CLI shard scheduling reservation to2.5GiB."
+}

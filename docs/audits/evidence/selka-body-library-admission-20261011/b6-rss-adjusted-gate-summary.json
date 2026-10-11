@@ -1,0 +1,75 @@
+{
+  "source_commit": "0dc2f12db",
+  "command": "zig build test fmt-check --summary all",
+  "exit_status": 1,
+  "steps_succeeded": 133,
+  "steps_total": 136,
+  "failed_actions": [
+    "body_check_qualification: coordinator_edit seed terminated"
+  ],
+  "native_test_verdicts": [
+    {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 100,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "native_failed": 0,
+  "native_selected_skipped": 0,
+  "zig_other_shard_skips": 5642,
+  "formatting": "passed",
+  "library_admission": {
+    "complete": true,
+    "source_operations": 213,
+    "join_forged_checks": 4
+  },
+  "body_main_matrix": "incomplete: coordinator edit rebuild terminated; no success report",
+  "guardian_verdict_passed": 818,
+  "reported_native_passed": 820,
+  "unwrapped_native_passed": 2
+}

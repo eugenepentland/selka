@@ -1,0 +1,75 @@
+{
+  "implementation_commit": "848bfe6784026ff3285901652a9b8e1afe95cbd8",
+  "host_sha256": "dc39e088da6dbbe686bc50206da98729ddf21def02febec61d74bb179a41ab4c",
+  "builder_sha256": "ff6406668dca84fc068756dfa83b7ff1f03acb263dba1d930caac6b11dc8d8dc",
+  "packages": {
+    "body-check": {
+      "artifact": "body-check-f9b441269f2c56807e978d3eaaca2af005d4ab9de61bb834c53ee38945fa8703",
+      "component": "body-check",
+      "format": 1,
+      "key": "08f765e2cb2302d5940a572e8b05966b2a744116e2917836cb78b8de91fedbeb",
+      "protocol": 1,
+      "schema": 6,
+      "sha256": "f9b441269f2c56807e978d3eaaca2af005d4ab9de61bb834c53ee38945fa8703"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-bcb8fe8388e7bb549af6dc6db7f04adfe0a70b131dd17db50bc36da94e1fd3de",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "933d90144299c3faba2f74a3cbbc243aa4104b95ed836e36bd6989f34b60fab4",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "bcb8fe8388e7bb549af6dc6db7f04adfe0a70b131dd17db50bc36da94e1fd3de"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-714d30f76a5d8511f2ff591d03a7f8462ea108aadf7fd7ace39d4028dd6743be",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "5a04ebaf3b0304d11dbf77a8d506356c8891d43965c46e5c22370fae2cd14d55",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "714d30f76a5d8511f2ff591d03a7f8462ea108aadf7fd7ace39d4028dd6743be"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-9afe946b5eb2336b19706da2b302cba4cab7035ec0634308a86d364d6ec8d59d",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "288047639c534f241dd88a58f5e44b91a8ae0bb0d0877dd640606d844f5c6034",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "9afe946b5eb2336b19706da2b302cba4cab7035ec0634308a86d364d6ec8d59d"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-37f2f175a42e37400d0d6fad8d3429f0e3173a6f7ea61cc36cd3ee5ecb4bd4c1",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "823b6d958132b11b11241ed1d17808e9e93a97c504ab9f873aee6256521edfd9",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "37f2f175a42e37400d0d6fad8d3429f0e3173a6f7ea61cc36cd3ee5ecb4bd4c1"
+    },
+    "test-index": {
+      "artifact": "test-index-cc3b0672fd7eaf676b697c4d538cdad12e9ba173bd3b4b7a0efc0883b0a41e01",
+      "component": "test-index",
+      "format": 1,
+      "key": "77342b5c394ada8b14a59ed5976eaeeee7c4192a739240231c2d00714e1f11dd",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "cc3b0672fd7eaf676b697c4d538cdad12e9ba173bd3b4b7a0efc0883b0a41e01"
+    },
+    "type-interface": {
+      "artifact": "type-interface-297bcf7bbd17eed32c032746bdb65b1e0dfc98910935c4cbe6ff0f945f67afb7",
+      "component": "type-interface",
+      "format": 1,
+      "key": "57c8ce69de6d605a5d0ee6d5637ad399b551e1109714011a7a1bc968029f62f2",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "297bcf7bbd17eed32c032746bdb65b1e0dfc98910935c4cbe6ff0f945f67afb7"
+    }
+  },
+  "debug_host_sha256": "106c74ea88a9c8817a1320e5cd0cd951bfe8f030dc5336bc6dc5afd7c4ee2138",
+  "frozen_b5_prefixes_unchanged": {
+    "body-variant-debug": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+    "body-variant-release": "5be1628129c9a7783d8db636c6dd8e4319b5befb4417f201e16e073aa6666b75"
+  }
+}

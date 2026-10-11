@@ -1,0 +1,5 @@
+func main() -> int:
+    const value = b"abcdef"
+    if value[1:4] != b"bcd" or value[-2:] != b"ef" or value[:2] != b"ab":
+        return 0
+    return 7

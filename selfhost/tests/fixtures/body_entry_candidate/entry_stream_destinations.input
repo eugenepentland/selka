@@ -1,0 +1,6 @@
+func main(out: Stream, err: Stream) -> int:
+    const first = out.write(b"\x00\xff")
+    const second = err.write(b"err\n")
+    if first == 2 and second == 4:
+        return 7
+    return 0

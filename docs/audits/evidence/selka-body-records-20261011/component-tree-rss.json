@@ -1,0 +1,24 @@
+{
+  "parent_command": "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang test /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_engine_tests.my --force --no-cache --release --verify-facts ",
+  "processes": [
+    {
+      "pid": 524148,
+      "ppid": 480336,
+      "rss_kib": 669968,
+      "command": "mylang"
+    },
+    {
+      "pid": 524320,
+      "ppid": 524148,
+      "rss_kib": 39744,
+      "command": "zig"
+    },
+    {
+      "pid": 524327,
+      "ppid": 524320,
+      "rss_kib": 564600,
+      "command": "zig"
+    }
+  ],
+  "total_rss_kib": 1274312
+}

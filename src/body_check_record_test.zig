@@ -188,7 +188,7 @@ test "body records retain prefix authority while materializing producer selected
     try std.testing.expectEqual(f.input.catalog.records.len, expanded.records.len);
     try std.testing.expectEqual(f.input.catalog.base_count + 1, expanded.base_count);
     try lists.catalog(a, expanded);
-    try materialize.apply(a, &f.native, f.input, &.{recipe});
+    try materialize.apply(a, &f.native, f.input, &.{.{ .list = recipe }});
     try std.testing.expectEqual(recipe.id, f.native.records[f.native.records.len - 1].id);
 }
 

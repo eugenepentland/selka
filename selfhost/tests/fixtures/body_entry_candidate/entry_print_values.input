@@ -1,0 +1,4 @@
+func main(out: Stream, err: Stream) -> int:
+    out.print("é", 7, True)
+    err.print("error", b"bytes")
+    return 7

@@ -4,6 +4,7 @@
 pub const compiler_language = @import("compiler.zig");
 test {
     _ = @import("component_launch.zig");
+    _ = @import("component_session.zig");
     _ = @import("component_digest.zig");
     _ = @import("parser_value_test.zig");
     _ = @import("parser_component_test.zig");
@@ -225,4 +226,12 @@ comptime {
     _ = @import("body_check_component_test.zig");
     _ = @import("body_check_list_test.zig");
     _ = @import("body_check_record_test.zig");
+    _ = @import("body_check_variant_test.zig");
+    _ = @import("body_check_buffer_test.zig");
+    _ = @import("body_check_resource_test.zig");
+}
+
+comptime {
+    _ = @import("body_check_policy_test.zig");
+    _ = @import("body_owned_copy_test.zig");
 }

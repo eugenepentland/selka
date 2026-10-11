@@ -1,0 +1,42 @@
+engine.my:1782:21: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              case Ok(unused):
+                      ^
+engine.my:2176:38: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func payload_local(mut state: State, arm_name: int, binding: int, internal_name: bytes, ty: int) -> int fails syntax_value.Problem:
+                                       ^
+record_names.my:175:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_start = try graph.number(pool, diagnostic_start_id)
+            ^
+record_names.my:176:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const diagnostic_end = try graph.number(pool, diagnostic_end_id)
+            ^
+record_names.my:179:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              const owner_text = try graph.spelling(pool, source, owner)
+                    ^
+record_names.my:181:15: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          const original = try graph.spelling(pool, source, name)
+                ^
+record_names.my:189:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut used_import = -1
+          ^
+record_names.my:215:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut canonical_name = spelling
+          ^
+record_names.my:216:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut matched = False
+          ^
+LLVM ERROR: out of memory
+Allocation failed
+zig: error: clang frontend command failed with exit code 134 (use -v to see invocation)
+clang version 22.1.8
+Target: x86_64-unknown-linux5.10.0-gnu2.31.0
+Thread model: posix
+InstalledDir: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b
+zig: note: diagnostic msg: 
+********************
+
+PLEASE ATTACH THE FOLLOWING FILES TO THE BUG REPORT:
+Preprocessed source(s) and associated run script(s) are located at:
+zig: note: diagnostic msg: /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/65c2294c42d2b638eecfd2e95facfa34687d2a8cb0d9edfccaa09e3f0d45e312-ed7845.ll
+libc++abi: terminating due to uncaught exception of type std::bad_alloc: std::bad_alloc
+components: command failed (exit 2): /home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang

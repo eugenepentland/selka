@@ -1,0 +1,14 @@
+func make(mut count: int) -> bytes:
+    count = count + 1
+    return b"abc"
+
+func start(mut count: int) -> int:
+    count = count + 1
+    return 1
+
+func main() -> int:
+    mut count = 0
+    const value = make(mut count)[start(mut count):]
+    if count != 2 or value != b"bc":
+        return 0
+    return 7

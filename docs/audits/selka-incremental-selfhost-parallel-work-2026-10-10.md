@@ -245,19 +245,41 @@ complete Selka compiler and requires compile time, test time and generated
 runtime to stay within 1.5 times the Zig implementation. This is an acceptance
 requirement for the completed compiler, not a claim about the current pilots.
 
-The last qualified boundary is B3, recorded in
-[the list body audit](selka-body-lists-2026-10-11.md). Seven packages build with
-the unchanged qualified seed; ordinary scalar, string, byte and supported list
-bodies use Selka checking without native body fallback. Ordered list recipes
-and complete final catalog schemas match native checking. B4 record/member
-checking is in progress in separate implementation lanes. The compiler still
-cannot check its own source, and neither a complete compiler nor a bootstrap
-fixed point is proven.
+The last functionally qualified boundary is B6, recorded in
+[the byte/buffer and pure-library audit](selka-body-bytes-buffer-contract-2026-10-11.md).
+Seven packages build with the unchanged qualified seed. Ordinary scalar, text,
+byte, list, nongeneric record/variant, admitted checked Result/Option and actual
+pure-library bodies use Selka checking without native body fallback. The full
+gate passes 136/136 steps, 253 pure tests per mode, all three installed
+443-workflow matrices, and 213 actual-library operations plus four forged-reply
+rejections. Complete typed metadata and catalog schemas match native checking.
 
-| Remaining stage | Completion evidence |
+[Private B7 proofs](evidence/selka-body-entry-generations-private-20261011/README.md)
+now rebuild all seven component entries through two normal and two release
+generations, then two further release generations with all frontend boundaries
+selected together. Binaries are byte-identical across corresponding generations.
+B7 is now integrated at `ed8f72c8c`. Its [first root gate](evidence/selka-body-entry-generations-root-20261011/README.md)
+passes 281 pure tests per mode, all three 443-workflow matrices, library admission,
+and both 349-operation entry-generation lanes. All seven generated binaries are
+byte-identical between generations in each lane. The full gate still exits 1:
+its sole failed action is a packaging test expecting schema 6 instead of 7.
+The assertion is corrected separately. After artifact authentication and body
+adoption allocation improvements, the [optimized root attempt](evidence/selka-body-entry-optimized-timeout-20261011/README.md)
+at `3e44a64df3` passes both 349-operation entry-generation lanes and library
+admission. All seven binaries again match between generations in each lane.
+Its full gate still exits 1 because the separate normal/edit matrix exceeds its
+outer 600-second deadline; that matrix and the remaining body-gate release phase
+are incomplete. Extending the whole-matrix deadline does not change guest limits
+or required selections, and complete qualification must be rerun.
+The native catalog, later semantic passes, backend and compiler driver remain
+in use; a complete Selka compiler and full-compiler bootstrap fixed point remain
+unproven.
+
+| Stage | Completion evidence |
 | --- | --- |
-| B4 ordinary records and members | Constructors/defaults, nominal resolution, field reads and mixed record/list mutation paths match complete native typed tables and metadata, including recursive records through lists, snapshots and exact diagnostics. |
-| Remaining body language | Unions and patterns, other collections, generic specialization, checked failures, resources and all remaining forms cover the current language and the compiler's own source. Unsupported profile refusals cannot count as success. |
+| B6 pure compiler libraries — functionally qualified | Byte/string and list slicing, admitted conversions, byte-buffer construction/mutation/snapshots, iteration, comprehensions, conditional expressions and literal managed/scalar constants cover the actual compiler helper closures. Complete native typed metadata and diagnostics match; actual library admission and pure tests pass in debug and release with fact/leak checks. Executable entrypoints belong to B7. |
+| B7 capabilities and scoped resources | Filesystem/Stream signatures, file opening/reading, stream output and scoped file cleanup cover all seven component entrypoints. The selected Selka body checker checks and builds the actual component source closures without native body fallback, preserving capability, ownership and cleanup metadata. This is component-source bootstrap coverage, not a complete compiler bootstrap. |
+| Remaining body language | Other collections, generic specialization, callbacks, scalar widths, additional resources, contracts and all remaining forms cover the current language. Unsupported profile refusals cannot count as success. |
 | Remaining semantic ownership | Selka owns declaration/catalog construction, entry handling, effects/origins, contracts, codecs and warnings, with diagnostics and accepted/rejected programs matching the native reference. |
 | Core and LLVM backend | Selka lowers checked programs, performs required Core transformations and emits LLVM; generated programs pass the complete behavior, ownership, fact and leak suites. |
 | Compiler driver | Selka owns source/module loading and build/test/cache orchestration, invokes the external toolchain, and performs supported installed commands without a native compiler fallback or Python dependency. |
@@ -269,13 +291,36 @@ self-hosting requires Selka ownership of the compiler, not rewriting those
 dependencies. The native implementation remains an independent qualification
 oracle during migration; selected production paths must not silently fall back.
 
-The B2 measurements already show an unmet performance requirement: selected body
-checking took 4.93 ms versus 1.06 ms native, warm replay 9.07 ms versus 1.80 ms,
-and edit/link 71.28 ms versus 15.29 ms on a small two-module workload. These are
-component measurements with warm shared native units, not whole-compiler or
-cold-toolchain benchmarks. Performance work therefore runs alongside feature
-coverage, with exact mode/cache provenance and behavior checks. Intermediate
-subset benchmarks cannot establish full-language acceptance.
+The completed [B6 performance measurements](selka-body-bytes-buffer-contract-2026-10-11.md)
+fail 30 of 36 strict median/p95 rows. Compile/check/test medians are approximately
+6.1–10.4 times native; the six short generated-runtime rows pass. Both sides use
+the same B6 ReleaseFast host, with only the candidate body checker selected as a
+component. These are component measurements with warm shared native units, not
+whole-compiler or cold-toolchain benchmarks. Performance work therefore runs
+alongside feature coverage, with exact mode/cache provenance and behavior checks.
+Intermediate subset benchmarks cannot establish full-language acceptance.
+
+The later [optimized B7 matched run](evidence/selka-body-optimized-performance-20261011/README.md)
+completes 20 samples per side for 36 workflows and fails 34 strict median/p95
+verdicts. Although compiler build/gate slots were reserved, sampled external
+project activity overlapped the benchmark CPU affinity throughout the observed
+intervals. The retained data are diagnostic; they neither establish the size of
+an optimization gain nor satisfy the 1.5-times performance requirement.
+
+The proposed B6/B7 split follows actual compiler source dependencies. Byte slices
+appear in `body_check/graph.my` and the codecs; buffer construction and writes
+appear in `parser_pilot/syntax_codec.my`, `type_interface/codec.my`,
+`declaration_index/codec.my` and `cache_plan/incremental.my`. Actual source
+admission also exposes text/byte iteration, `ord`, integer-to-text conversion,
+range/iterable comprehensions, list slices, nested collection iteration,
+conditional expressions and the lexer's string and private integer literal constants.
+These require exact native parity before the pure-library milestone is complete;
+the byte/buffer fixture implementation alone is insufficient. Those libraries
+can be qualified before resource support. Executable adapters such as
+`body_check/main.my` additionally require `Filesystem`, `Stream`, `fs.open`,
+`with file as input`, `input.read` and output methods. The native representation
+and validation contract for each wave must be audited before its schema is
+frozen; these planned boundaries are not completed implementation claims.
 
 The B3 strict measurements also fail: only the three generated-runtime rows pass
 out of 18 workflows. Compile/check/test medians are about 6–10 times native with
@@ -285,3 +330,10 @@ is a substantial improvement, not performance acceptance. The list audit retains
 all median/p95 verdicts, exact receipts and isolation records. Transitioning to a
 fused compiler removes intermediate process/transport boundaries, but remaining
 Selka algorithm, allocation and generated-runtime costs must still be measured.
+
+The historical B4 matched-host sweep fails all 20 compile/check/test rows across four
+workloads, with medians around 4.4–7.2 times native. Only the four short
+runtime rows pass. The record audit retains all 24 median/p95 verdicts,
+20 samples per row, exact package provenance and FIFO isolation receipts.
+Both sides use the same B4 ReleaseFast host, unlike B3's older B2 baseline;
+no full-language performance or bootstrap acceptance is claimed.

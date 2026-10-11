@@ -13,6 +13,19 @@ pub const value_wire_limit = 64 * 1024 * 1024;
 pub const max_values = 1048576;
 /// Maximum aggregate child references in one syntax value table.
 pub const max_edges = 4194304;
+/// Closed row policies; all other wire and expansion budgets remain shared.
+pub const ValueProfile = enum {
+    syntax,
+    body,
+
+    /// Maximum postorder rows admitted by this component profile.
+    pub fn rows(self: ValueProfile) u32 {
+        return switch (self) {
+            .syntax => max_values,
+            .body => 2097152,
+        };
+    }
+};
 const max_depth = 256;
 const magic = "SLKAST01";
 const error_magic = "SLKERR01";
@@ -25,11 +38,15 @@ const Value = struct {
     names: []const []const u8 = &.{},
 };
 
+/// Storage charged per decoded logical row by the shared 512 MiB policy.
+pub const value_table_row_size = @sizeOf(Value);
+
 const Encoder = struct {
     writer: codec.Writer,
     scratch: std.mem.Allocator,
     count: u32 = 0,
     edges: usize = 0,
+    profile: ValueProfile = .syntax,
 
     fn blob(self: *Encoder, data: []const u8) Error!void {
         if (data.len > value_wire_limit) return error.ComponentProtocol;
@@ -37,7 +54,7 @@ const Encoder = struct {
         try self.writer.raw(data);
     }
     fn append(self: *Encoder, item: Value) Error!u32 {
-        if (self.count >= max_values or item.children.len > max_edges - self.edges) return error.ComponentProtocol;
+        if (self.count >= self.profile.rows() or item.children.len > max_edges - self.edges) return error.ComponentProtocol;
         self.edges += item.children.len;
         try self.writer.integer(@as(u8, @backingInt(item.kind)));
         try self.writer.integer(item.integer);
@@ -52,7 +69,7 @@ const Encoder = struct {
         return id;
     }
     fn sequence(self: *Encoder, comptime T: type, items: []const T, depth: usize) Error!u32 {
-        if (items.len > max_values) return error.ComponentProtocol;
+        if (items.len > self.profile.rows()) return error.ComponentProtocol;
         const children = try self.scratch.alloc(u32, items.len);
         for (items, children) |item, *child| child.* = try self.value(T, item, depth + 1);
         return self.append(.{ .kind = .list, .children = children });
@@ -106,11 +123,16 @@ pub fn encode(allocator: std.mem.Allocator, program: ast.Program) Error![]u8 {
 
 /// Encode a bounded logical named-field value under an eight-byte schema signature.
 pub fn encodeTree(allocator: std.mem.Allocator, comptime T: type, value: T, signature: []const u8) Error![]u8 {
+    return encodeTreeProfile(allocator, T, value, signature, .syntax);
+}
+
+/// Encode under a closed component row policy without widening other budgets.
+pub fn encodeTreeProfile(allocator: std.mem.Allocator, comptime T: type, value: T, signature: []const u8, profile: ValueProfile) Error![]u8 {
     @setEvalBranchQuota(200000);
     if (signature.len != 8) return error.ComponentProtocol;
     var scratch = std.heap.ArenaAllocator.init(allocator);
     defer scratch.deinit();
-    var encoder: Encoder = .{ .writer = .init(allocator), .scratch = scratch.allocator() };
+    var encoder: Encoder = .{ .writer = .init(allocator), .scratch = scratch.allocator(), .profile = profile };
     defer encoder.writer.deinit();
     try encoder.writer.raw(signature);
     try encoder.writer.integer(@as(u32, 0));
@@ -140,6 +162,7 @@ const Budget = struct {
 const Reader = struct {
     wire: codec.Reader,
     budget: *Budget,
+    profile: ValueProfile,
 
     fn integer(self: *Reader, comptime T: type) Error!T {
         return self.wire.integer(T) catch return error.ComponentProtocol;
@@ -152,7 +175,7 @@ const Reader = struct {
         const integer_value = try self.integer(i64);
         const data = try self.blob();
         const count = try self.integer(u32);
-        if (count > max_values or count > self.budget.edges) return error.ComponentProtocol;
+        if (count > self.profile.rows() or count > self.budget.edges) return error.ComponentProtocol;
         self.budget.edges -= count;
         const children = try self.budget.allocate(self.wire.allocator, u32, count);
         for (children) |*child| {
@@ -160,7 +183,7 @@ const Reader = struct {
             if (child.* >= index) return error.ComponentProtocol;
         }
         const name_count = try self.integer(u32);
-        if (name_count > 7) return error.ComponentProtocol;
+        if (name_count > (if (self.profile == .body) @as(u32, 8) else 7)) return error.ComponentProtocol;
         const names = try self.budget.allocate(self.wire.allocator, []const u8, name_count);
         for (names) |*name| {
             name.* = try self.blob();
@@ -297,29 +320,39 @@ pub fn Owned(comptime T: type) type {
 
 /// Decode a bounded logical named-field value; callers validate domain invariants.
 pub fn decodeTree(comptime T: type, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8) Error!Owned(T) {
+    return decodeTreeProfile(T, allocator, bytes, signature, .syntax);
+}
+
+/// Decode with a closed row policy and the unchanged allocation/visit budgets.
+pub fn decodeTreeProfile(comptime T: type, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8, profile: ValueProfile) Error!Owned(T) {
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
-    const item = try decodeTarget(T, allocator, arena.allocator(), bytes, signature);
+    const item = try decodeTarget(T, allocator, arena.allocator(), bytes, signature, profile);
     return .{ .arena = arena, .value = item };
 }
 
 /// Decode bounded logical values into caller-owned arena storage for adoption.
 /// The caller releases partial allocations with its arena if decoding fails.
 pub fn decodeInto(comptime T: type, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8) Error!T {
-    return decodeTarget(T, allocator, allocator, bytes, signature);
+    return decodeIntoProfile(T, allocator, bytes, signature, .syntax);
 }
-fn decodeTarget(comptime T: type, scratch_allocator: std.mem.Allocator, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8) Error!T {
+
+/// Decode into caller-owned storage using an explicitly selected closed policy.
+pub fn decodeIntoProfile(comptime T: type, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8, profile: ValueProfile) Error!T {
+    return decodeTarget(T, allocator, allocator, bytes, signature, profile);
+}
+fn decodeTarget(comptime T: type, scratch_allocator: std.mem.Allocator, allocator: std.mem.Allocator, bytes: []const u8, signature: []const u8, profile: ValueProfile) Error!T {
     @setEvalBranchQuota(200000);
     if (signature.len != 8) return error.ComponentProtocol;
     if (bytes.len < 16 or bytes.len > value_wire_limit or !std.mem.eql(u8, bytes[0..8], signature)) return error.ComponentProtocol;
     const count = std.mem.readInt(u32, bytes[8..12], .little);
     const root = std.mem.readInt(u32, bytes[12..16], .little);
-    if (count == 0 or count > max_values or root != count - 1 or count > (bytes.len - 16) / 21) return error.ComponentProtocol;
+    if (count == 0 or count > profile.rows() or root != count - 1 or count > (bytes.len - 16) / 21) return error.ComponentProtocol;
     var scratch = std.heap.ArenaAllocator.init(scratch_allocator);
     defer scratch.deinit();
     var budget: Budget = .{};
     const values = try budget.allocate(scratch.allocator(), Value, count);
-    var reader: Reader = .{ .wire = .init(scratch.allocator(), bytes[16..]), .budget = &budget };
+    var reader: Reader = .{ .wire = .init(scratch.allocator(), bytes[16..]), .budget = &budget, .profile = profile };
     for (values, 0..) |*value, index| value.* = try reader.value(index);
     if (!reader.wire.done()) return error.ComponentProtocol;
     var decoder: Decoder = .{ .allocator = allocator, .values = values, .budget = &budget };
@@ -387,10 +420,10 @@ test "parser values enforce aggregate edge budget across otherwise valid rows" {
     bytes[0] = 6;
     std.mem.writeInt(u32, bytes[13..17], 1, .little);
     var budget: Budget = .{ .edges = 1 };
-    var first: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget };
+    var first: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget, .profile = .syntax };
     const admitted = try first.value(1);
     try std.testing.expectEqual(@as(usize, 1), admitted.children.len);
     try std.testing.expectEqual(@as(usize, 0), budget.edges);
-    var excess: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget };
+    var excess: Reader = .{ .wire = .init(arena.allocator(), &bytes), .budget = &budget, .profile = .syntax };
     try std.testing.expectError(error.ComponentProtocol, excess.value(1));
 }

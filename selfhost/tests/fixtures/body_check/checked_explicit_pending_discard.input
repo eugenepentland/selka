@@ -1,0 +1,13 @@
+enum Failure:
+    bad
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure.bad
+    return value
+
+func main() -> int:
+    _ = parse(-1)
+    const result = parse(7)
+    _ = result
+    return 7

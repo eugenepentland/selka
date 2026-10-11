@@ -1,0 +1,30 @@
+[
+  {
+    "name": "slice_bound",
+    "mode": "component",
+    "equal": true,
+    "status": 0,
+    "native_status": 0
+  },
+  {
+    "name": "slice_bound",
+    "mode": "shadow",
+    "equal": true,
+    "status": 0,
+    "native_status": 0
+  },
+  {
+    "name": "comprehension_output",
+    "mode": "component",
+    "equal": true,
+    "status": 0,
+    "native_status": 0
+  },
+  {
+    "name": "comprehension_output",
+    "mode": "shadow",
+    "equal": true,
+    "status": 0,
+    "native_status": 0
+  }
+]

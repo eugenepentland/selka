@@ -1,0 +1,16 @@
+record Box:
+    values: int[]
+
+enum Choice:
+    box(value: Box)
+    empty
+
+func main() -> int:
+    mut items = [Choice.box(value=Box(values=[3, 4]))]
+    const saved = items
+    items[0] = Choice.empty
+    match saved[0]:
+        case Choice.box(value=box):
+            return box.values[0] + box.values[1]
+        case Choice.empty:
+            return 0

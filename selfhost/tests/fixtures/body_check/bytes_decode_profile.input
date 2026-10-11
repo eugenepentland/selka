@@ -1,0 +1,8 @@
+func main() -> int:
+    match b"7".decode():
+        case Ok(text):
+            if text == "7":
+                return 7
+            return 0
+        case Err(_):
+            return 0

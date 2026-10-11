@@ -1,0 +1,23 @@
+	Command being timed: "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/tools/selka-components --root /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/b5-edit-rebuild-4g/coordinator-source --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --install-dir /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/b5-edit-rebuild-4g/coordinator-install"
+	User time (seconds): 46.86
+	System time (seconds): 4.11
+	Percent of CPU this job got: 102%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:49.91
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2051872
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 40
+	Minor (reclaiming a frame) page faults: 4017126
+	Voluntary context switches: 4184
+	Involuntary context switches: 888
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 283928
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

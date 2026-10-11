@@ -5,6 +5,7 @@ An installed host and packages are inputs, never silently rebuilt. --edit-check
 explicitly asks the native coordinator to rebuild a private source closure.
 """
 import argparse
+from functools import partial
 import hashlib
 import json
 import os
@@ -37,11 +38,11 @@ OUTPUT_LIMIT = (64 << 20) + 4096  # AST profile wire cap plus bounded framing.
 ADDRESS_SPACE_BUDGET = 2 << 30
 
 
-def process_limits():
+def process_limits(address_space_budget=ADDRESS_SPACE_BUDGET, file_size_budget=OUTPUT_LIMIT):
     # Qualification budget, not a claim about the production launcher. Never
     # relax a caller's stricter soft or hard ceiling; descendants inherit it.
-    for kind, budget in ((resource.RLIMIT_FSIZE, OUTPUT_LIMIT),
-                         (resource.RLIMIT_AS, ADDRESS_SPACE_BUDGET)):
+    for kind, budget in ((resource.RLIMIT_FSIZE, file_size_budget),
+                         (resource.RLIMIT_AS, address_space_budget)):
         soft, hard = resource.getrlimit(kind)
         ceiling = min([budget] + [v for v in (soft, hard) if v != resource.RLIM_INFINITY])
         resource.setrlimit(kind, (ceiling, ceiling))
@@ -66,11 +67,12 @@ def copy_sources(destination):
         path.rename(path.with_suffix('.my'))
 
 
-def execute(argv, env, cwd, timeout=180):
+def execute(argv, env, cwd, timeout=180, *, address_space_budget=ADDRESS_SPACE_BUDGET,
+            file_size_budget=OUTPUT_LIMIT):
     with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
         result = subprocess.run([str(a) for a in argv], env=env, cwd=cwd,
                                 stdout=stdout, stderr=stderr, timeout=timeout,
-                                preexec_fn=process_limits)
+                                preexec_fn=partial(process_limits, address_space_budget, file_size_budget))
         stdout.seek(0)
         stderr.seek(0)
         return result.returncode, stdout.read(OUTPUT_LIMIT), stderr.read(OUTPUT_LIMIT)

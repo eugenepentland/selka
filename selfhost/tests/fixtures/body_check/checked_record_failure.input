@@ -1,0 +1,14 @@
+record Failure:
+    code: int
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure(code=7)
+    return value
+
+func main() -> int:
+    match parse(-1):
+        case Ok(value):
+            return value
+        case Err(error):
+            return error.code

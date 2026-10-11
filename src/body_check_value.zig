@@ -22,15 +22,31 @@ pub const Catalog = struct {
     lists: []const Sequence = &.{},
     list_available: bool = false,
     records: []const typed.Record = &.{},
+    templates: Templates = .{},
 };
+/// Opaque retained builtin template authority, never per-use body answers.
+pub const Templates = struct { result: ?TemplateBasis = null, option: ?TemplateBasis = null, byte_buffer: BufferBasis = .{} };
+/// Authenticated optional octet-buffer identity and exact builtin addability.
+pub const BufferBasis = struct { available: bool = false, identity: ?Sequence = null };
+/// Exact common declaration authority; an empty span denotes the synthesized prelude.
+pub const TemplateBasis = struct { id: usize, declaration: source.Span };
 /// The exact managed identity and its internal scalar element representation.
 pub const Sequence = struct { id: typed.Type, element: typed.Type };
 /// Complete typed tables before entry adaptation and native postpasses.
 pub const Batch = struct { nodes: []const typed.Node, statements: []const typed.Statement, functions: []const typed.Function, ranges: []const @import("semantic_copy.zig").Range };
 /// Typed bodies and all ordered checker observations.
-pub const Output = struct { batch: Batch, import_used: []const []const bool, diagnostics: []const Diagnostic, lists: []const ListRecipe = &.{} };
+pub const Output = struct { batch: Batch, import_used: []const []const bool, diagnostics: []const Diagnostic, recipes: []const CatalogRecipe = &.{} };
 /// One producer-selected canonical list identity, in native append order.
+/// First-demand canonical octet-buffer schema, without type arguments.
+pub const BufferRecipe = struct { id: typed.Type, span: source.Span };
+/// Producer-selected list schema with its original demand span.
 pub const ListRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
+/// One producer-selected canonical checked-result identity.
+pub const ResultRecipe = struct { id: typed.Type, success: typed.Type, failure: typed.Type, span: source.Span };
+/// One producer-selected canonical optional identity.
+pub const OptionRecipe = struct { id: typed.Type, element: typed.Type, span: source.Span };
+/// All append decisions share one native first-demand order.
+pub const CatalogRecipe = union(enum) { list: ListRecipe, result: ResultRecipe, option: OptionRecipe, byte_buffer: BufferRecipe };
 /// Located unsupported profile refusal; it never requests native fallback.
 pub const Profile = struct { code: []const u8, span: source.Span, message: []const u8 };
 /// Checked scalar bodies, source diagnostics, or explicit admission refusal.
@@ -77,22 +93,20 @@ pub fn diagnostics(a: std.mem.Allocator, items: []const diagnostic.Diagnostic) l
 }
 /// Adopt independent body tables into caller-owned arena storage.
 pub fn cloneBatch(a: std.mem.Allocator, batch: Batch) logical.Error!Batch {
-    const bytes = try logical.encodeTree(a, Batch, batch, "SLKBTB01");
-    defer a.free(bytes);
-    return logical.decodeInto(Batch, a, bytes, "SLKBTB01");
+    return @import("body_owned_copy.zig").clone(a, Batch, batch);
 }
 /// Publish complete decoded source diagnostics into a sink-owned arena.
 pub fn publish(sink: *diagnostic.Sink, items: []const Diagnostic) logical.Error!void {
-    const bytes = try logical.encodeTree(sink.allocator, []const Diagnostic, items, "SLKBTD01");
+    const bytes = try logical.encodeTreeProfile(sink.allocator, []const Diagnostic, items, "SLKBTD01", .body);
     defer sink.allocator.free(bytes);
-    const owned = try logical.decodeInto([]const Diagnostic, sink.allocator, bytes, "SLKBTD01");
+    const owned = try logical.decodeIntoProfile([]const Diagnostic, sink.allocator, bytes, "SLKBTD01", .body);
     for (owned) |item| try sink.items.append(sink.allocator, nativeDiagnostic(item));
 }
 /// Compare complete canonical outcomes independently of value-table ordering.
 pub fn equal(a: std.mem.Allocator, left: Outcome, right: Outcome) logical.Error!bool {
-    const lhs = try logical.encodeTree(a, Outcome, left, "SLKBKR01");
+    const lhs = try logical.encodeTreeProfile(a, Outcome, left, "SLKBKR01", .body);
     defer a.free(lhs);
-    const rhs = try logical.encodeTree(a, Outcome, right, "SLKBKR01");
+    const rhs = try logical.encodeTreeProfile(a, Outcome, right, "SLKBKR01", .body);
     defer a.free(rhs);
     return std.mem.eql(u8, lhs, rhs);
 }

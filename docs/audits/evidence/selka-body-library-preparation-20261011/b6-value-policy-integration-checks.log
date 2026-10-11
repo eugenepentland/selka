@@ -1,0 +1,12 @@
+build-slot: build slot 2, FIFO ticket 1955 after 0s
+..........................
+----------------------------------------------------------------------
+Ran 26 tests in 0.091s
+
+OK
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9840 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed

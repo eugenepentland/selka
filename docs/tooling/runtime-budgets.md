@@ -209,7 +209,7 @@ The gate's two slow Zig test roots run as several processes rather than one:
 `zig build test` splits `src/root_test.zig` into `-Dtest-shards=N` shards
 (default 12) and `test/integration.zig` into `N/2`, each an independent run of
 the same test binary under `--guardian-shard=K/N`, declaring its own `max_rss`
-(2.5 GiB per unit shard, 768 MiB per CLI shard) so `zig build --maxrss` still
+(2.5 GiB per unit or CLI shard) so `zig build --maxrss` still
 bounds the whole gate. Guardian's runner gives each shard the named tests whose
 position among them is `K` modulo `N`, and the unnamed `test { }` blocks to
 shard 0 alone, so the shards partition the root and their `N test(s) selected`
@@ -230,16 +230,26 @@ The build runner starts a step only while the `max_rss` of every running step
 fits in `--maxrss` (by default the machine's total memory, 30 GiB here), so the
 declarations decide how much of the gate runs at once. A driver's declaration
 covers its whole process tree at its peak; a Zig test binary's must also stay
-above the largest single process, which the runner checks and fails on. On
+above the largest single process, which the runner checks. The pinned Zig
+`0.17.0-dev.1683+5ceec001b` runner currently prints an excess-memory diagnostic
+without failing its final build summary; inspect that diagnostic as well as
+the exit status when qualifying a memory declaration. On
 2026-09-23 a clean-cache `zig build test` never held more than 5.8 GiB at once,
 while its declarations summed to far more than 30 GiB: the last unit shards
 waited most of a minute for reservations that were never used. The ceilings in
 `build.zig` now follow measured peaks — then 1 GiB per unit shard (largest process
-570 MiB; 2.5 GiB since a 2.18 GiB shard peak on 2026-10-05), 768 MiB per CLI shard (141 MiB), 1.5 GiB for the host-application
+570 MiB; 2.5 GiB since a 2.18 GiB shard peak on 2026-10-05), initially 768 MiB per CLI shard (141 MiB), 1.5 GiB for the host-application
 roots (since retired) and `tests/guest`, 256 MiB for checks that run no compiler — and a rerun
 of every test took 98 s instead of 136 s on the same loaded machine (81 s with
 no memory limit at all). Measure a step's tree before raising its ceiling; a
 larger number is not a safer one.
+
+The B6 uncached component bootstrap reported a 2,345,099,264-byte CLI shard
+peak on 2026-10-11, so CLI shards now reserve 2.5 GiB. Frontend and body
+qualification drivers also rebuild the optimized body component; they reserve
+2.5 GiB across the seed and clang. A body test build's process tree was sampled
+at 1,304,895,488 bytes before clang's peak. These are build scheduling allowances;
+guest memory limits and the selfhost performance budget remain unchanged.
 
 ## Cached test verdicts
 

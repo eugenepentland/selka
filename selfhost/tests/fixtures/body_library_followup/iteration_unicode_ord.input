@@ -1,0 +1,7 @@
+func main() -> int:
+    mut total = 0
+    for ch in "aé😀":
+        total = total + ord(ch)
+    if total != 128842:
+        return 0
+    return 7

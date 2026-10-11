@@ -110,7 +110,9 @@ pub fn resolveEntry(init: std.process.Init, path: []const u8, report: *std.Array
 }
 
 fn buildWith(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8)) Error!u8 {
-    const request: BuildRequest = .{ .init = init, .path = path, .options = options, .budget = budget, .report = report };
+    var artifacts: language.frontend_runtime.ArtifactSession = .{ .allocator = init.gpa };
+    defer artifacts.deinit();
+    const request: BuildRequest = .{ .init = init, .path = path, .options = options, .budget = budget, .report = report, .artifacts = &artifacts };
     return @import("build_retry.zig").run(request, report, BuildRequest.attempt);
 }
 
@@ -120,13 +122,16 @@ const BuildRequest = struct {
     options: Options,
     budget: ?run_budget.RunBudget,
     report: *std.ArrayList(u8),
+    artifacts: *language.frontend_runtime.ArtifactSession,
 
     fn attempt(self: BuildRequest, lazy: bool) Error!u8 {
-        return buildAttempt(self.init, self.path, self.options, self.budget, self.report, lazy);
+        return buildAttempt(self.init, self.path, self.options, self.budget, self.report, .{ .allow_lazy = lazy, .artifacts = self.artifacts });
     }
 };
 
-fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8), allow_lazy: bool) Error!u8 {
+fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budget: ?run_budget.RunBudget, report: *std.ArrayList(u8), attempt: struct { allow_lazy: bool, artifacts: *language.frontend_runtime.ArtifactSession }) Error!u8 {
+    const allow_lazy = attempt.allow_lazy;
+    const artifacts = attempt.artifacts;
     const allocator = init.arena.allocator();
     const compression = @import("stage_compression.zig").Policy.parse(init.environ_map.get("MYLANG_STAGE_CACHE_COMPRESSION")) catch {
         try report.appendSlice(allocator, "mylang-core: MYLANG_STAGE_CACHE_COMPRESSION must be 'zlib' or 'none'\n");
@@ -137,10 +142,10 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     const context: build_replay.Context = .{
         .arena = allocator,
         .io = init.io,
-        .environment = init.environ_map,
+        .authority = .{ .environment = init.environ_map, .session = artifacts },
         .cache = options.cache,
         .zig = options.zig,
-        .flags = try build_replay.bindFlags(allocator, try flags(init, options, budget), .{ .io = init.io, .environ = init.environ_map }),
+        .flags = try build_replay.bindFlags(allocator, try flags(init, options, budget), .{ .io = init.io, .environ = init.environ_map, .session = artifacts }),
         .entry = entry,
     };
     if (try replayBuild(context, options, report)) return 0;
@@ -157,7 +162,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         const checked_start = stage_metrics.now(init.io);
         const report_start = report.items.len;
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
-        session.configureFrontend(.{ .io = init.io, .environ = init.environ_map });
+        session.configureFrontend(.{ .io = init.io, .environ = init.environ_map, .session = artifacts });
         defer session.deinit();
         entry.configure(&session);
         if (options.show.diagnostics != .errors) session.setFormat(if (options.show.diagnostics == .json) .json else .text);
@@ -220,6 +225,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
     if (prepared.lazy) |state| state.input.module = module;
     const caches: StageContext = .{
         .frontend = try build_replay.validate(context),
+        .artifacts = artifacts,
         .storage = if (options.show.verify_cache) null else &storage,
         .io = init.io,
         .lanes = @import("unit_cache.zig").width(init.environ_map, module.functions.items.len),
@@ -386,10 +392,10 @@ fn linkEmittedCached(init: std.process.Init, module: *ir.Module, unit: Unit, opt
     const allocator = init.arena.allocator();
     const stages = cache.metrics;
     const emission = try emittedCached(.{ .result = allocator, .scratch = init.gpa }, module, unit, options, cache, report);
-    if (cache.frontend) |captured_frontend| try language.frontend_runtime.revalidate(allocator, .{ .io = init.io, .environ = init.environ_map }, captured_frontend);
+    if (cache.frontend) |captured_frontend| try language.frontend_runtime.revalidate(allocator, .{ .io = init.io, .environ = init.environ_map, .session = cache.artifacts }, captured_frontend);
     if (options.show.llvm) |where| std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = where, .data = emission.whole.? }) catch return error.WriteFailed;
     const native_start = stage_metrics.now(init.io);
-    var outcome = driver.linkVerified(.{ .arena = allocator, .backing = init.gpa, .io = init.io, .environ = init.environ_map, .frontend = cache.frontend }, .{
+    var outcome = driver.linkVerified(.{ .arena = allocator, .backing = init.gpa, .io = init.io, .environ = init.environ_map, .frontend = cache.frontend, .artifacts = cache.artifacts }, .{
         .zig = options.zig,
         .work = options.cache,
         .output = options.output,
@@ -425,7 +431,15 @@ pub fn emittedWithScratch(allocator: std.mem.Allocator, scratch: std.mem.Allocat
     return emittedCached(.{ .result = allocator, .scratch = scratch }, module, unit, options, null, report);
 }
 
-const StageContext = struct { storage: ?*stage_store.Store, io: std.Io, lanes: usize, metrics: *stage_metrics.Report, demand: ?*@import("demand_ir.zig").Context = null, frontend: ?language.frontend_runtime.Verified = null };
+const StageContext = struct {
+    storage: ?*stage_store.Store,
+    io: std.Io,
+    lanes: usize,
+    metrics: *stage_metrics.Report,
+    demand: ?*@import("demand_ir.zig").Context = null,
+    frontend: ?language.frontend_runtime.Verified = null,
+    artifacts: ?*language.frontend_runtime.ArtifactSession = null,
+};
 
 const Memory = struct { result: std.mem.Allocator, scratch: std.mem.Allocator };
 

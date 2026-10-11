@@ -1,0 +1,3 @@
+build-slot: gate slot 1, FIFO ticket 204 after 0s
+  docs/primer.md: 7 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+Doc examples: 1 files scanned, 10 blocks found, 7 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed

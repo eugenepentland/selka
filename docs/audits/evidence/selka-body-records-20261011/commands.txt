@@ -1,0 +1,29 @@
+Working directory: /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang
+Implementation commit: a58cf7f58
+ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+TMPDIR=/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots
+ZIG_LOCAL_CACHE_DIR=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+
+scripts/build-slot.sh gate $ZIG build test --summary all -j2 --maxrss 6442450944
+  Initial: gate ticket162, exit0, 131/131; memory diagnostic retained, not ignored.
+  After resource-only correction: gate ticket164, exit0, 131/131, no memory diagnostic.
+  Both run121 body pure tests per mode and complete283-workflow matrices.
+
+scripts/build-slot.sh gate python3 selfhost/tests/run_body_check_qualification.py --compiler $TMPDIR/body-record-release/bin/mylang --builder $TMPDIR/body-record-release/tools/selka-components --component-dir $TMPDIR/body-record-release/libexec/mylang/components --zig $ZIG --release --report $TMPDIR/b4-release-host-qualification.json
+  Gate ticket163, exit0;283workflows/566comparisons, zero failures/skips.
+
+scripts/build-slot.sh gate bash -c '$ZIG build fmt-check && /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --full --gate'
+  Gate ticket165, exit0. Actual shell command spells the pinned Zig path literally.
+
+scripts/build-slot.sh gate python3 $TMPDIR/record-performance/isolated.py taskset -c 2,3,10,11 python3 $TMPDIR/record-performance/sweep.py
+  Gate ticket166, build reservations1563/1564/1565. Launcher scripts retained.
+  Exit1: completed24-row strict performance report,20failed/4passed.
+  All3reservation holders exit0; every lock released.
+
+Both initial and corrected gate logs are retained. Unchanged shard verdicts can
+be cached; gate-summary.json separates actual executed Guardian counts.
+Early smoke failures and duplicate-spec failed install are preserved and
+superseded by final successful installs, smoke3 and whole-gate qualification.
+Production install/runtime commands use no Python. Python above is developer
+qualification and timing orchestration.

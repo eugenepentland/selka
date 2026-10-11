@@ -13,8 +13,8 @@ from test_pilots import require_guest
 ROOT=Path(__file__).resolve().parents[1]
 
 
-def execute(command, env):
-    result=subprocess.run([str(arg) for arg in command],cwd=ROOT,env=env,capture_output=True,text=True,timeout=600)
+def execute(command, env, timeout=600):
+    result=subprocess.run([str(arg) for arg in command],cwd=ROOT,env=env,capture_output=True,text=True,timeout=timeout)
     print(result.stdout,end='',flush=True)
     print(result.stderr,end='',file=sys.stderr,flush=True)
     if result.returncode:raise RuntimeError(f'body_check gate command exited {result.returncode}')
@@ -26,12 +26,12 @@ def require_summary(output, edit=False):
     if len(rows)!=1:raise RuntimeError('missing/duplicate body_check qualification verdict')
     workflows,comparisons,warm,live=map(int,rows[0])
     fixtures = json.loads((ROOT / 'selfhost/tests/fixtures/body_check/manifest.json').read_text())
-    expected = len(fixtures) + 2 * sum(bool(value.get('typed')) and not value.get('library') for value in fixtures.values()) + sum('result' in value for value in fixtures.values()) + 8 + 2 + 3 + 3
+    expected = len(fixtures) + 2 * sum(bool(value.get('typed')) and not value.get('library') for value in fixtures.values()) + sum('result' in value for value in fixtures.values()) + sum('library_check_status' in value for value in fixtures.values()) + 8 + 2 + 3 + 3
     if len(fixtures) < 20 or workflows != expected or comparisons!=(4 if edit else 2)*workflows or warm!=30 or live!=4:
         raise RuntimeError('incomplete body_check qualification selection')
-    if re.findall(r'^body_check transport: (\d+) valid, (\d+) malformed; 0 failed, 0 skipped$', output, re.M) != [('1', '17')]:
+    if re.findall(r'^body_check transport: (\d+) valid, (\d+) malformed; 0 failed, 0 skipped$', output, re.M) != [('1', '22')]:
         raise RuntimeError('missing/incomplete body_check transport selection')
-    if re.findall(r'^body_check forged replies: (\d+) rejected; 0 failed, 0 skipped$', output, re.M) != ['24']:
+    if re.findall(r'^body_check forged replies: (\d+) rejected; 0 failed, 0 skipped$', output, re.M) != ['92']:
         raise RuntimeError('missing/incomplete hostile body_check reply selection')
     if re.findall(r'^body_check publication: (\d+) host failures; 0 failed, 0 skipped$', output, re.M) != ['2']:
         raise RuntimeError('missing/incomplete cross-boundary publication selection')
@@ -54,7 +54,12 @@ def main():
     for release in (False,True):
         flags=['--release','--verify-facts'] if release else []
         for source,count in roots:
-            budget = ['--max-steps', '100000000'] if source.name in ('indexed_tests.my', 'profile_tests.my', 'record_index_tests.my') else []
+            if source.name == 'profile_tests.my':
+                # Exercise the real two-million-row boundary in this test child.
+                # Installed compiler requests retain their separate limits.
+                budget = ['--max-steps', '500000000', '--max-memory', '1G']
+            else:
+                budget = ['--max-steps', '100000000'] if source.name in ('indexed_tests.my', 'record_index_tests.my') else []
             require_guest(execute([seed,'test',source,'--force','--no-cache',*flags,*budget],env),count)
         command=[sys.executable,ROOT/'selfhost/tests/run_body_check_qualification.py','--compiler',args.compiler.resolve(),'--builder',args.builder.resolve(),'--component-dir',args.component_dir.resolve(),'--zig',args.zig]
         if args.report_dir:
@@ -62,7 +67,9 @@ def main():
             command.extend(['--report', report])
         if release:command.append('--release')
         else:command.append('--edit-check')
-        require_summary(execute(command,env), edit=not release)
+        # The complete matrix includes hundreds of workflows and edit rebuilds.
+        # Its outer deadline is separate from each guest/transport execution limit.
+        require_summary(execute(command,env,timeout=1800), edit=not release)
     print(f'body_check gate: {total} pure tests per mode; complete qualification passed')
 
 if __name__=='__main__':main()

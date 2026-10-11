@@ -1,0 +1,152 @@
+{
+  "version": "doc-examples-v1",
+  "compiler": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+  "compiler_sha256": "106c74ea88a9c8817a1320e5cd0cd951bfe8f030dc5336bc6dc5afd7c4ee2138",
+  "totals": {
+    "run": 7,
+    "checked": 2,
+    "skipped": 0,
+    "mistagged": 0,
+    "failed": 0
+  },
+  "files": {
+    "docs/primer.md": {
+      "blocks": 10,
+      "run": 7,
+      "checked": 2,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0,
+      "skips": []
+    }
+  },
+  "units": [
+    {
+      "label": "docs/primer.md:64",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "checked",
+      "detail": "",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit000/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit000/objects"
+      ]
+    },
+    {
+      "label": "docs/primer.md:88",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "checked",
+      "detail": "generated entry point",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit001/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit001/objects"
+      ]
+    },
+    {
+      "label": "docs/primer.md:126",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "run",
+      "detail": "stdout '2'",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit002/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit002/objects"
+      ]
+    },
+    {
+      "label": "docs/primer.md:142",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "run",
+      "detail": "stdout '3'",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit003/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit003/objects"
+      ]
+    },
+    {
+      "label": "docs/primer.md:178",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "run",
+      "detail": "stdout '1'",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit004/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit004/objects"
+      ]
+    },
+    {
+      "label": "docs/primer.md:189",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "run",
+      "detail": "stdout '2 1 [[], [7]] 1'",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit005/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit005/objects"
+      ]
+    },
+    {
+      "label": "docs/primer.md:202",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "run",
+      "detail": "stdout '{3, 1, 2} {'a': 1, 'bb': 2} 14 True'",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit006/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit006/objects"
+      ]
+    },
+    {
+      "label": "docs/primer.md:232",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "run",
+      "detail": "stdout '1'",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit007/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit007/objects"
+      ]
+    },
+    {
+      "label": "docs/primer.md:253",
+      "kind": "block",
+      "document": "docs/primer.md",
+      "status": "run",
+      "detail": "stdout '3.5 -4 2 -3 2.67 b'",
+      "command": [
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit008/main.my",
+        "--diagnostics=json",
+        "--cache-dir=/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/doctest-7aaf42ee9cfc3a8e/unit008/objects"
+      ]
+    }
+  ],
+  "mistagged": []
+}

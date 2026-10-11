@@ -1,0 +1,13 @@
+func read(fs: Filesystem) -> int fails str:
+    with try fs.open("blob.bin", "rb") as file:
+        _ = file.read(1)
+        fail "expected"
+func main(fs: Filesystem) -> int:
+    for item in range(128):
+        match read(fs):
+            case Ok(_):
+                return 0
+            case Err(message):
+                if message != "expected":
+                    return 0
+    return 7

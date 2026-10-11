@@ -224,3 +224,23 @@ The [incremental v2 protocol](component-protocol.md#incremental-core-cache-plann
 supports persisted canonical facts, complete graph generations and unaffected
 test-key reuse. Persistent workers, an in-process C ABI and application durable
 execution remain separate future features.
+
+Frontend invocation sessions retain up to seven authenticated artifact entries and
+64 MiB of artifact bytes in userspace. Selected launches lazily retain a sealed
+memfd copy too (up to another 64 MiB of kernel payload); both copies and all
+retained descriptors are released after invocation borrowers finish. Every
+existing cache/authority/publication barrier still validates the live manifest
+and exact executable bytes through EOF. Reuse replaces repeated SHA computation
+with equality against the original SHA-authenticated immutable bytes, without
+trusting filesystem timestamps. Artifacts that exceed the remaining retained
+budget use full authentication and caller-owned sealed descriptors, without
+changing artifact admission. Reference mode performs no deployment I/O.
+
+The frontend CLI and Core build workflow carry explicit sessions; Core checking
+sessions create a local owner when their caller supplies none. Independent
+`test-index` and `cache-plan` adapters currently keep their existing lifecycles;
+the shared seven-entry budget does not imply those adapters have been converted.
+Test-receipt and directory-discovery barriers also retain full authentication when
+their callers do not carry a session; no cross-workflow/global session is installed.
+This optimization has native safety checks; no performance-budget success is
+claimed before isolated baseline/candidate qualification.

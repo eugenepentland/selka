@@ -1,0 +1,11 @@
+func main() -> int:
+    mut total = 0
+    for octet in b"\x00\x03\x04\xff":
+        if octet == 0:
+            continue
+        if octet == 255:
+            break
+        total = total + octet
+    if total != 7:
+        return 0
+    return 7

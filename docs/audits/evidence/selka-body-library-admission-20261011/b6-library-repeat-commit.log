@@ -1,0 +1,22 @@
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (60s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (120s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (180s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (240s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (300s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (361s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (421s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (481s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (541s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (601s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (661s so far)
+build-slot: FIFO ticket 215, position 1; all 1 gate slot(s) busy; waiting (721s so far)
+build-slot: gate slot 1, FIFO ticket 215 after 772s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 9846 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/selka-bootstrap-20261011 8c58e7cb8] Preserve fresh join evidence across repeated library gates
+ 2 files changed, 23 insertions(+), 2 deletions(-)

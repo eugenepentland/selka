@@ -1,0 +1,5 @@
+func main() -> int:
+    const ch = "x"
+    for ch in "a":
+        _ = ch
+    return 7

@@ -1,0 +1,18 @@
+record Pair:
+    left: int = 3
+    right: int = 4
+
+enum Choice:
+    pair(value: Pair, marker: int = 0)
+    empty
+
+func main() -> int:
+    const first = Choice.pair(value=Pair())
+    const second = Choice.pair(value=Pair())
+    if first != second:
+        return 0
+    match first:
+        case Choice.pair(value=pair, marker=marker):
+            return pair.left + pair.right + marker
+        case Choice.empty:
+            return 0

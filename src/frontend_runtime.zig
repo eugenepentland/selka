@@ -54,7 +54,7 @@ pub fn verify(a: std.mem.Allocator, runtime: ?Runtime) HostError!Verified {
     const body_check_id = try body_check_boundary.identity(a, capabilities);
     if (allReference(capabilities)) return .{};
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("frontend-boundary-v7/target-profile/module-and-trust-v1/type-interface-v1/body-check-v4");
+    hash.update("frontend-boundary-v10/target-profile/module-and-trust-v1/type-interface-v1/body-check-v7");
     hash.update(&lex_id);
     hash.update(&parse_id);
     hash.update(&declaration_id);
@@ -92,9 +92,12 @@ pub fn hostFailure(err: anyerror) ?HostError {
 test "frontend verification keeps reference free of deployment access and rejects invalid modes" {
     var environment: std.process.Environ.Map = .init(std.testing.allocator);
     defer environment.deinit();
-    const runtime: Runtime = .{ .io = std.testing.io, .environ = &environment, .component_dir = "missing-frontend-fixture" };
+    var artifacts: ArtifactSession = .{ .allocator = std.testing.allocator };
+    defer artifacts.deinit();
+    const runtime: Runtime = .{ .io = std.testing.io, .environ = &environment, .component_dir = "missing-frontend-fixture", .session = &artifacts };
     const native = try verify(std.testing.allocator, runtime);
     try std.testing.expectEqualDeep(Verified{}, native);
+    try std.testing.expectEqual(@as(usize, 0), artifacts.retained);
     try std.testing.expect(reusable(runtime));
     try environment.put("MYLANG_PARSER_MODE", "invalid");
     try std.testing.expectError(error.ComponentMode, verify(std.testing.allocator, runtime));
@@ -148,4 +151,42 @@ test "body check producer identity gates reuse and shadow disables retained bodi
     try std.testing.expectError(error.ComponentMissing, verify(std.testing.allocator, runtime));
     try environment.put("MYLANG_BODY_CHECK_MODE", "invalid");
     try std.testing.expectError(error.ComponentMode, verify(std.testing.allocator, runtime));
+}
+
+/// Invocation-owned bounded artifact authentication state.
+pub const ArtifactSession = @import("component_session.zig").Session;
+
+fn sessionFixture(a: std.mem.Allocator, directory: std.Io.Dir, bytes: []const u8) !void {
+    const digest = @import("component_digest.zig").hash(bytes);
+    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"lexer-pilot\",\"protocol\":1,\"schema\":2,\"artifact\":\"producer\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
+    defer a.free(manifest);
+    try directory.writeFile(std.testing.io, .{ .sub_path = "producer", .data = bytes });
+    try directory.writeFile(std.testing.io, .{ .sub_path = "lexer-pilot.json", .data = manifest });
+}
+
+// spec-case: SELFHOST-ARTIFACT-SESSION-1
+test "frontend session rejects authenticated replacement and original environment changes before reuse" {
+    const a = std.testing.allocator;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const directory = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    defer a.free(directory);
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("MYLANG_COMPONENT_DIR", directory);
+    try environment.put("MYLANG_LEXER_MODE", "component");
+    var artifacts: ArtifactSession = .{ .allocator = a };
+    defer artifacts.deinit();
+    const runtime: Runtime = .{ .io = std.testing.io, .environ = &environment, .session = &artifacts };
+    try sessionFixture(a, temporary.dir, "first");
+    const captured = try verify(a, runtime);
+    try revalidate(a, runtime, captured);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "producer", .data = "wrong" });
+    try std.testing.expectError(error.ComponentDigest, revalidate(a, runtime, captured));
+    try sessionFixture(a, temporary.dir, "other");
+    try std.testing.expectError(error.ComponentChanged, revalidate(a, runtime, captured));
+    try environment.put("MYLANG_COMPONENT_DIR", "missing-session-fixture");
+    try std.testing.expectError(error.ComponentMissing, revalidate(a, runtime, captured));
+    try environment.put("MYLANG_LEXER_MODE", "invalid");
+    try std.testing.expectError(error.ComponentMode, revalidate(a, runtime, captured));
 }

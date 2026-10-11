@@ -38,7 +38,7 @@ test "body lists independently materialize exact ordered nested recipes and comp
     var reference = try fixture(a, program_text);
     const inner = recipe(selected, 0, .i64);
     const outer = recipe(selected, 1, inner.id);
-    const recipes = [_]value.ListRecipe{ inner, outer };
+    const recipes = [_]value.CatalogRecipe{ .{ .list = inner }, .{ .list = outer } };
     const first = try @import("collection_lower.zig").listType(&reference.native, .i64, inner.span);
     const second = try @import("collection_lower.zig").listType(&reference.native, first, outer.span);
     try std.testing.expectEqual(inner.id, first);
@@ -122,7 +122,12 @@ test "body lists accept native dynamic literal graphs and reject forged buffer a
     const nodes = try a.dupe(typed.Node, program.nodes);
     const ranges = try a.alloc(@import("semantic_copy.zig").Range, 1);
     ranges[0] = .{ .nodes = .{ .start = 0, .end = nodes.len }, .statements = .{ .start = 0, .end = program.statements.len } };
-    const output: value.Output = .{ .batch = .{ .nodes = nodes, .statements = program.statements, .functions = program.functions, .ranges = ranges }, .import_used = &.{}, .diagnostics = &.{}, .lists = &.{recipe(f, 0, .i64)} };
+    const output: value.Output = .{
+        .batch = .{ .nodes = nodes, .statements = program.statements, .functions = program.functions, .ranges = ranges },
+        .import_used = &.{},
+        .diagnostics = &.{},
+        .recipes = &.{.{ .list = recipe(f, 0, .i64) }},
+    };
     const protocol = @import("body_check_protocol.zig");
     const request = try protocol.request(a, f.input, @splat(6));
     const good = try protocol.response(a, .{ .success = output }, request.identity);

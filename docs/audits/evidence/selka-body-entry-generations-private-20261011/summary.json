@@ -1,0 +1,55 @@
+{
+  "scope": "private B7 two-generation component proof; native catalog/backend/driver retained; not root qualification or full compiler bootstrap",
+  "producer_commit": "085ae768a8958a07caf74ba181db5c1f1f2287fb",
+  "native_commit": "18da27cc0",
+  "runner_commit": "7de60b8dc990b4cd5ac848e48623eb63ff73de08",
+  "lanes": [
+    "normal",
+    "release/facts/leaks"
+  ],
+  "operations_per_lane": 349,
+  "captures_per_lane": 35,
+  "resource_forgeries_per_lane": 15,
+  "identical_generation_artifacts": {
+    "normal": {
+      "test-index": true,
+      "cache-plan": true,
+      "lexer-pilot": true,
+      "parser-pilot": true,
+      "declaration-index": true,
+      "type-interface": true,
+      "body-check": true
+    },
+    "release": {
+      "test-index": true,
+      "cache-plan": true,
+      "lexer-pilot": true,
+      "parser-pilot": true,
+      "declaration-index": true,
+      "type-interface": true,
+      "body-check": true
+    }
+  },
+  "frozen_source_files": 194,
+  "composed_frontend_generations": {
+    "operations": 119,
+    "fresh_body_exchanges": 28,
+    "generations": [
+      3,
+      4
+    ],
+    "all_seven_binaries_identical_to_release_parent": true,
+    "selected_modes": {
+      "LEXER": "component",
+      "PARSER": "component",
+      "DECLARATION": "component",
+      "TYPE_INTERFACE": "component",
+      "BODY_CHECK": "component",
+      "TEST_INDEX": "component",
+      "CACHE_PLAN": "component"
+    }
+  },
+  "retained_paths": 244,
+  "unique_archives": 45,
+  "frame_storage": "Every complete frame reconstructs as bytes.fromhex(header_hex) + gzip.decompress(archive); all original frame hashes verified. Original gzip-container hashes are provenance only."
+}

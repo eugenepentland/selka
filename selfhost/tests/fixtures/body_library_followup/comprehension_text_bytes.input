@@ -1,0 +1,6 @@
+func main() -> int:
+    const chars = [for ch in "é😀" yield ord(ch)]
+    const octets = [for value in b"\x03\x04" yield value]
+    if chars != [233, 128512] or octets != [3, 4]:
+        return 0
+    return 7

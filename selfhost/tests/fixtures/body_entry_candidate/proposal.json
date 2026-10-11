@@ -1,0 +1,478 @@
+{
+  "schema": 1,
+  "scope": "B7 separate native-controlled proposal; selected support pending, not promoted",
+  "cases": [
+    {
+      "name": "entry_binary_try",
+      "source": "entry_binary_try.input",
+      "sha256": "abf13618e0232b68dca7551b8e16084e9b11259152933de77a08ca707bb1a287",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "00ffc3a96162",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_binary_match",
+      "source": "entry_binary_match.input",
+      "sha256": "d6d08b9d44650b6d64d3ecb91e977eb4032ea4914e776665cccdc750279cc1ef",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "00ffc3a96162",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_return_snapshot",
+      "source": "entry_return_snapshot.input",
+      "sha256": "cd28fa582a06a6b263db2dee9ec3728f1e1209015b7eec9b89043dc3f0e1aa09",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": 32,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_scoped_failure",
+      "source": "entry_scoped_failure.input",
+      "sha256": "18cfcce367eb7597932db486de8970b22741931afcf7826d0959976d5ed421a0",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "636865636b6564206661696c7572650a",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_repeat_return",
+      "source": "entry_repeat_return.input",
+      "sha256": "d8efb9b24ae04e104153ec331b9947e0a29e11f717b68cb9a0c4303dd710c5b1",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": 32,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_repeat_failure",
+      "source": "entry_repeat_failure.input",
+      "sha256": "a8e0c90dfd3b578128fa2394d0f32f34131c5898a9d0b6b75c3f58f88f578df8",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": 32,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_repeat_break",
+      "source": "entry_repeat_break.input",
+      "sha256": "5e0962cf368999ee08397f57fd7b598c31a092429466de8b4365d3dcf2b50906",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": 32,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_repeat_continue",
+      "source": "entry_repeat_continue.input",
+      "sha256": "473bab3b965a55b12f28aed8bda922d18b9827f38f425ef98aaddc5cacfcaf01",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": 32,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_nested_return",
+      "source": "entry_nested_return.input",
+      "sha256": "5b4530f4832f03872a9e6512efa114fe92d4b96993c77d82ccf9ad05013ee5e3",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": 32,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_read_boundaries",
+      "source": "entry_read_boundaries.input",
+      "sha256": "462e0cf5be7e239881d2dcf55d25584ccf118ee5bb223cea55b6f64e626b5a4f",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_stream_destinations",
+      "source": "entry_stream_destinations.input",
+      "sha256": "d0a137d7b344c1cdb1ab4a049905f0e3c81ff54f145478ba64813370d0c6ff86",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "00ff",
+      "runtime_stderr_hex": "6572720a",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_print_values",
+      "source": "entry_print_values.input",
+      "sha256": "97823a1535353e7a1a47468122babf63818b43bfbcbb93ecff055d2f798aa51e",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "c3a9203720547275650a",
+      "runtime_stderr_hex": "6572726f722062276279746573270a",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_capability_helper",
+      "source": "entry_capability_helper.input",
+      "sha256": "80cbaf5dcf201a8c9aac8045e651d1ed011c55b89ed382fa515939c6caefd7a1",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "00ffc3a96162",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_missing_match",
+      "source": "entry_missing_match.input",
+      "sha256": "12f1b6dc0ba70734daa722b72bd3bdfbfaeaf8cb269f1574519bd46ee74c1a74",
+      "class": "success",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "6d697373696e670a",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_escape_error",
+      "source": "entry_escape_error.input",
+      "sha256": "694ebd7e8a6c2800b2d57bcd6df85a13a40477143434e69665cffb91fadffb35",
+      "class": "diagnostic",
+      "native_status": 1,
+      "runtime_status": null,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "diagnostics": [
+        {
+          "code": "E_WITH_RESOURCE",
+          "message": "an open file binding cannot be stored, passed or returned; call its methods instead, and iterate lines with `for line in name.readlines():`",
+          "bytes": {
+            "start": 117,
+            "end": 121
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    {
+      "name": "entry_binding_error",
+      "source": "entry_binding_error.input",
+      "sha256": "9369760fb2c1ba246ca36ed8e997540a85d49b23c64d14508fa1dc0b099d27cc",
+      "class": "diagnostic",
+      "native_status": 1,
+      "runtime_status": null,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "diagnostics": [
+        {
+          "code": "E_WITH_RESOURCE",
+          "message": "a file `with` scope requires a binding, as in `with open(fs, path, \"rb\")? as f:`",
+          "bytes": {
+            "start": 50,
+            "end": 104
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    {
+      "name": "entry_shadow_error",
+      "source": "entry_shadow_error.input",
+      "sha256": "a67e2c11b666ad70f804c72371e2c93252b6c98abae5ca17d909ca2c913cb13e",
+      "class": "diagnostic",
+      "native_status": 1,
+      "runtime_status": null,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "diagnostics": [
+        {
+          "code": "E_SHADOWING",
+          "message": "file name shadows an active name",
+          "bytes": {
+            "start": 107,
+            "end": 111
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    {
+      "name": "entry_after_scope_error",
+      "source": "entry_after_scope_error.input",
+      "sha256": "39e90c35763ddeb206f13f16e3ecebb214444cc810adee93f7be3b63b3b966f6",
+      "class": "diagnostic",
+      "native_status": 1,
+      "runtime_status": null,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "diagnostics": [
+        {
+          "code": "E_TYPE",
+          "message": "operation requires a nominal scalar domain",
+          "bytes": {
+            "start": 130,
+            "end": 134
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    {
+      "name": "entry_read_type_error",
+      "source": "entry_read_type_error.input",
+      "sha256": "560e180cac16086cfe43d223cca85f3def38d9c4456436cb54460e39472385e6",
+      "class": "diagnostic",
+      "native_status": 1,
+      "runtime_status": null,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "diagnostics": [
+        {
+          "code": "E_TYPE",
+          "message": "expected int, found bool",
+          "bytes": {
+            "start": 109,
+            "end": 124
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    {
+      "name": "entry_stream_arity_error",
+      "source": "entry_stream_arity_error.input",
+      "sha256": "bbaba1a8a396be6dabc9f9cc18574309e492f894bf61f44fd61dcd968249683a",
+      "class": "diagnostic",
+      "native_status": 1,
+      "runtime_status": null,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "diagnostics": [
+        {
+          "code": "E_ARITY",
+          "message": "stream.write takes one str or bytes argument",
+          "bytes": {
+            "start": 39,
+            "end": 54
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    {
+      "name": "entry_ambient_error",
+      "source": "entry_ambient_error.input",
+      "sha256": "d0c08a1c3a7f17ed3b13a48cb1c003d0467bb494f6910af4cbc7d0d3e7df5705",
+      "class": "diagnostic",
+      "native_status": 1,
+      "runtime_status": null,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "diagnostics": [
+        {
+          "code": "E_OUTPUT_CAPABILITY",
+          "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+          "bytes": {
+            "start": 24,
+            "end": 29
+          },
+          "notes": [
+            {
+              "role": "alternative",
+              "message": "print needs a Stream; add `out: Stream` to this function and pass one from main",
+              "bytes": {
+                "start": 24,
+                "end": 29
+              }
+            },
+            {
+              "role": "signature",
+              "message": "stream.print(values..., sep: str, end: str) -> None",
+              "bytes": {
+                "start": 24,
+                "end": 29
+              }
+            }
+          ],
+          "edits": []
+        }
+      ]
+    },
+    {
+      "name": "entry_mode_error",
+      "source": "entry_mode_error.input",
+      "sha256": "c3ede1751af28e4c9ef2e744a19b9cf339a2e31ae79fd09412528be02dfa28d0",
+      "class": "diagnostic",
+      "native_status": 1,
+      "runtime_status": null,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "diagnostics": [
+        {
+          "code": "E_FILE_ARGUMENT",
+          "message": "open requires a literal mode such as \"rb\", \"r\", \"wb\", \"w\", \"ab\" or \"a\"",
+          "bytes": {
+            "start": 90,
+            "end": 94
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    {
+      "name": "entry_write_profile",
+      "source": "entry_write_profile.input",
+      "sha256": "c8cb1bc4e6144938e555a55cfb251ed4ff85d67fd2b1717df869e7fa7b13955c",
+      "class": "profile",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    },
+    {
+      "name": "entry_text_profile",
+      "source": "entry_text_profile.input",
+      "sha256": "40ba90b7f64339f41ecef9b998c2068a68f356e683d5f8b42fb458040601bd63",
+      "class": "profile",
+      "native_status": 0,
+      "runtime_status": 7,
+      "selected_status": null,
+      "selected_admission": "pending",
+      "descriptor_limit": null,
+      "native_check_confirmed": true,
+      "runtime_stdout_hex": "",
+      "runtime_stderr_hex": "",
+      "native_release_facts_leaks_confirmed": true
+    }
+  ],
+  "donors": [
+    "helper.my"
+  ],
+  "data_files": {
+    "blob.bin": "00ffc3a96162",
+    "text.txt": "736576656e21210a"
+  },
+  "native_controls": {
+    "host_sha256": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+    "all_modes": "reference",
+    "checks": 24,
+    "generated_release_facts_leaks": 16,
+    "typed_ir_views": 32,
+    "descriptor_limit": {
+      "soft": 32,
+      "applies_to": "generated program only",
+      "cases": 6,
+      "repetitions": 128
+    },
+    "raw_receipts": ".tmp/b7-entry-proposal/native/{checks,runtime,typed-ir}.json",
+    "selected_tests_executed": 0
+  },
+  "selected_admission": "pending"
+}

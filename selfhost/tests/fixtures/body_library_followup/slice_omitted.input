@@ -1,0 +1,9 @@
+func main() -> int:
+    const source = [1, 2, 4]
+    const copy = source[:]
+    const prefix = source[:2]
+    const tail = source[1:]
+    const empty = source[2:1]
+    if copy == [1, 2, 4] and prefix == [1, 2] and tail == [2, 4] and empty == []:
+        return 7
+    return 0

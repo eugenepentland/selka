@@ -1,0 +1,11 @@
+enum Box[T]:
+    value(item: T)
+    empty
+
+func main() -> int:
+    const value: Box[int] = Box.value(item=7)
+    match value:
+        case Box.value(item=item):
+            return item
+        case Box.empty:
+            return 0

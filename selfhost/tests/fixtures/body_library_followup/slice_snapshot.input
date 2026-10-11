@@ -1,0 +1,8 @@
+func main() -> int:
+    mut source = [[1, 2], [4]]
+    mut copy = source[:]
+    source[0][0] = 99
+    copy[1].append(3)
+    if copy == [[1, 2], [4, 3]] and source == [[99, 2], [4]]:
+        return 7
+    return 0

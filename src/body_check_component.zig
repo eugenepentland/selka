@@ -1,4 +1,4 @@
-//! Authenticated process boundary for Selka-owned scalar and text body checking.
+//! Authenticated process boundary for Selka-owned ordinary bodies and checked failures.
 const std = @import("std");
 const value = @import("body_check_value.zig");
 const launch = @import("component_launch.zig");
@@ -34,12 +34,12 @@ fn directory(a: std.mem.Allocator, runtime: Runtime) Error![]u8 {
 pub fn identity(a: std.mem.Allocator, runtime: Runtime) Error![32]u8 {
     const selected = runtime.environ.get("MYLANG_BODY_CHECK_MODE") orelse reference_mode;
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    hash.update("selka-body-check-v4/record-bodies-v1/schema4/");
+    hash.update("selka-body-check-v7/entry-resource-bodies-v1/schema7/");
     hash.update(selected);
     if (std.mem.eql(u8, selected, "shadow") or std.mem.eql(u8, selected, component_mode)) {
         const dir = try directory(a, runtime);
         defer a.free(dir);
-        const artifact = try launch.artifact(a, runtime.io, dir, component_name);
+        const artifact = try runtime.artifact(a, dir, component_name);
         defer a.free(artifact.path);
         hash.update(&artifact.digest);
     } else if (std.mem.eql(u8, selected, reference_mode)) hash.update("host-reference-v1") else return error.ComponentMode;
@@ -55,7 +55,8 @@ pub fn execute(a: std.mem.Allocator, input: wire.Input, runtime: Runtime) Error!
     defer arena.deinit();
     const scratch = arena.allocator();
     const dir = try directory(scratch, runtime);
-    const snapshot = try launch.artifactSnapshot(scratch, runtime.io, dir, component_name);
+    const snapshot = try runtime.snapshot(scratch, dir, component_name);
+    defer snapshot.deinit(scratch);
     var nonce: [16]u8 = undefined;
     std.Io.random(runtime.io, &nonce);
     const request = try wire.request(scratch, input, nonce[0..8].*);
@@ -64,9 +65,9 @@ pub fn execute(a: std.mem.Allocator, input: wire.Input, runtime: Runtime) Error!
     const temporary = try std.fs.path.join(scratch, &.{ if (root.len == 0) config.temporary_root else root, name });
     std.Io.Dir.cwd().createDir(runtime.io, temporary, .fromMode(0o700)) catch return error.ComponentIo;
     defer discard(runtime.io, temporary);
-    const sealed = launch.sealedExecutable(runtime.io, snapshot.contents) catch return error.ComponentIo;
+    const sealed = runtime.seal(snapshot.contents) catch return error.ComponentIo;
     defer sealed.close(runtime.io);
-    const binary = try std.fmt.allocPrint(scratch, "/proc/{d}/fd/{d}", .{ std.os.linux.getpid(), sealed.handle });
+    const binary = try std.fmt.allocPrint(scratch, "/proc/{d}/fd/{d}", .{ std.os.linux.getpid(), sealed.file.handle });
     const path = try std.fs.path.join(scratch, &.{ temporary, "request.bin" });
     std.Io.Dir.cwd().writeFile(runtime.io, .{ .sub_path = path, .data = request.bytes }) catch return error.ComponentIo;
     const timeout: std.Io.Timeout = .{ .duration = .{ .clock = .awake, .raw = .fromMilliseconds(runtime.timeout_ms) } };
@@ -89,7 +90,7 @@ pub fn execute(a: std.mem.Allocator, input: wire.Input, runtime: Runtime) Error!
         else => return error.ComponentFailed,
     }
     if (result.stderr.len != 0) return error.ComponentProtocol;
-    const current = try launch.artifact(scratch, runtime.io, dir, component_name);
+    const current = try runtime.artifact(scratch, dir, component_name);
     if (!std.mem.eql(u8, &snapshot.verified.digest, &current.digest) or !std.mem.eql(u8, snapshot.verified.path, current.path)) return error.ComponentChanged;
     return wire.reply(a, result.stdout, request.identity, input);
 }

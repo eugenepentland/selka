@@ -1,0 +1,5509 @@
+{
+  "scope": "Installed check/typed/Core smoke; full generated runtime, hostile replies and edit qualification separate.",
+  "host_sha256": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-87a06f5edb58479a24bef394870567e0a672fc4b85547a23e984d4cfd75f5558",
+      "component": "test-index",
+      "format": 1,
+      "key": "4e8b4b2aacff840796da142a44d509b166df809be8840d29950853330ee2baca",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "87a06f5edb58479a24bef394870567e0a672fc4b85547a23e984d4cfd75f5558"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-632e9981a52949629a4fa03f437c09db6e1594a3e13ea7cd824c6c6640cfef86",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "57845edbdfbdfecccdc35a07375ea1fa5c95762e3db1eabe44848eb70c2265ae",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "632e9981a52949629a4fa03f437c09db6e1594a3e13ea7cd824c6c6640cfef86"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-2d5717c647a7f249fb83a2776896ee232254aed6644af56ac3930d68075e2162",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "0293ae4d3658f98920fd1211326607ea91f0dfd0c80eadc92cb14cc69ef9a750",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "2d5717c647a7f249fb83a2776896ee232254aed6644af56ac3930d68075e2162"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-d8480492e97eeb351298195fe026ba22a07d646e28ba98a03cedb63c197d803d",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "cb85147882565327006df48739cbc9f41918abeb0bc4eb5c24c9ac1ee63450e1",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "d8480492e97eeb351298195fe026ba22a07d646e28ba98a03cedb63c197d803d"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-e33aa081e794e0925e7dcfe61c4024535357498145e1c1308d62b0c400c7631f",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "038389b9709e8eedde0fdabe40132ffe7c6b9afe31729082fc2fd73a4c9eb52b",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "e33aa081e794e0925e7dcfe61c4024535357498145e1c1308d62b0c400c7631f"
+    },
+    "type-interface": {
+      "artifact": "type-interface-c448dfbc5a6c4fa2c47f3c2d623cd0dfd1f5373fa558d6a751d633a5059a3b27",
+      "component": "type-interface",
+      "format": 1,
+      "key": "3f4b8325fa96703c1fb7f899331ae498d2361a98b09a172dce3f8e7f9b905cae",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "c448dfbc5a6c4fa2c47f3c2d623cd0dfd1f5373fa558d6a751d633a5059a3b27"
+    },
+    "body-check": {
+      "artifact": "body-check-8a4d26ba2dbace37ae28586a86fe86883e90257eb98f82e31e200716ed2918cb",
+      "component": "body-check",
+      "format": 1,
+      "key": "76210079e48b9eaf6b78fd238f81f2b5589fec1f7d39c531db08425a674b03e0",
+      "protocol": 1,
+      "schema": 5,
+      "sha256": "8a4d26ba2dbace37ae28586a86fe86883e90257eb98f82e31e200716ed2918cb"
+    }
+  },
+  "passed": 604,
+  "comparisons": 604,
+  "cases": [
+    {
+      "source": "scalar_calls.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "scalar_calls.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "scalar_calls.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "scalar_calls.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "scalar_calls.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "scalar_calls.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "branches.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "branches.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "branches.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "branches.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "branches.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "branches.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "while_loop.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "while_loop.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "while_loop.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "while_loop.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "while_loop.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "while_loop.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "range_loop.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "range_loop.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "range_loop.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "range_loop.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "range_loop.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "range_loop.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "unit_assert.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "unit_assert.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "unit_assert.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "unit_assert.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "unit_assert.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "unit_assert.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "bool_ops.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "bool_ops.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "bool_ops.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "bool_ops.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "bool_ops.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "bool_ops.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_math.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_math.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_math.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_math.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_math.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_math.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "library.my",
+      "command": "check",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "library.my",
+      "command": "check",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "unknown_name.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "unknown_name.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "multi_body_errors.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "multi_body_errors.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "wrong_return.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "wrong_return.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "wrong_argument.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "wrong_argument.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "wrong_arity.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "wrong_arity.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "wrong_condition.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "wrong_condition.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "readonly_write.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "readonly_write.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "warning.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "warning.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "utf8_comment.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "utf8_comment.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "profile_managed.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "profile_managed.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "profile_managed.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "profile_managed.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "profile_managed.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "profile_managed.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "profile_generic.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_generic.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_text_method.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_text_method.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_text_repeat.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_text_repeat.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_lambda.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_lambda.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_division.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_division.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_chained_comparison.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_chained_comparison.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "private_import.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "private_import.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "nongeneric_type_arguments.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "nongeneric_type_arguments.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "named_only_positional.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "named_only_positional.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "named_only_valid.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_only_valid.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_only_valid.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_only_valid.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_only_valid.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_only_valid.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mut_call_marker.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "mut_call_marker.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "mut_call_valid.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mut_call_valid.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mut_call_valid.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mut_call_valid.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mut_call_valid.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mut_call_valid.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "shadow_function.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "shadow_function.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "shadow_type.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "shadow_type.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "shadow_parameter.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "shadow_parameter.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "signed_boundaries.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_boundaries.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_boundaries.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_boundaries.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_boundaries.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "signed_boundaries.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "literal_overflow.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "literal_overflow.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "repeated_defaults.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "repeated_defaults.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "repeated_defaults.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "repeated_defaults.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "repeated_defaults.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "repeated_defaults.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_argument_order.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_argument_order.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_argument_order.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_argument_order.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_argument_order.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "named_argument_order.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "nested_loop_control.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "nested_loop_control.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "nested_loop_control.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "nested_loop_control.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "nested_loop_control.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "nested_loop_control.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "forward_call.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "forward_call.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "forward_call.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "forward_call.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "forward_call.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "forward_call.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "recursive_call.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "recursive_call.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "recursive_call.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "recursive_call.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "recursive_call.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "recursive_call.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mutual_recursion.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mutual_recursion.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mutual_recursion.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mutual_recursion.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mutual_recursion.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "mutual_recursion.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "profile_range_stride.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_range_stride.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_integer_suffix.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "profile_integer_suffix.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "readonly_range_write.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "readonly_range_write.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "augmented_mut_parameter.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_mut_parameter.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_mut_parameter.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_mut_parameter.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_mut_parameter.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_mut_parameter.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_negative_remainder.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_negative_remainder.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_negative_remainder.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_negative_remainder.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_negative_remainder.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_negative_remainder.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "augmented_float_division.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "augmented_float_division.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "augmented_unknown_name.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "augmented_unknown_name.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "imported_private_alias.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "imported_private_alias.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "imported_private_alias.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "imported_private_alias.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "imported_private_alias.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "imported_private_alias.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_unicode.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_unicode.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_unicode.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_unicode.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_unicode.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_unicode.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_bytes.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_bytes.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_bytes.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_bytes.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_bytes.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_bytes.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_empty.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_empty.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_empty.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_empty.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_empty.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_empty.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_defaults.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_defaults.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_defaults.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_defaults.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_defaults.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_defaults.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_text.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_text.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_text.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_text.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_text.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_text.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_bytes.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_bytes.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_bytes.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_bytes.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_bytes.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_mut_bytes.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_branch.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_branch.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_branch.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_branch.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_branch.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_branch.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_import.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_import.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_import.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_import.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_import.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_import.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "managed_bytes_default.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "managed_bytes_default.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "managed_mixed_concat.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "managed_mixed_concat.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "managed_wrong_index.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "managed_wrong_index.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "managed_return_type.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "managed_return_type.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_empty_annotations.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_empty_annotations.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_empty_annotations.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_empty_annotations.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_empty_annotations.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_empty_annotations.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_call_return.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_call_return.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_call_return.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_call_return.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_call_return.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_call_return.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_nested_snapshots.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_nested_snapshots.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_nested_snapshots.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_nested_snapshots.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_nested_snapshots.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_nested_snapshots.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_mut_calls.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_mut_calls.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_mut_calls.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_mut_calls.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_mut_calls.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_mut_calls.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_methods.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_methods.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_methods.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_methods.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_methods.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_methods.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_augmented.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_augmented.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_augmented.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_augmented.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_augmented.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_augmented.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_elements.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_elements.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_elements.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_elements.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_elements.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_elements.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_mutation.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_mutation.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_mutation.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_mutation.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_mutation.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_mutation.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_rebind.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_rebind.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_rebind.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_rebind.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_rebind.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_iteration_rebind.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_intern_order.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_intern_order.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_intern_order.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_intern_order.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_intern_order.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_intern_order.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_63.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_63.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_63.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_63.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_63.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_63.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_64.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_64.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_64.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_64.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_64.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_constant_64.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_inference_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_inference_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_mixed_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_mixed_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_readonly_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_readonly_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_mut_marker_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_mut_marker_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_index_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_index_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_append_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_append_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_iteration_readonly_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_iteration_readonly_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_plus_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_plus_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "list_expression_methods.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_expression_methods.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_expression_methods.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_expression_methods.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_expression_methods.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_expression_methods.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_sort.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_sort.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_sort.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_sort.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_sort.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_sort.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_index_augmented.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_index_augmented.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_index_augmented.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_index_augmented.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_index_augmented.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_index_augmented.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat_augmented.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat_augmented.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat_augmented.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat_augmented.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat_augmented.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "list_repeat_augmented.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_alias_import.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_alias_import.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_alias_import.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_alias_import.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_alias_import.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_alias_import.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_call_return_list.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_call_return_list.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_call_return_list.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_call_return_list.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_call_return_list.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_call_return_list.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_defaults.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_defaults.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_defaults.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_defaults.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_defaults.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_defaults.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_named_order.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_named_order.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_named_order.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_named_order.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_named_order.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_constructor_named_order.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_duplicate_field_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_duplicate_field_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_field_type_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_field_type_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_generic_profile.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "record_generic_profile.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "record_invariant_profile.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "record_invariant_profile.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "record_list_path_snapshot.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_list_path_snapshot.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_list_path_snapshot.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_list_path_snapshot.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_list_path_snapshot.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_list_path_snapshot.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_missing_field_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_missing_field_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_mut_parameter_snapshot.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_mut_parameter_snapshot.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_mut_parameter_snapshot.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_mut_parameter_snapshot.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_mut_parameter_snapshot.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_mut_parameter_snapshot.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_nested_snapshot.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_nested_snapshot.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_nested_snapshot.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_nested_snapshot.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_nested_snapshot.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_nested_snapshot.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_private_import_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_private_import_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_readonly_field_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_readonly_field_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_receiver_overlap_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_receiver_overlap_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_refreshed_receiver.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_refreshed_receiver.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_refreshed_receiver.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_refreshed_receiver.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_refreshed_receiver.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_refreshed_receiver.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_union_profile.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_union_profile.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_union_profile.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_union_profile.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_union_profile.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_union_profile.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_unknown_field_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_unknown_field_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_unknown_member_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_unknown_member_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "record_recursive_lists.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_recursive_lists.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_recursive_lists.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_recursive_lists.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_recursive_lists.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_recursive_lists.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "record_invariant_unused.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "record_invariant_unused.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "record_invariant_imported.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "record_invariant_imported.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "checked_consumed_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_consumed_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_error_patterns.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_error_patterns.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_error_patterns.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_error_patterns.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_error_patterns.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_error_patterns.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_failure_list_payload.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_failure_list_payload.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_failure_list_payload.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_failure_list_payload.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_failure_list_payload.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_failure_list_payload.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_loop_consumption.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_loop_consumption.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_loop_consumption.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_loop_consumption.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_loop_consumption.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_loop_consumption.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_managed_result.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_managed_result.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_managed_result.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_managed_result.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_managed_result.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_managed_result.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_record_failure.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_record_failure.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_record_failure.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_record_failure.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_record_failure.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_record_failure.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_try_context_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_try_context_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_try_fail.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_try_fail.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_try_fail.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_try_fail.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_try_fail.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_try_fail.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_unhandled_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_unhandled_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_wrong_failure_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_wrong_failure_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "optional_try.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_try.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_try.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_try.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_try.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_try.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_boxed_recursive_profile.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "variant_boxed_recursive_profile.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "variant_duplicate_pattern_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "variant_duplicate_pattern_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "variant_generic_profile.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "variant_generic_profile.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "variant_import_alias.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_import_alias.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_import_alias.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_import_alias.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_import_alias.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_import_alias.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_incomplete_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "variant_incomplete_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "variant_loop_branch.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_loop_branch.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_loop_branch.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_loop_branch.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_loop_branch.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_loop_branch.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_match_expression.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_match_expression.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_match_expression.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_match_expression.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_match_expression.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_match_expression.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_named_order.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_named_order.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_named_order.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_named_order.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_named_order.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_named_order.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_payload_defaults.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_payload_defaults.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_payload_defaults.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_payload_defaults.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_payload_defaults.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_payload_defaults.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_payload_type_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "variant_payload_type_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "variant_record_list_snapshot.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_record_list_snapshot.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_record_list_snapshot.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_record_list_snapshot.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_record_list_snapshot.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_record_list_snapshot.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_recursive_lists.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_recursive_lists.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_recursive_lists.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_recursive_lists.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_recursive_lists.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_recursive_lists.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_unknown_case_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "variant_unknown_case_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_multi_argument_temporaries.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_multi_argument_temporaries.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_multi_argument_temporaries.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_multi_argument_temporaries.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_multi_argument_temporaries.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_multi_argument_temporaries.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_nested_default_constructors.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_nested_default_constructors.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_nested_default_constructors.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_nested_default_constructors.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_nested_default_constructors.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "variant_nested_default_constructors.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_short_circuit_success.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_short_circuit_success.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_short_circuit_success.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_short_circuit_success.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_short_circuit_success.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_short_circuit_success.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_short_circuit_path_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_short_circuit_path_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_explicit_pending_discard.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_explicit_pending_discard.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_explicit_pending_discard.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_explicit_pending_discard.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_explicit_pending_discard.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_explicit_pending_discard.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "checked_implicit_scalar_discard_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_implicit_scalar_discard_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_implicit_pending_discard_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_implicit_pending_discard_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_pending_list_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_pending_list_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_pending_list_annotated_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_pending_list_annotated_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_try_live_result_error.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "checked_try_live_result_error.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 1,
+      "native_status": 1,
+      "status": 1
+    },
+    {
+      "source": "optional_narrowing_profile.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "optional_narrowing_profile.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "optional_methods_profile.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "optional_methods_profile.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 2,
+      "native_status": 0,
+      "status": 2
+    },
+    {
+      "source": "optional_parse_int_demand.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_demand.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_demand.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_demand.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_demand.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_demand.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_failures.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_failures.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_failures.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_failures.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_failures.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_failures.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_methods.my",
+      "command": "check-project",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_methods.my",
+      "command": "check-project",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_methods.my",
+      "command": "dump-typed",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_methods.my",
+      "command": "dump-typed",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_methods.my",
+      "command": "dump-ir",
+      "mode": "component",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    },
+    {
+      "source": "optional_parse_int_methods.my",
+      "command": "dump-ir",
+      "mode": "shadow",
+      "matched": true,
+      "expected": 0,
+      "native_status": 0,
+      "status": 0
+    }
+  ]
+}

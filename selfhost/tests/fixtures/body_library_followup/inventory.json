@@ -1,0 +1,81 @@
+{
+  "scope": "isolated pure-library followup; not B5/B6 installed manifest",
+  "counts": {
+    "success": 20,
+    "diagnostic": 10
+  },
+  "source_cases": [
+    "iteration_unicode_ord.my",
+    "iteration_empty.my",
+    "iteration_bytes_break.my",
+    "iteration_rebind_snapshot.my",
+    "comprehension_range_capacity.my",
+    "comprehension_iterable_filter.my",
+    "comprehension_nested.my",
+    "comprehension_text_bytes.my",
+    "format_integer_bounds.my",
+    "format_key_composition.my",
+    "iteration_readonly_error.my",
+    "iteration_shadow_error.my",
+    "comprehension_filter_error.my",
+    "format_arity_error.my",
+    "format_aggregate_error.my",
+    "ord_arity_error.my",
+    "conditional_evaluation.my",
+    "constant_literal_type_error.my",
+    "constant_private_import_error.my",
+    "imported_literal_constants.my",
+    "iteration_nested_place.my",
+    "slice_negative.my",
+    "slice_omitted.my",
+    "slice_snapshot.my",
+    "repeat_augmented_snapshot.my",
+    "repeat_buffer_error.my",
+    "repeat_bytes_order.my",
+    "repeat_empty_negative.my",
+    "repeat_text_order.my",
+    "repeat_wrong_count_error.my"
+  ],
+  "native_controls": {
+    "compiler_sha256": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+    "mode": "all reference",
+    "generated_flags": [
+      "--release",
+      "--verify-facts"
+    ],
+    "MYL_CORE_LEAKCHECK": "1",
+    "source_checks": 24,
+    "runtime_executions": 16,
+    "operations": 40,
+    "failed": 0,
+    "skipped": 0,
+    "raw_receipt": ".tmp/library-extension/native-final.json"
+  },
+  "selected_library_admission": "pending",
+  "library_roots": 9,
+  "test_roots": 6,
+  "bootstrap": "not established",
+  "donors": {
+    "literal_constants.my": "55f4c4c459937b724577a8dda8d6d8af99d588e32a2d4531fe81758b234d3648"
+  },
+  "explicit_limits": [
+    "general scalar constant evaluation",
+    "embed constant initialization",
+    "Option narrowing/methods",
+    "resources"
+  ],
+  "diagnostic_provenance": {
+    "constant_private_import_error.my": "private declaration visibility is a retained interface/common phase, not new body ownership"
+  },
+  "native_semantic_limits": {
+    "nested_source_write_during_iteration": "native R_LIST_ITERATION_MUTATION; not a successful snapshot case",
+    "conditional_syntax": "canonical if condition then value else value; legacy syntax is a native repair diagnostic"
+  },
+  "repetition_native_controls": {
+    "host_sha256": "85242d8ea5880c028181e129db11510267f4c242a9246d3da50b3f7d49b3e856",
+    "mode": "all reference",
+    "checks": 6,
+    "release_verify_facts_leak_runs": 4,
+    "selected": "pending"
+  }
+}

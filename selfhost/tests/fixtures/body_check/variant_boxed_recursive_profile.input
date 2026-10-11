@@ -1,0 +1,15 @@
+enum Chain:
+    end
+    link(value: Chain)
+
+func main() -> int:
+    const value = Chain.link(value=Chain.end)
+    match value:
+        case Chain.end:
+            return 0
+        case Chain.link(value=next):
+            match next:
+                case Chain.end:
+                    return 7
+                case Chain.link(value=_):
+                    return 0
