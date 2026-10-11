@@ -19,6 +19,7 @@ import io_arguments
 import list_repeat
 import list_places
 import dictionary_places
+import dictionary_construct
 import list_iteration
 import comprehension_lower
 import collection_comprehension
@@ -1088,6 +1089,22 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                                 state.batch.resolved[raw_id] = id
                                 state.depth = state.depth - 1
                                 return Expression(id=id, ty=gathered.ty)
+                if raw_callee == b"dict":
+                    const constructor_inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
+                    const constructor_inputs = try graph.items(state.syntax.pool, constructor_inputs_id)
+                    mut checked_arguments: int[] = []
+                    for input in constructor_inputs:
+                        const argument_raw = try graph.number(state.syntax.pool, input)
+                        const checked = try expression(mut state, argument_raw)
+                        checked_arguments.append(checked.id)
+                    const context = list_lower.Context(input=state.syntax.pool, span=span)
+                    const lowered = try dictionary_construct.build(mut state.batch, mut state.scope, context, dictionary_construct.Input(arguments=checked_arguments, expected=state.batch.facts.expected[raw_id]), mut state.problems)
+                    const id = try list_lower.append(mut state.batch, context, lowered)
+                    const ty_id = try graph.field(state.batch.pool, state.batch.nodes[id], "ty")
+                    const constructed_type = try graph.number(state.batch.pool, ty_id)
+                    state.batch.resolved[raw_id] = id
+                    state.depth = state.depth - 1
+                    return Expression(id=id, ty=constructed_type)
                 if raw_callee == b"list":
                     const inputs_id = try graph.field(state.syntax.pool, payload, "arguments")
                     const inputs = try graph.items(state.syntax.pool, inputs_id)

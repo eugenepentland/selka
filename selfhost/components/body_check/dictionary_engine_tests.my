@@ -248,3 +248,69 @@ public func test_expression_dictionary_view_preserves_checked_mapping_without_ow
     state.syntax.nodes.append(call)
     const result = try engine.expression(mut state, 5)
     return result.ty == 20 and result.id == 6 and len(state.scope.locals) == 0 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[1].kind == "dict_keys"
+
+
+func constructor_call(mut state: engine.State, arguments: int[]) -> int fails syntax_value.Problem:
+    state.syntax.source = b"True7False8dict"
+    const name = try syntax_value.span(mut state.syntax.pool, 11, 15)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    mut references: int[] = []
+    for argument in arguments:
+        const reference = try syntax_value.integer(mut state.syntax.pool, argument)
+        references.append(reference)
+    const values = try syntax_value.sequence(mut state.syntax.pool, references)
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const call = try syntax_value.object(mut state.syntax.pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, name, values, empty, empty])
+    const raw = try node(mut state.syntax.pool, name, b"call", call)
+    const id = len(state.syntax.nodes)
+    state.syntax.nodes.append(raw)
+    state.batch.resolved.append(-1)
+    state.batch.facts.expected.append(-1)
+    return id
+
+
+public func test_dictionary_constructor_copy_preserves_mapping_type_and_native_owner() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const raw = try constructor_call(mut state, [4])
+    const result = try engine.expression(mut state, raw)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[result.id], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == 19 and data.data == b"block_value" and len(state.scope.locals) == 1 and state.scope.locals[0].ty == 19 and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_empty_dictionary_constructor_uses_context_without_new_recipe() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const mapping = try engine.expression(mut state, 4)
+    const raw = try constructor_call(mut state, [])
+    state.batch.facts.expected[raw] = mapping.ty
+    const before = len(state.batch.nodes)
+    const result = try engine.expression(mut state, raw)
+    const data_id = try graph.field(state.batch.pool, state.batch.nodes[before], "data")
+    const data = try graph.get(state.batch.pool, data_id)
+    return result.ty == mapping.ty and result.id == before + 1 and data.data == b"array" and len(state.scope.locals) == 0 and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_dictionary_constructor_checks_unknown_operand_before_extra_arity() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    state.syntax.source = b"True7False8missing"
+    const name = try syntax_value.span(mut state.syntax.pool, 11, 18)
+    const raw_name = try node(mut state.syntax.pool, name, b"name", name)
+    state.syntax.nodes.append(raw_name)
+    state.batch.resolved.append(-1)
+    state.batch.facts.expected.append(-1)
+    const raw = try constructor_call(mut state, [4, 5])
+    state.syntax.source = b"True7False8missingdict"
+    const call_name = try syntax_value.span(mut state.syntax.pool, 18, 22)
+    const absent = try syntax_value.absent(mut state.syntax.pool)
+    const first = try syntax_value.integer(mut state.syntax.pool, 4)
+    const second = try syntax_value.integer(mut state.syntax.pool, 5)
+    const values = try syntax_value.sequence(mut state.syntax.pool, [first, second])
+    const empty = try syntax_value.sequence(mut state.syntax.pool, [])
+    const call = try syntax_value.object(mut state.syntax.pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [absent, call_name, values, empty, empty])
+    const call_node = try node(mut state.syntax.pool, call_name, b"call", call)
+    state.syntax.nodes[raw] = call_node
+    match engine.expression(mut state, raw):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_UNKNOWN_NAME" and problem.start == 11 and problem.end == 18
