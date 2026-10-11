@@ -1,0 +1,39 @@
+{
+  "source_sha256": "90c4b57bc900996b8f8373c93a41dfc5516451d9b222c55cc7bc98970c92b2d3",
+  "schema": 8,
+  "hostile_names": [
+    "recipe_gap",
+    "recipe_duplicate",
+    "recipe_reorder",
+    "recipe_unhashable_key",
+    "recipe_site",
+    "view_missing_mapping",
+    "view_forward_mapping",
+    "dict_set_distinction",
+    "dictionary_odd",
+    "dictionary_key_type",
+    "dictionary_value_type",
+    "set_nonunit_write",
+    "read_result",
+    "get_fallback_type",
+    "get_arity",
+    "contains_result",
+    "length_result",
+    "write_key_type",
+    "write_value_type",
+    "write_readonly_owner",
+    "foreign_operand",
+    "view_mapping",
+    "item_field_index",
+    "item_field_value",
+    "option_some_type",
+    "option_some_missing",
+    "option_none_payload"
+  ],
+  "native_control": {
+    "host_sha256": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+    "check_status": 0,
+    "release_verify_facts_leakcheck_status": 7,
+    "stdout_hex": "370a"
+  }
+}
