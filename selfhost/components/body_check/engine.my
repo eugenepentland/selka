@@ -638,8 +638,8 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 state.batch.resolved[raw_id] = result.id
                 state.depth = state.depth - 1
                 return result
-            if owner_slot >= 0 and managed(state, state.scope.locals[owner_slot].ty):
-                const rejection = try problem(state, span, "P_BODY_PROFILE", "non-list managed methods are outside the admitted body closure")
+            if owner_slot >= 0:
+                const rejection = try problem(state, span, "P_BODY_PROFILE", "receiver method is outside the admitted body closure")
                 fail rejection
         if owner_value.kind != 0 and explicit_count == 0:
             const owner_name = try graph.spelling(state.syntax.pool, state.syntax.source, owner)

@@ -3,6 +3,7 @@ import graph
 import engine
 import locals
 import variants
+import list_types
 
 func fresh(method: bool, local: bool) -> engine.State fails syntax_value.Problem:
     mut pool = syntax_value.empty()
@@ -78,3 +79,16 @@ public func test_bound_parse_method_retains_owner_site_without_extra_read_node()
     const end_id = try graph.field(state.syntax.pool, site, "end")
     const end = try graph.number(state.syntax.pool, end_id)
     return value.ty == 20 and value.id == 0 and len(state.batch.nodes) == 1 and len(state.batch.statements) == 0 and len(state.scope.locals) == 1 and state.scope.locals[0].usage.reads == 1 and end == 1
+
+
+public func test_option_receiver_method_refuses_before_import_resolution() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, True)
+    state.syntax.source = b"s.unwrap_or()"
+    const span = try graph.field(state.syntax.pool, state.syntax.nodes[1], "span")
+    const optional = try list_types.union_intern(mut state.batch.facts.lists, mut state.syntax.pool, 0, -1, span, False)
+    state.scope.locals[0].ty = optional
+    match engine.expression(mut state, 1):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and problem.start == 0 and problem.end == 13 and len(state.batch.nodes) == 0
