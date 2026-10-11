@@ -92,3 +92,23 @@ public func test_augmented_write_snapshots_receiver_index_and_old_value_before_r
     const combined = try list_lower.binary(mut fixture.batch, fixture.context, b"add", plan.current, right, 0)
     const lowered = try list_places.finish(mut fixture.batch, mut fixture.scope, fixture.context, plan, combined)
     return plan.owner == 0 and plan.current < right and len(plan.setup) == 3 and len(fixture.scope.locals) == 5 and len(fixture.scope.active) == 0 and lowered.ty == 15 and lowered.tag == b"block_value" and fixture.scope.locals[0].usage.temporary and fixture.scope.locals[4].usage.temporary
+
+
+public func test_augmented_owner_is_reserved_before_nested_index_evaluation() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const outer = try list_lower.integer(mut fixture.batch, fixture.context, 0, 19)
+    const rooted = try list_places.receiver(mut fixture.batch, mut fixture.scope, fixture.context, outer, 19)
+    const nested_base = try list_lower.integer(mut fixture.batch, fixture.context, 0, 19)
+    const zero = try list_lower.integer(mut fixture.batch, fixture.context, 0, 0)
+    const access = try list_lower.access(mut fixture.batch, mut fixture.scope, fixture.context, list_lower.Access(base=nested_base, owner_type=19, kind=b"read", arguments=[zero], result_type=0, signed_length=False))
+    const selected = try list_lower.append(mut fixture.batch, fixture.context, access)
+    const plan = try list_places.indexed(mut fixture.batch, mut fixture.scope, rooted, selected, 0)
+    const nested_data_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[selected], "data")
+    const nested_data = try graph.get(fixture.batch.pool, nested_data_id)
+    const nested_value_id = try graph.field(fixture.batch.pool, nested_data.children[0], "value")
+    const nested_value = try graph.number(fixture.batch.pool, nested_value_id)
+    const operation_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[nested_value], "data")
+    const operation = try graph.get(fixture.batch.pool, operation_id)
+    const owner_id = try graph.field(fixture.batch.pool, operation.children[0], "owner")
+    const owner = try graph.number(fixture.batch.pool, owner_id)
+    return rooted.owner == 0 and owner == 1 and plan.owner == 0 and len(plan.setup) == 3 and len(fixture.scope.locals) == 6

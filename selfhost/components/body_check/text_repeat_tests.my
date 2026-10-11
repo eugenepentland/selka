@@ -1,0 +1,55 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import list_repeat
+
+func check(count_first: bool, count: int) -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 4, 12)
+    const context = list_lower.Context(input=pool, span=span)
+    mut batch = emission.empty()
+    mut scope = locals.empty()
+    const empty_values = try emission.ids(mut batch, [])
+    const source = try emission.node(mut batch, pool, span, 19, b"array", empty_values)
+    const times = try list_lower.integer(mut batch, context, count, 0)
+    const value = try list_repeat.build(mut batch, mut scope, context, list_repeat.Input(sequence=source, count=times, ty=19, count_first=count_first, loop_id=8, gathered_type=21))
+    const body_id = try graph.field(batch.pool, value.payload, "body")
+    const body = try graph.number(batch.pool, body_id)
+    const body_data_id = try graph.field(batch.pool, batch.statements[body], "data")
+    const body_data = try graph.get(batch.pool, body_data_id)
+    const statements = try graph.items(batch.pool, body_data.children[0])
+    const first_id = try graph.number(batch.pool, statements[0])
+    const first_data_id = try graph.field(batch.pool, batch.statements[first_id], "data")
+    const first_data = try graph.get(batch.pool, first_data_id)
+    const slot_id = try graph.field(batch.pool, first_data.children[0], "slot")
+    const first_slot = try graph.number(batch.pool, slot_id)
+    mut wanted = 0
+    if count_first:
+        wanted = 1
+    mut append = False
+    mut join = False
+    for node in batch.nodes:
+        const data_id = try graph.field(batch.pool, node, "data")
+        const data = try graph.get(batch.pool, data_id)
+        if data.data == b"buffer_operation":
+            const kind_id = try graph.field(batch.pool, data.children[0], "kind")
+            const kind = try graph.get(batch.pool, kind_id)
+            if kind.data == b"append":
+                append = True
+            if kind.data == b"join":
+                join = True
+    return value.ty == 19 and value.tag == b"block_value" and first_slot == wanted and len(scope.locals) == 5 and scope.locals[2].ty == 21 and append and join
+
+
+public func test_text_repeat_gathers_text_then_joins_with_empty_separator() -> bool fails syntax_value.Problem:
+    return try check(False, 3)
+
+
+public func test_count_first_negative_repeat_preserves_operand_initialization_order() -> bool fails syntax_value.Problem:
+    return try check(True, -1)
+
+
+public func test_zero_repeat_retains_guarded_loop_and_empty_join() -> bool fails syntax_value.Problem:
+    return try check(False, 0)

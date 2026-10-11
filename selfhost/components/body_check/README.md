@@ -178,7 +178,10 @@ calls. Literal i64, bool, and Unit constants retain checked body rows, then
 append the folded declaration return and fold each name use. General scalar
 constant expression evaluation and embedded literals remain outside this
 followup. Iteration through nested record/list places refreshes the same source
-path under the native mutation guards.
+path under the native mutation guards. Text and immutable bytes repetition
+evaluates each operand once, gathers references in a producer-interned list, and
+joins with an empty separator. Zero and negative counts yield an empty value;
+`*=` rebinds text/bytes while list repetition retains its in-place behavior.
 
 Pure tests and authenticated developer replays are distinct from installed
 source admission. The integration lane records admission of the nine selected

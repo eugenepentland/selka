@@ -192,6 +192,10 @@ public func expression(mut state: State, raw_id: int) -> Expression fails syntax
     return value
 
 
+func repeatable_type(state: State, ty: int) -> bool:
+    return (ty >= 0 and (ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type)) or list_types.element_type(state.batch.facts.lists, ty) >= 0
+
+
 func obvious_type(state: State, raw: int, depth: int) -> int fails syntax_value.Problem:
     if depth >= 256:
         return -1
@@ -394,13 +398,14 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
         const base_raw = try graph.number(state.syntax.pool, base_id)
         const index_raw = try graph.number(state.syntax.pool, index_id)
         const base = try expression(mut state, base_raw)
+        const rooted = try list_places.receiver(mut state.batch, mut state.scope, list_lower.Context(input=state.syntax.pool, span=target_span), base.id, base.ty)
         const index = try expression(mut state, index_raw)
         const element = list_types.element_type(state.batch.facts.lists, base.ty)
         if element < 0:
             const rejection = try problem(state, span, "P_BODY_PROFILE", "augmented destination requires an admitted list")
             fail rejection
         _ = try require(state, index.ty, 0, target_span)
-        const plan = try list_places.prepare(mut state.batch, mut state.scope, list_lower.Context(input=state.syntax.pool, span=target_span), list_places.Indexed(base=base.id, owner_type=base.ty, index=index.id, element=element))
+        const plan = try list_places.indexed(mut state.batch, mut state.scope, rooted, index.id, element)
         const value_id = try graph.field(state.syntax.pool, payload, "value")
         const value_raw = try graph.number(state.syntax.pool, value_id)
         const value = try expression_expected(mut state, value_raw, element)
@@ -1354,10 +1359,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             const difference = try pending_flow.mismatch(state.scope, pending_checkpoint)
             const right_span = try graph.field(state.syntax.pool, state.syntax.nodes[right_raw], "span")
             _ = try obligations.consistent(state.syntax.pool, state.scope, difference, right_span, False, mut state.problems)
-        if op.data == b"mul" and ((managed(state, left.ty) and list_types.element_type(state.batch.facts.lists, left.ty) < 0 and right.ty == 0) or (left.ty == 0 and managed(state, right.ty) and list_types.element_type(state.batch.facts.lists, right.ty) < 0)):
-            const rejection = try problem(state, span, "P_BODY_PROFILE", "text repetition is outside the admitted list body closure")
-            fail rejection
-        if op.data == b"mul" and ((list_types.element_type(state.batch.facts.lists, left.ty) >= 0 and right.ty == 0) or (left.ty == 0 and list_types.element_type(state.batch.facts.lists, right.ty) >= 0)):
+        if op.data == b"mul" and ((repeatable_type(state, left.ty) and right.ty == 0) or (left.ty == 0 and repeatable_type(state, right.ty))):
             mut sequence = left
             mut count = right
             mut count_first = False
@@ -1365,7 +1367,10 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 sequence = right
                 count = left
                 count_first = True
-            const lowered = try list_repeat.build(mut state.batch, mut state.scope, list_lower.Context(input=state.syntax.pool, span=span), list_repeat.Input(sequence=sequence.id, count=count.id, ty=sequence.ty, count_first=count_first, loop_id=state.control.next))
+            mut gathered_type = -1
+            if list_types.element_type(state.batch.facts.lists, sequence.ty) < 0:
+                gathered_type = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=sequence.ty, span=span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+            const lowered = try list_repeat.build(mut state.batch, mut state.scope, list_lower.Context(input=state.syntax.pool, span=span), list_repeat.Input(sequence=sequence.id, count=count.id, ty=sequence.ty, count_first=count_first, loop_id=state.control.next, gathered_type=gathered_type))
             state.control.next = state.control.next + 1
             const id = try list_lower.append(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), lowered)
             state.batch.resolved[raw_id] = id
@@ -1630,7 +1635,7 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
             fail rejection
         const value_id = try graph.field(state.syntax.pool, payload, "value")
         const value_raw = try graph.number(state.syntax.pool, value_id)
-        if op.data == b"mul" and list_types.element_type(state.batch.facts.lists, state.scope.locals[slot].ty) >= 0:
+        if op.data == b"mul" and repeatable_type(state, state.scope.locals[slot].ty):
             _ = try require_readable(mut state, slot, name_span)
             const count = try expression(mut state, value_raw)
             const operator_span = try graph.field(state.syntax.pool, payload, "op_span")
@@ -1642,9 +1647,16 @@ func checked_statement(mut state: State, raw_id: int) -> Statement fails syntax_
             state.scope.locals[slot].usage.writes = state.scope.locals[slot].usage.writes + 1
             const context = list_lower.Context(input=state.syntax.pool, span=operator_span)
             const sequence = try list_lower.read(mut state.batch, context, slot, owner_type)
-            const lowered = try list_repeat.build(mut state.batch, mut state.scope, context, list_repeat.Input(sequence=sequence, count=count.id, ty=owner_type, count_first=False, loop_id=state.control.next))
+            mut gathered_type = -1
+            if list_types.element_type(state.batch.facts.lists, owner_type) < 0:
+                gathered_type = try list_types.intern(mut state.batch.facts.lists, state.syntax.pool, list_types.Recipe(id=0, element=owner_type, span=operator_span), [state.batch.facts.string_type, state.batch.facts.bytes_type])
+            const lowered = try list_repeat.build(mut state.batch, mut state.scope, context, list_repeat.Input(sequence=sequence, count=count.id, ty=owner_type, count_first=False, loop_id=state.control.next, gathered_type=gathered_type))
             state.control.next = state.control.next + 1
             const product = try list_lower.append(mut state.batch, context, lowered)
+            if gathered_type >= 0:
+                const id = try list_lower.store(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), slot, product, False)
+                state.depth = state.depth - 1
+                return Statement(id=id, terminates=False)
             const repeated = try list_lower.temporary(mut state.scope, context, owner_type)
             const read = try list_lower.read(mut state.batch, context, repeated, owner_type)
             const initialize = try list_lower.store(mut state.batch, context, repeated, product, True)
