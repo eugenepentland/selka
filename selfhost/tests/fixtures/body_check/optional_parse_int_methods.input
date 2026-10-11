@@ -1,0 +1,10 @@
+func main() -> int:
+    match "3".parse_int():
+        case Some(left):
+            match b"4".parse_int():
+                case Some(right):
+                    return left + right
+                case None:
+                    return 0
+        case None:
+            return 0

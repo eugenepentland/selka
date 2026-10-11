@@ -1036,5 +1036,28 @@
         "edits": []
       }
     ]
+  },
+  "optional_narrowing_profile.my": {
+    "status": 2,
+    "boundary": "explicit-profile-refusal"
+  },
+  "optional_methods_profile.my": {
+    "status": 2,
+    "boundary": "explicit-profile-refusal"
+  },
+  "optional_parse_int_demand.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "optional_parse_int_failures.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
+  },
+  "optional_parse_int_methods.my": {
+    "status": 0,
+    "result": 7,
+    "typed": true
   }
 }

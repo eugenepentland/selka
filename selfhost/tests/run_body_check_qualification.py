@@ -516,7 +516,7 @@ def forged_replies(args,q,private,success,list_success,record_success,b5):
     cases.extend(('checked_try_fail.my', payload) for payload in mutate_propagation(b5['checked_try_fail.my'][64:]))
     cases.extend(('checked_loop_consumption.my', payload) for payload in mutate_transfer(b5['checked_loop_consumption.my'][64:]))
     cases.extend(('checked_try_fail.my', payload) for payload in mutate_catalog_recipes(b5['checked_try_fail.my'][64:], b'result'))
-    cases.extend(('optional_try.my', payload) for payload in mutate_catalog_recipes(b5['optional_try.my'][64:], b'option'))
+    cases.extend(('optional_parse_int_demand.my', payload) for payload in mutate_catalog_recipes(b5['optional_parse_int_demand.my'][64:], b'option'))
     F.require(len(cases) * len(q.modes) == FORGED_CHECKS, 'incomplete forged body selection')
     for case,(source,payload) in enumerate(cases):
         path=q.work/f'forged-body-{case}.bin';path.write_bytes(payload)
@@ -576,7 +576,7 @@ def main():
         record_captured, _, record_reply = capture_exchange(args, q, private, real, 'record_nested_snapshot.my')
         F.require(record_captured == (0, b'', b''), 'authentic nested record capture failed')
         b5 = {}
-        for source in ('variant_named_order.my', 'checked_try_fail.my', 'checked_loop_consumption.my', 'optional_try.my'):
+        for source in ('variant_named_order.my', 'checked_try_fail.my', 'checked_loop_consumption.my', 'optional_parse_int_demand.my'):
             captured, _, body_reply = capture_exchange(args, q, private, real, source)
             F.require(captured == (0, b'', b''), 'authentic B5 capture failed: ' + source)
             b5[source] = body_reply

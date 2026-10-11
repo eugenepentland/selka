@@ -1,0 +1,7 @@
+func main() -> int:
+    const value = parse_int("7")
+    match value:
+        case Some(number):
+            return number
+        case None:
+            return 0

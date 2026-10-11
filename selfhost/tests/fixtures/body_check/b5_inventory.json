@@ -19,6 +19,11 @@
     "checked_try_live_result_error.my",
     "checked_unhandled_error.my",
     "checked_wrong_failure_error.my",
+    "optional_methods_profile.my",
+    "optional_narrowing_profile.my",
+    "optional_parse_int_demand.my",
+    "optional_parse_int_failures.my",
+    "optional_parse_int_methods.my",
     "optional_try.my",
     "variant_boxed_recursive_profile.my",
     "variant_duplicate_pattern_error.my",
@@ -39,8 +44,8 @@
     "variant_import_dep.my"
   ],
   "counts": {
-    "success": 18,
+    "success": 21,
     "diagnostic": 14,
-    "profile": 2
+    "profile": 4
   }
 }

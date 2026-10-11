@@ -1,0 +1,7 @@
+func extract(value: int?) -> int:
+    if value is None:
+        return 0
+    return value
+
+func main() -> int:
+    return extract(Some(7))
