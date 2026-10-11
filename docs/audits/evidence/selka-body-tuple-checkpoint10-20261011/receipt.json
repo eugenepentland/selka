@@ -1,0 +1,370 @@
+{
+  "scope": "Installed schema10 tuple checkpoint and original ten collection extensions",
+  "source_commit": "4069e037eda8ff101b90dfcd9af925b888bfbac1",
+  "compiler_sha256": "65b5c4b61ea02208b285376313f9ab868ccbe8771d9405ec9016e8d2e6eff7df",
+  "coordinator_sha256": "0f9d930c1fe57b4e3a5f33d1204b2fe52c5bb5b471198b0daec297f2d1319974",
+  "qualified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530",
+      "component": "test-index",
+      "format": 1,
+      "key": "9d1b1240f2a85a2e56a500485df15efe828a04caa6f1d5a9ce1b216f2cf06278",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "636922f37986e139ad7b03c4842bfa795bd9aac76484777de09c8106bae87a66",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "f0cb6c124ae9541ef5ca389872a5d81b6fac1a4033912755a3e37f3a7eebae36",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-db6d58afbb6827003f690fa7ae2916fe018b9f0261b1c67dc77ee6b4deda9eff",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "077b2698e6fbe1b6ca4fb24175760806f5f03823950cfb0296760517e1f49b2b",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "db6d58afbb6827003f690fa7ae2916fe018b9f0261b1c67dc77ee6b4deda9eff"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "abd37cad83dfefdf977fc25f1d88debc7410047ad0def0c3186bb3660bf9aea1",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696"
+    },
+    "type-interface": {
+      "artifact": "type-interface-b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717",
+      "component": "type-interface",
+      "format": 1,
+      "key": "4f1de862972c0bcfcfa79d0cd96f8b9914e7a803d8ada8fba68d901e7d1e6577",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717"
+    },
+    "body-check": {
+      "artifact": "body-check-e36e6cde0037156a8c3884794b318c8cc635f51fd27d870c813335bb5d64416a",
+      "component": "body-check",
+      "format": 1,
+      "key": "cf54d9d0e4900c5da0f6a398c515995c996985e76fb034f15bdb31312bd3529d",
+      "protocol": 1,
+      "schema": 10,
+      "sha256": "e36e6cde0037156a8c3884794b318c8cc635f51fd27d870c813335bb5d64416a"
+    }
+  },
+  "tuple_checkpoint": {
+    "fixtures": 8,
+    "success": 6,
+    "diagnostics": 2,
+    "operations": 60,
+    "genuine_correlated_captures": 8,
+    "failed": 0,
+    "skipped": 0
+  },
+  "collection_extensions": {
+    "fixtures": 10,
+    "operations": 90,
+    "failed": 0,
+    "skipped": 0
+  },
+  "native_build": {
+    "steps_passed": 24,
+    "steps_total": 24,
+    "body_tests_passed": 208,
+    "body_tests_failed": 0,
+    "body_tests_skipped": 0,
+    "format_sources_checked": 1071,
+    "format_deliberate_exclusions": 209,
+    "format_failures": 0,
+    "format_driver_tests": 6,
+    "guardian_checks": 88,
+    "guardian_scope": "diff-scoped"
+  },
+  "initial_build": {
+    "status": "failed",
+    "reason": "earlyoom SIGTERM to native Zig compiler PID805612",
+    "timestamp_utc": "2026-10-11 15:56:55",
+    "retry": "same source, serial, passed"
+  },
+  "modes": [
+    "reference",
+    "shadow",
+    "component"
+  ],
+  "runtime_flags": [
+    "--release",
+    "--verify-facts",
+    "MYL_CORE_LEAKCHECK=1"
+  ],
+  "limitations": [
+    "The original strict B10 inventory remains 30 fixtures and 222 operations; its full admission is pending.",
+    "Thirteen hostile structural component cases still require a complete array producer.",
+    "The eight tuple cases are an explicit separate checkpoint and do not replace the strict B10 inventory.",
+    "No full-language, complete bootstrap, or performance acceptance is claimed."
+  ],
+  "files": {
+    "frames/dictionary_generator_pairs.request.bin.gz": {
+      "sha256": "db9f6b1884625c0161744830b896452c16b382ab0f066a5967529b6f7e86a8a0",
+      "uncompressed_sha256": "0234c8acd54cfea889b086209e9c253e2fd086604bc42dc2d745ab74f8bdbe05",
+      "bytes": 15539,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/dictionary_generator_pairs/capture-request-component.bin"
+    },
+    "frames/dictionary_generator_pairs.reply.bin.gz": {
+      "sha256": "128a3e8001bd4abe8a1752830aebd60d4aee8d308f63b513827e5e8bab361213",
+      "uncompressed_sha256": "a561ceff84864ee16955634834a73d19f11a0c1051cfe7a599882369395b079a",
+      "bytes": 29800,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/dictionary_generator_pairs/capture-reply-component.bin"
+    },
+    "frames/tuple_context.request.bin.gz": {
+      "sha256": "a8bd41dc7167c5059775e682833dfd12fdf3a4f00b56ab5c99953d49de231e31",
+      "uncompressed_sha256": "eac9ee873c4194e370176d48166206433d5be080199969e375ee31cff8cf9d26",
+      "bytes": 16738,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_context/capture-request-component.bin"
+    },
+    "frames/tuple_context.reply.bin.gz": {
+      "sha256": "5bc0d8134d9d61a57877ae28bddac1eb3b727c149ee69a6979df7760563393c6",
+      "uncompressed_sha256": "9ee341a784342e84860205927c2ec3e920540b2954a4885cfe1d918b753f5387",
+      "bytes": 11449,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_context/capture-reply-component.bin"
+    },
+    "frames/tuple_list.request.bin.gz": {
+      "sha256": "fbc4416f4eb3a75cdd54b77a09860002ceece26214fcd50d67f2e6b14b708115",
+      "uncompressed_sha256": "b9d3e699ff51c8ccf036a1901bd8462f6f79b26f898730e6d0b3150482663624",
+      "bytes": 16800,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_list/capture-request-component.bin"
+    },
+    "frames/tuple_list.reply.bin.gz": {
+      "sha256": "2eeb3c42d814927a6bdaf5f1f157edc43b984deae3dc23591308869a98782368",
+      "uncompressed_sha256": "62ce9aa2c0a06a421cd25f7d1ec748f22a34b2e898138d4c9855e1b5358ce63f",
+      "bytes": 19402,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_list/capture-reply-component.bin"
+    },
+    "frames/tuple_literal.request.bin.gz": {
+      "sha256": "3820ba59d66aa31c61e9992e8c1609c0b27bdc7d1c438ab36242166df669f725",
+      "uncompressed_sha256": "ebcd46276126f30e06271551118cefaaeac9f5ab1558113bde5161ec4a6a141a",
+      "bytes": 11752,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_literal/capture-request-component.bin"
+    },
+    "frames/tuple_literal.reply.bin.gz": {
+      "sha256": "aabc7458cf6381a6c88d9118f1bac35cec79711a1c1a434d524a2060e099aeb0",
+      "uncompressed_sha256": "a39c86b68852e94fd9bfafc29fdbb6df07004360f06ff3f0317c7ec4d8752b82",
+      "bytes": 9182,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_literal/capture-reply-component.bin"
+    },
+    "frames/tuple_nested.request.bin.gz": {
+      "sha256": "3522c093841a12be194d732f12d27ea88fb33b17f6bafb19b69fe91869f7d654",
+      "uncompressed_sha256": "7beffab649972bd6e63d97d625dddefaffa8496c66b94346376ee8f9880f1d3a",
+      "bytes": 18769,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_nested/capture-request-component.bin"
+    },
+    "frames/tuple_nested.reply.bin.gz": {
+      "sha256": "d701764a499303d5c041226cf8d8a5d03604223409f36bfb1e2735419c6c92ea",
+      "uncompressed_sha256": "0319f9ccb0d90bbd2042c9b005e396fea52529a9ca274b63a8e493fbab4f097a",
+      "bytes": 15186,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_nested/capture-reply-component.bin"
+    },
+    "frames/tuple_swap.request.bin.gz": {
+      "sha256": "a34b0f2d8a1c86261fb4c0224be969428584ed4cbdde9c54cfa59d1856cb09ad",
+      "uncompressed_sha256": "dea3fed37a947ca6cfdbe7fe5e70b64c02178cff225e6dd379fb4adfe67ce891",
+      "bytes": 13252,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_swap/capture-request-component.bin"
+    },
+    "frames/tuple_swap.reply.bin.gz": {
+      "sha256": "d895942db59d988cc1ee850a515e949326ff0c3447a37765843e3190677173f5",
+      "uncompressed_sha256": "0e4394d0b0343a0db491cfc3b626eef83e3058ef91fe5710a1d0da9d3018883b",
+      "bytes": 10325,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/tuple_swap/capture-reply-component.bin"
+    },
+    "frames/error_tuple_arity.request.bin.gz": {
+      "sha256": "1aeb8a7c2c39ffb536617bd630151f9247beeeb2a6f75bea6bda4d5b9d7f17fb",
+      "uncompressed_sha256": "e3bce8aae008978f1e3199187319b24a9263ebc83fb60d4d4c74937ab2b34635",
+      "bytes": 12548,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/error_tuple_arity/capture-request-component.bin"
+    },
+    "frames/error_tuple_arity.reply.bin.gz": {
+      "sha256": "840241fe0a89c192bb2579c5ff1f0064e625d2ff34f62eba306f9244c2605333",
+      "uncompressed_sha256": "16aad7b814f39d6a3fe50ed992fff89530863963786ec77d2d51f1a4a90f7368",
+      "bytes": 670,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/error_tuple_arity/capture-reply-component.bin"
+    },
+    "frames/error_tuple_element.request.bin.gz": {
+      "sha256": "4f87d746c3ec4ad9bdb8f6d3850f172f35244a2721394b660004630cd65d6a93",
+      "uncompressed_sha256": "c8c89c317b879b2b03f1701a53de1031e30bbc65f5e1971d87df3937eac803fc",
+      "bytes": 12269,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/error_tuple_element/capture-request-component.bin"
+    },
+    "frames/error_tuple_element.reply.bin.gz": {
+      "sha256": "5b5b014a99956ea60b398f8528e3926a67e0f87688db0a95f4d54a493f489789",
+      "uncompressed_sha256": "72135f14dc784418bafd41bd11d9d5fee37b68e2cde441527280b656928b3a3c",
+      "bytes": 618,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/captures/error_tuple_element/capture-reply-component.bin"
+    },
+    "tuple-report.json.gz": {
+      "sha256": "bafef914b7ab12b87e023b7f3426350cfaf22ffbcf6fb568663c6fe8f8f7d998",
+      "uncompressed_sha256": "2e327d79f3bc8bc361ffd2a8c726407dac5f6036c53b91c65e2c8ea8e30f27f9",
+      "bytes": 105288,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/report.json"
+    },
+    "collection-extensions-report.json.gz": {
+      "sha256": "0988a2706fe201705dbe7645dee88c2b04fd61125057446eb4113eced4b346a4",
+      "uncompressed_sha256": "9906b592c58049fce5e13b85ca9d88f0498d97fadb2cfc47ba167b0cdd348e65",
+      "bytes": 227367,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-collection-extensions.json"
+    },
+    "tuple-run.log.gz": {
+      "sha256": "99a8c91f19c2b3fd5d16468bdf3306cea83c2a64d156310dd1ba06bc3451ff5f",
+      "uncompressed_sha256": "a3cda20cbcb58b79dbd9907fd46073c48d1e2131aa5d516ddbf4c19dcf41beae",
+      "bytes": 152,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint.log"
+    },
+    "collection-extensions-run.log.gz": {
+      "sha256": "77401b7ec6879da1f2b9dfa556a7f0a705f9a4fb054e3ef2b0123f538bafa9fd",
+      "uncompressed_sha256": "db960d392249139143cf3984d1cc9e57a84f69a8d2385e3eeb4019611234e6f0",
+      "bytes": 325,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-collection-extensions.log"
+    },
+    "tuple-checkpoint.py.gz": {
+      "sha256": "ec78b86de2d3e4ee1fad647d89bbacfa807aa25bc350229974259fcf09990d75",
+      "uncompressed_sha256": "d7360793e69aceffcc2e0561892134a6c7d8410290fc4a7c1cc9c9973ef46cd9",
+      "bytes": 5858,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-tuple-checkpoint.py"
+    },
+    "collection-extensions.py.gz": {
+      "sha256": "67280e2e611ff03c9ba022cd21eb32ab17170bbd66a5dbd10f3726c96ccff1de",
+      "uncompressed_sha256": "fe6e4f875b45e18c6dbf295c68e7377b2e7a6c0f62f37ee9fb8ae81b7f091b1b",
+      "bytes": 6176,
+      "source_path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_collection_extensions.py"
+    },
+    "install-body-fmt-passed.log.gz": {
+      "sha256": "12e3f18f7c28be89cae21b4cfb30c88f642ea4482bed47111baef79795e86202",
+      "uncompressed_sha256": "e992ac14e8ee0138bb9c5416f794afcdd10615afe96338c2ac4e33dca7711fbb",
+      "bytes": 9108,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-root-4069-install-serial.log"
+    },
+    "initial-install-failed.log.gz": {
+      "sha256": "76615fb79eee71ffffc8e613ac9ad35b059c6482d83585f5b18a4f1553042483",
+      "uncompressed_sha256": "aefafc59e4414b1383bd8db5c3ea65093d282c0aab791194406dff948066b603",
+      "bytes": 10440,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-root-4069-install.log"
+    },
+    "initial-install-earlyoom.log.gz": {
+      "sha256": "890e20579b6c2656d0c3a0d253b9de02be47c27e02ffca4135c6401aa405d4db",
+      "uncompressed_sha256": "e99e692ac8fe8c4b77c1b06d14856eada3d528aa062b11945aa8077a3df9851a",
+      "bytes": 827,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-root-4069-initial-earlyoom.log"
+    },
+    "sources/dictionary_generator_pairs.my.gz": {
+      "sha256": "771c7b75b8929bba46b7c077259ed382a02a3c8dad2637688e758b8e535369ef",
+      "uncompressed_sha256": "9bfeb55f38522f71fc1a784e26ad55be7316df56dfd4a2797b192580ad484dd3",
+      "bytes": 114,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/sources/dictionary_generator_pairs.my"
+    },
+    "sources/error_tuple_arity.my.gz": {
+      "sha256": "d5b74a36df77365ecfd5ed605dba51bbfcd41bd2217e6c9aa24c27454d741387",
+      "uncompressed_sha256": "8dfe5a21991648dcd0281800de0116fb8f5b93196c63681fdb049087c0f276ef",
+      "bytes": 78,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/sources/error_tuple_arity.my"
+    },
+    "sources/error_tuple_element.my.gz": {
+      "sha256": "a84d55b41001c2791a1f3a4db9205bd341bf8caec26b5e7538db85a434199be7",
+      "uncompressed_sha256": "be9ed7b62f7f2f473f4e70219916a3e7c5d520d81be65525fc72596f32865132",
+      "bytes": 76,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/sources/error_tuple_element.my"
+    },
+    "sources/tuple_context.my.gz": {
+      "sha256": "5eed0a22a9aca0688f8c580c7969b761ab554c7c2df4a4a69855f9e41f838bd2",
+      "uncompressed_sha256": "45c530d28b1e9470d47791ca9821ae1a6bc1a3da7fff6627526c11df8eb03c93",
+      "bytes": 135,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/sources/tuple_context.my"
+    },
+    "sources/tuple_list.my.gz": {
+      "sha256": "102628c3cdccf95c9e77fa873c8f62069fd67048e5b0bc7145c2248221616dc3",
+      "uncompressed_sha256": "6496adfbdedbd3ea23c4f6e33c4b74697679ce0018bcb5aa1dbcdf7d90fa6013",
+      "bytes": 123,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/sources/tuple_list.my"
+    },
+    "sources/tuple_literal.my.gz": {
+      "sha256": "794009e48540bb74e0cafd7d31e0cc74360820cb27267e7b43fc3279c38317bb",
+      "uncompressed_sha256": "c6afde25beef65497bc993bedd9e7ba034d508635aea8887abb874ad3e46e095",
+      "bytes": 75,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/sources/tuple_literal.my"
+    },
+    "sources/tuple_nested.my.gz": {
+      "sha256": "1d1e9c7a36fffb97140d942765a0159aabb008dc490bbdb9311dbd26d496e8fc",
+      "uncompressed_sha256": "55d89bbed6473baa617a15b7f52a11f8d3485b05e3b82f4572de9eba7d4c700f",
+      "bytes": 158,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/sources/tuple_nested.my"
+    },
+    "sources/tuple_swap.my.gz": {
+      "sha256": "b093a5eff85017b8e984e56a79610a36ee44345fa18890bb8bef979f6b7ac810",
+      "uncompressed_sha256": "6834e4de98045906a3501455e9a2285d544a0ac852b4b9f095599662296c4a3e",
+      "bytes": 109,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/b10-4069-tuple-checkpoint/sources/tuple_swap.my"
+    },
+    "packages/test-index.json.gz": {
+      "sha256": "5a439276c7a62ddac9a8d2940345477dd2ce1845d62db47f3b9874a6da1fe4ea",
+      "uncompressed_sha256": "d7e7bd5af3ace6ae207f4cab069d532ada5cf8d251d0d16d84494b33ae04a0fb",
+      "bytes": 300,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/body-structural-b10/4069-prefix/libexec/mylang/components/test-index.json"
+    },
+    "packages/cache-plan.json.gz": {
+      "sha256": "ad53ddc512ceeca0bdf356972229488d414d2ffecce403e13e344c07e5b0f980",
+      "uncompressed_sha256": "9828ce5ebc9e799cc1f771e1cf82f0cb0f23821ff436159f368a75566a7fab9d",
+      "bytes": 300,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/body-structural-b10/4069-prefix/libexec/mylang/components/cache-plan.json"
+    },
+    "packages/lexer-pilot.json.gz": {
+      "sha256": "79c4a7087926d223c463d64039169ff8e06523a75838d53e3110c066c77424b6",
+      "uncompressed_sha256": "5a8b913ec04f742f5cc77e80faae4a42c04dd47249d2349c6ce99901139e1ccd",
+      "bytes": 302,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/body-structural-b10/4069-prefix/libexec/mylang/components/lexer-pilot.json"
+    },
+    "packages/parser-pilot.json.gz": {
+      "sha256": "c9beb993140d0ac828121b9e791d19582c07cca2df0778ea14657a377a80c02c",
+      "uncompressed_sha256": "9ec29137acddd8ae514c25693ceb3ded1cb25c249d1519ef960a4c241936de8e",
+      "bytes": 304,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/body-structural-b10/4069-prefix/libexec/mylang/components/parser-pilot.json"
+    },
+    "packages/declaration-index.json.gz": {
+      "sha256": "3a1bedeeca29870767dc42e5761ba5f7e638224f1c5d486644acbd0b9dd11c62",
+      "uncompressed_sha256": "f25e05ae8a0c437c0456fa97eb08749233769a55bbf39061644e92a6d1626744",
+      "bytes": 314,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/body-structural-b10/4069-prefix/libexec/mylang/components/declaration-index.json"
+    },
+    "packages/type-interface.json.gz": {
+      "sha256": "6bbe76166b38df1ded17f803a54655d2b972ae545210a20479e87e8445e13031",
+      "uncompressed_sha256": "bedba7ef2f63c798bedeb9ee1abc4a45bec4bb2c9bd87ab0c005e21f677134ae",
+      "bytes": 308,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/body-structural-b10/4069-prefix/libexec/mylang/components/type-interface.json"
+    },
+    "packages/body-check.json.gz": {
+      "sha256": "bf95e163331e88d4bc207600da0b23ed2f257bc9df538f551434440c38b4de02",
+      "uncompressed_sha256": "a8c5c38409cf1da9f442542637fb579146396a6b72352340a1713e86bfe143c4",
+      "bytes": 301,
+      "source_path": "/home/epentland/ai/canopy/.selka-agent-cache/body-structural-b10/4069-prefix/libexec/mylang/components/body-check.json"
+    },
+    "body-package-receipt.json.gz": {
+      "sha256": "46758aa8029847dbd9982a95e31533869ff0793799c7231b95160dc114875710",
+      "uncompressed_sha256": "53adc3af4e1098012f173d9f6e1b9a5c3001ce4c393121e0db14a7f654738188",
+      "bytes": 72981,
+      "source_path": "/home/epentland/.cache/mylang/components/artifacts/cf54d9d0e4900c5da0f6a398c515995c996985e76fb034f15bdb31312bd3529d/receipt.json"
+    }
+  }
+}
