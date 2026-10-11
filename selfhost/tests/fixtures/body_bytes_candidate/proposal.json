@@ -1,0 +1,277 @@
+{
+  "cases": {
+    "slice_unicode.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "3730737631e5df17ba84fa9bcaa1d7141b5d1ef63e368ccb414428b0b1ada38c",
+      "native_status": 7
+    },
+    "slice_bytes.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "4cd3ebccc6ebc49ea6bfe6fded847f6f4efdab6023aa7978d797f99e435e1318",
+      "native_status": 7
+    },
+    "slice_clamped.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "475e57c9f0a0a80092b149967781d55b8173bc24ec52e51f94adb53a0b640f12",
+      "native_status": 7
+    },
+    "slice_receiver_order.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "17171fe749120905a9a6a821498cc266829444883197ea84df3e9fb559dfdb03",
+      "native_status": 7
+    },
+    "buffer_fresh_conversion.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "e47bd00d54cb5e718896582709b81e2d17b3c924575bcbb07cc320bfae751233",
+      "native_status": 7
+    },
+    "buffer_operations.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "e0e764e18f6127ee66f34ae8a6e35b45a7b9e609e5fd197e84d8c10f4207081d",
+      "native_status": 7
+    },
+    "buffer_snapshot_alias.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "4767f165767e7143944942c6cf6566db479d4181dc87911f924491967cbc7da8",
+      "native_status": 7
+    },
+    "buffer_mut_parameter.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "6d07d7c692944ea5b81e5eafec4f885dd5d59d46731f6b7948645d6975d037da",
+      "native_status": 7
+    },
+    "buffer_self_range.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "a94d3573350df506f7b60b29df109350da046d91f317e46742452311cd84e694",
+      "native_status": 7
+    },
+    "buffer_refused_bounds.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "30ce707edf0efad25d24fbebced5e5cdfa6afc504444df732c0477b824344026",
+      "native_status": 7
+    },
+    "buffer_immutable_error.my": {
+      "status": 1,
+      "source_sha256": "9aa0587f398c443f71963eebc9ebf5cee122afbba60e4f6a12832f6e631c7d66",
+      "native_status": 1,
+      "diagnostics": [
+        {
+          "code": "E_IMMUTABLE",
+          "message": "collection update requires a writable binding",
+          "bytes": {
+            "start": 65,
+            "end": 71
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "buffer_write_error.my": {
+      "status": 1,
+      "source_sha256": "8eda00aa8a332ba3ca6444c20ba85f905929ff30cd775455c919e7395458c7dd",
+      "native_status": 1,
+      "diagnostics": [
+        {
+          "code": "E_LIST_METHOD",
+          "message": "unknown method for a byte_buffer receiver; accepted methods: append_byte, append_float, append_int, append_range, append_utf8, copy, count, decode, endswith, find, find_any, hex, index, join, lstrip, parse_float, parse_float_range, parse_int, parse_int_range, reserve, rfind, rindex, rstrip, scalar_count, scalar_count_range, split, startswith, strip, to_list, view",
+          "bytes": {
+            "start": 70,
+            "end": 75
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "buffer_arity_error.my": {
+      "status": 1,
+      "source_sha256": "d764f17d47fe62b2650d64877b69170bba7d824e3a7f73d6c9856fec883c300d",
+      "native_status": 1,
+      "diagnostics": [
+        {
+          "code": "E_ARITY",
+          "message": "`byte_buffer.append_range(data: bytes, start: int, end: int) -> bool` takes 3 arguments, but this call passes 2",
+          "bytes": {
+            "start": 63,
+            "end": 91
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "buffer_range_type_error.my": {
+      "status": 1,
+      "source_sha256": "616a1e774352dbf965d041fd835446a23b831b9b9cff133dce46c21fb7433a2e",
+      "native_status": 1,
+      "diagnostics": [
+        {
+          "code": "E_COLLECTION_METHOD",
+          "message": "append_range requires a bytes or byte_buffer source",
+          "bytes": {
+            "start": 63,
+            "end": 69
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "bytes_conversion_type_error.my": {
+      "status": 1,
+      "source_sha256": "2bafffee20500631d2e811e624615b6280fb69652577662c58462c502786a13a",
+      "native_status": 1,
+      "diagnostics": [
+        {
+          "code": "E_BYTES_CONVERSION",
+          "message": "bytes() requires an int[] or byte_buffer argument",
+          "bytes": {
+            "start": 62,
+            "end": 75
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "bytes_slice_step_error.my": {
+      "status": 1,
+      "source_sha256": "bafaa24578c9e7980ddc361abd3ffee6acc463b6f52a36e3baec2fb130555b8b",
+      "native_status": 1,
+      "diagnostics": [
+        {
+          "code": "E_COLLECTION_METHOD",
+          "message": "byte strings do not support a slice step",
+          "bytes": {
+            "start": 36,
+            "end": 47
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "encode_profile.my": {
+      "status": 2,
+      "source_sha256": "aa6d4e5301e8fb48b772c3f20692a3c5f097054bf3d1b097f10c084ef7dc0147",
+      "native_status": 7
+    },
+    "decode_profile.my": {
+      "status": 2,
+      "source_sha256": "c9ad3bf88d4dcf475eb81ab265879ca9e3127886ff081240125083a7dccabfb1",
+      "native_status": 7
+    },
+    "buffer_arity_precedence_error.my": {
+      "status": 1,
+      "source_sha256": "07439cfd9629dff91d6486efef80f332d32560d01e7aa5cd65347ce2dcc965cb",
+      "native_status": 1,
+      "diagnostics": [
+        {
+          "code": "E_ARITY",
+          "message": "`byte_buffer.append_range(data: bytes, start: int, end: int) -> bool` takes 3 arguments, but this call passes 2",
+          "bytes": {
+            "start": 64,
+            "end": 92
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "buffer_argument_precedence_error.my": {
+      "status": 1,
+      "source_sha256": "5b9d6a49802c96fe04185b79f975b6efc9022f376f4924d6e0b7731d4e589327",
+      "native_status": 1,
+      "diagnostics": [
+        {
+          "code": "E_IMMUTABLE",
+          "message": "collection update requires a writable binding",
+          "bytes": {
+            "start": 64,
+            "end": 69
+          },
+          "notes": [],
+          "edits": []
+        }
+      ]
+    },
+    "buffer_function_shadow.my": {
+      "status": 0,
+      "result": 7,
+      "typed": true,
+      "source_sha256": "17b3a1ce9b92bafc196932c8d7e17c0ad25f4532c7b54ec4b8e01daaf26931ef",
+      "native_status": 7
+    }
+  },
+  "scope": "B6 candidate only; not integrated B5",
+  "expected": {
+    "success": 11,
+    "diagnostic": 8,
+    "profile": 2
+  },
+  "native_control": {
+    "host_sha256": "a4b0323080cf6e247560df9e0b182baf32eb5c2dfe91873362ea424b752b83c1",
+    "all_modes": "reference",
+    "generated_flags": [
+      "--release",
+      "--verify-facts"
+    ],
+    "MYL_CORE_LEAKCHECK": "1",
+    "selected_B6_qualification": "pending coherent schema6 installation"
+  },
+  "helper_admission": {
+    "status": "pending selected schema6 check and existing tests; no package entry claim",
+    "libraries": [
+      "selfhost/components/body_check/graph.my",
+      "selfhost/components/body_check/codec.my",
+      "selfhost/components/body_check/checking.my",
+      "selfhost/components/parser_pilot/syntax_codec.my",
+      "selfhost/components/lexer_pilot/wire.my",
+      "selfhost/components/cache_plan/graph.my",
+      "selfhost/components/cache_plan/incremental.my",
+      "selfhost/components/declaration_index/codec.my",
+      "selfhost/components/type_interface/codec.my"
+    ],
+    "tests": [
+      "selfhost/components/declaration_index/tests.my",
+      "selfhost/components/declaration_index/indexed_tests.my",
+      "selfhost/components/type_interface/tests.my",
+      "selfhost/components/parser_pilot/value_tests.my",
+      "selfhost/components/cache_plan/tests.my",
+      "selfhost/components/test_index/tests.my"
+    ],
+    "commands": [
+      "check LIBRARY --diagnostics=json",
+      "test TEST --force --no-cache",
+      "test TEST --force --no-cache --release --verify-facts"
+    ],
+    "indexed_test_flags": [
+      "--max-steps=100000000"
+    ],
+    "required_modes": [
+      "shadow",
+      "component"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+func main() -> int:
+    mut values = [65, 66]
+    mut buffer = byte_buffer(values)
+    const raw = bytes(values)
+    values[0] = 90
+    _ = buffer.append_byte(67)
+    if raw != b"AB" or bytes(buffer) != b"ABC" or values[0] != 90:
+        return 0
+    return 7

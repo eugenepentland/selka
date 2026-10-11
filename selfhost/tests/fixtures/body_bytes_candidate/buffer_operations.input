@@ -1,0 +1,7 @@
+func main() -> int:
+    mut buffer = byte_buffer([])
+    if not buffer.reserve(8) or not buffer.append_byte(65) or not buffer.append_range(b"01234", 1, 3):
+        return 0
+    if len(buffer) != 3 or buffer[0] != 65 or bytes(buffer) != b"A12":
+        return 0
+    return 7

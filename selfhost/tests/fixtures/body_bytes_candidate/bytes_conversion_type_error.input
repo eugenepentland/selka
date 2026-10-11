@@ -1,0 +1,5 @@
+func main() -> int:
+    const values = [True]
+    const raw = bytes(values)
+    _ = raw
+    return 7
