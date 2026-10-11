@@ -1,0 +1,14 @@
+func main(fs: Filesystem) -> int:
+    with fs.open("data", "wb") as file:
+        assert file.write(b"a\nb\n") == 4
+        file.flush()
+    with open(fs, "data", "ab") as file:
+        assert file.write(b"c\n") == 2
+        file.close()
+    with fs.open("data", "rb") as file:
+        assert file.read(2) == b"a\n"
+        assert file.readline() == b"b\n"
+        assert file.readlines() == [b"c\n"]
+        assert file.read() == b""
+    _ = fs.remove("data")
+    return 7

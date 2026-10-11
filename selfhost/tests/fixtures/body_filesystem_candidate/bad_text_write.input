@@ -1,0 +1,4 @@
+func main(fs: Filesystem) -> int:
+    with fs.open("sample", "w") as f:
+        _ = f.write(b"text")
+    return 7

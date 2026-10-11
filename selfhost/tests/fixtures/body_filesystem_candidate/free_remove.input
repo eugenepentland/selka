@@ -1,0 +1,3 @@
+func main(fs: Filesystem) -> int:
+    _ = remove(fs, "sample")
+    return 7

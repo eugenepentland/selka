@@ -1,0 +1,10 @@
+func read(fs: Filesystem) -> str fails str:
+    with try fs.open("missing", "r") as file:
+        return file.read()
+
+func main(fs: Filesystem) -> int:
+    match read(fs):
+        case Ok(_):
+            return 0
+        case Err(_):
+            return 7

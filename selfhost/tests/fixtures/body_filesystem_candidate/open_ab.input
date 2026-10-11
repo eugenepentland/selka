@@ -1,0 +1,4 @@
+func main(fs: Filesystem) -> int:
+    with fs.open("sample", "ab") as f:
+        _ = f.read(0)
+    return 7

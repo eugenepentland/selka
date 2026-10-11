@@ -108,12 +108,37 @@ public func test_record_unsupported_leaf_propagates_to_declaration() -> bool fai
     mut elements: int[] = []
     for unused in range(21):
         elements.append(-1)
-    elements[20] = 11
+    elements[20] = 16
     match record_types.closure(mut catalog, pool, elements, []):
         case Ok(unused):
             return False
         case Err(problem):
             return problem.code == "P_BODY_PROFILE" and problem.start == 4 and problem.end == 10
+
+
+func capability_closure(ty: int, list_field: bool) -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut field = ty
+    if list_field:
+        field = 20
+    mut catalog = try recursive_catalog(mut pool, field)
+    mut elements: int[] = []
+    for unused in range(21):
+        elements.append(-1)
+    elements[20] = ty
+    return try record_types.closure(mut catalog, pool, elements, [])
+
+
+public func test_record_filesystem_and_stream_fields_are_admitted() -> bool fails syntax_value.Problem:
+    const filesystem = try capability_closure(11, False)
+    const stream = try capability_closure(18, False)
+    return filesystem and stream
+
+
+public func test_record_capability_lists_are_admitted_transitively() -> bool fails syntax_value.Problem:
+    const filesystem = try capability_closure(11, True)
+    const stream = try capability_closure(18, True)
+    return filesystem and stream
 
 
 public func test_direct_value_record_cycle_is_malformed() -> bool fails syntax_value.Problem:

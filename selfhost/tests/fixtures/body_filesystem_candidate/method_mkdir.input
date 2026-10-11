@@ -1,0 +1,3 @@
+func main(fs: Filesystem) -> int:
+    _ = fs.mkdir("sample")
+    return 7

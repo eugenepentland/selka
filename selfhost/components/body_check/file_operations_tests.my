@@ -1,0 +1,19 @@
+import file_operations
+
+public func test_open_mode_separates_provider_letter_from_text_representation() -> bool:
+    const binary = file_operations.mode(b"ab")
+    const text = file_operations.mode(b"wt")
+    const implicit_text = file_operations.mode(b"r")
+    return binary.valid and binary.letter == 97 and not binary.text and text.valid and text.letter == 119 and text.text and implicit_text.valid and implicit_text.letter == 114 and implicit_text.text
+
+
+public func test_open_mode_rejects_empty_oversized_and_noncanonical_spellings() -> bool:
+    for spelling in [b"", b"rbt", b"rw", b"br", b"r+", b"R", b"\x00", b"r\x00", b"\xffb"]:
+        const mode = file_operations.mode(spelling)
+        if mode.valid:
+            return False
+    return True
+
+
+public func test_file_methods_distinguish_optional_required_and_absent_operands() -> bool:
+    return file_operations.method_arity(b"read", 0) and file_operations.method_arity(b"read", 1) and not file_operations.method_arity(b"read", 2) and not file_operations.method_arity(b"write", 0) and file_operations.method_arity(b"write", 1) and file_operations.method_arity(b"readline", 0) and not file_operations.method_arity(b"readlines", 1) and not file_operations.method(b"exists") and not file_operations.access(b"read")

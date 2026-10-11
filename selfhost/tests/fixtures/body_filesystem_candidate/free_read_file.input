@@ -1,0 +1,3 @@
+func main(fs: Filesystem) -> int:
+    _ = read_file(fs, "sample")
+    return 7

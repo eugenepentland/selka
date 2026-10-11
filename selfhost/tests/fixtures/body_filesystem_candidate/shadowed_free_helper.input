@@ -1,0 +1,7 @@
+func read_text(value: int) -> int:
+    return value
+
+
+func main() -> int:
+    _ = read_text(3)
+    return 7

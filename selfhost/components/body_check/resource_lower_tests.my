@@ -27,8 +27,8 @@ func number(fixture: Fixture, row: int, name: str) -> int fails syntax_value.Pro
 
 public func test_open_preserves_selected_result_shapes_mode_and_argument_order() -> bool fails syntax_value.Problem:
     mut fixture = try fresh()
-    const request = resource_lower.Open(mode=1, text=False, arguments=[8, 3, 5], shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=41)
-    const node = try resource_lower.open(mut fixture.batch, fixture.context, request)
+    const request = resource_lower.Access(kind=b"open", mode=1, text=False, arguments=[8, 3, 5], shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=41)
+    const node = try resource_lower.access(mut fixture.batch, fixture.context, request)
     const payload = try data(fixture, node)
     const mode = try number(fixture, payload, "mode")
     const ty = try number(fixture, fixture.batch.nodes[node], "ty")
@@ -46,7 +46,7 @@ public func test_open_preserves_selected_result_shapes_mode_and_argument_order()
 
 public func test_scoped_read_preserves_owner_and_absent_count() -> bool fails syntax_value.Problem:
     mut fixture = try fresh()
-    const node = try resource_lower.read(mut fixture.batch, fixture.context, resource_lower.Read(owner=4, text=False, argument=-1, shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=25))
+    const node = try resource_lower.method(mut fixture.batch, fixture.context, resource_lower.Method(kind=b"read", owner=4, text=False, argument=-1, shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=25))
     const payload = try data(fixture, node)
     const owner = try number(fixture, payload, "owner")
     const argument = try graph.field(fixture.batch.pool, payload, "argument")
@@ -57,7 +57,7 @@ public func test_scoped_read_preserves_owner_and_absent_count() -> bool fails sy
 
 public func test_text_read_preserves_explicit_count_and_text_flag() -> bool fails syntax_value.Problem:
     mut fixture = try fresh()
-    const node = try resource_lower.read(mut fixture.batch, fixture.context, resource_lower.Read(owner=2, text=True, argument=9, shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=24))
+    const node = try resource_lower.method(mut fixture.batch, fixture.context, resource_lower.Method(kind=b"read", owner=2, text=True, argument=9, shapes=resource_lower.Shapes(text=24, bytes=25, list=40), ty=24))
     const payload = try data(fixture, node)
     const count = try number(fixture, payload, "argument")
     const flag = try graph.field(fixture.batch.pool, payload, "text")

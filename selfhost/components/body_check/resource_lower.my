@@ -10,7 +10,8 @@ public record Shapes:
     list: int
 
 
-public record Open:
+public record Access:
+    kind: bytes
     mode: int
     text: bool
     arguments: int[]
@@ -18,7 +19,8 @@ public record Open:
     ty: int
 
 
-public record Read:
+public record Method:
+    kind: bytes
     owner: int
     text: bool
     argument: int
@@ -46,8 +48,8 @@ func shapes(mut batch: emission.Batch, request: Shapes) -> int fails syntax_valu
     return try syntax_value.object(mut batch.pool, ["text", "bytes", "list"], [text, bytes, list])
 
 
-public func open(mut batch: emission.Batch, context: list_lower.Context, request: Open) -> int fails syntax_value.Problem:
-    const kind = try syntax_value.enumeration(mut batch.pool, b"open")
+public func access(mut batch: emission.Batch, context: list_lower.Context, request: Access) -> int fails syntax_value.Problem:
+    const kind = try syntax_value.enumeration(mut batch.pool, request.kind)
     const mode = try syntax_value.integer(mut batch.pool, request.mode)
     const text = try syntax_value.boolean(mut batch.pool, request.text)
     const arguments = try emission.ids(mut batch, request.arguments)
@@ -56,8 +58,8 @@ public func open(mut batch: emission.Batch, context: list_lower.Context, request
     return try emission.node(mut batch, context.input, context.span, request.ty, b"file_access", payload)
 
 
-public func read(mut batch: emission.Batch, context: list_lower.Context, request: Read) -> int fails syntax_value.Problem:
-    const kind = try syntax_value.enumeration(mut batch.pool, b"read")
+public func method(mut batch: emission.Batch, context: list_lower.Context, request: Method) -> int fails syntax_value.Problem:
+    const kind = try syntax_value.enumeration(mut batch.pool, request.kind)
     const owner = try syntax_value.integer(mut batch.pool, request.owner)
     const text = try syntax_value.boolean(mut batch.pool, request.text)
     const argument = try optional(mut batch, request.argument)

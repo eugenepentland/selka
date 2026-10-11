@@ -1,0 +1,74 @@
+# Pure vocabulary and arity decisions for the native Filesystem/file surface.
+public record Mode:
+    valid: bool
+    letter: int
+    text: bool
+
+
+public func access(name: bytes) -> bool:
+    return name == b"open" or name == b"read_file" or name == b"read_text" or name == b"write_file" or name == b"write_text" or name == b"exists" or name == b"listdir" or name == b"mkdir" or name == b"remove"
+
+
+public func access_arity(name: bytes) -> int:
+    if name == b"open" or name == b"write_file" or name == b"write_text":
+        return 3
+    return 2
+
+
+public func access_signature(name: bytes) -> str:
+    if name == b"open":
+        return "open(fs: Filesystem, path: str, mode: str) -> Result[File, str]"
+    if name == b"read_file":
+        return "read_file(fs: Filesystem, path: str) -> Result[bytes, str]"
+    if name == b"read_text":
+        return "read_text(fs: Filesystem, path: str) -> Result[str, str]"
+    if name == b"write_file":
+        return "write_file(fs: Filesystem, path: str, data: bytes) -> Result[None, str]"
+    if name == b"write_text":
+        return "write_text(fs: Filesystem, path: str, text: str) -> Result[None, str]"
+    if name == b"exists":
+        return "exists(fs: Filesystem, path: str) -> bool"
+    if name == b"listdir":
+        return "listdir(fs: Filesystem, path: str) -> Result[str[], str]"
+    if name == b"mkdir":
+        return "mkdir(fs: Filesystem, path: str) -> Result[None, str]"
+    return "remove(fs: Filesystem, path: str) -> Result[None, str]"
+
+
+public func method(name: bytes) -> bool:
+    return name == b"read" or name == b"readline" or name == b"readlines" or name == b"write" or name == b"flush" or name == b"close"
+
+
+public func method_arity(name: bytes, count: int) -> bool:
+    if name == b"read":
+        return count == 0 or count == 1
+    if name == b"write":
+        return count == 1
+    return count == 0
+
+
+public func method_signature(name: bytes) -> str:
+    if name == b"read":
+        return "read() -> str, or read(size: int) -> str"
+    if name == b"readline":
+        return "readline() -> str"
+    if name == b"readlines":
+        return "readlines() -> str[]"
+    if name == b"write":
+        return "write(data) -> int"
+    if name == b"flush":
+        return "flush() -> None"
+    return "close() -> None"
+
+
+public func mode(spelling: bytes) -> Mode:
+    if len(spelling) < 1 or len(spelling) > 2:
+        return Mode(valid=False, letter=0, text=False)
+    const letter = int(spelling[0])
+    if letter != 114 and letter != 119 and letter != 97:
+        return Mode(valid=False, letter=0, text=False)
+    if len(spelling) == 1:
+        return Mode(valid=True, letter=letter, text=True)
+    if spelling[1] != 98 and spelling[1] != 116:
+        return Mode(valid=False, letter=0, text=False)
+    return Mode(valid=True, letter=letter, text=spelling[1] == 116)

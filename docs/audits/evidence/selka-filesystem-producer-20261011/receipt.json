@@ -1,0 +1,2608 @@
+{
+  "format": 1,
+  "source_base": "0ce4c813f336e8ba5e64d304cbd270032aa609ad",
+  "native_source": "8987826f05f0cd4adf2d0523ddb8df4262024935",
+  "compiler_sha256": "11c7e9152983918ce196d7b0419814c60818975112e64fd388d94af2f96a4a5f",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-20498ae1a241e32b092f6f8e65670689b0c1146c76b0fd98e2a6fc841408c05e",
+      "component": "test-index",
+      "format": 1,
+      "key": "da0e9479ff7cc4d96d93a49d3afd2773341994770229d51301880f1449830933",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "20498ae1a241e32b092f6f8e65670689b0c1146c76b0fd98e2a6fc841408c05e"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-7bb38b5b5367d1832e9fd4152191e738b9561dd14456e2dc18a7dbfc02384253",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "4ed1a17e71224736aee4140f1060f326b986118331d8369ede78303503736ea5",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "7bb38b5b5367d1832e9fd4152191e738b9561dd14456e2dc18a7dbfc02384253"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-d368c2086924b96626870f47d4dfc25614800d5df86c3438540c7d0c8d97cac7",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "c9d96ee01a9c1506e1905add7e53579654153481e70968843a94672b0b70f288",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "d368c2086924b96626870f47d4dfc25614800d5df86c3438540c7d0c8d97cac7"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-e9518c4932b8d2594fca6a9ef48ca0c9f7d18ae4676135e4f5c278b2ed07ac75",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "2b90ecba0489357f0c5d59c861b0d5e2ae1aaa8a561fe7e335586dc405a59b04",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "e9518c4932b8d2594fca6a9ef48ca0c9f7d18ae4676135e4f5c278b2ed07ac75"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-1fa1e98505b4719796bb8a8130d24015c3b750d9bb971eefab50d6f6d364077b",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "e8640208294077644cec870901461310e784b1bd42bf00fe4b87012ae30d9f77",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "1fa1e98505b4719796bb8a8130d24015c3b750d9bb971eefab50d6f6d364077b"
+    },
+    "type-interface": {
+      "artifact": "type-interface-6d68b072edd82cedb9ccd54159b234cd2c5751a452c941499878cd45da05f619",
+      "component": "type-interface",
+      "format": 1,
+      "key": "9320fbb5d5fd143e7321629ed67e50de76ec6a0230ac4004543f3d868bdd8822",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "6d68b072edd82cedb9ccd54159b234cd2c5751a452c941499878cd45da05f619"
+    },
+    "body-check": {
+      "artifact": "body-check-e5881022e952a5775a636859e18ca0a94a360c26f94c269dbe1d5a7bd2ce529b",
+      "component": "body-check",
+      "format": 1,
+      "key": "c2fa007784931b6f5777f31ef7aca6d7ac646ef9c6ab0e0bb7b80aeb810b35d2",
+      "protocol": 1,
+      "schema": 10,
+      "sha256": "e5881022e952a5775a636859e18ca0a94a360c26f94c269dbe1d5a7bd2ce529b"
+    }
+  },
+  "qualified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "source_sha256": {
+    "selfhost/components/body_check/array_catalog_tests.my": "978275909c621f6775929ac33a005ce2ad64bf2f7bb2de6359a3ac8f3ee539cd",
+    "selfhost/components/body_check/array_engine_tests.my": "37efd6209ca5964a98a1c62c4f7ee6dfbfd29a8a61456a48dfee16d768f8d4e7",
+    "selfhost/components/body_check/array_index.my": "456b530417ba8507adf5d917187045fc90f2f1950cd57f0469d25134d0d2bed6",
+    "selfhost/components/body_check/array_index_tests.my": "07b54ccbaff7ddd3253a5b25134e0c4e08f866caef5de48326fdb04e7c1d4d6b",
+    "selfhost/components/body_check/array_places.my": "7ec4f7ca5f47214ac574f4c7c6c3c5766feae7560921b2638758a407eebfb8c7",
+    "selfhost/components/body_check/array_places_tests.my": "a133f6a63d9faec2e3b285557fe9158eda7515f7aa5e5d731c0ffd24a0ddc8ba",
+    "selfhost/components/body_check/array_policy_tests.my": "06fdb9ea6d62d6107bb5457f649b03e04ab09ef14491f0368ae6c98bb7c4eae9",
+    "selfhost/components/body_check/array_routing_tests.my": "4c72b686d7cbab0656136a435befcea8e61ff1c18bef996e90a4f0a6a3829933",
+    "selfhost/components/body_check/array_types.my": "d858c231fc6eb2a333f0e21eec14f1ea7e4b1ad1d32bcd762142b9a586be21b7",
+    "selfhost/components/body_check/array_types_tests.my": "69dcba4a9bd8d45b8db620995c27a118825104bfd84d9ffa4c93addf29553249",
+    "selfhost/components/body_check/array_write_tests.my": "14574bca6aaa9b86fc8f4bc7590344c7ae9005d896f20ee48e63296838d0d661",
+    "selfhost/components/body_check/body_tests.my": "ec9deb476dd5664a6f8b6e5b35a0325c44943d392605bb3f35f486fc66ea8acc",
+    "selfhost/components/body_check/buffer_engine_tests.my": "e37c02f4abb2561a350ff45479dbb7f8b9b0e9b82e6d07f662e8c65e054f39f4",
+    "selfhost/components/body_check/buffer_lower.my": "268d52bcb03a52b1af071ba8c5babae3c30f20add3fed6b89fe014d859a5330f",
+    "selfhost/components/body_check/buffer_lower_tests.my": "3b1408cdeaccbd9c1d2c39339c2a1a8c94cef64fd913dbc45dc9cdee9f619acd",
+    "selfhost/components/body_check/buffer_type_tests.my": "d05a3f62575667bf073b98b2b9e4c97182690451ddae89728000a30bc98fce23",
+    "selfhost/components/body_check/buffer_types.my": "74a35aa42e3234146aeebfee36ca4a39991ce0b30aa5ab975611bfd9425ead6b",
+    "selfhost/components/body_check/call_repairs.my": "a246462e908cd48ff0e2e20493bb66ee60890c4bb210245b73cbf5c318291da8",
+    "selfhost/components/body_check/chained_compare.my": "39034a8ea6b1b34b4399e31dfe4846d3560480b87ee22945d8fdea46de2fabf9",
+    "selfhost/components/body_check/chained_compare_tests.my": "63eac0e561a7e7447f8e5e2b3d8a2272fd355cd4097d19472e30701234a76a8c",
+    "selfhost/components/body_check/checking.my": "4a6630a8bc1d047fb0ef432f36a24b3b20e596c91a3161524d0bbbecc3795b8d",
+    "selfhost/components/body_check/codec.my": "178a99658a0b3010d591c0fddf63d14469cb67bb046d657dd37a04c72fa30d37",
+    "selfhost/components/body_check/codec_label_tests.my": "fd20402bab3b855e1860cab2fd1be9c148b889af5af8557b6b69e10044141f27",
+    "selfhost/components/body_check/codec_tests.my": "aff559127da9307c1d6ec8eb9282f26942f7aad791822bb2458ad9c3eb47aa7c",
+    "selfhost/components/body_check/collection_comprehension.my": "8679fb3b6e502952a7d94593674380c3f78ff0a37ffed2a8aa00297a71e4cd44",
+    "selfhost/components/body_check/collection_comprehension_tests.my": "82a3ae135f76a055301ba4e278d1f356b323cf9f42fbc5355cc8a130edce9cf1",
+    "selfhost/components/body_check/collection_gather.my": "4277c7725c0113d977e22a6a7085aab2791f0886cf0739c920b140a2e847eb6b",
+    "selfhost/components/body_check/collection_gather_tests.my": "33980e7d41c71268c10265080b1d9a9e2529d21740d787f29d34168d65c9bbe6",
+    "selfhost/components/body_check/collection_recipe_tests.my": "d2cb8905d4a322df21d71424bf99ee2ef61caa4eaf9bef19c66f468f9e123b56",
+    "selfhost/components/body_check/collection_types.my": "1dbdb81c2c43703f5d19cd54a807d418ce5e3aae706cd0ea9d5a2f680b007c18",
+    "selfhost/components/body_check/collection_types_tests.my": "af0604afec1e856dc6240e7b8cbbe94aadccf877c5452c25931a6a47bc32fe6a",
+    "selfhost/components/body_check/comprehension_lower.my": "5d54fdec8f423f0a48a30349b54bf2828b40040d4399346f5c9ebf3cf5aeebbb",
+    "selfhost/components/body_check/constant_call.my": "a3783ff37f66f6df1792afda3d76141b6ab89855275fb0f9de356d83da5d3702",
+    "selfhost/components/body_check/constant_context.my": "64ab05d92276ee8101cd7c1606fcf3a495bdd683ae00be4ad2a03d7420f80a30",
+    "selfhost/components/body_check/constant_eval.my": "e01f223cd5fb6be1cc2fae854ddefe75854c6c0bbf198ff0e72738b36322e38b",
+    "selfhost/components/body_check/constant_eval_tests.my": "dd13246122798fbf26f9462c4e51bb9a6d3c2fb39bd7f91bc4552b810d2d0199",
+    "selfhost/components/body_check/constant_float.my": "620e0af90f7519124a63773a91eeb0c05ee4fd5ec0334af6d066385f9d1cb527",
+    "selfhost/components/body_check/constant_float_tests.my": "e775d6dca163b988359669a39c104bde748fb80bdce378bb68553a81eb344278",
+    "selfhost/components/body_check/constant_integer.my": "a248bd8c5b7b09eedcb6b827dbe35e785519d9af66394ae7989117aaf42a0141",
+    "selfhost/components/body_check/constant_integer_tests.my": "8a8515f6ef2423840e3273a3a54e7741d858bd07cad647ef264963c557478ffb",
+    "selfhost/components/body_check/constant_value.my": "bacb569836a6e27510b2a175c6305a4e1c8b9bc9a466f40bd5a5898d40c57d8a",
+    "selfhost/components/body_check/diagnostic.my": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c",
+    "selfhost/components/body_check/dictionary_construct.my": "4bb4d02dc2a180e1887fc9fa5fd8c4c46ddc7436476477be8aef1378b57d917f",
+    "selfhost/components/body_check/dictionary_construct_tests.my": "d85e6786f833aa283fd67581e742890c7c8377fd78b13f53c33ff87899759d93",
+    "selfhost/components/body_check/dictionary_engine_tests.my": "ccd17383da0a5cd474a02aa96ba94da869f73f95c88c93dc7df9b6ff0d401d85",
+    "selfhost/components/body_check/dictionary_iteration.my": "ad006e2d4aa04903025cc97127a940c25bc16d7ae23acfff3dbbaed653ca312e",
+    "selfhost/components/body_check/dictionary_iteration_engine_tests.my": "a86d123b3c3b36b4d991c0cc30be7d0771e65e8c69d49058dba01c4f51de335d",
+    "selfhost/components/body_check/dictionary_iteration_tests.my": "a08664ba89836de99a4a999c9643347f3f7bc2ec9c21097e355df8dc0ad69612",
+    "selfhost/components/body_check/dictionary_method_tests.my": "2b4971783a6cad97492e6db7c2853e5e2ce9b571cd921aa050f1382fd2f626c9",
+    "selfhost/components/body_check/dictionary_places.my": "c230380dc0d91bae9bf05738801382dc755914f161b97bcc3f7b9df1c592d556",
+    "selfhost/components/body_check/dictionary_places_tests.my": "9c5786b10b10102487a881ceef5909616dbe37870f051e92b2ba4d1576efdb65",
+    "selfhost/components/body_check/dictionary_snapshot_tests.my": "4036d3060ee75daa23e35162599cad1daa004d43e5b041b7d932dc7b19efd8e0",
+    "selfhost/components/body_check/dictionary_view_contains.my": "65ea5f90d4faead3f65761ea5e6327e4f30d0686d7772afe01307f72d5a8dcbf",
+    "selfhost/components/body_check/dictionary_view_contains_tests.my": "aaf3f72139e969c02af394173693dfdbac29c7eac6daffc53f140a98664bdf2e",
+    "selfhost/components/body_check/dictionary_view_lower.my": "34dfad04b6a9d62d25a4250f465c11eccf88713e88372ee24a73e4d34f8e2e4f",
+    "selfhost/components/body_check/dictionary_view_lower_tests.my": "0ce93bd6e938bde5eafa79a48bb5b697ab276a437639d3096529dead5c3f6165",
+    "selfhost/components/body_check/discard_policy.my": "70eb5f69af54a7a98de0151011f4a341610bf2ad45cc7e84322d5e3721db4f9e",
+    "selfhost/components/body_check/discard_policy_tests.my": "a99c0935569eb7e9df88fb8e54f4d3d0e5a43ef4efe5fcd3530c9bb789109895",
+    "selfhost/components/body_check/emission.my": "14a8e2304fc89edbbcd0396bfc76544b52c1c2d920620d6e7cc9a9a184febf33",
+    "selfhost/components/body_check/engine.my": "b9e0bdd570920f92ea1b6a4eb9c1acfa4c1d80e3d74d6b2bf6f4e89ed54ad59b",
+    "selfhost/components/body_check/engine_flow_tests.my": "9bb1fb7dfa4399210bba05c62a72f0db117bb4a3c6763fc9f0e441885a36be1e",
+    "selfhost/components/body_check/failure_lower.my": "b25c91b13dd108492f88601bc83263b692d1790bb0879cdd2d225f390eb0eaac",
+    "selfhost/components/body_check/failure_lower_tests.my": "1c5ca4563a3a736f7974e44aaf5a1bbc19f99de49755e750dbfff6e23483b42f",
+    "selfhost/components/body_check/file_operations.my": "d0b86609a361c78639b6d38a03f5a6ca37c7c7b163c14dd146a7cc4aa50d1a72",
+    "selfhost/components/body_check/file_operations_tests.my": "48996149f67cbe5df361371ef438194515bdc8f7a52a8c5b260ba724818e5885",
+    "selfhost/components/body_check/floating_literals.my": "a6d8c10a65b485b5a149d3e03743707d3ed1f30de1f46b01bed1d5b2fd3e932e",
+    "selfhost/components/body_check/floating_literals_tests.my": "347fad008ca6c31fb532a63f8c6bd8cd783929a2ee02103da868b216b93296fc",
+    "selfhost/components/body_check/floating_types.my": "2823fae2a1da7f1d201a3c41748140d25d743992282d16172bef5132c2445d40",
+    "selfhost/components/body_check/functions.my": "b9ee1a5e5bab2a1980cd1cad74a98ed8d0f68c02290de60e8aa5ad91ad0ba154",
+    "selfhost/components/body_check/gather_engine_tests.my": "f2e3b5ffe5b09ff8036b8b74cdfc25b6fd39aa03c406fb3d3368436192dc9d93",
+    "selfhost/components/body_check/gather_lower.my": "e8f824050238e12e40514cfd63da985ce2d310d05b0533861f8e19abd896e4cb",
+    "selfhost/components/body_check/gather_lower_tests.my": "e46d9ad022d9f2bd3f633a0bc7aa958191bd8650e8336a8fbc469cac344a2b8c",
+    "selfhost/components/body_check/gather_pair.my": "9d2d0215b914de485cc8f741d4a079f684a0e2f5dda1ef5ac2ed586279d9d21c",
+    "selfhost/components/body_check/gather_pair_tests.my": "f101b9fe4eabce005074ea83e335674ece41a0caf90c04aaebe9087394171334",
+    "selfhost/components/body_check/graph.my": "60cce5eb4fd540c639c80ecdaf8da8903ed25e97f957f062337555651c3eef33",
+    "selfhost/components/body_check/graph_projection_tests.my": "24b4e7d7c4f773096b7609dcb0cd3b1bf66312b8f644b89a19e0774e6f382143",
+    "selfhost/components/body_check/hash_keys.my": "f263d4a225a6a4063835803e17eaf32ed62d96fcd3d766369488087d826e86c4",
+    "selfhost/components/body_check/hash_keys_tests.my": "6e0d2c696479bc6d0c757c45ecf3c7c2b41dac0d93e592850807b420b7123b0b",
+    "selfhost/components/body_check/integer_literals.my": "56ca6bd3bfe37e5820daa5f496925d385d12dea5063181673da71c721b26bad8",
+    "selfhost/components/body_check/integer_literals_tests.my": "2c27e6d293e454a9ccde94480c631f5451baaa464e66ae64d20caa83277f4654",
+    "selfhost/components/body_check/io_arguments.my": "07ff4afeca100a8c5634258104dd49f4f85f3c820cfa107fb741059d4cfad25b",
+    "selfhost/components/body_check/io_arguments_tests.my": "8c5e4f517d03693b628d28adac840cfaaf16ae405821ed95c085ae0caa7307fa",
+    "selfhost/components/body_check/lexer.my": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137",
+    "selfhost/components/body_check/library_closure_tests.my": "228847d5335a28a87f6c91466c08a3885b3e848ea716020fbb90ffb24d197805",
+    "selfhost/components/body_check/library_comprehension_tests.my": "304fc232dd502afe47aca9bd372df946fb37766b72d33ee65ad2ae7fafba3eb4",
+    "selfhost/components/body_check/library_iteration_tests.my": "aba0e772350f17dfdeb9c0a0d62710bea7e2bfe6a918def24efa642e3e3e3169",
+    "selfhost/components/body_check/library_scalar_tests.my": "92bca92eeb0668a88741f65c6a6ee331ba35a76384cb2ffd589f3ae8535a4cd8",
+    "selfhost/components/body_check/list_engine_tests.my": "6122d98338399e1eef4ed1853ffbc9c4a97ed4f11c5212f6733df44fd145e39f",
+    "selfhost/components/body_check/list_iteration.my": "6b1b971b7455605df071347fc3fdf71adbda4035a2f8a48d3d2490736524d9af",
+    "selfhost/components/body_check/list_iteration_tests.my": "37b025a37d268e7611ce760ce05f61a3ba176a6b72262477ae36daadcbbb040c",
+    "selfhost/components/body_check/list_lower.my": "7c8e6372f92f3730e55b70ec35c9d34e711761ef84ed863be441ffc6067cd813",
+    "selfhost/components/body_check/list_lower_tests.my": "6dcd1dd923bab0ea36ca8ce205ef0a316f88dddb5092d326d45bee5712b3faae",
+    "selfhost/components/body_check/list_places.my": "07962a5b986b0b777c4adab01a5d81a14154c226fcd30248e81310f7165dea4e",
+    "selfhost/components/body_check/list_places_tests.my": "3586e00e21a4df116125fd47f0ecc5b795b1bc7bc1989f291ab3b2db1284e8fa",
+    "selfhost/components/body_check/list_repeat.my": "2a45f3de1234ee819538681750bccf378edaf53404e3d2e319ee06d14cf751e2",
+    "selfhost/components/body_check/list_slice.my": "06d2a21519cf35031c8fd1def75309d441cf631dbe26bb22baca6f95091ddb84",
+    "selfhost/components/body_check/list_slice_tests.my": "c2a7425185cd3e7ccbdb7525a937215f09000c434b4553a7e6bf7b702e6903fd",
+    "selfhost/components/body_check/list_type_tests.my": "13d5080bb3a59c32bb3a81c5ddabf146f60669be7bfe0eec6846421afa191a88",
+    "selfhost/components/body_check/list_types.my": "9963a61c137f7dc7f228a6c6407b5ce3ff8840d8e5c52cfe15f4241a88e5f8f1",
+    "selfhost/components/body_check/locals.my": "815ac30a86547e9f1b81a7875bfe8090867fb67869a004b0c224a9ebd66851d6",
+    "selfhost/components/body_check/locals_flow.my": "bd1abc61ccb18707d040fd999778df90e3e04b9a16b285f86c9fd6813eb1e08d",
+    "selfhost/components/body_check/locals_flow_tests.my": "8d83721945bc0a5a5ebe64aa14ad97ffad68cdb4e18097887602446b6ffbbd90",
+    "selfhost/components/body_check/loop_assigns.my": "8925393ce2674e88d56d58055cde089b2cd894f6bce2cac343fb0b62d0896396",
+    "selfhost/components/body_check/loop_assigns_tests.my": "e079d350496f421d0bafcfe564b0cb8409b0b2163fca149197014d849377b73f",
+    "selfhost/components/body_check/main.my": "c92d85ae2cd6f8710e15ca5e7d0ed5b32e8009a4b01fa649e151bc8d7f9faf82",
+    "selfhost/components/body_check/mapping_lower.my": "ee7ab58f4c3d78ce975aa8573506f31e7dd43962d1e1c7e9d4e0205806462403",
+    "selfhost/components/body_check/membership_lower.my": "b1d2de6ebfbb6f0790f4626435abc4ca7adb52e3d6fb533b6ad5feb22acdbe0a",
+    "selfhost/components/body_check/membership_lower_tests.my": "7762b2ca290111d9d8645424ec7861b6718e1ae2f57fc69fa5dfec8436ee25d2",
+    "selfhost/components/body_check/mut_marker_tests.my": "86eaf140b6a9ee60af59cd1f62f09683c61c8c54d4b1ec2843441009ec012275",
+    "selfhost/components/body_check/mut_markers.my": "df968136e9beb34e0ca46e4763131b44b08e25b5a0c397dae495fd513fd4352d",
+    "selfhost/components/body_check/mutation_places.my": "e871e4297a1bb6a5fbc79db12f8b66a39e6a0b446cdb2e6840122ca364080845",
+    "selfhost/components/body_check/mutation_places_tests.my": "1fdbea52e832779e9b086bf183347e3a1817e5012ec7212c0a65ec2aa60e98a1",
+    "selfhost/components/body_check/names.my": "f93a6c3f797545f1d375b12c434c9e19b8d2170c9e4030e259c17533318258a6",
+    "selfhost/components/body_check/numeric_lower.my": "53de4c7d124774570a52da5cf7cd10a9d4fdd204e736578379e78b54a4c7a293",
+    "selfhost/components/body_check/numeric_lower_tests.my": "b5825c185dbca0e0292ed3acd05749399e570c11963bb66e3b1b1303cdd0fe9d",
+    "selfhost/components/body_check/obligation_tests.my": "211097717040b43258b530203fea3791214f56e6bac9754935d351a7e7ac978f",
+    "selfhost/components/body_check/obligations.my": "d97be071e8013a3a6e2947a5b0c65a2227daac7369aa53b937f9bc2c2e8c3aa1",
+    "selfhost/components/body_check/option_engine_tests.my": "1da90ce071ace6656ad612c463a06e5ab0c078b2e9ceb34d5626a9f292c95482",
+    "selfhost/components/body_check/option_flow.my": "5872f4c103a8b867d3b65ceb4a767fe83cd30f82ce58bfe21361bc58e87e34ae",
+    "selfhost/components/body_check/option_flow_tests.my": "a41c35bd8be081fe4d94f1005e071234fdac26950322036a7c0fecf3414c622f",
+    "selfhost/components/body_check/option_lower.my": "df0721b020fe4fc09af8c49dadfe14d944389d446689b1c57296f4ac3c8c0bc8",
+    "selfhost/components/body_check/option_lower_tests.my": "a785a3539ce50997f0094f0acc03a7ff1da336c5878fd641b593b4fc20bec235",
+    "selfhost/components/body_check/parse_engine_tests.my": "388f93f679cf4d6627fdbe886c481af683176ce13dd2c32d1e4e1b4e81f05543",
+    "selfhost/components/body_check/pending_flow.my": "22f64407e94dc914df4dc9049dde7ec55a4bc06d220832312259e4bc832331d0",
+    "selfhost/components/body_check/pending_flow_tests.my": "32d72129ebd6b358d846c87666bdef529d9cf6325bd1db2c34be8f28c322b6ea",
+    "selfhost/components/body_check/prelude_iteration.my": "eade34a17f88d11c09ec99483511dc195de3c8333ec31800edd4bf774278cdec",
+    "selfhost/components/body_check/profile_tests.my": "2fb49f8a60a1d7585bcacb5c9192832b537b668cd9b8ec01839fa023544d0ce5",
+    "selfhost/components/body_check/range_capacity.my": "9b6f4ec8c692f524f4047f2dce33bd0a458d83574be99e17029785100bfcd808",
+    "selfhost/components/body_check/range_capacity_tests.my": "bfba3a300bfa49fa3775828157dc54403fe963073162a921ec30fe0013ed6f8d",
+    "selfhost/components/body_check/range_lower.my": "a6ab79ea04016283ba5715eba890eb8f60b50fc41bcda2f1155acc033ad3c4d4",
+    "selfhost/components/body_check/range_stride.my": "df85b110e85e702c5fca771fdd1fa4a122a2f69bcf3d02a70ad368526611b89f",
+    "selfhost/components/body_check/range_tests.my": "82964b378c818b7958cbc6d04bda9f3d5b0ae83963068da7ab03603d45727b32",
+    "selfhost/components/body_check/receiver_overlap.my": "18656f26942331e663a52c269b8a6fa6ae333d4883baac6a7234d513b9962278",
+    "selfhost/components/body_check/receiver_overlap_tests.my": "6040e983e6b1cfb80a322d24c2158fa61870e62caa1aed392041abceaa430272",
+    "selfhost/components/body_check/recipe_index.my": "71903f67525209970e62995d96feec664a197c9529108a79d70c7728c0ced953",
+    "selfhost/components/body_check/recipe_index_tests.my": "e10aafdbef70f62385605605b59152b03555dc0deb592aea489cff62f9859c0e",
+    "selfhost/components/body_check/record_construct.my": "565a688d9af3fd97a428a98866d6d6ae491284566ebe8ffeb7f7f5dbf516ed39",
+    "selfhost/components/body_check/record_construct_tests.my": "2fd35b0c00a4b1d0919c9b6981cdb0736ed162ea5b6bcc91eaf9eb3eff15ad64",
+    "selfhost/components/body_check/record_engine_tests.my": "96472d83350b6b84473079fe1414daded999592041e7db56f65a7c5905a9f0bb",
+    "selfhost/components/body_check/record_index.my": "5c756454309d65df96d286c192c0bffca2e4e927b22167d4479c1654a0464872",
+    "selfhost/components/body_check/record_index_tests.my": "8eefee2a1b3440e59de2bf901f1909e456d86004508d590c92bf84d1f16f1b04",
+    "selfhost/components/body_check/record_name_index.my": "7df407da5fe863c434f4db1189f36be6b7f9de400975f5d5dee9aca21b462ca7",
+    "selfhost/components/body_check/record_names.my": "faa1dfdcf11ad3a93bc8f2e4ca0733f8335f2f058da1751df6c1b1e5f22c8ffa",
+    "selfhost/components/body_check/record_places.my": "7ef3097ddc78ca90b484eacd0d986a2cbf3e01eb4dd95bee17e2f4c2d9f55737",
+    "selfhost/components/body_check/record_places_tests.my": "7e3c2c1ea2c112329bc81e29c08b46b47e4fe60e60152cb53d535ae618c13457",
+    "selfhost/components/body_check/record_qualified.my": "5dfcda5a1989ba9d189e39887cf13f85261d1c5d9929eddb0fd707dbfc73d371",
+    "selfhost/components/body_check/record_qualified_tests.my": "57316bcee6ebd588f0819991dbba7b0787028a4ba04acb7586f8a24230a6cb9a",
+    "selfhost/components/body_check/record_type_tests.my": "f5488b82fde73caef4cd8c02e1b0c93714963d62eb3f1805a8c4e21987d4a234",
+    "selfhost/components/body_check/record_types.my": "5546fe66ebb614dcc4f51fad4ad30b569c68291ecc9185f0cb9dba82082f953f",
+    "selfhost/components/body_check/resource_engine_tests.my": "54c8713d330f989a115d763b8da82e457218295545021c91d57724045b346214",
+    "selfhost/components/body_check/resource_lower.my": "7a5645ce67b4ebc2ebb91fa7d8fd272c37757cceabbd487c26832e0c3d858e40",
+    "selfhost/components/body_check/resource_lower_tests.my": "42dc65e95c92c362e8e9d943294ac8c9a519bdfb37de95652d260991733a45bb",
+    "selfhost/components/body_check/scalar_tests.my": "94a04e1c8435f51d4c44c6e7289dd34e11d5e927d73cd79f15cfd055e24858f4",
+    "selfhost/components/body_check/scalars.my": "239bdf02596d0cea325fd08da51e18f7b442094fb8edbf70d6ec7652041b6941",
+    "selfhost/components/body_check/sequence_iteration.my": "60ed9c659f2a276b03939d4f15aa7ab81f820e83793ce5ccb2fb3221434da865",
+    "selfhost/components/body_check/sequence_iteration_tests.my": "d2a7f170940ff4c11c83793f09ffcadd7bd7c3f4048466c4f2fe6f6f66539f7d",
+    "selfhost/components/body_check/sequence_tests.my": "e77faf6fb736d30f9937373a7980e6ecf803b126d14876ac5ad0684a970b0d47",
+    "selfhost/components/body_check/sequences.my": "99070432a8602591a4d80eb88ca7df99c25ee7c56532b3e1b4a1e418849d4285",
+    "selfhost/components/body_check/set_conversion_tests.my": "fce18cb5fb2c66ff12ca7989fa4c483a0ebbd864e1f9ee4f88661e13283c323c",
+    "selfhost/components/body_check/set_engine_tests.my": "8bededeaa82a0bbb454f42a1d76950c2ba64cab296e75a63b15aaf22c8d7bd4f",
+    "selfhost/components/body_check/set_lower.my": "d1c58c1609b17ab08758a34df832aa1bb891b17832cc8684d8c53da27e5a86fe",
+    "selfhost/components/body_check/set_lower_tests.my": "c8570b5f26660347cfb32cd05800edd2240ed91be9ef4971fc210cc0f74a0f45",
+    "selfhost/components/body_check/set_method_tests.my": "9d076954fb3ba6fd8941353db8335cf266001092460d159c96607bc13f62be81",
+    "selfhost/components/body_check/source.my": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed",
+    "selfhost/components/body_check/suggestions.my": "ffba15551dd18cb1a4f338f868459280b82c19d94d457ed07879834008dd88e4",
+    "selfhost/components/body_check/syntax_codec.my": "dc4e4258f9d39a39907164093ec171fed88bccfe28fd478e4e2e32ba24f11d60",
+    "selfhost/components/body_check/syntax_diagnostics.my": "4bb6a293b5f470db45a666c18a4bd6eade755a4845f7ec573c73e02643464e37",
+    "selfhost/components/body_check/syntax_diagnostics_tests.my": "b83f78eced1a81523c093bfc9495de2d0cf52e46ffa9e037547ebff12abc484c",
+    "selfhost/components/body_check/syntax_problem.my": "e685ee9620a452c23884f41d257ba3913781ac2c7fe0fad0e34143d1a2b9ed90",
+    "selfhost/components/body_check/syntax_value.my": "fdf8268c366d876212b9a7145591404c01687addc06fee713bfc94c862ceb5bd",
+    "selfhost/components/body_check/text_repeat_tests.my": "7f750b70719d9d2bb4d641012bc0f6bbe643aa7658990b0e59ae98754968eef5",
+    "selfhost/components/body_check/token.my": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de",
+    "selfhost/components/body_check/tuple_assignment_tests.my": "d198fc120501463616a8ac1d3dc94c343afee728a53091d759f19dd1d4296dad",
+    "selfhost/components/body_check/tuple_catalog_tests.my": "a2786e13c77d6092edbdf57f6137ec30c97f3e9fe4754d35a54391ff76026093",
+    "selfhost/components/body_check/tuple_engine_tests.my": "3e7c97e0c381e675310e3e1e5b6e5e2bad554b82f87f402925058e0c9c734af9",
+    "selfhost/components/body_check/tuple_lower.my": "41c9d7edd30724162f12a910cff2410ceb002fdfb6f334485619bb14c69772c3",
+    "selfhost/components/body_check/tuple_lower_tests.my": "63056ac77c0ab781f19fea7bb99474de0ed9408d379a38e71e4fd4bbf4da116d",
+    "selfhost/components/body_check/tuple_pair_engine_tests.my": "fdb70072ca703b5a6ef94f864db2c51295d0b194c2ff8528de265b0d2e7a70b1",
+    "selfhost/components/body_check/tuple_type_engine_tests.my": "89f831476561ea95df3afa1440528d8feb0fc6d97f3e7b852ddfe05effd90e78",
+    "selfhost/components/body_check/tuple_types.my": "46947fb63332a70ceb56e6ff115e45fb422d4a9dc48d4a0d1af2105b92846785",
+    "selfhost/components/body_check/tuple_types_tests.my": "7a47074aea1ed0c93f218d3ceb6038ec550b18b179fda37408bf98f5b4f026e2",
+    "selfhost/components/body_check/variant_construct.my": "6d5307ba85ecd3c45dce71fa6ff4c2a318136e6a9136f72e41f87198741c259d",
+    "selfhost/components/body_check/variant_construct_tests.my": "5fe4d545240352a0dc8f26c956aeff88314c463f564501b34f16140e8a645caf",
+    "selfhost/components/body_check/variant_patterns.my": "1fff3b27a64ef90c51eb1ac2291a88540ab7121e33d882ce104007dfb906dc5b",
+    "selfhost/components/body_check/variant_patterns_tests.my": "6d571d4db9c824c99ec3b7be4750da97ad3e419115396703035dc0a8123762e2",
+    "selfhost/components/body_check/variant_shape_tests.my": "06bbd3d1cd8d797c132ee7d52323c1c1095e163bd4bbb7315a4575b669b32441",
+    "selfhost/components/body_check/variant_type_tests.my": "1a7d6a5488b19c606fdab81e23e6f42772a2ea863826742bb8c8d145024e6c80",
+    "selfhost/components/body_check/variants.my": "2cdc4718f97b86e86b7c03a07292d0d1e3c269a2aaf30a8a4ad3f3543aa63cfd"
+  },
+  "harness_sha256": {
+    "selfhost/tests/run_body_filesystem_admission.py": "0447003fe5f2a62545456aff9422fab80b3376b4a7e0595b21405f515198d73d",
+    "selfhost/tests/run_body_filesystem_hostile.py": "9bc8fe13b76acb5453027e89522906d983b7e8dce07f32cd262533d4fdba52cf",
+    "selfhost/tests/body_filesystem_admission_test.py": "c4b4ee87ee26272f1a2928930d261327e7aa4d7ed4b39dd395bd3a8dd0bc8166"
+  },
+  "earlier_pure_source_changes": [
+    "selfhost/components/body_check/record_type_tests.my",
+    "selfhost/components/body_check/record_types.my"
+  ],
+  "pure_passes": {
+    "filesystem": 52,
+    "capability_record_and_hash_policy": 28
+  },
+  "installed": {
+    "fixtures": 59,
+    "source_operations": 372,
+    "captures": 4,
+    "mutations": 235,
+    "rejected_replies": 470,
+    "authentic_replays": 8,
+    "python_tests": 5,
+    "guardian": 88
+  },
+  "scope": "Debug native host; normal and release/facts/leak guest execution; joined root and full compiler bootstrap pending",
+  "artifacts": [
+    {
+      "name": "before-closeout-fixes-filesystem-installed-proof.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/before-closeout-fixes-filesystem-installed-proof.json",
+      "bytes": 28105,
+      "sha256": "39c122a27b9fde30a1661c01a123052634eb7eefc706433e78d441720badc01c",
+      "archive_bytes": 10138,
+      "archive_sha256": "71c5c38c5cb23f030d0185a949c90933aa6150e8b0eda4b475cbc17e5b4cdbbe"
+    },
+    {
+      "name": "before-closeout-fixes-filesystem-installed-proof.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/before-closeout-fixes-filesystem-installed-proof.log",
+      "bytes": 1499,
+      "sha256": "336b108d6635e5da2d8f59412bee12bb156875e3bf4630023d809721b9d36453",
+      "archive_bytes": 468,
+      "archive_sha256": "1f331b7365f1727864ea8fd059921571d49a9346171d382451310f9b24117e12"
+    },
+    {
+      "name": "before-closeout-fixes-filesystem-selected-qualification.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/before-closeout-fixes-filesystem-selected-qualification.json",
+      "bytes": 427313,
+      "sha256": "9ea60364cd40870de419ce3120d5e80b21d2ef393e64ad028cc23ea0d987f947",
+      "archive_bytes": 24956,
+      "archive_sha256": "ac13ca12413f9ab0980bc8ea7c09139139fc147a87c81e09eddd0d057a485d96"
+    },
+    {
+      "name": "before-closeout-fixes-filesystem-selected-qualification.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/before-closeout-fixes-filesystem-selected-qualification.log",
+      "bytes": 996,
+      "sha256": "3c4ca977d66a0086f3ba962b63b01c676d5f78dc99e0466a1237478dbca39d30",
+      "archive_bytes": 344,
+      "archive_sha256": "ff76b49fb2264765e294cb79a38135a571c90abb347d99515a116c37d4dff6f9"
+    },
+    {
+      "name": "filesystem-capability-admission-selftests.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-admission-selftests.log",
+      "bytes": 103,
+      "sha256": "9f169aa04896ef0203477ff61d8d57406ec0dab00b71ec15cf38cdae22509147",
+      "archive_bytes": 54,
+      "archive_sha256": "c4e019d4795c32afc98060f5ce7990cf68dcccf4f3f4ad5fc03005a2b20aaa6a"
+    },
+    {
+      "name": "filesystem-capability-installed-guardian.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-installed-guardian.log",
+      "bytes": 404,
+      "sha256": "eac43f42e05a37dafeecbdb5969d1521fa2ba6e4aa27ac315b27e35a4adfe10f",
+      "archive_bytes": 185,
+      "archive_sha256": "af0ef00d313c48a458ca0b2ae844ab8c78c88937343a992733c465c5eeea427d"
+    },
+    {
+      "name": "filesystem-capability-installed-proof.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-installed-proof.json",
+      "bytes": 28565,
+      "sha256": "fd18ab88d4764ce11e679880bb0380475c4b7867e8a53a1e74fe2933a274b006",
+      "archive_bytes": 10226,
+      "archive_sha256": "fe50d2384f44c37b092edf31bcd9a63018fcd9d3ebbff1b158f0a638a736e67a"
+    },
+    {
+      "name": "filesystem-capability-installed-proof.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-installed-proof.log",
+      "bytes": 220,
+      "sha256": "1dbdc4293570054fa176d56618379efa6228d477fd5a0d6b97aeb597d4845218",
+      "archive_bytes": 169,
+      "archive_sha256": "83daf6037f6b89d85e11919fbc5c25cd2ce1487a8bf458558fde3839fbf17e4f"
+    },
+    {
+      "name": "filesystem-capability-installed-proof.py.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-installed-proof.py",
+      "bytes": 2498,
+      "sha256": "cdb3d961b12aa83d90c69ac570b1732c67361badedc0a2ddc01330f79fbf3640",
+      "archive_bytes": 1061,
+      "archive_sha256": "bb12a1939f060dfdb271915eba94b0ca907f2455561edfe9cb910d4bdce243de"
+    },
+    {
+      "name": "filesystem-capability-native-archive-install.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-native-archive-install.log",
+      "bytes": 4827,
+      "sha256": "48a06f13d0f49bc07a7fad855d24c9e6030aafa4c36e639bfd0c1e6019e3206d",
+      "archive_bytes": 1402,
+      "archive_sha256": "3bbe8a22d6b1464091ebf4538ae90b04bd7acdb773ae4040bb596950b35fed1d"
+    },
+    {
+      "name": "filesystem-capability-native-debug-install.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-native-debug-install.json",
+      "bytes": 912,
+      "sha256": "03a6f3566f70493c356a2a2a1528e6898aff8424024dc276d62f884b97aef073",
+      "archive_bytes": 479,
+      "archive_sha256": "980bbaeed8c044ecd50b5f0e6d97d8efd623a0e22ce9f97260da60111200f4d2"
+    },
+    {
+      "name": "filesystem-capability-producer-diff.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_bytes": 20,
+      "archive_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "name": "filesystem-capability-producer-guardian.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-guardian.log",
+      "bytes": 404,
+      "sha256": "eac43f42e05a37dafeecbdb5969d1521fa2ba6e4aa27ac315b27e35a4adfe10f",
+      "archive_bytes": 185,
+      "archive_sha256": "af0ef00d313c48a458ca0b2ae844ab8c78c88937343a992733c465c5eeea427d"
+    },
+    {
+      "name": "filesystem-capability-producer-hash_keys_tests.my-normal.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-hash_keys_tests.my-normal.log",
+      "bytes": 454,
+      "sha256": "0afd0c3a89f4e061a9af905d0a57c9fd133403c70e3ba00453e4442d80606238",
+      "archive_bytes": 207,
+      "archive_sha256": "0040fe38cf445d65f2fd02dc232ec24b21f5270bfec11595105ce92e8fb775dc"
+    },
+    {
+      "name": "filesystem-capability-producer-hash_keys_tests.my-release.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-hash_keys_tests.my-release.log",
+      "bytes": 454,
+      "sha256": "0afd0c3a89f4e061a9af905d0a57c9fd133403c70e3ba00453e4442d80606238",
+      "archive_bytes": 207,
+      "archive_sha256": "0040fe38cf445d65f2fd02dc232ec24b21f5270bfec11595105ce92e8fb775dc"
+    },
+    {
+      "name": "filesystem-capability-producer-install.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-install.json",
+      "bytes": 27299,
+      "sha256": "3c2a9a875832c24944c349543b355e63c5e9b5bf31bfe346e6269ad3fda0de44",
+      "archive_bytes": 10034,
+      "archive_sha256": "16ca39d99042faeababfa81f5a83256840b17dee60977d988f4e46d79f84a6a3"
+    },
+    {
+      "name": "filesystem-capability-producer-install.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-install.log",
+      "bytes": 5841,
+      "sha256": "cf4de4cd0238c095e64d267f1956a604ee78b0ed013ad3ad71a0d28bfabd29ac",
+      "archive_bytes": 1096,
+      "archive_sha256": "71118ab48bdac0b35a1271ab89015073acaf8ca9d8023edd1404512dc668395b"
+    },
+    {
+      "name": "filesystem-capability-producer-install.py.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-install.py",
+      "bytes": 1543,
+      "sha256": "a69a473488dbd9d4add8fdf0383b44c5686c8a3b78a80e7c704a330d68a22f47",
+      "archive_bytes": 752,
+      "archive_sha256": "a19eba79bacc7200c37f88162aad715bb5cd4c46b8d56baa2b6d8847696e12b0"
+    },
+    {
+      "name": "filesystem-capability-producer-preflight.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-preflight.json",
+      "bytes": 28209,
+      "sha256": "329efd420ae832278746f4e20349ddf4b89ff7a3199838562eca997df1c2e268",
+      "archive_bytes": 9523,
+      "archive_sha256": "a559aaa83d184c9c0e429083849bbbdbc723e999fe0a2af0d74e9454233f9aff"
+    },
+    {
+      "name": "filesystem-capability-producer-preflight.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-preflight.log",
+      "bytes": 546,
+      "sha256": "4040f07bc519f5382f5da51462fb16b8361af7198992d6394039aa78b2204c85",
+      "archive_bytes": 192,
+      "archive_sha256": "8e18976360123e2c6fb582cd36319c970f81bf12f38673c6f95d05cf8a1f1011"
+    },
+    {
+      "name": "filesystem-capability-producer-preflight.py.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-preflight.py",
+      "bytes": 3052,
+      "sha256": "b0b5cd21f15a8276ea604e33894d81706e49f739f568990e32871e80f4c44188",
+      "archive_bytes": 1413,
+      "archive_sha256": "4c6aff67c125181329b51769d98d60a573790cb69b81e7c1f51c397bedca445c"
+    },
+    {
+      "name": "filesystem-capability-producer-record_type_tests.my-normal.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-record_type_tests.my-normal.log",
+      "bytes": 643,
+      "sha256": "8512f99e31759108364fe7877f7e3e30f6c49d4eedd6835f5a39acbe933a153f",
+      "archive_bytes": 266,
+      "archive_sha256": "eae88d3ee9bd37c3d49bca0d76bb0365700f4ee3334e9dd598a4bc4df3efdf63"
+    },
+    {
+      "name": "filesystem-capability-producer-record_type_tests.my-release.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-record_type_tests.my-release.log",
+      "bytes": 643,
+      "sha256": "8512f99e31759108364fe7877f7e3e30f6c49d4eedd6835f5a39acbe933a153f",
+      "archive_bytes": 266,
+      "archive_sha256": "eae88d3ee9bd37c3d49bca0d76bb0365700f4ee3334e9dd598a4bc4df3efdf63"
+    },
+    {
+      "name": "filesystem-capability-producer-seed-check.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-producer-seed-check.log",
+      "bytes": 4417,
+      "sha256": "3f375875b623de69e98aaad82dfe7862d006c9246983793426d50a54b89dd278",
+      "archive_bytes": 676,
+      "archive_sha256": "b2dd18b8b470246be294a565230caf0ce9b97b018f2435a3bca1ec3efe91013d"
+    },
+    {
+      "name": "filesystem-capability-selected-qualification.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification.json",
+      "bytes": 1068142,
+      "sha256": "40773f385b0d5561e40f584c7159fdc4f3762d98255c6284666b46a95f50a57f",
+      "archive_bytes": 45417,
+      "archive_sha256": "4b65e47c2d308cade7b129108a300b1c06e87e1ebcaf991b38a9aaf9bd1cb4f9"
+    },
+    {
+      "name": "filesystem-capability-selected-qualification.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification.log",
+      "bytes": 68,
+      "sha256": "8f50f6eb78c13ad160e23f4b7ba6568d712d2cbd612d75d37ca588ee9d0e1aed",
+      "archive_bytes": 85,
+      "archive_sha256": "8e5e85838d3f28f09057ed6082891288f1cfadf00b5683b1fdb756687d063794"
+    },
+    {
+      "name": "filesystem-producer-archive-commit.py.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-archive-commit.py",
+      "bytes": 9952,
+      "sha256": "a0ada303b92c9decca9597fabb41976684307bc9bd68a21214be5aa59342e3a0",
+      "archive_bytes": 3332,
+      "archive_sha256": "6d8a798fd8ee5ee420768cb39491e8587a14e1aace93a4fd88cb58bb3b645d4b"
+    },
+    {
+      "name": "filesystem-producer-archive-missing-log.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-archive-missing-log.log",
+      "bytes": 613,
+      "sha256": "8e78192b1b0b05fdfcec70715aa4d7fb8040d72fae5116a21fb829d54b408f78",
+      "archive_bytes": 307,
+      "archive_sha256": "13076471d9c5af24ac17ffa25d37588d00e7a47fdcd1b886c7412f7c9400abd1"
+    },
+    {
+      "name": "filesystem-producer-archive-missing-log.py.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-archive-missing-log.py",
+      "bytes": 9691,
+      "sha256": "18f1896edc9c5ef6ef7637e5776305888c9115eeb0ac90972b9a5a4bd20d7cbc",
+      "archive_bytes": 3283,
+      "archive_sha256": "b6ef623f5d51b643588ed0856b915d1d840ddacacdca05e975b525933083cbc5"
+    },
+    {
+      "name": "filesystem-producer-diff.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-diff.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archive_bytes": 20,
+      "archive_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "name": "filesystem-producer-file_operations_tests.my-normal.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-file_operations_tests.my-normal.log",
+      "bytes": 330,
+      "sha256": "3f587418deac1d45511509ded411bd191c7c86e0cdc22192c0469ea65e39cab7",
+      "archive_bytes": 190,
+      "archive_sha256": "4cddb089df78d096c9a1e7c440dbed4c11ec5f4be426eaff2232b028f783ce74"
+    },
+    {
+      "name": "filesystem-producer-file_operations_tests.my-release.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-file_operations_tests.my-release.log",
+      "bytes": 330,
+      "sha256": "3f587418deac1d45511509ded411bd191c7c86e0cdc22192c0469ea65e39cab7",
+      "archive_bytes": 190,
+      "archive_sha256": "4cddb089df78d096c9a1e7c440dbed4c11ec5f4be426eaff2232b028f783ce74"
+    },
+    {
+      "name": "filesystem-producer-guardian.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-guardian.log",
+      "bytes": 404,
+      "sha256": "eac43f42e05a37dafeecbdb5969d1521fa2ba6e4aa27ac315b27e35a4adfe10f",
+      "archive_bytes": 185,
+      "archive_sha256": "af0ef00d313c48a458ca0b2ae844ab8c78c88937343a992733c465c5eeea427d"
+    },
+    {
+      "name": "filesystem-producer-preflight-before-default-fix.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-preflight-before-default-fix.json",
+      "bytes": 2092,
+      "sha256": "d008ee3302a81f2619dfb80a916a13ca73b5e1a57f479b71b419a552b1d383ef",
+      "archive_bytes": 819,
+      "archive_sha256": "3d3650d5ebdeaa82ebda530feab5f26a0c1a412532544d00c12289d312c39082"
+    },
+    {
+      "name": "filesystem-producer-preflight-before-default-fix.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-preflight-before-default-fix.log",
+      "bytes": 919,
+      "sha256": "e655ecc4139ef552c9a60cd510e21486c95d45d0a658164734e634bb22f8c739",
+      "archive_bytes": 410,
+      "archive_sha256": "51662487887ccb5f924e7a0bce37acdecc249d7b85d89bec9599c15ae890a7f2"
+    },
+    {
+      "name": "filesystem-producer-preflight.json.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-preflight.json",
+      "bytes": 30315,
+      "sha256": "f6e899745ae32fcde7e641aa5dda8f4a04b33aee2b82994ddebf3f9c23a0d751",
+      "archive_bytes": 9601,
+      "archive_sha256": "224da5c07faad6a084de16145db38986c09a7d5e2c219e6a5c604ffb548941f5"
+    },
+    {
+      "name": "filesystem-producer-preflight.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-preflight.log",
+      "bytes": 359,
+      "sha256": "0cbb0f0ff6c211ad69a8e2c9d3208c1c186add9c77055891737b4ba5010de65b",
+      "archive_bytes": 192,
+      "archive_sha256": "6e8e30512dd9d12dc54d7a7ac1cf66bc1620efe827938c26e2740f9fb85b16e9"
+    },
+    {
+      "name": "filesystem-producer-preflight.py.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-preflight.py",
+      "bytes": 3152,
+      "sha256": "e53142715f668059a74afc3b74dcf0e44b9fbec170867ebf7f6e4213b1abccee",
+      "archive_bytes": 1427,
+      "archive_sha256": "308153ab43e6156817415041fead4cf401bf377ee28b62aea615f9fc0cc5f23c"
+    },
+    {
+      "name": "filesystem-producer-resource_engine_tests.my-normal.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-resource_engine_tests.my-normal.log",
+      "bytes": 1592,
+      "sha256": "371d883d42ddcc0c08736818b47d700d19bf7756af3ceb824e5f691ab914846f",
+      "archive_bytes": 530,
+      "archive_sha256": "f6d921c13ed0f0b6d7571edfa68fa5b32dde25fde755f5f59bc47e7b1e5e43ad"
+    },
+    {
+      "name": "filesystem-producer-resource_engine_tests.my-release.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-resource_engine_tests.my-release.log",
+      "bytes": 1592,
+      "sha256": "371d883d42ddcc0c08736818b47d700d19bf7756af3ceb824e5f691ab914846f",
+      "archive_bytes": 530,
+      "archive_sha256": "f6d921c13ed0f0b6d7571edfa68fa5b32dde25fde755f5f59bc47e7b1e5e43ad"
+    },
+    {
+      "name": "filesystem-producer-resource_lower_tests.my-normal.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-resource_lower_tests.my-normal.log",
+      "bytes": 563,
+      "sha256": "c9d093f548ee6a8dfed27d9547f597353afe103e5ebb7dddbded152250874ff4",
+      "archive_bytes": 240,
+      "archive_sha256": "f65fb317c6902be9deb478d9c35fb6f166722704e45eb8e1378ecb658303a7f6"
+    },
+    {
+      "name": "filesystem-producer-resource_lower_tests.my-release.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-resource_lower_tests.my-release.log",
+      "bytes": 563,
+      "sha256": "c9d093f548ee6a8dfed27d9547f597353afe103e5ebb7dddbded152250874ff4",
+      "archive_bytes": 240,
+      "archive_sha256": "f65fb317c6902be9deb478d9c35fb6f166722704e45eb8e1378ecb658303a7f6"
+    },
+    {
+      "name": "filesystem-producer-seed-check.log.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-producer-seed-check.log",
+      "bytes": 4417,
+      "sha256": "3f375875b623de69e98aaad82dfe7862d006c9246983793426d50a54b89dd278",
+      "archive_bytes": 676,
+      "archive_sha256": "b2dd18b8b470246be294a565230caf0ce9b97b018f2435a3bca1ec3efe91013d"
+    },
+    {
+      "name": "scoped_binary-access_open_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_arity.bin",
+      "bytes": 35292,
+      "sha256": "de061aef8da0a3dd1928ee2e49cd7ba13e916e3b6384de08e1e929c107757f22",
+      "archive_bytes": 5262,
+      "archive_sha256": "db0ed3713895c61a1cb9bb55da2d88d2e02cc532a7048e86cf5bf20e8d1dea7f"
+    },
+    {
+      "name": "scoped_binary-access_open_data.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_data.bin",
+      "bytes": 35296,
+      "sha256": "477d01af98541ec0c085e34cf29448508421d6f2b276d739ba5ba7aff0ce7413",
+      "archive_bytes": 5263,
+      "archive_sha256": "bfa915668cdcf39c21b0ecb1696c957b9fee509317f728bbca246ff585eceb2d"
+    },
+    {
+      "name": "scoped_binary-access_open_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_mode.bin",
+      "bytes": 35296,
+      "sha256": "c9af5d4f90b807d6887e7a92a2802faf7e96ebecdf8e60ae89299b5a35367bb3",
+      "archive_bytes": 5262,
+      "archive_sha256": "dd686c0e063ff80a92e0f2dd42e5b3c05a227cc2b3c2cb96d85e64e6b63cca21"
+    },
+    {
+      "name": "scoped_binary-access_open_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_path.bin",
+      "bytes": 35296,
+      "sha256": "f96f63ed7f66bff1b344b30f9e74a68d6f8327d4ed98ecbd49ed796988c2a1c7",
+      "archive_bytes": 5261,
+      "archive_sha256": "212627f48eaf453361876382567d4aa0c8bac10b4432ddfbbc22703b87182559"
+    },
+    {
+      "name": "scoped_binary-access_open_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_receiver.bin",
+      "bytes": 35296,
+      "sha256": "400f69694c69a03ac8495c47a470fa5dacefd1ec91cf11ef54bcb27edfbf0a64",
+      "archive_bytes": 5262,
+      "archive_sha256": "4ea28cd8d9557b23f9091d68c73e823b8c30854b9a0a0da4b67a0f518612077d"
+    },
+    {
+      "name": "scoped_binary-access_open_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_result.bin",
+      "bytes": 35296,
+      "sha256": "294698793d2b8ba7648ac33039d6d456f423d19db27fef67e9298f0cbd02a8a0",
+      "archive_bytes": 5264,
+      "archive_sha256": "24b4bffc8bbdeb29baab44e03aaf0054d0c82ea63206ea82a939a9019986a003"
+    },
+    {
+      "name": "scoped_binary-access_open_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_shape_bytes.bin",
+      "bytes": 35296,
+      "sha256": "d117c422174c9c53bb9c52bcb45721a3a579369bbd577a2877eb07f97a6c7dbb",
+      "archive_bytes": 5268,
+      "archive_sha256": "524e07afe85e692ad6069045f93922a458847a404b9423dc795fbf32bc35fa9f"
+    },
+    {
+      "name": "scoped_binary-access_open_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_shape_list.bin",
+      "bytes": 35296,
+      "sha256": "8ad76910528170a13f7bf3e5ce863322eecf6858637194818c44a2bb7f00d148",
+      "archive_bytes": 5266,
+      "archive_sha256": "fa87eb43c7e412c5fcc9d05b06034fc068b83444ad9173b255db6832e7b20656"
+    },
+    {
+      "name": "scoped_binary-access_open_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_shape_text.bin",
+      "bytes": 35296,
+      "sha256": "5a0e3c0c1d5ee4634097007ed803bbae9991450d11d3aaeb15837145e0457303",
+      "archive_bytes": 5267,
+      "archive_sha256": "2b8e47eed7b975136b84cd085302638ffdd71f2f9cae3d997625c25ddae98bfd"
+    },
+    {
+      "name": "scoped_binary-access_open_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_open_text.bin",
+      "bytes": 35296,
+      "sha256": "20aaec83015baed870bdaeaa276d36d7e50595f46ea264bcb0b742f87ea7eb6c",
+      "archive_bytes": 5265,
+      "archive_sha256": "72d059059d95734ac90e4cc62839c851dd36d8512f8fb6e773b7a43d90972523"
+    },
+    {
+      "name": "scoped_binary-access_remove_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_arity.bin",
+      "bytes": 35292,
+      "sha256": "96e0bca30db7a88ba48cfa26426f0e8cd393fb191cea3b7162eccd86784e2a3a",
+      "archive_bytes": 5260,
+      "archive_sha256": "3d708bb348a8c0a4d3b51aa826888dcb694006ffeb9bf80b19ced814483c36ad"
+    },
+    {
+      "name": "scoped_binary-access_remove_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_mode.bin",
+      "bytes": 35296,
+      "sha256": "219d0bcb6297e688aacb70b29303535407a18429d165babc850e2b911c1cb35b",
+      "archive_bytes": 5263,
+      "archive_sha256": "7226aacf3a8d61609c0262228a9ec2cc7b88beb54c9f589c8dc886a5b0486381"
+    },
+    {
+      "name": "scoped_binary-access_remove_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_path.bin",
+      "bytes": 35296,
+      "sha256": "42af287162367578f2c0e5795b13e0d3e46a93f5bcdc31450c29a9c52a6e2e3d",
+      "archive_bytes": 5263,
+      "archive_sha256": "b030e0b2f0d0b7d2f32cee4cb5c0cddb451da6f38d4f5bdb6d75948de3734908"
+    },
+    {
+      "name": "scoped_binary-access_remove_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_receiver.bin",
+      "bytes": 35296,
+      "sha256": "c2bd04d67e1966c7caa2a7dde5ba26d328f7d61a72da6dd705821b5f74321acf",
+      "archive_bytes": 5262,
+      "archive_sha256": "40612471c255c2a2e77a0b983bc628a7e73c496fbf8c9476aa3b10597f242533"
+    },
+    {
+      "name": "scoped_binary-access_remove_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_result.bin",
+      "bytes": 35296,
+      "sha256": "c5b600cf54f32d09853940e16fa41b0bb99ebb48267a0f78d0b09cc351dd821b",
+      "archive_bytes": 5263,
+      "archive_sha256": "79e5e90293fab28a60146a7b77dfa3b23c289a1bc845a96c24838f784656a906"
+    },
+    {
+      "name": "scoped_binary-access_remove_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_shape_bytes.bin",
+      "bytes": 35296,
+      "sha256": "88dfbb7c62c01baa6d1c1e04738e30db16780a500ed9cac9f0bc2184ebf5b4af",
+      "archive_bytes": 5266,
+      "archive_sha256": "1d2c15ba4926cfcb832025ba25093fc37fa069a87f49b3cca9b87b071270b3be"
+    },
+    {
+      "name": "scoped_binary-access_remove_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_shape_list.bin",
+      "bytes": 35296,
+      "sha256": "97384cdc9a1adb06625fc8085eb5de60325b0cbb6fe63c057801f191356e048a",
+      "archive_bytes": 5266,
+      "archive_sha256": "a0b46a1cc5ce1fefd090064132846de09b0b6265207a04f6a0d13b1520b50758"
+    },
+    {
+      "name": "scoped_binary-access_remove_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_shape_text.bin",
+      "bytes": 35296,
+      "sha256": "3bc53b96ea8a01253074fdac68cd6fba221837dfe0e5020faf87af383e1e9f8a",
+      "archive_bytes": 5266,
+      "archive_sha256": "ead35f0f8462dd71d7a754e6cbfe85d109ae2108d9d65a9ae312866a24e30d97"
+    },
+    {
+      "name": "scoped_binary-access_remove_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/access_remove_text.bin",
+      "bytes": 35296,
+      "sha256": "12573e562bb81c2db1953fdd5ccd4ea05b11c541e20a5ada3515543e2a30eba0",
+      "archive_bytes": 5265,
+      "archive_sha256": "08f8f38f352aad17016c9a6cf6e7227fb6e07defb506c00399e02274d8c2c998"
+    },
+    {
+      "name": "scoped_binary-authentic.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/authentic.bin",
+      "bytes": 35296,
+      "sha256": "75b6c12c9f8c6406afacc9caa64a14f54d0e5d8b12f35bfb1ff728c046bf792d",
+      "archive_bytes": 5263,
+      "archive_sha256": "98c9050e3c112ab2da3e6e2115c30599f2836c3a57649a221e116e69f97e26e6"
+    },
+    {
+      "name": "scoped_binary-method_close_extra_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_close_extra_argument.bin",
+      "bytes": 35296,
+      "sha256": "3a77b2f3e293697961f8528d3689aea94d39d4f68581bd91dc4925458c824457",
+      "archive_bytes": 5266,
+      "archive_sha256": "15145b295a27a3635741adb31f7926565ff6859ca3ed4b848a9a408afad8b573"
+    },
+    {
+      "name": "scoped_binary-method_close_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_close_owner.bin",
+      "bytes": 35296,
+      "sha256": "709e3264992325c94d834a079f240e2df22250e03c9c3d20d7837665340c3885",
+      "archive_bytes": 5264,
+      "archive_sha256": "d3c3839aea7e26b1cc461b2bef37626dba0009b3b4384bfe66d109e3799d40c0"
+    },
+    {
+      "name": "scoped_binary-method_close_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_close_result.bin",
+      "bytes": 35296,
+      "sha256": "360ad2446570e018704724ceeefe16e8f41ea36049ce9f9f4bb4fabe6882d673",
+      "archive_bytes": 5265,
+      "archive_sha256": "fa1e28fd6c3eeb44e207ada32ba69956f9f1d313dff3c32647c5feffb47a2939"
+    },
+    {
+      "name": "scoped_binary-method_close_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_close_shape_bytes.bin",
+      "bytes": 35296,
+      "sha256": "9f7b57562ab300bf175b8d21a7333a76364b0f4a8eedf5c3ee92a5520eb348c8",
+      "archive_bytes": 5269,
+      "archive_sha256": "2cd61ceefb8b34a0ae16ae13ae6bd8cf2d876071307675a0931d76a570b2921b"
+    },
+    {
+      "name": "scoped_binary-method_close_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_close_shape_list.bin",
+      "bytes": 35296,
+      "sha256": "5f0517f48aca6b53dacb3dead7fce88a397c823e201a2080c34845fe9bb77649",
+      "archive_bytes": 5270,
+      "archive_sha256": "4bc59628614dd1709f0a71c05494285d22a0bd86ab80d01d20a795c945b90bb9"
+    },
+    {
+      "name": "scoped_binary-method_close_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_close_shape_text.bin",
+      "bytes": 35296,
+      "sha256": "292db53c384c0937c9d3493df77e8d5bfd3711fc704a5a127a0df9d351780e2c",
+      "archive_bytes": 5270,
+      "archive_sha256": "957b71f6dd28714226f0426f4e6558d9248c4c986f6996870b7c3fbd91fa45e3"
+    },
+    {
+      "name": "scoped_binary-method_close_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_close_text.bin",
+      "bytes": 35296,
+      "sha256": "2c7ccdbed02028438d006bf86033e68903ecafdf63fc9b185c7ca5ba9e4c4850",
+      "archive_bytes": 5264,
+      "archive_sha256": "8023eec67f9801d8c8ff2fe2b7e759afbed7e37778cdd29ea07c9ab3ee8b24ff"
+    },
+    {
+      "name": "scoped_binary-method_flush_extra_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_flush_extra_argument.bin",
+      "bytes": 35296,
+      "sha256": "67f4eee44385007252ad9b137826fde2d2b184ffccfc430e97f1d662d83d2956",
+      "archive_bytes": 5263,
+      "archive_sha256": "68ecc6c73ba350f0dd820f14655b1d40b887b27c2d57c6371bc66f78ebc97719"
+    },
+    {
+      "name": "scoped_binary-method_flush_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_flush_owner.bin",
+      "bytes": 35296,
+      "sha256": "79e827d6a5715c11865261d2a400a964f0e09c777d965cd7fb2da40858f7ce2f",
+      "archive_bytes": 5264,
+      "archive_sha256": "28ada00cfd35d5860e460b33fe1ed3684b2314b1f41c3c42639e803121e7106a"
+    },
+    {
+      "name": "scoped_binary-method_flush_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_flush_result.bin",
+      "bytes": 35296,
+      "sha256": "dcde8b34dc8841161509fe1a28b18bee3351ea500371ae82886ea8fd45d93cd8",
+      "archive_bytes": 5265,
+      "archive_sha256": "f04c88d99c66cbf8078196967fc4e6500788a6f410e6b288a0fbcd43eb467f6b"
+    },
+    {
+      "name": "scoped_binary-method_flush_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_flush_shape_bytes.bin",
+      "bytes": 35296,
+      "sha256": "deb2b69e4c1d4f76407ab1b947bb1113c1d9538681c2dfeeb53f3ca3d6488108",
+      "archive_bytes": 5269,
+      "archive_sha256": "b33c2d17043e0591d1a650ad95bbbf77ad0cbd7580d52c5e95eb9d352a7e4a6c"
+    },
+    {
+      "name": "scoped_binary-method_flush_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_flush_shape_list.bin",
+      "bytes": 35296,
+      "sha256": "dd5aa506da5867070bf8399146fdbe7e4bdf820f8cbb63c8e9b6d5af9a73db63",
+      "archive_bytes": 5269,
+      "archive_sha256": "186dce641f962df7f0ef6ab9d5b4df91207e458e850710b6604bf2dacaf7cf37"
+    },
+    {
+      "name": "scoped_binary-method_flush_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_flush_shape_text.bin",
+      "bytes": 35296,
+      "sha256": "d344314283309ad64e21b20e121f369fbf4652bb88927c44358537981ce1c2b1",
+      "archive_bytes": 5268,
+      "archive_sha256": "75dcc0b6c695997621f119345413f393fe4be3fef2f8f7af21fe61850b7e7ffc"
+    },
+    {
+      "name": "scoped_binary-method_flush_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_flush_text.bin",
+      "bytes": 35296,
+      "sha256": "39de540eb4d4456d1fb3291ad1168850a9f776abb6aad13c43b1987a2ba975b7",
+      "archive_bytes": 5264,
+      "archive_sha256": "b64ae3241b23ebf507a5b03d75c352902a3e51d53163956e9ee4f11f0399d100"
+    },
+    {
+      "name": "scoped_binary-method_read_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_read_argument.bin",
+      "bytes": 35296,
+      "sha256": "ea402e694209568a8e083193b33c454b92c8cc1c36d1bc97dbca8a688962dbba",
+      "archive_bytes": 5261,
+      "archive_sha256": "06d93fda5e4f8455db88718f7a98ac8123d407cdc68b8b7e221efd08452721b4"
+    },
+    {
+      "name": "scoped_binary-method_read_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_read_owner.bin",
+      "bytes": 35296,
+      "sha256": "136d02936133668a0d300e5f00229b6bf190e4bc4fa758b141a66253b6d112a4",
+      "archive_bytes": 5262,
+      "archive_sha256": "945cbaef79dd6109c32edccf738e63e6dfe26a5146a4eff5b693bcd8a0024067"
+    },
+    {
+      "name": "scoped_binary-method_read_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_read_result.bin",
+      "bytes": 35296,
+      "sha256": "d605514449bbf1218321dbe323c044929cdc409c994336bb0224e1ec9643b696",
+      "archive_bytes": 5266,
+      "archive_sha256": "16d313439370b96476fcd8cfcb084edff2a372146fd6bd182fda4c42e0d95f6f"
+    },
+    {
+      "name": "scoped_binary-method_read_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_read_shape_bytes.bin",
+      "bytes": 35296,
+      "sha256": "a0fbe6d508a04b7d7a2bbcf08bf13027fd75b10fad2930c3a2ad4c328cfca4fe",
+      "archive_bytes": 5267,
+      "archive_sha256": "6ed1adbc5b2b806cff39b277903f0a8834664549cdaffd93e4501a23c7124293"
+    },
+    {
+      "name": "scoped_binary-method_read_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_read_shape_list.bin",
+      "bytes": 35296,
+      "sha256": "7e8bdc6ba2449602dbfa453580fa40be7d2f123bcb2173a0115481c990b46b34",
+      "archive_bytes": 5267,
+      "archive_sha256": "fb600ffd1986ec1f1bb125dd4fea7747985631d3e0dec7b3a34b45ea31aa67b2"
+    },
+    {
+      "name": "scoped_binary-method_read_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_read_shape_text.bin",
+      "bytes": 35296,
+      "sha256": "5dc9c9044d3e01f23e07421e233f47779d7b2f414c1714e0426a31f06ebbcb89",
+      "archive_bytes": 5265,
+      "archive_sha256": "240a814188946171707e73977458f2c21312b28e3b9499abfc60cd4d7440dde1"
+    },
+    {
+      "name": "scoped_binary-method_read_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_read_text.bin",
+      "bytes": 35296,
+      "sha256": "f4c3cf3315100d1cfa2116a67de497469de5b326a398178328ad164cea9f9818",
+      "archive_bytes": 5265,
+      "archive_sha256": "be6007ce61d425e6ef18c708516c9bb6444cc45fc27447412345be50fafe0726"
+    },
+    {
+      "name": "scoped_binary-method_readline_extra_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readline_extra_argument.bin",
+      "bytes": 35296,
+      "sha256": "08f535a488934614ea421fc26f68794ea97c4cc66df89ec9a0249ad4f740d367",
+      "archive_bytes": 5265,
+      "archive_sha256": "9ae5d0f986e0bd663d0e77966a1dbf166005c6936b183629f30f6b9dfdc587bf"
+    },
+    {
+      "name": "scoped_binary-method_readline_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readline_owner.bin",
+      "bytes": 35296,
+      "sha256": "c3ba5a412e80532d7fe0c545d3e20892c3293672b0ad70eb14044a7b9da3dd20",
+      "archive_bytes": 5266,
+      "archive_sha256": "f895a8e15f8a747bec0b5b8deadfca23d3e26cfa77dd1939831f8cfa26134f56"
+    },
+    {
+      "name": "scoped_binary-method_readline_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readline_result.bin",
+      "bytes": 35296,
+      "sha256": "02752e43cc36a99218239c70e58238cb89b27c31c2aa33a5fde195c637a192c7",
+      "archive_bytes": 5266,
+      "archive_sha256": "8c8cf91d34463657e4b43a167553576d443160ae35be923a528ee987fc00ad44"
+    },
+    {
+      "name": "scoped_binary-method_readline_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readline_shape_bytes.bin",
+      "bytes": 35296,
+      "sha256": "092e71028b1c8d1f9d1c3aedd1d55294c9f6431ab7b16fed129767d8514c1ef4",
+      "archive_bytes": 5269,
+      "archive_sha256": "452d2a60664c725701137eec4e9425b0b74b455e5352f1fbcaa6136355f903c8"
+    },
+    {
+      "name": "scoped_binary-method_readline_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readline_shape_list.bin",
+      "bytes": 35296,
+      "sha256": "3d48140c5edfe36a4e1ea4d7f3932b8184525b9cba9b9c418396b86ff0f04f71",
+      "archive_bytes": 5269,
+      "archive_sha256": "df2e514b9f9ec9a3feea9fb09c371cb4de4bfea535f6d6ba20925a1748d3d229"
+    },
+    {
+      "name": "scoped_binary-method_readline_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readline_shape_text.bin",
+      "bytes": 35296,
+      "sha256": "c29fcf4a4182b9740a30a8ea35672c711792b4e36852babb2baead556a32ea34",
+      "archive_bytes": 5269,
+      "archive_sha256": "84c718ed00829fdd8c935fddb11e9c7047c7d08f2f4891cd753d0a83cebb0289"
+    },
+    {
+      "name": "scoped_binary-method_readline_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readline_text.bin",
+      "bytes": 35296,
+      "sha256": "ae895df906ca24a626c1fdc96b2046ed1f473f1372425e5c581eb1750bfcf678",
+      "archive_bytes": 5265,
+      "archive_sha256": "ab2d9d2565842ebb9ebac56b07b6368da07c44d24d252d6df23cf75d68eb28ab"
+    },
+    {
+      "name": "scoped_binary-method_readlines_extra_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readlines_extra_argument.bin",
+      "bytes": 35296,
+      "sha256": "52bd099fe00b0776d0adf2b11b3831c598e4968852e4737f0a554eab9cd502e2",
+      "archive_bytes": 5265,
+      "archive_sha256": "8a6e7038b598e92e51198dc47d9387e3d9f00bcd000ab1e186415123ed941f4d"
+    },
+    {
+      "name": "scoped_binary-method_readlines_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readlines_owner.bin",
+      "bytes": 35296,
+      "sha256": "8a9d05b4d97ded28c5a5d7be78eeba593e62c912e8dc2d66252a074864734d7e",
+      "archive_bytes": 5266,
+      "archive_sha256": "52b6852fbf4a77fd58acf227aba36d0d30739707935ae5ba8890904fbfecdb1a"
+    },
+    {
+      "name": "scoped_binary-method_readlines_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readlines_result.bin",
+      "bytes": 35296,
+      "sha256": "4cae1499fb6a813f5f8afe2be6cd3f8febdbc3660c8d2129776aa927a19c6416",
+      "archive_bytes": 5263,
+      "archive_sha256": "605abac6bf3a3693b3fc71af79bf08b2616e0596a36709ed0a2d3189bcc1ad61"
+    },
+    {
+      "name": "scoped_binary-method_readlines_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readlines_shape_bytes.bin",
+      "bytes": 35296,
+      "sha256": "899e1aad105a639aca99412c49d88abf6673a22f6a610d648c4854618cd4f1e8",
+      "archive_bytes": 5266,
+      "archive_sha256": "ecdf014653a66128c2db7ac656a53efd4cd28d35a67d623a717dbd1fc9724053"
+    },
+    {
+      "name": "scoped_binary-method_readlines_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readlines_shape_list.bin",
+      "bytes": 35296,
+      "sha256": "bcf6d6e6d93d7618ab88b945235bd8b466adc9b82b95ac7756c1c599d66f2467",
+      "archive_bytes": 5266,
+      "archive_sha256": "0121e0f391f92f54f28e4137ba041627f3134f3f7a3f2d13754a517e399517b6"
+    },
+    {
+      "name": "scoped_binary-method_readlines_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readlines_shape_text.bin",
+      "bytes": 35296,
+      "sha256": "641ed99ea42ea84bc92846836dd1cabd69839d1446712000eee156ac312eb3f5",
+      "archive_bytes": 5266,
+      "archive_sha256": "25539425b4567cf11f05bd583b1d266dde6809f9e598272cd48da47acdb6079c"
+    },
+    {
+      "name": "scoped_binary-method_readlines_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_readlines_text.bin",
+      "bytes": 35296,
+      "sha256": "6d3c89c1890c444b6fbaa33f94beb694c7cebe7ae8f85f0fff939bb8d6adbebe",
+      "archive_bytes": 5265,
+      "archive_sha256": "3d030d916d687722d83cc3c2ac68cda7d72df213a106c9ec2a8fa094305f8fcb"
+    },
+    {
+      "name": "scoped_binary-method_write_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_write_argument.bin",
+      "bytes": 35296,
+      "sha256": "520e635195cc01c4a0a3daa795d86ee278f9d60a3f32c040b1a05285fdfcb6be",
+      "archive_bytes": 5260,
+      "archive_sha256": "c040b51842c39417131c9f010079fd5b080f29ae4d3f87cb5fcbafc67d9264eb"
+    },
+    {
+      "name": "scoped_binary-method_write_missing_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_write_missing_argument.bin",
+      "bytes": 35296,
+      "sha256": "3b37969ddc197354fc522ddc6ed444c8a5950a510db7e2b396ffa12ed9ee7c0e",
+      "archive_bytes": 5263,
+      "archive_sha256": "f0a611af6f0dceb6889b802bc70e56c1ab274562efb3c2b09c02c470cab14ace"
+    },
+    {
+      "name": "scoped_binary-method_write_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_write_owner.bin",
+      "bytes": 35296,
+      "sha256": "4922e4b2eb82f77ab27c1e8a039621066cd707d909fa7a46a7911e00fb2d3c58",
+      "archive_bytes": 5265,
+      "archive_sha256": "9890bb332730a7d090d61795e253aa37b2b2ea8b97a1d87117f61ac28077379c"
+    },
+    {
+      "name": "scoped_binary-method_write_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_write_result.bin",
+      "bytes": 35296,
+      "sha256": "0457778deb230befe02b628c6a2e6c727b303c0553c52a8d13dcc201de5dbe39",
+      "archive_bytes": 5265,
+      "archive_sha256": "ee660663e53afb76d462feeea865b99b4e18a6424046280c2d6ed44f8ea694d1"
+    },
+    {
+      "name": "scoped_binary-method_write_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_write_shape_bytes.bin",
+      "bytes": 35296,
+      "sha256": "701088a945d0b928444239fbf97b667787dad0e6653d487b7ccf718ee3f1e0fb",
+      "archive_bytes": 5266,
+      "archive_sha256": "d6512da0cf86d8bf949214ad66b0cd6bea12591d1bdb8411faec7f184a948299"
+    },
+    {
+      "name": "scoped_binary-method_write_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_write_shape_list.bin",
+      "bytes": 35296,
+      "sha256": "efc612cdbcb5dc394e0ba042563f76ee3ba1b8cee4a213b8663cfb04e61d625f",
+      "archive_bytes": 5266,
+      "archive_sha256": "535c478ed1715ae425e6d8893e2bb5b86caa253e6162323cbb3829b029f76cc2"
+    },
+    {
+      "name": "scoped_binary-method_write_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_write_shape_text.bin",
+      "bytes": 35296,
+      "sha256": "c368acbf3548f56e0cfc234fcd9683fee5e866344d1bb6441ce90f0d34ed6baa",
+      "archive_bytes": 5264,
+      "archive_sha256": "b84707fed3ca768b7d9c49e2518cf885b52f3eceab38627a923b4dbc9e46f221"
+    },
+    {
+      "name": "scoped_binary-method_write_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/method_write_text.bin",
+      "bytes": 35296,
+      "sha256": "f2c629468f26c73dbf6a49d6122e99365b586bc67bbb6b862c8e95038f5c7cd0",
+      "archive_bytes": 5266,
+      "archive_sha256": "e011d09698219e366ba45c2ae16cfc90ec3ae442ff39ac1f5fab8d1ee21d7078"
+    },
+    {
+      "name": "scoped_binary-recipe_0_element.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/recipe_0_element.bin",
+      "bytes": 35296,
+      "sha256": "938e1670419f817ee4bf85dedf92c7f6c710eeaa002fbcac27084cffae7e761d",
+      "archive_bytes": 5261,
+      "archive_sha256": "c909f12593e2a46fe6874e949664632226f388241f9842fc43d4559a86632665"
+    },
+    {
+      "name": "scoped_binary-recipe_1_element.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/recipe_1_element.bin",
+      "bytes": 35296,
+      "sha256": "89bbff3bd116596bbf9f1a3ac1167f2f23aa22be486c4a09e951c0d4ce2a9ec7",
+      "archive_bytes": 5263,
+      "archive_sha256": "73b0f5913e65f7a1d106a4aa14a391c77b5a4fff9bdc038bda9fec655c202904"
+    },
+    {
+      "name": "scoped_binary-recipe_2_failure.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/recipe_2_failure.bin",
+      "bytes": 35296,
+      "sha256": "6f2d18c1d161bdba8a2975fc7b55f17755cc0e6f84e08012f4995f65e92623e2",
+      "archive_bytes": 5261,
+      "archive_sha256": "deb27da74d1384b4a3b6397badc1daefccb64698574a381d5543361550281189"
+    },
+    {
+      "name": "scoped_binary-recipe_2_success.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/recipe_2_success.bin",
+      "bytes": 35296,
+      "sha256": "4e97a3dc90155962337e8ebd54da5e7a4adeb810a88b39f18f00e9147ebb93d0",
+      "archive_bytes": 5263,
+      "archive_sha256": "42c00c4a82c75e224e4a97638fbbd5bb8b4f244ea6196701f872f47459ac4ef0"
+    },
+    {
+      "name": "scoped_binary-reply.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/capture-reply-component.bin",
+      "bytes": 35360,
+      "sha256": "1fb739021fe87d4961b19559b53ede0682db70f63acc09148b8fcc0eba6dee21",
+      "archive_bytes": 5331,
+      "archive_sha256": "40ecb167e724b3f78aa2054aaf60a506e11c9f63f812cc8f1a5b670e62685738"
+    },
+    {
+      "name": "scoped_binary-request.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_binary/capture-request-component.bin",
+      "bytes": 28542,
+      "sha256": "a334f03726f1ca635b28be97edd2b9fe93fb711d111048719808a2768ee5ca0c",
+      "archive_bytes": 4797,
+      "archive_sha256": "e95a0c28df24e8a99d76deb24fafcd96731605a186642214dd6acbd82bc79e66"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_arity.bin",
+      "bytes": 35066,
+      "sha256": "99a455fa069f0ea6fb92c56fa69b0108e2a24c055f1a342649e82e4dd6f930eb",
+      "archive_bytes": 5230,
+      "archive_sha256": "d4f93878e6810f61e5d520b0184e8f82a232959b3369c074f926992f949b5f40"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_data.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_data.bin",
+      "bytes": 35070,
+      "sha256": "ba68c44ebad07869acfdfdbb61013cb0b5670709a39c5cee2eac8f38ee60f741",
+      "archive_bytes": 5229,
+      "archive_sha256": "ba3a25bb1ddd1d269a17fd328874956d5ccd5ebeb6bbaeb2f6354072014cfdac"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_mode.bin",
+      "bytes": 35070,
+      "sha256": "46b5b055ca77ed8d8736e48f4f5f1285a8ce803a143cacd4747e3a7105d2b076",
+      "archive_bytes": 5228,
+      "archive_sha256": "39334368220378681300ec5e508ddd81c02f1c17b72f41b30423d6ed4fe60709"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_path.bin",
+      "bytes": 35070,
+      "sha256": "9fbb70f3b53dfa5fc2b744e81d24a699607503a06add3ea11dacf1ce8ed78691",
+      "archive_bytes": 5228,
+      "archive_sha256": "f652b6b35075dbdfc4b2a8eaa5d279a786f037481a26e0eb2cf59adea8ec5e4d"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_receiver.bin",
+      "bytes": 35070,
+      "sha256": "1a02e91eb8ef1a15d810e53a052bbe16ed8a6f07e4e5c979fb7da0be343ec1ab",
+      "archive_bytes": 5229,
+      "archive_sha256": "f0a3886c80aeba696ad973766cad3ed70a2477364161983f7747cd46ca10aeb5"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_result.bin",
+      "bytes": 35070,
+      "sha256": "edbd59342a02acabe644bb298121b9e174ac53ef2778495eeae50576f5b0b92b",
+      "archive_bytes": 5230,
+      "archive_sha256": "84b4b2f0da48feefba5dad8c1910e84bada989e55cd58a783009eaee435164e2"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_shape_bytes.bin",
+      "bytes": 35070,
+      "sha256": "7a7a5faafc4ee752aecd982474577d8593763e7d399a5f46b5080b3b08c01c55",
+      "archive_bytes": 5232,
+      "archive_sha256": "4a05eb6feb4cda55e0c277f22b5ce08022e35e236299b1130c57257a59f03d1b"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_shape_list.bin",
+      "bytes": 35070,
+      "sha256": "c1e63f2e05d67dd57b055da6289d2fab4a86451d9b2ae7ff13e68e2c88f818f3",
+      "archive_bytes": 5234,
+      "archive_sha256": "010208507a71312aa2527724ae56aa504dba54bc99c4731e0876d5c9e99c436b"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_shape_text.bin",
+      "bytes": 35070,
+      "sha256": "0e0b00efe7ebdf1416914b08f00f63b151c91e4bc701bf1101b125140094d9ce",
+      "archive_bytes": 5234,
+      "archive_sha256": "8e32f214dae7ff6830996e2e0d20f22e94a29e6117d531189a5da23eb28616c1"
+    },
+    {
+      "name": "scoped_text_explicit-access_open_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_open_text.bin",
+      "bytes": 35070,
+      "sha256": "c0602c6503d84bf254ca4af1faaf6406166ac4e8fd72fc3695ce896d260cb1b2",
+      "archive_bytes": 5229,
+      "archive_sha256": "81cb5d0f9616197e55bcd269fbebbe00743085b5a6c295581f38c4c8971fe708"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_arity.bin",
+      "bytes": 35066,
+      "sha256": "919472ef3b82b4967615537c5f97a05c856029a66cedfe2a576411f0c2e34374",
+      "archive_bytes": 5227,
+      "archive_sha256": "e53cdd0c9cb0be336cf3c3a6eb8da52aff621a285623e3d38ddafcb53d402cbe"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_mode.bin",
+      "bytes": 35070,
+      "sha256": "9d5578c2fc30ed0bc4a5d7e16513ef16660ac79f560435c2595d77562cc8f482",
+      "archive_bytes": 5231,
+      "archive_sha256": "d7379d536b9b313819f92dd013c78272dc4df124e4a071516a68f6afeb803608"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_path.bin",
+      "bytes": 35070,
+      "sha256": "7160a9de4790408aa491e82c1351ae890090dc518a7418fa177e6dc255d6e37f",
+      "archive_bytes": 5230,
+      "archive_sha256": "9407ccf1b44f539e060b108e39095089b6e46a8ec0bc88f4542af1aca71138b1"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_receiver.bin",
+      "bytes": 35070,
+      "sha256": "54bfd882ddde1ad27163093a863d6e417775faedef090d1ecb1ab8b9c180415d",
+      "archive_bytes": 5229,
+      "archive_sha256": "14705adb0a7aeac93cb5e1ddc2bb36b223823fdbac7c02a061a885b6679f0324"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_result.bin",
+      "bytes": 35070,
+      "sha256": "98db310f17372a2fca746c234d0ebcde9e4e09b317a9ad3f4cbcf219a4c7b9f9",
+      "archive_bytes": 5232,
+      "archive_sha256": "12ac01cf6e85882adbadf535d07fa791151f72ca7df89b384322579836e245c3"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_shape_bytes.bin",
+      "bytes": 35070,
+      "sha256": "6a471f031739873941a3183d7c39afbdf6f6cb18f51c338ef97cc4b5125ed74a",
+      "archive_bytes": 5232,
+      "archive_sha256": "3292316233f10622104733cbd49416a5c4d516d0e733fe019686ed010a431d72"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_shape_list.bin",
+      "bytes": 35070,
+      "sha256": "752ede6a4f15b6fe46a14360bf48d8198c178a0e1a592d5b572fb9cc8a683118",
+      "archive_bytes": 5232,
+      "archive_sha256": "b71d871900aff6f89dc4630586cc47dbc058de1a634f10fad25861ec1cbfb1a8"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_shape_text.bin",
+      "bytes": 35070,
+      "sha256": "9ecdf97f9f25b7f5e0f1eb0370ad3d0ec2b03321d870630f08a59da6c4c891f9",
+      "archive_bytes": 5233,
+      "archive_sha256": "87ce0f272b85d023e83dfb207229779a822b75e0fc6fa11e6f8a961caff5d6f4"
+    },
+    {
+      "name": "scoped_text_explicit-access_remove_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/access_remove_text.bin",
+      "bytes": 35070,
+      "sha256": "a7177e1e2cfac83ce15db729630d117fc101fd4395af69287fa763d76a739ddb",
+      "archive_bytes": 5229,
+      "archive_sha256": "6d4a244000264f215694968d33be426659e5ce3753448dafb5ada1dda427fe88"
+    },
+    {
+      "name": "scoped_text_explicit-authentic.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/authentic.bin",
+      "bytes": 35070,
+      "sha256": "0fe05747b1ac418e9564bcff4ca9b226e1111158ed88dcb928728b9ea8feab9b",
+      "archive_bytes": 5230,
+      "archive_sha256": "9463d7500c9d137924f712dba864d8ad26c3294fbd9ace9248b492d4e8dd3343"
+    },
+    {
+      "name": "scoped_text_explicit-method_close_extra_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_close_extra_argument.bin",
+      "bytes": 35070,
+      "sha256": "0d460e1396d30da64969276562f880d3588f74f789a66ee147ea1f13e68b3a06",
+      "archive_bytes": 5232,
+      "archive_sha256": "67dd203a8399a65697aff0b883e868214c04c20f0b55b96b5c6c611f59ffebf3"
+    },
+    {
+      "name": "scoped_text_explicit-method_close_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_close_owner.bin",
+      "bytes": 35070,
+      "sha256": "f834397e7910f928139e1ec8264c8c0c7350e0bd02ce1d038c4599e8339e3de9",
+      "archive_bytes": 5231,
+      "archive_sha256": "d96fd39b4f0b43d694cade0f27c21d04683f0ffc62726394c8737eb9afd1bb9c"
+    },
+    {
+      "name": "scoped_text_explicit-method_close_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_close_result.bin",
+      "bytes": 35070,
+      "sha256": "deb74aec3a76f0b4d82d14a194632a25a4286fcecd4ad44c90ad71529edaaf86",
+      "archive_bytes": 5231,
+      "archive_sha256": "2b7577842a8a2a3cb2fb2c4dfd548699946a93c654f7772b9b45d5c35abca47b"
+    },
+    {
+      "name": "scoped_text_explicit-method_close_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_close_shape_bytes.bin",
+      "bytes": 35070,
+      "sha256": "6651ce31a5d42eae222c02f23dac58884162a2eb6eac700e22febfe507eb1693",
+      "archive_bytes": 5235,
+      "archive_sha256": "64d346ac2b2098f8f8f0fe6bc1ca6362bf2de828122dadabbf8ebae64a439921"
+    },
+    {
+      "name": "scoped_text_explicit-method_close_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_close_shape_list.bin",
+      "bytes": 35070,
+      "sha256": "cb5cbb0fc5146d0f7c7962eb3aaab29d77ba02e6384c2210d1d945bc3d213deb",
+      "archive_bytes": 5236,
+      "archive_sha256": "d3c68f1c441a209f10e6abb950a9a2c5fc8560e36e1777f3e8f89a81257b95eb"
+    },
+    {
+      "name": "scoped_text_explicit-method_close_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_close_shape_text.bin",
+      "bytes": 35070,
+      "sha256": "3376a4eb2eb8cd7d52647039dc3762c2e2cde93771700a1dcd06fc140d6c6f22",
+      "archive_bytes": 5237,
+      "archive_sha256": "cde54398611f6bf4d5eef58bac4c9bb22d921df05b00bb75f205b21bd34ac360"
+    },
+    {
+      "name": "scoped_text_explicit-method_close_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_close_text.bin",
+      "bytes": 35070,
+      "sha256": "0a5b757934b1d910bd17e3243d784fe3df88f5ccf26d03ce7c11ae105ef3f324",
+      "archive_bytes": 5232,
+      "archive_sha256": "64cdb5b362c79acbbb9304adf87d42cebcdad0206ca433e3d9e439c2d94c9856"
+    },
+    {
+      "name": "scoped_text_explicit-method_flush_extra_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_flush_extra_argument.bin",
+      "bytes": 35070,
+      "sha256": "b472662502ab7c688ca0b9cfbe959efa27fe0066470d6c86d0ee530f346b59e7",
+      "archive_bytes": 5230,
+      "archive_sha256": "029af442095b44f485fb2c1aa8ed4b463ec7c7cc30352f8f8708c7f78ee432d4"
+    },
+    {
+      "name": "scoped_text_explicit-method_flush_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_flush_owner.bin",
+      "bytes": 35070,
+      "sha256": "6050c8c74515641b3729b5d2195023213ec3a8b724d07403262f5c751ce64ed9",
+      "archive_bytes": 5232,
+      "archive_sha256": "54ad3a60dbcc26b9e008b178eef9adc9b531d3ea4a85f932134e50e2304c0365"
+    },
+    {
+      "name": "scoped_text_explicit-method_flush_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_flush_result.bin",
+      "bytes": 35070,
+      "sha256": "1275a0327cf2e5cb20ef1bbda60a5933780fac8413ede88df77be5cd850c7ac7",
+      "archive_bytes": 5231,
+      "archive_sha256": "c9092e3c6f5bc44f570b9f893ee261b8849c3723004e9c942e80d6a108536a7d"
+    },
+    {
+      "name": "scoped_text_explicit-method_flush_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_flush_shape_bytes.bin",
+      "bytes": 35070,
+      "sha256": "eb9ad0c5ecbe52fa989632a5ce286f9de0879960233872b980a6e0b74bc056b5",
+      "archive_bytes": 5235,
+      "archive_sha256": "78578ce637942978299dcc2cbf530d3bcdb7a33acc69b71042058d91b6e77485"
+    },
+    {
+      "name": "scoped_text_explicit-method_flush_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_flush_shape_list.bin",
+      "bytes": 35070,
+      "sha256": "eaa2e50206e2fb28f9e5f90ab6f16fea9d0d05baa0855b220d1364e8b213ca08",
+      "archive_bytes": 5236,
+      "archive_sha256": "9a93f8386fcdadaf4f2dad7cf3afbd877062d768295dea80752bbcd44578553a"
+    },
+    {
+      "name": "scoped_text_explicit-method_flush_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_flush_shape_text.bin",
+      "bytes": 35070,
+      "sha256": "258cf45d2753adeaed5aeff91ea9b1f881cefab0e91ebb16f21c887a82b5e792",
+      "archive_bytes": 5236,
+      "archive_sha256": "8c020cd045f873113f1341fbdae8c0faf171bf02be924a66978ec0e543967dd8"
+    },
+    {
+      "name": "scoped_text_explicit-method_flush_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_flush_text.bin",
+      "bytes": 35070,
+      "sha256": "a8d286747813cf84b95b644e8115849457631b68b0cb3f4bca4f49fb80f97ad8",
+      "archive_bytes": 5230,
+      "archive_sha256": "87243ea0511352497d00365bd806035a60db292ba6b54a3a72bbeeb9baa2bbd3"
+    },
+    {
+      "name": "scoped_text_explicit-method_read_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_read_argument.bin",
+      "bytes": 35070,
+      "sha256": "21b0515419a0184d8038fd1a4700ce7d502c12c69d009cd27a7ec91545cf5050",
+      "archive_bytes": 5227,
+      "archive_sha256": "48de3e10dda9d327519d2f309e4f1ad90942f8eb38c176d987e59eab34940973"
+    },
+    {
+      "name": "scoped_text_explicit-method_read_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_read_owner.bin",
+      "bytes": 35070,
+      "sha256": "da5367621f63d8ac4b43725eabea3df609c064b5e091d105e4f661e7db65d653",
+      "archive_bytes": 5228,
+      "archive_sha256": "8161e9cc722a5c0e117cfeae1df89321527c6eaa9343b4338545c46c6eeca2ec"
+    },
+    {
+      "name": "scoped_text_explicit-method_read_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_read_result.bin",
+      "bytes": 35070,
+      "sha256": "d4394b61463e1d06f9cf43fcfdc5737dc581bb42acc5b5e0b7c5a81cbbf9a44d",
+      "archive_bytes": 5232,
+      "archive_sha256": "fcf1af46ada5b3e7d408a7d16b19e3975c29a3c83e708215d6bca8a46b8abcc3"
+    },
+    {
+      "name": "scoped_text_explicit-method_read_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_read_shape_bytes.bin",
+      "bytes": 35070,
+      "sha256": "b051324b877d5c8de9b52b39a1a134bf420e187af91531cfbd1894b64a2c3bd2",
+      "archive_bytes": 5233,
+      "archive_sha256": "1c150ebe43d54932d061226a1dcf714679ff514d2cb432940b7b49585c20e48f"
+    },
+    {
+      "name": "scoped_text_explicit-method_read_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_read_shape_list.bin",
+      "bytes": 35070,
+      "sha256": "2e6c652d296c37c2345120c921cb6acc3b2c187005fe8705ea5ddae7ddcb85cb",
+      "archive_bytes": 5232,
+      "archive_sha256": "226e24ff251892f082f5f42315d86b3fd3a160f7747936afdd5994afcfa6fa66"
+    },
+    {
+      "name": "scoped_text_explicit-method_read_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_read_shape_text.bin",
+      "bytes": 35070,
+      "sha256": "cb594ebfbb221ccc0511325b0bf1532445f7ecc4e53db8f61e8eea80089c6e34",
+      "archive_bytes": 5233,
+      "archive_sha256": "7b7e9ec67a485c72af7a64e4fdef78efdabb3fddcd9dadfc21bc85be74ea1889"
+    },
+    {
+      "name": "scoped_text_explicit-method_read_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_read_text.bin",
+      "bytes": 35070,
+      "sha256": "9dc9e76462b7a01c56d6c94cee216b9e50f8bf5da8004008d63b388fd9e18930",
+      "archive_bytes": 5229,
+      "archive_sha256": "986e8673ed145763e795ea1134f5c36fa31808d85db5db7d5d955e169495162d"
+    },
+    {
+      "name": "scoped_text_explicit-method_readline_extra_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readline_extra_argument.bin",
+      "bytes": 35070,
+      "sha256": "fa4d07f784ba86f1496f401022607aa085185c158e9be6eed961c8e9d1364b5d",
+      "archive_bytes": 5233,
+      "archive_sha256": "d6864c7e86f7f4a56ece1a581ab986c365e29d4216a69726398d6fe9342f6c5c"
+    },
+    {
+      "name": "scoped_text_explicit-method_readline_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readline_owner.bin",
+      "bytes": 35070,
+      "sha256": "03d426d00fd0ce094d1ccc626b15c3f420a9bac951add2d72a6da359212cfee9",
+      "archive_bytes": 5233,
+      "archive_sha256": "82c09e4d10d49bd9e504fde04dbc9753f10475cb278529005659a8ab168e0dad"
+    },
+    {
+      "name": "scoped_text_explicit-method_readline_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readline_result.bin",
+      "bytes": 35070,
+      "sha256": "199e9715239867986507e1ca95171ea8bed2ef60c0437fc4ff6ff7d8e09d0112",
+      "archive_bytes": 5233,
+      "archive_sha256": "8e822f2f21e2b693d8163f302e3e5c00a0a1df2b03bd0b9e788d07e70d43a390"
+    },
+    {
+      "name": "scoped_text_explicit-method_readline_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readline_shape_bytes.bin",
+      "bytes": 35070,
+      "sha256": "90bdb774a6233b29c676ae0c82d892d8f2d1919743127b74be45bbdb1174e44d",
+      "archive_bytes": 5236,
+      "archive_sha256": "dcaa69bcc664ca52e76d7036e9598d8387b0047e1d6792864926d2746e93311f"
+    },
+    {
+      "name": "scoped_text_explicit-method_readline_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readline_shape_list.bin",
+      "bytes": 35070,
+      "sha256": "93e153db07909acbb48c51dec8b7a768014cfe0cd11cdc5e8d3a6fa303940177",
+      "archive_bytes": 5235,
+      "archive_sha256": "05d58b9aa41e729b257bd04a82b0f3568d216190ae4f51155b384037a513880a"
+    },
+    {
+      "name": "scoped_text_explicit-method_readline_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readline_shape_text.bin",
+      "bytes": 35070,
+      "sha256": "8722b1511824c2afdc89395c00089efcfb9e1bec48f6df377ea335b33f5e64e7",
+      "archive_bytes": 5236,
+      "archive_sha256": "52c963c60d3fe3c87065652ae3dc09182c5c0312b8e9e4348b33ff757bde6801"
+    },
+    {
+      "name": "scoped_text_explicit-method_readline_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readline_text.bin",
+      "bytes": 35070,
+      "sha256": "b891c3b20cdb384fba1f1f5312b44a84172220448e7d730c3ad2036a6af57c1f",
+      "archive_bytes": 5233,
+      "archive_sha256": "65d36a1c6260424832db99208bade68ab57020065412e488ac34a7ccbae378b1"
+    },
+    {
+      "name": "scoped_text_explicit-method_readlines_extra_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readlines_extra_argument.bin",
+      "bytes": 35070,
+      "sha256": "a589e98c22b3551e700449e2c5e65d434f9fbc2869167162a3d82b4ec81f112d",
+      "archive_bytes": 5231,
+      "archive_sha256": "4f2763e48e205705779ff936ce2c4129112ec10806314eaee8a4ed051eb39156"
+    },
+    {
+      "name": "scoped_text_explicit-method_readlines_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readlines_owner.bin",
+      "bytes": 35070,
+      "sha256": "7c4531276b0378866aefbd356a566abbd3dad821d737b915081f5aa036946889",
+      "archive_bytes": 5233,
+      "archive_sha256": "f104cff1335d6ddea2713a601a2542ed9ed693a23fbd0d03271ac4c836fbe497"
+    },
+    {
+      "name": "scoped_text_explicit-method_readlines_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readlines_result.bin",
+      "bytes": 35070,
+      "sha256": "67b529f1ae67b666090ec6d652f63d5064191b6dff8c5343abb96d56e31fff07",
+      "archive_bytes": 5230,
+      "archive_sha256": "c64d7f8fa94a9c4a60264dff1f9a5c69b03c0d0637217d71ccf76c3a500165f9"
+    },
+    {
+      "name": "scoped_text_explicit-method_readlines_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readlines_shape_bytes.bin",
+      "bytes": 35070,
+      "sha256": "bc99b4dae33a884fbbc6ce8b66a2f1a06146f803b41fae653b02156bb0363106",
+      "archive_bytes": 5233,
+      "archive_sha256": "3e5febfdb38408b170f7c04862c5318d32d66c91fe8c33539c730a7baa11a2d8"
+    },
+    {
+      "name": "scoped_text_explicit-method_readlines_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readlines_shape_list.bin",
+      "bytes": 35070,
+      "sha256": "e286b2d8ca5b6888dd15d32cbb24118476023da51e1801bdf25d0e564d599480",
+      "archive_bytes": 5232,
+      "archive_sha256": "f51af5dcddd2d733962e029f9ef307739b0e9f9e188300b96906b8beb09b5097"
+    },
+    {
+      "name": "scoped_text_explicit-method_readlines_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readlines_shape_text.bin",
+      "bytes": 35070,
+      "sha256": "cf93f1461e208c2b8a7db3896b97684cf2886f07da56897218afb5db22fbe9e8",
+      "archive_bytes": 5233,
+      "archive_sha256": "4b956ef0b6c6c5e28e30aa6b0e1c1bb2c8ea477aa88b158c01d2c408d9947ea8"
+    },
+    {
+      "name": "scoped_text_explicit-method_readlines_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_readlines_text.bin",
+      "bytes": 35070,
+      "sha256": "64effd7a2daf3d2e485f5d890899b3b1a4a23f3bf2d00e96cb317ca568b3707a",
+      "archive_bytes": 5231,
+      "archive_sha256": "4b6927d4408113e57555c5399669735a26fba4145ef438f335eac719eabd933c"
+    },
+    {
+      "name": "scoped_text_explicit-method_write_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_write_argument.bin",
+      "bytes": 35070,
+      "sha256": "d42e1b2f24f619fb7325324c02c09a23b93972e4a2c41a01d9e77464edce1341",
+      "archive_bytes": 5227,
+      "archive_sha256": "2ef5687a02bcf6d22743c3f7409c4dad9f83194b2a3482c4aacd3e895699d4f8"
+    },
+    {
+      "name": "scoped_text_explicit-method_write_missing_argument.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_write_missing_argument.bin",
+      "bytes": 35070,
+      "sha256": "e7c8878241cd077a25f12079c7310f8cee6fa683302cb0ef419a9bab9f9cbd00",
+      "archive_bytes": 5230,
+      "archive_sha256": "a02b4bde0c8e3193b43662e4ee910d8d1a47c6aeea332f2bc7272943367b1221"
+    },
+    {
+      "name": "scoped_text_explicit-method_write_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_write_owner.bin",
+      "bytes": 35070,
+      "sha256": "388af52ebb09845adf328e8261a08e021231126220cf58b469f6bc961dfed655",
+      "archive_bytes": 5233,
+      "archive_sha256": "2be1e300e45616e24231d6ba3d9b96667db36e7e71b793eaa60f3acb0c457dae"
+    },
+    {
+      "name": "scoped_text_explicit-method_write_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_write_result.bin",
+      "bytes": 35070,
+      "sha256": "1c59c200cdd6c90a3910be0d5d26099cb5f0e10ea02ed893af75f4bc44f286d6",
+      "archive_bytes": 5232,
+      "archive_sha256": "b3baad14345cb5bdf3cd36921d8fd8c20272be1251fd62cff94501a764c5dd2d"
+    },
+    {
+      "name": "scoped_text_explicit-method_write_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_write_shape_bytes.bin",
+      "bytes": 35070,
+      "sha256": "295b425cd96f8340576777f0043d869941a7cae4ac95769d79fa4f441bbb5be3",
+      "archive_bytes": 5232,
+      "archive_sha256": "dcf5439479678988debb6fd3f3a06dc72ed8642878034b5324c820416efa5af3"
+    },
+    {
+      "name": "scoped_text_explicit-method_write_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_write_shape_list.bin",
+      "bytes": 35070,
+      "sha256": "0d0496057f099e99c2d22c334833970f1e03db0445b96d560d9ea3f4569efef0",
+      "archive_bytes": 5234,
+      "archive_sha256": "557c96e6e48c9c823c04c07bdb1b79220cfc4613cc1017fb06660a0b734f8849"
+    },
+    {
+      "name": "scoped_text_explicit-method_write_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_write_shape_text.bin",
+      "bytes": 35070,
+      "sha256": "1b99da691801e47ed120be72b95d03bf0e80123b8e2657df6f3a99387cb6c99a",
+      "archive_bytes": 5231,
+      "archive_sha256": "14bf6bc622eb098840db05d18920339edef1e2ae484cca3e6d6d44111a321a78"
+    },
+    {
+      "name": "scoped_text_explicit-method_write_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/method_write_text.bin",
+      "bytes": 35070,
+      "sha256": "55e9e8dec8a79a228c5ff59ab5e899fc64f11c3d593b978bc002648590075f89",
+      "archive_bytes": 5230,
+      "archive_sha256": "575b01b65404e0be086f90bdda215e23a6b7a5b4e4c6730b78cbdb6432aa7f0a"
+    },
+    {
+      "name": "scoped_text_explicit-recipe_0_element.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/recipe_0_element.bin",
+      "bytes": 35070,
+      "sha256": "eae05fd8be8d21504a6b25f0dd98949568d266ef628151a36103e422e4eb61fa",
+      "archive_bytes": 5230,
+      "archive_sha256": "a9e19a0e21dd8ebad239b2a2a921fb45fee720fabb5dc48803140e469462d6b0"
+    },
+    {
+      "name": "scoped_text_explicit-recipe_1_failure.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/recipe_1_failure.bin",
+      "bytes": 35070,
+      "sha256": "93f1fe14142ae173c8c7f190d2834d5a0e313ee20f547cc70057872340b09ade",
+      "archive_bytes": 5227,
+      "archive_sha256": "c30db869225323dbea7972d8c592e48d90eb1036083ebb11a4df009157a914ee"
+    },
+    {
+      "name": "scoped_text_explicit-recipe_1_success.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/recipe_1_success.bin",
+      "bytes": 35070,
+      "sha256": "42b365ce814be8b19f3c92d383bdebf09856d054e7e23056bd719a6d911e7ee5",
+      "archive_bytes": 5229,
+      "archive_sha256": "1c22dc092783a6e7271b44267951d9b04c052aa5e76947b88e6a2067e3ff3d12"
+    },
+    {
+      "name": "scoped_text_explicit-reply.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/capture-reply-component.bin",
+      "bytes": 35134,
+      "sha256": "40d4853480bc2a14a1d16693462f9d35bf90b86a0204d4b8e70ae8bd1b481c66",
+      "archive_bytes": 5296,
+      "archive_sha256": "c1dbf5b208d6c9f1c1144b07a6df80f01b6204965fbd6cca37a77b581adeb767"
+    },
+    {
+      "name": "scoped_text_explicit-request.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/scoped_text_explicit/capture-request-component.bin",
+      "bytes": 28518,
+      "sha256": "50ba81271d411f9412f1e33e7365e5c24a37c639bd5f6f02e1b481c1f14cb19e",
+      "archive_bytes": 4790,
+      "archive_sha256": "a141b80f70d5ddbb9ad696b36d3f420c13825a5afb2fedd02f47bb26aecf8a83"
+    },
+    {
+      "name": "text_open_failure-access_open_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_arity.bin",
+      "bytes": 13773,
+      "sha256": "5cca78b374d76451c6f8c7e9eab79708e59abd2fa70eda4de6664c4ec0e986ca",
+      "archive_bytes": 2446,
+      "archive_sha256": "2203736e097b9126b2f77d510f7ce93a2d4a612b4ef493232c6aa42caee24d80"
+    },
+    {
+      "name": "text_open_failure-access_open_data.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_data.bin",
+      "bytes": 13777,
+      "sha256": "04813a4eb67182631c98ad206cffc6c81ed104680f8a656cc57b18d0ad0f48bb",
+      "archive_bytes": 2452,
+      "archive_sha256": "e4b843c81edf9e5242093dd737bc4d2ffd733a39f3fbd8ff8c57345d9ae089cc"
+    },
+    {
+      "name": "text_open_failure-access_open_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_mode.bin",
+      "bytes": 13777,
+      "sha256": "3484766296fb7bcfbc265b02f01654be0cc6b8417c48b0682f271559210fa5fe",
+      "archive_bytes": 2449,
+      "archive_sha256": "9fe9bd5017b465c0adffcef01a8fd92115aa77f4d5fc77ede836dbee7fb1b592"
+    },
+    {
+      "name": "text_open_failure-access_open_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_path.bin",
+      "bytes": 13777,
+      "sha256": "9390361fbd75371995b2d7d31af9127ecda74026826f3e07fc733d2035550e04",
+      "archive_bytes": 2453,
+      "archive_sha256": "e5317c716c3a677f7a839efefb39a7694dffc82807bc553703910cc8a8d66db6"
+    },
+    {
+      "name": "text_open_failure-access_open_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_receiver.bin",
+      "bytes": 13777,
+      "sha256": "e1675d74d39d32c5bed53d75ed1310eb9577ce35c6b2ef500c33955917bf1af9",
+      "archive_bytes": 2449,
+      "archive_sha256": "962b6c3f7161f6c7a367053b587227e37402d26e1b7a4a6a5fbf9c9712a90b27"
+    },
+    {
+      "name": "text_open_failure-access_open_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_result.bin",
+      "bytes": 13777,
+      "sha256": "fd952030e31b60e4bb6fe235025896174d1d16f67160208caefa708cbffe5644",
+      "archive_bytes": 2454,
+      "archive_sha256": "44dc4d8e601192142fb81fc826c2abb49301a86b8dd4672b2fb685c6eb9d5130"
+    },
+    {
+      "name": "text_open_failure-access_open_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_shape_bytes.bin",
+      "bytes": 13777,
+      "sha256": "771330a788b5b4dbe13f6f257d28be2f4cc62c602bb9f8db458026e1111b1765",
+      "archive_bytes": 2455,
+      "archive_sha256": "42fc3a3c2dd184ee502bf5abb9e76eb41463a79fb6d96aea234e052a032d37a5"
+    },
+    {
+      "name": "text_open_failure-access_open_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_shape_list.bin",
+      "bytes": 13777,
+      "sha256": "f006653720d22c95bb43e59fae8232005091584ac64c6b9d821a33535ce8f930",
+      "archive_bytes": 2455,
+      "archive_sha256": "efcd3b5f10d8a88601127e7a474189eec8a8e50aa9a0b6c52354d51a83a4e36b"
+    },
+    {
+      "name": "text_open_failure-access_open_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_shape_text.bin",
+      "bytes": 13777,
+      "sha256": "66fd6b00f5922cb65511e4e31a74b2072993386f734724e51da58a7bf22e4289",
+      "archive_bytes": 2457,
+      "archive_sha256": "5b77e74598b3f03c0e1dde7c5118eb8bb83323d472b5bf7f451f569bc59d0b37"
+    },
+    {
+      "name": "text_open_failure-access_open_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/access_open_text.bin",
+      "bytes": 13777,
+      "sha256": "7bf94c62328e681d2ecba009d8b756048f49be64e7170175e7c139f7009fcb73",
+      "archive_bytes": 2455,
+      "archive_sha256": "3b1147cffb58e4715162d51088451c415c5f2129c5c0531dca684693f42c4d02"
+    },
+    {
+      "name": "text_open_failure-authentic.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/authentic.bin",
+      "bytes": 13777,
+      "sha256": "ebdd86a9fc39b2d8a2a9499b1856bd8a2af2747cccc8be24df76ab76fc7d3e10",
+      "archive_bytes": 2454,
+      "archive_sha256": "f7bbc82399cbf20020cc7360ef6de734979347509e7b5efbfb140304b47a4a83"
+    },
+    {
+      "name": "text_open_failure-method_read_owner.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/method_read_owner.bin",
+      "bytes": 13777,
+      "sha256": "647e6da37fb10ad6b6ca939b0a5b80156cabcadc603117822d42cc90dadb29bb",
+      "archive_bytes": 2452,
+      "archive_sha256": "10fdc9518b7207535e24e932675a43c8f3e9a32ed6c542c817fb5f6d134a8614"
+    },
+    {
+      "name": "text_open_failure-method_read_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/method_read_result.bin",
+      "bytes": 13777,
+      "sha256": "fff29d9c98a25d5b2edd1265d3bbf5ae007f2471d2fb236c7f6a4e708cd74294",
+      "archive_bytes": 2454,
+      "archive_sha256": "61b557fdf66e584067852fffbe4563adcc5718fb0f94ac43eff27072c53486bf"
+    },
+    {
+      "name": "text_open_failure-method_read_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/method_read_shape_bytes.bin",
+      "bytes": 13777,
+      "sha256": "b2e3b4e345da92a582bd56f586adbfa001f2aac6e9d8a4d116141b70882e5593",
+      "archive_bytes": 2455,
+      "archive_sha256": "c8c935004bfc79e7193d749a5b031193e34fb4a2f188418f06b15403b9560ee4"
+    },
+    {
+      "name": "text_open_failure-method_read_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/method_read_shape_list.bin",
+      "bytes": 13777,
+      "sha256": "26a093bcd854205ba286706bf31075114ff28eed551eb118a3c365da3dba2404",
+      "archive_bytes": 2455,
+      "archive_sha256": "86bd489acff07c190b0444e2dff12e2448a1e879e0100f9bda6f8580411ebfa3"
+    },
+    {
+      "name": "text_open_failure-method_read_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/method_read_shape_text.bin",
+      "bytes": 13777,
+      "sha256": "034694247c45ebc7a39ea01896ef60afc259b9cfeb6fc4f65094ba9ac943cfc9",
+      "archive_bytes": 2452,
+      "archive_sha256": "be33d2d7478cc8a07071de696a6d98abf496bd5f3fc681548c28e0f0b8e7e11f"
+    },
+    {
+      "name": "text_open_failure-method_read_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/method_read_text.bin",
+      "bytes": 13777,
+      "sha256": "4a8065bb3c9f2f5a1de396e73c78fb315d371fc431c1e76aabd917e829cc7d09",
+      "archive_bytes": 2449,
+      "archive_sha256": "1ddc5209d146ff72a21a262b052d4e156123c8639e30c7fecc177e1674be164c"
+    },
+    {
+      "name": "text_open_failure-recipe_0_failure.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/recipe_0_failure.bin",
+      "bytes": 13777,
+      "sha256": "73d3dc3678a441ec06012ddaf00930dd9ff5fe0fd250ec0926759d75b130da36",
+      "archive_bytes": 2451,
+      "archive_sha256": "5bc69e32a4b44b46fe98572cad15e00122caec5a1417158cd08278793520f291"
+    },
+    {
+      "name": "text_open_failure-recipe_0_success.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/recipe_0_success.bin",
+      "bytes": 13777,
+      "sha256": "ef4b7924d6269a39bc461725eacccdfcd47afcad0c9e5ddf51926a1fc580c84e",
+      "archive_bytes": 2453,
+      "archive_sha256": "e487e35da6215b44d09547fbb48e56a3880409a2ba212a6746ca86fc58ac0fe4"
+    },
+    {
+      "name": "text_open_failure-recipe_1_element.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/recipe_1_element.bin",
+      "bytes": 13777,
+      "sha256": "f6a1f74135871e8d4b831e9a51cc395c6777ca781665071ec488f7d94d11a9c9",
+      "archive_bytes": 2454,
+      "archive_sha256": "ab37c51ab847b34d42b99789d715e5487fad741c77999418f12d65f57d21fe97"
+    },
+    {
+      "name": "text_open_failure-recipe_2_failure.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/recipe_2_failure.bin",
+      "bytes": 13777,
+      "sha256": "112e8db0190e73da63abc7e3df6acdd5f7623c9c8c34550bff18d972a52e6de3",
+      "archive_bytes": 2451,
+      "archive_sha256": "ada929e7debae430f055353c2390635760dec78252ea915a0a1096244971185c"
+    },
+    {
+      "name": "text_open_failure-recipe_2_success.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/recipe_2_success.bin",
+      "bytes": 13777,
+      "sha256": "037b4db9df5a236c26ccba27a3cc71926c96ef61682e5b7cdd61e6292227d42f",
+      "archive_bytes": 2451,
+      "archive_sha256": "7eba80cd54b6e3df29bb4ece033147845f3519fb1fae92dd074ee5c7ec499170"
+    },
+    {
+      "name": "text_open_failure-reply.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/capture-reply-component.bin",
+      "bytes": 13841,
+      "sha256": "e99309699fd7e361d256e7382382bab44e58ddb2befd28b52ab8b6d4b24e82c0",
+      "archive_bytes": 2528,
+      "archive_sha256": "54d931e38f0127ad3c1a478dd2c47d5f50dddd5ab413208e96c70394e92ff935"
+    },
+    {
+      "name": "text_open_failure-request.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/text_open_failure/capture-request-component.bin",
+      "bytes": 17856,
+      "sha256": "ba7a3e6551f30ae785c27e15c927b7cace6385a89a8111419f0245ee82a85972",
+      "archive_bytes": 3341,
+      "archive_sha256": "d114015534ab820e7d41d48954bf840fc68ba1e93ad963d92cf16181c26e58c2"
+    },
+    {
+      "name": "whole_path_method-access_exists_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_arity.bin",
+      "bytes": 57430,
+      "sha256": "a4ee5a4263380001fe994350eac4cd9718c833c6c08c8bcd132a58ef6969d87a",
+      "archive_bytes": 7870,
+      "archive_sha256": "3afce6c7fba5a32dbc7ef9ca01e1229fb54530d34df2b167c890518d2e162b9a"
+    },
+    {
+      "name": "whole_path_method-access_exists_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_mode.bin",
+      "bytes": 57434,
+      "sha256": "8d9a82c0e69ed5adaf77fdef31630b63ac3cd4b460fec7904c2404d3c2203ac5",
+      "archive_bytes": 7882,
+      "archive_sha256": "3a4443f6a600a5ca9634cdbd231a704269173a1c3c85c49054caacc49ce6188f"
+    },
+    {
+      "name": "whole_path_method-access_exists_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_path.bin",
+      "bytes": 57434,
+      "sha256": "0800cbc14767c9d1b3e401bcd403fe231d10d7ccaff4754f5622de92c0630d11",
+      "archive_bytes": 7874,
+      "archive_sha256": "42591d73c0e6c6b944d3f432b9ee8e4728191ea1527c897314f6ee394b86a17a"
+    },
+    {
+      "name": "whole_path_method-access_exists_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_receiver.bin",
+      "bytes": 57434,
+      "sha256": "b4476a7f73f79f0ab26aa2349087765a97f08127811a043e1c3438777d4a4a7a",
+      "archive_bytes": 7875,
+      "archive_sha256": "0b9a447f8378d2557bbc72a80e6f6e7ac09400a9473e016e9f9b32874a9111fc"
+    },
+    {
+      "name": "whole_path_method-access_exists_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_result.bin",
+      "bytes": 57434,
+      "sha256": "22fe98f25e364555a9b11f2df9d5eb6849109e538e56710c9757d55c1a9d890c",
+      "archive_bytes": 7875,
+      "archive_sha256": "190d4dbc929777e50db9548282df1af693c21d736eb2e10befd306714426e480"
+    },
+    {
+      "name": "whole_path_method-access_exists_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_shape_bytes.bin",
+      "bytes": 57434,
+      "sha256": "2fc4d9916800ff6bde3169f328e515d0379744bc51f7cb329088ccb6c97a4778",
+      "archive_bytes": 7879,
+      "archive_sha256": "921173fea2fd6131b004c172bc440487f9af07c469c72080a1deba38d5a6640b"
+    },
+    {
+      "name": "whole_path_method-access_exists_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_shape_list.bin",
+      "bytes": 57434,
+      "sha256": "0617247454a32ba48a80e25e8bc8cb5d3ea0033e3cbf6dc387ee320f22879a89",
+      "archive_bytes": 7880,
+      "archive_sha256": "68c584f2e475fea376616511f6566a5006b3e7378fd4496d60b79b3e7e662792"
+    },
+    {
+      "name": "whole_path_method-access_exists_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_shape_text.bin",
+      "bytes": 57434,
+      "sha256": "03b49b98790abd80f213c728abe2349f1e3ac71343bc0ba730065cb59fff0dc4",
+      "archive_bytes": 7878,
+      "archive_sha256": "566c95b42c1e80728d5beca290910c87349b4ff13475d330dc974142608f3ec6"
+    },
+    {
+      "name": "whole_path_method-access_exists_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_exists_text.bin",
+      "bytes": 57434,
+      "sha256": "407cfc0983ace7addddc143527c50f0a4bba308f237a27fd237fb9c271ac9af6",
+      "archive_bytes": 7872,
+      "archive_sha256": "0023834f489ce7eae4789b336fdbf4d56781fb87e4b9801e2e0e07f060591202"
+    },
+    {
+      "name": "whole_path_method-access_listdir_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_arity.bin",
+      "bytes": 57430,
+      "sha256": "3b1f415e3318cc117a9e729955f3c9c6d64d37d75f4b42a49de2d8bfda07fed6",
+      "archive_bytes": 7874,
+      "archive_sha256": "17e11407236083e383b38adbf815e4a11f34f8917160124f23a2851b820a6160"
+    },
+    {
+      "name": "whole_path_method-access_listdir_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_mode.bin",
+      "bytes": 57434,
+      "sha256": "9cc3e8d7560e2b1eb3e694499832b881d957780ea4773103e8b063f195107c22",
+      "archive_bytes": 7883,
+      "archive_sha256": "7ce4390b8f5de846031d649d3d1509787ff194f4eccf7cb6f237899e7642adae"
+    },
+    {
+      "name": "whole_path_method-access_listdir_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_path.bin",
+      "bytes": 57434,
+      "sha256": "9c812182d83d907c0b35dfd9b5af5ef589b8ca9c833649e5df1bc9178bc4c857",
+      "archive_bytes": 7871,
+      "archive_sha256": "8212edb48f9796ef2c0e404ffbdc6f7266f9fa4fdba4abcc4130e3a085b94ac2"
+    },
+    {
+      "name": "whole_path_method-access_listdir_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_receiver.bin",
+      "bytes": 57434,
+      "sha256": "a1dc0c1d96abe702b31fc898c36b83fc1ed4764a809347280b36cc6ad2d1724e",
+      "archive_bytes": 7871,
+      "archive_sha256": "d839d720a4bf4b335a53ba9fb7eebecf374cd56a35893daaf5138e67ee903c0d"
+    },
+    {
+      "name": "whole_path_method-access_listdir_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_result.bin",
+      "bytes": 57434,
+      "sha256": "936d2ab50ca8d416878ce8d48ba9b8256df34ddf56d42252f56527af2fa10d77",
+      "archive_bytes": 7874,
+      "archive_sha256": "60ef39b81e4db6abe3e523c947b4d7129a49049c78ee492c256b9b0001efedf5"
+    },
+    {
+      "name": "whole_path_method-access_listdir_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_shape_bytes.bin",
+      "bytes": 57434,
+      "sha256": "f941556b25e9977c239273e184e8a5349d557b3a04299ec30686068bcf02541c",
+      "archive_bytes": 7879,
+      "archive_sha256": "05d90aadc3a8b20660c84c0ed796aa42437c6aa26f4a151a5f2b5d938716b316"
+    },
+    {
+      "name": "whole_path_method-access_listdir_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_shape_list.bin",
+      "bytes": 57434,
+      "sha256": "e29d6acfda9afafff24faf08f6b13eda47da76b09ecdbed6d6ac1bf5736e3f1e",
+      "archive_bytes": 7879,
+      "archive_sha256": "7863a0a3d19ff13fc51e944f2f9238dae824741c5e593de2d8dc0234b7fc367f"
+    },
+    {
+      "name": "whole_path_method-access_listdir_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_shape_text.bin",
+      "bytes": 57434,
+      "sha256": "d133ab0b2c7fc61085c099c6b0b1fb47e7b93e88b580b10ccfc8960aa09db6fd",
+      "archive_bytes": 7879,
+      "archive_sha256": "a79cd26ea6ba35cb89ade64273cad09e20945432b6aa719e60747693d48e5fce"
+    },
+    {
+      "name": "whole_path_method-access_listdir_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_listdir_text.bin",
+      "bytes": 57434,
+      "sha256": "6aaea0577e03d73cf5494f91267d11a6069e76ade2f834df9bcc6963c59d51ad",
+      "archive_bytes": 7881,
+      "archive_sha256": "59a92f70f6ca85473dd1d57bc381ef670c76b0469d135f688a1d8d8678871f37"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_arity.bin",
+      "bytes": 57430,
+      "sha256": "b2e1e8de6faf395c4ba377ca6b55ad175e87e7bee551a3bef0109b01c9f6f28e",
+      "archive_bytes": 7869,
+      "archive_sha256": "4fd14eec3805b4da53575166a07145c745d969d2af6b3ec69dbd1e58c1005f52"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_mode.bin",
+      "bytes": 57434,
+      "sha256": "023cf550786e28195c5725ce6275ca693e2e7b5d8370211afc7888661ff91d77",
+      "archive_bytes": 7880,
+      "archive_sha256": "efb2198dbcf8352023475cce62c4cd8ad5d6faea323095207ed95fce31999558"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_path.bin",
+      "bytes": 57434,
+      "sha256": "05c5dd819169fee7279bb0e2c6262991b095d3540abf48c8b5be34738425ba18",
+      "archive_bytes": 7873,
+      "archive_sha256": "78075cc49af3e4092cff8518ea5a2fde3e2095fd28e26881c1bf05b01c4ccbe7"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_receiver.bin",
+      "bytes": 57434,
+      "sha256": "1aea4d46b1f1a3ac79a74399c5f845d4dfc0087c0061670e5936a532ab084e2e",
+      "archive_bytes": 7868,
+      "archive_sha256": "4ea05ad46b6a41f8418c3837539391bf79ef573992d443393dc83d03c02c577a"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_result.bin",
+      "bytes": 57434,
+      "sha256": "af45fa84440604ec805a945acb860b6f7d7b171991bcc1ebb2c1793b9e5af893",
+      "archive_bytes": 7875,
+      "archive_sha256": "d819e9484df090f7e61c409861b11afcc2e2c61b52637f5d5833ac042bc83b6e"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_shape_bytes.bin",
+      "bytes": 57434,
+      "sha256": "8e774dbcaf1ef0e67c3d10b16be289f824552d0b5b6f5ca499ba64b46c747182",
+      "archive_bytes": 7876,
+      "archive_sha256": "1e23a6c53791cb11a3562b9f0349cd09cfa03ee4f4a48d7c278d4a6250c67bdc"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_shape_list.bin",
+      "bytes": 57434,
+      "sha256": "0ec93fd3e1be6b009a2f8c9e9c417ff493ed4021de586d647056975e7546d450",
+      "archive_bytes": 7879,
+      "archive_sha256": "bd3dfd0c9b93a68f3b88b67f97f4ef5a2f3bb2e02e927e9c9b04fc2826821161"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_shape_text.bin",
+      "bytes": 57434,
+      "sha256": "65b6de0c5c401593759d7b1bc47010eabe8d2b49245c14db3fbd62b6660fa08e",
+      "archive_bytes": 7878,
+      "archive_sha256": "bd67d6f978cb52931cd4c90b601cb9ec933125a15928f0a9d364f07386f22c4f"
+    },
+    {
+      "name": "whole_path_method-access_mkdir_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_mkdir_text.bin",
+      "bytes": 57434,
+      "sha256": "c270c72264cd1ff023315c2179a6304dbac02b4c6bf270eaca35978c32da1a5b",
+      "archive_bytes": 7872,
+      "archive_sha256": "6b860c60fc22c2409d64235eaf6ddcb921ad224ac14b3c4d60a804752a992172"
+    },
+    {
+      "name": "whole_path_method-access_read_file_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_arity.bin",
+      "bytes": 57430,
+      "sha256": "deeab3b777c50c7291f6f05cc28d83f6e879dbc05287c2e67db66a26bce27015",
+      "archive_bytes": 7870,
+      "archive_sha256": "acda4c07da973281b8eae19357266df34a5f3b515f8d09ccd11ca7115cd520e1"
+    },
+    {
+      "name": "whole_path_method-access_read_file_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_mode.bin",
+      "bytes": 57434,
+      "sha256": "8be142e2262d105b1c4f81ad63e62358c6df25554be99e53458cbab48f40ee22",
+      "archive_bytes": 7881,
+      "archive_sha256": "afde74052e5e78b93bcd669493bd2fab5ddb57a1c6d565b5e4ad427dbdbe3402"
+    },
+    {
+      "name": "whole_path_method-access_read_file_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_path.bin",
+      "bytes": 57434,
+      "sha256": "5f437e115025bb1126c3634877fd0c43d3107f42927fbe60b214d51072c153f1",
+      "archive_bytes": 7873,
+      "archive_sha256": "798c4873bcd20401eb9019ca22278929ca4599044bc39ae5cc8c59cd6b9c24c5"
+    },
+    {
+      "name": "whole_path_method-access_read_file_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_receiver.bin",
+      "bytes": 57434,
+      "sha256": "93cbb7369c56fec456446d9a5b74a6f9769db583a691ed2df6b81cacd468f404",
+      "archive_bytes": 7871,
+      "archive_sha256": "74fa7382a20e853d0dceec68dbbe44b4feb9d5740036a95d3dfcdd4ee76bbb82"
+    },
+    {
+      "name": "whole_path_method-access_read_file_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_result.bin",
+      "bytes": 57434,
+      "sha256": "7203392403830aab68eb13f8e0c7902f251f0e9818a0aeb008b3c15bc151b3a8",
+      "archive_bytes": 7874,
+      "archive_sha256": "8cc01f956385b805104c77bc1cfb28393b3642bc50ba274ca6342d160ba90aa0"
+    },
+    {
+      "name": "whole_path_method-access_read_file_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_shape_bytes.bin",
+      "bytes": 57434,
+      "sha256": "6db8841ba160825a6650ca4ccf82aaa2fa35ab0c3c708f137dae88af93e8eb64",
+      "archive_bytes": 7879,
+      "archive_sha256": "9d508f7eaa424b238382b07875c897f9cb2fc19f72313c7472bf430b164d3b24"
+    },
+    {
+      "name": "whole_path_method-access_read_file_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_shape_list.bin",
+      "bytes": 57434,
+      "sha256": "7757a6a8f2d3432d9e48707d32308abfa9fa4de146bd22e94a8f1b53d89d1ea2",
+      "archive_bytes": 7878,
+      "archive_sha256": "f4ff74fb2cd42fc7a8b4f1b6a08812204ba00e7afbe6f65c49dc1401cbd96047"
+    },
+    {
+      "name": "whole_path_method-access_read_file_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_shape_text.bin",
+      "bytes": 57434,
+      "sha256": "4b9699c6bcb50b33bcddd8a51b3f732264f96ca72a7e27f516b2f215f43e4de1",
+      "archive_bytes": 7880,
+      "archive_sha256": "e20235d4dda8b9a27284d929309e55fd7a8d829d6defeeed94f48bc7deadc8c2"
+    },
+    {
+      "name": "whole_path_method-access_read_file_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_file_text.bin",
+      "bytes": 57434,
+      "sha256": "4c395aa3f175b05e58c80f0440e7c0b7aa7769ef9654f2ce8470674e25eb4c3f",
+      "archive_bytes": 7876,
+      "archive_sha256": "af10b9a026cd532044cde76e85586e6586bddabdf4f5b6e424858907142a2bb4"
+    },
+    {
+      "name": "whole_path_method-access_read_text_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_arity.bin",
+      "bytes": 57430,
+      "sha256": "a998dc93941cac952bb86dcce7abdd76f70f80a5db1743556d10572f1d7071e1",
+      "archive_bytes": 7874,
+      "archive_sha256": "dc06ba925c21c49513711be1c2b1769482cb4ec2b2483d93505b1919d8d49104"
+    },
+    {
+      "name": "whole_path_method-access_read_text_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_mode.bin",
+      "bytes": 57434,
+      "sha256": "233e8e31e5419c420e0be7a645a6b306daec1d68e2ee8b2b2184c44a59ac7529",
+      "archive_bytes": 7881,
+      "archive_sha256": "0b0a9fbc1efd24379e6030541d0bf28e49d0da0e9a28d135a0870c95953a9fe1"
+    },
+    {
+      "name": "whole_path_method-access_read_text_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_path.bin",
+      "bytes": 57434,
+      "sha256": "f43caec44df560e6e5e300e4f960f4c07878eda18306e69d0953033ad0a26ff4",
+      "archive_bytes": 7875,
+      "archive_sha256": "4cd8a7de54a9ff0d10647c092db15da4d6c06fff25a97ba6323897e9f71b4fee"
+    },
+    {
+      "name": "whole_path_method-access_read_text_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_receiver.bin",
+      "bytes": 57434,
+      "sha256": "bf3787120388c37ca8a50d2cd187a29c91341336407cfc71c0133a7399d1acea",
+      "archive_bytes": 7873,
+      "archive_sha256": "a304d165c1498e0dac3e00e4111451abc9d8c0760f5c8f011432321c00fc0375"
+    },
+    {
+      "name": "whole_path_method-access_read_text_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_result.bin",
+      "bytes": 57434,
+      "sha256": "ec7c93fed0081c2d9e0c37af53640f652afe7be83a07632ad5eebc7f1aed0552",
+      "archive_bytes": 7873,
+      "archive_sha256": "6f4511cd7825c6c869d0346a9ad591223c0a63d84d2d7224262b1f2e85d58c56"
+    },
+    {
+      "name": "whole_path_method-access_read_text_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_shape_bytes.bin",
+      "bytes": 57434,
+      "sha256": "878ad1a3bdeeb4dccd52a7a968ed10c4ae98cf86c260f51ef14c938ac9e040a7",
+      "archive_bytes": 7878,
+      "archive_sha256": "3543f7b711c6a8a27c2161a3334b91785f09bc29fd60212502e62641062405db"
+    },
+    {
+      "name": "whole_path_method-access_read_text_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_shape_list.bin",
+      "bytes": 57434,
+      "sha256": "ca0137d3bbc332d139d27f1c1c0f227cef99c8a79f7f5dadd97aec94d87d05c3",
+      "archive_bytes": 7879,
+      "archive_sha256": "853204833e72b1f080afc7cd50c8d1df4b8dc118aabc71befaf7cfd81444bda9"
+    },
+    {
+      "name": "whole_path_method-access_read_text_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_shape_text.bin",
+      "bytes": 57434,
+      "sha256": "34139af9f0ac5fb91174be957ae849516fa5c7d9d992cc3f25d686ba01cbdc64",
+      "archive_bytes": 7878,
+      "archive_sha256": "08129c69d108a26e4ef5f2807b707d88ebc9580914a17efacaac2f5ce1694813"
+    },
+    {
+      "name": "whole_path_method-access_read_text_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_read_text_text.bin",
+      "bytes": 57434,
+      "sha256": "c1d707a9474c1451f6707d05d923d586d8082240003006b88d93c33813d59ffb",
+      "archive_bytes": 7880,
+      "archive_sha256": "36b6e8737a8dff9a77c91f5ddb22d5721ed7b3399afd4de2e3267db4a49af96a"
+    },
+    {
+      "name": "whole_path_method-access_remove_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_arity.bin",
+      "bytes": 57430,
+      "sha256": "688fa10b4e8ad6f6ba307bad1b571d5120fd0ab92b261d04c04e9b99d193348b",
+      "archive_bytes": 7872,
+      "archive_sha256": "421f9d27ba8c2f2a72b5064bbbea5d0c74bf7ffa63ff7c6b167da72d9ec799ac"
+    },
+    {
+      "name": "whole_path_method-access_remove_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_mode.bin",
+      "bytes": 57434,
+      "sha256": "6214c7a3ecbbad2c7e387bcf266060de39300b7760a29f4777dfccbcca4f1086",
+      "archive_bytes": 7880,
+      "archive_sha256": "1e1ba733553978b48248246b74a7a3315e62b776177c09a2c45794f2c53e776f"
+    },
+    {
+      "name": "whole_path_method-access_remove_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_path.bin",
+      "bytes": 57434,
+      "sha256": "f1cd2a01c725c322211a32563da45a6799d9fa48f5791f5435679a9206d7bdd7",
+      "archive_bytes": 7873,
+      "archive_sha256": "d0fdf1355e45556d690efc5b0d4d37d476335375d283e6cc7a50a9054c82e886"
+    },
+    {
+      "name": "whole_path_method-access_remove_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_receiver.bin",
+      "bytes": 57434,
+      "sha256": "a04c9d405739d311ee91d3d87a59f4ba5728aed869b776afab409fe77220aa22",
+      "archive_bytes": 7870,
+      "archive_sha256": "78d5adee5cb5b29d4b8dead35aa87f22ccd30149b84cd4605bddd2e5daed7777"
+    },
+    {
+      "name": "whole_path_method-access_remove_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_result.bin",
+      "bytes": 57434,
+      "sha256": "154560e0fdd6290d4ea57f2a551706a6e7cf3a4e232d970be213f1316c02e4a7",
+      "archive_bytes": 7874,
+      "archive_sha256": "79a7619511a26f4a750de944bb3aedd5dab34628e517311b526a97f9935fe0ee"
+    },
+    {
+      "name": "whole_path_method-access_remove_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_shape_bytes.bin",
+      "bytes": 57434,
+      "sha256": "1d4488492e270e538dc03e9f9fd510dcdf46917422cbe76b21cfcfbd5dc4bd5c",
+      "archive_bytes": 7878,
+      "archive_sha256": "aea1a94d7267ee5b942721d1c723523130ca63ee46010d8c0deceb61c73319d9"
+    },
+    {
+      "name": "whole_path_method-access_remove_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_shape_list.bin",
+      "bytes": 57434,
+      "sha256": "502c88377124fc57723f7a158d114609ed0330cfde7cf85b06247ff9132ba83e",
+      "archive_bytes": 7881,
+      "archive_sha256": "2e7acce81371a598306cc2311b5e1b682a5cb34141a174460501851714ba92f7"
+    },
+    {
+      "name": "whole_path_method-access_remove_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_shape_text.bin",
+      "bytes": 57434,
+      "sha256": "d06834f233b778bfbb30b08903b547c3437aff8a12d59b3054215b348618a4c0",
+      "archive_bytes": 7875,
+      "archive_sha256": "dacc5ceef806df3584507fdc5ad51b0cd4d4e3838e29081bd0f9909ec5c9bb61"
+    },
+    {
+      "name": "whole_path_method-access_remove_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_remove_text.bin",
+      "bytes": 57434,
+      "sha256": "3473dd8905f712ffa63343cdaced6f5621ac23ba0d14c533b6cdf2e66796db3b",
+      "archive_bytes": 7879,
+      "archive_sha256": "90a6b91995a734b00057d22e595cd8d31372ea35743050a6f2569f1af4689b03"
+    },
+    {
+      "name": "whole_path_method-access_write_file_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_arity.bin",
+      "bytes": 57430,
+      "sha256": "fdc32c2196c7ea26df62b5c4955bae97617811928ea821330a71617c5f92d378",
+      "archive_bytes": 7868,
+      "archive_sha256": "f6957b278c31e7c4a906c0038e5bf48fe8f407b7cf913c355a538d79cc054b7e"
+    },
+    {
+      "name": "whole_path_method-access_write_file_data.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_data.bin",
+      "bytes": 57434,
+      "sha256": "f83adc668149aa7866cfd3e6bb06539c76481aad3df808a36a9559bfade49e98",
+      "archive_bytes": 7876,
+      "archive_sha256": "25ef743b69961fc3953d89df4e1c01a5dc25f6a8005030061678c9778e3cde98"
+    },
+    {
+      "name": "whole_path_method-access_write_file_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_mode.bin",
+      "bytes": 57434,
+      "sha256": "98a714242e2514ae62e58e1ee4d93d1057483c7af57cc1cb6dc6dae3c0937eed",
+      "archive_bytes": 7886,
+      "archive_sha256": "7d1a7c29a342e802cb029fea6288b906bf9899bf099acb89a4b8fec3cea03860"
+    },
+    {
+      "name": "whole_path_method-access_write_file_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_path.bin",
+      "bytes": 57434,
+      "sha256": "0eee0d67d804aa7ef2b34a24f44026fdd0e9d04d57496450f6e1a23f2cc33762",
+      "archive_bytes": 7872,
+      "archive_sha256": "a53c0acd98a3f8e57604f5d68b25002df6125c8dc200eeded6dca990648d085d"
+    },
+    {
+      "name": "whole_path_method-access_write_file_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_receiver.bin",
+      "bytes": 57434,
+      "sha256": "a007a8715f4648c7b75f17a85631ab15393e685ee310c958005132dc775a6c0d",
+      "archive_bytes": 7871,
+      "archive_sha256": "cee568d0e79ce866fd5a7b148148e22a6f3de4328fada93fbf819dbd132aa5f5"
+    },
+    {
+      "name": "whole_path_method-access_write_file_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_result.bin",
+      "bytes": 57434,
+      "sha256": "7b0cfebcd8211393a3ae3df6a7c3bf5e599f6c373dd129cb0a6c772b4dd2f4b5",
+      "archive_bytes": 7874,
+      "archive_sha256": "303d39cb8b46db35c5055b5e2d24dd69346704fe7d967d8e3d7a6db503fe3a30"
+    },
+    {
+      "name": "whole_path_method-access_write_file_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_shape_bytes.bin",
+      "bytes": 57434,
+      "sha256": "8ce82146909eeeb72b0eff0380588cd7350202ab82617d120c8be45c0b0816bf",
+      "archive_bytes": 7879,
+      "archive_sha256": "5aeba76a7166e59c403d112c87c8377bcc0f51d5e5d44de9d94ba17627d66726"
+    },
+    {
+      "name": "whole_path_method-access_write_file_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_shape_list.bin",
+      "bytes": 57434,
+      "sha256": "69190d877e4e6a40e6fd48d3809c9602ad63a96c96926afefce5e2d974f41e28",
+      "archive_bytes": 7879,
+      "archive_sha256": "7095e3b880df53f183143e42ff2b7af204382eefe3b633c239b62c300ad323df"
+    },
+    {
+      "name": "whole_path_method-access_write_file_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_shape_text.bin",
+      "bytes": 57434,
+      "sha256": "68ccc37ca46b0888189f441678f0f9aadbcb2cc3c05aa6243954e6fdab263c0a",
+      "archive_bytes": 7878,
+      "archive_sha256": "c9c89a307df4a5da3b994a009e411f59826224dc1848f32748bd743643e5f44f"
+    },
+    {
+      "name": "whole_path_method-access_write_file_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_file_text.bin",
+      "bytes": 57434,
+      "sha256": "bf9a23c84d46b1bfe78c278caba841c62f45222be6323f21b51703531b1def24",
+      "archive_bytes": 7875,
+      "archive_sha256": "d9e0c869d160d2a4c29a194aade95b3d53ac226a735f76f9fdb41c151381484e"
+    },
+    {
+      "name": "whole_path_method-access_write_text_arity.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_arity.bin",
+      "bytes": 57430,
+      "sha256": "ee1712210fa05fdd5730921305f19b59142a54882d790f0c3a354816f53f21a5",
+      "archive_bytes": 7871,
+      "archive_sha256": "bc722bf6df2521f5dfe81d87b280262242bda02a67b05d09665c06895232efce"
+    },
+    {
+      "name": "whole_path_method-access_write_text_data.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_data.bin",
+      "bytes": 57434,
+      "sha256": "fa374c1b1867a754b6fa523c990ef15f190dba10a57a703e1c4f0ef47f719f29",
+      "archive_bytes": 7874,
+      "archive_sha256": "d58966a8f5098bb1e2b83b25ca3cf2c1bdf5d16c521e7d8d51c75df9ba9251d2"
+    },
+    {
+      "name": "whole_path_method-access_write_text_mode.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_mode.bin",
+      "bytes": 57434,
+      "sha256": "518b58923b54511a229ac0a8c18617a883da9f26911a4787cabd2281bc45c528",
+      "archive_bytes": 7883,
+      "archive_sha256": "21b84de6efcf514e6cfdb63c5a7d6ea7256354e42524fdc13ab37a400a82dfb8"
+    },
+    {
+      "name": "whole_path_method-access_write_text_path.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_path.bin",
+      "bytes": 57434,
+      "sha256": "d9665db44a696aadc80cd632390ab51c310d674a443429e9a2b3cf72a1493a96",
+      "archive_bytes": 7870,
+      "archive_sha256": "5e67974b87afb6417d74d2ea7e77c0eaaaf3207cbec48c03103b1aa722f2129e"
+    },
+    {
+      "name": "whole_path_method-access_write_text_receiver.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_receiver.bin",
+      "bytes": 57434,
+      "sha256": "138c02cdae544682ae72aa595cf2b8e88dc5d4b49f923ea7caf9244c3d7a0d05",
+      "archive_bytes": 7871,
+      "archive_sha256": "74691b6feabe0ef5b0547cc3bf67c4bd18b3a04be146d2b7254f710137eab946"
+    },
+    {
+      "name": "whole_path_method-access_write_text_result.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_result.bin",
+      "bytes": 57434,
+      "sha256": "9db62422fe13ea1d053950278f4e592d6edc2ef93016e8a85af1867cf6c7967a",
+      "archive_bytes": 7876,
+      "archive_sha256": "cbeb1dfd884398e1761f0851fca49346ed753cab674a4f98e6eedf809e76bb8d"
+    },
+    {
+      "name": "whole_path_method-access_write_text_shape_bytes.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_shape_bytes.bin",
+      "bytes": 57434,
+      "sha256": "22569b2bb73bf7a1c947e7f96b0c35efb096cd81538fcfe5d07ff77257e0ce77",
+      "archive_bytes": 7880,
+      "archive_sha256": "cc4e1ea00ad6222db558637e9a2395293c2557abcef43483f4051e4099cd6d8b"
+    },
+    {
+      "name": "whole_path_method-access_write_text_shape_list.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_shape_list.bin",
+      "bytes": 57434,
+      "sha256": "f556d4c23a8720832407b926381ffe13b4b308e902b0092745c91fa506b99640",
+      "archive_bytes": 7880,
+      "archive_sha256": "7457a696b9da0a8a32e297347bfe0e096f3909065cc4420ccebf4805a6747bbb"
+    },
+    {
+      "name": "whole_path_method-access_write_text_shape_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_shape_text.bin",
+      "bytes": 57434,
+      "sha256": "b40d1cc2de91cc1f6bfbbd85de55a6114fef5828c5b85c12dbb7c38121a93e75",
+      "archive_bytes": 7877,
+      "archive_sha256": "df601e30f82190158315b6fa07c14e25cf5364b2fb4fa65ffb5e3a42aa31c7a7"
+    },
+    {
+      "name": "whole_path_method-access_write_text_text.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/access_write_text_text.bin",
+      "bytes": 57434,
+      "sha256": "5f0fe465e8f26299d6955e95c3410b06eda340813eb1f8523d3c45c56347d9ba",
+      "archive_bytes": 7871,
+      "archive_sha256": "ab417160e5d309c4fa2f1606715ffe3fae7bb394c754346794cc47372b148872"
+    },
+    {
+      "name": "whole_path_method-authentic.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/authentic.bin",
+      "bytes": 57434,
+      "sha256": "02a1a70a877cba17bbd6030f0b9d83588e06d3507330ed0180d05dbd036a4c1d",
+      "archive_bytes": 7874,
+      "archive_sha256": "c96b64e41430ccf12b211505555aa4d6cd2aaa0921f5233adbe94e31c79bccf9"
+    },
+    {
+      "name": "whole_path_method-recipe_0_element.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_0_element.bin",
+      "bytes": 57434,
+      "sha256": "6c47b228e13815307bd99a5e289ae6e288cbc3eecd1290eb1070948d0e041fe8",
+      "archive_bytes": 7871,
+      "archive_sha256": "058759cf6330bd5a9072d0a83615a1226426ead69bda651911f440e2bd854ac7"
+    },
+    {
+      "name": "whole_path_method-recipe_1_failure.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_1_failure.bin",
+      "bytes": 57434,
+      "sha256": "c582f54e15ffbd501d3e0642a56b47fa883596f0bac3ae423e89b8c89ab854f6",
+      "archive_bytes": 7875,
+      "archive_sha256": "67f58b5cde3a01ac3ed2c6cc40522dd9a5d7814498dc020617393fb2bff8f586"
+    },
+    {
+      "name": "whole_path_method-recipe_1_success.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_1_success.bin",
+      "bytes": 57434,
+      "sha256": "b5f64a0dce946900488089d4529a8670dd20dbea54ebdd996e54d6bf0199d27c",
+      "archive_bytes": 7873,
+      "archive_sha256": "bfdbada704da4a975a96366c55b3e60a8e3762b1ac07bb3ad093463026183381"
+    },
+    {
+      "name": "whole_path_method-recipe_2_failure.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_2_failure.bin",
+      "bytes": 57434,
+      "sha256": "3afce06fa4c43adce610c6fb72e0420eaf515cf4173b5f9deefbdcea555d943b",
+      "archive_bytes": 7876,
+      "archive_sha256": "8e36111765eb87d27c7ca0203dc6cd0396d891dd59643dedabbba0995574ff6c"
+    },
+    {
+      "name": "whole_path_method-recipe_2_success.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_2_success.bin",
+      "bytes": 57434,
+      "sha256": "468952211604f779cc98514c95a951f85c98322679b3facbfad50f3b6b1201da",
+      "archive_bytes": 7875,
+      "archive_sha256": "7932098e28959dabfea8b2d78f4eca39c74682051f08da32cbaedd8b8de2d2d7"
+    },
+    {
+      "name": "whole_path_method-recipe_3_failure.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_3_failure.bin",
+      "bytes": 57434,
+      "sha256": "6dd40d70b46b97ee61e12dfbb103b034b40a12542d02f9c8446878bea4e4f00f",
+      "archive_bytes": 7876,
+      "archive_sha256": "5788f057afacea4a957ecb0bb50630045243d6581b1e10f31dca47dba24f45df"
+    },
+    {
+      "name": "whole_path_method-recipe_3_success.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_3_success.bin",
+      "bytes": 57434,
+      "sha256": "e3681c9fb2e3fe687d8b9f7e306fbccd772edbf8d5c473cc5f719a5035b822ba",
+      "archive_bytes": 7874,
+      "archive_sha256": "8fe5e0de97858f86759309357b8142c3da9264d583f6f08b3b6d37bcc62d6e0d"
+    },
+    {
+      "name": "whole_path_method-recipe_4_failure.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_4_failure.bin",
+      "bytes": 57434,
+      "sha256": "cf80ec95b119df4e5ddb386340f70ed080ddaa6abb051b3a76430508853608d2",
+      "archive_bytes": 7875,
+      "archive_sha256": "4b410d5ad6c9aff0cff434760a0d4a8517531ccace5f7bfdf1afb4fa8ce885f2"
+    },
+    {
+      "name": "whole_path_method-recipe_4_success.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/recipe_4_success.bin",
+      "bytes": 57434,
+      "sha256": "bbaba7b8d27656738783c1f7f87e60aeb6294103cb4e98d7ce03e58d210f30c9",
+      "archive_bytes": 7875,
+      "archive_sha256": "0a6de8d114ec4078ef289e662ef2d3547ab52810d91f37c20c6e157b023e5172"
+    },
+    {
+      "name": "whole_path_method-reply.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/capture-reply-component.bin",
+      "bytes": 57498,
+      "sha256": "db6789906610284fe8b2e97fb24315841fde4115bdf0b84bd597cf79b65a4897",
+      "archive_bytes": 7942,
+      "archive_sha256": "8ac26aaadb0f2ccc3f72d625ee32613e0256da3014c8fd9d467300d3cdf6a70f"
+    },
+    {
+      "name": "whole_path_method-request.bin.gz",
+      "source": "/home/epentland/ai/canopy/.selka-agent-cache/bootstrap-20261011/tmp/filesystem-capability-selected-qualification-hostile/whole_path_method/capture-request-component.bin",
+      "bytes": 35702,
+      "sha256": "bb0bfe89df713e5f653d04aed4726de54a006309ef8ee9f32cf929b37e610445",
+      "archive_bytes": 5821,
+      "archive_sha256": "27af568ba39da51eb21610bcdba9b15bc7fc512423dcc3041d1ee41dda5578b1"
+    }
+  ]
+}

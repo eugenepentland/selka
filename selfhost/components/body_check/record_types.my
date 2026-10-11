@@ -155,7 +155,7 @@ public func closure(mut catalog: Catalog, pool: syntax_value.Pool, elements: int
     mut allowed: bool[] = []
     mut parents: int[][] = []
     for ty in range(count):
-        allowed.append(ty == floating or catalog.admitted[ty] or elements[ty] >= 0 or ty == 0 or ty == 1 or ty == 15 or (ty >= 2 and ty <= 8))
+        allowed.append(ty == floating or catalog.admitted[ty] or elements[ty] >= 0 or ty == 0 or ty == 1 or ty == 11 or ty == 15 or ty == 18 or (ty >= 2 and ty <= 8))
         parents.append([])
     for ty in managed:
         if ty >= 0:

@@ -1,0 +1,3 @@
+func main(fs: Filesystem) -> int:
+    _ = fs.write_text("sample", "hi")
+    return 7

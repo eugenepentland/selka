@@ -50,31 +50,36 @@ func statement(mut state: engine.State, tag: bytes, payload: int, start: int, en
 
 
 func scoped(discard_name: bool = False) -> engine.State fails syntax_value.Problem:
+    return try scoped_method(discard_name, b"rb", b"read")
+
+
+func scoped_method(discard_name: bool, mode: bytes, method: bytes) -> engine.State fails syntax_value.Problem:
     mut state = try fresh()
     const path = try syntax_value.octets(mut state.syntax.pool, b"blob.bin")
-    const mode = try syntax_value.octets(mut state.syntax.pool, b"rb")
+    state.syntax.source = b"fs open file " + method + b" Stream Filesystem"
+    const mode_value = try syntax_value.octets(mut state.syntax.pool, mode)
     const path_id = try node(mut state, b"text", path, 3, 7)
-    const mode_id = try node(mut state, b"text", mode, 3, 7)
+    const mode_id = try node(mut state, b"text", mode_value, 3, 7)
     const owner = try syntax_value.span(mut state.syntax.pool, 0, 2)
     const open_name = try syntax_value.span(mut state.syntax.pool, 3, 7)
     const open_call = try call(mut state, owner, open_name, [path_id, mode_id])
     const open_id = try node(mut state, b"call", open_call, 0, 7)
     mut binding_end = 12
     if discard_name:
-        state.syntax.source = b"fs open _    read Stream Filesystem"
+        state.syntax.source = b"fs open _    " + method + b" Stream Filesystem"
         binding_end = 9
         const previous = try syntax_value.span(mut state.syntax.pool, 8, 9)
         _ = try locals.add(mut state.scope, b"_", previous, 0, False, b"local")
     const file_name = try syntax_value.span(mut state.syntax.pool, 8, binding_end)
-    const read_name = try syntax_value.span(mut state.syntax.pool, 13, 17)
+    const read_name = try syntax_value.span(mut state.syntax.pool, 13, 13 + len(method))
     const read_call = try call(mut state, file_name, read_name, [])
-    const read_id = try node(mut state, b"call", read_call, 8, 17)
+    const read_id = try node(mut state, b"call", read_call, 8, 13 + len(method))
     const discard_value = try syntax_value.integer(mut state.syntax.pool, read_id)
-    const discard = try statement(mut state, b"discard", discard_value, 8, 17)
+    const discard = try statement(mut state, b"discard", discard_value, 8, 13 + len(method))
     const resource = try syntax_value.integer(mut state.syntax.pool, open_id)
     const body = try syntax_value.integer(mut state.syntax.pool, discard)
     const scope = try syntax_value.object(mut state.syntax.pool, ["name", "resource", "body"], [file_name, resource, body])
-    const scope_id = try statement(mut state, b"with_scope", scope, 0, 17)
+    const scope_id = try statement(mut state, b"with_scope", scope, 0, 13 + len(method))
     _ = try engine.statement(mut state, scope_id)
     return state
 
@@ -349,3 +354,37 @@ public func test_free_open_keywords_precede_operands_but_method_keywords_follow(
 public func test_method_open_known_operands_then_rejects_keyword_at_call_name() -> bool fails syntax_value.Problem:
     const method = try open_rejection(True, True, False)
     return method.code == "E_CALL_ARGUMENT" and method.start == 3 and method.end == 7 and method.message == "keyword arguments require a declared function or record constructor"
+
+
+func resource_node(state: engine.State, tag: bytes) -> int fails syntax_value.Problem:
+    for entry in state.batch.nodes:
+        const data_id = try graph.field(state.batch.pool, entry, "data")
+        const data = try graph.get(state.batch.pool, data_id)
+        if data.data == tag:
+            return entry
+    fail syntax_value.Problem(code="P_TEST", start=0, end=0, message="expected a file operation node")
+
+
+public func test_text_readlines_reuses_canonical_text_list_and_text_handle() -> bool fails syntax_value.Problem:
+    const state = try scoped_method(False, b"r", b"readlines")
+    const access_node = try resource_node(state, b"file_access")
+    const method_node = try resource_node(state, b"file_method")
+    const data = try graph.field(state.batch.pool, access_node, "data")
+    const access = try graph.payload(state.batch.pool, data)
+    const text_id = try graph.field(state.batch.pool, access, "text")
+    const text = try graph.get(state.batch.pool, text_id)
+    const result_id = try graph.field(state.batch.pool, method_node, "ty")
+    const result = try graph.number(state.batch.pool, result_id)
+    const method_data = try graph.field(state.batch.pool, method_node, "data")
+    const method = try graph.payload(state.batch.pool, method_data)
+    const kind_id = try graph.field(state.batch.pool, method, "kind")
+    const kind = try graph.get(state.batch.pool, kind_id)
+    return text.integer == 1 and result == 21 and kind.data == b"readlines" and state.scope.locals[1].ty == 17 and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_binary_readlines_demands_byte_list_after_shared_text_list() -> bool fails syntax_value.Problem:
+    const state = try scoped_method(False, b"rb", b"readlines")
+    const method_node = try resource_node(state, b"file_method")
+    const result_id = try graph.field(state.batch.pool, method_node, "ty")
+    const result = try graph.number(state.batch.pool, result_id)
+    return result == 22 and state.scope.locals[1].ty == 16 and len(state.batch.facts.lists.recipes) == 2 and state.batch.facts.lists.recipes[0].element == 19 and state.batch.facts.lists.recipes[1].element == 20

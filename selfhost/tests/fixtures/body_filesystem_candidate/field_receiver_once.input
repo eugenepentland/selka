@@ -1,0 +1,20 @@
+record Ports:
+    fs: Filesystem
+
+func receiver(fs: Filesystem, mut count: int) -> Ports:
+    count += 1
+    return Ports(fs=fs)
+
+func main(fs: Filesystem) -> int:
+    mut count = 0
+    with receiver(fs, mut count).fs.open("data", "w") as file:
+        _ = file.write("seven!!")
+    assert count == 1
+    match receiver(fs, mut count).fs.read_text("data"):
+        case Ok(value):
+            assert value == "seven!!"
+        case Err(_):
+            return 0
+    assert count == 2
+    _ = fs.remove("data")
+    return 7

@@ -1,0 +1,25 @@
+func main(fs: Filesystem) -> int:
+    _ = fs.mkdir("data")
+    _ = fs.write_text("data/text", "aé\n")
+    _ = fs.write_file("data/bytes", b"\x00\xff")
+    assert fs.exists("data/text")
+    match fs.read_text("data/text"):
+        case Ok(value):
+            assert value == "aé\n"
+        case Err(_):
+            return 0
+    match fs.read_file("data/bytes"):
+        case Ok(value):
+            assert value == b"\x00\xff"
+        case Err(_):
+            return 0
+    match fs.listdir("data"):
+        case Ok(value):
+            assert value == ["bytes", "text"]
+        case Err(_):
+            return 0
+    _ = fs.remove("data/text")
+    _ = fs.remove("data/bytes")
+    _ = fs.remove("data")
+    assert not fs.exists("data")
+    return 7

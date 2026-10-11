@@ -1,0 +1,497 @@
+{
+  "open_r.my": {
+    "status": 0,
+    "source_sha256": "ebb5b3ba4a62bab584e1d2a7f8b5ad70a25cdb972f2a6ed12b3ddd3d310ea1a5",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "open_rt.my": {
+    "status": 0,
+    "source_sha256": "7a16804437edb01e271f889d2786096cca0324dc8984399b62074a00807ea228",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "open_rb.my": {
+    "status": 0,
+    "source_sha256": "b25ce8ce7099787a0c54b7a7feb766aa0e9f7ca89ad2952366aa6e2dac654ee4",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "open_w.my": {
+    "status": 0,
+    "source_sha256": "c157d39c464b589e4ffb7d1d6bf3fd76ef8879bb2479b9367dadfe17a5874a8c",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "open_wt.my": {
+    "status": 0,
+    "source_sha256": "c5a1fffe24d78f46d0aed607947a55ddb3f48376bfa73f4d242e9721d2c1e732",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "open_wb.my": {
+    "status": 0,
+    "source_sha256": "26cc4b2d68c63474e89554d5ac0f303dc69e54f3e9220fe3126f488fd284bfe0",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "open_a.my": {
+    "status": 0,
+    "source_sha256": "dc916931c3df9a1a65dafb04f902dd175f238bcab23d8d99b9a9eec077befebf",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "open_at.my": {
+    "status": 0,
+    "source_sha256": "b036175a0f56f307b18cfe98a1d95c80485d1596c51c9c1fd5ded272812c70e7",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "open_ab.my": {
+    "status": 0,
+    "source_sha256": "5c439112268bfb67a69476b3af47e4e1debb22afaf31969f38ca2b0c440bed03",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "method_read_file.my": {
+    "status": 0,
+    "source_sha256": "557d3968c1fa0e840d5ce2b5715605c7adb1940eaa397c7cfbc50598920b329b",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "free_read_file.my": {
+    "status": 0,
+    "source_sha256": "666a8ab12d347a1b272193e55eea7d261382a794fd0f1d0e666f46bd5cdc1b91",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "method_read_text.my": {
+    "status": 0,
+    "source_sha256": "ae46cb5aed3fc33368f996e1e95fdbf04ede799af2a3efaf727693d15153d907",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "free_read_text.my": {
+    "status": 0,
+    "source_sha256": "1e2c800b066ed3fcd014b9c6ebfb93390a5cea5a9fc5ee32cab8d9dd99f27118",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "method_write_file.my": {
+    "status": 0,
+    "source_sha256": "89a07e379afb18c9fb3dab6006906bb179851457c2a753a60a94343603bf6fde",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "free_write_file.my": {
+    "status": 0,
+    "source_sha256": "7390849aa28a88c397c93c8eedc02935fa7aa1100010731643423525a59974c2",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "method_write_text.my": {
+    "status": 0,
+    "source_sha256": "0d8e5089e8355da4b067f80202bc48c8ff0841d5306d99c6ae90eef0b1d0ee5d",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "free_write_text.my": {
+    "status": 0,
+    "source_sha256": "d2ae8416c9a7a57a825f49aa801d8aca434dd000db5d89563d96582851cdf08d",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "method_exists.my": {
+    "status": 0,
+    "source_sha256": "f0b6ae4f9caffa0df0ba0972935f4d75620e3dd64a8f7664bbe65fc5f4d4e1a0",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "free_exists.my": {
+    "status": 0,
+    "source_sha256": "6994c4a378ffc6f1962507bbc35109a0a9cca233cca19a187f08da1f9436ecb6",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "method_listdir.my": {
+    "status": 0,
+    "source_sha256": "81be5691f70f419bfea52df225581a8ee0f0a61ff3b29308ab1fff6b9f2ef691",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "free_listdir.my": {
+    "status": 0,
+    "source_sha256": "283c97588b9a460624c71a12ebc2cd85ddf889257c0a168849df0c677e1b641e",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "method_mkdir.my": {
+    "status": 0,
+    "source_sha256": "4340ca22971e4609840b7d010e9f036d4d527d5f9c80533670df2c1dcbe2136c",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "free_mkdir.my": {
+    "status": 0,
+    "source_sha256": "71634bc2852a2ee8fe44bc01dce46848c84d99cae97d6f8f3e19acecf266765b",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "method_remove.my": {
+    "status": 0,
+    "source_sha256": "93afda4fcbfd9e4e0304ca7647341a5ceb51f70814419dee3e06de1d94029cff",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "free_remove.my": {
+    "status": 0,
+    "source_sha256": "7b6c16f104c4c5d8b2cc01c4b56172221c458a96c1910254d89da9fb1f0db02e",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "rb_read.my": {
+    "status": 0,
+    "source_sha256": "1812cf56e7a14c0a66c1b8502842634f8bdd4201abb9fc4b8b5d25b33c5e9031",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "rb_readline.my": {
+    "status": 0,
+    "source_sha256": "31f2b105e074632f0e8efb47f1ee304e654fc3a29edd539c8fc24871eedb5926",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "rb_readlines.my": {
+    "status": 0,
+    "source_sha256": "24c3e075f452ba78c0466875d7fa7d3956e1923fa21535812ad9997dd278e374",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "rb_write.my": {
+    "status": 0,
+    "source_sha256": "7ef0806746bf3e9f152743191b677c908b816347bc209284dfb8ab644b7f67f0",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "rb_flush.my": {
+    "status": 0,
+    "source_sha256": "79b93bc8b40474c5a95ee50936248a471207491d01fb30cdbcbe7ebf58bc2b26",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "rb_close.my": {
+    "status": 0,
+    "source_sha256": "064033b41d77cce3fae1db5a2625bd3542ca14f33f9a4f09a08179cd8baed998",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "r_read.my": {
+    "status": 0,
+    "source_sha256": "d08793e4dbf95baed977c818dcb4fa9dae390b67d9c201451e5f56a5653aaaaa",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "r_readline.my": {
+    "status": 0,
+    "source_sha256": "dca085bb58cdc5177734474f060c77e2bc959056e707f8c138696931cf6ef90a",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "r_readlines.my": {
+    "status": 0,
+    "source_sha256": "e492bfb6b2a99d204074808cf4f33d7c2291b00953da73c02008a96bee8a1991",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "r_write.my": {
+    "status": 0,
+    "source_sha256": "7dfd8e94d81c1821b0adb58f7d078729e8d7163d2068dc1af86c45871088e63a",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "r_flush.my": {
+    "status": 0,
+    "source_sha256": "ecd3712a288913b5c6ebaead7d8f29ce4e3e6cd5e9c68f19ea8edf6b31c7be64",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "r_close.my": {
+    "status": 0,
+    "source_sha256": "1050e50bcc61b5320a03a22013785f4a54b22d9a5fc0e18f17ec6c5dceaeb2d4",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "bad_mode.my": {
+    "status": 1,
+    "source_sha256": "8839363d51cd8ddd9385b10eaf94a50a6f5585a01bfcbbcd082b8a38ef916912",
+    "diagnostics": [
+      {
+        "code": "E_FILE_ARGUMENT",
+        "message": "unsupported open mode; use \"r\", \"w\", \"a\" with an optional \"b\" or \"t\"",
+        "bytes": {
+          "start": 61,
+          "end": 65
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "nonliteral_mode.my": {
+    "status": 1,
+    "source_sha256": "ad0dec1ba46a592d52582c54b3380bfaf5af2299d15796b2742ee1fd81608573",
+    "diagnostics": [
+      {
+        "code": "E_FILE_ARGUMENT",
+        "message": "open requires a literal mode such as \"rb\", \"r\", \"wb\", \"w\", \"ab\" or \"a\"",
+        "bytes": {
+          "start": 83,
+          "end": 87
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_read_size.my": {
+    "status": 1,
+    "source_sha256": "be16fd3fac884a81d686b03a71cf20546240fb46a97c871b51480720e9b5edf4",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected int, found bool",
+        "bytes": {
+          "start": 85,
+          "end": 97
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_readline_arity.my": {
+    "status": 1,
+    "source_sha256": "301948b1c853446a3963c4f2154737e4739bbcfabb113a907bd8aefcfec29396",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`readline() -> str` does not take 1 argument",
+        "bytes": {
+          "start": 87,
+          "end": 95
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_binary_write.my": {
+    "status": 1,
+    "source_sha256": "0e46b5be012598ceae96dd02500975637aab4e13e819f86f179295107ff7e1a9",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected bytes, found str",
+        "bytes": {
+          "start": 85,
+          "end": 100
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_text_write.my": {
+    "status": 1,
+    "source_sha256": "03939b00e3c100bc9187b4ad163886c3a90323f9e13b89f9278e69d3a87eadc9",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected str, found bytes",
+        "bytes": {
+          "start": 84,
+          "end": 100
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_helper_path.my": {
+    "status": 1,
+    "source_sha256": "bf14e7a70412ccddddb8983b3a7dd6d0e2cd577d86430bc25cc2ba3ab9c5b0b7",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected str, found int",
+        "bytes": {
+          "start": 55,
+          "end": 56
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_helper_data.my": {
+    "status": 1,
+    "source_sha256": "116700f775b8b967095c127b56d040473cf082cc5814a69dac886d451f93a255",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected bytes, found str",
+        "bytes": {
+          "start": 42,
+          "end": 73
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_method_keyword.my": {
+    "status": 1,
+    "source_sha256": "1b38593b2207d7cfa2424c9d1d9dcb18c302b61222e7fc350d48804c6cf9364a",
+    "diagnostics": [
+      {
+        "code": "E_CALL_ARGUMENT",
+        "message": "keyword arguments require a declared function or record constructor",
+        "bytes": {
+          "start": 45,
+          "end": 54
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_free_arity.my": {
+    "status": 1,
+    "source_sha256": "e4ce4e60c120a1fdfa7ed4ceaa38c7ea2364399caf8361afc415e4182cf4accd",
+    "diagnostics": [
+      {
+        "code": "E_ARITY",
+        "message": "`read_text(fs: Filesystem, path: str) -> Result[str, str]` takes 2 arguments, but this call passes 1",
+        "bytes": {
+          "start": 42,
+          "end": 61
+        },
+        "notes": [
+          {
+            "role": "alternative",
+            "message": "a free file helper takes the Filesystem capability first: `open(fs, path, mode)` or `read_text(fs, path)`; `fs.open(path, mode)` is the method spelling",
+            "bytes": {
+              "start": 42,
+              "end": 61
+            }
+          }
+        ],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "bad_helper_capability.my": {
+    "status": 1,
+    "source_sha256": "d45c54f228ea1e5d84f76f21fbe84725ca6bcfec40a7910378e13d657760dc55",
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected Filesystem, found int",
+        "bytes": {
+          "start": 42,
+          "end": 64
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "unknown_file_method.my": {
+    "status": 1,
+    "source_sha256": "dd636baf5d28e4b9c2457c99dcff97dc573a7e0c0329fa7c7cbe7f99d0f3ecd8",
+    "diagnostics": [
+      {
+        "code": "E_FILE_ARGUMENT",
+        "message": "unknown file method; open handles support read, readline, readlines, write, flush and close",
+        "bytes": {
+          "start": 87,
+          "end": 94
+        },
+        "notes": [],
+        "edits": []
+      }
+    ],
+    "runtime": false
+  },
+  "shadowed_free_helper.my": {
+    "status": 0,
+    "source_sha256": "3954e16fe6e783a8933fa6151a56ff6676b62a17ba7ac6aa2b668c8fd3d79921",
+    "diagnostics": [],
+    "runtime": false
+  },
+  "whole_path_method.my": {
+    "status": 0,
+    "source_sha256": "933e7804f070658c031d78663041ca5f356c8a123267ee5d9821e1a9a6507dd1",
+    "diagnostics": [],
+    "runtime": true
+  },
+  "whole_path_free.my": {
+    "status": 0,
+    "source_sha256": "abbc38bd1986b020f113ad7ff7b79156f7e6ab2214edc94a54b40f3f57362df7",
+    "diagnostics": [],
+    "runtime": true
+  },
+  "scoped_binary.my": {
+    "status": 0,
+    "source_sha256": "9a973656dcbf99f94c9de21cbbd23c3504ac63e50aab894a84360a4d053d56e6",
+    "diagnostics": [],
+    "runtime": true
+  },
+  "scoped_text.my": {
+    "status": 0,
+    "source_sha256": "02f4bf0d917215594727870edc26588714655364dd32e0191ed0d9e6f4299d10",
+    "diagnostics": [],
+    "runtime": true
+  },
+  "scoped_text_explicit.my": {
+    "status": 0,
+    "source_sha256": "19cb52c21b442122aefd06ba0fa2268932390d1e6b02605275fbd411f89fc04b",
+    "diagnostics": [],
+    "runtime": true
+  },
+  "field_receiver_once.my": {
+    "status": 0,
+    "source_sha256": "63bad5421cb29ca100cbe4afe4cc22477641ed65cbc96a398787ebf2201ea86e",
+    "diagnostics": [],
+    "runtime": true
+  },
+  "text_open_failure.my": {
+    "status": 0,
+    "source_sha256": "e8dce06e7c61bda652ddb370dfad43a8e089b36408a139bd62b1f4ec6de6b315",
+    "diagnostics": [],
+    "runtime": true
+  },
+  "entry_text_profile.my": {
+    "status": 0,
+    "source_sha256": "40ba90b7f64339f41ecef9b998c2068a68f356e683d5f8b42fb458040601bd63",
+    "diagnostics": [],
+    "runtime": true
+  },
+  "entry_write_profile.my": {
+    "status": 0,
+    "source_sha256": "c8cb1bc4e6144938e555a55cfb251ed4ff85d67fd2b1717df869e7fa7b13955c",
+    "diagnostics": [],
+    "runtime": true
+  }
+}
