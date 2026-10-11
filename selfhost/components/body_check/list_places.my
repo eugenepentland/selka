@@ -76,17 +76,30 @@ public func write(mut batch: emission.Batch, mut scope: locals.Scope, context: l
 
 
 public func prepare(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Indexed) -> Plan fails syntax_value.Problem:
-    const owner = try list_lower.temporary(mut scope, context, request.owner_type)
-    const initialize = try list_lower.store(mut batch, context, owner, request.base, True)
+    const rooted = try receiver(mut batch, mut scope, context, request.base, request.owner_type)
+    return try indexed(mut batch, mut scope, rooted, request.index, request.element)
+
+
+public func receiver(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, base: int, ty: int) -> Plan fails syntax_value.Problem:
+    const owner = try list_lower.temporary(mut scope, context, ty)
+    const initialize = try list_lower.store(mut batch, context, owner, base, True)
+    return Plan(context=context, owner=owner, index=-1, current=-1, setup=[initialize], element=-1)
+
+
+public func indexed(mut batch: emission.Batch, mut scope: locals.Scope, rooted: Plan, input: int, element: int) -> Plan fails syntax_value.Problem:
+    const context = rooted.context
     const index_slot = try list_lower.temporary(mut scope, context, 0)
-    const normalized = try list_lower.index(mut batch, mut scope, context, owner, request.index)
+    const normalized = try list_lower.index(mut batch, mut scope, context, rooted.owner, input)
     const initialize_index = try list_lower.store(mut batch, context, index_slot, normalized, True)
     const index = try list_lower.read(mut batch, context, index_slot, 0)
-    const saved = try list_lower.temporary(mut scope, context, request.element)
-    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=owner, kind=b"read", arguments=[index], ty=request.element))
+    const saved = try list_lower.temporary(mut scope, context, element)
+    const value = try list_lower.operation(mut batch, context, list_lower.Operation(owner=rooted.owner, kind=b"read", arguments=[index], ty=element))
     const refresh = try list_lower.store(mut batch, context, saved, value, True)
-    const current = try list_lower.read(mut batch, context, saved, request.element)
-    return Plan(context=context, owner=owner, index=index, current=current, setup=[initialize, initialize_index, refresh], element=request.element)
+    const current = try list_lower.read(mut batch, context, saved, element)
+    mut setup = rooted.setup
+    setup.append(initialize_index)
+    setup.append(refresh)
+    return Plan(context=context, owner=rooted.owner, index=index, current=current, setup=setup, element=element)
 
 
 public func finish(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, plan: Plan, combined: int) -> list_lower.Lowered fails syntax_value.Problem:

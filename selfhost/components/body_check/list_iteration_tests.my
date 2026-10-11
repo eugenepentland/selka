@@ -183,3 +183,40 @@ public func test_guard_discard_encodes_node_reference_in_pool() -> bool fails sy
         if guards != 1:
             return False
     return True
+
+
+public func test_initialized_record_root_refreshes_nested_field_iteration_after_mut_call() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(1)
+    fixture.scope.locals[0].ty = 41
+    const context = list_lower.Context(input=fixture.input, span=fixture.request.span)
+    const initial = try list_lower.integer(mut fixture.batch, context, 0, 41)
+    _ = try list_lower.store(mut fixture.batch, context, 0, initial, True)
+    const parent = try list_lower.read(mut fixture.batch, context, 0, 41)
+    const first_base = try syntax_value.integer(mut fixture.batch.pool, parent)
+    const zero = try syntax_value.integer(mut fixture.batch.pool, 0)
+    const first = try syntax_value.object(mut fixture.batch.pool, ["base", "index"], [first_base, zero])
+    const field = try emission.node(mut fixture.batch, fixture.input, fixture.request.span, 42, b"field", first)
+    const next_base = try syntax_value.integer(mut fixture.batch.pool, field)
+    const four = try syntax_value.integer(mut fixture.batch.pool, 4)
+    const second = try syntax_value.object(mut fixture.batch.pool, ["base", "index"], [next_base, four])
+    const iterable = try emission.node(mut fixture.batch, fixture.input, fixture.request.span, 40, b"field", second)
+    fixture.request.iterable = iterable
+    const before = len(fixture.batch.nodes)
+    const plan = try list_iteration.prepare(mut fixture.batch, mut fixture.scope, fixture.input, fixture.request)
+    const walk = try list_iteration.source(mut fixture.batch, mut fixture.scope, fixture.input, plan, list_iteration.SourceBody(raw_statements=fixture.statements, raw_nodes=fixture.nodes, body_raw=0, expressions=[]))
+    const rebuilt_id = try graph.field(fixture.batch.pool, fixture.batch.nodes[before], "data")
+    const rebuilt = try graph.get(fixture.batch.pool, rebuilt_id)
+    const root = try graph.number(fixture.batch.pool, rebuilt.children[0])
+    return walk.growing and len(walk.refresh) == 1 and len(fixture.batch.nodes) == before + 3 and rebuilt.data == b"local" and root == 0 and fixture.scope.locals[0].usage.reads == 2
+
+
+public func test_mut_argument_in_match_discriminator_selects_live_iteration_refresh() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh(1)
+    const value = try syntax_value.integer(mut fixture.input, 1)
+    const arms = try syntax_value.sequence(mut fixture.input, [])
+    const payload = try syntax_value.object(mut fixture.input, ["value", "arms"], [value, arms])
+    const statement = try raw(mut fixture.input, fixture.request.span, b"match", payload)
+    fixture.statements = [statement]
+    const lowered = try lower(mut fixture)
+    const parts = try slots(fixture.batch.pool, lowered)
+    return parts == [1, 12, 13, 14] and fixture.scope.locals[0].usage.reads == 2 and len(fixture.batch.nodes) == 17

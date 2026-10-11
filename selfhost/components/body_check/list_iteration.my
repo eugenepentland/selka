@@ -164,6 +164,12 @@ func effects(scan: Scan) -> Effects fails syntax_value.Problem:
                         if op.data == b"set":
                             result.rebinds = True
                 try append_number(mut nodes, scan.input, payload, "value")
+            elif tag == b"match":
+                try append_number(mut nodes, scan.input, payload, "value")
+                const arms_id = try graph.field(scan.input, payload, "arms")
+                const arms = try graph.items(scan.input, arms_id)
+                for arm in arms:
+                    try append_number(mut statements, scan.input, arm, "body")
             elif tag == b"block":
                 try append_ids(mut statements, scan.input, payload)
             elif tag == b"branch":
@@ -266,6 +272,12 @@ func effects(scan: Scan) -> Effects fails syntax_value.Problem:
                 nodes.append(extracted_25)
             elif tag == b"list_literal" or tag == b"tuple" or tag == b"format":
                 try append_ids(mut nodes, scan.input, payload)
+            elif tag == b"match_expression":
+                try append_number(mut nodes, scan.input, payload, "value")
+                const arms_id = try graph.field(scan.input, payload, "arms")
+                const arms = try graph.items(scan.input, arms_id)
+                for arm in arms:
+                    try append_number(mut statements, scan.input, arm, "body")
             elif tag == b"conditional":
                 try append_number(mut nodes, scan.input, payload, "condition")
                 try append_number(mut nodes, scan.input, payload, "then_value")
@@ -328,11 +340,11 @@ func typed_root(batch: emission.Batch, scope: locals.Scope, id: int) -> int fail
             const slot = try graph.number(batch.pool, payload)
             if slot < 0 or slot >= len(scope.locals):
                 return -1
+            if not scope.locals[slot].usage.temporary:
+                return slot
             const value = try initializer(batch, scope, slot)
             if value >= 0:
                 at = value
-            elif not scope.locals[slot].usage.temporary:
-                return slot
             else:
                 return -1
         elif data.data == b"block_value":
@@ -389,9 +401,10 @@ func rebuild(mut batch: emission.Batch, mut scope: locals.Scope, context: list_l
     const payload = data.children[0]
     if data.data == b"local":
         const slot = try graph.number(batch.pool, payload)
-        const value = try initializer(batch, scope, slot)
-        if value >= 0:
-            return try rebuild(mut batch, mut scope, context, mut path, value, depth + 1)
+        if scope.locals[slot].usage.temporary:
+            const value = try initializer(batch, scope, slot)
+            if value >= 0:
+                return try rebuild(mut batch, mut scope, context, mut path, value, depth + 1)
         return try list_lower.read(mut batch, context, slot, scope.locals[slot].ty)
     if data.data == b"block_value":
         const value = try field_number(batch.pool, payload, "value")
