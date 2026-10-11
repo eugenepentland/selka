@@ -1,0 +1,11 @@
+public func work() -> int:
+    mut text = "é"
+    mut raw = b"x"
+    mut index = 0
+    while index < 1000:
+        text = text + "😀"
+        raw = raw + b"y"
+        index += 1
+    if len(text) == 1001 and len(raw) == 1001:
+        return 7
+    return 0

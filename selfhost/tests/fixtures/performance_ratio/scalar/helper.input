@@ -1,0 +1,7 @@
+public func work() -> int:
+    mut total = 0
+    for index in range(10000):
+        total += index
+    if total == 49995000:
+        return 7
+    return 0

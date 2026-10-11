@@ -1,0 +1,43 @@
+import sys
+import unittest
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).parent))
+import measure_performance_ratio as P
+
+class StrictPerformanceTests(unittest.TestCase):
+    def row(self,values):return P.summarize(values)
+    def test_one_slow_workflow_cannot_hide_in_average(self):
+        baseline={'fast':self.row([100]*20),'slow':self.row([100]*20)}
+        candidate={'fast':self.row([1]*20),'slow':self.row([151]*20)}
+        result=P.verdict(baseline,candidate)
+        self.assertFalse(result['passed'])
+        self.assertFalse(result['rows'][1]['passed'])
+    def test_tail_limit_and_exact_boundary(self):
+        baseline={'x':self.row([100]*20)}
+        self.assertTrue(P.verdict(baseline,{'x':self.row([150]*20)})['passed'])
+        self.assertFalse(P.verdict(baseline,{'x':self.row([100]*18+[151]*2)})['passed'])
+    def test_missing_empty_or_invalid_samples_fail_closed(self):
+        for values in ([],[0],[-1],[True]):
+            with self.assertRaises(RuntimeError):self.row(values)
+        with self.assertRaises(RuntimeError):P.verdict({'x':self.row([1])},{})
+    def test_inventory_requires_schema_and_exact_authenticated_packages(self):
+        import json,tempfile
+        with tempfile.TemporaryDirectory() as temporary:
+            prefix=Path(temporary);directory=prefix/'libexec/mylang/components';directory.mkdir(parents=True)
+            binary=directory/'artifact';binary.write_bytes(b'authenticated')
+            versions={'test-index':(1,1),'cache-plan':(2,2),'lexer-pilot':(1,2),'parser-pilot':(1,2),'declaration-index':(1,1),'type-interface':(1,1),'body-check':(1,3)}
+            for name,(protocol,schema) in versions.items():
+                (directory/(name+'.json')).write_text(json.dumps({'component':name,'protocol':protocol,'schema':schema,'artifact':'artifact','sha256':P.F.digest(binary)}))
+            self.assertEqual(len(P.inventory(prefix,3)),7)
+            with self.assertRaises(RuntimeError):P.inventory(prefix,2)
+            binary.write_bytes(b'replaced')
+            with self.assertRaises(RuntimeError):P.inventory(prefix,3)
+
+    def test_modes_are_explicit_and_do_not_inherit_callers(self):
+        from unittest.mock import patch
+        with patch.dict(P.os.environ,{'MYLANG_BODY_CHECK_MODE':'component','MYLANG_PARSER_MODE':'component'}):
+            env=P.environment(Path('/candidate'),{'BODY_CHECK':'reference'},Path('/empty'))
+        self.assertEqual(env['MYLANG_BODY_CHECK_MODE'],'reference')
+        self.assertEqual(env['MYLANG_PARSER_MODE'],'reference')
+
+if __name__=='__main__':unittest.main()
