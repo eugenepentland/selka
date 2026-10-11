@@ -1,0 +1,29 @@
+enum Failure:
+    bad
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure.bad
+    return value
+
+func combine(first: Result[int, Failure], second: Result[int, Failure]) -> int fails Failure:
+    match first:
+        case Ok(left):
+            match second:
+                case Ok(right):
+                    return left + right
+                case Err(error):
+                    fail error
+        case Err(error):
+            _ = second
+            fail error
+
+func forward() -> int fails Failure:
+    return try combine(parse(3), parse(4))
+
+func main() -> int:
+    match forward():
+        case Ok(value):
+            return value
+        case Err(_):
+            return 0

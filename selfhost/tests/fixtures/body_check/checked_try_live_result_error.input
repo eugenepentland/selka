@@ -1,0 +1,20 @@
+enum Failure:
+    bad
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure.bad
+    return value
+
+func forward() -> int fails Failure:
+    const pending = parse(3)
+    const value = try parse(4)
+    _ = pending
+    return value
+
+func main() -> int:
+    match forward():
+        case Ok(value):
+            return value
+        case Err(_):
+            return 0

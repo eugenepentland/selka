@@ -1,0 +1,21 @@
+enum Failure:
+    bad
+
+func parse(value: int) -> int fails Failure:
+    if value < 0:
+        fail Failure.bad
+    return value
+
+func take(value: Result[int, Failure]) -> bool:
+    match value:
+        case Ok(number):
+            return number == 7
+        case Err(_):
+            return False
+
+func main() -> int:
+    const result = parse(7)
+    const flag = take(result) and True
+    if flag:
+        return 7
+    return 0

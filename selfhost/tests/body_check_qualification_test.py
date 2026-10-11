@@ -229,19 +229,19 @@ class BodyQualificationTests(unittest.TestCase):
         inventory=json.loads((D.FIXTURES/'b5_inventory.json').read_text())
         cases,donors=set(inventory['cases']),set(inventory['donors'])
         names=cases|donors
-        self.assertEqual(len(inventory['cases']),24)
-        self.assertEqual(len(cases),24)
+        self.assertEqual(len(inventory['cases']),34)
+        self.assertEqual(len(cases),34)
         self.assertEqual(donors,{'variant_import_dep.my'})
-        self.assertEqual(len(names),25)
+        self.assertEqual(len(names),35)
         self.assertEqual(names-set(manifest),donors)
         self.assertTrue(all((D.FIXTURES/Path(name).with_suffix('.input')).is_file() for name in names))
-        self.assertEqual(inventory['counts'],{'success':14,'diagnostic':8,'profile':2})
+        self.assertEqual(inventory['counts'],{'success':18,'diagnostic':14,'profile':2})
         self.assertEqual(manifest['record_union_profile.my']['result'],7)
         self.assertEqual(manifest['variant_recursive_lists.my']['result'],7)
         self.assertEqual(manifest['variant_boxed_recursive_profile.my']['status'],2)
         self.assertEqual(manifest['variant_generic_profile.my']['status'],2)
-        self.assertEqual(sum(manifest[name]['status']==0 for name in names&set(manifest)),14)
-        self.assertEqual(sum(manifest[name]['status']==1 for name in names&set(manifest)),8)
+        self.assertEqual(sum(manifest[name]['status']==0 for name in names&set(manifest)),18)
+        self.assertEqual(sum(manifest[name]['status']==1 for name in names&set(manifest)),14)
 
     def test_managed_measurement_edits_preserve_text_and_change_byte_length(self):
         import measure_managed_body_adoption as M
