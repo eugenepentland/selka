@@ -325,6 +325,23 @@ class WatchdogTests(unittest.TestCase):
             child.stdout.close()
             child.stderr.close()
 
+    def test_preexisting_detached_admission_helper_survives(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary)/'settled'
+            helper_argv = [sys.executable, '-c', f'import time; from pathlib import Path; time.sleep(.4); Path({str(marker)!r}).write_text("settled")']
+            for worker_source, timeout, expected in [('pass', 1, 0), ('import time; time.sleep(60)', .15, 124)]:
+                marker.unlink(missing_ok=True)
+                worker_argv = [sys.executable, '-c', worker_source]
+                source = ('import subprocess,os; from scripts.verification_process import run_supervised; '
+                          f'subprocess.Popen({helper_argv!r},start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); '
+                          f'raise SystemExit(run_supervised({worker_argv!r},dict(os.environ)))')
+                result = wait_owned(self.spawn(source), limits=ProcessLimits(timeout,.5))
+                self.assertEqual(result.returncode, expected)
+                deadline = time.monotonic() + 1
+                while not marker.exists() and time.monotonic() < deadline:
+                    time.sleep(.01)
+                self.assertEqual(marker.read_text(), 'settled')
+
     def test_interrupt_cleans_and_propagates(self):
         class Interrupt:
             def is_set(self):

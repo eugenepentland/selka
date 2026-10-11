@@ -378,6 +378,10 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
     if libc.prctl(36, 1, 0, 0, 0) != 0:  # PR_SET_CHILD_SUBREAPER
         error = ctypes.get_errno()
         raise OSError(error, os.strerror(error))
+    inherited = _descendants(os.getpid())
+    def owned_descendants():
+        return {pid: birth for pid, birth in _descendants(os.getpid()).items()
+                if inherited.get(pid) != birth}
     interrupted = False
     def interrupt(signum, frame):
         nonlocal interrupted
@@ -390,7 +394,7 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
             time.sleep(0.01)
         status = worker.poll()
         _reap_adopted()
-        leftovers = _descendants(os.getpid())
+        leftovers = owned_descendants()
         incomplete = status is not None and bool(leftovers)
         # Stop before kill so descendants cannot keep forking during shutdown.
         deadline = time.monotonic() + 0.3
@@ -398,7 +402,7 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
             for pid, birth in leftovers.items():
                 _kill_identity(pid, birth)
             _reap_adopted()
-            leftovers = _descendants(os.getpid())
+            leftovers = owned_descendants()
             if leftovers:
                 time.sleep(0.005)
         if worker.returncode is None:
