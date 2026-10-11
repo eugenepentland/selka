@@ -48,11 +48,16 @@ func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_val
 func walk(context: Context, ty: int, path: bytes, mut seen: bool[], depth: int) -> Refusal? fails syntax_value.Problem:
     if (ty >= 0 and ty <= 8) or ty == 15:
         return None
-    if ty < 19 or ty - 19 >= len(context.records):
+    if ty < 19:
+        return rejected(path, ty, "capability")
+    # New list recipes enter the type index before their record rows are needed.
+    # Their mutable storage is already known from that authoritative index.
+    const list = ty < len(context.lists) and context.lists[ty] >= 0
+    if ty - 19 >= len(context.records) and not list:
         return rejected(path, ty, "capability")
     if ty == context.text or ty == context.bytes:
         return None
-    if ty == context.buffer or (ty < len(context.lists) and context.lists[ty] >= 0):
+    if ty == context.buffer or list:
         return rejected(path, ty, "shared")
     const row = context.records[ty - 19]
     const shape = try graph.field(context.pool, row, "shape")
