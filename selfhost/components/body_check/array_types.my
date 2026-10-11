@@ -1,0 +1,278 @@
+import syntax_value
+import graph
+
+public record Array:
+    id: int
+    element: int
+    length: int
+    key: int
+
+
+public record Catalog:
+    arrays: Array[]
+    slots: int[]
+    by_type: int[]
+
+
+public record Recipe:
+    id: int
+    element: int
+    length: int
+    span: int
+
+
+public func empty() -> Catalog:
+    return Catalog(arrays=[], slots=[], by_type=[])
+
+
+func invalid() -> syntax_value.Problem:
+    return syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid fixed array catalog authority")
+
+
+func bucket(element: int, length: int, key: int, capacity: int) -> int:
+    return ((element + 1) * 1000003 + length % capacity * 1000033 + key + 1) % capacity
+
+
+public func find(catalog: Catalog, element: int, length: int, key: int) -> int:
+    if len(catalog.slots) == 0 or element < 0 or element >= 65555 or length < 0 or key < -1 or key >= 65555:
+        return -1
+    mut position = bucket(element, length, key, len(catalog.slots))
+    mut visited = 0
+    while visited < len(catalog.slots):
+        const entry = catalog.slots[position]
+        if entry < 0:
+            return -1
+        const array = catalog.arrays[entry]
+        if array.element == element and array.length == length and array.key == key:
+            return array.id
+        position = (position + 1) % len(catalog.slots)
+        visited += 1
+    return -1
+
+
+func grow(mut catalog: Catalog) -> Unit:
+    mut capacity = len(catalog.slots) * 2
+    if capacity == 0:
+        capacity = 16
+    catalog.slots = []
+    for unused in range(capacity):
+        catalog.slots.append(-1)
+    for entry in range(len(catalog.arrays)):
+        const array = catalog.arrays[entry]
+        mut position = bucket(array.element, array.length, array.key, capacity)
+        while catalog.slots[position] >= 0:
+            position = (position + 1) % capacity
+        catalog.slots[position] = entry
+
+
+public func add(mut catalog: Catalog, array: Array) -> bool fails syntax_value.Problem:
+    if array.id < 19 or array.id >= 65555 or array.element < 0 or array.element >= 65555 or array.length < 0 or (array.key != -1 and array.key < 19) or array.key >= 65555:
+        fail invalid()
+    const previous = find(catalog, array.element, array.length, array.key)
+    if previous >= 0:
+        if previous != array.id:
+            fail invalid()
+        return False
+    if len(catalog.arrays) >= 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="fixed array catalog limit exceeded")
+    while len(catalog.by_type) <= array.id:
+        catalog.by_type.append(-1)
+    if catalog.by_type[array.id] >= 0:
+        fail invalid()
+    if len(catalog.slots) == 0 or (len(catalog.arrays) + 1) * 2 > len(catalog.slots):
+        grow(mut catalog)
+    const entry = len(catalog.arrays)
+    catalog.arrays.append(array)
+    catalog.by_type[array.id] = entry
+    mut position = bucket(array.element, array.length, array.key, len(catalog.slots))
+    while catalog.slots[position] >= 0:
+        position = (position + 1) % len(catalog.slots)
+    catalog.slots[position] = entry
+    return True
+
+
+public func schema(catalog: Catalog, ty: int) -> Array:
+    if ty < 0 or ty >= len(catalog.by_type) or catalog.by_type[ty] < 0:
+        return Array(id=-1, element=-1, length=0, key=-1)
+    return catalog.arrays[catalog.by_type[ty]]
+
+
+func number(pool: syntax_value.Pool, row: int, name: str) -> int fails syntax_value.Problem:
+    const field = try graph.field(pool, row, name)
+    return try graph.number(pool, field)
+
+
+func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_value.Problem:
+    const field = try graph.field(pool, row, name)
+    const value = try graph.get(pool, field)
+    if value.kind != 2:
+        fail invalid()
+    return value.integer != 0
+
+
+public func prepare(pool: syntax_value.Pool, records: int[]) -> Catalog fails syntax_value.Problem:
+    mut catalog = empty()
+    if len(records) > 65536:
+        fail invalid()
+    for ordinal in range(len(records)):
+        const row = records[ordinal]
+        const shape = try graph.field(pool, row, "shape")
+        const array_id = try graph.field(pool, shape, "array")
+        const array = try graph.get(pool, array_id)
+        if array.kind == 0:
+            continue
+        if array.kind != 5:
+            fail invalid()
+        const id = try number(pool, row, "id")
+        const element = try number(pool, array_id, "element")
+        const length = try number(pool, array_id, "length")
+        const key_id = try graph.field(pool, array_id, "key")
+        const key_value = try graph.get(pool, key_id)
+        mut key = -1
+        if key_value.kind == 1:
+            key = key_value.integer
+            if key < 19 or key >= 19 + len(records):
+                fail invalid()
+        elif key_value.kind != 0:
+            fail invalid()
+        if id != 19 + ordinal or element < 0 or element >= 19 + len(records) or length < 0:
+            fail invalid()
+        const managed = try flag(pool, row, "managed")
+        const tuple = try flag(pool, shape, "tuple")
+        if managed or tuple:
+            fail invalid()
+        for name in ["domain", "variants", "buffer", "resource"]:
+            const value_id = try graph.field(pool, shape, name)
+            const value = try graph.get(pool, value_id)
+            if value.kind != 0:
+                fail invalid()
+        const builtin_id = try graph.field(pool, shape, "builtin")
+        const builtin = try graph.get(pool, builtin_id)
+        if builtin.kind != 4 or builtin.data != b"none":
+            fail invalid()
+        const fields_id = try graph.field(pool, row, "fields")
+        const fields = try graph.items(pool, fields_id)
+        if key < 0:
+            if len(fields) != 0:
+                fail invalid()
+        else:
+            try validate_table(pool, records, key, element, length, fields)
+        _ = try add(mut catalog, Array(id=id, element=element, length=length, key=key))
+    return catalog
+
+
+func validate_table(pool: syntax_value.Pool, records: int[], key: int, element: int, length: int, fields: int[]) -> Unit fails syntax_value.Problem:
+    const shape = try graph.field(pool, records[key - 19], "shape")
+    const variants_id = try graph.field(pool, shape, "variants")
+    const variants = try graph.get(pool, variants_id)
+    if variants.kind != 5:
+        fail invalid()
+    const is_union = try flag(pool, variants_id, "is_union")
+    const fallible = try flag(pool, variants_id, "fallible")
+    const cases_id = try graph.field(pool, variants_id, "cases")
+    const cases = try graph.items(pool, cases_id)
+    if is_union or fallible or len(cases) != length or len(fields) != length:
+        fail invalid()
+    for position in range(length):
+        const field = fields[position]
+        const variant_case = cases[position]
+        const field_name = try graph.field(pool, field, "name")
+        const case_name = try graph.field(pool, variant_case, "name")
+        const left = try graph.get(pool, field_name)
+        const right = try graph.get(pool, case_name)
+        const ty = try number(pool, field, "ty")
+        const payload_id = try graph.field(pool, variant_case, "payload")
+        const payload = try graph.get(pool, payload_id)
+        const boxed = try flag(pool, field, "boxed")
+        const case_boxed = try flag(pool, variant_case, "boxed")
+        const fielded = try flag(pool, variant_case, "fielded")
+        const default_id = try graph.field(pool, field, "default_value")
+        const default = try graph.get(pool, default_id)
+        if case_boxed or fielded or default.kind != 0:
+            fail invalid()
+        if left.kind != 3 or right.kind != 3 or left.data != right.data or ty != element or payload.kind != 0 or boxed:
+            fail invalid()
+
+
+func internal_name(pool: syntax_value.Pool, records: int[], ty: int) -> bytes fails syntax_value.Problem:
+    if ty >= 0 and ty < 19:
+        return [b"i64", b"bool", b"i8", b"i16", b"i32", b"u8", b"u16", b"u32", b"u64", b"clock_cap", b"random_cap", b"filesystem_cap", b"network_cap", b"environment_cap", b"host_cap", b"unit", b"file", b"text_file", b"stream_cap"][ty]
+    if ty < 19 or ty - 19 >= len(records):
+        fail invalid()
+    const name_id = try graph.field(pool, records[ty - 19], "name")
+    const name = try graph.get(pool, name_id)
+    if name.kind != 3:
+        fail invalid()
+    return name.data
+
+
+func decimal(value: int) -> bytes:
+    mut remaining = value
+    mut reversed = b""
+    while remaining > 0:
+        const digit = remaining % 10
+        reversed += b"0123456789"[digit:digit + 1]
+        remaining //= 10
+    if len(reversed) == 0:
+        return b"0"
+    mut result = b""
+    mut position = len(reversed)
+    while position > 0:
+        position -= 1
+        result += reversed[position:position + 1]
+    return result
+
+
+public func materialize(mut pool: syntax_value.Pool, records: int[], recipe: Recipe) -> int fails syntax_value.Problem:
+    if recipe.id != 19 + len(records) or recipe.id >= 65555 or recipe.element < 0 or recipe.element >= recipe.id or recipe.length < 0:
+        fail invalid()
+    const declaration = try graph.get(pool, recipe.span)
+    if declaration.kind != 5:
+        fail invalid()
+    const start = try number(pool, recipe.span, "start")
+    const end = try number(pool, recipe.span, "end")
+    if start < 0 or end < start:
+        fail invalid()
+    const element_name = try internal_name(pool, records, recipe.element)
+    const name = b"[" + decimal(recipe.length) + b"]" + element_name
+    mut storable = True
+    mut move = False
+    mut pending = False
+    if recipe.length != 0 and recipe.element >= 19:
+        const contract = try graph.field(pool, records[recipe.element - 19], "contract")
+        storable = try flag(pool, contract, "storable")
+        move = try flag(pool, contract, "move_only")
+        pending = try flag(pool, contract, "requires_handling")
+    const absent = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    const yes = try syntax_value.boolean(mut pool, True)
+    const fields = try syntax_value.sequence(mut pool, [])
+    const element = try syntax_value.integer(mut pool, recipe.element)
+    const length = try syntax_value.integer(mut pool, recipe.length)
+    const array = try syntax_value.object(mut pool, ["element", "length", "key"], [element, length, absent])
+    const kind = try syntax_value.enumeration(mut pool, b"list")
+    const collection = try syntax_value.object(mut pool, ["kind", "key", "contains_cell", "set", "box"], [kind, absent, no, no, no])
+    const builtin = try syntax_value.enumeration(mut pool, b"none")
+    const shape = try syntax_value.object(mut pool, ["array", "domain", "variants", "buffer", "resource", "builtin", "tuple"], [array, absent, absent, absent, absent, builtin, no])
+    const storable_value = try syntax_value.boolean(mut pool, storable)
+    const move_value = try syntax_value.boolean(mut pool, move)
+    const pending_value = try syntax_value.boolean(mut pool, pending)
+    const contract = try syntax_value.object(mut pool, ["callback", "public_arguments", "codec", "codec_declared", "move_only", "storable", "requires_handling"], [absent, yes, absent, no, move_value, storable_value, pending_value])
+    const id = try syntax_value.integer(mut pool, recipe.id)
+    const name_value = try syntax_value.octets(mut pool, name)
+    return try syntax_value.object(mut pool, ["collection", "managed", "id", "name", "declaration", "fields", "shape", "contract"], [collection, no, id, name_value, recipe.span, fields, shape, contract])
+
+
+public func encode(mut pool: syntax_value.Pool, recipe: Recipe) -> int fails syntax_value.Problem:
+    if recipe.id < 19 or recipe.id >= 65555 or recipe.element < 0 or recipe.element >= recipe.id or recipe.length < 0:
+        fail invalid()
+    const start = try number(pool, recipe.span, "start")
+    const end = try number(pool, recipe.span, "end")
+    if start < 0 or end < start:
+        fail invalid()
+    const id = try syntax_value.integer(mut pool, recipe.id)
+    const element = try syntax_value.integer(mut pool, recipe.element)
+    const length = try syntax_value.integer(mut pool, recipe.length)
+    const payload = try syntax_value.object(mut pool, ["id", "element", "length", "span"], [id, element, length, recipe.span])
+    const array = try syntax_value.tagged(mut pool, b"array", payload)
+    return try syntax_value.tagged(mut pool, b"structural", array)
