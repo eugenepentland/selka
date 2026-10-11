@@ -86,11 +86,11 @@ pub fn outcome(a: std.mem.Allocator, request: value.Input, result: value.Outcome
     }
 }
 const Work = union(enum) { node: usize, statement: usize, finish_node: usize, finish_statement: usize };
+const GraphContext = struct { source_len: usize, catalog: value.Catalog };
 const Graph = struct {
     allocator: std.mem.Allocator,
     tables: value.Batch,
-    source_len: usize,
-    catalog: value.Catalog = .{},
+    context: GraphContext,
     locals: usize,
     function: usize = 0,
     pending: std.ArrayList(Work) = .empty,
@@ -102,7 +102,7 @@ const Graph = struct {
     }
     fn fields(self: *Graph, comptime T: type, item: T) Error!void {
         @setEvalBranchQuota(200000);
-        if (T == source.Span) return span(item, self.source_len);
+        if (T == source.Span) return span(item, self.context.source_len);
         if (T == typed.NodeId) return self.push(.{ .node = @backingInt(item) });
         if (T == typed.StatementId) return self.push(.{ .statement = @backingInt(item) });
         if (T == typed.LocalId) {
@@ -114,7 +114,7 @@ const Graph = struct {
             return;
         }
         if (T == typed.Type) {
-            if (!admittedType(self.catalog, item)) return error.ComponentProtocol;
+            if (!admittedType(self.context.catalog, item)) return error.ComponentProtocol;
             return;
         }
         switch (@typeInfo(T)) {
@@ -148,7 +148,7 @@ fn batch(a: std.mem.Allocator, request: value.Input, tables: value.Batch) Error!
     defer a.free(statement_states);
     @memset(node_states, 0);
     @memset(statement_states, 0);
-    var graph: Graph = .{ .allocator = a, .tables = tables, .source_len = request.context.source.len, .locals = 0, .catalog = request.catalog };
+    var graph: Graph = .{ .allocator = a, .tables = tables, .context = .{ .source_len = request.context.source.len, .catalog = request.catalog }, .locals = 0 };
     defer graph.pending.deinit(a);
     var locals: usize = 0;
     for (tables.functions, request.program.functions, 0..) |function, raw, id| {
@@ -231,15 +231,15 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
             if (node.ty != input_type and !scalar_conversion) return error.ComponentProtocol;
         },
         .array => |items| {
-            const element = sequenceElement(graph.catalog, node.ty) orelse return error.ComponentProtocol;
+            const element = sequenceElement(graph.context.catalog, node.ty) orelse return error.ComponentProtocol;
             for (items) |item| if (try nodeType(graph, item) != element) return error.ComponentProtocol;
         },
         .length => |operand| {
-            if (node.ty != .i64 or sequenceElement(graph.catalog, try nodeType(graph, operand)) == null) return error.ComponentProtocol;
+            if (node.ty != .i64 or sequenceElement(graph.context.catalog, try nodeType(graph, operand)) == null) return error.ComponentProtocol;
         },
         .index => |operation| {
             const owner = try nodeType(graph, operation.base);
-            const element = sequenceElement(graph.catalog, owner) orelse return error.ComponentProtocol;
+            const element = sequenceElement(graph.context.catalog, owner) orelse return error.ComponentProtocol;
             const expected = if (element == .u32) owner else element;
             if (node.ty != expected or try nodeType(graph, operation.index) != .i64 or operation.from_end) return error.ComponentProtocol;
         },
@@ -397,7 +397,7 @@ fn binaryNode(graph: *Graph, node: typed.Node, operation: @FieldType(@FieldType(
     const left = try nodeType(graph, operation.left);
     const right = try nodeType(graph, operation.right);
     if (left != right) return error.ComponentProtocol;
-    if (sequenceElement(graph.catalog, left) != null) {
+    if (sequenceElement(graph.context.catalog, left) != null) {
         const result: typed.Type = switch (operation.op) {
             .add => left,
             .eq, .ne, .lt, .le, .gt, .ge => .bool,

@@ -364,7 +364,12 @@ test "body check schema two accepts native Unicode text and byte sequence graphs
         "func item(value: bytes) -> int:\n    return value[0]\n",
         "func order(left: bytes, right: bytes) -> bool:\n    return left < right\n",
     };
-    for (cases) |case| try acceptsManaged(a, try managedFixture(a, case));
+    for (cases) |case| {
+        const f = try managedFixture(a, case);
+        const catalog = f.input.catalog;
+        try acceptsManaged(a, f);
+        try std.testing.expect(std.meta.eql(catalog, f.input.catalog));
+    }
 }
 // spec-case: SELFHOST-BODY-CHECK-1
 test "body check rejects forged managed catalog identities and elements" {
