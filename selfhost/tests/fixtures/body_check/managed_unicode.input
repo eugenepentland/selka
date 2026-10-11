@@ -1,0 +1,10 @@
+func saved(value: str, suffix: str = "!") -> str:
+    return value + suffix
+
+func main() -> int:
+    mut value = "é😀\n"
+    mut snapshot = value
+    value = saved(value)
+    if len(snapshot) == 3 and snapshot[0] == "é" and snapshot[-2] == "😀" and value == "é😀\n!":
+        return 7
+    return 0

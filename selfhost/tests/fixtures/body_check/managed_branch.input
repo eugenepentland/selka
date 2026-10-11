@@ -1,0 +1,9 @@
+func choose(value: bool) -> str:
+    if value:
+        return "é"
+    return "😀"
+
+func main() -> int:
+    if choose(True) == "é" and choose(False) == "😀" and "a" < "b" and b"a" < b"b":
+        return 7
+    return 0

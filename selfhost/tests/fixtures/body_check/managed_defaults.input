@@ -1,0 +1,7 @@
+func join(value: str, suffix: str = "é") -> str:
+    return value + suffix
+
+func main() -> int:
+    if join("a") == "aé" and join("b") == "bé" and join(suffix="!", value="c") == "c!":
+        return 7
+    return 0

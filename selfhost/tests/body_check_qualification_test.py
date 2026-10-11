@@ -15,29 +15,29 @@ class BodyQualificationTests(unittest.TestCase):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
         n=len(manifest)+2*sum(bool(v.get('typed')) and not v.get('library') for v in manifest.values())+sum('result' in v for v in manifest.values())+16
         return (f'body_check qualification: {n} workflows, {n*2} comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
-                'body_check transport: 1 valid, 13 malformed; 0 failed, 0 skipped\n'
+                'body_check transport: 1 valid, 15 malformed; 0 failed, 0 skipped\n'
                 'body_check forged replies: 8 rejected; 0 failed, 0 skipped\n'
                 'body_check publication: 2 host failures; 0 failed, 0 skipped\n')
 
     def test_gate_rejects_incomplete_or_duplicate_verdicts(self):
         good=self.summary();G.require_summary(good)
-        for bad in (good+good,good.replace('30 warm','29 warm'),good.replace('4 live','0 live'),good.replace('13 malformed','12 malformed'),good.replace('8 rejected','0 rejected'),good.replace('2 host','1 host'),good.replace('0 skipped','1 skipped')):
+        for bad in (good+good,good.replace('30 warm','29 warm'),good.replace('4 live','0 live'),good.replace('15 malformed','12 malformed'),good.replace('8 rejected','0 rejected'),good.replace('2 host','1 host'),good.replace('0 skipped','1 skipped')):
             with self.assertRaises(RuntimeError):G.require_summary(bad)
 
     def test_frame_binds_whole_request(self):
         payload=b'raw body\x00'+ 'éλ'.encode();frame=D.frame(payload)
         self.assertEqual(frame[:8],b'SLKBCK01')
-        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,1,0,len(payload)))
+        self.assertEqual(struct.unpack('<IIII',frame[8:24]),(1,2,0,len(payload)))
         self.assertEqual(frame[32:64],D.F.hashlib.sha256(payload).digest())
         self.assertEqual(frame[64:],payload)
 
     def test_package_authentication_requires_all_seven(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);artifact=root/'artifact';artifact.write_bytes(b'fixture')
-            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,1)]:
+            for name,protocol,schema in [('test-index',1,1),('cache-plan',2,2),('lexer-pilot',1,2),('parser-pilot',1,2),('declaration-index',1,1),('type-interface',1,1),('body-check',1,2)]:
                 (root/(name+'.json')).write_text(json.dumps(dict(format=1,component=name,protocol=protocol,schema=schema,artifact='artifact',sha256=D.F.digest(artifact))))
             self.assertEqual(len(D.packages(root)),7)
-            manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=True;manifest.write_text(json.dumps(value))
+            manifest=root/'body-check.json';value=json.loads(manifest.read_text());value['schema']=1;manifest.write_text(json.dumps(value))
             with self.assertRaisesRegex(RuntimeError,'noninteger'):D.packages(root)
             manifest.unlink()
             with self.assertRaises(FileNotFoundError):D.packages(root)
@@ -80,6 +80,22 @@ class BodyQualificationTests(unittest.TestCase):
             self.assertNotEqual(value,original)
             self.assertEqual(len(value),len(original))
             D.graph_rows(value)
+
+    def test_input_mutations_preserve_bounded_graph_and_corrupt_dto_kinds(self):
+        rows=[(4,b'source',[],[]),(5,b'',[0],[b'source']),
+              (5,b'',[],[]),(5,b'',[1,2],[b'context',b'catalog'])]
+        payload=bytearray(b'SLKBKI01'+struct.pack('<II',4,3))
+        for kind,data,children,names in rows:
+            payload.extend(struct.pack('<BqI',kind,0,len(data))+data+struct.pack('<I',len(children)))
+            for child in children:payload.extend(struct.pack('<I',child))
+            payload.extend(struct.pack('<I',len(names)))
+            for name in names:payload.extend(struct.pack('<I',len(name))+name)
+        variants=D.mutate_input(bytes(payload))
+        self.assertEqual(len(set(variants)),2)
+        for value in variants:
+            self.assertEqual(len(value),len(payload))
+            self.assertNotEqual(value,payload)
+            D.graph_rows(value,b'SLKBKI01')
 
     def test_profile_selection_is_explicit_and_nonempty(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())

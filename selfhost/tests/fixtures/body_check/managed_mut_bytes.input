@@ -1,0 +1,10 @@
+func change(mut value: bytes) -> Unit:
+    value = value + b"!"
+
+func main() -> int:
+    mut value = b"a"
+    mut saved = value
+    change(mut value)
+    if saved == b"a" and value == b"a!":
+        return 7
+    return 0

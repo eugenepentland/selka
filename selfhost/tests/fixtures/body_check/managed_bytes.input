@@ -1,0 +1,10 @@
+func saved(value: bytes, suffix: bytes) -> bytes:
+    return value + suffix
+
+func main() -> int:
+    mut value = b"a\xff"
+    mut snapshot = value
+    value = saved(value, b"!")
+    if len(snapshot) == 2 and int(snapshot[0]) == 97 and int(snapshot[-1]) == 255 and value == b"a\xff!":
+        return 7
+    return 0

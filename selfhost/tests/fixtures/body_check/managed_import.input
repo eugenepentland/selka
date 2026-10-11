@@ -1,0 +1,6 @@
+import managed_dependency
+
+func main() -> int:
+    if managed_dependency.text("a") == "aé" and managed_dependency.raw(b"a") == b"a!":
+        return 7
+    return 0

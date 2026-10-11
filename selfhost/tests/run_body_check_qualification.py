@@ -18,7 +18,7 @@ COMPONENT = 'body-check'
 
 def frame(payload):
     identity = b'bodytest' + F.hashlib.sha256(payload).digest()
-    return b'SLKBCK01' + struct.pack('<IIII', 1, 1, 0, len(payload)) + identity + payload
+    return b'SLKBCK01' + struct.pack('<IIII', 1, 2, 0, len(payload)) + identity + payload
 
 
 def blob(value):
@@ -36,14 +36,15 @@ def transport(binary, work, env, valid):
     request.write_bytes(valid)
     status, stdout, stderr = F.execute([binary, '--exchange', request], env, work, 30)
     F.require(status == 0 and not stderr and stdout[:8] == b'SLKBCK01' and stdout[24:64] == valid[24:64], 'valid body exchange failed')
-    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, 1, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
+    F.require(struct.unpack('<IIII', stdout[8:24]) == (1, 2, 1, len(stdout)-64) and stdout[64:72] == b'SLKBKR01', 'unbound body reply')
     malformed = [b'', valid[:63], valid[:-1], valid+b'X', b'BADMAGIC'+valid[8:]]
-    for offset,value in ((8,2),(12,2),(16,1),(20,67108864)):
+    for offset,value in ((8,2),(12,1),(16,1),(20,67108864)):
         changed=bytearray(valid);struct.pack_into('<I',changed,offset,value);malformed.append(bytes(changed))
     payload=valid[64:]
     malformed.extend([frame(b'BADMAGIC'+payload[8:]), frame(payload[:-1])])
     for offset,value in ((8,1048577),(12,1048576)):
         changed=bytearray(payload);struct.pack_into('<I',changed,offset,value);malformed.append(frame(changed))
+    malformed.extend(frame(value) for value in mutate_input(payload))
     for index,value in enumerate(malformed):
         request.write_bytes(value)
         status,out,err=F.execute([binary,'--exchange',request],env,work,30)
@@ -51,9 +52,9 @@ def transport(binary, work, env, valid):
     return {'valid':1,'malformed':len(malformed),'request_sha256':F.hashlib.sha256(valid).hexdigest(),'request_bytes':len(valid),'failed':0,'skipped':0}
 
 
-def graph_rows(payload):
+def graph_rows(payload, magic=b'SLKBKR01'):
     """Read bounded named rows for developer mutations, never production decoding."""
-    F.require(len(payload)>=16 and payload[:8]==b'SLKBKR01','not a body outcome')
+    F.require(len(payload)>=16 and payload[:8]==magic,'not a body outcome')
     count,root=struct.unpack_from('<II',payload,8)
     F.require(0<count<=1048576 and root<count,'bad captured outcome root')
     at=16;rows=[]
@@ -74,6 +75,22 @@ def graph_rows(payload):
         rows.append({'kind':kind,'integer':value,'integer_at':integer_at,'data':data,'children':children,'names':names})
     F.require(at==len(payload),'captured trailing rows')
     return rows,root
+
+
+def mutate_input(payload):
+    rows,root=graph_rows(payload,b'SLKBKI01')
+    def field(node,name):
+        row=rows[node]
+        F.require(row['kind']==5 and name in row['names'],'missing projected input field')
+        return row['children'][row['names'].index(name)]
+    # Keep a complete, bounded graph while refusing wrong DTO kinds before typing.
+    targets=[field(root,b'catalog'),field(field(root,b'context'),b'source')]
+    variants=[]
+    for target in targets:
+        changed=bytearray(payload)
+        changed[rows[target]['integer_at']-1]=1
+        variants.append(bytes(changed))
+    return variants
 
 
 def mutate_success(payload):
@@ -114,7 +131,7 @@ def environment(mode, components, empty):
 def packages(directory):
     result = {}
     versions = {'test-index': (1, 1), 'cache-plan': (2, 2),
-                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), 'type-interface': (1, 1), COMPONENT: (1, 1)}
+                'lexer-pilot': (1, 2), 'parser-pilot': (1, 2), 'declaration-index': (1, 1), 'type-interface': (1, 1), COMPONENT: (1, 2)}
     for name, (protocol, schema) in versions.items():
         value = json.loads((directory / f'{name}.json').read_text())
         F.require(all(type(value.get(k)) is int for k in ('format', 'protocol', 'schema')), 'noninteger package identity')

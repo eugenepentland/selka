@@ -1,0 +1,3 @@
+func main() -> int:
+    mut value = "a" + b"b"
+    return len(value)

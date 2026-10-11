@@ -1,0 +1,5 @@
+public func text(value: str) -> str:
+    return value + "é"
+
+public func raw(value: bytes) -> bytes:
+    return value + b"!"

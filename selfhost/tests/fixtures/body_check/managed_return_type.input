@@ -1,0 +1,5 @@
+func value() -> bytes:
+    return 7
+
+func main() -> int:
+    return 0

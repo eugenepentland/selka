@@ -1,0 +1,6 @@
+func main() -> int:
+    mut text = ""
+    mut raw = b""
+    if len(text) == 0 and len(raw) == 0 and text + "é" == "é" and raw + b"a" == b"a":
+        return 7
+    return 0

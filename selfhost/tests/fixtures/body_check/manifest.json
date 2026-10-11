@@ -311,5 +311,89 @@
     "typed": true,
     "library": false,
     "result": 0
+  },
+  "managed_unicode.my": {
+    "status": 0,
+    "boundary": "managed-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "managed_bytes.my": {
+    "status": 0,
+    "boundary": "managed-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "managed_empty.my": {
+    "status": 0,
+    "boundary": "managed-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "managed_defaults.my": {
+    "status": 0,
+    "boundary": "managed-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "managed_mut_text.my": {
+    "status": 0,
+    "boundary": "managed-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "managed_mut_bytes.my": {
+    "status": 0,
+    "boundary": "managed-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "managed_branch.my": {
+    "status": 0,
+    "boundary": "managed-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "managed_import.my": {
+    "status": 0,
+    "boundary": "managed-body",
+    "typed": true,
+    "library": false,
+    "result": 7
+  },
+  "managed_bytes_default.my": {
+    "status": 1,
+    "boundary": "managed-body",
+    "typed": false,
+    "library": false,
+    "code": "E_DEFAULT_ARGUMENT"
+  },
+  "managed_mixed_concat.my": {
+    "status": 1,
+    "boundary": "managed-body",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "managed_wrong_index.my": {
+    "status": 1,
+    "boundary": "managed-body",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
+  },
+  "managed_return_type.my": {
+    "status": 1,
+    "boundary": "managed-body",
+    "typed": false,
+    "library": false,
+    "code": "E_TYPE"
   }
 }

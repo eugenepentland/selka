@@ -1,0 +1,14 @@
+func change(mut value: str) -> int:
+    value = value + "é"
+    return 1
+
+func observe(value: str, status: int) -> bool:
+    return value == "a" and status == 1
+
+func main() -> int:
+    mut value = "a"
+    mut saved = value
+    mut ok = observe(value, change(mut value))
+    if ok and saved == "a" and value == "aé":
+        return 7
+    return 0
