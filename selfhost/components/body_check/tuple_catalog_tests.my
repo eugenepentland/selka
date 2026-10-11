@@ -1,0 +1,52 @@
+import syntax_value
+import graph
+import list_types
+import tuple_types
+
+func fresh() -> list_types.Catalog:
+    mut catalog = list_types.empty()
+    catalog.available = True
+    for unused in range(19):
+        catalog.by_element.append(-1)
+        catalog.elements.append(-1)
+    return catalog
+
+
+public func test_tuple_demand_flushes_prior_list_and_preserves_global_recipe_order() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 2, 4)
+    mut catalog = fresh()
+    const list = try list_types.intern(mut catalog, pool, list_types.Recipe(id=-1, element=0, span=span), [])
+    const tuple = try list_types.tuple_intern(mut catalog, mut pool, [list, 1], span)
+    const repeated = try list_types.tuple_intern(mut catalog, mut pool, [list, 1], span)
+    const schema = tuple_types.schema(catalog.types.tuples, tuple)
+    const next = try list_types.intern(mut catalog, pool, list_types.Recipe(id=-1, element=tuple, span=span), [])
+    return list == 19 and tuple == 20 and repeated == 20 and next == 21 and schema.elements == [19, 1] and len(catalog.types.records.rows) == 2 and len(catalog.recipes) == 3 and catalog.recipes[1].depth == 3
+
+
+public func test_tuple_recipe_wire_uses_structural_wrapper_without_span() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 9, 12)
+    mut catalog = fresh()
+    const tuple = try list_types.tuple_intern(mut catalog, mut pool, [0, 1], span)
+    mut output = syntax_value.empty()
+    const recipes = try list_types.encode(mut output, pool, catalog.recipes)
+    const entries = try graph.items(output, recipes)
+    const outer = try graph.get(output, entries[0])
+    const inner_id = try graph.payload(output, entries[0])
+    const inner = try graph.get(output, inner_id)
+    const payload_id = try graph.payload(output, inner_id)
+    const payload = try graph.get(output, payload_id)
+    return tuple == 19 and outer.data == b"structural" and inner.data == b"tuple" and payload.names == ["id", "elements"] and len(payload.children) == 2
+
+
+public func test_nested_tuple_reuses_identity_and_inherits_prior_depth() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 0, 0)
+    mut catalog = fresh()
+    const first = try list_types.tuple_intern(mut catalog, mut pool, [0, 1], span)
+    const second = try list_types.tuple_intern(mut catalog, mut pool, [first, 15], span)
+    const row = catalog.types.records.rows[second - 19]
+    const name_id = try graph.field(pool, row, "name")
+    const name = try graph.get(pool, name_id)
+    return first == 19 and second == 20 and catalog.recipes[1].depth == 3 and name.data == b"tuple<tuple<i64,bool>,unit>" and catalog.types.records.admitted[second]

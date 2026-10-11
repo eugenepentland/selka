@@ -280,7 +280,8 @@ public func list_semantic(mut pool: syntax_value.Pool, records: int[], id: int, 
     const no = try syntax_value.boolean(mut pool, False)
     const empty_fields = try syntax_value.sequence(mut pool, [])
     const list_shape = try syntax_value.object(mut pool, ["variants"], [absent])
-    const contract = try syntax_value.object(mut pool, ["requires_handling"], [no])
+    const yes = try syntax_value.boolean(mut pool, True)
+    const contract = try syntax_value.object(mut pool, ["requires_handling", "move_only", "storable"], [no, no, yes])
     const id_value = try syntax_value.integer(mut pool, id)
     return try syntax_value.object(mut pool, ["id", "name", "declaration", "fields", "shape", "contract"], [id_value, name, span, empty_fields, list_shape, contract])
 
@@ -291,6 +292,7 @@ public func buffer_semantic(mut pool: syntax_value.Pool, id: int, span: int) -> 
     const no = try syntax_value.boolean(mut pool, False)
     const empty_fields = try syntax_value.sequence(mut pool, [])
     const shape_value = try syntax_value.object(mut pool, ["variants"], [absent])
-    const contract = try syntax_value.object(mut pool, ["requires_handling"], [no])
+    const yes = try syntax_value.boolean(mut pool, True)
+    const contract = try syntax_value.object(mut pool, ["requires_handling", "move_only", "storable"], [no, no, yes])
     const id_value = try syntax_value.integer(mut pool, id)
     return try syntax_value.object(mut pool, ["id", "name", "declaration", "fields", "shape", "contract"], [id_value, name, span, empty_fields, shape_value, contract])
