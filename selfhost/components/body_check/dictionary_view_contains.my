@@ -1,0 +1,84 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import comprehension_lower
+import dictionary_view_lower
+
+public record Membership:
+    needle: int
+    needle_type: int
+    mapping: int
+    shape: dictionary_view_lower.Shape
+    negate: bool
+    loop_id: int
+
+
+func boolean(mut batch: emission.Batch, context: list_lower.Context, value: bool) -> int fails syntax_value.Problem:
+    const payload = try syntax_value.boolean(mut batch.pool, value)
+    return try emission.node(mut batch, context.input, context.span, 1, b"boolean", payload)
+
+
+func negate(mut batch: emission.Batch, context: list_lower.Context, value: int) -> int fails syntax_value.Problem:
+    const op = try syntax_value.enumeration(mut batch.pool, b"not")
+    const operand = try syntax_value.integer(mut batch.pool, value)
+    const span = try graph.clone(mut batch.pool, context.input, context.span, 0)
+    const payload = try syntax_value.object(mut batch.pool, ["op", "operand", "op_span"], [op, operand, span])
+    return try emission.node(mut batch, context.input, context.span, 1, b"unary", payload)
+
+
+func keys(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Membership) -> dictionary_view_lower.Snapshot fails syntax_value.Problem:
+    const member = try list_lower.temporary(mut scope, context, request.needle_type)
+    const input = try list_lower.temporary(mut scope, context, request.shape.mapping)
+    const needle = try list_lower.read(mut batch, context, member, request.needle_type)
+    mut result = try list_lower.operation(mut batch, context, list_lower.Operation(owner=input, kind=b"contains", arguments=[needle], ty=1))
+    if request.negate:
+        const inverted = try negate(mut batch, context, result)
+        result = inverted
+    const setup_member = try list_lower.store(mut batch, context, member, request.needle, True)
+    const setup_input = try list_lower.store(mut batch, context, input, request.mapping, True)
+    const lowered = try list_lower.block(mut batch, context, [setup_member, setup_input], result, 1)
+    return dictionary_view_lower.Snapshot(value=lowered, next_loop=request.loop_id)
+
+
+public func contains(mut batch: emission.Batch, mut scope: locals.Scope, context: list_lower.Context, request: Membership) -> dictionary_view_lower.Snapshot fails syntax_value.Problem:
+    if request.shape.kind == b"keys":
+        return try keys(mut batch, mut scope, context, request)
+    const member = try list_lower.temporary(mut scope, context, request.needle_type)
+    const input = try list_lower.temporary(mut scope, context, request.shape.mapping)
+    const count = try list_lower.temporary(mut scope, context, 0)
+    const cursor = try list_lower.temporary(mut scope, context, 0)
+    const found = try list_lower.temporary(mut scope, context, 1)
+    const index = try list_lower.read(mut batch, context, cursor, 0)
+    const value = try dictionary_view_lower.at(mut batch, context, input, index, request.shape)
+    const needle = try list_lower.read(mut batch, context, member, request.needle_type)
+    const equal = try list_lower.binary(mut batch, context, b"eq", needle, value, 1)
+    const yes = try boolean(mut batch, context, True)
+    const matched_value = try list_lower.store(mut batch, context, found, yes, False)
+    const target = try syntax_value.integer(mut batch.pool, request.loop_id)
+    const continuing = try syntax_value.boolean(mut batch.pool, False)
+    const exit = try syntax_value.object(mut batch.pool, ["target", "continuing"], [target, continuing])
+    const leave = try emission.statement(mut batch, context.input, context.span, False, b"loop_exit", exit)
+    const matched = try comprehension_lower.block_statement(mut batch, context, [matched_value, leave])
+    mut result = try list_lower.read(mut batch, context, found, 1)
+    if request.negate:
+        const inverted = try negate(mut batch, context, result)
+        result = inverted
+    const setup_member = try list_lower.store(mut batch, context, member, request.needle, True)
+    const setup_input = try list_lower.store(mut batch, context, input, request.mapping, True)
+    const length = try list_lower.length(mut batch, context, input)
+    const setup_count = try list_lower.store(mut batch, context, count, length, True)
+    const zero = try list_lower.integer(mut batch, context, 0, 0)
+    const setup_cursor = try list_lower.store(mut batch, context, cursor, zero, True)
+    const no = try boolean(mut batch, context, False)
+    const setup_found = try list_lower.store(mut batch, context, found, no, True)
+    const bound = try list_lower.read(mut batch, context, count, 0)
+    const condition = try list_lower.binary(mut batch, context, b"lt", index, bound, 1)
+    const body = try comprehension_lower.branch_statement(mut batch, context, equal, matched)
+    const one = try list_lower.integer(mut batch, context, 1, 0)
+    const next = try list_lower.binary(mut batch, context, b"add", index, one, 0)
+    const step = try list_lower.store(mut batch, context, cursor, next, False)
+    const loop = try comprehension_lower.loop_statement(mut batch, context, request.loop_id, condition, body, step)
+    const lowered = try list_lower.block(mut batch, context, [setup_member, setup_input, setup_count, setup_cursor, setup_found, loop], result, 1)
+    return dictionary_view_lower.Snapshot(value=lowered, next_loop=request.loop_id + 1)

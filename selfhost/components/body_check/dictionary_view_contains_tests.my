@@ -1,0 +1,130 @@
+import syntax_value
+import graph
+import emission
+import locals
+import list_lower
+import dictionary_view_lower
+import dictionary_view_contains
+
+record Fixture:
+    batch: emission.Batch
+    scope: locals.Scope
+    context: list_lower.Context
+
+
+func fresh() -> Fixture fails syntax_value.Problem:
+    mut input = syntax_value.empty()
+    const span = try syntax_value.span(mut input, 3, 11)
+    return Fixture(batch=emission.empty(), scope=locals.empty(), context=list_lower.Context(input=input, span=span))
+
+
+func request(kind: bytes, negate: bool) -> dictionary_view_contains.Membership:
+    const shape = dictionary_view_lower.Shape(mapping=40, key=0, value=1, item=42, list=-1, kind=kind)
+    mut ty = 0
+    if kind == b"values":
+        ty = 1
+    if kind == b"items":
+        ty = 42
+    return dictionary_view_contains.Membership(needle=51, needle_type=ty, mapping=52, shape=shape, negate=negate, loop_id=23)
+
+
+func number(pool: syntax_value.Pool, row: int, field: str) -> int fails syntax_value.Problem:
+    const value = try graph.field(pool, row, field)
+    return try graph.number(pool, value)
+
+
+func payload(pool: syntax_value.Pool, row: int) -> int fails syntax_value.Problem:
+    const data = try graph.field(pool, row, "data")
+    return try graph.payload(pool, data)
+
+
+func tag(pool: syntax_value.Pool, row: int) -> bytes fails syntax_value.Problem:
+    const data = try graph.field(pool, row, "data")
+    const value = try graph.get(pool, data)
+    return value.data
+
+
+public func test_key_membership_roots_needle_before_mapping_without_loop() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const result = try dictionary_view_contains.contains(mut fixture.batch, mut fixture.scope, fixture.context, request(b"keys", False))
+    const first = try payload(fixture.batch.pool, fixture.batch.statements[0])
+    const second = try payload(fixture.batch.pool, fixture.batch.statements[1])
+    const needle = try number(fixture.batch.pool, first, "value")
+    const mapping = try number(fixture.batch.pool, second, "value")
+    const operation = try payload(fixture.batch.pool, fixture.batch.nodes[1])
+    const kind_id = try graph.field(fixture.batch.pool, operation, "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    const owner = try number(fixture.batch.pool, operation, "owner")
+    return result.next_loop == 23 and result.value.ty == 1 and len(fixture.batch.nodes) == 2 and len(fixture.batch.statements) == 3 and len(fixture.scope.locals) == 2 and fixture.scope.locals[0].ty == 0 and fixture.scope.locals[1].ty == 40 and needle == 51 and mapping == 52 and kind.data == b"contains" and owner == 1
+
+
+public func test_negated_keys_wrap_only_final_membership_with_source_span() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const result = try dictionary_view_contains.contains(mut fixture.batch, mut fixture.scope, fixture.context, request(b"keys", True))
+    const unary = try payload(fixture.batch.pool, fixture.batch.nodes[2])
+    const operand = try number(fixture.batch.pool, unary, "operand")
+    const location = try graph.field(fixture.batch.pool, unary, "op_span")
+    const start = try number(fixture.batch.pool, location, "start")
+    const end = try number(fixture.batch.pool, location, "end")
+    const value = try number(fixture.batch.pool, result.value.payload, "value")
+    return result.next_loop == 23 and operand == 1 and value == 2 and start == 3 and end == 11 and len(fixture.batch.nodes) == 3
+
+
+public func test_value_membership_keeps_native_locals_and_early_exit() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const result = try dictionary_view_contains.contains(mut fixture.batch, mut fixture.scope, fixture.context, request(b"values", False))
+    const exit = try payload(fixture.batch.pool, fixture.batch.statements[1])
+    const target = try number(fixture.batch.pool, exit, "target")
+    const loop = try payload(fixture.batch.pool, fixture.batch.statements[10])
+    const id = try number(fixture.batch.pool, loop, "id")
+    const branch = try payload(fixture.batch.pool, fixture.batch.statements[8])
+    const condition = try number(fixture.batch.pool, branch, "condition")
+    const matched = try number(fixture.batch.pool, branch, "then_body")
+    const result_read = try number(fixture.batch.pool, result.value.payload, "value")
+    if len(fixture.scope.locals) != 5 or len(fixture.scope.active) != 0:
+        return False
+    for local in fixture.scope.locals:
+        if local.flags.initialized or not local.mutable or not local.usage.temporary or local.usage.reads != 1:
+            return False
+    return result.next_loop == 24 and fixture.scope.locals[0].ty == 1 and fixture.scope.locals[1].ty == 40 and fixture.scope.locals[2].ty == 0 and fixture.scope.locals[3].ty == 0 and fixture.scope.locals[4].ty == 1 and target == 23 and id == 23 and condition == 4 and matched == 2 and result_read == 6 and len(fixture.batch.statements) == 12
+
+
+public func test_value_membership_retains_key_read_and_initialization_order() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const result = try dictionary_view_contains.contains(mut fixture.batch, mut fixture.scope, fixture.context, request(b"values", False))
+    const block_id = try number(fixture.batch.pool, result.value.payload, "body")
+    const block = try payload(fixture.batch.pool, fixture.batch.statements[block_id])
+    const rows = try graph.items(fixture.batch.pool, block)
+    mut ids: int[] = []
+    for row in rows:
+        const id = try graph.number(fixture.batch.pool, row)
+        ids.append(id)
+    const key = try payload(fixture.batch.pool, fixture.batch.nodes[1])
+    const kind_id = try graph.field(fixture.batch.pool, key, "kind")
+    const kind = try graph.get(fixture.batch.pool, kind_id)
+    const source = try payload(fixture.batch.pool, fixture.batch.statements[4])
+    const mapping = try number(fixture.batch.pool, source, "value")
+    return ids == [3, 4, 5, 6, 7, 10] and kind.data == b"key_at" and mapping == 52 and len(fixture.batch.nodes) == 15
+
+
+public func test_item_membership_compares_constructed_pair() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const result = try dictionary_view_contains.contains(mut fixture.batch, mut fixture.scope, fixture.context, request(b"items", False))
+    const record_tag = try tag(fixture.batch.pool, fixture.batch.nodes[3])
+    const record_type = try number(fixture.batch.pool, fixture.batch.nodes[3], "ty")
+    const equal = try payload(fixture.batch.pool, fixture.batch.nodes[5])
+    const right = try number(fixture.batch.pool, equal, "right")
+    const left = try number(fixture.batch.pool, equal, "left")
+    return result.next_loop == 24 and record_tag == b"record" and record_type == 42 and left == 4 and right == 3 and fixture.scope.locals[0].ty == 42 and len(fixture.batch.nodes) == 16
+
+
+public func test_negated_value_membership_keeps_match_and_negates_result() -> bool fails syntax_value.Problem:
+    mut fixture = try fresh()
+    const result = try dictionary_view_contains.contains(mut fixture.batch, mut fixture.scope, fixture.context, request(b"values", True))
+    const unary_tag = try tag(fixture.batch.pool, fixture.batch.nodes[7])
+    const unary = try payload(fixture.batch.pool, fixture.batch.nodes[7])
+    const operand = try number(fixture.batch.pool, unary, "operand")
+    const final_value = try number(fixture.batch.pool, result.value.payload, "value")
+    const branch = try payload(fixture.batch.pool, fixture.batch.statements[8])
+    const condition = try number(fixture.batch.pool, branch, "condition")
+    return result.next_loop == 24 and unary_tag == b"unary" and operand == 6 and final_value == 7 and condition == 4 and len(fixture.batch.nodes) == 16

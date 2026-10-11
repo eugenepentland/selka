@@ -39,6 +39,7 @@ import variant_construct
 import option_flow
 import option_lower
 import collection_types
+import dictionary_view_lower
 import hash_keys
 import set_lower
 
@@ -860,6 +861,11 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                     state.batch.resolved[raw_id] = result.id
                     state.depth = state.depth - 1
                     return result
+            if owner_slot >= 0 and collection_types.schema(state.batch.facts.lists.types.collections, state.scope.locals[owner_slot].ty).kind == 0:
+                const result = try dictionary_method(mut state, payload, span, owner_slot)
+                state.batch.resolved[raw_id] = result.id
+                state.depth = state.depth - 1
+                return result
             if owner_slot >= 0 and (state.scope.locals[owner_slot].ty == 11 or state.scope.locals[owner_slot].ty == 18 or state.scope.locals[owner_slot].ty == 16 or state.scope.locals[owner_slot].ty == 17):
                 const result = try resource_call(mut state, raw_id, span, payload, owner_slot)
                 state.batch.resolved[raw_id] = result.id
@@ -1532,7 +1538,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
             state.batch.resolved[raw_id] = id
             state.depth = state.depth - 1
             return Expression(id=id, ty=sequence.ty)
-        if managed(state, left.ty):
+        if managed(state, left.ty) and collection_types.schema(state.batch.facts.lists.types.collections, left.ty).kind != 1:
             const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, operator_span)
             mut builtin = ""
             mut operator = ""
@@ -1597,7 +1603,7 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                 fail rejection
         ty = left.ty
         if managed(state, left.ty):
-            if list_types.element_type(state.batch.facts.lists, left.ty) >= 0 and op.data != b"eq" and op.data != b"ne":
+            if (list_types.element_type(state.batch.facts.lists, left.ty) >= 0 or left_collection.kind == 0 or left_collection.kind == 1) and op.data != b"eq" and op.data != b"ne":
                 const rejection = try problem(state, operator_span, "E_TEXT_OPERATOR", "managed collections support equality; str and bytes also support `+` and `<`, `<=`, `>`, `>=`")
                 fail rejection
             if op.data == b"add":
@@ -2194,7 +2200,8 @@ func require_readable(mut state: State, slot: int, span: int) -> bool fails synt
 
 
 public func managed(state: State, ty: int) -> bool:
-    return ty >= 19 and (ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or ty == state.batch.facts.lists.types.buffer.id or list_types.element_type(state.batch.facts.lists, ty) >= 0)
+    const collection = collection_types.schema(state.batch.facts.lists.types.collections, ty)
+    return ty >= 19 and (ty == state.batch.facts.string_type or ty == state.batch.facts.bytes_type or ty == state.batch.facts.lists.types.buffer.id or list_types.element_type(state.batch.facts.lists, ty) >= 0 or collection.kind == 0 or collection.kind == 1)
 
 
 func type_name(state: State, ty: int) -> str:
@@ -4101,3 +4108,146 @@ func set_literal(mut state: State, payload: int, span: int, expected: int) -> Ex
     const lowered = try set_lower.literal(mut state.batch, mut state.scope, context, set_lower.Literal(ty=ty, values=values))
     const id = try list_lower.append(mut state.batch, context, lowered)
     return Expression(id=id, ty=ty)
+
+
+func dictionary_signature(state: State, schema: collection_types.Schema, kind: bytes) -> str fails syntax_value.Problem:
+    const owner = type_name(state, schema.id)
+    const key = type_name(state, schema.key)
+    const value = type_name(state, schema.value)
+    mut name = kind
+    mut body = "() -> None"
+    if kind == b"get" or kind == b"pop_default" or kind == b"setdefault":
+        body = "(key: " + key + ", default: " + value + ") -> " + value
+    elif kind == b"pop_key":
+        body = "(key: " + key + ") -> " + value
+    elif kind == b"update":
+        body = "(other: " + owner + ") -> None"
+    elif kind == b"copy":
+        body = "() -> " + owner
+    elif kind == b"keys":
+        body = "() -> list[" + key + "]"
+    elif kind == b"values" or kind == b"items":
+        body = "() -> list[" + value + "]"
+    if kind == b"pop_key" or kind == b"pop_default":
+        name = b"pop"
+    const spelling = try suggestions.text(name)
+    return owner + "." + spelling + body
+
+
+func dictionary_arity(mut state: State, schema: collection_types.Schema, kind: bytes, span: int, name: int, count: int, arity: int) -> bool fails syntax_value.Problem:
+    mut plural = "s"
+    if arity == 1:
+        plural = ""
+    const signature = try dictionary_signature(state, schema, kind)
+    const rejection = try problem(state, span, "E_ARITY", "`" + signature + "` takes " + str(arity) + " argument" + plural + ", but this call passes " + str(count))
+    if kind == b"get":
+        const site = try problem(state, name, "", "")
+        const note = syntax_problem.Related(start=site.start, end=site.end, message="a dictionary `get` always takes its fallback: `d.get(key, default)`", role="alternative")
+        state.problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[note], origin=[], requirement=[], edits=[])))
+    fail rejection
+
+
+func dictionary_method(mut state: State, call: int, span: int, slot: int) -> Expression fails syntax_value.Problem:
+    const owner = try graph.field(state.syntax.pool, call, "owner")
+    const name = try graph.field(state.syntax.pool, call, "name")
+    _ = try require_readable(mut state, slot, owner)
+    const labels_id = try graph.field(state.syntax.pool, call, "argument_names")
+    const labels = try graph.items(state.syntax.pool, labels_id)
+    for label in labels:
+        const value = try graph.get(state.syntax.pool, label)
+        if value.kind != 0:
+            const rejection = try problem(state, name, "E_CALL_ARGUMENT", "keyword arguments require a declared function or record constructor")
+            fail rejection
+    const spelling = try graph.spelling(state.syntax.pool, state.syntax.source, name)
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, state.scope.locals[slot].ty)
+    const inputs_id = try graph.field(state.syntax.pool, call, "arguments")
+    const inputs = try graph.items(state.syntax.pool, inputs_id)
+    const types_id = try graph.field(state.syntax.pool, call, "type_arguments")
+    const types = try graph.items(state.syntax.pool, types_id)
+    mut kind = spelling
+    mut arity = 0
+    mut vocabulary = True
+    mut result_type = 15
+    if kind == b"get":
+        arity = 2
+        vocabulary = False
+        result_type = schema.value
+    elif kind == b"pop":
+        kind = b"pop_key"
+        arity = 1
+        if len(inputs) == 2:
+            kind = b"pop_default"
+            arity = 2
+        result_type = schema.value
+    elif kind == b"setdefault":
+        arity = 2
+        result_type = schema.value
+    elif kind == b"update":
+        arity = 1
+    elif kind == b"copy":
+        result_type = schema.id
+    elif kind == b"clear" or kind == b"items":
+        pass
+    elif kind == b"keys" or kind == b"values":
+        vocabulary = False
+    else:
+        const rejection = try problem(state, name, "E_LIST_METHOD", "unknown method for a " + type_name(state, schema.id) + " receiver; accepted methods: clear, copy, get, items, keys, pop, setdefault, update, values")
+        fail rejection
+    if not vocabulary and (len(types) != 0 or len(inputs) != arity):
+        _ = try dictionary_arity(mut state, schema, kind, span, name, len(inputs), arity)
+    mut values: int[] = []
+    for position in range(len(inputs)):
+        const raw = try graph.number(state.syntax.pool, inputs[position])
+        mut expected = -1
+        if kind == b"update" and len(inputs) == 1:
+            expected = schema.id
+        elif position == 0:
+            expected = schema.key
+        elif position == 1 and len(inputs) == 2:
+            expected = schema.value
+        const value = try expression_expected(mut state, raw, expected)
+        values.append(value.id)
+    state.scope.locals[slot].usage.reads += 1
+    const mutates = kind == b"clear" or kind == b"update" or kind == b"setdefault" or kind == b"pop_key" or kind == b"pop_default"
+    if mutates:
+        if not state.scope.locals[slot].mutable:
+            const rejection = try problem(state, owner, "E_IMMUTABLE", "collection update requires a writable binding")
+            fail rejection
+        option_flow.forget(mut state.control.options, slot)
+        state.scope.locals[slot].usage.writes += 1
+    if len(inputs) != arity:
+        _ = try dictionary_arity(mut state, schema, kind, owner, owner, len(inputs), arity)
+    if kind == b"keys" or kind == b"values" or kind == b"items":
+        mut view_kind = 3
+        if kind == b"values":
+            view_kind = 4
+        elif kind == b"items":
+            view_kind = 5
+        const view = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=view_kind, key=schema.key, value=schema.value, owner=schema.id), span)
+        const context = list_lower.Context(input=state.syntax.pool, span=span)
+        const receiver = try list_lower.read(mut state.batch, context, slot, schema.id)
+        const lowered = try dictionary_view_lower.construct(mut state.batch, context, view, receiver)
+        const id = try list_lower.append(mut state.batch, context, lowered)
+        return Expression(id=id, ty=view)
+    for position in range(len(inputs)):
+        const raw = try graph.number(state.syntax.pool, inputs[position])
+        const type_id = try graph.field(state.batch.pool, state.batch.nodes[values[position]], "ty")
+        const actual = try graph.number(state.batch.pool, type_id)
+        mut expected = schema.key
+        if kind == b"update":
+            expected = schema.id
+        elif position == 1:
+            expected = schema.value
+        mut site = owner
+        if kind != b"get":
+            site = try graph.field(state.syntax.pool, state.syntax.nodes[raw], "span")
+        match require(state, actual, expected, site):
+            case Ok(unused):
+                pass
+            case Err(rejection):
+                if kind != b"get":
+                    const signature = try dictionary_signature(state, schema, kind)
+                    state.problems.append(syntax_problem.alternative(rejection, signature))
+                fail rejection
+    const id = try list_lower.operation(mut state.batch, list_lower.Context(input=state.syntax.pool, span=span), list_lower.Operation(owner=slot, kind=kind, arguments=values, ty=result_type))
+    return Expression(id=id, ty=result_type)
