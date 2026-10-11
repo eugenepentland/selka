@@ -72,7 +72,7 @@ fn policyMode(a: std.mem.Allocator, item: value.Catalog, hashable: bool) Error![
     var pending: std.ArrayList(usize) = .empty;
     defer pending.deinit(a);
     for (item.records, 0..) |record, index| {
-        allowed[index] = valueRecord(record);
+        allowed[index] = valueRecord(record) or @import("body_check_numeric_validate.zig").floating(item, record.id);
         if (hashable and record.contract.requires_handling) allowed[index] = false;
         if (!hashable and dictionaries.identify(item, record.id) != null) allowed[index] = true;
     }
@@ -321,8 +321,5 @@ fn collectionDependencies(builder: *Builder, item: value.Catalog, index: usize, 
 }
 
 fn scalar(ty: typed.Type) bool {
-    return switch (ty) {
-        .i64, .bool, .unit, .u8, .u32, .u64 => true,
-        else => false,
-    };
+    return @import("body_check_numeric_validate.zig").scalar(ty);
 }

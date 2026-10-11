@@ -20,7 +20,8 @@ pub fn listElement(initial: value.Catalog, ty: typed.Type) ?typed.Type {
     return null;
 }
 fn leaf(initial: value.Catalog, ty: typed.Type) bool {
-    if (ty == .i64 or ty == .bool or ty == .unit) return true;
+    if (@import("body_check_numeric_validate.zig").scalar(ty)) return true;
+    if (@import("body_check_numeric_validate.zig").floating(initial, ty)) return true;
     if (initial.string) |item| if (item.id == ty) return true;
     if (initial.bytes) |item| if (item.id == ty) return true;
     if (initial.templates.byte_buffer.identity) |item| if (item.id == ty) return true;

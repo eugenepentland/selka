@@ -1,10 +1,10 @@
-# Body-check batches through B8
+# Body-check batches through B9
 
-B1 through B8 transfer body checking for every admitted ordinary function to a qualified Selka process. Native catalog construction, entry checks/adaptation, effects/origin/mutation passes, domain codecs and final warnings remain explicit host stages. Unsupported syntax produces a located profile refusal; selected modes never fall back to native body checking. Reference remains the default.
+B1 through B9 transfer body checking for every admitted ordinary function to a qualified Selka process. Native catalog construction, entry checks/adaptation, effects/origin/mutation passes, domain codecs and final warnings remain explicit host stages. Unsupported syntax produces a located profile refusal; selected modes never fall back to native body checking. Reference remains the default.
 
 ## Framing
 
-The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/8`, direction `0` request or `1` reply, payload byte length at offset20, nonce8 at24 and request payload SHA256 at32. A reply echoes bytes24..64 exactly. Both complete frames are at most64MiB. Payloads are named postorder logical tables under `SLKBKI01`/`SLKBKR01`, using the existing parser value kinds0null,1signedi64,2bool,3bytes,4enum-tag,5namedrecord,6list,7taggedunion. Payload header contains value count and final root ID. References must point backward; duplicate/unknown fields, malformed tags, trailing bytes and correlation mismatches are host protocol failures.
+The 64-byte outer frame is `SLKBCK01`, little-endian u32 protocol/schema `1/9`, direction `0` request or `1` reply, payload byte length at offset20, nonce8 at24 and request payload SHA256 at32. A reply echoes bytes24..64 exactly. Both complete frames are at most64MiB. Payloads are named postorder logical tables under `SLKBKI01`/`SLKBKR01`, using the existing parser value kinds0null,1signedi64,2bool,3bytes,4enum-tag,5namedrecord,6list,7taggedunion. Payload header contains value count and final root ID. References must point backward; duplicate/unknown fields, malformed tags, trailing bytes and correlation mismatches are host protocol failures.
 
 ## Request
 
@@ -93,3 +93,11 @@ Option flow introduces no per-use native answers or new Batch fields. The native
 Body-only 2M values, 4M edges/visits, depth 256, 64MiB complete frame and 512MiB decoder budget remain unchanged. All earlier wire schemas are refused by the schema 8 boundary. Packaging/runtime selector wiring and installed producer qualification are separate from these native DTO tests.
 
 Schema 8 collection recipes are grouped: outer `collection` contains one tagged `dict`, `set`, `dict_item`, `dict_keys`, `dict_values` or `dict_items` recipe. All outer families still share one contiguous append order. Option flow uses native block values and matches; the domain-only typed `unwrap` opcode is not admitted.
+
+## B9 fixed-width integers and binary64
+
+Schema 9 keeps the Batch, Catalog and row layout unchanged. Body-only value kind 8 (`unsigned_integer`) carries an upper-half unsigned64 payload in the existing signed-i64 integer slot by bitcast; its integer slot is negative and data/children/names are empty. It may decode only into an i128 typed constant. Values at most INT64_MAX and all signed values use canonical kind 1. Syntax and other profiles reject kind 8, and IDs/types/counts/spans never use it. Encoders and owned-copy preflight reject values below INT64_MIN or above UINT64_MAX. Raw AST integer nodes retain source spans, so oversized source spellings still produce exact native range diagnostics rather than host protocol failures. Native and selected-parser controls agree for UINT64_MAX+1 and a magnitude above UINT128_MAX.
+
+Every fixed integer width is checked against its exact mathematical bounds. Integer casts, arithmetic, bitwise, shifts, wrapping/saturating operations and comparisons retain native operand/result types. Unicode scalar bounds apply separately to string-array constant elements; ordinary u32 values use the full unsigned32 range. The authenticated retained synthetic float domain has zero declaration, name `float` and u64 backing; arbitrary source domains remain outside admission. Binary64 literals and conversions preserve exact u64 bit patterns with native wrap/unwrap and closed f64 unary/binary opcodes, including native operand temporaries and floor-division/remainder lowering. Parsing operations require the exact canonical Option[int|float] identity, immutable canonical str/bytes receivers and exact arity; range operands are fixed integers. Source parsing, numeric promotion, name shadowing, diagnostics and fixes remain producer-owned. No numeric operation bypasses native Core traps.
+
+All earlier body frame schemas are refused; every existing source/catalog/table/row/edge/depth/wire/decode bound remains unchanged. Native catalog, effects, origins, entry checks and final postpasses remain retained; this wave does not admit user domains, generic bodies, callbacks or contracts. Packaging and producer qualification follow separately.

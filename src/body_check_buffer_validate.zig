@@ -1,6 +1,7 @@
 //! Closed pure octet/text operations and authenticated mutable-buffer authority.
 const value = @import("body_check_value.zig");
 const typed = @import("typed.zig");
+const numeric = @import("body_check_numeric_validate.zig");
 const operations = @import("buffer_operations.zig");
 pub const Error = error{ComponentProtocol};
 /// Validate a grouped authority independently of per-use source decisions.
@@ -54,7 +55,7 @@ fn listElement(catalog: value.Catalog, ty: typed.Type) ?typed.Type {
 }
 /// The three exact snapshot/construction cast pairs used by codec libraries.
 pub fn cast(catalog: value.Catalog, output: typed.Type, input: typed.Type) bool {
-    if (catalog.string) |text| if (output == text.id) return input.isInteger() or input == .bool or input == .unit;
+    if (catalog.string) |text| if (output == text.id) return numeric.scalar(input) or numeric.floating(catalog, input);
     const list = listElement(catalog, input);
     if (mutable(catalog, output)) return list == .i64;
     if (catalog.bytes) |entry| if (entry.id == output) return list == .i64 or mutable(catalog, input);
@@ -84,7 +85,11 @@ pub fn operation(catalog: value.Catalog, owner: typed.Type, result: typed.Type, 
             if (result != owner) return error.ComponentProtocol;
             try integers(arguments);
         },
-        .buffer_reserve, .buffer_append_byte => {
+        .buffer_append_float => {
+            try mutating(catalog, owner, result, writable);
+            if (!numeric.floating(catalog, arguments[0])) return error.ComponentProtocol;
+        },
+        .buffer_reserve, .buffer_append_byte, .buffer_append_int => {
             try mutating(catalog, owner, result, writable);
             try integers(arguments);
         },

@@ -249,8 +249,5 @@ fn hashableKeys(a: std.mem.Allocator, output: value.Catalog) Error!void {
 }
 
 fn scalar(ty: typed.Type) bool {
-    return switch (ty) {
-        .i64, .bool, .unit, .u8, .u32, .u64 => true,
-        else => false,
-    };
+    return @import("body_check_numeric_validate.zig").scalar(ty);
 }

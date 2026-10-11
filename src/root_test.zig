@@ -239,3 +239,7 @@ comptime {
 comptime {
     _ = @import("body_check_dictionary_test.zig");
 }
+
+comptime {
+    _ = @import("body_check_numeric_test.zig");
+}

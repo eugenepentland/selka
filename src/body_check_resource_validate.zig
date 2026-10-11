@@ -63,7 +63,7 @@ fn octets(catalog: value.Catalog, ty: typed.Type) bool {
 }
 fn printable(catalog: value.Catalog, ty: typed.Type) bool {
     if (octets(catalog, ty)) return true;
-    return ty == .i64 or ty == .bool or ty == .unit;
+    return @import("body_check_numeric_validate.zig").scalar(ty) or @import("body_check_numeric_validate.zig").floating(catalog, ty);
 }
 
 fn mode(nodes: []const typed.Node, access: typed.FileAccess) Error!void {
