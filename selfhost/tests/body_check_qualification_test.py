@@ -13,7 +13,7 @@ import test_body_checks as G
 class BodyQualificationTests(unittest.TestCase):
     def summary(self):
         manifest=json.loads((D.FIXTURES/'manifest.json').read_text())
-        n=len(manifest)+2*sum(bool(v.get('typed')) and not v.get('library') for v in manifest.values())+sum('result' in v for v in manifest.values())+16
+        n=len(manifest)+2*sum(bool(v.get('typed')) and not v.get('library') for v in manifest.values())+sum('result' in v for v in manifest.values())+sum('library_check_status' in v for v in manifest.values())+16
         return (f'body_check qualification: {n} workflows, {n*2} comparisons, 30 warm deployment checks, 4 live session checks; 0 failed, 0 skipped\n'
                 'body_check transport: 1 valid, 22 malformed; 0 failed, 0 skipped\n'
                 'body_check forged replies: 92 rejected; 0 failed, 0 skipped\n'
@@ -271,15 +271,15 @@ class BodyQualificationTests(unittest.TestCase):
         inventory=json.loads((D.FIXTURES/'b6_inventory.json').read_text())
         self.assertEqual(len(manifest),169)
         self.assertEqual(len(set(inventory['cases'])),21)
-        self.assertEqual(inventory['counts'],{'success':11,'diagnostic':8,'profile':2})
+        self.assertEqual(inventory['counts'],{'success':10,'diagnostic':9,'profile':2})
         self.assertTrue(all(name in manifest for name in inventory['cases']))
-        self.assertEqual(sum(manifest[name]['status']==0 for name in inventory['cases']),11)
-        self.assertEqual(sum(manifest[name]['status']==1 for name in inventory['cases']),8)
+        self.assertEqual(sum(manifest[name]['status']==0 for name in inventory['cases']),10)
+        self.assertEqual(sum(manifest[name]['status']==1 for name in inventory['cases']),9)
         self.assertTrue(all(manifest[name].get('diagnostics') for name in inventory['cases']
                             if manifest[name]['status']==1))
         self.assertEqual(manifest['bytes_buffer_arity_precedence_error.my']['diagnostics'][0]['code'],'E_ARITY')
         self.assertEqual(manifest['bytes_buffer_argument_precedence_error.my']['diagnostics'][0]['code'],'E_IMMUTABLE')
-        self.assertEqual(manifest['bytes_buffer_function_shadow.my']['result'],7)
+        self.assertEqual(manifest['bytes_buffer_function_shadow.my']['library_check_status'],0)
         self.assertEqual(D.SCHEMA,6)
 
     def test_buffer_forgeries_require_real_recipe_and_preserve_named_graph(self):

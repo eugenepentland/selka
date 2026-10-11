@@ -26,7 +26,7 @@ def require_summary(output, edit=False):
     if len(rows)!=1:raise RuntimeError('missing/duplicate body_check qualification verdict')
     workflows,comparisons,warm,live=map(int,rows[0])
     fixtures = json.loads((ROOT / 'selfhost/tests/fixtures/body_check/manifest.json').read_text())
-    expected = len(fixtures) + 2 * sum(bool(value.get('typed')) and not value.get('library') for value in fixtures.values()) + sum('result' in value for value in fixtures.values()) + 8 + 2 + 3 + 3
+    expected = len(fixtures) + 2 * sum(bool(value.get('typed')) and not value.get('library') for value in fixtures.values()) + sum('result' in value for value in fixtures.values()) + sum('library_check_status' in value for value in fixtures.values()) + 8 + 2 + 3 + 3
     if len(fixtures) < 20 or workflows != expected or comparisons!=(4 if edit else 2)*workflows or warm!=30 or live!=4:
         raise RuntimeError('incomplete body_check qualification selection')
     if re.findall(r'^body_check transport: (\d+) valid, (\d+) malformed; 0 failed, 0 skipped$', output, re.M) != [('1', '22')]:

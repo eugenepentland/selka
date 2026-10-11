@@ -328,6 +328,9 @@ class Qualification(F.Qualification):
                     F.require(len(diagnostics) == 2 and all(d['code'] == 'E_UNKNOWN_NAME' for d in diagnostics), 'independent body diagnostics were lost')
                 if name == 'warning.my':
                     F.require(any(d['code'] == 'W_UNUSED_BINDING' and d['severity'] == 'warning' for d in diagnostics), 'native warning was lost')
+            if 'library_check_status' in spec:
+                self.compare(name+'-library-check', ['check', self.source/name, '--diagnostics=json'],
+                             spec['library_check_status'])
             if spec.get('typed') and not spec.get('library'):
                 self.compare(name+'-typed', ['dump-typed', self.source / name])
                 self.compare(name+'-ir', ['dump-ir', self.source / name])

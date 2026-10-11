@@ -23,10 +23,17 @@
     "bytes_buffer_function_shadow.my"
   ],
   "counts": {
-    "success": 11,
-    "diagnostic": 8,
+    "success": 10,
+    "diagnostic": 9,
     "profile": 2
   },
   "schema": 6,
-  "history": "B5 retains148cases and388workflows; B6 selected qualification pending"
+  "history": "B5 retains148cases and388workflows; B6 selected qualification pending",
+  "context_control": {
+    "case": "bytes_buffer_function_shadow.my",
+    "check": 0,
+    "check-project": 1,
+    "run-project": 7,
+    "note": "Native contextual name qualification; project diagnostic and standalone check both mandatory"
+  }
 }

@@ -1237,8 +1237,19 @@
     ]
   },
   "bytes_buffer_function_shadow.my": {
-    "status": 0,
-    "result": 7,
-    "typed": true
+    "status": 1,
+    "library_check_status": 0,
+    "diagnostics": [
+      {
+        "code": "E_TYPE",
+        "message": "expected int, found byte_buffer",
+        "bytes": {
+          "start": 86,
+          "end": 109
+        },
+        "notes": [],
+        "edits": []
+      }
+    ]
   }
 }
