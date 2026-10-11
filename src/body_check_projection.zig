@@ -69,3 +69,21 @@ pub fn adoptUsage(names: ?*Names, used: []const []const bool) Error!void {
         @memcpy(unit.import_used, flags);
     }
 }
+
+/// Merge retained common-phase usage before any native body oracle runs.
+/// Returned rows belong to the allocator; producer body observations stay exact.
+pub fn mergeUsage(a: std.mem.Allocator, producer: []const []const bool, common: []const []const bool) Error![]const []const bool {
+    if (producer.len != common.len) return error.ComponentProtocol;
+    const output = try a.alloc([]const bool, producer.len);
+    errdefer a.free(output);
+    var initialized: usize = 0;
+    errdefer for (output[0..initialized]) |row| a.free(row);
+    for (producer, common, output) |observed, initial, *row| {
+        if (observed.len != initial.len) return error.ComponentProtocol;
+        const merged = try a.alloc(bool, observed.len);
+        row.* = merged;
+        initialized += 1;
+        for (observed, initial, merged) |body_used, common_used, *used| used.* = body_used or common_used;
+    }
+    return output;
+}

@@ -1626,7 +1626,13 @@ const BodySelection = struct {
 
 fn selectedBodies(step: InstanceStep, contracts_failed: bool, prior_failure: bool, selection: BodySelection) FrontendError![]typed.Function {
     if (selection.mode == .reference) return checkBodies(step, contracts_failed, prior_failure) catch |err| return retryOr(step.plan, err);
-    const actual = selection.outcome orelse return error.ComponentProtocol;
+    var actual = selection.outcome orelse return error.ComponentProtocol;
+    // Capture common catalog/entry observations before the shadow oracle can
+    // add body observations. Merging after checkBodies would hide omissions.
+    if (actual == .success) {
+        const common = try body_projection.importUsage(step.allocator, selection.names);
+        actual.success.import_used = try body_projection.mergeUsage(step.allocator, actual.success.import_used, common);
+    }
     if (selection.mode == .component) {
         if (contracts_failed or prior_failure) return error.SourceError;
         return adoptBodies(step, selection.names, actual);

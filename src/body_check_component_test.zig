@@ -299,3 +299,24 @@ fn functionNodeEnd(nodes: []const typed.Node, end: usize) usize {
     }
     return result;
 }
+
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check merges common prebody usage without concealing missing body observations" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const projection = @import("body_check_projection.zig");
+    const common = [_][]const bool{&.{ true, false }};
+    const merged = try projection.mergeUsage(a, &.{&.{ false, true }}, &common);
+    try std.testing.expectEqualSlices(bool, &.{ true, true }, merged[0]);
+    const missing = try projection.mergeUsage(a, &.{&.{ false, false }}, &common);
+    try std.testing.expectEqualSlices(bool, &.{ true, false }, missing[0]);
+    const f = try fixture(a);
+    var actual = f.output;
+    actual.import_used = missing;
+    var expected = f.output;
+    expected.import_used = merged;
+    try std.testing.expect(!try value.equal(a, .{ .success = actual }, .{ .success = expected }));
+    try std.testing.expectError(error.ComponentProtocol, projection.mergeUsage(std.testing.allocator, &.{}, &common));
+    try std.testing.expectError(error.ComponentProtocol, projection.mergeUsage(std.testing.allocator, &.{&.{false}}, &common));
+}
