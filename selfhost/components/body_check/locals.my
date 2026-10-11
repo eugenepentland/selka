@@ -7,6 +7,8 @@ public record Usage:
     dead_write_reads: int
     dead_write_span: int
     temporary: bool = False
+    transfer_available: bool = False
+    transfer_span: int = -1
 
 
 public record Local:
@@ -51,7 +53,11 @@ public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, local:
     const no = try syntax_value.boolean(mut pool, False)
     const initialized = try syntax_value.boolean(mut pool, local.initialized)
     const absent = try syntax_value.absent(mut pool)
-    const ownership = try syntax_value.object(mut pool, ["scoped_file", "transfer_span", "initialized", "transfer_available"], [no, absent, initialized, no])
+    const available = try syntax_value.boolean(mut pool, local.usage.transfer_available)
+    mut transfer_span = absent
+    if local.usage.transfer_span >= 0:
+        transfer_span = try graph.clone(mut pool, input, local.usage.transfer_span, 0)
+    const ownership = try syntax_value.object(mut pool, ["scoped_file", "transfer_span", "initialized", "transfer_available"], [no, transfer_span, initialized, available])
     const reads = try syntax_value.integer(mut pool, local.usage.reads)
     const writes = try syntax_value.integer(mut pool, local.usage.writes)
     const dead_reads = try syntax_value.integer(mut pool, local.usage.dead_write_reads)

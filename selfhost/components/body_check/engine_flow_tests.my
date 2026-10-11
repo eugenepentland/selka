@@ -1,0 +1,40 @@
+import syntax_value
+import graph
+import engine
+import locals
+import variants
+
+public func test_short_circuit_checks_result_consumption_before_binary_emission() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const empty = try syntax_value.sequence(mut pool, [])
+    const span = try syntax_value.span(mut pool, 0, 1)
+    const false_value = try syntax_value.boolean(mut pool, False)
+    const literal = try syntax_value.tagged(mut pool, b"boolean", false_value)
+    const left = try syntax_value.object(mut pool, ["span", "data"], [span, literal])
+    const name_data = try syntax_value.tagged(mut pool, b"name", span)
+    const name = try syntax_value.object(mut pool, ["span", "data"], [span, name_data])
+    const one = try syntax_value.integer(mut pool, 1)
+    const propagation = try syntax_value.tagged(mut pool, b"propagate", one)
+    const right = try syntax_value.object(mut pool, ["span", "data"], [span, propagation])
+    const zero = try syntax_value.integer(mut pool, 0)
+    const two = try syntax_value.integer(mut pool, 2)
+    const op = try syntax_value.enumeration(mut pool, b"logical_and")
+    const binary = try syntax_value.object(mut pool, ["op", "left", "right", "op_span", "chained"], [op, zero, two, span, false_value])
+    const binary_data = try syntax_value.tagged(mut pool, b"binary", binary)
+    const node = try syntax_value.object(mut pool, ["span", "data"], [span, binary_data])
+    const nodes = try syntax_value.sequence(mut pool, [left, name, right, node])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    const template = variants.Template(id=0, declaration=span, raw=-1, cases=[variants.TemplateCase(name=b"ok", declaration=span, parameter=0), variants.TemplateCase(name=b"err", declaration=span, parameter=1)])
+    const record = try variants.materialize(mut pool, [], template, 19, 1, 1, True)
+    mut state = try engine.make(pool, b"r", program)
+    state.return_type = 19
+    state.batch.facts.lists.types.records.rows = [record]
+    const slot = try locals.add(mut state.scope, b"r", span, 19, False, b"local")
+    state.scope.locals[slot].usage.transfer_available = True
+    match engine.expression(mut state, 3):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_RESULT_PATH" and len(state.problems) == 1 and len(state.problems[0].notes.related) == 1 and len(state.batch.nodes) == 3

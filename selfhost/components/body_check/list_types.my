@@ -1,6 +1,8 @@
 import syntax_value
 import graph
 import record_types
+import variants
+import recipe_index
 
 public record Schema:
     id: int
@@ -11,11 +13,15 @@ public record Recipe:
     id: int
     element: int
     span: int
+    kind: str = "list"
+    failure: int = -1
+    depth: int = 2
 
 
 public record TypeTables:
     suffixes: int[]
     records: record_types.Catalog
+    variants: variants.Catalog
 
 
 public record Catalog:
@@ -29,7 +35,7 @@ public record Catalog:
 
 
 public func empty() -> Catalog:
-    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty()), by_element=[], elements=[])
+    return Catalog(base_count=0, available=False, known=[], recipes=[], types=TypeTables(suffixes=[], records=record_types.empty(), variants=variants.empty()), by_element=[], elements=[])
 
 
 func bad() -> syntax_value.Problem:
@@ -127,6 +133,15 @@ func refusal(pool: syntax_value.Pool, span: int, message: str) -> syntax_value.P
     return syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message=message)
 
 
+func recipe_depth(catalog: Catalog, element: int) -> int fails syntax_value.Problem:
+    const ordinal = element - 19 - catalog.base_count
+    if ordinal < 0:
+        return 1
+    if ordinal >= len(catalog.recipes):
+        fail bad()
+    return catalog.recipes[ordinal].depth
+
+
 public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recipe, managed: int[]) -> int fails syntax_value.Problem:
     if not catalog.available:
         const problem = try refusal(pool, request.span, "builtin List is unavailable")
@@ -169,7 +184,12 @@ public func intern(mut catalog: Catalog, pool: syntax_value.Pool, request: Recip
     const id = 19 + catalog.base_count + len(catalog.recipes)
     if request.element < 0 or request.element >= id:
         fail bad()
-    catalog.recipes.append(Recipe(id=id, element=request.element, span=request.span))
+    const parent_depth = try recipe_depth(catalog, request.element)
+    const admitted_depth = parent_depth + 1
+    if admitted_depth > 256:
+        const rejection = try refusal(pool, request.span, "catalog recipe depth limit exceeded")
+        fail rejection
+    catalog.recipes.append(Recipe(id=id, element=request.element, span=request.span, depth=admitted_depth))
     catalog.by_element[request.element] = id
     catalog.by_element.append(-1)
     catalog.elements.append(request.element)
@@ -182,6 +202,89 @@ public func encode(mut pool: syntax_value.Pool, input: syntax_value.Pool, recipe
         const id = try syntax_value.integer(mut pool, recipe.id)
         const element = try syntax_value.integer(mut pool, recipe.element)
         const span = try graph.clone(mut pool, input, recipe.span, 0)
-        const value = try syntax_value.object(mut pool, ["id", "element", "span"], [id, element, span])
-        values.append(value)
+        mut value = -1
+        if recipe.kind == "result":
+            const failure = try syntax_value.integer(mut pool, recipe.failure)
+            value = try syntax_value.object(mut pool, ["id", "success", "failure", "span"], [id, element, failure, span])
+        elif recipe.kind == "list" or recipe.kind == "option":
+            value = try syntax_value.object(mut pool, ["id", "element", "span"], [id, element, span])
+        else:
+            fail bad()
+        mut tag = b"list"
+        if recipe.kind == "result":
+            tag = b"result"
+        elif recipe.kind == "option":
+            tag = b"option"
+        const tagged = try syntax_value.tagged(mut pool, tag, value)
+        values.append(tagged)
     return try syntax_value.sequence(mut pool, values)
+
+
+public func seed_variants(mut catalog: Catalog, pool: syntax_value.Pool) -> bool fails syntax_value.Problem:
+    for position in range(len(catalog.types.records.rows)):
+        const row = catalog.types.records.rows[position]
+        const ty = 19 + position
+        const name_id = try graph.field(pool, row, "name")
+        const name = try graph.get(pool, name_id)
+        if catalog.types.variants.result.id >= 0 and len(name.data) >= 7 and name.data[:7] == b"Result<":
+            const shape = try variants.result_shape(pool, catalog.types.records.rows, ty)
+            if shape.valid:
+                _ = try recipe_index.insert(mut catalog.types.variants.index, recipe_index.Key(kind=1, first=shape.success, second=shape.failure, id=ty))
+        if catalog.types.variants.option.id >= 0 and len(name.data) >= 7 and name.data[:7] == b"Option<":
+            const shape = try variants.option_shape(pool, catalog.types.records.rows, ty)
+            if shape.valid:
+                _ = try recipe_index.insert(mut catalog.types.variants.index, recipe_index.Key(kind=2, first=shape.element, second=-1, id=ty))
+    return True
+
+
+public func union_intern(mut catalog: Catalog, mut pool: syntax_value.Pool, first: int, second: int, span: int, result: bool) -> int fails syntax_value.Problem:
+    mut kind = 2
+    mut tag = "option"
+    mut template = catalog.types.variants.option
+    if result:
+        kind = 1
+        tag = "result"
+        template = catalog.types.variants.result
+    if template.id < 0:
+        const rejection = try refusal(pool, span, "builtin variant template is unavailable")
+        fail rejection
+    const existing = recipe_index.lookup(catalog.types.variants.index, kind, first, second)
+    if existing >= 0:
+        return existing
+    const id = 19 + catalog.base_count + len(catalog.recipes)
+    if id >= 65555:
+        const rejection = try refusal(pool, span, "variant schema limit exceeded")
+        fail rejection
+    if first < 0 or first >= id or (result and (second < 0 or second >= id)):
+        fail bad()
+    mut admitted_depth = try recipe_depth(catalog, first)
+    if result:
+        const failure_depth = try recipe_depth(catalog, second)
+        if failure_depth > admitted_depth:
+            admitted_depth = failure_depth
+    admitted_depth = admitted_depth + 1
+    if admitted_depth > 256:
+        const rejection = try refusal(pool, span, "catalog recipe depth limit exceeded")
+        fail rejection
+    while len(catalog.types.records.rows) < id - 19:
+        const missing = 19 + len(catalog.types.records.rows)
+        const ordinal = missing - 19 - catalog.base_count
+        if ordinal < 0 or ordinal >= len(catalog.recipes) or catalog.recipes[ordinal].kind != "list":
+            fail bad()
+        const recipe = catalog.recipes[ordinal]
+        const semantic = try variants.list_semantic(mut pool, catalog.types.records.rows, missing, recipe.element, recipe.span)
+        catalog.types.records.rows.append(semantic)
+    if len(catalog.types.records.rows) != id - 19:
+        fail bad()
+    const row = try variants.materialize(mut pool, catalog.types.records.rows, template, id, first, second, result)
+    catalog.types.records.rows.append(row)
+    while len(catalog.types.records.by_type) < id:
+        catalog.types.records.by_type.append(-1)
+        catalog.types.records.admitted.append(False)
+    catalog.types.records.by_type.append(-2)
+    catalog.types.records.admitted.append(True)
+    catalog.recipes.append(Recipe(id=id, element=first, span=span, kind=tag, failure=second, depth=admitted_depth))
+    catalog.by_element.append(-1)
+    catalog.elements.append(-1)
+    _ = try recipe_index.insert(mut catalog.types.variants.index, recipe_index.Key(kind=kind, first=first, second=second, id=id))
+    return id

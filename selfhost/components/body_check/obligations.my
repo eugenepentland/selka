@@ -1,0 +1,68 @@
+import syntax_value
+import syntax_problem
+import graph
+import locals
+import variants
+
+func location(pool: syntax_value.Pool, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+func related(pool: syntax_value.Pool, span: int, message: str) -> syntax_problem.Related fails syntax_value.Problem:
+    const value = try location(pool, span, "", message)
+    return syntax_problem.Related(start=value.start, end=value.end, message=message, role="related")
+
+
+public func consume(pool: syntax_value.Pool, mut scope: locals.Scope, slot: int, span: int, synthetic: bool, mut problems: syntax_problem.Diagnostic[]) -> bool fails syntax_value.Problem:
+    if not scope.locals[slot].usage.transfer_available:
+        mut message = "value has already been transferred or handled"
+        if synthetic:
+            message = "pattern value was already transferred"
+        const rejection = try location(pool, span, "E_RESULT_CONSUMED", message)
+        mut diagnostic = syntax_problem.plain(rejection)
+        if not synthetic:
+            const declaration = scope.locals[slot].declaration
+            const earlier = scope.locals[slot].usage.transfer_span
+            if earlier >= 0:
+                const cause = try related(pool, earlier, "earlier transfer or handling on this path")
+                const origin = try related(pool, declaration, "value declared here")
+                diagnostic.notes.related.append(cause)
+                diagnostic.notes.origin.append(origin)
+            else:
+                const note = try related(pool, declaration, "value declared here")
+                diagnostic.notes.related.append(note)
+        problems.append(diagnostic)
+        fail rejection
+    scope.locals[slot].usage.transfer_available = False
+    scope.locals[slot].usage.transfer_span = span
+    return True
+
+
+public func handled(pool: syntax_value.Pool, rows: int[], scope: locals.Scope, first: int, span: int, mut problems: syntax_problem.Diagnostic[]) -> bool fails syntax_value.Problem:
+    for slot in range(first, len(scope.locals)):
+        const local = scope.locals[slot]
+        if not local.usage.transfer_available or locals.find(scope, local.name) != slot:
+            continue
+        const pending = try variants.requires_handling(pool, rows, local.ty)
+        if pending:
+            const rejection = try location(pool, span, "E_RESULT_UNHANDLED", "result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded")
+            const note = try related(pool, local.declaration, "unhandled result-bearing binding")
+            problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[note], origin=[], requirement=[], edits=[])))
+            fail rejection
+    return True
+
+
+public func consistent(pool: syntax_value.Pool, scope: locals.Scope, slot: int, span: int, loop: bool, mut problems: syntax_problem.Diagnostic[]) -> bool fails syntax_value.Problem:
+    if slot < 0:
+        return True
+    mut code = "E_RESULT_PATH"
+    if loop:
+        code = "E_RESULT_LOOP"
+    const rejection = try location(pool, span, code, "ownership or result obligation must have the same state on every continuing path")
+    const note = try related(pool, scope.locals[slot].declaration, "binding declared here")
+    problems.append(syntax_problem.Diagnostic(problem=rejection, severity="err", notes=syntax_problem.Notes(related=[note], origin=[], requirement=[], edits=[])))
+    fail rejection

@@ -1,0 +1,279 @@
+import syntax_value
+import graph
+import record_index
+import recipe_index
+
+public record Case:
+    row: int
+    name: bytes
+    declaration: int
+    payload: int
+    fielded: bool
+    boxed: bool
+
+
+public record Shape:
+    valid: bool
+    fallible: bool
+    is_union: bool
+    cases: Case[]
+
+
+public record ResultShape:
+    valid: bool
+    success: int
+    failure: int
+    ok: int
+    err: int
+
+
+public record OptionShape:
+    valid: bool
+    element: int
+    some: int
+    none: int
+
+
+func flag(pool: syntax_value.Pool, row: int, name: str) -> bool fails syntax_value.Problem:
+    const id = try graph.field(pool, row, name)
+    const value = try graph.get(pool, id)
+    if value.kind != 2:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid variant flag")
+    return value.integer != 0
+
+
+public func shape(pool: syntax_value.Pool, records: int[], ty: int) -> Shape fails syntax_value.Problem:
+    if ty < 19 or ty - 19 >= len(records):
+        return Shape(valid=False, fallible=False, is_union=False, cases=[])
+    const record_shape = try graph.field(pool, records[ty - 19], "shape")
+    const variant_id = try graph.field(pool, record_shape, "variants")
+    const variant_value = try graph.get(pool, variant_id)
+    if variant_value.kind == 0:
+        return Shape(valid=False, fallible=False, is_union=False, cases=[])
+    const fallible = try flag(pool, variant_id, "fallible")
+    const is_union = try flag(pool, variant_id, "is_union")
+    const cases_id = try graph.field(pool, variant_id, "cases")
+    const rows = try graph.items(pool, cases_id)
+    mut cases: Case[] = []
+    for row in rows:
+        const name_id = try graph.field(pool, row, "name")
+        const name = try graph.get(pool, name_id)
+        if name.kind != 3:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid variant case name")
+        const declaration = try graph.field(pool, row, "declaration")
+        const payload_id = try graph.field(pool, row, "payload")
+        const value = try graph.get(pool, payload_id)
+        mut payload = -1
+        if value.kind != 0:
+            payload = try graph.number(pool, payload_id)
+        const fielded = try flag(pool, row, "fielded")
+        const boxed = try flag(pool, row, "boxed")
+        cases.append(Case(row=row, name=name.data, declaration=declaration, payload=payload, fielded=fielded, boxed=boxed))
+    return Shape(valid=True, fallible=fallible, is_union=is_union, cases=cases)
+
+
+public func case_tag(value: Shape, name: bytes) -> int:
+    for position in range(len(value.cases)):
+        if value.cases[position].name == name:
+            return position
+    return -1
+
+
+public func result_shape(pool: syntax_value.Pool, records: int[], ty: int) -> ResultShape fails syntax_value.Problem:
+    const value = try shape(pool, records, ty)
+    if not value.valid or not value.fallible or not value.is_union or len(value.cases) != 2:
+        return ResultShape(valid=False, success=-1, failure=-1, ok=-1, err=-1)
+    const ok = case_tag(value, b"ok")
+    const err = case_tag(value, b"err")
+    if ok < 0 or err < 0:
+        return ResultShape(valid=False, success=-1, failure=-1, ok=-1, err=-1)
+    if value.cases[ok].payload < 0 or value.cases[err].payload < 0:
+        return ResultShape(valid=False, success=-1, failure=-1, ok=-1, err=-1)
+    return ResultShape(valid=True, success=value.cases[ok].payload, failure=value.cases[err].payload, ok=ok, err=err)
+
+
+public func option_shape(pool: syntax_value.Pool, records: int[], ty: int) -> OptionShape fails syntax_value.Problem:
+    const value = try shape(pool, records, ty)
+    if not value.valid or value.fallible or not value.is_union or len(value.cases) != 2:
+        return OptionShape(valid=False, element=-1, some=-1, none=-1)
+    const some = case_tag(value, b"some")
+    const none = case_tag(value, b"none")
+    if some < 0 or none < 0:
+        return OptionShape(valid=False, element=-1, some=-1, none=-1)
+    if value.cases[some].payload < 0 or value.cases[none].payload >= 0:
+        return OptionShape(valid=False, element=-1, some=-1, none=-1)
+    return OptionShape(valid=True, element=value.cases[some].payload, some=some, none=none)
+
+
+public func requires_handling(pool: syntax_value.Pool, records: int[], ty: int) -> bool fails syntax_value.Problem:
+    if ty < 19 or ty - 19 >= len(records):
+        return False
+    const contract = try graph.field(pool, records[ty - 19], "contract")
+    return try flag(pool, contract, "requires_handling")
+
+
+public record TemplateCase:
+    name: bytes
+    declaration: int
+    parameter: int
+
+
+public record Template:
+    id: int
+    declaration: int
+    raw: int
+    cases: TemplateCase[]
+
+
+public record Catalog:
+    result: Template
+    option: Template
+    index: recipe_index.Index
+
+
+public func empty() -> Catalog:
+    const absent = Template(id=-1, declaration=-1, raw=-1, cases=[])
+    return Catalog(result=absent, option=absent, index=recipe_index.empty())
+
+
+func basis(pool: syntax_value.Pool, source: bytes, templates: int, name: str, declarations: int[], index: record_index.Index) -> Template fails syntax_value.Problem:
+    const value_id = try graph.field(pool, templates, name)
+    const value = try graph.get(pool, value_id)
+    if value.kind == 0:
+        return Template(id=-1, declaration=-1, raw=-1, cases=[])
+    const id_id = try graph.field(pool, value_id, "id")
+    const id = try graph.number(pool, id_id)
+    const declaration = try graph.field(pool, value_id, "declaration")
+    const start_id = try graph.field(pool, declaration, "start")
+    const end_id = try graph.field(pool, declaration, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    if id < 0 or id >= 65536 or start < 0 or end < start or end > len(source):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid variant template authority")
+    mut result = Template(id=id, declaration=declaration, raw=-1, cases=[])
+    if start == 0 and end == 0:
+        if name == "result":
+            result.cases = [TemplateCase(name=b"ok", declaration=declaration, parameter=0), TemplateCase(name=b"err", declaration=declaration, parameter=1)]
+        else:
+            result.cases = [TemplateCase(name=b"none", declaration=declaration, parameter=-1), TemplateCase(name=b"some", declaration=declaration, parameter=0)]
+        return result
+    const position = record_index.find(index, start, end)
+    if position < 0:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=start, end=end, message="variant template declaration is missing")
+    result.raw = declarations[position]
+    const parameters_id = try graph.field(pool, result.raw, "type_parameters")
+    const parameters = try graph.items(pool, parameters_id)
+    mut count = 1
+    if name == "result":
+        count = 2
+    if len(parameters) != count:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=start, end=end, message="invalid variant template parameter count")
+    const cases_id = try graph.field(pool, result.raw, "cases")
+    const cases = try graph.items(pool, cases_id)
+    if len(cases) != 2:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=start, end=end, message="invalid variant template case count")
+    for row in cases:
+        const case_name = try graph.field(pool, row, "name")
+        const label = try graph.spelling(pool, source, case_name)
+        const fields_id = try graph.field(pool, row, "fields")
+        const fields = try graph.items(pool, fields_id)
+        if len(fields) != 0:
+            fail syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message="fielded builtin variant template is outside the body profile")
+        const payload_id = try graph.field(pool, row, "payload")
+        const payload = try graph.get(pool, payload_id)
+        mut parameter = -1
+        if payload.kind != 0:
+            const spelling = try graph.spelling(pool, source, payload_id)
+            for number in range(len(parameters)):
+                const parameter_name = try graph.field(pool, parameters[number], "name")
+                const candidate = try graph.spelling(pool, source, parameter_name)
+                if spelling == candidate:
+                    parameter = number
+            if parameter < 0:
+                fail syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message="compound builtin variant payload is outside the body profile")
+        result.cases.append(TemplateCase(name=label, declaration=case_name, parameter=parameter))
+    return result
+
+
+public func prepare(pool: syntax_value.Pool, source: bytes, catalog: int, declarations: int[]) -> Catalog fails syntax_value.Problem:
+    mut spans: int[] = []
+    for declaration in declarations:
+        const span = try graph.field(pool, declaration, "name")
+        spans.append(span)
+    const index = try record_index.make(pool, spans)
+    const templates = try graph.field(pool, catalog, "templates")
+    const result = try basis(pool, source, templates, "result", declarations, index)
+    const option = try basis(pool, source, templates, "option", declarations, index)
+    return Catalog(result=result, option=option, index=recipe_index.empty())
+
+
+public func internal_name(pool: syntax_value.Pool, records: int[], ty: int) -> bytes fails syntax_value.Problem:
+    if ty == 0:
+        return b"i64"
+    if ty == 1:
+        return b"bool"
+    if ty == 15:
+        return b"unit"
+    if ty < 19 or ty - 19 >= len(records):
+        fail syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="variant argument type is outside the body profile")
+    const name_id = try graph.field(pool, records[ty - 19], "name")
+    const value = try graph.get(pool, name_id)
+    if value.kind != 3:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid retained type name")
+    return value.data
+
+
+# The producer's semantic schema is used for decisions only. The host independently
+# materializes the requested recipe and compares the complete retained catalog.
+public func materialize(mut pool: syntax_value.Pool, records: int[], template: Template, id: int, first: int, second: int, result: bool) -> int fails syntax_value.Problem:
+    const first_name = try internal_name(pool, records, first)
+    mut name = b"Option<" + first_name + b">"
+    if result:
+        const second_name = try internal_name(pool, records, second)
+        name = b"Result<" + first_name + b"," + second_name + b">"
+    const no = try syntax_value.boolean(mut pool, False)
+    const yes = try syntax_value.boolean(mut pool, True)
+    const absent = try syntax_value.absent(mut pool)
+    const empty_fields = try syntax_value.sequence(mut pool, [])
+    const id_value = try syntax_value.integer(mut pool, id)
+    const name_value = try syntax_value.octets(mut pool, name)
+    mut cases: int[] = []
+    mut pending = result
+    for member in template.cases:
+        const member_name = try syntax_value.octets(mut pool, member.name)
+        mut payload = absent
+        mut ty = -1
+        if member.parameter == 0:
+            ty = first
+        elif member.parameter == 1:
+            ty = second
+        if ty >= 0:
+            payload = try syntax_value.integer(mut pool, ty)
+            const handling = try requires_handling(pool, records, ty)
+            if handling:
+                pending = True
+        const row = try syntax_value.object(mut pool, ["name", "declaration", "payload", "fielded", "boxed"], [member_name, member.declaration, payload, no, no])
+        cases.append(row)
+    const cases_value = try syntax_value.sequence(mut pool, cases)
+    const fallible = try syntax_value.boolean(mut pool, result)
+    const variants_value = try syntax_value.object(mut pool, ["fallible", "is_union", "cases"], [fallible, yes, cases_value])
+    const none_builtin = try syntax_value.enumeration(mut pool, b"none")
+    const shape_value = try syntax_value.object(mut pool, ["array", "domain", "variants", "buffer", "resource", "builtin", "tuple"], [absent, absent, variants_value, absent, absent, none_builtin, no])
+    const kind = try syntax_value.enumeration(mut pool, b"list")
+    const collection = try syntax_value.object(mut pool, ["kind", "key", "contains_cell", "set", "box"], [kind, absent, no, no, no])
+    const pending_value = try syntax_value.boolean(mut pool, pending)
+    const storable = try syntax_value.boolean(mut pool, not pending)
+    const contract = try syntax_value.object(mut pool, ["callback", "public_arguments", "codec", "codec_declared", "move_only", "storable", "requires_handling"], [absent, yes, absent, no, no, storable, pending_value])
+    return try syntax_value.object(mut pool, ["collection", "managed", "id", "name", "declaration", "fields", "shape", "contract"], [collection, no, id_value, name_value, template.declaration, empty_fields, shape_value, contract])
+
+
+public func list_semantic(mut pool: syntax_value.Pool, records: int[], id: int, element: int, span: int) -> int fails syntax_value.Problem:
+    const element_name = try internal_name(pool, records, element)
+    const name = try syntax_value.octets(mut pool, b"List<" + element_name + b">")
+    const absent = try syntax_value.absent(mut pool)
+    const no = try syntax_value.boolean(mut pool, False)
+    const empty_fields = try syntax_value.sequence(mut pool, [])
+    const list_shape = try syntax_value.object(mut pool, ["variants"], [absent])
+    const contract = try syntax_value.object(mut pool, ["requires_handling"], [no])
+    const id_value = try syntax_value.integer(mut pool, id)
+    return try syntax_value.object(mut pool, ["id", "name", "declaration", "fields", "shape", "contract"], [id_value, name, span, empty_fields, list_shape, contract])

@@ -10,7 +10,7 @@ func fresh() -> engine.State:
     for unused in range(19):
         batch.facts.lists.by_element.append(-1)
         batch.facts.lists.elements.append(-1)
-    return engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"1", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=engine.Control(next=0, active=[], exited=[]), problems=[])
+    return engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"1", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=engine.fresh_control(), problems=[])
 
 
 func add(mut state: engine.State, tag: bytes, payload: int) -> int fails syntax_value.Problem:

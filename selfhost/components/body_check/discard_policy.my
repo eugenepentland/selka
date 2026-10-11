@@ -1,0 +1,23 @@
+import syntax_value
+import syntax_problem
+import graph
+import variants
+
+public func check(pool: syntax_value.Pool, records: int[], statement: int, ty: int) -> syntax_problem.Diagnostic? fails syntax_value.Problem:
+    const flag_id = try graph.field(pool, statement, "implicit_discard")
+    const flag = try graph.get(pool, flag_id)
+    if flag.kind != 2:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid implicit discard flag")
+    if flag.integer == 0 or ty == 15:
+        return None
+    const span = try graph.field(pool, statement, "span")
+    const start_id = try graph.field(pool, span, "start")
+    const end_id = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, start_id)
+    const end = try graph.number(pool, end_id)
+    const problem = syntax_value.Problem(code="E_EXPLICIT_DISCARD_REQUIRED", start=start, end=end, message="a standalone non-unit value requires `_ =` or result handling")
+    const pending = try variants.requires_handling(pool, records, ty)
+    if pending:
+        return Some(syntax_problem.plain(problem))
+    const edit = syntax_problem.Edit(start=start, end=start, text=b"_ = ")
+    return Some(syntax_problem.repaired(problem, [edit]))

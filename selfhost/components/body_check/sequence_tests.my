@@ -9,7 +9,7 @@ func fresh_state() -> engine.State:
     mut batch = emission.empty()
     batch.facts.string_type = 83
     batch.facts.bytes_type = 42
-    return engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"0 str bytes", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=engine.Control(next=0, active=[], exited=[]), problems=[])
+    return engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"0 str bytes", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=batch, scope=locals.empty(), return_type=15, depth=0, control=engine.fresh_control(), problems=[])
 
 
 func node(mut state: engine.State, tag: bytes, payload: int, start: int, end: int) -> int fails syntax_value.Problem:

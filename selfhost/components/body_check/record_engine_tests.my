@@ -21,7 +21,7 @@ func node(mut state: engine.State, span: int, tag: bytes, payload: int) -> int f
 
 
 func fresh() -> Fixture fails syntax_value.Problem:
-    mut state = engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"Pair left right 1 2", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=emission.empty(), scope=locals.empty(), return_type=15, depth=0, control=engine.Control(next=0, active=[], exited=[]), problems=[])
+    mut state = engine.State(syntax=engine.Syntax(pool=syntax_value.empty(), source=b"Pair left right 1 2", nodes=[], statements=[], functions=[], modules=[], usage=[]), batch=emission.empty(), scope=locals.empty(), return_type=15, depth=0, control=engine.fresh_control(), problems=[])
     const name = try syntax_value.span(mut state.syntax.pool, 0, 4)
     const left = try syntax_value.span(mut state.syntax.pool, 5, 9)
     const right = try syntax_value.span(mut state.syntax.pool, 10, 15)
@@ -45,6 +45,7 @@ func fresh() -> Fixture fails syntax_value.Problem:
     mut records = record_types.empty()
     records.rows = [schema]
     records.declarations = [declaration]
+    records.bindings.record_count = 1
     records.ids = [19]
     for unused in range(19):
         records.by_type.append(-1)

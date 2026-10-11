@@ -1,0 +1,105 @@
+import syntax_value
+import syntax_problem
+import discard_policy
+
+record Fixture:
+    pool: syntax_value.Pool
+    records: int[]
+    statement: int
+
+
+func fixture(implicit: bool) -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const yes = try syntax_value.boolean(mut pool, True)
+    const no = try syntax_value.boolean(mut pool, False)
+    const pending_contract = try syntax_value.object(mut pool, ["requires_handling"], [yes])
+    const plain_contract = try syntax_value.object(mut pool, ["requires_handling"], [no])
+    const pending = try syntax_value.object(mut pool, ["contract"], [pending_contract])
+    const ordinary = try syntax_value.object(mut pool, ["contract"], [plain_contract])
+    const span = try syntax_value.span(mut pool, 11, 37)
+    const flag = try syntax_value.boolean(mut pool, implicit)
+    const statement = try syntax_value.object(mut pool, ["span", "implicit_discard"], [span, flag])
+    return Fixture(pool=pool, records=[pending, ordinary], statement=statement)
+
+
+func absent(value: syntax_problem.Diagnostic?) -> bool:
+    match value:
+        case Some(unused):
+            return False
+        case None:
+            return True
+
+
+func diagnostic_matches(value: syntax_problem.Diagnostic, repaired: bool) -> bool:
+    const problem = value.problem
+    if problem.code != "E_EXPLICIT_DISCARD_REQUIRED" or problem.start != 11 or problem.end != 37:
+        return False
+    if problem.message != "a standalone non-unit value requires `_ =` or result handling" or value.severity != "err":
+        return False
+    if len(value.notes.related) != 0 or len(value.notes.origin) != 0 or len(value.notes.requirement) != 0:
+        return False
+    if not repaired:
+        return len(value.notes.edits) == 0
+    if len(value.notes.edits) != 1:
+        return False
+    const edit = value.notes.edits[0]
+    return edit.start == 11 and edit.end == 11 and edit.text == b"_ = "
+
+
+public func test_explicit_pending_discard_is_allowed() -> bool fails syntax_value.Problem:
+    const f = try fixture(False)
+    const value = try discard_policy.check(f.pool, f.records, f.statement, 19)
+    return absent(value)
+
+
+public func test_explicit_scalar_discard_is_allowed() -> bool fails syntax_value.Problem:
+    const f = try fixture(False)
+    const value = try discard_policy.check(f.pool, f.records, f.statement, 0)
+    return absent(value)
+
+
+public func test_implicit_unit_is_allowed() -> bool fails syntax_value.Problem:
+    const f = try fixture(True)
+    const value = try discard_policy.check(f.pool, f.records, f.statement, 15)
+    return absent(value)
+
+
+public func test_scalar_discard_has_exact_statement_span_and_insertion() -> bool fails syntax_value.Problem:
+    const f = try fixture(True)
+    const value = try discard_policy.check(f.pool, f.records, f.statement, 0)
+    match value:
+        case Some(diagnostic):
+            return diagnostic_matches(diagnostic, True)
+        case None:
+            return False
+
+
+public func test_managed_nonpending_value_has_safe_insertion() -> bool fails syntax_value.Problem:
+    const f = try fixture(True)
+    const value = try discard_policy.check(f.pool, f.records, f.statement, 20)
+    match value:
+        case Some(diagnostic):
+            return diagnostic_matches(diagnostic, True)
+        case None:
+            return False
+
+
+public func test_result_bearing_value_has_no_automatic_discard_repair() -> bool fails syntax_value.Problem:
+    const f = try fixture(True)
+    const value = try discard_policy.check(f.pool, f.records, f.statement, 19)
+    match value:
+        case Some(diagnostic):
+            return diagnostic_matches(diagnostic, False)
+        case None:
+            return False
+
+
+public func test_nonboolean_discard_flag_is_rejected() -> bool fails syntax_value.Problem:
+    mut f = try fixture(True)
+    const invalid = try syntax_value.integer(mut f.pool, 1)
+    const statement = try syntax_value.object(mut f.pool, ["implicit_discard"], [invalid])
+    match discard_policy.check(f.pool, f.records, statement, 0):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

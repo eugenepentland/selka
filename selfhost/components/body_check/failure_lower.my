@@ -1,0 +1,103 @@
+import syntax_value
+import graph
+import emission
+import variants
+
+# Source catalog and emission site; expression checks and obligations stay in the engine.
+public record Context:
+    pool: syntax_value.Pool
+    records: int[]
+    span: int
+
+
+public func type_of(batch: emission.Batch, value: int) -> int fails syntax_value.Problem:
+    if value < 0 or value >= len(batch.nodes):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid failure value identity")
+    const ty = try graph.field(batch.pool, batch.nodes[value], "ty")
+    return try graph.number(batch.pool, ty)
+
+
+func variant(mut batch: emission.Batch, context: Context, ty: int, tag: int, value: int) -> int fails syntax_value.Problem:
+    const case_tag = try syntax_value.integer(mut batch.pool, tag)
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    const data = try syntax_value.object(mut batch.pool, ["tag", "value"], [case_tag, payload])
+    return try emission.node(mut batch, context.pool, context.span, ty, b"variant", data)
+
+
+# Called after the engine has checked the successful return against its declared type.
+public func wrap_success(mut batch: emission.Batch, context: Context, return_type: int, value: int) -> int fails syntax_value.Problem:
+    const shape = try variants.result_shape(context.pool, context.records, return_type)
+    if not shape.valid:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid success wrapper result type")
+    return try variant(mut batch, context, return_type, shape.ok, value)
+
+
+# Called after error injection and the engine's exact failure-type diagnostic.
+public func wrap_err(mut batch: emission.Batch, context: Context, return_type: int, value: int) -> int fails syntax_value.Problem:
+    const shape = try variants.result_shape(context.pool, context.records, return_type)
+    if not shape.valid:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid error wrapper result type")
+    return try variant(mut batch, context, return_type, shape.err, value)
+
+
+func wrapping_record(context: Context, member: variants.Case, actual: int) -> int fails syntax_value.Problem:
+    if not member.fielded or member.payload < 19 or member.payload - 19 >= len(context.records):
+        return -1
+    const fields_id = try graph.field(context.pool, context.records[member.payload - 19], "fields")
+    const fields = try graph.items(context.pool, fields_id)
+    if len(fields) != 1:
+        return -1
+    const ty_id = try graph.field(context.pool, fields[0], "ty")
+    const ty = try graph.number(context.pool, ty_id)
+    if ty == actual:
+        return member.payload
+    return -1
+
+
+func field_payload(mut batch: emission.Batch, context: Context, ty: int, value: int) -> int fails syntax_value.Problem:
+    const index = try syntax_value.integer(mut batch.pool, 0)
+    const payload = try syntax_value.integer(mut batch.pool, value)
+    const field = try syntax_value.object(mut batch.pool, ["index", "value"], [index, payload])
+    const fields = try syntax_value.sequence(mut batch.pool, [field])
+    return try emission.node(mut batch, context.pool, context.span, ty, b"record", fields)
+
+
+# The first direct or single-field case wins, matching native error widening.
+# An incompatible value is returned unchanged for the engine's ordinary E_TYPE check.
+public func inject_error(mut batch: emission.Batch, context: Context, expected: int, value: int) -> int fails syntax_value.Problem:
+    const actual = try type_of(batch, value)
+    if actual == expected:
+        return value
+    const shape = try variants.shape(context.pool, context.records, expected)
+    if not shape.valid or not shape.is_union:
+        return value
+    for tag in range(len(shape.cases)):
+        const member = shape.cases[tag]
+        const record_type = try wrapping_record(context, member, actual)
+        if member.payload == actual or record_type >= 0:
+            mut payload = value
+            if record_type >= 0:
+                payload = try field_payload(mut batch, context, record_type, value)
+            return try variant(mut batch, context, expected, tag, payload)
+    return value
+
+
+func optional_at(mut batch: emission.Batch, context: Context, expected: int, value: int, depth: int) -> int fails syntax_value.Problem:
+    const actual = try type_of(batch, value)
+    if actual == expected:
+        return value
+    if depth > 256:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="optional injection depth exceeded")
+    const shape = try variants.option_shape(context.pool, context.records, expected)
+    if not shape.valid:
+        return value
+    const payload = try optional_at(mut batch, context, shape.element, value, depth + 1)
+    const payload_type = try type_of(batch, payload)
+    if payload_type != shape.element:
+        return value
+    return try variant(mut batch, context, expected, shape.some, payload)
+
+
+# Preserve existing optional layers, including None, and inject only compatible values.
+public func inject_optional(mut batch: emission.Batch, context: Context, expected: int, value: int) -> int fails syntax_value.Problem:
+    return try optional_at(mut batch, context, expected, value, 0)

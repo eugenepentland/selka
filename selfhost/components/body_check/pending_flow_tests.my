@@ -1,0 +1,99 @@
+import syntax_value
+import locals
+import pending_flow
+
+func fresh() -> locals.Scope fails syntax_value.Problem:
+    mut scope = locals.empty()
+    _ = try locals.add(mut scope, b"first", 10, 19, True, b"local")
+    _ = try locals.add(mut scope, b"second", 20, 19, True, b"local")
+    scope.locals[0].usage.transfer_available = True
+    scope.locals[0].usage.transfer_span = 30
+    return scope
+
+
+public func test_snapshot_is_bounded_prefix_with_independent_storage() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const state = try pending_flow.snapshot(scope, 1)
+    scope.locals[0].usage.transfer_available = False
+    scope.locals[0].usage.transfer_span = 99
+    return len(state) == 1 and state[0].available and state[0].span == 30
+
+
+public func test_restore_does_not_change_init_usage_or_new_locals() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const state = try pending_flow.snapshot(scope, 1)
+    scope.locals[0].initialized = False
+    scope.locals[0].usage.reads = 5
+    scope.locals[0].usage.transfer_available = False
+    scope.locals[1].usage.transfer_span = 77
+    try pending_flow.restore(mut scope, state)
+    return scope.locals[0].usage.transfer_available and scope.locals[0].usage.transfer_span == 30 and not scope.locals[0].initialized and scope.locals[0].usage.reads == 5 and scope.locals[1].usage.transfer_span == 77
+
+
+public func test_transfer_site_difference_is_not_path_disagreement() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const state = try pending_flow.snapshot(scope, 2)
+    scope.locals[0].usage.transfer_span = 44
+    const index = try pending_flow.mismatch(scope, state)
+    return index == -1
+
+
+public func test_first_availability_mismatch_is_lexical_local_order() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const state = try pending_flow.snapshot(scope, 2)
+    scope.locals[0].usage.transfer_available = False
+    scope.locals[1].usage.transfer_available = True
+    const index = try pending_flow.mismatch(scope, state)
+    return index == 0
+
+
+public func test_two_continuing_paths_require_identical_obligations() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const state = try pending_flow.snapshot(scope, 2)
+    scope.locals[0].usage.transfer_available = False
+    const index = try pending_flow.branch(mut scope, state, False, False)
+    return index == 0 and not scope.locals[0].usage.transfer_available
+
+
+public func test_terminating_then_path_does_not_contribute_to_join() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const state = try pending_flow.snapshot(scope, 2)
+    scope.locals[0].usage.transfer_available = False
+    const index = try pending_flow.branch(mut scope, state, True, False)
+    return index == -1 and not scope.locals[0].usage.transfer_available
+
+
+public func test_terminating_else_restores_then_sites_and_availability() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const state = try pending_flow.snapshot(scope, 2)
+    scope.locals[0].usage.transfer_available = False
+    scope.locals[0].usage.transfer_span = 55
+    const index = try pending_flow.branch(mut scope, state, False, True)
+    return index == -1 and scope.locals[0].usage.transfer_available and scope.locals[0].usage.transfer_span == 30
+
+
+public func test_both_terminated_paths_keep_native_last_checked_state() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const state = try pending_flow.snapshot(scope, 2)
+    scope.locals[0].usage.transfer_available = False
+    const index = try pending_flow.branch(mut scope, state, True, True)
+    return index == -1 and not scope.locals[0].usage.transfer_available
+
+
+public func test_invalid_checkpoint_count_is_transport_error() -> bool fails syntax_value.Problem:
+    const scope = try fresh()
+    match pending_flow.snapshot(scope, 3):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_invalid_restore_checkpoint_is_transport_error() -> bool fails syntax_value.Problem:
+    mut scope = try fresh()
+    const item = pending_flow.Pending(available=False, span=-1)
+    match pending_flow.restore(mut scope, [item, item, item]):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"

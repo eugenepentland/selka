@@ -1,0 +1,48 @@
+import syntax_value
+import locals
+
+public record Pending:
+    available: bool
+    span: int
+
+
+public func snapshot(scope: locals.Scope, count: int) -> Pending[] fails syntax_value.Problem:
+    if count < 0 or count > len(scope.locals) or count > 65536:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid pending local checkpoint")
+    mut state: Pending[] = []
+    for index in range(count):
+        const usage = scope.locals[index].usage
+        state.append(Pending(available=usage.transfer_available, span=usage.transfer_span))
+    return state
+
+
+public func restore(mut scope: locals.Scope, state: Pending[]) -> Unit fails syntax_value.Problem:
+    if len(state) > len(scope.locals) or len(state) > 65536:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid pending local checkpoint")
+    for index in range(len(state)):
+        scope.locals[index].usage.transfer_available = state[index].available
+        scope.locals[index].usage.transfer_span = state[index].span
+
+
+# samePending compares availability only, retaining first lexical disagreement.
+# The engine selects E_RESULT_PATH/E_RESULT_LOOP and rich related declaration.
+public func mismatch(scope: locals.Scope, state: Pending[]) -> int fails syntax_value.Problem:
+    if len(state) > len(scope.locals) or len(state) > 65536:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid pending local checkpoint")
+    for index in range(len(state)):
+        if scope.locals[index].usage.transfer_available != state[index].available:
+            return index
+    return -1
+
+
+# Current scope is the checked else path, restored from the before checkpoint.
+# Diverging paths do not contribute obligations to the continuing branch join.
+public func branch(mut scope: locals.Scope, then_state: Pending[], then_terminates: bool, else_terminates: bool) -> int fails syntax_value.Problem:
+    mut disagreement = -1
+    if not then_terminates:
+        if not else_terminates:
+            disagreement = try mismatch(scope, then_state)
+            if disagreement >= 0:
+                return disagreement
+        try restore(mut scope, then_state)
+    return disagreement
