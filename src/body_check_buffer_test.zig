@@ -351,3 +351,41 @@ test "body pure closure rejects foreign unsigned capacity arithmetic" {
     try std.testing.expectError(error.ComponentProtocol, corruptUnsigned(a, f, false));
     try std.testing.expectError(error.ComponentProtocol, corruptUnsigned(a, f, true));
 }
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body pure closure accepts authentic text and octet repetition join graphs" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const text = "func value(octets: bytes[], words: str[]) -> int:\n    const first = b\"a\" * 32\n    const second = 3 * \"é\"\n    return len(first) + len(second)\n";
+    const f = try graphFixture(a, text);
+    try validate.outcome(a, f.input, .{ .success = f.output });
+    var joins: usize = 0;
+    for (f.output.batch.nodes) |node| {
+        if (node.data == .buffer_operation and node.data.buffer_operation.kind == .join) joins += 1;
+    }
+    try std.testing.expectEqual(@as(usize, 2), joins);
+}
+
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body pure closure rejects foreign join result element owner and arity" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try graphFixture(a, "func value(mut buffer: byte_buffer, octets: bytes[], words: str[]) -> int:\n    return len(b\"a\" * 32)\n");
+    const c = try recipes.expanded(a, f.input, f.output.recipes);
+    const bytes = c.bytes.?.id;
+    const text = c.string.?.id;
+    var bytes_list: typed.Type = .unit;
+    var text_list: typed.Type = .unit;
+    for (c.lists) |entry| {
+        if (entry.element == bytes) bytes_list = entry.id;
+        if (entry.element == text) text_list = entry.id;
+    }
+    try buffers.operation(c, bytes, bytes, .join, &.{bytes_list}, false);
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, bytes, text, .join, &.{bytes_list}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, bytes, bytes, .join, &.{text_list}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, bytes, bytes, .join, &.{.i64}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, bytes, bytes, .join, &.{}, false));
+    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, c.templates.byte_buffer.identity.?.id, bytes, .join, &.{bytes_list}, true));
+}

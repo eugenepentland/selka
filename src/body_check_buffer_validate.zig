@@ -71,6 +71,10 @@ pub fn operation(catalog: value.Catalog, owner: typed.Type, result: typed.Type, 
             if (mutable(catalog, owner) or result != .unit or arguments[0] != .i64) return error.ComponentProtocol;
         },
         .text_ord => if (!text or result != .i64) return error.ComponentProtocol,
+        .join => {
+            if (mutable(catalog, owner) or result != owner) return error.ComponentProtocol;
+            if (listElement(catalog, arguments[0]) != owner) return error.ComponentProtocol;
+        },
         .read => {
             const wanted = if (text) owner else typed.Type.u8;
             if (result != wanted or !arguments[0].isInteger()) return error.ComponentProtocol;
