@@ -1,0 +1,16 @@
+public func work() -> int:
+    mut values = [1, 2, 4]
+    const saved = values
+    mut index = 0
+    while index < 1000:
+        values.append(index)
+        index += 1
+    values[0] = 3
+    mut total = 0
+    for value in values:
+        total += value
+    const copied = values.copy()
+    values[1] = 9
+    if saved == [1, 2, 4] and copied[1] == 2 and len(values) == 1003 and total == 499509:
+        return 7
+    return 0

@@ -2,7 +2,7 @@
 
 `selfhost/tests/measure_performance_ratio.py` compares every workload and workflow separately against the frozen Zig host. Both the median and nearest-rank p95 must be at most 1.5 times the baseline. One failing row fails the result; fast rows cannot offset a slower check, compilation, test or runtime. Raw samples and command receipts remain in the JSON.
 
-The initial corpus covers scalar loops and managed Unicode text/bytes loops, with imports, two executed guest tests and generated release executables. It is an intermediate seven-package subset, not evidence that the entire language compiler is self-hosted. Unsupported selected forms fail visibly; the tool never removes them from its denominator. Broader language coverage must be added as ownership expands.
+The initial corpus covers scalar loops, managed Unicode text/bytes loops and list construction/mutation/iteration/snapshot copies, with imports, two executed guest tests and generated release executables. It is an intermediate seven-package subset, not evidence that the entire language compiler is self-hosted. Unsupported selected forms fail visibly; the tool never removes them from its denominator. Broader language coverage must be added as ownership expands.
 
 Run with qualified ReleaseFast hosts after correctness gates and through the approved FIFO launcher holding the gate and all three build reservations. The tool requires CPUs 2,3,10,11 and the inherited gate FD30. Specify each candidate boundary explicitly, for example `--candidate-mode BODY_CHECK=component`; other boundaries are forced to reference. Caller mode variables cannot alter provenance.
 
