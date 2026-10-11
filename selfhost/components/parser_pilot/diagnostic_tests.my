@@ -31,13 +31,22 @@ public func test_diagnostic_preserves_notes_fix_and_recovery_order() -> bool fai
     return len(values) == 2 and pool.values[field(pool, first, "message")].data == b"unexpected `token`\n" and pool.values[field(pool, note, "role")].data == b"alternative" and len(pool.values[field(pool, fix, "more")].children) == 1 and pool.values[field(pool, values[1], "code")].data == b"E_EXPRESSION"
 
 
-public func test_diagnostic_refuses_unqualified_unicode_encoding() -> bool:
+public func test_diagnostic_preserves_owned_unicode_encoding() -> bool fails syntax_value.Problem:
+    const problem = syntax_value.Problem(code="E_SYNTAX", start=0, end=0, message="é—")
+    const pool = try syntax_diagnostics.report([syntax_problem.plain(problem)])
+    const report = pool.values[field(pool, len(pool.values) - 1, "diagnostics")].children[0]
+    return pool.values[field(pool, report, "message")].data == b"\xc3\xa9\xe2\x80\x94"
+
+
+public func test_diagnostic_refuses_multiple_notes_for_one_role() -> bool:
     const problem = syntax_value.Problem(code="E_SYNTAX", start=0, end=0, message="é")
-    match syntax_diagnostics.report([syntax_problem.plain(problem)]):
+    mut diagnostic = syntax_problem.alternative(problem, "first")
+    diagnostic.notes.related.append(syntax_problem.Related(start=0, end=0, message="second", role="alternative"))
+    match syntax_diagnostics.report([diagnostic]):
         case Ok(pool):
             return False
         case Err(failure):
-            return failure.code == "P_DIAGNOSTIC"
+            return failure.code == "P_DIAGNOSTIC" and failure.message == "a diagnostic has at most one note per role"
 
 
 public func test_recovery_stops_at_same_depth_newline_and_unwinds_depth() -> bool:
