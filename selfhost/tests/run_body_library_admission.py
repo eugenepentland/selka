@@ -56,6 +56,37 @@ def require_tests(result, expected):
     return [{'name': test['name'], 'status': test['status']} for test in report['tests']]
 
 
+
+def require_library_success(result):
+    F.require(result[0] == 0 and result[1] == b'', 'actual library check did not succeed quietly on stdout')
+    try:
+        for line in result[2].splitlines():
+            record = json.loads(line)
+            F.require(record['version'] == 'diagnostic-v1' and record['kind'] == 'diagnostic', 'not a diagnostic-v1 warning')
+            diagnostic = record['diagnostic']
+            F.require(diagnostic['severity'] == 'warning' and isinstance(diagnostic['code'], str)
+                      and diagnostic['code'].startswith('W_') and isinstance(diagnostic['message'], str), 'not a warning diagnostic')
+            location = diagnostic['location']
+            F.require(isinstance(location['path'], str), 'invalid warning path')
+            for endpoint in ('start', 'end'):
+                point = location[endpoint]
+                F.require(all(type(point[key]) is int and point[key] >= 1 for key in ('line', 'column')), 'invalid warning coordinates')
+            bounds = location['bytes']
+            F.require(type(bounds['start']) is int and type(bounds['end']) is int
+                      and 0 <= bounds['start'] <= bounds['end'], 'invalid warning byte span')
+            F.require(isinstance(diagnostic['notes'], list) and isinstance(diagnostic['stack']['frames'], list)
+                      and type(diagnostic['stack']['omitted']) is int and diagnostic['stack']['omitted'] >= 0,
+                      'invalid warning notes/stack')
+            D.diagnostic_contract(diagnostic)
+    except (ValueError, KeyError, TypeError) as error:
+        raise RuntimeError('malformed actual library warning') from error
+
+
+def require_library_match(native, selected):
+    require_library_success(native)
+    F.require(selected == native, 'actual selected library rejected/differed')
+
+
 def deployment_identity(args):
     return {'compiler_sha256': F.digest(args.compiler),
             'packages': None if args.native_controls else D.packages(args.component_dir)}
@@ -131,10 +162,10 @@ def main():
             for relative in LIBRARIES:
                 command = ['check', components / relative, '--no-cache', '--diagnostics=json']
                 native = execute('reference', command, relative)
-                F.require(native == (0, b'', b''), 'native actual library admission failed: ' + relative)
+                require_library_success(native)
                 for mode in modes[1:]:
                     # Runtime shadow checks full typed batch/catalog, not dump text alone.
-                    F.require(execute(mode, command, relative) == native, 'actual selected library rejected/differed: ' + relative)
+                    require_library_match(native, execute(mode, command, relative))
             for relative in TESTS:
                 entry = components / relative
                 expected = test_selection(entry)

@@ -90,6 +90,17 @@ class LibraryAdmissionTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,'deployment changed'):D.require_deployment(args,before)
 
     def test_actual_test_root_inventory_is_nonempty_and_duplicate_safe(self):
+        warning={'version':'diagnostic-v1','kind':'diagnostic','diagnostic':{'code':'W_UNUSED_BINDING','severity':'warning','message':'unused','location':{'path':'engine.my','start':{'line':1,'column':1},'end':{'line':1,'column':2},'bytes':{'start':0,'end':1}},'notes':[],'stack':{'frames':[],'omitted':0}}}
+        native=(0,b'',json.dumps(warning).encode()+b'\n')
+        D.require_library_success((0,b'',b''))
+        D.require_library_match(native,native)
+        for bad in ((1,b'',native[2]),(0,b'noise',native[2]),(0,b'',b'noise'),(0,b'',b'{}'),(0,b'',b'\n')):
+            with self.assertRaises(RuntimeError):D.require_library_success(bad)
+        for key,value in (('severity','error'),('code','E_TYPE'),('location',{}),('stack',{})):
+            changed=json.loads(json.dumps(warning));changed['diagnostic'][key]=value
+            with self.assertRaises(RuntimeError):D.require_library_success((0,b'',json.dumps(changed).encode()))
+        for changed in (b'',native[2].replace(b'unused',b'changed')):
+            with self.assertRaises(RuntimeError):D.require_library_match(native,(0,b'',changed))
         self.assertEqual((len(D.LIBRARIES),len(D.TESTS)),(9,6))
         self.assertEqual(D.D.BODY_VALUE_LIMIT,2097152)
         self.assertEqual(D.F.SOURCE_LIMIT,1048576)
