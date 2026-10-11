@@ -65,11 +65,15 @@ descriptor does not traverse each nested arm body twice. A 64-level nested typed
 match regression guards against exponential traversal; related tests check that
 body selection, bindings, and source changes still affect cache keys. This is a
 structural compile-time safeguard, not a compile-time speed benchmark.
-Full integrated compiler validation is reported separately by the integration branch.
+Integrated validation passed 1,025 Core tests, 177 frontend tests, 11 CLI semantic-cache
+tests, six fresh/warm/uncached owned-record executions, and all 88 whole-tree Guardian
+checks. The final Core suite includes both hashing regressions. Frontend and CLI
+semantic-cache tests preceded the cache-hashing follow-up; those implementations
+were unchanged. See `integration-validation.json` for source revisions and log hashes.
 No total-process RSS or compile-time speedup is claimed.
 
 Raw records: `before.json`, `after.json`, `summary.json`, `timing.json`,
-`validation.json`, and `source-sha256.json`.
+`validation.json`, `integration-validation.json`, and `source-sha256.json`.
 
 ## Workloads and interpretation
 
