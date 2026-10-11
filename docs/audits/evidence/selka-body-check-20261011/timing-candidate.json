@@ -1,0 +1,696 @@
+{
+  "label": "candidate",
+  "measurement_script_sha256": "813df9f5dcdd4930815dcc71586332d3aa867fc623ea7ff1314c7f9db9ee1977",
+  "qualification_script_sha256": "751b09f6f33d0e30cf9165c373f64e5ee49d9160435350f2c8000f92e4ae93de",
+  "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+  "iterations": 20,
+  "edit_iterations": 5,
+  "baseline_reference_only": false,
+  "host_sha256": "20fb7facf405ff440f38703d9c600ed9cbd74af904fbeba5a45571bc159ea273",
+  "packages": {
+    "test-index": {
+      "artifact": "test-index-ba723bf453c8fbb614e5584a14bcebc4129bfab68f18fb575cd1dc748c03ea9d",
+      "component": "test-index",
+      "format": 1,
+      "key": "0020c40a073ae01814b0102b6d5ba15b93063f5c85f1c28283bd2ecc46e6aee0",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "ba723bf453c8fbb614e5584a14bcebc4129bfab68f18fb575cd1dc748c03ea9d"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-48a1c4bdb8def53be50c64883e3bc92255aa722d8bcaded98bffb1e654c2c2cf",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "bf67059125e2bbbe252c4060d4557e3fc5fc80cc4021848104a82d3313034a2d",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "48a1c4bdb8def53be50c64883e3bc92255aa722d8bcaded98bffb1e654c2c2cf"
+    },
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-3baf51c37ffa17c64d9dc2eff5ecdfeb7342ba0e301d4713037ba00cfe744024",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "b5148d8c87bea88474276e92286b854470cb47cb0ab344cebbff2e0662821135",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "3baf51c37ffa17c64d9dc2eff5ecdfeb7342ba0e301d4713037ba00cfe744024"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-3e6ff854bfd97d981031f5f30430b0fa872d1be394a34388d9bb9686b8ad1c9e",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "80414daf68fc6c3184c8a03977f2cec880543e39a624af5c14c39f88066294d1",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "3e6ff854bfd97d981031f5f30430b0fa872d1be394a34388d9bb9686b8ad1c9e"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-77a8b0c50ad66e4feee380b1e08a1e6722979de43710e81ba5e7ff945ba17a1c",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "272cdbf10292f661aa4bd548a0ca0e7f50556fa058c38d1d39e0d0b63380dff7",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "77a8b0c50ad66e4feee380b1e08a1e6722979de43710e81ba5e7ff945ba17a1c"
+    },
+    "type-interface": {
+      "artifact": "type-interface-fbb13e373529e83bf7b7d9be921e486b1ca144e1c1467f1662b11235d1a4214b",
+      "component": "type-interface",
+      "format": 1,
+      "key": "261cdd21eee50c9b51cd6eda70b4de7dd80b593e8c798980a29c4b103bdd6788",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "fbb13e373529e83bf7b7d9be921e486b1ca144e1c1467f1662b11235d1a4214b"
+    },
+    "body-check": {
+      "artifact": "body-check-9b6d1f86e5e6cae1f57e8f369da629794550635de7a6355e31518ed51f4c5ae0",
+      "component": "body-check",
+      "format": 1,
+      "key": "fbe7f04a7ee3943df223e40f58306df12d317375a7c610650493d098fb80eda5",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "9b6d1f86e5e6cae1f57e8f369da629794550635de7a6355e31518ed51f4c5ae0"
+    }
+  },
+  "verified_seed_sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b",
+  "fixed_modes": {
+    "lexer": "reference",
+    "parser": "reference",
+    "test-index": "reference",
+    "cache-plan": "reference",
+    "declaration": "reference",
+    "type-interface": "reference"
+  },
+  "fact_leak_checks": "disabled for timings, qualified independently",
+  "native_cache_scope": "private application cache, shared native units/runtime/toolchain may be warm; retained reports identify reuse",
+  "rows": [
+    {
+      "mode": "reference",
+      "phase": "fresh-application-cache",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":660105,\"lowering\":115605,\"optimizer\":204943,\"emission\":419503,\"native\":12836564,\"linker\":10920847,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":35535,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":140217,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":27856,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":48832,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":19888,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1216,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":401,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":7954,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":39148,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":470,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":15883,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":140,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":978,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":11031,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":127062,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":335475,\"inclusive\":true}]},\"frontend\":{\"checked\":5,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":5,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":3,\"reused\":0,\"rendered\":3,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":3,\"keys_built\":3,\"llvm_loaded_bytes\":17530,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":434186,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":4,\"packs_prepared\":1,\"pack_bytes_prepared\":9916,\"save_bytes_prepared\":23147,\"sequence_locks\":31}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        16944275
+      ],
+      "median_ns": 16944275,
+      "min_ns": 16944275,
+      "max_ns": 16944275
+    },
+    {
+      "mode": "reference",
+      "phase": "warm",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,\"reused\":0,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":null,\"storage\":null}\n",
+      "cache_samples": [
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        }
+      ],
+      "samples_ns": [
+        1976248,
+        1830618,
+        1742184,
+        1709515,
+        1821475,
+        1756268,
+        1792589,
+        1686505,
+        1867821,
+        1775124,
+        1763774,
+        1741459,
+        1740790,
+        1759442,
+        1786497,
+        1841426,
+        1779704,
+        1813704,
+        1853153,
+        1718842
+      ],
+      "median_ns": 1777414.0,
+      "min_ns": 1686505,
+      "max_ns": 1976248
+    },
+    {
+      "mode": "reference",
+      "phase": "edit",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":679158,\"lowering\":103898,\"optimizer\":213267,\"emission\":285972,\"native\":11494638,\"linker\":9640485,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":32502,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":71563,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":14456,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":25812,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":49093,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":18915,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1335,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":3745,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":25883,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":7704,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":289,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":12816,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":121,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":857,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":8785,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":78422,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":267377,\"inclusive\":true}]},\"frontend\":{\"checked\":1,\"reused\":4,\"summaries\":2,\"syntax_hits\":1,\"syntax_misses\":1,\"stored\":1,\"damaged\":0},\"lowering\":{\"reused\":1,\"lowered\":1,\"deferred\":2,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":3,\"reused\":1,\"rendered\":2,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":3,\"keys_built\":2,\"llvm_loaded_bytes\":11516,\"native_handles\":1}},\"frontend_misses\":{\"total\":[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":390022,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":7796,\"decoded_bytes\":15799,\"blocks_decoded\":2,\"payload_bytes_returned\":3169,\"block_cache_hits\":4,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":8269,\"save_bytes_prepared\":16377,\"sequence_locks\":26}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        16033309,
+        15253024,
+        14589496,
+        14955732,
+        14825776
+      ],
+      "median_ns": 14955732,
+      "min_ns": 14589496,
+      "max_ns": 16033309
+    },
+    {
+      "mode": "reference",
+      "phase": "check-project",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "samples_ns": [
+        1090966,
+        1051234,
+        980083,
+        1123584,
+        1100086,
+        1065808,
+        1018219,
+        1055478,
+        985283,
+        1020620,
+        1036656,
+        1078416,
+        1009425,
+        963728,
+        1016359,
+        1020720,
+        958856,
+        967827,
+        984609,
+        976335
+      ],
+      "median_ns": 1019419.5,
+      "min_ns": 958856,
+      "max_ns": 1123584
+    },
+    {
+      "mode": "component",
+      "phase": "fresh-application-cache",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":35108424,\"lowering\":123802,\"optimizer\":216114,\"emission\":362185,\"native\":18207241,\"linker\":10899832,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":1714308,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":6741359,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":1671889,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":3373305,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":14890282,\"inclusive\":true}]},\"frontend\":{\"checked\":0,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":0,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":3,\"reused\":0,\"rendered\":3,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":3,\"keys_built\":3,\"llvm_loaded_bytes\":17530,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":434513,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":4,\"packs_prepared\":1,\"pack_bytes_prepared\":9451,\"save_bytes_prepared\":22594,\"sequence_locks\":31}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        68378928
+      ],
+      "median_ns": 68378928,
+      "min_ns": 68378928,
+      "max_ns": 68378928
+    },
+    {
+      "mode": "component",
+      "phase": "warm",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,\"reused\":0,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":null,\"storage\":null}\n",
+      "cache_samples": [
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        },
+        {
+          "program": "replayed",
+          "units": 0,
+          "reused": 0,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0
+        }
+      ],
+      "samples_ns": [
+        8896172,
+        8575720,
+        8503545,
+        8618618,
+        8544986,
+        8858708,
+        8721997,
+        8567470,
+        8659319,
+        8664337,
+        8578337,
+        8856772,
+        8770979,
+        8462483,
+        8907293,
+        8533386,
+        8666638,
+        8864685,
+        9091176,
+        8691581
+      ],
+      "median_ns": 8665487.5,
+      "min_ns": 8462483,
+      "max_ns": 9091176
+    },
+    {
+      "mode": "component",
+      "phase": "edit",
+      "cache_evidence": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":3,\"reused\":3,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":35148609,\"lowering\":124138,\"optimizer\":228536,\"emission\":323826,\"native\":17552679,\"linker\":10569345,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":1677503,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":3386463,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":3301103,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":1714460,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":3341991,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":14960375,\"inclusive\":true}]},\"frontend\":{\"checked\":0,\"reused\":0,\"summaries\":0,\"syntax_hits\":1,\"syntax_misses\":1,\"stored\":0,\"damaged\":0},\"lowering\":{\"reused\":1,\"lowered\":1,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":3,\"reused\":1,\"rendered\":2,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":3,\"keys_built\":2,\"llvm_loaded_bytes\":11516,\"native_handles\":1}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":485419,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":6863,\"decoded_bytes\":14693,\"blocks_decoded\":2,\"payload_bytes_returned\":2616,\"block_cache_hits\":4,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":7797,\"save_bytes_prepared\":15824,\"sequence_locks\":26}}}}\n",
+      "cache_samples": [
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        },
+        {
+          "program": "linked",
+          "units": 3,
+          "reused": 3,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1
+        }
+      ],
+      "samples_ns": [
+        67450038,
+        67328740,
+        67380546,
+        67385326,
+        67335492
+      ],
+      "median_ns": 67380546,
+      "min_ns": 67328740,
+      "max_ns": 67450038
+    },
+    {
+      "mode": "component",
+      "phase": "check-project",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "samples_ns": [
+        4701464,
+        4611943,
+        4389764,
+        4495921,
+        4552094,
+        4539135,
+        4393691,
+        4578046,
+        4413279,
+        4630361,
+        4413118,
+        4396269,
+        4402189,
+        4529255,
+        4518868,
+        4618137,
+        4558019,
+        4610033,
+        4718401,
+        4513490
+      ],
+      "median_ns": 4534195.0,
+      "min_ns": 4389764,
+      "max_ns": 4718401
+    }
+  ],
+  "affinity": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "children_peak_rss_kib": 47036,
+  "rss_scope": "cumulative child high-water across complete run, not per exchange"
+}

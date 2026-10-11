@@ -1,0 +1,720 @@
+{
+  "ACTUAL": {
+    "success": {
+      "batch": {
+        "nodes": [
+          {
+            "ty": "i64",
+            "span": {
+              "start": 50,
+              "end": 51
+            },
+            "data": {
+              "integer": 7
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 41,
+              "end": 46
+            },
+            "data": {
+              "local": 0
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 47,
+              "end": 49
+            },
+            "data": {
+              "binary": {
+                "op": "add",
+                "left": 1,
+                "right": 0,
+                "op_span": {
+                  "start": 47,
+                  "end": 49
+                }
+              }
+            }
+          },
+          {
+            "ty": "unit",
+            "span": {
+              "start": 5,
+              "end": 11
+            },
+            "data": {
+              "unit": {}
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 89,
+              "end": 90
+            },
+            "data": {
+              "integer": 0
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 106,
+              "end": 111
+            },
+            "data": {
+              "local": 0
+            }
+          },
+          {
+            "ty": "unit",
+            "span": {
+              "start": 95,
+              "end": 112
+            },
+            "data": {
+              "call": {
+                "evaluation_order": [],
+                "evaluation": null,
+                "function": 0,
+                "arguments": [
+                  5
+                ]
+              }
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 124,
+              "end": 129
+            },
+            "data": {
+              "local": 0
+            }
+          }
+        ],
+        "statements": [
+          {
+            "span": {
+              "start": 41,
+              "end": 51
+            },
+            "terminates": false,
+            "data": {
+              "assign": {
+                "slot": 0,
+                "value": 2,
+                "element": false
+              }
+            }
+          },
+          {
+            "span": {
+              "start": 35,
+              "end": 51
+            },
+            "terminates": false,
+            "data": {
+              "block": [
+                0
+              ]
+            }
+          },
+          {
+            "span": {
+              "start": 5,
+              "end": 11
+            },
+            "terminates": true,
+            "data": {
+              "ret": 3
+            }
+          },
+          {
+            "span": {
+              "start": 5,
+              "end": 11
+            },
+            "terminates": true,
+            "data": {
+              "block": [
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "span": {
+              "start": 77,
+              "end": 90
+            },
+            "terminates": false,
+            "data": {
+              "initialize": {
+                "slot": 0,
+                "value": 4,
+                "element": false
+              }
+            }
+          },
+          {
+            "span": {
+              "start": 95,
+              "end": 112
+            },
+            "terminates": false,
+            "data": {
+              "discard": 6
+            }
+          },
+          {
+            "span": {
+              "start": 117,
+              "end": 129
+            },
+            "terminates": true,
+            "data": {
+              "ret": 7
+            }
+          },
+          {
+            "span": {
+              "start": 71,
+              "end": 129
+            },
+            "terminates": true,
+            "data": {
+              "block": [
+                4,
+                5,
+                6
+              ]
+            }
+          }
+        ],
+        "functions": [
+          {
+            "policy": {
+              "c_abi": false,
+              "host": null,
+              "effect_bound": null,
+              "effects": 0,
+              "owner": null,
+              "restricted": false,
+              "conversion": false
+            },
+            "type_arguments": [],
+            "signature": {
+              "constant_arguments": [],
+              "return_type": "unit",
+              "parameter_count": 1,
+              "mutates": [],
+              "return_origin": {
+                "unknown": {}
+              },
+              "declared_mutates": [
+                0
+              ],
+              "inferred": {
+                "writes": false,
+                "external": false
+              }
+            },
+            "scope": {
+              "parameter_labels": [
+                ""
+              ],
+              "body": 3,
+              "locals": [
+                {
+                  "ownership": {
+                    "scoped_file": false,
+                    "transfer_span": null,
+                    "initialized": true,
+                    "transfer_available": false
+                  },
+                  "usage": {
+                    "temporary": false,
+                    "reads": 1,
+                    "writes": 1,
+                    "dead_write_reads": 0,
+                    "dead_write_span": null
+                  },
+                  "name": "value",
+                  "declaration": {
+                    "start": 16,
+                    "end": 21
+                  },
+                  "ty": "i64",
+                  "mutable": true,
+                  "origin": "parameter"
+                }
+              ]
+            },
+            "id": 0,
+            "name": "update",
+            "declaration": {
+              "start": 5,
+              "end": 11
+            }
+          },
+          {
+            "policy": {
+              "c_abi": false,
+              "host": null,
+              "effect_bound": null,
+              "effects": 0,
+              "owner": null,
+              "restricted": false,
+              "conversion": false
+            },
+            "type_arguments": [],
+            "signature": {
+              "constant_arguments": [],
+              "return_type": "i64",
+              "parameter_count": 0,
+              "mutates": [],
+              "return_origin": {
+                "unknown": {}
+              },
+              "declared_mutates": [],
+              "inferred": {
+                "writes": false,
+                "external": false
+              }
+            },
+            "scope": {
+              "parameter_labels": [],
+              "body": 7,
+              "locals": [
+                {
+                  "ownership": {
+                    "scoped_file": false,
+                    "transfer_span": null,
+                    "initialized": true,
+                    "transfer_available": false
+                  },
+                  "usage": {
+                    "temporary": false,
+                    "reads": 2,
+                    "writes": 1,
+                    "dead_write_reads": 0,
+                    "dead_write_span": null
+                  },
+                  "name": "value",
+                  "declaration": {
+                    "start": 81,
+                    "end": 86
+                  },
+                  "ty": "i64",
+                  "mutable": true,
+                  "origin": "local"
+                }
+              ]
+            },
+            "id": 1,
+            "name": "main",
+            "declaration": {
+              "start": 58,
+              "end": 62
+            }
+          }
+        ],
+        "ranges": [
+          {
+            "nodes": {
+              "start": 0,
+              "end": 4
+            },
+            "statements": {
+              "start": 0,
+              "end": 4
+            }
+          },
+          {
+            "nodes": {
+              "start": 4,
+              "end": 8
+            },
+            "statements": {
+              "start": 4,
+              "end": 8
+            }
+          }
+        ]
+      },
+      "import_used": [],
+      "diagnostics": []
+    }
+  },
+  "EXPECTED": {
+    "success": {
+      "batch": {
+        "nodes": [
+          {
+            "ty": "i64",
+            "span": {
+              "start": 50,
+              "end": 51
+            },
+            "data": {
+              "integer": 7
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 41,
+              "end": 46
+            },
+            "data": {
+              "local": 0
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 47,
+              "end": 49
+            },
+            "data": {
+              "binary": {
+                "op": "add",
+                "left": 1,
+                "right": 0,
+                "op_span": {
+                  "start": 47,
+                  "end": 49
+                }
+              }
+            }
+          },
+          {
+            "ty": "unit",
+            "span": {
+              "start": 5,
+              "end": 11
+            },
+            "data": {
+              "unit": {}
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 89,
+              "end": 90
+            },
+            "data": {
+              "integer": 0
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 106,
+              "end": 111
+            },
+            "data": {
+              "local": 0
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 102,
+              "end": 111
+            },
+            "data": {
+              "local": 0
+            }
+          },
+          {
+            "ty": "unit",
+            "span": {
+              "start": 95,
+              "end": 112
+            },
+            "data": {
+              "call": {
+                "evaluation_order": [],
+                "evaluation": null,
+                "function": 0,
+                "arguments": [
+                  6
+                ]
+              }
+            }
+          },
+          {
+            "ty": "i64",
+            "span": {
+              "start": 124,
+              "end": 129
+            },
+            "data": {
+              "local": 0
+            }
+          }
+        ],
+        "statements": [
+          {
+            "span": {
+              "start": 41,
+              "end": 51
+            },
+            "terminates": false,
+            "data": {
+              "assign": {
+                "slot": 0,
+                "value": 2,
+                "element": false
+              }
+            }
+          },
+          {
+            "span": {
+              "start": 35,
+              "end": 51
+            },
+            "terminates": false,
+            "data": {
+              "block": [
+                0
+              ]
+            }
+          },
+          {
+            "span": {
+              "start": 5,
+              "end": 11
+            },
+            "terminates": true,
+            "data": {
+              "ret": 3
+            }
+          },
+          {
+            "span": {
+              "start": 5,
+              "end": 11
+            },
+            "terminates": true,
+            "data": {
+              "block": [
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "span": {
+              "start": 77,
+              "end": 90
+            },
+            "terminates": false,
+            "data": {
+              "initialize": {
+                "slot": 0,
+                "value": 4,
+                "element": false
+              }
+            }
+          },
+          {
+            "span": {
+              "start": 95,
+              "end": 112
+            },
+            "terminates": false,
+            "data": {
+              "discard": 7
+            }
+          },
+          {
+            "span": {
+              "start": 117,
+              "end": 129
+            },
+            "terminates": true,
+            "data": {
+              "ret": 8
+            }
+          },
+          {
+            "span": {
+              "start": 71,
+              "end": 129
+            },
+            "terminates": true,
+            "data": {
+              "block": [
+                4,
+                5,
+                6
+              ]
+            }
+          }
+        ],
+        "functions": [
+          {
+            "policy": {
+              "c_abi": false,
+              "host": null,
+              "effect_bound": null,
+              "effects": 0,
+              "owner": null,
+              "restricted": false,
+              "conversion": false
+            },
+            "type_arguments": [],
+            "signature": {
+              "constant_arguments": [],
+              "return_type": "unit",
+              "parameter_count": 1,
+              "mutates": [],
+              "return_origin": {
+                "unknown": {}
+              },
+              "declared_mutates": [
+                0
+              ],
+              "inferred": {
+                "writes": false,
+                "external": false
+              }
+            },
+            "scope": {
+              "parameter_labels": [
+                ""
+              ],
+              "body": 3,
+              "locals": [
+                {
+                  "ownership": {
+                    "scoped_file": false,
+                    "transfer_span": null,
+                    "initialized": true,
+                    "transfer_available": false
+                  },
+                  "usage": {
+                    "temporary": false,
+                    "reads": 1,
+                    "writes": 1,
+                    "dead_write_reads": 0,
+                    "dead_write_span": null
+                  },
+                  "name": "value",
+                  "declaration": {
+                    "start": 16,
+                    "end": 21
+                  },
+                  "ty": "i64",
+                  "mutable": true,
+                  "origin": "parameter"
+                }
+              ]
+            },
+            "id": 0,
+            "name": "update",
+            "declaration": {
+              "start": 5,
+              "end": 11
+            }
+          },
+          {
+            "policy": {
+              "c_abi": false,
+              "host": null,
+              "effect_bound": null,
+              "effects": 0,
+              "owner": null,
+              "restricted": false,
+              "conversion": false
+            },
+            "type_arguments": [],
+            "signature": {
+              "constant_arguments": [],
+              "return_type": "i64",
+              "parameter_count": 0,
+              "mutates": [],
+              "return_origin": {
+                "unknown": {}
+              },
+              "declared_mutates": [],
+              "inferred": {
+                "writes": false,
+                "external": false
+              }
+            },
+            "scope": {
+              "parameter_labels": [],
+              "body": 7,
+              "locals": [
+                {
+                  "ownership": {
+                    "scoped_file": false,
+                    "transfer_span": null,
+                    "initialized": true,
+                    "transfer_available": false
+                  },
+                  "usage": {
+                    "temporary": false,
+                    "reads": 2,
+                    "writes": 1,
+                    "dead_write_reads": 0,
+                    "dead_write_span": null
+                  },
+                  "name": "value",
+                  "declaration": {
+                    "start": 81,
+                    "end": 86
+                  },
+                  "ty": "i64",
+                  "mutable": true,
+                  "origin": "local"
+                }
+              ]
+            },
+            "id": 1,
+            "name": "main",
+            "declaration": {
+              "start": 58,
+              "end": 62
+            }
+          }
+        ],
+        "ranges": [
+          {
+            "nodes": {
+              "start": 0,
+              "end": 4
+            },
+            "statements": {
+              "start": 0,
+              "end": 4
+            }
+          },
+          {
+            "nodes": {
+              "start": 4,
+              "end": 9
+            },
+            "statements": {
+              "start": 4,
+              "end": 8
+            }
+          }
+        ]
+      },
+      "import_used": [],
+      "diagnostics": []
+    }
+  }
+}

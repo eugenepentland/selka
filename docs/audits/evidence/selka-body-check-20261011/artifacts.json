@@ -1,0 +1,71 @@
+{
+  "implementation_commit": "218608460cc69dde482ae4c874af95e191d885e5",
+  "additional_component_source": "WIRE.md common-phase import usage clarification, committed with audit",
+  "debug_host_sha256": "8af1f6ae8f1d7b2302d5c1cda04950c64fba4eb5db7c4f245aa8ba91e83c4533",
+  "release_host_sha256": "20fb7facf405ff440f38703d9c600ed9cbd74af904fbeba5a45571bc159ea273",
+  "packages": {
+    "lexer-pilot": {
+      "artifact": "lexer-pilot-3baf51c37ffa17c64d9dc2eff5ecdfeb7342ba0e301d4713037ba00cfe744024",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "b5148d8c87bea88474276e92286b854470cb47cb0ab344cebbff2e0662821135",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "3baf51c37ffa17c64d9dc2eff5ecdfeb7342ba0e301d4713037ba00cfe744024"
+    },
+    "parser-pilot": {
+      "artifact": "parser-pilot-3e6ff854bfd97d981031f5f30430b0fa872d1be394a34388d9bb9686b8ad1c9e",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "80414daf68fc6c3184c8a03977f2cec880543e39a624af5c14c39f88066294d1",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "3e6ff854bfd97d981031f5f30430b0fa872d1be394a34388d9bb9686b8ad1c9e"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-48a1c4bdb8def53be50c64883e3bc92255aa722d8bcaded98bffb1e654c2c2cf",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "bf67059125e2bbbe252c4060d4557e3fc5fc80cc4021848104a82d3313034a2d",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "48a1c4bdb8def53be50c64883e3bc92255aa722d8bcaded98bffb1e654c2c2cf"
+    },
+    "test-index": {
+      "artifact": "test-index-ba723bf453c8fbb614e5584a14bcebc4129bfab68f18fb575cd1dc748c03ea9d",
+      "component": "test-index",
+      "format": 1,
+      "key": "0020c40a073ae01814b0102b6d5ba15b93063f5c85f1c28283bd2ecc46e6aee0",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "ba723bf453c8fbb614e5584a14bcebc4129bfab68f18fb575cd1dc748c03ea9d"
+    },
+    "body-check": {
+      "artifact": "body-check-9b6d1f86e5e6cae1f57e8f369da629794550635de7a6355e31518ed51f4c5ae0",
+      "component": "body-check",
+      "format": 1,
+      "key": "fbe7f04a7ee3943df223e40f58306df12d317375a7c610650493d098fb80eda5",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "9b6d1f86e5e6cae1f57e8f369da629794550635de7a6355e31518ed51f4c5ae0"
+    },
+    "declaration-index": {
+      "artifact": "declaration-index-77a8b0c50ad66e4feee380b1e08a1e6722979de43710e81ba5e7ff945ba17a1c",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "272cdbf10292f661aa4bd548a0ca0e7f50556fa058c38d1d39e0d0b63380dff7",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "77a8b0c50ad66e4feee380b1e08a1e6722979de43710e81ba5e7ff945ba17a1c"
+    },
+    "type-interface": {
+      "artifact": "type-interface-fbb13e373529e83bf7b7d9be921e486b1ca144e1c1467f1662b11235d1a4214b",
+      "component": "type-interface",
+      "format": 1,
+      "key": "261cdd21eee50c9b51cd6eda70b4de7dd80b593e8c798980a29c4b103bdd6788",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "fbb13e373529e83bf7b7d9be921e486b1ca144e1c1467f1662b11235d1a4214b"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "completed",
+  "command": [
+    "python3",
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_check_qualification.py",
+    "--compiler",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-release/bin/mylang",
+    "--builder",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-release/tools/selka-components",
+    "--component-dir",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-release/libexec/mylang/components",
+    "--zig",
+    "/home/epentland/.local/bin/zig",
+    "--release",
+    "--report",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check/release-host-qualification.json"
+  ],
+  "host_sha256": "20fb7facf405ff440f38703d9c600ed9cbd74af904fbeba5a45571bc159ea273",
+  "driver_sha256": "751b09f6f33d0e30cf9165c373f64e5ee49d9160435350f2c8000f92e4ae93de",
+  "manifests": {
+    "lexer-pilot.json": "0fe77f58e601a0d4b5a9e9fff5abe2a5fa56739d09ed1dd958885c1f1b481d71",
+    "parser-pilot.json": "b9124c8a605c32c1d732e1fd36e157773e57d715c086456dfa180f7d4cea4d8c",
+    "cache-plan.json": "efe8c8c63351fba0806bc175d15d511c419b284ae9f811147053b6ce59b6c1d3",
+    "test-index.json": "a2e6852ed5ab61a639499120784baf021abde7e800e0a3a671201cbd34eaaeed",
+    "body-check.json": "6250f73a2828fa2bd7dc39261b921adb01823707a229493d0ee84a8c1bf8207e",
+    "declaration-index.json": "4a02815bedce2f2f5bfbf484c38c094088b0266e8d94afa8818c89a6adba14bf",
+    "type-interface.json": "7372228cdc07d05df3260e58d2cab20c6520dcff04ebc4748958743d7eedfbff"
+  },
+  "exit_status": 0,
+  "report_sha256": "a77c3a5719057d4b50319f4d48f62a427798a0542909ac4773f07b37236d1a0a",
+  "log_sha256": "41da2ff2295a30b4b9f6b712f4e3de175637bbb26ff0c07202dc8a4060de5c6c"
+}

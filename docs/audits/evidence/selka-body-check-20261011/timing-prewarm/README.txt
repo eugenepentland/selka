@@ -1,0 +1,1 @@
+Successful first isolated measurement, retained as cache preparation evidence. Baseline edits compiled one native unit; candidate edits reused all units. Do not compare their edit timings as matched cache conditions. The final parent-directory timing receipts repeat all runs after these shared units are warm.

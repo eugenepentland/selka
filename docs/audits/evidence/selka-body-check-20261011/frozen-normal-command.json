@@ -1,0 +1,25 @@
+{
+  "status": "completed",
+  "exit_status": 0,
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "python3",
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/run_body_check_qualification.py",
+    "--compiler",
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+    "--builder",
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/tools/selka-components",
+    "--component-dir",
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components",
+    "--zig",
+    "/home/epentland/.local/bin/zig",
+    "--edit-check",
+    "--report",
+    "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check/frozen-normal.json"
+  ],
+  "host_sha256": "8af1f6ae8f1d7b2302d5c1cda04950c64fba4eb5db7c4f245aa8ba91e83c4533",
+  "exact_coordinator_before_matches_installed": true,
+  "report_sha256": "4b689cd52b0c5f7dd12ff88345643b487a25bc1a8d01d2d6d75227b2d71e8cf3",
+  "log_sha256": "e5d1c5204f7ae50af7a2bd15105066c50ee0c52e63e5f9a7632db6c654eacd56"
+}

@@ -16,6 +16,13 @@ Outcome tags are `success`, `failure` and `profile`.
 
 Success is `Output{batch,import_used,diagnostics}`. Batch is `{nodes,statements,functions,ranges}`, preserving all `typed.Node`, `typed.Statement` and `typed.Function` logical fields and stable append order. Ranges contain `{nodes:{start,end},statements:{start,end}}` per raw function, in declaration order. They form exact contiguous partitions and assign even unreachable intermediate rows to one lexical local table. Calls reference global function IDs; local IDs belong only to their owning function. Type IDs use builtins i64=0, bool=1 and Unit=15. Scalar integer literals use signedi64 wire values widened to native i128; B1 cannot encode wider integers.
 
+The retained native catalog and entry phases may observe additional import uses
+after the raw request snapshot. Before adopting or comparing successful bodies,
+the host copies the producer flags and merges those common-phase observations.
+Shadow captures this common state before native body checking, so missing
+producer body observations still cause a mismatch. Neither the reply nor its
+authenticated input snapshot is mutated.
+
 Source failure is the complete ordered diagnostic array. Profile is `{code:"P_BODY_PROFILE",span,message}` and maps to host `ComponentProfile`. Diagnostic elements use the existing six-field SyntaxDiagnostic schema, including related/origin/requirement notes and structured fixes. Runtime traces or checker obligation pointers are rejected during oracle projection, never silently dropped.
 
 ## Bounds and validation

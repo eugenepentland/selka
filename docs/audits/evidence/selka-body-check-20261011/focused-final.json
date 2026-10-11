@@ -1,0 +1,290 @@
+[
+  {
+    "fixture": "main.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "scalar_calls.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "branches.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "while_loop.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "range_loop.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "unit_assert.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "bool_ops.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "signed_math.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "library.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "unknown_name.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "multi_body_errors.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "wrong_return.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "wrong_argument.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "wrong_arity.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "wrong_condition.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "readonly_write.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "warning.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "utf8_comment.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "profile_managed.my",
+    "reference_status": 0,
+    "shadow_status": 2,
+    "equal": false
+  },
+  {
+    "fixture": "profile_generic.my",
+    "reference_status": 0,
+    "shadow_status": 2,
+    "equal": false
+  },
+  {
+    "fixture": "profile_lambda.my",
+    "reference_status": 0,
+    "shadow_status": 2,
+    "equal": false
+  },
+  {
+    "fixture": "profile_division.my",
+    "reference_status": 0,
+    "shadow_status": 2,
+    "equal": false
+  },
+  {
+    "fixture": "profile_chained_comparison.my",
+    "reference_status": 0,
+    "shadow_status": 2,
+    "equal": false
+  },
+  {
+    "fixture": "private_import.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "nongeneric_type_arguments.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "named_only_positional.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "named_only_valid.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "mut_call_marker.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "mut_call_valid.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "shadow_function.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "shadow_type.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "shadow_parameter.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "signed_boundaries.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "literal_overflow.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "repeated_defaults.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "named_argument_order.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "nested_loop_control.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "forward_call.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "recursive_call.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "mutual_recursion.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "profile_range_stride.my",
+    "reference_status": 0,
+    "shadow_status": 2,
+    "equal": false
+  },
+  {
+    "fixture": "profile_integer_suffix.my",
+    "reference_status": 0,
+    "shadow_status": 2,
+    "equal": false
+  },
+  {
+    "fixture": "readonly_range_write.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "augmented_mut_parameter.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "augmented_negative_remainder.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  },
+  {
+    "fixture": "augmented_float_division.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "augmented_unknown_name.my",
+    "reference_status": 1,
+    "shadow_status": 1,
+    "equal": true
+  },
+  {
+    "fixture": "imported_private_alias.my",
+    "reference_status": 0,
+    "shadow_status": 0,
+    "equal": true
+  }
+]

@@ -1,0 +1,40 @@
+Production implementation: 218608460cc69dde482ae4c874af95e191d885e5
+Additional package input: WIRE.md common-phase import usage clarification,
+committed with the audit. Final installed package identities are in artifacts.json.
+Branch: codex/selka-body-check-20261011
+Working directory: /home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang
+TMPDIR=/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots
+ZIG_LOCAL_CACHE_DIR=/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots
+ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+Pinned Zig: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig
+
+scripts/build-slot.sh build zig build test-compile --summary all
+scripts/build-slot.sh build zig build test-units --summary all
+scripts/build-slot.sh build zig build test-units '-Dtest-filter=body check' --summary all
+scripts/build-slot.sh build zig build test-components test-verification-cache fmt-check --summary all
+scripts/build-slot.sh build zig build --summary all
+scripts/build-slot.sh build zig build -Doptimize=ReleaseFast --prefix /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-release --summary all
+scripts/build-slot.sh gate zig build test --summary all
+
+The full gate includes test-selfhost-body-checks: 32 verified-seed pure tests
+per mode, uncached normal/release fact/leak checks, installed normal/edit/release
+matrices, framing, forged replies, cross-publication and deployment/cache checks.
+Standalone ReleaseFast-host qualification retains a separate argv/env receipt.
+The frozen-normal command receipt records the final Debug normal/edit rerun,
+with exact equality of installed and private coordinator initial package identities.
+
+Isolated timing invocation from the integration worktree:
+scripts/build-slot.sh gate python3 /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check/body_check_isolated_measure.py taskset -c 2,3,10,11 python3 /home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check/body_check_matched_measure.py
+The launcher holds the outer FIFO gate and all three build reservations.
+The completed timing receipt records exact baseline/candidate argv and outcomes.
+timing-prewarm/ retains the first successful measurement whose baseline edit
+compiled a shared native unit. The final run repeats after warming that unit;
+every baseline/candidate fresh/edit row then reuses all three native units.
+
+Final documentation/format and whole-tree Guardian checks:
+scripts/build-slot.sh build zig build test-docs fmt-check --summary all
+scripts/build-slot.sh gate /home/epentland/ai/canopy/guardian-zig/zig-out/bin/guardian-check all . --gate
+
+Earlier failing logs and mutation-wrapper-red.json are diagnostic evidence,
+not passing qualifications. The final gate and frozen installed receipts govern
+the adoption claim. Diagnostic trace code was removed before final installation.

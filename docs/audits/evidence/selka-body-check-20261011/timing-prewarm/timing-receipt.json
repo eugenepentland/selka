@@ -1,0 +1,66 @@
+{
+  "status": "completed",
+  "affinity": [
+    2,
+    3,
+    10,
+    11
+  ],
+  "measurement_script_sha256": "813df9f5dcdd4930815dcc71586332d3aa867fc623ea7ff1314c7f9db9ee1977",
+  "qualification_script_sha256": "751b09f6f33d0e30cf9165c373f64e5ee49d9160435350f2c8000f92e4ae93de",
+  "runs": [
+    {
+      "label": "baseline",
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_body_check_adoption.py",
+        "--isolated",
+        "--label",
+        "baseline",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--compiler",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/bin/mylang",
+        "--builder",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/tools/selka-components",
+        "--component-dir",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/type-interface-release/libexec/mylang/components",
+        "--source-root",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-baseline-source",
+        "--output",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check/body-check-timing-baseline.json",
+        "--baseline"
+      ],
+      "host_sha256": "16d3c3bab8160aaf30ce5e9206a7259fb3d50c85d4be7b2760c65798bc161bc3",
+      "source_root": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-baseline-source",
+      "exit_status": 0,
+      "output_sha256": "bad5cd385f80a859467f95338b5d8830ece0a2202790f1e8763dd39ab8d71054"
+    },
+    {
+      "label": "candidate",
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/tests/measure_body_check_adoption.py",
+        "--isolated",
+        "--label",
+        "candidate",
+        "--zig",
+        "/home/epentland/.local/bin/zig",
+        "--compiler",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-release/bin/mylang",
+        "--builder",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-release/tools/selka-components",
+        "--component-dir",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check-release/libexec/mylang/components",
+        "--source-root",
+        "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+        "--output",
+        "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-check/body-check-timing-candidate.json"
+      ],
+      "host_sha256": "20fb7facf405ff440f38703d9c600ed9cbd74af904fbeba5a45571bc159ea273",
+      "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+      "exit_status": 0,
+      "output_sha256": "01ca1ef784bc20c905b7ffa9d321bd711ede9834778263b4902fa9cb0ce09a97"
+    }
+  ]
+}
