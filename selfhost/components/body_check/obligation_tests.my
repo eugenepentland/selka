@@ -1,0 +1,49 @@
+import syntax_value
+import syntax_problem
+import locals
+import obligations
+
+public func test_transfer_records_site_and_second_read_has_ordered_related_sites() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const declaration = try syntax_value.span(mut pool, 1, 4)
+    const first = try syntax_value.span(mut pool, 8, 11)
+    const second = try syntax_value.span(mut pool, 20, 23)
+    mut scope = locals.empty()
+    const slot = try locals.add(mut scope, b"value", declaration, 19, False, b"local")
+    scope.locals[slot].usage.transfer_available = True
+    mut problems: syntax_problem.Diagnostic[] = []
+    _ = try obligations.consume(pool, mut scope, slot, first, False, mut problems)
+    if scope.locals[slot].usage.transfer_available or scope.locals[slot].usage.transfer_span != first:
+        return False
+    match obligations.consume(pool, mut scope, slot, second, False, mut problems):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_RESULT_CONSUMED" and problem.start == 20 and len(problems) == 1 and len(problems[0].notes.related) == 1 and problems[0].notes.related[0].start == 8 and len(problems[0].notes.origin) == 1 and problems[0].notes.origin[0].start == 1
+
+
+public func test_synthetic_pattern_reuse_has_no_user_declaration_notes() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const span = try syntax_value.span(mut pool, 3, 7)
+    mut scope = locals.empty()
+    const slot = try locals.add(mut scope, b"\0pattern1", span, 19, False, b"local")
+    mut problems: syntax_problem.Diagnostic[] = []
+    match obligations.consume(pool, mut scope, slot, span, True, mut problems):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.message == "pattern value was already transferred" and len(problems) == 1 and len(problems[0].notes.related) == 0 and len(problems[0].notes.origin) == 0
+
+
+public func test_loop_disagreement_uses_binding_related_site() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const declaration = try syntax_value.span(mut pool, 4, 9)
+    const loop = try syntax_value.span(mut pool, 12, 30)
+    mut scope = locals.empty()
+    _ = try locals.add(mut scope, b"value", declaration, 19, False, b"local")
+    mut problems: syntax_problem.Diagnostic[] = []
+    match obligations.consistent(pool, scope, 0, loop, True, mut problems):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "E_RESULT_LOOP" and problem.start == 12 and len(problems[0].notes.related) == 1 and problems[0].notes.related[0].start == 4

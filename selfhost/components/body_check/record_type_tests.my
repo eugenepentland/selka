@@ -74,7 +74,9 @@ func recursive_catalog(mut pool: syntax_value.Pool, element: int) -> record_type
     const ty = try syntax_value.integer(mut pool, element)
     const field = try syntax_value.object(mut pool, ["ty"], [ty])
     const fields = try syntax_value.sequence(mut pool, [field])
-    const schema = try syntax_value.object(mut pool, ["fields", "declaration"], [fields, span])
+    const absent = try syntax_value.absent(mut pool)
+    const shape = try syntax_value.object(mut pool, ["variants"], [absent])
+    const schema = try syntax_value.object(mut pool, ["fields", "declaration", "shape"], [fields, span, shape])
     mut catalog = record_types.empty()
     catalog.rows = [schema, schema]
     for unused in range(21):

@@ -53,10 +53,12 @@ public func test_recipe_graph_has_exact_provenance() -> bool fails syntax_value.
     mut output = syntax_value.empty()
     const encoded = try list_types.encode(mut output, input, [list_types.Recipe(id=42, element=0, span=site)])
     const items = try graph.items(output, encoded)
-    const span = try graph.field(output, items[0], "span")
+    const recipe = try graph.get(output, items[0])
+    const payload = try graph.payload(output, items[0])
+    const span = try graph.field(output, payload, "span")
     const start = try graph.field(output, span, "start")
     const offset = try graph.number(output, start)
-    return len(items) == 1 and offset == 7
+    return len(items) == 1 and recipe.data == b"list" and offset == 7
 
 
 func make_catalog(mut pool: syntax_value.Pool, elements: int[]) -> int fails syntax_value.Problem:

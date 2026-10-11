@@ -1,0 +1,80 @@
+import syntax_value
+import graph
+import engine
+import locals
+import variants
+
+func fresh(method: bool, local: bool) -> engine.State fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    const empty = try syntax_value.sequence(mut pool, [])
+    const absent = try syntax_value.absent(mut pool)
+    const span = try syntax_value.span(mut pool, 0, 13)
+    const name = try syntax_value.span(mut pool, 2, 11)
+    const owner = try syntax_value.span(mut pool, 0, 1)
+    const name_free = try syntax_value.span(mut pool, 0, 9)
+    const raw_text = try syntax_value.octets(mut pool, b"7")
+    const text = try syntax_value.tagged(mut pool, b"text", raw_text)
+    const node = try syntax_value.object(mut pool, ["span", "data"], [span, text])
+    const zero = try syntax_value.integer(mut pool, 0)
+    mut arguments = try syntax_value.sequence(mut pool, [zero])
+    mut call_owner = absent
+    mut call_name = name_free
+    if method or local:
+        arguments = empty
+        call_name = name
+    if local:
+        call_owner = owner
+    mut payload = try syntax_value.object(mut pool, ["owner", "name", "arguments", "argument_names", "type_arguments"], [call_owner, call_name, arguments, empty, empty])
+    mut tag = b"call"
+    if method:
+        payload = try syntax_value.object(mut pool, ["base", "name", "arguments", "argument_names"], [zero, name, empty, empty])
+        tag = b"method_call"
+    const call = try syntax_value.tagged(mut pool, tag, payload)
+    const call_node = try syntax_value.object(mut pool, ["span", "data"], [span, call])
+    const nodes = try syntax_value.sequence(mut pool, [node, call_node])
+    const expressions = try syntax_value.object(mut pool, ["applications", "aliases", "suffixes"], [empty, empty, empty])
+    const types = try syntax_value.object(mut pool, ["records", "domains", "resources", "variants", "constraints", "expressions"], [empty, empty, empty, empty, empty, expressions])
+    const program = try syntax_value.object(mut pool, ["nodes", "statements", "functions", "types"], [nodes, empty, empty, types])
+    const no = try syntax_value.boolean(mut pool, False)
+    const contract = try syntax_value.object(mut pool, ["requires_handling"], [no])
+    const str_name = try syntax_value.octets(mut pool, b"str")
+    const str_schema = try syntax_value.object(mut pool, ["name", "contract"], [str_name, contract])
+    mut source = b"parse_int(7)  "
+    if method or local:
+        source = b"s.parse_int()"
+    mut state = try engine.make(pool, source, program)
+    state.batch.facts.string_type = 19
+    state.batch.facts.lists.base_count = 1
+    state.batch.facts.lists.types.records.rows = [str_schema]
+    for unused in range(20):
+        state.batch.facts.lists.by_element.append(-1)
+        state.batch.facts.lists.elements.append(-1)
+    state.batch.facts.lists.types.variants.option = variants.Template(id=0, declaration=span, raw=-1, cases=[variants.TemplateCase(name=b"none", declaration=span, parameter=-1), variants.TemplateCase(name=b"some", declaration=span, parameter=0)])
+    if local:
+        _ = try locals.add(mut state.scope, b"s", owner, 19, False, b"parameter")
+    return state
+
+
+public func test_free_parse_creates_real_option_recipe_and_rooted_operation() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, False)
+    const value = try engine.expression(mut state, 1)
+    const node_data = try graph.field(state.batch.pool, state.batch.nodes[2], "data")
+    const operation = try graph.payload(state.batch.pool, node_data)
+    const kind_id = try graph.field(state.batch.pool, operation, "kind")
+    const kind = try graph.get(state.batch.pool, kind_id)
+    return value.ty == 20 and value.id == 3 and len(state.batch.nodes) == 4 and len(state.batch.statements) == 2 and len(state.scope.locals) == 1 and state.scope.locals[0].usage.temporary and state.batch.facts.lists.recipes[0].kind == "option" and kind.data == b"parse_int"
+
+
+public func test_expression_parse_method_uses_same_rooted_lowering() -> bool fails syntax_value.Problem:
+    mut state = try fresh(True, False)
+    const value = try engine.expression(mut state, 1)
+    return value.ty == 20 and value.id == 3 and len(state.scope.locals) == 1 and len(state.batch.facts.lists.recipes) == 1
+
+
+public func test_bound_parse_method_retains_owner_site_without_extra_read_node() -> bool fails syntax_value.Problem:
+    mut state = try fresh(False, True)
+    const value = try engine.expression(mut state, 1)
+    const site = state.batch.facts.lists.recipes[0].span
+    const end_id = try graph.field(state.syntax.pool, site, "end")
+    const end = try graph.number(state.syntax.pool, end_id)
+    return value.ty == 20 and value.id == 0 and len(state.batch.nodes) == 1 and len(state.batch.statements) == 0 and len(state.scope.locals) == 1 and state.scope.locals[0].usage.reads == 1 and end == 1

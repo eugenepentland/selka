@@ -9,6 +9,7 @@ import names
 import sequences
 import list_types
 import record_types
+import variants
 
 func ascii(text: str) -> bytes fails syntax_value.Problem:
     const alphabet = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
@@ -66,7 +67,7 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
                 const end = try graph.number(pool, end_id)
                 return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=start, end=end, message="contracts require additional checked bodies outside the record profile"))
     const type_tables = try graph.field(pool, program_id, "types")
-    for field_name in ["domains", "resources", "variants"]:
+    for field_name in ["domains", "resources"]:
         const values_id = try graph.field(pool, type_tables, field_name)
         const values = try graph.items(pool, values_id)
         if len(values) != 0:
@@ -98,10 +99,32 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
             if problem.code == "P_BODY_PROFILE":
                 return try profile(problem)
             fail problem
+    const variants_id = try graph.field(pool, type_tables, "variants")
+    const raw_variants = try graph.items(pool, variants_id)
+    mut variant_catalog = variants.empty()
+    match variants.prepare(pool, source.data, catalog, raw_variants):
+        case Ok(prepared):
+            variant_catalog = prepared
+        case Err(problem):
+            if problem.code == "P_BODY_PROFILE":
+                return try profile(problem)
+            fail problem
+    mut template_spans: int[] = []
+    if variant_catalog.result.id >= 0:
+        template_spans.append(variant_catalog.result.declaration)
+    if variant_catalog.option.id >= 0:
+        template_spans.append(variant_catalog.option.declaration)
+    match record_types.extend_variants(mut records, pool, raw_variants, template_spans):
+        case Ok(extended):
+            _ = extended
+        case Err(problem):
+            if problem.code == "P_BODY_PROFILE":
+                return try profile(problem)
+            fail problem
     const aliases_id = try graph.field(pool, expressions, "aliases")
     const aliases = try graph.items(pool, aliases_id)
     _ = try record_types.bind_names(mut records, pool, source.data, modules, aliases)
-    const lists = try list_types.prepare_records(pool, catalog, suffixes, [string_type, bytes_type], records)
+    mut lists = try list_types.prepare_records(pool, catalog, suffixes, [string_type, bytes_type], records)
     match record_types.closure(mut records, pool, lists.elements, [string_type, bytes_type]):
         case Ok(admitted):
             _ = admitted
@@ -109,6 +132,8 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
             if problem.code == "P_BODY_PROFILE":
                 return try profile(problem)
             fail problem
+    lists.types.variants = variant_catalog
+    _ = try list_types.seed_variants(mut lists, pool)
     state.batch.facts.lists = lists
     if len(state.syntax.functions) > 65536:
         return try profile(syntax_value.Problem(code="P_BODY_PROFILE", start=0, end=0, message="function limit exceeded"))
@@ -166,6 +191,6 @@ public func check(pool: syntax_value.Pool, root: int) -> syntax_value.Pool fails
     const import_used = try syntax_value.sequence(mut state.batch.pool, usage)
     const empty_diagnostics = try syntax_value.sequence(mut state.batch.pool, [])
     const recipes = try list_types.encode(mut state.batch.pool, state.syntax.pool, state.batch.facts.lists.recipes)
-    const output = try syntax_value.object(mut state.batch.pool, ["batch", "import_used", "diagnostics", "lists"], [batch, import_used, empty_diagnostics, recipes])
+    const output = try syntax_value.object(mut state.batch.pool, ["batch", "import_used", "diagnostics", "recipes"], [batch, import_used, empty_diagnostics, recipes])
     _ = try syntax_value.tagged(mut state.batch.pool, b"success", output)
     return state.batch.pool

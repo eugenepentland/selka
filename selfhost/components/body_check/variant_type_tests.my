@@ -1,0 +1,84 @@
+import syntax_value
+import graph
+import variants
+import list_types
+
+func catalog(mut pool: syntax_value.Pool) -> list_types.Catalog fails syntax_value.Problem:
+    const zero = try syntax_value.span(mut pool, 0, 0)
+    mut value = list_types.empty()
+    value.available = True
+    for unused in range(19):
+        value.elements.append(-1)
+        value.by_element.append(-1)
+        value.types.records.by_type.append(-1)
+        value.types.records.admitted.append(False)
+    value.types.variants.result = variants.Template(id=0, declaration=zero, raw=-1, cases=[variants.TemplateCase(name=b"ok", declaration=zero, parameter=0), variants.TemplateCase(name=b"err", declaration=zero, parameter=1)])
+    value.types.variants.option = variants.Template(id=1, declaration=zero, raw=-1, cases=[variants.TemplateCase(name=b"none", declaration=zero, parameter=-1), variants.TemplateCase(name=b"some", declaration=zero, parameter=0)])
+    return value
+
+
+public func test_list_result_option_share_first_demand_id_order() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut value = try catalog(mut pool)
+    const first = try syntax_value.span(mut pool, 1, 2)
+    const second = try syntax_value.span(mut pool, 3, 4)
+    const list = try list_types.intern(mut value, pool, list_types.Recipe(id=0, element=0, span=first), [])
+    const result = try list_types.union_intern(mut value, mut pool, list, 1, second, True)
+    const same = try list_types.union_intern(mut value, mut pool, list, 1, first, True)
+    const option = try list_types.union_intern(mut value, mut pool, 0, -1, first, False)
+    const shape = try variants.result_shape(pool, value.types.records.rows, result)
+    const optional = try variants.option_shape(pool, value.types.records.rows, option)
+    return list == 19 and result == 20 and same == 20 and option == 21 and shape.valid and shape.success == list and shape.failure == 1 and optional.valid and optional.none == 0 and optional.some == 1 and value.recipes[1].span == second and len(value.recipes) == 3
+
+
+public func test_recipe_encoder_is_tagged_and_preserves_parameter_roles() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut value = try catalog(mut pool)
+    const span = try syntax_value.span(mut pool, 0, 0)
+    _ = try list_types.union_intern(mut value, mut pool, 0, 1, span, True)
+    mut output = syntax_value.empty()
+    const encoded = try list_types.encode(mut output, pool, value.recipes)
+    const rows = try graph.items(output, encoded)
+    const tag = try graph.get(output, rows[0])
+    const payload = try graph.payload(output, rows[0])
+    const success_id = try graph.field(output, payload, "success")
+    const failure_id = try graph.field(output, payload, "failure")
+    const success = try graph.number(output, success_id)
+    const failure = try graph.number(output, failure_id)
+    return tag.data == b"result" and success == 0 and failure == 1
+
+
+public func test_reordered_template_maps_payload_parameter_not_tag_position() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut value = try catalog(mut pool)
+    const basis = value.types.variants.result
+    value.types.variants.result.cases = [basis.cases[1], basis.cases[0]]
+    const span = try syntax_value.span(mut pool, 0, 0)
+    const ty = try list_types.union_intern(mut value, mut pool, 0, 1, span, True)
+    const shape = try variants.result_shape(pool, value.types.records.rows, ty)
+    return shape.valid and shape.ok == 1 and shape.err == 0 and shape.success == 0 and shape.failure == 1
+
+
+public func test_recipe_depth_counts_new_constructors_and_retained_leaf() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut value = try catalog(mut pool)
+    const span = try syntax_value.span(mut pool, 0, 0)
+    mut ty = 0
+    for unused in range(255):
+        ty = try list_types.union_intern(mut value, mut pool, ty, -1, span, False)
+    if len(value.recipes) != 255 or value.recipes[254].depth != 256:
+        return False
+    match list_types.union_intern(mut value, mut pool, ty, -1, span, False):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_PROFILE" and len(value.recipes) == 255
+
+
+public func test_recipe_depth_retained_graph_is_a_leaf() -> bool fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut value = try catalog(mut pool)
+    const span = try syntax_value.span(mut pool, 0, 0)
+    const list = try list_types.intern(mut value, pool, list_types.Recipe(id=0, element=0, span=span), [])
+    const option = try list_types.union_intern(mut value, mut pool, list, -1, span, False)
+    return value.recipes[0].depth == 2 and value.recipes[1].depth == 3 and option == 20

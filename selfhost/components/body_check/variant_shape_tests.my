@@ -1,0 +1,69 @@
+import syntax_value
+import variants
+
+record Fixture:
+    pool: syntax_value.Pool
+    rows: int[]
+
+
+func case_row(mut pool: syntax_value.Pool, name: bytes, payload: int) -> int fails syntax_value.Problem:
+    const label = try syntax_value.octets(mut pool, name)
+    const declaration = try syntax_value.span(mut pool, 0, 0)
+    mut value = try syntax_value.absent(mut pool)
+    if payload >= 0:
+        value = try syntax_value.integer(mut pool, payload)
+    const no = try syntax_value.boolean(mut pool, False)
+    return try syntax_value.object(mut pool, ["name", "declaration", "payload", "fielded", "boxed"], [label, declaration, value, no, no])
+
+
+func fixture(result: bool, reversed: bool) -> Fixture fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut first_name = b"none"
+    mut second_name = b"some"
+    mut first_type = -1
+    mut second_type = 0
+    if result:
+        first_name = b"ok"
+        second_name = b"err"
+        first_type = 0
+        second_type = 1
+    const first = try case_row(mut pool, first_name, first_type)
+    const second = try case_row(mut pool, second_name, second_type)
+    mut rows = [first, second]
+    if reversed:
+        rows = [second, first]
+    const cases = try syntax_value.sequence(mut pool, rows)
+    const fallible = try syntax_value.boolean(mut pool, result)
+    const is_union = try syntax_value.boolean(mut pool, True)
+    const value = try syntax_value.object(mut pool, ["fallible", "is_union", "cases"], [fallible, is_union, cases])
+    const shape = try syntax_value.object(mut pool, ["variants"], [value])
+    const contract = try syntax_value.object(mut pool, ["requires_handling"], [fallible])
+    const record_value = try syntax_value.object(mut pool, ["shape", "contract"], [shape, contract])
+    return Fixture(pool=pool, rows=[record_value])
+
+
+public func test_result_case_order_is_nominal_not_hardcoded() -> bool fails syntax_value.Problem:
+    const input = try fixture(True, True)
+    const value = try variants.result_shape(input.pool, input.rows, 19)
+    return value.valid and value.ok == 1 and value.err == 0 and value.success == 0 and value.failure == 1
+
+
+public func test_option_accepts_both_native_case_orders() -> bool fails syntax_value.Problem:
+    const first = try fixture(False, False)
+    const second = try fixture(False, True)
+    const a = try variants.option_shape(first.pool, first.rows, 19)
+    const b = try variants.option_shape(second.pool, second.rows, 19)
+    return a.valid and b.valid and a.some == 1 and a.none == 0 and b.some == 0 and b.none == 1 and a.element == b.element
+
+
+public func test_scalar_is_not_a_variant_or_pending_value() -> bool fails syntax_value.Problem:
+    const input = try fixture(True, False)
+    const value = try variants.shape(input.pool, input.rows, 0)
+    const pending = try variants.requires_handling(input.pool, input.rows, 0)
+    return not value.valid and not pending
+
+
+public func test_result_ownership_comes_from_contract() -> bool fails syntax_value.Problem:
+    const input = try fixture(True, False)
+    const pending = try variants.requires_handling(input.pool, input.rows, 19)
+    return pending

@@ -1,0 +1,279 @@
+import syntax_value
+import graph
+import syntax_problem
+import variant_patterns
+
+record Fixture:
+    pool: syntax_value.Pool
+    nodes: int[]
+    statements: int[]
+    arms: int[]
+    source: bytes
+
+
+func fresh() -> Fixture:
+    return Fixture(pool=syntax_value.empty(), nodes=[], statements=[], arms=[], source=b"Outer C Inner A B x y left right")
+
+
+func span(mut f: Fixture, begin: int, end: int) -> int fails syntax_value.Problem:
+    return try syntax_value.span(mut f.pool, begin, end)
+
+
+func binding(mut f: Fixture, name: int) -> int fails syntax_value.Problem:
+    const data = try syntax_value.tagged(mut f.pool, b"binding", name)
+    const at = try span(mut f, 18, 19)
+    return try syntax_value.object(mut f.pool, ["span", "data"], [at, data])
+
+
+func variant(mut f: Fixture, tag: int, fields: int[]) -> int fails syntax_value.Problem:
+    const ty = try span(mut f, 8, 13)
+    const name = try span(mut f, tag, tag + 1)
+    const items = try syntax_value.sequence(mut f.pool, fields)
+    const value = try syntax_value.object(mut f.pool, ["ty", "name", "fields"], [ty, name, items])
+    const data = try syntax_value.tagged(mut f.pool, b"variant", value)
+    return try syntax_value.object(mut f.pool, ["span", "data"], [name, data])
+
+
+func pattern_field(mut f: Fixture, label: int, pattern: int) -> int fails syntax_value.Problem:
+    return try syntax_value.object(mut f.pool, ["name", "pattern"], [label, pattern])
+
+
+func add_arm(mut f: Fixture, fields: int[], body_start: int) -> int fails syntax_value.Problem:
+    const ty = try span(mut f, 0, 5)
+    const name = try span(mut f, 6, 7)
+    const at = try span(mut f, body_start, body_start + 1)
+    const empty = try syntax_value.sequence(mut f.pool, [])
+    const data = try syntax_value.tagged(mut f.pool, b"block", empty)
+    const fallible_1 = try syntax_value.boolean(mut f.pool, False)
+    const stmt = try syntax_value.object(mut f.pool, ["span", "data", "implicit_discard"], [at, data, fallible_1])
+    const body = len(f.statements)
+    f.statements.append(stmt)
+    const fallible_2 = try syntax_value.boolean(mut f.pool, False)
+    const internal = try syntax_value.object(mut f.pool, ["names", "wildcard"], [empty, fallible_2])
+    const patterns = try syntax_value.sequence(mut f.pool, fields)
+    const body_id = try syntax_value.integer(mut f.pool, body)
+    const arm = try syntax_value.object(mut f.pool, ["ty", "name", "bindings", "binding_names", "payload_patterns", "internal", "body"], [ty, name, empty, empty, patterns, internal, body_id])
+    f.arms.append(arm)
+    return arm
+
+
+func add_nested(mut f: Fixture, tag: int, body: int) -> int fails syntax_value.Problem:
+    const pattern = try variant(mut f, tag, [])
+    const absent = try syntax_value.absent(mut f.pool)
+    const field = try pattern_field(mut f, absent, pattern)
+    return try add_arm(mut f, [field], body)
+
+
+func normalize(mut f: Fixture) -> int[] fails syntax_value.Problem:
+    return try variant_patterns.normalize(mut f.pool, mut f.nodes, mut f.statements, f.source, f.arms)
+
+
+public func test_flat_arms_preserve_ids_and_tables() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const first = try add_arm(mut f, [], 14)
+    const second = try add_arm(mut f, [], 16)
+    const values = len(f.pool.values)
+    const result = try normalize(mut f)
+    return result == [first, second] and len(f.nodes) == 0 and len(f.statements) == 2 and len(f.pool.values) == values
+
+
+public func test_empty_input_preserves_tables() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const result = try normalize(mut f)
+    return len(result) == 0 and len(f.pool.values) == 0 and len(f.nodes) == 0 and len(f.statements) == 0
+
+
+public func test_nested_variants_preserve_source_order_and_synthetic_key() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    _ = try add_nested(mut f, 16, 16)
+    _ = try add_nested(mut f, 14, 14)
+    const result = try normalize(mut f)
+    const data_id = try graph.field(f.pool, f.nodes[0], "data")
+    const key_id = try graph.payload(f.pool, data_id)
+    const key = try graph.get(f.pool, key_id)
+    const body_id = try graph.field(f.pool, result[0], "body")
+    const body = try graph.number(f.pool, body_id)
+    const match_data = try graph.field(f.pool, f.statements[body], "data")
+    const match_value = try graph.payload(f.pool, match_data)
+    const arms_id = try graph.field(f.pool, match_value, "arms")
+    const arms = try graph.items(f.pool, arms_id)
+    const first_name = try graph.field(f.pool, arms[0], "name")
+    const second_name = try graph.field(f.pool, arms[1], "name")
+    const first = try graph.spelling(f.pool, f.source, first_name)
+    const second = try graph.spelling(f.pool, f.source, second_name)
+    return len(result) == 1 and key.data == b"\x00pattern0" and first == b"B" and second == b"A" and len(f.nodes) == 2 and len(f.statements) == 5
+
+
+public func test_duplicate_nested_combinations_locate_second_body() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    _ = try add_nested(mut f, 14, 14)
+    _ = try add_nested(mut f, 14, 16)
+    match normalize(mut f):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_DUPLICATE_ARM" and problem.start == 16 and problem.end == 17 and problem.message == "nested variant combinations overlap"
+
+
+public func test_missing_payload_fields_precedes_compilation() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    _ = try add_nested(mut f, 14, 14)
+    _ = try add_arm(mut f, [], 16)
+    match normalize(mut f):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_PATTERN_PAYLOAD" and problem.start == 6 and problem.end == 7
+
+
+public func test_nested_binding_alias_emits_binding_before_original_body() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const local = try span(mut f, 18, 19)
+    const bind = try binding(mut f, local)
+    const absent = try syntax_value.absent(mut f.pool)
+    const inner_field = try pattern_field(mut f, absent, bind)
+    const pattern = try variant(mut f, 14, [inner_field])
+    const outer_field = try pattern_field(mut f, absent, pattern)
+    _ = try add_arm(mut f, [outer_field], 14)
+    const result = try normalize(mut f)
+    const binding_data = try graph.field(f.pool, f.statements[1], "data")
+    const tag = try graph.get(f.pool, binding_data)
+    const block_data = try graph.field(f.pool, f.statements[2], "data")
+    const block_value = try graph.payload(f.pool, block_data)
+    const children = try graph.items(f.pool, block_value)
+    const first = try graph.number(f.pool, children[0])
+    const last = try graph.number(f.pool, children[1])
+    return len(result) == 1 and tag.data == b"binding" and first == 1 and last == 0 and len(f.nodes) == 4
+
+
+public func test_binding_fallback_overlapping_variant_is_not_silently_accepted() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    _ = try add_nested(mut f, 14, 14)
+    const local = try span(mut f, 18, 19)
+    const bind = try binding(mut f, local)
+    const absent = try syntax_value.absent(mut f.pool)
+    const field = try pattern_field(mut f, absent, bind)
+    _ = try add_arm(mut f, [field], 16)
+    match normalize(mut f):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_DUPLICATE_ARM" and problem.start == 16
+
+
+func product(mut f: Fixture, left: int, right: int, reverse: bool) -> Unit fails syntax_value.Problem:
+    const lname = try span(mut f, 22, 26)
+    const rname = try span(mut f, 27, 32)
+    const lp = try variant(mut f, left, [])
+    const rp = try variant(mut f, right, [])
+    const lf = try pattern_field(mut f, lname, lp)
+    const rf = try pattern_field(mut f, rname, rp)
+    if reverse:
+        _ = try add_arm(mut f, [rf, lf], right)
+    else:
+        _ = try add_arm(mut f, [lf, rf], right)
+
+
+public func test_product_matrix_reorders_labels_without_losing_rows() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const fallible_3 = try product(mut f, 14, 14, False)
+    fallible_3
+    const fallible_4 = try product(mut f, 14, 16, True)
+    fallible_4
+    const fallible_5 = try product(mut f, 16, 14, True)
+    fallible_5
+    const fallible_6 = try product(mut f, 16, 16, False)
+    fallible_6
+    const result = try normalize(mut f)
+    return len(result) == 1 and len(f.nodes) == 5 and len(f.statements) == 11
+
+
+public func test_named_duplicate_preserves_previous_related_span() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const first = try span(mut f, 14, 15)
+    const second = try span(mut f, 16, 17)
+    mut cover = try variant_patterns.coverage(2)
+    mut problems: syntax_problem.Diagnostic[] = []
+    try variant_patterns.named(f.pool, mut cover, first, 0, mut problems)
+    match variant_patterns.named(f.pool, mut cover, second, 0, mut problems):
+        case Ok(value):
+            return False
+        case Err(problem):
+            if problem.code != "E_DUPLICATE_ARM" or problem.start != 16:
+                return False
+    return len(problems) == 1 and problems[0].notes.related[0].start == 14 and problems[0].notes.related[0].message == "previous arm"
+
+
+public func test_wildcard_tags_keep_declaration_order_and_share_body() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const first = try span(mut f, 14, 15)
+    mut cover = try variant_patterns.coverage(4)
+    mut problems: syntax_problem.Diagnostic[] = []
+    try variant_patterns.named(f.pool, mut cover, first, 1, mut problems)
+    const tags = try variant_patterns.wildcard_after(f.pool, mut cover, first, [False, True, False, False])
+    return tags == [0, 2, 3] and cover.seen == [first, first, first, first]
+
+
+public func test_internal_complete_wildcard_skips_before_last_rule() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const first = try span(mut f, 14, 15)
+    mut cover = try variant_patterns.coverage(1)
+    mut problems: syntax_problem.Diagnostic[] = []
+    try variant_patterns.named(f.pool, mut cover, first, 0, mut problems)
+    const skip = try variant_patterns.wildcard_before(f.pool, cover, first, variant_patterns.Wildcard(internal=True, last=False))
+    return skip
+
+
+public func test_explicit_wildcard_must_be_last_even_when_complete() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const first = try span(mut f, 14, 15)
+    const cover = variant_patterns.Cover(seen=[first])
+    match variant_patterns.wildcard_before(f.pool, cover, first, variant_patterns.Wildcard(internal=False, last=False)):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_WILDCARD_ARM" and problem.message == "`case _` must be the last arm of a match"
+
+
+public func test_wildcard_refuses_pending_payload_at_first_uncovered_tag() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const first = try span(mut f, 14, 15)
+    mut cover = try variant_patterns.coverage(2)
+    match variant_patterns.wildcard_after(f.pool, mut cover, first, [False, True]):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_RESULT_DISCARD" and cover.seen == [first, -1]
+
+
+public func test_explicit_complete_wildcard_reports_unreachable_after_body() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const first = try span(mut f, 14, 15)
+    mut cover = variant_patterns.Cover(seen=[first])
+    const skip = try variant_patterns.wildcard_before(f.pool, cover, first, variant_patterns.Wildcard(internal=False, last=True))
+    if skip:
+        return False
+    match variant_patterns.wildcard_after(f.pool, mut cover, first, [False]):
+        case Ok(value):
+            return False
+        case Err(problem):
+            return problem.code == "E_WILDCARD_ARM" and problem.message == "every variant already has an arm, so `case _` is unreachable"
+
+
+public func test_exhaustiveness_reports_first_declaration_and_related_site() -> bool fails syntax_value.Problem:
+    mut f = fresh()
+    const first = try span(mut f, 14, 15)
+    const second = try span(mut f, 16, 17)
+    const name = try syntax_value.octets(mut f.pool, b"A")
+    const other = try syntax_value.octets(mut f.pool, b"B")
+    const a = try syntax_value.object(mut f.pool, ["name", "declaration"], [name, first])
+    const b = try syntax_value.object(mut f.pool, ["name", "declaration"], [other, second])
+    const cover = variant_patterns.Cover(seen=[-1, -1])
+    mut problems: syntax_problem.Diagnostic[] = []
+    match variant_patterns.complete(f.pool, cover, [a, b], second, mut problems):
+        case Ok(value):
+            return False
+        case Err(problem):
+            if problem.code != "E_INCOMPLETE_MATCH" or problem.message != "match does not handle variant `A`; every variant requires an explicit arm":
+                return False
+    return len(problems) == 1 and problems[0].notes.related[0].start == 14 and problems[0].notes.related[0].message == "unhandled variant declared here"

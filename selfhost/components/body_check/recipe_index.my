@@ -1,0 +1,75 @@
+import syntax_value
+
+# Explicit bounded open addressing: no native dictionary or semantic lookup.
+public record Key:
+    kind: int
+    first: int
+    second: int
+    id: int
+
+
+public record Index:
+    keys: Key[]
+    slots: int[]
+
+
+public func empty() -> Index:
+    return Index(keys=[], slots=[])
+
+
+func bucket(kind: int, first: int, second: int, capacity: int) -> int:
+    return (first * 1000003 + (second + 1) * 101 + kind * 17) % capacity
+
+
+public func lookup(index: Index, kind: int, first: int, second: int) -> int:
+    if len(index.slots) == 0:
+        return -1
+    mut position = bucket(kind, first, second, len(index.slots))
+    mut visited = 0
+    while visited < len(index.slots):
+        const entry = index.slots[position]
+        if entry < 0:
+            return -1
+        const key = index.keys[entry]
+        if key.kind == kind and key.first == first and key.second == second:
+            return key.id
+        position = (position + 1) % len(index.slots)
+        visited = visited + 1
+    return -1
+
+
+func grow(mut index: Index) -> bool:
+    mut capacity = len(index.slots) * 2
+    if capacity == 0:
+        capacity = 16
+    index.slots = []
+    for unused in range(capacity):
+        index.slots.append(-1)
+    for entry in range(len(index.keys)):
+        const key = index.keys[entry]
+        mut position = bucket(key.kind, key.first, key.second, capacity)
+        while index.slots[position] >= 0:
+            position = (position + 1) % capacity
+        index.slots[position] = entry
+    return True
+
+
+public func insert(mut index: Index, key: Key) -> bool fails syntax_value.Problem:
+    if key.kind < 0 or key.kind > 2 or key.first < 0 or key.first >= 65555 or key.second < -1 or key.second >= 65555 or key.id < 19 or key.id >= 65555:
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid catalog recipe key")
+    const previous = lookup(index, key.kind, key.first, key.second)
+    if previous >= 0:
+        if previous != key.id:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="duplicate catalog recipe identity")
+        return False
+    if len(index.keys) >= 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="catalog recipe index limit exceeded")
+    if len(index.slots) == 0 or (len(index.keys) + 1) * 2 > len(index.slots):
+        _ = grow(mut index)
+    const entry = len(index.keys)
+    index.keys.append(key)
+    mut position = bucket(key.kind, key.first, key.second, len(index.slots))
+    while index.slots[position] >= 0:
+        position = (position + 1) % len(index.slots)
+    index.slots[position] = entry
+    return True

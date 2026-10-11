@@ -4,6 +4,10 @@ import locals
 import syntax_value
 import emission
 import syntax_problem
+import list_types
+import variants
+import obligations
+import failure_lower
 
 public func type_at(mut state: engine.State, span: int) -> int fails syntax_value.Problem:
     return try engine.type_at(mut state, span)
@@ -20,7 +24,7 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
         state.batch.resolved.append(-1)
         state.batch.facts.expected.append(-1)
     state.depth = 0
-    state.control = engine.Control(next=0, active=[], exited=[])
+    state.control = engine.fresh_control()
     const declaration = try graph.field(state.syntax.pool, raw, "name")
     const raw_policy = try graph.field(state.syntax.pool, raw, "policy")
     for field_name in ["constant", "c_abi", "restricted", "conversion"]:
@@ -40,12 +44,18 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
     const generics = try graph.items(state.syntax.pool, generics_id)
     const failure_id = try graph.field(state.syntax.pool, signature_id, "failure_type")
     const failure = try graph.get(state.syntax.pool, failure_id)
-    if len(generics) != 0 or failure.kind != 0:
-        const rejection = try engine.problem(state, declaration, "P_BODY_PROFILE", "B1 requires nongeneric functions without checked failure types")
+    if len(generics) != 0:
+        const rejection = try engine.problem(state, declaration, "P_BODY_PROFILE", "generic functions are outside the body profile")
         fail rejection
     const return_span = try graph.field(state.syntax.pool, signature_id, "return_type")
     const return_type = try type_at(mut state, return_span)
+    state.control.success_type = return_type
     state.return_type = return_type
+    if failure.kind != 0:
+        const failure_type = try type_at(mut state, failure_id)
+        state.control.failure_type = failure_type
+        const result_type = try list_types.union_intern(mut state.batch.facts.lists, mut state.syntax.pool, return_type, failure_type, declaration, True)
+        state.return_type = result_type
     const parameters_id = try graph.field(state.syntax.pool, signature_id, "parameters")
     const parameters = try graph.items(state.syntax.pool, parameters_id)
     mut labels: int[] = []
@@ -73,7 +83,9 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
             const default_raw = try graph.number(state.syntax.pool, default_id)
             const checked = try engine.expression_expected(mut state, default_raw, ty)
             _ = try engine.require(state, checked.ty, ty, type_span)
-        _ = try locals.add(mut state.scope, spelling, parameter_name, ty, mutable.integer != 0, b"parameter")
+        const slot = try locals.add(mut state.scope, spelling, parameter_name, ty, mutable.integer != 0, b"parameter")
+        const pending = try variants.requires_handling(state.syntax.pool, state.batch.facts.lists.types.records.rows, ty)
+        state.scope.locals[slot].usage.transfer_available = pending
         const named_id = try graph.field(state.syntax.pool, parameter, "named")
         const named = try graph.get(state.syntax.pool, named_id)
         mut label_text = b""
@@ -85,11 +97,15 @@ public func check(mut state: engine.State, raw: int, id: int, name: bytes) -> bo
     const body_raw = try graph.number(state.syntax.pool, body_id)
     mut body = try engine.statement(mut state, body_raw)
     if not body.terminates:
-        if state.return_type != 15:
+        _ = try obligations.handled(state.syntax.pool, state.batch.facts.lists.types.records.rows, state.scope, 0, declaration, mut state.problems)
+        if state.control.success_type != 15:
             const rejection = try engine.problem(state, declaration, "E_MISSING_RETURN", "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true")
             fail rejection
         const unit_payload = try syntax_value.absent(mut state.batch.pool)
-        const unit = try emission.node(mut state.batch, state.syntax.pool, declaration, 15, b"unit", unit_payload)
+        mut unit = try emission.node(mut state.batch, state.syntax.pool, declaration, 15, b"unit", unit_payload)
+        if state.control.failure_type >= 0:
+            const context = failure_lower.Context(pool=state.syntax.pool, records=state.batch.facts.lists.types.records.rows, span=declaration)
+            unit = try failure_lower.wrap_success(mut state.batch, context, state.return_type, unit)
         const return_payload = try syntax_value.integer(mut state.batch.pool, unit)
         const ret = try emission.statement(mut state.batch, state.syntax.pool, declaration, True, b"ret", return_payload)
         const children = try emission.ids(mut state.batch, [body.id, ret])

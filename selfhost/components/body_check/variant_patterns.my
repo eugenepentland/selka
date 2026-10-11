@@ -1,0 +1,463 @@
+import syntax_value
+import graph
+import syntax_problem
+import suggestions
+
+record Cell:
+    key: bytes
+    pattern: int
+
+
+record Alias:
+    name: int
+    key: bytes
+
+
+record Row:
+    cells: Cell[]
+    aliases: Alias[]
+    body: int
+
+
+record Matrix:
+    pool: syntax_value.Pool
+    nodes: int[]
+    statements: int[]
+    source: bytes
+    depth: int
+
+
+func located(matrix: Matrix, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const start_id = try graph.field(matrix.pool, span, "start")
+    const end_id = try graph.field(matrix.pool, span, "end")
+    const start = try graph.number(matrix.pool, start_id)
+    const end = try graph.number(matrix.pool, end_id)
+    return syntax_value.Problem(code=code, start=start, end=end, message=message)
+
+
+func equal(matrix: Matrix, left: int, right: int) -> bool fails syntax_value.Problem:
+    const a = try graph.spelling(matrix.pool, matrix.source, left)
+    const b = try graph.spelling(matrix.pool, matrix.source, right)
+    return a == b
+
+
+func node(mut matrix: Matrix, key: bytes, span: int) -> int fails syntax_value.Problem:
+    if len(matrix.nodes) >= 262144:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="pattern node table exceeded")
+    const name = try syntax_value.octets(mut matrix.pool, key)
+    const data = try syntax_value.tagged(mut matrix.pool, b"synthetic_name", name)
+    const value = try syntax_value.object(mut matrix.pool, ["span", "data"], [span, data])
+    const id = len(matrix.nodes)
+    matrix.nodes.append(value)
+    return id
+
+
+func fresh_key(mut matrix: Matrix) -> bytes fails syntax_value.Problem:
+    const digits = str(len(matrix.nodes))
+    mut buffer = byte_buffer([0, 112, 97, 116, 116, 101, 114, 110])
+    for digit in digits:
+        _ = buffer.append_byte(ord(digit))
+    const name = bytes(buffer)
+    const span = try syntax_value.span(mut matrix.pool, 0, 0)
+    _ = try node(mut matrix, name, span)
+    return name
+
+
+func statement(mut matrix: Matrix, span: int, data: int) -> int fails syntax_value.Problem:
+    if len(matrix.statements) >= 262144:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="pattern statement table exceeded")
+    const fallible_1 = try syntax_value.boolean(mut matrix.pool, False)
+    const value = try syntax_value.object(mut matrix.pool, ["span", "data", "implicit_discard"], [span, data, fallible_1])
+    const id = len(matrix.statements)
+    matrix.statements.append(value)
+    return id
+
+
+func add_pattern(matrix: Matrix, mut row: Row, name: bytes, pattern: int) -> Unit fails syntax_value.Problem:
+    const data_id = try graph.field(matrix.pool, pattern, "data")
+    const data = try graph.get(matrix.pool, data_id)
+    if data.data == b"variant":
+        row.cells.append(Cell(key=name, pattern=pattern))
+        return
+    if data.data != b"binding":
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid nested pattern tag")
+    const binding = try graph.payload(matrix.pool, data_id)
+    const value = try graph.get(matrix.pool, binding)
+    if value.kind != 0:
+        row.aliases.append(Alias(name=binding, key=name))
+
+
+func find(row: Row, name: bytes) -> int:
+    for index in range(len(row.cells)):
+        if row.cells[index].key == name:
+            return index
+    return -1
+
+
+func same_variant(matrix: Matrix, a: int, b: int) -> bool fails syntax_value.Problem:
+    const adata = try graph.field(matrix.pool, a, "data")
+    const bdata = try graph.field(matrix.pool, b, "data")
+    const avalue = try graph.get(matrix.pool, adata)
+    const bvalue = try graph.get(matrix.pool, bdata)
+    if avalue.data != b"variant" or bvalue.data != b"variant":
+        return False
+    const left = try graph.payload(matrix.pool, adata)
+    const right = try graph.payload(matrix.pool, bdata)
+    const aty = try graph.field(matrix.pool, left, "ty")
+    const bty = try graph.field(matrix.pool, right, "ty")
+    const aname = try graph.field(matrix.pool, left, "name")
+    const bname = try graph.field(matrix.pool, right, "name")
+    const fallible_2 = try equal(matrix, aname, bname)
+    const fallible_3 = try equal(matrix, aty, bty)
+    return fallible_3 and fallible_2
+
+
+func field(matrix: Matrix, fields: int[], exemplar: int, position: int) -> int fails syntax_value.Problem:
+    const label = try graph.field(matrix.pool, exemplar, "name")
+    const value = try graph.get(matrix.pool, label)
+    if value.kind != 0:
+        for item in fields:
+            const name = try graph.field(matrix.pool, item, "name")
+            const candidate = try graph.get(matrix.pool, name)
+            if candidate.kind != 0:
+                const matches = try equal(matrix, label, name)
+                if matches:
+                    return try graph.field(matrix.pool, item, "pattern")
+    else:
+        if position < len(fields):
+            return try graph.field(matrix.pool, fields[position], "pattern")
+    const pattern = try graph.field(matrix.pool, exemplar, "pattern")
+    const span = try graph.field(matrix.pool, pattern, "span")
+    const problem = try located(matrix, span, "E_PATTERN_PAYLOAD", "pattern must specify every enum payload field")
+    fail problem
+
+
+func make_arm(mut matrix: Matrix, ty: int, name: int, fields: int[], body: int, keys: bytes[]) -> int fails syntax_value.Problem:
+    mut bindings: int[] = []
+    mut labels: int[] = []
+    mut names: int[] = []
+    for item in fields:
+        const pattern = try graph.field(matrix.pool, item, "pattern")
+        const fallible_5 = try graph.field(matrix.pool, pattern, "span")
+        bindings.append(fallible_5)
+        const fallible_6 = try graph.field(matrix.pool, item, "name")
+        labels.append(fallible_6)
+    for key_name in keys:
+        const fallible_7 = try syntax_value.octets(mut matrix.pool, key_name)
+        names.append(fallible_7)
+    const fallible_8 = try syntax_value.boolean(mut matrix.pool, False)
+    const fallible_9 = try syntax_value.sequence(mut matrix.pool, names)
+    const internal = try syntax_value.object(mut matrix.pool, ["names", "wildcard"], [fallible_9, fallible_8])
+    const fallible_10 = try syntax_value.integer(mut matrix.pool, body)
+    const fallible_11 = try syntax_value.sequence(mut matrix.pool, [])
+    const fallible_12 = try syntax_value.sequence(mut matrix.pool, labels)
+    const fallible_13 = try syntax_value.sequence(mut matrix.pool, bindings)
+    return try syntax_value.object(mut matrix.pool, ["ty", "name", "bindings", "binding_names", "payload_patterns", "internal", "body"], [ty, name, fallible_13, fallible_12, fallible_11, internal, fallible_10])
+
+
+func leaf(mut matrix: Matrix, rows: Row[]) -> int fails syntax_value.Problem:
+    if len(rows) != 1:
+        if len(rows) < 2:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="empty pattern matrix")
+        const span = try graph.field(matrix.pool, matrix.statements[rows[1].body], "span")
+        const problem = try located(matrix, span, "E_DUPLICATE_ARM", "nested variant combinations overlap")
+        fail problem
+    const row = rows[0]
+    mut children: int[] = []
+    for alias in row.aliases:
+        const value = try node(mut matrix, alias.key, alias.name)
+        const fallible_14 = try syntax_value.integer(mut matrix.pool, value)
+        const fallible_15 = try syntax_value.boolean(mut matrix.pool, False)
+        const fallible_16 = try syntax_value.absent(mut matrix.pool)
+        const binding = try syntax_value.object(mut matrix.pool, ["name", "annotation", "mutable", "value"], [alias.name, fallible_16, fallible_15, fallible_14])
+        const data = try syntax_value.tagged(mut matrix.pool, b"binding", binding)
+        const id = try statement(mut matrix, alias.name, data)
+        const fallible_17 = try syntax_value.integer(mut matrix.pool, id)
+        children.append(fallible_17)
+    const fallible_18 = try syntax_value.integer(mut matrix.pool, row.body)
+    children.append(fallible_18)
+    const span = try graph.field(matrix.pool, matrix.statements[row.body], "span")
+    const fallible_19 = try syntax_value.sequence(mut matrix.pool, children)
+    const data = try syntax_value.tagged(mut matrix.pool, b"block", fallible_19)
+    return try statement(mut matrix, span, data)
+
+
+func expand(matrix: Matrix, row: Row, column: Cell, pattern: int, keys: bytes[]) -> Row fails syntax_value.Problem:
+    mut result = Row(cells=[], aliases=row.aliases, body=row.body)
+    for cell in row.cells:
+        if cell.key != column.key:
+            result.cells.append(cell)
+    const found = find(row, column.key)
+    if found >= 0:
+        const data = try graph.field(matrix.pool, pattern, "data")
+        const variant = try graph.payload(matrix.pool, data)
+        const fields_id = try graph.field(matrix.pool, variant, "fields")
+        const fields = try graph.items(matrix.pool, fields_id)
+        const matched_data = try graph.field(matrix.pool, row.cells[found].pattern, "data")
+        const matched = try graph.payload(matrix.pool, matched_data)
+        const candidate_id = try graph.field(matrix.pool, matched, "fields")
+        const candidate = try graph.items(matrix.pool, candidate_id)
+        if len(candidate) != len(fields):
+            const span = try graph.field(matrix.pool, row.cells[found].pattern, "span")
+            const problem = try located(matrix, span, "E_PATTERN_PAYLOAD", "pattern must specify every enum payload field")
+            fail problem
+        for index in range(len(fields)):
+            const item = try field(matrix, candidate, fields[index], index)
+            const fallible_20 = try add_pattern(matrix, mut result, keys[index], item)
+            fallible_20
+    return result
+
+
+func variant_arm(mut matrix: Matrix, rows: Row[], column: Cell, pattern: int) -> int fails syntax_value.Problem:
+    const data = try graph.field(matrix.pool, pattern, "data")
+    const variant = try graph.payload(matrix.pool, data)
+    const fields_id = try graph.field(matrix.pool, variant, "fields")
+    const fields = try graph.items(matrix.pool, fields_id)
+    mut keys: bytes[] = []
+    for item in fields:
+        const fallible_21 = try fresh_key(mut matrix)
+        keys.append(fallible_21)
+    mut group: Row[] = []
+    for row in rows:
+        const found = find(row, column.key)
+        if found >= 0:
+            const same = try same_variant(matrix, row.cells[found].pattern, pattern)
+            if not same:
+                continue
+        const fallible_23 = try expand(matrix, row, column, pattern, keys)
+        group.append(fallible_23)
+    const ty = try graph.field(matrix.pool, variant, "ty")
+    const name = try graph.field(matrix.pool, variant, "name")
+    const body = try compile(mut matrix, group)
+    return try make_arm(mut matrix, ty, name, fields, body, keys)
+
+
+func compile(mut matrix: Matrix, rows: Row[]) -> int fails syntax_value.Problem:
+    if matrix.depth >= 256 or len(rows) > 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="pattern matrix depth or rows exceeded")
+    matrix.depth += 1
+    mut selected = Cell(key=b"", pattern=-1)
+    for row in rows:
+        if len(row.cells) != 0:
+            selected = row.cells[0]
+            break
+    if selected.pattern < 0:
+        const result = try leaf(mut matrix, rows)
+        matrix.depth -= 1
+        return result
+    mut arms: int[] = []
+    mut patterns: int[] = []
+    for row in rows:
+        const found = find(row, selected.key)
+        if found < 0:
+            continue
+        const matched = row.cells[found].pattern
+        mut duplicate = False
+        for pattern in patterns:
+            const fallible_24 = try same_variant(matrix, matched, pattern)
+            if fallible_24:
+                duplicate = True
+                break
+        if duplicate:
+            continue
+        patterns.append(matched)
+        const fallible_25 = try variant_arm(mut matrix, rows, selected, matched)
+        arms.append(fallible_25)
+    mut fallback: Row[] = []
+    for row in rows:
+        if find(row, selected.key) < 0:
+            fallback.append(row)
+    const span = try graph.field(matrix.pool, selected.pattern, "span")
+    if len(fallback) != 0:
+        const start_id = try graph.field(matrix.pool, span, "start")
+        const start = try graph.number(matrix.pool, start_id)
+        const ty = try syntax_value.span(mut matrix.pool, start, start)
+        const fallible_26 = try syntax_value.boolean(mut matrix.pool, True)
+        const fallible_27 = try syntax_value.sequence(mut matrix.pool, [])
+        const internal = try syntax_value.object(mut matrix.pool, ["names", "wildcard"], [fallible_27, fallible_26])
+        const body = try compile(mut matrix, fallback)
+        const empty = try syntax_value.sequence(mut matrix.pool, [])
+        const fallible_28 = try syntax_value.integer(mut matrix.pool, body)
+        const wildcard = try syntax_value.object(mut matrix.pool, ["ty", "name", "bindings", "binding_names", "payload_patterns", "internal", "body"], [ty, span, empty, empty, empty, internal, fallible_28])
+        arms.append(wildcard)
+    const value = try node(mut matrix, selected.key, span)
+    const fallible_29 = try syntax_value.sequence(mut matrix.pool, arms)
+    const fallible_30 = try syntax_value.integer(mut matrix.pool, value)
+    const match_value = try syntax_value.object(mut matrix.pool, ["value", "arms"], [fallible_30, fallible_29])
+    const data = try syntax_value.tagged(mut matrix.pool, b"match", match_value)
+    const result = try statement(mut matrix, span, data)
+    matrix.depth -= 1
+    return result
+
+
+func nested(matrix: Matrix, arm: int) -> bool fails syntax_value.Problem:
+    const fields_id = try graph.field(matrix.pool, arm, "payload_patterns")
+    const fields = try graph.items(matrix.pool, fields_id)
+    for item in fields:
+        const pattern = try graph.field(matrix.pool, item, "pattern")
+        const data_id = try graph.field(matrix.pool, pattern, "data")
+        const data = try graph.get(matrix.pool, data_id)
+        if data.data == b"variant":
+            return True
+    return False
+
+
+func normalize_group(mut matrix: Matrix, arms: int[]) -> int fails syntax_value.Problem:
+    const first = arms[0]
+    const fields_id = try graph.field(matrix.pool, first, "payload_patterns")
+    const fields = try graph.items(matrix.pool, fields_id)
+    mut keys: bytes[] = []
+    for item in fields:
+        const fallible_31 = try fresh_key(mut matrix)
+        keys.append(fallible_31)
+    mut rows: Row[] = []
+    for input in arms:
+        const candidates_id = try graph.field(matrix.pool, input, "payload_patterns")
+        const candidates = try graph.items(matrix.pool, candidates_id)
+        if len(candidates) != len(fields):
+            const span = try graph.field(matrix.pool, input, "name")
+            const problem = try located(matrix, span, "E_PATTERN_PAYLOAD", "pattern must specify every enum payload field")
+            fail problem
+        const body_id = try graph.field(matrix.pool, input, "body")
+        const fallible_32 = try graph.number(matrix.pool, body_id)
+        mut row = Row(cells=[], aliases=[], body=fallible_32)
+        for position in range(len(fields)):
+            const pattern = try field(matrix, candidates, fields[position], position)
+            const fallible_33 = try add_pattern(matrix, mut row, keys[position], pattern)
+            fallible_33
+        rows.append(row)
+    const ty = try graph.field(matrix.pool, first, "ty")
+    const name = try graph.field(matrix.pool, first, "name")
+    const body = try compile(mut matrix, rows)
+    return try make_arm(mut matrix, ty, name, fields, body, keys)
+
+
+# Mirrors frontend_patterns.normalize; type-directed tag checks remain in engine.
+public func normalize(mut pool: syntax_value.Pool, mut nodes: int[], mut statements: int[], source: bytes, arms: int[]) -> int[] fails syntax_value.Problem:
+    if len(arms) > 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="pattern arm count exceeded")
+    mut matrix = Matrix(pool=pool, nodes=nodes, statements=statements, source=source, depth=0)
+    mut used: bool[] = []
+    for item in arms:
+        used.append(False)
+    mut output: int[] = []
+    for index in range(len(arms)):
+        if used[index]:
+            continue
+        const ty = try graph.field(matrix.pool, arms[index], "ty")
+        const name = try graph.field(matrix.pool, arms[index], "name")
+        mut group: int[] = []
+        mut has_nested = False
+        for position in range(index, len(arms)):
+            const other_ty = try graph.field(matrix.pool, arms[position], "ty")
+            const other_name = try graph.field(matrix.pool, arms[position], "name")
+            const fallible_34 = try equal(matrix, name, other_name)
+            const fallible_35 = try equal(matrix, ty, other_ty)
+            if not fallible_35 or not fallible_34:
+                continue
+            used[position] = True
+            const fallible_36 = try nested(matrix, arms[position])
+            if fallible_36:
+                has_nested = True
+            group.append(arms[position])
+        if not has_nested:
+            for item in group:
+                output.append(item)
+        else:
+            const fallible_37 = try normalize_group(mut matrix, group)
+            output.append(fallible_37)
+    pool = matrix.pool
+    nodes = matrix.nodes
+    statements = matrix.statements
+    return output
+
+
+public record Cover:
+    seen: int[]
+
+
+public record Wildcard:
+    internal: bool
+    last: bool
+
+
+public func coverage(count: int) -> Cover fails syntax_value.Problem:
+    if count < 0 or count > 65536:
+        fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="variant case count exceeded")
+    mut seen: int[] = []
+    for index in range(count):
+        seen.append(-1)
+    return Cover(seen=seen)
+
+
+func complete_cases(cover: Cover) -> bool:
+    for span in cover.seen:
+        if span < 0:
+            return False
+    return True
+
+
+func at(pool: syntax_value.Pool, span: int, code: str, message: str) -> syntax_value.Problem fails syntax_value.Problem:
+    const begin = try graph.field(pool, span, "start")
+    const end = try graph.field(pool, span, "end")
+    const start = try graph.number(pool, begin)
+    const finish = try graph.number(pool, end)
+    return syntax_value.Problem(code=code, start=start, end=finish, message=message)
+
+
+public func named(pool: syntax_value.Pool, mut cover: Cover, name: int, tag: int, mut problems: syntax_problem.Diagnostic[]) -> Unit fails syntax_value.Problem:
+    if tag < 0 or tag >= len(cover.seen):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid matched variant tag")
+    if cover.seen[tag] >= 0:
+        const problem = try at(pool, name, "E_DUPLICATE_ARM", "variant has more than one match arm")
+        const previous = try at(pool, cover.seen[tag], "", "")
+        const related = syntax_problem.Related(start=previous.start, end=previous.end, message="previous arm", role="related")
+        problems.append(syntax_problem.Diagnostic(problem=problem, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+        fail problem
+    cover.seen[tag] = name
+
+
+# A generated wildcard with a complete discriminator is omitted before its body.
+public func wildcard_before(pool: syntax_value.Pool, cover: Cover, name: int, flags: Wildcard) -> bool fails syntax_value.Problem:
+    if flags.internal and complete_cases(cover):
+        return True
+    if not flags.last:
+        const problem = try at(pool, name, "E_WILDCARD_ARM", "`case _` must be the last arm of a match")
+        fail problem
+    return False
+
+
+# Run only after the wildcard body has been checked; returned tags share that body.
+public func wildcard_after(pool: syntax_value.Pool, mut cover: Cover, name: int, pending_payloads: bool[]) -> int[] fails syntax_value.Problem:
+    if len(pending_payloads) != len(cover.seen):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid wildcard case policy")
+    mut tags: int[] = []
+    for tag in range(len(cover.seen)):
+        if cover.seen[tag] >= 0:
+            continue
+        if pending_payloads[tag]:
+            const problem = try at(pool, name, "E_RESULT_DISCARD", "`case _` would drop a result-bearing payload; give that variant its own arm")
+            fail problem
+        cover.seen[tag] = name
+        tags.append(tag)
+    if len(tags) == 0:
+        const problem = try at(pool, name, "E_WILDCARD_ARM", "every variant already has an arm, so `case _` is unreachable")
+        fail problem
+    return tags
+
+
+public func complete(pool: syntax_value.Pool, cover: Cover, cases: int[], span: int, mut problems: syntax_problem.Diagnostic[]) -> Unit fails syntax_value.Problem:
+    if len(cases) != len(cover.seen):
+        fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid exhaustive case schema")
+    for tag in range(len(cases)):
+        if cover.seen[tag] >= 0:
+            continue
+        const name_id = try graph.field(pool, cases[tag], "name")
+        const name = try graph.get(pool, name_id)
+        const text = try suggestions.text(name.data)
+        const problem = try at(pool, span, "E_INCOMPLETE_MATCH", "match does not handle variant `" + text + "`; every variant requires an explicit arm")
+        const declaration = try graph.field(pool, cases[tag], "declaration")
+        const missing = try at(pool, declaration, "", "")
+        const related = syntax_problem.Related(start=missing.start, end=missing.end, message="unhandled variant declared here", role="related")
+        problems.append(syntax_problem.Diagnostic(problem=problem, severity="err", notes=syntax_problem.Notes(related=[related], origin=[], requirement=[], edits=[])))
+        fail problem

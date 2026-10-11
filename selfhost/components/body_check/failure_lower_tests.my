@@ -1,0 +1,254 @@
+import syntax_value
+import graph
+import emission
+import failure_lower
+
+func member(mut pool: syntax_value.Pool, name: bytes, payload: int, fielded: bool) -> int fails syntax_value.Problem:
+    const label = try syntax_value.octets(mut pool, name)
+    const declaration = try syntax_value.span(mut pool, 1, 2)
+    mut ty = try syntax_value.absent(mut pool)
+    if payload >= 0:
+        ty = try syntax_value.integer(mut pool, payload)
+    const fields = try syntax_value.boolean(mut pool, fielded)
+    const no = try syntax_value.boolean(mut pool, False)
+    return try syntax_value.object(mut pool, ["name", "declaration", "payload", "fielded", "boxed"], [label, declaration, ty, fields, no])
+
+
+func row(mut pool: syntax_value.Pool, types: int[], cases: int[], is_union: bool, fallible: bool) -> int fails syntax_value.Problem:
+    mut fields: int[] = []
+    for ty in types:
+        const value = try syntax_value.integer(mut pool, ty)
+        const field = try syntax_value.object(mut pool, ["ty"], [value])
+        fields.append(field)
+    const field_rows = try syntax_value.sequence(mut pool, fields)
+    mut variant = try syntax_value.absent(mut pool)
+    if len(cases) > 0:
+        const case_rows = try syntax_value.sequence(mut pool, cases)
+        const union_flag = try syntax_value.boolean(mut pool, is_union)
+        const result_flag = try syntax_value.boolean(mut pool, fallible)
+        variant = try syntax_value.object(mut pool, ["cases", "is_union", "fallible"], [case_rows, union_flag, result_flag])
+    const shape = try syntax_value.object(mut pool, ["variants"], [variant])
+    return try syntax_value.object(mut pool, ["shape", "fields"], [shape, field_rows])
+
+
+func option(mut pool: syntax_value.Pool, element: int, reversed: bool) -> int fails syntax_value.Problem:
+    const some = try member(mut pool, b"some", element, False)
+    const none = try member(mut pool, b"none", -1, False)
+    mut cases = [none, some]
+    if reversed:
+        cases = [some, none]
+    return try row(mut pool, [], cases, True, False)
+
+
+func fixture() -> failure_lower.Context fails syntax_value.Problem:
+    mut pool = syntax_value.empty()
+    mut rows: int[] = []
+    # 19: ordinary empty error record. 20: Result with reversed case order.
+    const error_record = try row(mut pool, [], [], False, False)
+    rows.append(error_record)
+    const ok = try member(mut pool, b"ok", 0, False)
+    const err = try member(mut pool, b"err", 19, False)
+    const result = try row(mut pool, [], [err, ok], True, True)
+    rows.append(result)
+    # 21: synthesized one-field payload. 22: its wrapping case precedes a direct match.
+    const fielded = try row(mut pool, [19], [], False, False)
+    rows.append(fielded)
+    const wrapped = try member(mut pool, b"wrapped", 21, True)
+    const direct = try member(mut pool, b"direct", 19, False)
+    const container = try row(mut pool, [], [wrapped, direct], True, False)
+    rows.append(container)
+    # 23-25: int?, int??, bool?, including reversed some/none tags.
+    const inner = try option(mut pool, 0, True)
+    rows.append(inner)
+    const outer = try option(mut pool, 23, False)
+    rows.append(outer)
+    const incompatible = try option(mut pool, 1, False)
+    rows.append(incompatible)
+    # 26: nonunion shape; 27: two direct cases preserve the first match.
+    const enumeration = try row(mut pool, [], [direct], False, False)
+    rows.append(enumeration)
+    const other = try member(mut pool, b"other", 19, False)
+    const ambiguous = try row(mut pool, [], [other, direct], True, False)
+    rows.append(ambiguous)
+    # 28-29: a multi-field case cannot be implicitly filled from one value.
+    const multiple = try member(mut pool, b"multiple", 29, True)
+    const multi_variant = try row(mut pool, [], [multiple], True, False)
+    rows.append(multi_variant)
+    const multi_record = try row(mut pool, [19, 0], [], False, False)
+    rows.append(multi_record)
+    # 30 is deliberately malformed to exercise the independent helper depth bound.
+    const cycle = try option(mut pool, 30, False)
+    rows.append(cycle)
+    const span = try syntax_value.span(mut pool, 12, 34)
+    return failure_lower.Context(pool=pool, records=rows, span=span)
+
+
+func scalar(mut batch: emission.Batch, context: failure_lower.Context) -> int fails syntax_value.Problem:
+    const value = try syntax_value.integer(mut batch.pool, 7)
+    return try emission.node(mut batch, context.pool, context.span, 0, b"integer", value)
+
+
+func error_value(mut batch: emission.Batch, context: failure_lower.Context) -> int fails syntax_value.Problem:
+    const fields = try syntax_value.sequence(mut batch.pool, [])
+    return try emission.node(mut batch, context.pool, context.span, 19, b"record", fields)
+
+
+func field_number(pool: syntax_value.Pool, value: int, name: str) -> int fails syntax_value.Problem:
+    const id = try graph.field(pool, value, name)
+    return try graph.number(pool, id)
+
+
+func node_payload(batch: emission.Batch, value: int) -> int fails syntax_value.Problem:
+    const data = try graph.field(batch.pool, batch.nodes[value], "data")
+    return try graph.payload(batch.pool, data)
+
+
+func variant_matches(batch: emission.Batch, value: int, ty: int, tag: int, original: int) -> bool fails syntax_value.Problem:
+    const actual = try failure_lower.type_of(batch, value)
+    const data = try node_payload(batch, value)
+    const actual_tag = try field_number(batch.pool, data, "tag")
+    const actual_value = try field_number(batch.pool, data, "value")
+    const span = try graph.field(batch.pool, batch.nodes[value], "span")
+    const start = try field_number(batch.pool, span, "start")
+    const end = try field_number(batch.pool, span, "end")
+    return actual == ty and actual_tag == tag and actual_value == original and start == 12 and end == 34
+
+
+public func test_success_uses_reordered_ok_tag_and_exact_site() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try scalar(mut batch, context)
+    const wrapped = try failure_lower.wrap_success(mut batch, context, 20, value)
+    const matches = try variant_matches(batch, wrapped, 20, 1, value)
+    return len(batch.nodes) == 2 and matches
+
+
+public func test_error_uses_reordered_err_tag_and_exact_site() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try error_value(mut batch, context)
+    const wrapped = try failure_lower.wrap_err(mut batch, context, 20, value)
+    const matches = try variant_matches(batch, wrapped, 20, 0, value)
+    return len(batch.nodes) == 2 and matches
+
+
+public func test_error_widening_first_direct_case_wins() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try error_value(mut batch, context)
+    const wrapped = try failure_lower.inject_error(mut batch, context, 27, value)
+    const matches = try variant_matches(batch, wrapped, 27, 0, value)
+    return len(batch.nodes) == 2 and matches
+
+
+public func test_first_fielded_case_adds_one_record_before_variant() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try error_value(mut batch, context)
+    const wrapped = try failure_lower.inject_error(mut batch, context, 22, value)
+    const record_type = try failure_lower.type_of(batch, 1)
+    const fields_id = try node_payload(batch, 1)
+    const fields = try graph.items(batch.pool, fields_id)
+    const index = try field_number(batch.pool, fields[0], "index")
+    const original = try field_number(batch.pool, fields[0], "value")
+    const matches = try variant_matches(batch, wrapped, 22, 0, 1)
+    return len(batch.nodes) == 3 and record_type == 21 and len(fields) == 1 and index == 0 and original == value and matches
+
+
+public func test_matching_error_type_is_preserved_without_nodes() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try error_value(mut batch, context)
+    const unchanged = try failure_lower.inject_error(mut batch, context, 19, value)
+    return unchanged == value and len(batch.nodes) == 1
+
+
+public func test_incompatible_error_is_left_for_engine_diagnostic() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try scalar(mut batch, context)
+    const unchanged = try failure_lower.inject_error(mut batch, context, 22, value)
+    return unchanged == value and len(batch.nodes) == 1
+
+
+public func test_nonunion_and_multifield_cases_do_not_widen() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try error_value(mut batch, context)
+    const enumeration = try failure_lower.inject_error(mut batch, context, 26, value)
+    const multiple = try failure_lower.inject_error(mut batch, context, 28, value)
+    return enumeration == value and multiple == value and len(batch.nodes) == 1
+
+
+public func test_optional_injection_uses_declared_some_tag() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try scalar(mut batch, context)
+    const wrapped = try failure_lower.inject_optional(mut batch, context, 23, value)
+    const matches = try variant_matches(batch, wrapped, 23, 0, value)
+    return len(batch.nodes) == 2 and matches
+
+
+public func test_nested_optional_injection_keeps_every_layer() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try scalar(mut batch, context)
+    const wrapped = try failure_lower.inject_optional(mut batch, context, 24, value)
+    const inner = try variant_matches(batch, 1, 23, 0, value)
+    const matches = try variant_matches(batch, wrapped, 24, 1, 1)
+    return len(batch.nodes) == 3 and inner and matches
+
+
+public func test_existing_none_is_injected_as_some_none_without_flattening() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const tag = try syntax_value.integer(mut batch.pool, 1)
+    const absent = try syntax_value.absent(mut batch.pool)
+    const data = try syntax_value.object(mut batch.pool, ["tag", "value"], [tag, absent])
+    const value = try emission.node(mut batch, context.pool, context.span, 23, b"variant", data)
+    const unchanged = try failure_lower.inject_optional(mut batch, context, 23, value)
+    const wrapped = try failure_lower.inject_optional(mut batch, context, 24, value)
+    const original = try node_payload(batch, value)
+    const original_id = try graph.field(batch.pool, original, "value")
+    const original_value = try graph.get(batch.pool, original_id)
+    const matches = try variant_matches(batch, wrapped, 24, 1, value)
+    return unchanged == value and original_value.kind == 0 and len(batch.nodes) == 2 and matches
+
+
+public func test_incompatible_optional_does_not_emit_partial_wrappers() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try scalar(mut batch, context)
+    const unchanged = try failure_lower.inject_optional(mut batch, context, 25, value)
+    return unchanged == value and len(batch.nodes) == 1
+
+
+public func test_invalid_result_shape_is_transport_failure() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try scalar(mut batch, context)
+    match failure_lower.wrap_success(mut batch, context, 19, value):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT" and len(batch.nodes) == 1
+
+
+public func test_out_of_bounds_typed_value_is_transport_failure() -> bool fails syntax_value.Problem:
+    const batch = emission.empty()
+    match failure_lower.type_of(batch, 0):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_TRANSPORT"
+
+
+public func test_optional_cycle_is_bounded_without_partial_nodes() -> bool fails syntax_value.Problem:
+    const context = try fixture()
+    mut batch = emission.empty()
+    const value = try scalar(mut batch, context)
+    match failure_lower.inject_optional(mut batch, context, 30, value):
+        case Ok(unused):
+            return False
+        case Err(problem):
+            return problem.code == "P_BODY_LIMIT" and len(batch.nodes) == 1

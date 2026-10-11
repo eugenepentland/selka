@@ -4,12 +4,14 @@ import record_index
 import record_name_index
 import names
 import suggestions
+import variants
 
 public record Bindings:
     table: record_name_index.Index
     types: int[]
     aliases: int[]
     display: str[]
+    record_count: int = 0
 
 
 public record Catalog:
@@ -94,7 +96,7 @@ public func prepare(pool: syntax_value.Pool, rows: int[], declarations: int[]) -
             const problem = try refusal(pool, span, "specialized record representation is outside the body profile")
             fail problem
         const contract = try graph.field(pool, row, "contract")
-        for name in ["move_only", "requires_handling"]:
+        for name in ["move_only"]:
             const refused = try flag(pool, contract, name)
             if refused:
                 const problem = try refusal(pool, span, "owned or result-bearing record is outside the body profile")
@@ -102,7 +104,8 @@ public func prepare(pool: syntax_value.Pool, rows: int[], declarations: int[]) -
         const callback_id = try graph.field(pool, contract, "callback")
         const callback = try graph.get(pool, callback_id)
         const storable = try flag(pool, contract, "storable")
-        if callback.kind != 0 or not storable:
+        const pending = try flag(pool, contract, "requires_handling")
+        if callback.kind != 0 or (not storable and not pending):
             const problem = try refusal(pool, span, "record storage contract is outside the body profile")
             fail problem
         const fields_id = try graph.field(pool, row, "fields")
@@ -124,6 +127,7 @@ public func prepare(pool: syntax_value.Pool, rows: int[], declarations: int[]) -
     for present in seen:
         if not present:
             fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="missing retained nominal declaration")
+    catalog.bindings.record_count = len(declarations)
     return catalog
 
 
@@ -135,7 +139,9 @@ public func type_for(catalog: Catalog, pool: syntax_value.Pool, span: int) -> in
 
 
 public func schema(catalog: Catalog, ty: int) -> int:
-    if ty < 19 or ty >= len(catalog.by_type) or catalog.by_type[ty] < 0:
+    if ty < 19 or ty >= len(catalog.by_type) or not catalog.admitted[ty]:
+        return -1
+    if catalog.by_type[ty] == -2 or catalog.by_type[ty] >= catalog.bindings.record_count:
         return -1
     return catalog.rows[ty - 19]
 
@@ -162,11 +168,8 @@ public func closure(mut catalog: Catalog, pool: syntax_value.Pool, elements: int
         if elements[ty] >= 0:
             children.append(elements[ty])
         if catalog.admitted[ty]:
-            const fields_id = try graph.field(pool, catalog.rows[ty - 19], "fields")
-            const fields = try graph.items(pool, fields_id)
-            for field in fields:
-                const child_id = try graph.field(pool, field, "ty")
-                const child = try graph.number(pool, child_id)
+            const members = try children_of(pool, catalog.rows, ty)
+            for child in members:
                 children.append(child)
         for child in children:
             if child < 0 or child >= count:
@@ -183,11 +186,8 @@ public func closure(mut catalog: Catalog, pool: syntax_value.Pool, elements: int
         layout_parents.append([])
     for ty in range(19, count):
         if catalog.admitted[ty]:
-            const fields_id = try graph.field(pool, catalog.rows[ty - 19], "fields")
-            const fields = try graph.items(pool, fields_id)
-            for field in fields:
-                const child_id = try graph.field(pool, field, "ty")
-                const child = try graph.number(pool, child_id)
+            const members = try children_of(pool, catalog.rows, ty)
+            for child in members:
                 if catalog.admitted[child]:
                     remaining[ty] = remaining[ty] + 1
                     layout_parents[child].append(ty)
@@ -278,7 +278,7 @@ public func bind_names(mut catalog: Catalog, pool: syntax_value.Pool, source: by
             display.append(surface)
     match record_name_index.make(keys):
         case Ok(table):
-            catalog.bindings = Bindings(table=table, types=types, aliases=aliases, display=display)
+            catalog.bindings = Bindings(table=table, types=types, aliases=aliases, display=display, record_count=catalog.bindings.record_count)
         case Err(problem):
             fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message=problem.message)
     return True
@@ -311,15 +311,94 @@ public func equality(pool: syntax_value.Pool, catalog: Catalog, elements: int[],
     path.append(ty)
     if ty < len(elements) and elements[ty] >= 0:
         return try equality(pool, catalog, elements, elements[ty], managed, path)
-    const row = schema(catalog, ty)
-    if row < 0:
+    if ty >= len(catalog.admitted) or not catalog.admitted[ty]:
         return False
-    const fields_id = try graph.field(pool, row, "fields")
-    const fields = try graph.items(pool, fields_id)
-    for field in fields:
-        const type_id = try graph.field(pool, field, "ty")
-        const child = try graph.number(pool, type_id)
+    const children = try children_of(pool, catalog.rows, ty)
+    for child in children:
         const supported = try equality(pool, catalog, elements, child, managed, path)
         if not supported:
             return False
     return True
+
+
+# Lists cut layout recursion; ordinary variant payloads retain value edges.
+public func children_of(pool: syntax_value.Pool, rows: int[], ty: int) -> int[] fails syntax_value.Problem:
+    mut children: int[] = []
+    const fields_id = try graph.field(pool, rows[ty - 19], "fields")
+    const fields = try graph.items(pool, fields_id)
+    for field in fields:
+        const child_id = try graph.field(pool, field, "ty")
+        const child = try graph.number(pool, child_id)
+        children.append(child)
+    const value = try variants.shape(pool, rows, ty)
+    for member in value.cases:
+        if member.boxed:
+            const rejection = try refusal(pool, member.declaration, "boxed variant payload is outside the body profile")
+            fail rejection
+        if member.payload >= 0:
+            children.append(member.payload)
+    return children
+
+
+public func extend_variants(mut catalog: Catalog, pool: syntax_value.Pool, declarations: int[], template_spans: int[]) -> bool fails syntax_value.Problem:
+    mut spans: int[] = []
+    for declaration in catalog.declarations:
+        const span = try graph.field(pool, declaration, "name")
+        spans.append(span)
+    const template_index = try record_index.make(pool, template_spans)
+    mut added = 0
+    for declaration in declarations:
+        const span = try graph.field(pool, declaration, "name")
+        const parameters_id = try graph.field(pool, declaration, "type_parameters")
+        const parameters = try graph.items(pool, parameters_id)
+        const template = try record_index.lookup(template_index, pool, span)
+        if template >= 0:
+            continue
+        if len(parameters) != 0:
+            const rejection = try refusal(pool, span, "generic variant is outside the body profile")
+            fail rejection
+        if len(catalog.declarations) >= 65536:
+            fail syntax_value.Problem(code="P_BODY_LIMIT", start=0, end=0, message="nominal declaration count exceeded")
+        catalog.declarations.append(declaration)
+        catalog.ids.append(-1)
+        spans.append(span)
+        added = added + 1
+    const combined_index = try record_index.make(pool, spans)
+    catalog.index = combined_index
+    for position in range(len(catalog.rows)):
+        const ty = 19 + position
+        const value = try variants.shape(pool, catalog.rows, ty)
+        if not value.valid:
+            continue
+        const span = try graph.field(pool, catalog.rows[position], "declaration")
+        const declaration = try record_index.lookup(catalog.index, pool, span)
+        const template = try record_index.lookup(template_index, pool, span)
+        if declaration < 0 and template < 0:
+            continue
+        if declaration >= 0:
+            if declaration < catalog.bindings.record_count or catalog.ids[declaration] >= 0:
+                fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="duplicate retained variant declaration")
+            catalog.ids[declaration] = ty
+            catalog.by_type[ty] = declaration
+        if declaration < 0:
+            catalog.by_type[ty] = -2
+        catalog.admitted[ty] = True
+        for member in value.cases:
+            if member.boxed:
+                const rejection = try refusal(pool, member.declaration, "boxed variant payload is outside the body profile")
+                fail rejection
+            if member.fielded:
+                if member.payload < 19 or member.payload >= len(catalog.by_type):
+                    fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="invalid fielded variant payload schema")
+                catalog.admitted[member.payload] = True
+                const fields_id = try graph.field(pool, catalog.rows[member.payload - 19], "fields")
+                const fields = try graph.items(pool, fields_id)
+                for field in fields:
+                    const boxed = try flag(pool, field, "boxed")
+                    if boxed:
+                        const rejection = try refusal(pool, member.declaration, "boxed variant field is outside the body profile")
+                        fail rejection
+    for position in range(catalog.bindings.record_count, len(catalog.declarations)):
+        if catalog.ids[position] < 0:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="missing retained variant declaration")
+    return added >= 0
