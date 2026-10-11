@@ -259,7 +259,7 @@ def wait_owned(process: subprocess.Popen, *, limits: ProcessLimits = ProcessLimi
                     logs.drain(0.02)
                 if logs._selector.get_map():
                     logs.capture_complete = False
-        incomplete = process.returncode == 125 or (logs is not None and not logs.capture_complete)
+        incomplete = process.returncode == 125
         return ProcessResult(130 if cancelled else 124 if timed_out else 125 if incomplete else process.returncode,
                              time.monotonic() - started, timed_out, cancelled, incomplete)
     except BaseException:

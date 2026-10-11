@@ -165,7 +165,7 @@ class WatchdogTests(unittest.TestCase):
         self.assertEqual(result.returncode, 125)
         self.assertFalse(result.complete)
 
-    def test_unsupervised_escaped_writer_is_bounded_incomplete(self):
+    def test_unsupervised_escaped_writer_is_bounded_diagnostic(self):
         with tempfile.TemporaryDirectory() as temporary:
             pid_path = Path(temporary)/'pid'
             source = ('import subprocess; child=subprocess.Popen(["sleep","60"],start_new_session=True); '
@@ -176,12 +176,30 @@ class WatchdogTests(unittest.TestCase):
                 started = time.monotonic()
                 result = wait_owned(child, logs=logs)
                 self.assertLess(time.monotonic()-started, 1)
-                self.assertFalse(result.complete)
-                self.assertEqual(result.returncode, 125)
+                self.assertTrue(result.complete)
+                self.assertEqual(result.returncode, 0)
+                self.assertFalse(logs.capture_complete)
+                self.assertTrue(logs.capture_errors)
             finally:
                 os.kill(int(pid_path.read_text()), signal.SIGKILL)
                 child.stdout.close()
                 child.stderr.close()
+
+    def test_slow_log_drain_does_not_change_success(self):
+        class SlowLogs(BoundedProcessLogs):
+            def _drain(self, seconds=0):
+                time.sleep(.4)
+                super()._drain(seconds)
+        with tempfile.TemporaryDirectory() as temporary:
+            logs = SlowLogs(Path(temporary)/'out', Path(temporary)/'err')
+            child = self.spawn('print("done")', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            result = wait_owned(child, logs=logs)
+            self.assertEqual(result.returncode, 0)
+            self.assertTrue(result.complete)
+            self.assertFalse(logs.capture_complete)
+            self.assertTrue(logs.capture_errors)
+            child.stdout.close()
+            child.stderr.close()
 
     def test_stuck_console_tee_does_not_block(self):
         release = threading.Event()
