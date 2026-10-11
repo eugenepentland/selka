@@ -212,3 +212,77 @@ test "body check allocation failures release partial framing decoded graphs and 
     try std.testing.checkAllAllocationFailures(stable.allocator(), allocationRoundtrip, .{});
     try std.testing.expect(true);
 }
+
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check accepts native assigned mutable parameter origin and rejects foreign identity" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const src = try source.Source.init(a, "parameter.my", "func update(mut value: int) -> int:\n    value = 7\n    return value\n");
+    var sink: diagnostic.Sink = .{ .allocator = a };
+    const tokens = try lexer.lex(a, src.bytes, &sink);
+    var p: parser.Parser = .{ .src = src, .tokens = tokens, .storage = a, .sink = &sink };
+    const syntax = try p.parse();
+    const program = try @import("sema.zig").checkLibraryProgram(a, src, syntax, &sink, null);
+    const input: value.Input = .{ .context = .{ .path = src.path, .source = src.bytes, .trusted_intrinsics = false, .entry_required = false }, .program = syntax, .modules = &.{} };
+    const output: value.Output = .{ .batch = .{
+        .nodes = program.nodes,
+        .statements = program.statements,
+        .functions = program.functions,
+        .ranges = &.{.{ .nodes = .{ .start = 0, .end = program.nodes.len }, .statements = .{ .start = 0, .end = program.statements.len } }},
+    }, .import_used = &.{}, .diagnostics = &.{} };
+    try std.testing.expectEqual(typed.LocalOrigin.local, program.functions[0].scope.locals[0].origin);
+    const request = try protocol.request(a, input, @splat(3));
+    const response = try protocol.response(a, .{ .success = output }, request.identity);
+    var decoded = try protocol.reply(std.testing.allocator, response, request.identity, input);
+    defer decoded.deinit();
+    var owned = try value.cloneBatch(a, output.batch);
+    const functions = try a.dupe(typed.Function, owned.functions);
+    const parameters = try a.dupe(typed.Local, functions[0].scope.locals);
+    functions[0].scope.locals = parameters;
+    owned.functions = functions;
+    parameters[0].name = "foreign";
+    var bad = output;
+    bad.batch = owned;
+    try rejects(std.testing.allocator, input, bad);
+    parameters[0].name = "value";
+    parameters[0].declaration = .{ .start = 0, .end = 1 };
+    try rejects(std.testing.allocator, input, bad);
+}
+
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check rejects in-range scalar call argument of incompatible type" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const src = try source.Source.init(a, "call.my", "func take(value: int) -> int:\n    return value\nfunc invoke() -> int:\n    return take(1)\n");
+    var sink: diagnostic.Sink = .{ .allocator = a };
+    const tokens = try lexer.lex(a, src.bytes, &sink);
+    var p: parser.Parser = .{ .src = src, .tokens = tokens, .storage = a, .sink = &sink };
+    const syntax = try p.parse();
+    const program = try @import("sema.zig").checkLibraryProgram(a, src, syntax, &sink, null);
+    const input: value.Input = .{ .context = .{ .path = src.path, .source = src.bytes, .trusted_intrinsics = false, .entry_required = false }, .program = syntax, .modules = &.{} };
+    const nodes = try a.dupe(typed.Node, program.nodes);
+    const split = @backingInt(program.functions[0].scope.body) + 1;
+    const first_nodes = functionNodeEnd(nodes, syntax.statements.items[@backingInt(syntax.functions[0].body)].span.end);
+    const output: value.Output = .{ .batch = .{ .nodes = nodes, .statements = program.statements, .functions = program.functions, .ranges = &.{
+        .{ .nodes = .{ .start = 0, .end = first_nodes }, .statements = .{ .start = 0, .end = split } },
+        .{ .nodes = .{ .start = first_nodes, .end = nodes.len }, .statements = .{ .start = split, .end = program.statements.len } },
+    } }, .import_used = &.{}, .diagnostics = &.{} };
+    try validate.outcome(std.testing.allocator, input, .{ .success = output });
+    for (nodes) |*node| {
+        if (node.data == .integer) {
+            node.ty = .bool;
+            node.data = .{ .boolean = true };
+        }
+    }
+    try rejects(std.testing.allocator, input, output);
+}
+
+fn functionNodeEnd(nodes: []const typed.Node, end: usize) usize {
+    var result: usize = 0;
+    for (nodes, 0..) |node, index| {
+        if (node.span.end <= end) result = index + 1;
+    }
+    return result;
+}

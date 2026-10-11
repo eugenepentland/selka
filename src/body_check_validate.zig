@@ -210,6 +210,10 @@ fn scalarNode(graph: *Graph, node: typed.Node) Error!void {
             if (@backingInt(call.function) >= graph.tables.functions.len) return error.ComponentProtocol;
             const target = graph.tables.functions[@backingInt(call.function)];
             if (call.arguments.len != target.signature.parameter_count or node.ty != target.signature.return_type) return error.ComponentProtocol;
+            if (target.scope.locals.len < call.arguments.len) return error.ComponentProtocol;
+            for (call.arguments, 0..) |argument, index| {
+                if (try nodeType(graph, argument) != target.scope.locals[index].ty) return error.ComponentProtocol;
+            }
             try permutation(graph.allocator, call.evaluation_order, call.arguments.len);
         },
         .block_value => |block| if (node.ty != try nodeType(graph, block.value)) return error.ComponentProtocol,
@@ -266,7 +270,9 @@ fn functionMetadata(request: value.Input, function: typed.Function, raw: @import
         const expected = if (parameter.named) request.context.source[parameter.name.start..parameter.name.end] else "";
         if (!std.mem.eql(u8, label, expected)) return error.ComponentProtocol;
         const local = function.scope.locals[index];
-        if (!std.meta.eql(local.declaration, parameter.name) or local.mutable != parameter.mut or local.origin != .parameter) return error.ComponentProtocol;
+        if (!std.meta.eql(local.declaration, parameter.name) or local.mutable != parameter.mut) return error.ComponentProtocol;
+        const parameter_origin = local.origin == .parameter or (parameter.mut and local.origin == .local);
+        if (!parameter_origin) return error.ComponentProtocol;
         if (!std.mem.eql(u8, local.name, request.context.source[parameter.name.start..parameter.name.end])) return error.ComponentProtocol;
     }
     if (!std.mem.eql(u16, function.signature.declared_mutates, raw.signature.mut_positions)) return error.ComponentProtocol;
