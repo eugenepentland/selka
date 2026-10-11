@@ -136,6 +136,25 @@ class Reports(unittest.TestCase):
             self.assertEqual(result['observations'][0]['elapsed_seconds'], 90)
             self.assertEqual(result['observations'][1]['elapsed_seconds'], 3600)
 
+    def test_registered_action_labels_preserve_counts_and_reject_malformed_rows(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'log'
+            path.write_text('+- verification action unit member 3 7 pass, 2 skip (9 total) 14ms MaxRSS:7M\n'
+                            '+- verification action coverage member 0 success 2s\n'
+                            '+- verification action unit member 3 7 pass (8 total) 14ms\n'
+                            '+- verification action unit member 3 7 pass, 7 pass (14 total) 14ms\n'
+                            '+- verification action unit member 3 7 pass (7 total) cached 14ms\n'
+                            '+- verification action unit member 3 (reused)\n')
+            result = report.execution_timings(path)
+            self.assertEqual(len(result['observations']), 2)
+            native, coverage = result['observations']
+            self.assertEqual(native['node'], 'verification action unit member 3')
+            self.assertEqual(native['kind'], 'test')
+            self.assertEqual(native['test_counts'], {'pass': 7, 'skip': 2, 'total': 9})
+            self.assertEqual(native['elapsed_seconds'], .014)
+            self.assertEqual(coverage['node'], 'verification action coverage member 0')
+            self.assertEqual(coverage['state'], 'success')
+
     def test_log_bounds_and_missing(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'log'

@@ -150,7 +150,8 @@ def explain_miss(current, previous, reason='dependency identity changed'):
 
 
 _DURATION = re.compile(r'^(?P<prefix>[| +\\`├─└│-]*)(?P<name>.+?) (?P<state>success|cached|failure) (?P<value>[0-9]+(?:\.[0-9]+)?)(?P<unit>ns|us|µs|ms|s|m|h)(?: MaxRSS:(?P<rss>[0-9.]+[KMGT]?))?$')
-_TEST_DURATION = re.compile(r'^(?P<prefix>[| +\\`├─└│-]*)(?P<name>run test) (?P<counts>[0-9]{1,12} (?:pass|fail|skip)(?:, [0-9]{1,12} (?:pass|fail|skip))*) \((?P<total>[0-9]{1,12}) total\) (?P<value>[0-9]+(?:\.[0-9]+)?)(?P<unit>ns|us|µs|ms|s|m|h)(?: MaxRSS:(?P<rss>[0-9]+(?:\.[0-9]+)?[KMGT]?))?$')
+_ACTION_NAME = r'verification action [a-zA-Z0-9_-]+ member [0-9]+'
+_TEST_DURATION = re.compile(r'^(?P<prefix>[| +\\`├─└│-]*)(?P<name>run test|' + _ACTION_NAME + r') (?P<counts>[0-9]{1,12} (?:pass|fail|skip)(?:, [0-9]{1,12} (?:pass|fail|skip))*) \((?P<total>[0-9]{1,12}) total\) (?P<value>[0-9]+(?:\.[0-9]+)?)(?P<unit>ns|us|µs|ms|s|m|h)(?: MaxRSS:(?P<rss>[0-9]+(?:\.[0-9]+)?[KMGT]?))?$')
 _ANSI = re.compile(r'\x1b\[[0-9;]*m')
 
 
@@ -197,6 +198,9 @@ CPU time and aggregate concurrent RSS are unavailable from this format.
         if not match:
             continue
         if not test_match and match['name'].startswith('run test') and (match['name'] != 'run test' or match['state'] == 'cached'):
+            continue
+        if (not test_match and match['name'].startswith('verification action ')
+                and re.fullmatch(_ACTION_NAME, match['name']) is None):
             continue
         if len(result['observations']) >= MAX_OBSERVATIONS:
             result['truncated'] = True

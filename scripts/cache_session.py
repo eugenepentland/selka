@@ -37,7 +37,7 @@ MAX_ID = 256
 COMMANDS = {"verify": "verify_cache", "fuzz": "fuzz_campaign", "perf": "juice_cache"}
 DISPATCH_MODULES = frozenset((*COMMANDS.values(), "fuzz_campaign_identity",
                             "fuzz_campaign_store", "verification_artifacts",
-                            "verification_process", "verification_report",
+                            "verification_process", "verification_report", "verification_budgets",
                             "juice_evidence", "juice_provider", "juice_worker", "juice_tool"))
 
 
