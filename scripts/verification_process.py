@@ -76,6 +76,7 @@ class BoundedProcessLogs:
         self._stop = threading.Event()
         self._error = None
         self.capture_complete = True
+        self.capture_available = [False, False]
         self._tee_queues = [queue.Queue(maxsize=8), queue.Queue(maxsize=8)]
         self._tee_threads = []
 
@@ -86,6 +87,7 @@ class BoundedProcessLogs:
                     raise ValueError("bounded logs require stdout=PIPE and stderr=PIPE")
                 try:
                     file = self.paths[index].open("wb")
+                    self.capture_available[index] = True
                 except OSError as error:
                     self.capture_errors.append(str(error))
                     file = open(os.devnull, "wb")

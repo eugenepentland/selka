@@ -303,6 +303,28 @@ class WatchdogTests(unittest.TestCase):
                 child.stdout.close()
                 child.stderr.close()
 
+    def test_existing_inaccessible_log_is_not_available(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)/'out'
+            error = Path(temporary)/'err'
+            output.write_bytes(b'stale timing evidence')
+            real_open = Path.open
+            def deny_write(path, mode='r', *args, **kwargs):
+                if path == output and mode == 'wb':
+                    raise PermissionError('capture destination inaccessible')
+                return real_open(path, mode, *args, **kwargs)
+            logs = BoundedProcessLogs(output, error)
+            child = self.spawn('print("new output")', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            with mock.patch('verification_process.Path.open', new=deny_write):
+                result = wait_owned(child, logs=logs)
+            self.assertEqual(result.returncode, 0)
+            self.assertTrue(result.complete)
+            self.assertEqual(logs.capture_available, [False, True])
+            self.assertEqual(output.read_bytes(), b'stale timing evidence')
+            self.assertTrue(logs.capture_errors)
+            child.stdout.close()
+            child.stderr.close()
+
     def test_interrupt_cleans_and_propagates(self):
         class Interrupt:
             def is_set(self):
