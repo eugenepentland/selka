@@ -1,0 +1,7 @@
+type Pair = FixedArray[int, 2]
+
+func take(value: Pair) -> int:
+    return value[0] + value[1]
+
+func main() -> int:
+    return take(FixedArray[int, 0x2]([3, 4]))

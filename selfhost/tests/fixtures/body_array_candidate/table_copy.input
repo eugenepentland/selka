@@ -1,0 +1,10 @@
+enum Status:
+    ok
+    missing
+    failed
+
+func main() -> int:
+    mut values: [Status]int = {Status.failed: 3, Status.ok: 1, Status.missing: 2}
+    const snapshot = values
+    values[Status.ok] = 5
+    return values[Status.ok] + snapshot[Status.missing]

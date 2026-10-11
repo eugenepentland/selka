@@ -1,0 +1,5 @@
+func take(value: FixedArray[bool, 0]) -> int:
+    return i64(len(value))
+
+func main() -> int:
+    return take(FixedArray[bool, 0]([])) + 7
