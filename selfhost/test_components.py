@@ -198,7 +198,7 @@ class ComponentCacheTests(unittest.TestCase):
     def test_frontend_profile_is_versioned_in_manifest_and_build_receipt(self):
         self.invoke()
         for name, protocol, schema in (("test-index", 1, 1), ("cache-plan", 2, 2),
-                                      ("lexer-pilot", 1, 2), ("parser-pilot", 1, 2), ("declaration-index", 1, 1), ("type-interface", 1, 1), ("body-check", 1, 4)):
+                                      ("lexer-pilot", 1, 2), ("parser-pilot", 1, 2), ("declaration-index", 1, 1), ("type-interface", 1, 1), ("body-check", 1, 5)):
             manifest = json.loads((self.install / (name + ".json")).read_text())
             receipt = json.loads((self.cache / "artifacts" / manifest["key"] / "receipt.json").read_text())
             self.assertEqual((manifest["protocol"], manifest["schema"]), (protocol, schema))

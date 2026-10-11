@@ -84,7 +84,7 @@ def main():
     ap.add_argument('--baseline-host-sha256',default='3c9f1f1c1806eadd21c0281b4cf216d74e2a4854415a4176e2010416b99c3496')
     ap.add_argument('--source-root',type=Path,default=Path(__file__).resolve().parents[2])
     ap.add_argument('--baseline-body-schema',type=int,default=2)
-    ap.add_argument('--candidate-body-schema',type=int,default=4)
+    ap.add_argument('--candidate-body-schema',type=int,default=5)
     ap.add_argument('--iterations',type=int,default=20);ap.add_argument('--isolated',action='store_true')
     args=ap.parse_args();F.require(args.isolated and args.iterations>=5,'isolated nonempty samples required')
     F.require(sorted(os.sched_getaffinity(0))==[2,3,10,11] and '/gate' in os.readlink('/proc/self/fd/30'),'timing reservation/affinity absent')

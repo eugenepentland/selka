@@ -162,7 +162,7 @@ fn manifestDeployment(a: std.mem.Allocator, io: std.Io, directory: []const u8, c
     const m = parsed.value;
     const version: u32 = if (std.mem.eql(u8, component, "cache-plan")) 2 else 1;
     const schema_two = std.mem.eql(u8, component, "lexer-pilot") or std.mem.eql(u8, component, "parser-pilot");
-    const schema: u32 = if (std.mem.eql(u8, component, "body-check")) 4 else if (schema_two) 2 else version;
+    const schema: u32 = if (std.mem.eql(u8, component, "body-check")) 5 else if (schema_two) 2 else version;
     if (m.format != 1 or m.protocol != version or m.schema != schema) return error.ComponentManifest;
     if (!std.mem.eql(u8, m.component, component) or m.sha256.len != 64) return error.ComponentManifest;
     if (m.artifact.len == 0 or std.mem.indexOfAny(u8, m.artifact, "/\\") != null) return error.ComponentManifest;
@@ -195,8 +195,8 @@ fn mapFailure(err: anyerror, fallback: Error) Error {
     return if (err == error.OutOfMemory) error.OutOfMemory else fallback;
 }
 
-// spec-case: SELFHOST-BODY-RECORDS-1
-test "body check artifact admission requires record schema four" {
+// spec-case: SELFHOST-BODY-VARIANTS-1
+test "body check artifact admission requires variant schema five and refuses earlier profiles" {
     const a = std.testing.allocator;
     var temporary = std.testing.tmpDir(.{});
     defer temporary.cleanup();
@@ -205,24 +205,19 @@ test "body check artifact admission requires record schema four" {
     const contents = "body component fixture";
     const digest = content_hash.hash(contents);
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "producer", .data = contents });
-    const schema_one = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"body-check\",\"protocol\":1,\"schema\":1,\"artifact\":\"producer\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
-    defer a.free(schema_one);
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "body-check.json", .data = schema_one });
-    try std.testing.expectError(error.ComponentManifest, artifact(a, std.testing.io, directory, "body-check"));
-    const schema_two = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"body-check\",\"protocol\":1,\"schema\":2,\"artifact\":\"producer\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
-    defer a.free(schema_two);
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "body-check.json", .data = schema_two });
-    try std.testing.expectError(error.ComponentManifest, artifact(a, std.testing.io, directory, "body-check"));
-    const schema_three = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"body-check\",\"protocol\":1,\"schema\":3,\"artifact\":\"producer\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
-    defer a.free(schema_three);
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "body-check.json", .data = schema_three });
-    try std.testing.expectError(error.ComponentManifest, artifact(a, std.testing.io, directory, "body-check"));
-    const schema_four = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"body-check\",\"protocol\":1,\"schema\":4,\"artifact\":\"producer\",\"sha256\":\"{s}\"}}", .{std.fmt.bytesToHex(digest, .lower)});
-    defer a.free(schema_four);
-    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "body-check.json", .data = schema_four });
-    const accepted = try artifact(a, std.testing.io, directory, "body-check");
+    try std.testing.expectError(error.ComponentManifest, bodyFixture(a, temporary, directory, 1, digest));
+    try std.testing.expectError(error.ComponentManifest, bodyFixture(a, temporary, directory, 2, digest));
+    try std.testing.expectError(error.ComponentManifest, bodyFixture(a, temporary, directory, 3, digest));
+    try std.testing.expectError(error.ComponentManifest, bodyFixture(a, temporary, directory, 4, digest));
+    const accepted = try bodyFixture(a, temporary, directory, 5, digest);
     defer a.free(accepted.path);
     try std.testing.expectEqualSlices(u8, &digest, &accepted.digest);
+}
+fn bodyFixture(a: std.mem.Allocator, temporary: std.testing.TmpDir, directory: []const u8, schema: u32, digest: [32]u8) !Verified {
+    const manifest = try std.fmt.allocPrint(a, "{{\"format\":1,\"component\":\"body-check\",\"protocol\":1,\"schema\":{d},\"artifact\":\"producer\",\"sha256\":\"{s}\"}}", .{ schema, std.fmt.bytesToHex(digest, .lower) });
+    defer a.free(manifest);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "body-check.json", .data = manifest });
+    return artifact(a, std.testing.io, directory, "body-check");
 }
 
 // spec: SELFHOST-FRONTEND-VERIFY-1
