@@ -41,6 +41,8 @@ import option_lower
 import collection_types
 import dictionary_view_lower
 import dictionary_iteration
+import collection_gather
+import loop_assigns
 import hash_keys
 import set_lower
 
@@ -1039,14 +1041,18 @@ func checked_expression(mut state: State, raw_id: int) -> Expression fails synta
                         state.batch.resolved[raw_id] = result.id
                         state.depth = state.depth - 1
                         return result
+                    mut source = Expression(id=-1, ty=-1)
                     for input in inputs:
                         const argument_raw = try graph.number(state.syntax.pool, input)
-                        _ = try expression(mut state, argument_raw)
+                        const checked = try expression(mut state, argument_raw)
+                        source = checked
                     if len(inputs) != 1:
                         const rejection = try problem(state, span, "E_ARITY", "set takes at most one argument: `set()` or `set(iterable)`")
                         fail rejection
-                    const rejection = try problem(state, span, "P_BODY_PROFILE", "set materialization from an iterable is being connected")
-                    fail rejection
+                    const result = try set_conversion(mut state, span, source)
+                    state.batch.resolved[raw_id] = result.id
+                    state.depth = state.depth - 1
+                    return result
                 if raw_callee == b"ord" and locals.find(state.scope, raw_callee) < 0:
                     const shadowed = try top_level(state, call_name)
                     if shadowed or explicit_count != 0:
@@ -4324,9 +4330,6 @@ func dictionary_iteration_payload(mut state: State, each: int, span: int, iterab
     const enumerated_id = try graph.field(state.syntax.pool, each, "enumerated")
     const enumerated_value = try graph.get(state.syntax.pool, enumerated_id)
     const enumerated = enumerated_value.integer != 0
-    if enumerated:
-        const rejection = try problem(state, span, "P_BODY_PROFILE", "enumerated collection iteration awaits source rebinding analysis")
-        fail rejection
     mut second_name = -1
     if index_value.kind != 0:
         second_name = index_id
@@ -4347,12 +4350,12 @@ func dictionary_iteration_payload(mut state: State, each: int, span: int, iterab
             const item_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=2, key=schema.key, value=schema.value, owner=-1), span)
             item = item_type
             element = item_type
-    if second_name >= 0 and kind != b"items":
+    if second_name >= 0 and not enumerated and kind != b"items":
         const rejection = try problem(state, span, "E_ITERATION", "two iteration names require dictionary items, enumerate, zip or a list of two-value tuples")
         fail rejection
     mut names_to_check = [name_span]
     if second_name >= 0:
-        names_to_check = [second_name, name_span]
+        names_to_check = if enumerated then [name_span, second_name] else [second_name, name_span]
     for binding_span in names_to_check:
         const binding_name = try graph.spelling(state.syntax.pool, state.syntax.source, binding_span)
         const declared = try top_level(state, binding_span)
@@ -4365,15 +4368,22 @@ func dictionary_iteration_payload(mut state: State, each: int, span: int, iterab
         if second != b"_" and first == second:
             const rejection = try problem(state, second_name, "E_SHADOWING", "iteration names must differ")
             fail rejection
+    const body_id = try graph.field(state.syntax.pool, each, "body")
+    const body_raw = try graph.number(state.syntax.pool, body_id)
+    mut rebound = False
+    if enumerated:
+        if second_name < 0:
+            fail syntax_value.Problem(code="P_BODY_TRANSPORT", start=0, end=0, message="enumerated iteration requires a position name")
+        const position_name = try graph.spelling(state.syntax.pool, state.syntax.source, second_name)
+        const assigned = try loop_assigns.assigns(loop_assigns.Context(pool=state.syntax.pool, source=state.syntax.source, nodes=state.syntax.nodes, statements=state.syntax.statements), body_raw, position_name)
+        rebound = assigned
     const loop_id = state.control.next
     state.control.next += 1
     const request = list_iteration.Input(source=state.syntax.source, name=name_span, span=span, iterable=iterable.id, owner_type=mapping, element=element, loop_id=loop_id)
     const shape = dictionary_view_lower.Shape(mapping=mapping, key=schema.key, value=schema.value, item=item, list=-1, kind=kind)
-    const plan = try dictionary_iteration.prepare(mut state.batch, mut state.scope, state.syntax.pool, dictionary_iteration.Input(iteration=request, shape=shape, kind=kind, second_name=second_name, position=dictionary_iteration.Position(enumerated=False, rebound=False)))
+    const plan = try dictionary_iteration.prepare(mut state.batch, mut state.scope, state.syntax.pool, dictionary_iteration.Input(iteration=request, shape=shape, kind=kind, second_name=second_name, position=dictionary_iteration.Position(enumerated=enumerated, rebound=rebound)))
     state.control.active.append(loop_id)
     state.control.exited.append(False)
-    const body_id = try graph.field(state.syntax.pool, each, "body")
-    const body_raw = try graph.number(state.syntax.pool, body_id)
     const before = locals_flow.snapshot(state.scope)
     const pending_before = try pending_flow.snapshot(state.scope, len(state.scope.locals))
     const body = try statement(mut state, body_raw)
@@ -4388,3 +4398,43 @@ func dictionary_iteration_payload(mut state: State, each: int, span: int, iterab
     state.control.active = state.control.active[:last]
     state.control.exited = state.control.exited[:last]
     return lowered.payload
+
+
+func set_conversion(mut state: State, span: int, value: Expression) -> Expression fails syntax_value.Problem:
+    const schema = collection_types.schema(state.batch.facts.lists.types.collections, value.ty)
+    mut element = list_types.element_type(state.batch.facts.lists, value.ty)
+    mut owner_type = value.ty
+    mut kind = b"list"
+    mut item = -1
+    if value.ty == state.batch.facts.string_type:
+        element = value.ty
+        kind = b"text"
+    elif value.ty == state.batch.facts.bytes_type or value.ty == state.batch.facts.lists.types.buffer.id:
+        element = 0
+        kind = b"bytes"
+    elif schema.kind == 0 or schema.kind == 1:
+        element = schema.key
+        kind = if schema.kind == 0 then b"dict" else b"set"
+    elif schema.kind >= 3:
+        element = schema.key
+        owner_type = schema.owner
+        kind = b"keys"
+        if schema.kind == 4:
+            element = schema.value
+            kind = b"values"
+        elif schema.kind == 5:
+            const item_type = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=2, key=schema.key, value=schema.value, owner=-1), span)
+            item = item_type
+            element = item_type
+            kind = b"items"
+    if element < 0:
+        const rejection = try problem(state, span, "E_COLLECTION_METHOD", "set() takes a list, str, bytes, fixed array, dictionary, dictionary view or set")
+        fail rejection
+    _ = try require_hash_key(mut state, element, span, True)
+    const ty = try list_types.collection_intern(mut state.batch.facts.lists, mut state.syntax.pool, collection_types.Schema(id=-1, kind=1, key=element, value=15, owner=-1), span)
+    const context = list_lower.Context(input=state.syntax.pool, span=span)
+    const shape = dictionary_view_lower.Shape(mapping=owner_type, key=schema.key, value=schema.value, item=item, list=-1, kind=kind)
+    const gathered = try collection_gather.set_from(mut state.batch, mut state.scope, context, collection_gather.Input(iterable=value.id, owner_type=owner_type, element=element, output_type=ty, projection=shape, kind=kind, loop_id=state.control.next))
+    state.control.next = gathered.next_loop
+    const id = try list_lower.append(mut state.batch, context, gathered.value)
+    return Expression(id=id, ty=ty)

@@ -58,7 +58,7 @@ func call(mut state: engine.State, method: bytes, arguments: int[], writable: bo
     return slot
 
 
-func walk(mut state: engine.State, iterable: int, name: int, second: int) -> engine.Statement fails syntax_value.Problem:
+func walk(mut state: engine.State, iterable: int, name: int, second: int, enumerated: bool = False) -> engine.Statement fails syntax_value.Problem:
     const span = try syntax_value.span(mut state.syntax.pool, 0, len(state.syntax.source))
     const empty = try syntax_value.sequence(mut state.syntax.pool, [])
     const block_data = try syntax_value.tagged(mut state.syntax.pool, b"block", empty)
@@ -66,7 +66,7 @@ func walk(mut state: engine.State, iterable: int, name: int, second: int) -> eng
     state.syntax.statements.append(body)
     const body_id = try syntax_value.integer(mut state.syntax.pool, len(state.syntax.statements) - 1)
     const source_id = try syntax_value.integer(mut state.syntax.pool, iterable)
-    const no = try syntax_value.boolean(mut state.syntax.pool, False)
+    const no = try syntax_value.boolean(mut state.syntax.pool, enumerated)
     const absent = try syntax_value.absent(mut state.syntax.pool)
     const second_value = if second < 0 then absent else second
     const payload = try syntax_value.object(mut state.syntax.pool, ["name", "index_name", "enumerated", "iterable", "body"], [name, second_value, no, source_id, body_id])
@@ -94,3 +94,11 @@ public func test_items_iteration_unpacks_key_and_value_with_one_item_recipe() ->
     const value = try syntax_value.span(mut state.syntax.pool, 9, 10)
     const result = try walk(mut state, iterable, value, key)
     return (not result.terminates) and (len(state.scope.active) == 1) and (len(state.scope.locals) == 7) and (state.scope.locals[4].ty == 1) and (state.scope.locals[5].ty == 0) and (state.scope.locals[4].name == b"k") and (state.scope.locals[5].name == b"v") and (len(state.batch.facts.lists.recipes) == 3) and (state.batch.facts.lists.recipes[2].kind == "dict_item")
+
+
+public func test_enumerated_dictionary_reuses_position_counter_and_restores_scope() -> bool fails syntax_value.Problem:
+    mut state = try fresh()
+    const name = try syntax_value.span(mut state.syntax.pool, 0, 4)
+    const position = try syntax_value.span(mut state.syntax.pool, 4, 5)
+    const result = try walk(mut state, 4, name, position, True)
+    return not result.terminates and len(state.scope.locals) == 4 and len(state.scope.active) == 0 and state.scope.locals[1].name == b"7" and state.scope.locals[1].ty == 0 and state.scope.locals[1].origin == b"iteration" and not state.scope.locals[1].mutable and state.scope.locals[3].ty == 1

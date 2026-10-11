@@ -224,10 +224,10 @@ The connected foundation adds authenticated collection templates, one globally
 ordered recipe stream, dictionary literal arrays in written key/value order,
 contextual narrow integer literals, structural Option facts and payload
 lowering, direct dictionary indexing and length, and set literals, contextual
-empty construction, and native set combination/relation lowering. Named
+empty construction, `set(iterable)` gathering, and native set combination/relation lowering. Named
 dictionary bindings support get, pop, setdefault, update, copy, clear, keys,
 values and items with source operand typing and receiver usage metadata. Collection recipes use the outer `collection` tag and six inner tags;
-views require their canonical dictionary to exist first. `list` snapshots of dictionaries, sets and live views preserve native temporary and recipe order, including the intermediate result rows retained for keys and values. Ordinary dictionary/set and live-view iteration, including item unpacking, is connected; enumerated iteration awaits its source rebinding scan. Ordinary record and
+views require their canonical dictionary to exist first. `list` snapshots of dictionaries, sets and live views preserve native temporary and recipe order, including the intermediate result rows retained for keys and values. Ordinary dictionary/set and live-view iteration, including item unpacking and enumerated positions with native source rebinding analysis, is connected. Ordinary record and
 collection storage recursion remains bounded and does not change wire limits.
 
 This slice does not qualify the complete dictionary/set closure. Collection
