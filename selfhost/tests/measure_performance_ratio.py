@@ -83,7 +83,8 @@ def main():
     ap.add_argument('--candidate-mode',action='append',default=[],help='NAME=reference|component; unspecified boundaries remain reference')
     ap.add_argument('--baseline-host-sha256',default='3c9f1f1c1806eadd21c0281b4cf216d74e2a4854415a4176e2010416b99c3496')
     ap.add_argument('--source-root',type=Path,default=Path(__file__).resolve().parents[2])
-    ap.add_argument('--candidate-body-schema',type=int,default=3)
+    ap.add_argument('--baseline-body-schema',type=int,default=2)
+    ap.add_argument('--candidate-body-schema',type=int,default=4)
     ap.add_argument('--iterations',type=int,default=20);ap.add_argument('--isolated',action='store_true')
     args=ap.parse_args();F.require(args.isolated and args.iterations>=5,'isolated nonempty samples required')
     F.require(sorted(os.sched_getaffinity(0))==[2,3,10,11] and '/gate' in os.readlink('/proc/self/fd/30'),'timing reservation/affinity absent')
@@ -92,7 +93,7 @@ def main():
     for item in args.candidate_mode:
         name,value=item.split('=',1);F.require(name in MODES and name not in modes and value in ('reference','component'),'invalid explicit mode');modes[name]=value
     F.require(bool(modes),'candidate mode selection must be explicit')
-    evidence={'tool_sha256':F.digest(Path(__file__)),'affinity':sorted(os.sched_getaffinity(0)),'facts_leaks':'qualified before timings; disabled consistently during timings','scope':'intermediate seven-package scalar/managed/list subset, not full language selfhosting','iterations':args.iterations,'modes':modes,'hosts':{},'rows':{},'behavior_checks':[]}
+    evidence={'tool_sha256':F.digest(Path(__file__)),'affinity':sorted(os.sched_getaffinity(0)),'facts_leaks':'qualified before timings; disabled consistently during timings','scope':'intermediate seven-package scalar/managed/list/record subset, not full language selfhosting','iterations':args.iterations,'modes':modes,'hosts':{},'rows':{},'behavior_checks':[]}
     with tempfile.TemporaryDirectory(prefix='performance-ratio-') as temporary:
         work=Path(temporary);empty=work/'empty';empty.mkdir()
         # Match native-unit warmth before either host contributes timing samples.
@@ -107,7 +108,7 @@ def main():
                 evidence['native_prewarm'].append({'host':label,'fixture':fixture.name,'cache_receipt':result[2].decode()})
         evidence['cache_scope']='fresh private application caches; native units prewarmed for both hosts before timing'
         for label,prefix,selected in [('baseline',args.baseline_prefix,{}),('candidate',args.candidate_prefix,modes)]:
-            prefix=prefix.resolve();compiler=prefix/'bin/mylang';body_schema=2 if label=='baseline' else args.candidate_body_schema
+            prefix=prefix.resolve();compiler=prefix/'bin/mylang';body_schema=args.baseline_body_schema if label=='baseline' else args.candidate_body_schema
             seed_env=environment(prefix,{},empty)
             seed=execute([prefix/'tools/selka-components','--root',args.source_root,'--zig',args.zig,'--seed-only'],seed_env,work,timeout=600)
             seed_lines=seed[1].decode().strip().splitlines();F.require(seed[0]==0 and len(seed_lines)==1 and Path(seed_lines[0]).is_file(),'qualified seed receipt failed')

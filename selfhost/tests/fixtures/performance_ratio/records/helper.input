@@ -1,0 +1,31 @@
+public record Bucket:
+    values: int[]
+    offset: int = 1
+
+public record Bundle:
+    bucket: Bucket
+    score: int = 2
+
+func change(mut bundle: Bundle) -> Unit:
+    bundle.bucket.values.append(4)
+    bundle.bucket.values[0] = 3
+    bundle.score += 1
+
+func result(bundle: Bundle) -> Bundle:
+    return bundle
+
+public func work() -> int:
+    mut value = Bundle(bucket=Bucket(values=[1, 2]))
+    const saved = value
+    mut index = 0
+    while index < 100:
+        change(mut value)
+        index += 1
+    const returned = result(value)
+    value.bucket.values[1] = 9
+    mut total = 0
+    for item in returned.bucket.values:
+        total += item
+    if saved.bucket.values == [1, 2] and saved.score == 2 and returned.bucket.values[1] == 2 and returned.score == 102 and total == 405 and value.bucket.offset == 1:
+        return 7
+    return 0
