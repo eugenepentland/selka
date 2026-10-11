@@ -20,8 +20,10 @@ individual test limits. Changing an enforced limit conservatively changes receip
 identity; changing the advisory target preserves reusable evidence and pass/fail.
 
 A timed-out command returns 124. Its isolated Linux supervisor terminates and reaps
-owned descendants, including helpers that start new process sessions. Lingering
-live descendants after a command exits are incomplete execution, status 125.
+owned descendants, including helpers that start new process sessions. After normal
+command exit, descendants get up to two seconds to finish existing temporary-cache
+cleanup; this time counts against the execution deadline and is interruptible.
+Live descendants remaining afterward are incomplete execution, status 125.
 Cancellation terminates the owned tree; another coordinator's work remains owned
 by that coordinator. None of these incomplete outcomes publishes new success
 receipts. A subsequent request can retry. The supervisor preserves inheritable
