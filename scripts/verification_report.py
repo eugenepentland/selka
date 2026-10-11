@@ -73,7 +73,7 @@ def _bounded(value):
                 raise ValueError('diagnostic mapping bound')
             pending.extend((key, depth + 1) for key in item)
             pending.extend((child, depth + 1) for child in item.values())
-        elif isinstance(item, list):
+        elif isinstance(item, (list, tuple)):
             if len(item) > 16384:
                 raise ValueError('diagnostic list bound')
             pending.extend((child, depth + 1) for child in item)

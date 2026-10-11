@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Focused tests of advisory dependency and execution reports."""
 import json
+import resource
 from pathlib import Path
 import tempfile
 import unittest
@@ -22,6 +23,21 @@ class Reports(unittest.TestCase):
         self.assertEqual(one, report.dependency_summary({'id': 'test'}, files[::-1], {'a': 1, 'b': 2}))
         files[0]['sha256'] = 'b' * 64
         self.assertEqual(json.loads(one)['files'][1]['sha256'], 'a' * 64)
+
+    def test_real_nested_host_limits_are_json_sequences(self):
+        limits = {name: resource.getrlimit(getattr(resource, name))
+                  for name in dir(resource) if name.startswith('RLIMIT_')}
+        current = summary(platform={'limits': limits})
+        self.assertIsNotNone(current)
+        expected = {name: list(value) for name, value in limits.items()}
+        self.assertEqual(json.loads(current)['common']['platform']['limits'], expected)
+        self.assertEqual(current, summary(platform={'limits': expected}))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'summary'
+            self.assertTrue(report.write_summary(path, current))
+            self.assertEqual(report.read_summary(path), current)
+        self.assertEqual(report.explain_miss(current, current)['status'], 'observed')
+        self.assertIsNone(report.dependency_summary({}, (file('a'),), {}))
 
     def test_precise_changes(self):
         old = summary([file('delete'), file('content'), file('mode', mode=1)], tools='old', environment='old')
