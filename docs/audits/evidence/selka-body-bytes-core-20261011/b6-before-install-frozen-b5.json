@@ -1,0 +1,25 @@
+{
+  "prefix": "/home/epentland/.cache/mylang-tmp/selka-selfhost-pilots/body-variant-debug",
+  "files": {
+    "bin/mylang": "e379d007c0a9a5e97f9c1fa9b6c4138958e8359ca3081b098f783e398c20e46e",
+    "tools/selka-components": "d6b2ae3ce189fa4f3816b5db7300e4c7856c7db29419b6cd8a9e4206e3b5e70f",
+    "libexec/mylang/components/body-check.json": "8a4e64581f976e43d5ca18a8168a144e7b348c548dcb3073e178d2f7f3616942",
+    "libexec/mylang/components/body-check-8a4d26ba2dbace37ae28586a86fe86883e90257eb98f82e31e200716ed2918cb": "8a4d26ba2dbace37ae28586a86fe86883e90257eb98f82e31e200716ed2918cb",
+    "libexec/mylang/components/cache-plan.json": "8a025129821838b0df8ee55ff9a250f1129f8b3d10fb1d3ea273724873d02ae8",
+    "libexec/mylang/components/cache-plan-632e9981a52949629a4fa03f437c09db6e1594a3e13ea7cd824c6c6640cfef86": "632e9981a52949629a4fa03f437c09db6e1594a3e13ea7cd824c6c6640cfef86",
+    "libexec/mylang/components/declaration-index.json": "f199b150148d1e8909f6453dd711a8c17ac9a8ea70fec5c17f3791a1b38466ea",
+    "libexec/mylang/components/declaration-index-e33aa081e794e0925e7dcfe61c4024535357498145e1c1308d62b0c400c7631f": "e33aa081e794e0925e7dcfe61c4024535357498145e1c1308d62b0c400c7631f",
+    "libexec/mylang/components/lexer-pilot.json": "4ccaab07d5efca8608e8d1377f621b6e74704ac17e5e557b159ef809c97f38b8",
+    "libexec/mylang/components/lexer-pilot-2d5717c647a7f249fb83a2776896ee232254aed6644af56ac3930d68075e2162": "2d5717c647a7f249fb83a2776896ee232254aed6644af56ac3930d68075e2162",
+    "libexec/mylang/components/parser-pilot.json": "b47c909890cc55853a980a2c4b10cad3167f69e0e6240059513cb0a891885110",
+    "libexec/mylang/components/parser-pilot-d8480492e97eeb351298195fe026ba22a07d646e28ba98a03cedb63c197d803d": "d8480492e97eeb351298195fe026ba22a07d646e28ba98a03cedb63c197d803d",
+    "libexec/mylang/components/test-index.json": "c28d6337929cc2fe2a985a81d8914d37407e1a1f9d1230cea6d3d06bf6ae6934",
+    "libexec/mylang/components/test-index-87a06f5edb58479a24bef394870567e0a672fc4b85547a23e984d4cfd75f5558": "87a06f5edb58479a24bef394870567e0a672fc4b85547a23e984d4cfd75f5558",
+    "libexec/mylang/components/type-interface.json": "8e55c7916cbdc3d9762f61744eb3eca76eb463a359087dac92edb1bcebbae92e",
+    "libexec/mylang/components/type-interface-c448dfbc5a6c4fa2c47f3c2d623cd0dfd1f5373fa558d6a751d633a5059a3b27": "c448dfbc5a6c4fa2c47f3c2d623cd0dfd1f5373fa558d6a751d633a5059a3b27"
+  },
+  "removed_live_links": [
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+    "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/tools/selka-components"
+  ]
+}

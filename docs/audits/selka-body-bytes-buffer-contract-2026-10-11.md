@@ -1,6 +1,33 @@
 # B6 pure bytes, text and octet-buffer boundary
 
-Status: the schema-6 byte/buffer producer, native validator and qualification harness are integrated; installed qualification and actual pure compiler-library coverage remain pending. Focused native buffer tests pass 18/18, the Python harness selftests pass 42/42, and the whole-tree Guardian check passes all 88 checks. These establish implementation checks, not complete B6 acceptance. B5 remains the last qualified boundary. B7 owns capability/resource entry closure. Reference remains the default; neither compiler-source bootstrap nor the <=1.5x target is established.
+Status: the schema-6 byte/buffer producer, native validator and qualification harness are integrated. The installed Debug host passes the 440-workflow release/facts/leak fixture matrix; the full B6 gate and actual pure compiler-library coverage remain pending. Focused native buffer tests pass 18/18, the Python harness selftests pass 42/42, and the whole-tree Guardian check passes all 88 checks. These establish implementation checks and one installed lane, not complete B6 acceptance. B5 remains the last fully qualified boundary. B7 owns capability/resource entry closure. Reference remains the default; neither compiler-source bootstrap nor the <=1.5x target is established.
+
+## Initial installed core evidence
+
+Integration commit `e59f37c61` passes the plain Debug installation (14/14 steps),
+the release-guest installed matrix (440 workflows, 880 comparisons, 30 warm
+deployment checks and four live-session checks), 22 malformed requests,
+92 forged-reply rejections and two expected publication failures. The matrix
+reports zero failed or skipped cases. Formatting passes 20/20 steps with
+987 live `.my` files and 204 deliberate exclusions. The native buffer selection
+contains 11 named tests and seven unconditional test blocks, all passing.
+
+The installed Debug host SHA256 is
+`724a68c33d204c82dd900a4571e3d003979855f4cd29c72f60fe32a18cf33f17`.
+The schema-6 body artifact SHA256 is
+`c937729ed45b2bb0c1cbf8ee394262340dae98555a55a5b8cc91fc7c7fcfa80e`,
+with content key
+`314ee4d8a9f0fd6c80564044cba8d92649ea0be0858f50dee1064e4170f66b99`.
+All seven package hashes and the unchanged qualified seed were verified. The
+frozen B5 Debug installation was independently verified unchanged after install.
+The [raw evidence inventory](evidence/selka-body-bytes-core-20261011/SHA256SUMS)
+includes the complete installed report, identities and compressed command logs.
+
+The normal/source-edit lane, ReleaseFast-host lane, full gate and actual compiler
+helper-library admission are not established by this run. Compiler-library
+follow-up still has exact negative-literal metadata differences and the largest
+helper closure exhausts the logical value pool. These must be resolved without
+discarding required typed rows or silently using native body checking.
 
 ## Concrete compiler dependencies
 

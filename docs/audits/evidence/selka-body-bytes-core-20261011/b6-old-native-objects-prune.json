@@ -1,0 +1,15 @@
+{
+  "reason": "Inactive root native object caches from before B6; current object, installed hosts, frozen prefixes and test evidence retained. No root native build is active.",
+  "removed": [
+    {
+      "path": "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/49efd169a082a36e4ef80ea72ba5a521/mylang_zcu.o",
+      "bytes": 109923928,
+      "sha256": "7815ed568f530ffea87799459a716969fc874382a7f46bb9886e37009ebcd4fb"
+    },
+    {
+      "path": "/home/epentland/.cache/mylang/zig-local-cache-selka-selfhost-pilots/o/a6817695100fa24f1c54dbc145424d39/mylang_zcu.o",
+      "bytes": 109690832,
+      "sha256": "6a25198fc840891365684d5557660fd9663a477eebeb13cd42de7df72dab8d8c"
+    }
+  ]
+}
