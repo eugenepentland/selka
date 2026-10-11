@@ -1,0 +1,6 @@
+func read(fs: Filesystem) -> bytes fails str:
+    const file = 1
+    with try fs.open("blob.bin", "rb") as file:
+        return file.read(1)
+func main() -> int:
+    return 7

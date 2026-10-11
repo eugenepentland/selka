@@ -1,0 +1,3 @@
+func main(out: Stream) -> int:
+    _ = out.write(1, 2)
+    return 7

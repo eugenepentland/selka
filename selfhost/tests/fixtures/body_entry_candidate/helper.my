@@ -1,0 +1,3 @@
+public func read(fs: Filesystem) -> bytes fails str:
+    with try fs.open("blob.bin", "rb") as file:
+        return file.read(6)

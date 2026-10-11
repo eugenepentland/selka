@@ -1,0 +1,11 @@
+func read(fs: Filesystem) -> int fails str:
+    with try fs.open("blob.bin", "rb") as file:
+        _ = file.read(1)
+        fail "checked failure"
+func main(fs: Filesystem, err: Stream) -> int:
+    match read(fs):
+        case Ok(_):
+            return 0
+        case Err(message):
+            err.print(message)
+            return 7

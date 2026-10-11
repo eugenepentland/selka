@@ -1,0 +1,11 @@
+func main(fs: Filesystem, err: Stream) -> int:
+    match fs.open("absent.bin", "rb"):
+        case Ok(file):
+            with file as input:
+                _ = input.read(1)
+            return 0
+        case Err(message):
+            if len(message) > 0:
+                err.print("missing")
+                return 7
+    return 0

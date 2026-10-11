@@ -1,0 +1,14 @@
+func read(fs: Filesystem) -> bytes fails str:
+    mut data = b""
+    with try fs.open("blob.bin", "rb") as file:
+        data = file.read(6)
+    return data
+func main(fs: Filesystem) -> int:
+    for item in range(128):
+        match read(fs):
+            case Ok(data):
+                if data != b"\x00\xff\xc3\xa9ab":
+                    return 0
+            case Err(_):
+                return 0
+    return 7

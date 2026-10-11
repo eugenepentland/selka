@@ -1,0 +1,467 @@
+{
+  "schema": 1,
+  "scope": "actual seven component entries and all their transitive imports; not full-language bootstrap",
+  "entries": [
+    {
+      "package": "test-index",
+      "entry": "selfhost/components/test_index/main.my",
+      "sha256": "365f56a9f40de9658fed629427a43ba8bcad59f2b4c9b144654a66b1e90cf6b4",
+      "sites": [
+        {
+          "line": 6,
+          "text": "with try fs.open(path, \"rb\") as file:"
+        },
+        {
+          "line": 7,
+          "text": "data = file.read(16777217)"
+        },
+        {
+          "line": 13,
+          "text": "func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:"
+        },
+        {
+          "line": 15,
+          "text": "err.print(\"test-index: expected --request FILE\")"
+        },
+        {
+          "line": 19,
+          "text": "_ = out.write(reply)"
+        },
+        {
+          "line": 22,
+          "text": "err.print(\"test-index:\", message)"
+        }
+      ],
+      "required_controls": [
+        "native check",
+        "native generated release/facts/leaks",
+        "selected reference/shadow/component full typed/catalog parity",
+        "valid exchange exact stdout",
+        "usage status2 exact stderr",
+        "missing file status2 exact stderr",
+        "malformed exchange status2 exact stderr"
+      ],
+      "selected_admission": "pending",
+      "source_closure": {
+        "selfhost/components/test_index/main.my": "365f56a9f40de9658fed629427a43ba8bcad59f2b4c9b144654a66b1e90cf6b4",
+        "selfhost/components/test_index/codec.my": "e81c6d9535dbe66b704733d26462579057ae6798040eb3beeceb7790285bbdd2",
+        "selfhost/components/test_index/graph.my": "8dec40f8e2e15e5d796b4c13262e21d1d9f22e8cdd6ed139060e6679c9fc2139"
+      },
+      "source_modules": 3,
+      "unresolved_imports": []
+    },
+    {
+      "package": "cache-plan",
+      "entry": "selfhost/components/cache_plan/main.my",
+      "sha256": "03222396a6df8346c8dfe1396b384ba43adf63f370a536ad9bebf59e412cfda7",
+      "sites": [
+        {
+          "line": 8,
+          "text": "with try fs.open(path, \"rb\") as file:"
+        },
+        {
+          "line": 9,
+          "text": "data = file.read(33554433)"
+        },
+        {
+          "line": 19,
+          "text": "func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:"
+        },
+        {
+          "line": 21,
+          "text": "err.print(\"cache-plan: expected --request FILE\")"
+        },
+        {
+          "line": 25,
+          "text": "_ = out.write(reply)"
+        },
+        {
+          "line": 28,
+          "text": "err.print(\"cache-plan:\", message)"
+        }
+      ],
+      "required_controls": [
+        "native check",
+        "native generated release/facts/leaks",
+        "selected reference/shadow/component full typed/catalog parity",
+        "valid exchange exact stdout",
+        "usage status2 exact stderr",
+        "missing file status2 exact stderr",
+        "malformed exchange status2 exact stderr"
+      ],
+      "selected_admission": "pending",
+      "source_closure": {
+        "selfhost/components/cache_plan/main.my": "03222396a6df8346c8dfe1396b384ba43adf63f370a536ad9bebf59e412cfda7",
+        "selfhost/components/cache_plan/codec_v2.my": "c502b53cf68a48760fad7d8c539922816d2d1e38d35e497d4a873261a17d1cb4",
+        "selfhost/components/cache_plan/incremental.my": "01dfb35efe07f472c1ecfd2e05140cb899e2fc6514f64d8a0d140cf92621f032",
+        "selfhost/components/cache_plan/codec.my": "fa0592f90fad2ac0efb7f1ca955e63a1a9059e03559e1c0c2bf97417c15102e5",
+        "selfhost/components/cache_plan/graph.my": "ae55b3f4e713a1e86cee87e2e870e2fe65ca11e7604e0000759fcbaa0145a5a7"
+      },
+      "source_modules": 5,
+      "unresolved_imports": []
+    },
+    {
+      "package": "lexer-pilot",
+      "entry": "selfhost/components/lexer_pilot/main.my",
+      "sha256": "b68bd7939d83b84164f770ad1a9ffbc498a63a7bb161b50d4fb16e8ccc94db8d",
+      "sites": [
+        {
+          "line": 7,
+          "text": "with try fs.open(path, \"rb\") as file:"
+        },
+        {
+          "line": 8,
+          "text": "data = file.read(1048577)"
+        },
+        {
+          "line": 27,
+          "text": "out.print(item.kind, item.start, item.end)"
+        },
+        {
+          "line": 31,
+          "text": "out.print(\"error\", item.code, item.line, item.column, item.start, item.end)"
+        },
+        {
+          "line": 35,
+          "text": "func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:"
+        },
+        {
+          "line": 39,
+          "text": "_ = out.write(reply)"
+        },
+        {
+          "line": 42,
+          "text": "err.print(\"lexer transport:\", message)"
+        },
+        {
+          "line": 45,
+          "text": "err.print(\"lexer transport: expected --request FILE\")"
+        },
+        {
+          "line": 51,
+          "text": "err.print(\"lexer transport:\", message)"
+        },
+        {
+          "line": 57,
+          "text": "with try fs.open(path, \"rb\") as file:"
+        },
+        {
+          "line": 58,
+          "text": "data = file.read(1048641)"
+        }
+      ],
+      "required_controls": [
+        "native check",
+        "native generated release/facts/leaks",
+        "selected reference/shadow/component full typed/catalog parity",
+        "valid exchange exact stdout",
+        "usage status2 exact stderr",
+        "missing file status2 exact stderr",
+        "malformed exchange status2 exact stderr"
+      ],
+      "selected_admission": "pending",
+      "source_closure": {
+        "selfhost/components/lexer_pilot/main.my": "b68bd7939d83b84164f770ad1a9ffbc498a63a7bb161b50d4fb16e8ccc94db8d",
+        "selfhost/components/lexer_pilot/wire.my": "d91ab2db2163f999f00d5094b215da93355724b71f0979c381148580db065272",
+        "selfhost/components/lexer_pilot/diagnostic.my": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c",
+        "selfhost/components/lexer_pilot/token.my": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de",
+        "selfhost/components/lexer_pilot/source.my": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed",
+        "selfhost/components/lexer_pilot/lexer.my": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137"
+      },
+      "source_modules": 6,
+      "unresolved_imports": []
+    },
+    {
+      "package": "parser-pilot",
+      "entry": "selfhost/components/parser_pilot/full_adapter.my",
+      "sha256": "c9d38254b0a4c06337ad7bea1f8278cc8d5ce40f91665738cb7a2723f6423853",
+      "sites": [
+        {
+          "line": 50,
+          "text": "with try fs.open(path, \"rb\") as file:"
+        },
+        {
+          "line": 51,
+          "text": "return file.read(67108865)"
+        },
+        {
+          "line": 131,
+          "text": "func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:"
+        },
+        {
+          "line": 133,
+          "text": "err.print(\"parser-full: expected --request FILE or --exchange FILE\")"
+        },
+        {
+          "line": 137,
+          "text": "_ = out.write(reply)"
+        },
+        {
+          "line": 140,
+          "text": "err.print(problem.code, problem.start, problem.end, problem.message)"
+        }
+      ],
+      "required_controls": [
+        "native check",
+        "native generated release/facts/leaks",
+        "selected reference/shadow/component full typed/catalog parity",
+        "valid exchange exact stdout",
+        "usage status2 exact stderr",
+        "missing file status2 exact stderr",
+        "malformed exchange status2 exact stderr"
+      ],
+      "selected_admission": "pending",
+      "source_closure": {
+        "selfhost/components/parser_pilot/full_adapter.my": "c9d38254b0a4c06337ad7bea1f8278cc8d5ce40f91665738cb7a2723f6423853",
+        "selfhost/components/parser_pilot/syntax_problem.my": "e685ee9620a452c23884f41d257ba3913781ac2c7fe0fad0e34143d1a2b9ed90",
+        "selfhost/components/parser_pilot/syntax_value.my": "a9b8be525aa491d7ffeaefaf79b059a8f09826d99a2b94ba3a2186b6d8a28a0d",
+        "selfhost/components/parser_pilot/syntax_diagnostics.my": "1ad627f530c7b6a3165e71c9e95dad7fc84acc9f480085507f20dd563f9d07b5",
+        "selfhost/components/parser_pilot/syntax_codec.my": "1a44fe77f93c160aa94ccda8d1e9a999afcc80cb6e5da3cd3ed69f718dadd852",
+        "selfhost/components/parser_pilot/full_parser.my": "34ae6c276ec2be5330e8d3f21b00b6dc056ba2320a94698e72ceac9c23fd9ddb",
+        "selfhost/components/parser_pilot/syntax_recovery.my": "0fcaec74ddeee26717ded7f405a1d2f08fb464906e1d20f2cfd94eb5dbd8230c",
+        "selfhost/components/parser_pilot/full_model.my": "00fead2fede77367e69f4421cef251b5b3ac3ed7f091e8a19d21337573485a78",
+        "selfhost/components/parser_pilot/lexer.my": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137",
+        "selfhost/components/parser_pilot/diagnostic.my": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c",
+        "selfhost/components/parser_pilot/token.my": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de",
+        "selfhost/components/parser_pilot/source.my": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed",
+        "selfhost/components/parser_pilot/full_calls.my": "6a3ac8f50aa68cbc2e0151f6509a5753fd792f59def127d13f9ca6aeeba170ed",
+        "selfhost/components/parser_pilot/type_parser.my": "3a5940891c02fa79d7f0d9837e5c72eb908a92dc29f06ce068b71c4c94c85928",
+        "selfhost/components/parser_pilot/full_migration.my": "a27088a0f802bfcf923bdc9f8208acc7a649d3ff647e743a7d56750142dfa1f1",
+        "selfhost/components/parser_pilot/full_arena_migration.my": "29aa6ec3fa6a44cd82a285c9ef6633b51234b14632e43625054a1d7df5bfbb58",
+        "selfhost/components/parser_pilot/full_migration_expressions.my": "d9dc8e609e2477b58908fa59199d829d844a530a0bd4ea757e620105fa8bc098",
+        "selfhost/components/parser_pilot/full_migration_types.my": "d161f85bed3d09b21e861e6dff65055ea1f214d89990228c33e8b25a4d304967",
+        "selfhost/components/parser_pilot/full_values.my": "3020b62baea81c31baa341fcf18b4828ce562c84b3cf98f77a2a99009249606a",
+        "selfhost/components/parser_pilot/full_migration_variants.my": "878ae0b09ac8fe87df75f9f079962cdd5f36609f4d53b83745c38ca9c4f1aa58",
+        "selfhost/components/parser_pilot/full_binding_migration.my": "21b9a7868557da86ef77737e0af30e9f5bbe9bb93258353e2ff9da232b512bde",
+        "selfhost/components/parser_pilot/full_hints.my": "e1c989e0e7a10a76b6e262bc9a6687e021eecb421f8dbea26e844f1e8d9a0da2",
+        "selfhost/components/parser_pilot/full_header.my": "f3657aca3db3930237a238f6d53e2b822e77c22cf5a337985b5f0bc16b160580",
+        "selfhost/components/parser_pilot/full_format.my": "3b31ab390d5b5dfa13cefeae303a5713eed0dde11b29ed40be9ee7aa9ee69d55",
+        "selfhost/components/parser_pilot/full_resource.my": "ac2a21a9481884bd0897fe9ad535859d1111351da9f53c2d55c4593dd9904f0b",
+        "selfhost/components/parser_pilot/full_patterns.my": "ea1f679e2c704b2b17f685ca8e428c43a4b7db0b8dd4aae5353a21f6d9cc272e",
+        "selfhost/components/parser_pilot/literal_decoder.my": "3ca334c863b751b0a22792bf62c7d2620b0849f5cb700b5d672581ad572c081d",
+        "selfhost/components/parser_pilot/parser.my": "2d2948155d66eeef00a97edd79b9d57ca7ae3e462148c00574bb1da47750699d"
+      },
+      "source_modules": 28,
+      "unresolved_imports": []
+    },
+    {
+      "package": "declaration-index",
+      "entry": "selfhost/components/declaration_index/main.my",
+      "sha256": "bc5dfaae9885248c5bf9de9ed1f924dadc7862113c37ee255c12b361eb62ffaa",
+      "sites": [
+        {
+          "line": 7,
+          "text": "match fs.open(path, \"rb\"):"
+        },
+        {
+          "line": 9,
+          "text": "with file as input:"
+        },
+        {
+          "line": 10,
+          "text": "data = input.read(33554433)"
+        },
+        {
+          "line": 24,
+          "text": "func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:"
+        },
+        {
+          "line": 26,
+          "text": "err.print(\"declaration-index: expected --exchange FILE or --request FILE\")"
+        },
+        {
+          "line": 30,
+          "text": "_ = out.write(reply)"
+        },
+        {
+          "line": 33,
+          "text": "err.print(problem.code, problem.message)"
+        }
+      ],
+      "required_controls": [
+        "native check",
+        "native generated release/facts/leaks",
+        "selected reference/shadow/component full typed/catalog parity",
+        "valid exchange exact stdout",
+        "usage status2 exact stderr",
+        "missing file status2 exact stderr",
+        "malformed exchange status2 exact stderr"
+      ],
+      "selected_admission": "pending",
+      "source_closure": {
+        "selfhost/components/declaration_index/main.my": "bc5dfaae9885248c5bf9de9ed1f924dadc7862113c37ee255c12b361eb62ffaa",
+        "selfhost/components/declaration_index/indexed.my": "d2fac8905448a78b587f94a33559388d773223123188f8bf8310964d1a92a19b",
+        "selfhost/components/declaration_index/indexing.my": "828c183be506cd830ae600fc2867bcb22e6123f9eba3ce77096643a21ab84be5",
+        "selfhost/components/declaration_index/model.my": "28de6c85d6f815a1d60219bbaf9cbbe2b33fcef0cdb5f53dbf5af24ac856f24a",
+        "selfhost/components/declaration_index/codec.my": "767d70cca4865f1185db3b287f2f84ac2bd59976fa94cd1cc473894d211ba4df"
+      },
+      "source_modules": 5,
+      "unresolved_imports": []
+    },
+    {
+      "package": "type-interface",
+      "entry": "selfhost/components/type_interface/main.my",
+      "sha256": "54ccbd473433469b176f06fd3ce8820fc8ea70a5f60daff0b558f5841bf2dc2a",
+      "sites": [
+        {
+          "line": 7,
+          "text": "match fs.open(path, \"rb\"):"
+        },
+        {
+          "line": 9,
+          "text": "with file as input:"
+        },
+        {
+          "line": 10,
+          "text": "data = input.read(67108865)"
+        },
+        {
+          "line": 24,
+          "text": "func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:"
+        },
+        {
+          "line": 26,
+          "text": "err.print(\"type-interface: expected --exchange FILE or --request FILE\")"
+        },
+        {
+          "line": 30,
+          "text": "_ = out.write(reply)"
+        },
+        {
+          "line": 33,
+          "text": "err.print(problem.code, problem.message)"
+        }
+      ],
+      "required_controls": [
+        "native check",
+        "native generated release/facts/leaks",
+        "selected reference/shadow/component full typed/catalog parity",
+        "valid exchange exact stdout",
+        "usage status2 exact stderr",
+        "missing file status2 exact stderr",
+        "malformed exchange status2 exact stderr"
+      ],
+      "selected_admission": "pending",
+      "source_closure": {
+        "selfhost/components/type_interface/main.my": "54ccbd473433469b176f06fd3ce8820fc8ea70a5f60daff0b558f5841bf2dc2a",
+        "selfhost/components/type_interface/model.my": "351d74c65f2abc41f2b281b9baeab4c5f0c9bf0854396de9855607dc0de384e7",
+        "selfhost/components/type_interface/checking.my": "fba92cf8c80f450a2b63ce6c94eda56010a68a91d49dfe3cfec92840018cb0d8",
+        "selfhost/components/type_interface/depth.my": "8977b74931f407c7d45c33d206228dba2b3a69d3d0bb83aab2fa7d834ba68fdb",
+        "selfhost/components/type_interface/resolve.my": "07bb36fdd15ec3f3fcf3d23203831c22653aa756d36682950f5829d3f12ccbef",
+        "selfhost/components/type_interface/indexed.my": "40720bd20e7dc08d971367b496ebacc896f2b358c2477932f548b5ba43b90db2",
+        "selfhost/components/type_interface/signatures.my": "1a8f42a6565e4abf4f4ae36ab116677c481b47a948c2eae3eb2924a61d3e5bdd",
+        "selfhost/components/type_interface/generics.my": "3d2495254bb8bedfb1884115ac988d64c503689603b55e8607fbb599f414629f",
+        "selfhost/components/type_interface/prelude.my": "295c94f187f065984688645d2e627256ad53d0f9ba76b47863020bfc0ce7e9bf",
+        "selfhost/components/type_interface/qualified.my": "c1777725c6b96b8fc2b918858887f7dcc44a393466f301b0572f27f6f96b0042",
+        "selfhost/components/type_interface/token.my": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de",
+        "selfhost/components/type_interface/source.my": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed",
+        "selfhost/components/type_interface/lexer.my": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137",
+        "selfhost/components/type_interface/diagnostic.my": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c",
+        "selfhost/components/type_interface/indexes.my": "e15d149dccc8ca1579119272f05eb38e63edf468eca966c1700fdbcc3384aaaa",
+        "selfhost/components/type_interface/codec.my": "52825f82bd6a4a7769ecf85c324131658e40f9b02031c4e8362b800fdb8d8973"
+      },
+      "source_modules": 16,
+      "unresolved_imports": []
+    },
+    {
+      "package": "body-check",
+      "entry": "selfhost/components/body_check/main.my",
+      "sha256": "c92d85ae2cd6f8710e15ca5e7d0ed5b32e8009a4b01fa649e151bc8d7f9faf82",
+      "sites": [
+        {
+          "line": 7,
+          "text": "match fs.open(path, \"rb\"):"
+        },
+        {
+          "line": 9,
+          "text": "with file as input:"
+        },
+        {
+          "line": 10,
+          "text": "data = input.read(67108865)"
+        },
+        {
+          "line": 24,
+          "text": "func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:"
+        },
+        {
+          "line": 26,
+          "text": "err.print(\"body-check: expected --exchange FILE or --request FILE\")"
+        },
+        {
+          "line": 30,
+          "text": "_ = out.write(reply)"
+        },
+        {
+          "line": 33,
+          "text": "err.print(problem.code, problem.message)"
+        }
+      ],
+      "required_controls": [
+        "native check",
+        "native generated release/facts/leaks",
+        "selected reference/shadow/component full typed/catalog parity",
+        "valid exchange exact stdout",
+        "usage status2 exact stderr",
+        "missing file status2 exact stderr",
+        "malformed exchange status2 exact stderr"
+      ],
+      "selected_admission": "pending",
+      "source_closure": {
+        "selfhost/components/body_check/main.my": "c92d85ae2cd6f8710e15ca5e7d0ed5b32e8009a4b01fa649e151bc8d7f9faf82",
+        "selfhost/components/body_check/syntax_value.my": "a9b8be525aa491d7ffeaefaf79b059a8f09826d99a2b94ba3a2186b6d8a28a0d",
+        "selfhost/components/body_check/checking.my": "2b4897cc665fd350ea67c142f17da46c85e67590ee7c6f1b83502dd93b7c3fa5",
+        "selfhost/components/body_check/variants.my": "627369dc0572eade9fffe9626ed8db6e50974644a76bc6079b0703af627f0b4a",
+        "selfhost/components/body_check/recipe_index.my": "7ec260ba535937a9a2cb17da8a66a02e51cb5f03448586964c4418ae331ed45e",
+        "selfhost/components/body_check/record_index.my": "5c756454309d65df96d286c192c0bffca2e4e927b22167d4479c1654a0464872",
+        "selfhost/components/body_check/graph.my": "d951145934206bd5d499583aadb6ae53d87f542384b5eb35e44b560de4ac26f2",
+        "selfhost/components/body_check/record_types.my": "f2dc01a57a3f595db4844e192d09228a2186554a3fa70ab32be2ac58e2bea37d",
+        "selfhost/components/body_check/suggestions.my": "ffba15551dd18cb1a4f338f868459280b82c19d94d457ed07879834008dd88e4",
+        "selfhost/components/body_check/names.my": "f93a6c3f797545f1d375b12c434c9e19b8d2170c9e4030e259c17533318258a6",
+        "selfhost/components/body_check/syntax_problem.my": "e685ee9620a452c23884f41d257ba3913781ac2c7fe0fad0e34143d1a2b9ed90",
+        "selfhost/components/body_check/record_name_index.my": "7df407da5fe863c434f4db1189f36be6b7f9de400975f5d5dee9aca21b462ca7",
+        "selfhost/components/body_check/list_types.my": "dba8cf62e5d0effe91d6b6a0eea8497fe72a221d29e8f91ff9b1efec0597ac9d",
+        "selfhost/components/body_check/sequences.my": "99070432a8602591a4d80eb88ca7df99c25ee7c56532b3e1b4a1e418849d4285",
+        "selfhost/components/body_check/emission.my": "326b322a326f31670a6e19be5f4b8872b12592249158245fa635b070cb6d5ae5",
+        "selfhost/components/body_check/functions.my": "6ea48074992ac27777ebceca623e985932128670961d084ab05c4076a307b225",
+        "selfhost/components/body_check/failure_lower.my": "b25c91b13dd108492f88601bc83263b692d1790bb0879cdd2d225f390eb0eaac",
+        "selfhost/components/body_check/obligations.my": "d97be071e8013a3a6e2947a5b0c65a2227daac7369aa53b937f9bc2c2e8c3aa1",
+        "selfhost/components/body_check/locals.my": "2ed9f796da77cf4bc85ca0762b4a9d44acf932d3307d99dabe4b4cd211a9c4ff",
+        "selfhost/components/body_check/engine.my": "298b35ab51e2f8d9339076ab46499fdbfa76ff4c6794a5f24c79be9d99e44da4",
+        "selfhost/components/body_check/variant_construct.my": "6d5307ba85ecd3c45dce71fa6ff4c2a318136e6a9136f72e41f87198741c259d",
+        "selfhost/components/body_check/record_construct.my": "565a688d9af3fd97a428a98866d6d6ae491284566ebe8ffeb7f7f5dbf516ed39",
+        "selfhost/components/body_check/variant_patterns.my": "1fff3b27a64ef90c51eb1ac2291a88540ab7121e33d882ce104007dfb906dc5b",
+        "selfhost/components/body_check/pending_flow.my": "22f64407e94dc914df4dc9049dde7ec55a4bc06d220832312259e4bc832331d0",
+        "selfhost/components/body_check/discard_policy.my": "70eb5f69af54a7a98de0151011f4a341610bf2ad45cc7e84322d5e3721db4f9e",
+        "selfhost/components/body_check/receiver_overlap.my": "18656f26942331e663a52c269b8a6fa6ae333d4883baac6a7234d513b9962278",
+        "selfhost/components/body_check/mutation_places.my": "e871e4297a1bb6a5fbc79db12f8b66a39e6a0b446cdb2e6840122ca364080845",
+        "selfhost/components/body_check/record_places.my": "7ef3097ddc78ca90b484eacd0d986a2cbf3e01eb4dd95bee17e2f4c2d9f55737",
+        "selfhost/components/body_check/list_lower.my": "c7aa1c624523360c0034648c93db2ae63e47f3d8bb742f31fcdc42ec83e9dca6",
+        "selfhost/components/body_check/record_names.my": "faa1dfdcf11ad3a93bc8f2e4ca0733f8335f2f058da1751df6c1b1e5f22c8ffa",
+        "selfhost/components/body_check/record_qualified.my": "5dfcda5a1989ba9d189e39887cf13f85261d1c5d9929eddb0fd707dbfc73d371",
+        "selfhost/components/body_check/token.my": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de",
+        "selfhost/components/body_check/source.my": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed",
+        "selfhost/components/body_check/lexer.my": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137",
+        "selfhost/components/body_check/diagnostic.my": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c",
+        "selfhost/components/body_check/list_iteration.my": "d50f997597c120dfa13213b20db95cfa939d63cc94e0dd8741ba31ccd8aca0b5",
+        "selfhost/components/body_check/list_places.my": "33b5513d13f37139b7a8771cbdb827ebc73075db74d204d3115ac9cc2899afb7",
+        "selfhost/components/body_check/list_repeat.my": "63153f83c5af17e6dbb5e788baec4eeeb39db26d6ff9a88f00736fbf4e4ebed3",
+        "selfhost/components/body_check/mut_markers.my": "df968136e9beb34e0ca46e4763131b44b08e25b5a0c397dae495fd513fd4352d",
+        "selfhost/components/body_check/call_repairs.my": "a246462e908cd48ff0e2e20493bb66ee60890c4bb210245b73cbf5c318291da8",
+        "selfhost/components/body_check/locals_flow.my": "a3c6c3cfb57f43719d06f45c0b517e548e9756fae9345304c7654842b1c77e51",
+        "selfhost/components/body_check/range_lower.my": "5f4b4c839dd1db15e24d18eafc3b95c659aba65b278abe78b2aa29053a0e6007",
+        "selfhost/components/body_check/scalars.my": "57697f129c8f5c4396aaac2200201e123deea17839a852cba110f98c07bd1b13",
+        "selfhost/components/body_check/syntax_diagnostics.my": "1ad627f530c7b6a3165e71c9e95dad7fc84acc9f480085507f20dd563f9d07b5",
+        "selfhost/components/body_check/codec.my": "c12f62d7bef8ec135d7c96e782cf91ab814f7c907668d831f6f407b2be9d9869",
+        "selfhost/components/body_check/syntax_codec.my": "1a44fe77f93c160aa94ccda8d1e9a999afcc80cb6e5da3cd3ed69f718dadd852"
+      },
+      "source_modules": 46,
+      "unresolved_imports": []
+    }
+  ],
+  "executed_native_controls": 0,
+  "executed_selected_controls": 0,
+  "status": "source inventory only; actual seven-entry selected admission pending",
+  "source_root": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang",
+  "source_revision": "2880232f35940ee0624e083c7f9a5ab9c28bc70d"
+}

@@ -1,0 +1,11 @@
+func read(fs: Filesystem) -> str fails str:
+    with try fs.open("text.txt", "r") as file:
+        return file.readline()
+func main(fs: Filesystem) -> int:
+    match read(fs):
+        case Ok(value):
+            if value == "seven!!\n":
+                return 7
+        case Err(_):
+            pass
+    return 0

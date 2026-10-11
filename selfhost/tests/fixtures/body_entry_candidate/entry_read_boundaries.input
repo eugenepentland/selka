@@ -1,0 +1,15 @@
+func read(fs: Filesystem) -> int fails str:
+    with try fs.open("blob.bin", "rb") as file:
+        const zero = file.read(0)
+        const prefix = file.read(2)
+        const tail = file.read()
+        const eof = file.read(1)
+        if zero == b"" and prefix == b"\x00\xff" and tail == b"\xc3\xa9ab" and eof == b"":
+            return 7
+    return 0
+func main(fs: Filesystem) -> int:
+    match read(fs):
+        case Ok(value):
+            return value
+        case Err(_):
+            return 0
