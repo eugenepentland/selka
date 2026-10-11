@@ -9,7 +9,7 @@ import threading
 import time
 import unittest
 
-from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned
+from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned, _kill_identity, _process_starttime
 
 
 class WatchdogTests(unittest.TestCase):
@@ -124,6 +124,40 @@ class WatchdogTests(unittest.TestCase):
                 os.kill(int(pid_path.read_text()), 0)
             child.stdout.close()
             child.stderr.close()
+
+    def test_supervisor_preserves_inherited_descriptors(self):
+        read_fd, write_fd = os.pipe()
+        child = self.supervised(f'import os; os.write({write_fd},b"preserved")', pass_fds=(write_fd,))
+        os.close(write_fd)
+        result = wait_owned(child)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(os.read(read_fd, 32), b'preserved')
+        os.close(read_fd)
+
+    def test_supervisor_preserves_signal_exit_status(self):
+        result = wait_owned(self.supervised('import os,signal; os.kill(os.getpid(),signal.SIGTERM)'))
+        self.assertEqual(result.returncode, 143)
+
+    def test_pid_identity_mismatch_never_signals(self):
+        child = self.spawn('import time; time.sleep(60)')
+        try:
+            _kill_identity(child.pid, _process_starttime(child.pid) + 1)
+            self.assertIsNone(child.poll())
+        finally:
+            terminate_owned(child, grace_seconds=.05)
+
+    def test_thread_owned_detached_child(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pid_path = Path(temporary)/'pid'
+            source = ('import subprocess,threading,time; '
+                      '\ndef fork():\n child=subprocess.Popen(["sleep","60"],start_new_session=True); '
+                      f'open({str(pid_path)!r},"w").write(str(child.pid)); time.sleep(60)'
+                      '\nthreading.Thread(target=fork).start(); time.sleep(60)')
+            child = self.supervised(source)
+            result = wait_owned(child, limits=ProcessLimits(.2,.5))
+            self.assertTrue(result.timed_out)
+            with self.assertRaises(ProcessLookupError):
+                os.kill(int(pid_path.read_text()), 0)
 
     def test_supervisor_leader_exit_is_incomplete(self):
         result = wait_owned(self.supervised('import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True)'),

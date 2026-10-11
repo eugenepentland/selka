@@ -283,21 +283,53 @@ def terminate_owned(process: subprocess.Popen, *, grace_seconds: float = 0.5):
 
 
 
+def _process_starttime(pid):
+    try:
+        stat = Path(f"/proc/{pid}/stat").read_text()
+        return int(stat[stat.rfind(")") + 2:].split()[19])
+    except FileNotFoundError:
+        return None
+
+
 def _descendants(pid):
-    """Read only the isolated supervisor's lineage, never global process names."""
-    result = set()
+    """Snapshot all thread-owned descendants and their kernel birth identities."""
+    result = {}
     pending = [pid]
     while pending:
         parent = pending.pop()
         try:
-            children = Path(f"/proc/{parent}/task/{parent}/children").read_text().split()
+            tasks = list(Path(f"/proc/{parent}/task").iterdir())
         except FileNotFoundError:
             continue
-        for child in map(int, children):
-            if child not in result:
-                result.add(child)
-                pending.append(child)
+        for task in tasks:
+            try:
+                children = (task / "children").read_text().split()
+            except FileNotFoundError:
+                continue
+            for child in map(int, children):
+                if child not in result:
+                    birth = _process_starttime(child)
+                    if birth is not None:
+                        result[child] = birth
+                        pending.append(child)
     return result
+
+
+def _kill_identity(pid, birth):
+    """Pin a process with pidfd, verify birth, then signal that exact process."""
+    try:
+        descriptor = os.pidfd_open(pid)
+    except ProcessLookupError:
+        return
+    try:
+        if _process_starttime(pid) != birth:
+            return
+        signal.pidfd_send_signal(descriptor, signal.SIGSTOP)
+        signal.pidfd_send_signal(descriptor, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    finally:
+        os.close(descriptor)
 
 
 def run_supervised(argv: list[str], env: dict[str, str]) -> int:
@@ -320,7 +352,7 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
     previous = {sig: signal.signal(sig, interrupt) for sig in (signal.SIGTERM, signal.SIGINT)}
     worker = None
     try:
-        worker = subprocess.Popen(argv, env=env)
+        worker = subprocess.Popen(argv, env=env, close_fds=False)
         while worker.poll() is None and not interrupted:
             time.sleep(0.01)
         status = worker.poll()
@@ -329,12 +361,8 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
         # Stop before kill so descendants cannot keep forking during shutdown.
         deadline = time.monotonic() + 0.3
         while leftovers and time.monotonic() < deadline:
-            for pid in leftovers:
-                try:
-                    os.kill(pid, signal.SIGSTOP)
-                    os.kill(pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
+            for pid, birth in leftovers.items():
+                _kill_identity(pid, birth)
             while True:
                 try:
                     pid, _ = os.waitpid(-1, os.WNOHANG)
@@ -350,7 +378,7 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
             worker.poll()
         if leftovers:
             return 125
-        return 130 if interrupted else 125 if incomplete else status
+        return 130 if interrupted else 125 if incomplete else (128 - status if status < 0 else status)
     finally:
         for sig, handler in previous.items():
             signal.signal(sig, handler)
