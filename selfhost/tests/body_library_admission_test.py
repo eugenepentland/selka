@@ -64,7 +64,9 @@ class LibraryAdmissionTests(unittest.TestCase):
             args=SimpleNamespace(compiler=Path('/fake'),zig=Path('/zig'),builder=None,
                                  source_root=D.D.ROOT,component_dir=Path('/components'),
                                  native_controls=True,report=report)
+            real_digest=D.F.digest
             with patch.object(D.argparse.ArgumentParser,'parse_args',return_value=args), \
+                 patch.object(D.F,'digest',side_effect=lambda path: 'compiler-before' if path==args.compiler else real_digest(path)), \
                  patch.object(D.F,'execute',return_value=(2,b'',b'ComponentProfile')):
                 with self.assertRaisesRegex(RuntimeError,'native fixture status changed'):D.main()
             evidence=json.loads(report.read_text())
@@ -73,6 +75,19 @@ class LibraryAdmissionTests(unittest.TestCase):
             self.assertEqual(evidence['records'][0]['stderr'],'ComponentProfile')
             self.assertEqual(evidence['records'][0]['status'],2)
             self.assertNotIn('failed',evidence)
+            self.assertIn('--no-cache',evidence['records'][0]['command'])
+            self.assertEqual(evidence['compiler_sha256'],'compiler-before')
+            args.native_controls=False
+            before={'compiler_sha256':'compiler-before','packages':{'body-check':'artifact-before'}}
+            with patch.object(D.F,'digest',return_value='compiler-before'), \
+                 patch.object(D.D,'packages',return_value={'body-check':'artifact-before'}):
+                D.require_deployment(args,before)
+            with patch.object(D.F,'digest',return_value='compiler-after'), \
+                 patch.object(D.D,'packages',return_value={'body-check':'artifact-before'}):
+                with self.assertRaisesRegex(RuntimeError,'deployment changed'):D.require_deployment(args,before)
+            with patch.object(D.F,'digest',return_value='compiler-before'), \
+                 patch.object(D.D,'packages',return_value={'body-check':'artifact-after'}):
+                with self.assertRaisesRegex(RuntimeError,'deployment changed'):D.require_deployment(args,before)
 
     def test_actual_test_root_inventory_is_nonempty_and_duplicate_safe(self):
         self.assertEqual((len(D.LIBRARIES),len(D.TESTS)),(9,6))

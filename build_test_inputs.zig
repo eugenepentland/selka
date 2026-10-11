@@ -239,5 +239,25 @@ pub const type_interface_qualification_self = [_][]const u8{ "selfhost/test_type
 /// Qualified body check pure tests and installed workflow/protocol qualification.
 pub const body_check_qualification = [_][]const u8{"selfhost/"};
 
+/// Actual compiler libraries, transitive source closure, fixture controls and verified seed pin.
+pub const body_library_admission = [_][]const u8{
+    "selfhost/tests/run_body_library_admission.py",
+    "selfhost/tests/run_body_check_qualification.py",
+    "selfhost/tests/run_frontend_qualification.py",
+    "selfhost/tests/fixtures/body_library_followup/",
+    "selfhost/components/",
+    "selfhost/component-seed.json",
+};
+
+/// Adversarial selection and guest verdict accounting, including real test-root source inventories.
+pub const body_library_admission_self = [_][]const u8{
+    "selfhost/tests/body_library_admission_test.py",
+    "selfhost/tests/run_body_library_admission.py",
+    "selfhost/tests/run_body_check_qualification.py",
+    "selfhost/tests/run_frontend_qualification.py",
+    "selfhost/tests/fixtures/body_library_followup/",
+    "selfhost/components/",
+};
+
 /// Adversarial verdict accounting for body check qualification.
 pub const body_check_qualification_self = [_][]const u8{ "selfhost/test_body_checks.py", "selfhost/test_pilots.py", "selfhost/tests/run_body_check_qualification.py", "selfhost/tests/run_declaration_qualification.py", "selfhost/tests/run_frontend_qualification.py", "selfhost/tests/measure_managed_body_adoption.py", "selfhost/tests/measure_frontend_adoption.py", "selfhost/tests/body_check_qualification_test.py", "selfhost/tests/fixtures/body_check/", "selfhost/tests/measure_performance_ratio.py", "selfhost/tests/performance_ratio_test.py", "selfhost/tests/fixtures/performance_ratio/" };

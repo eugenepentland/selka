@@ -896,6 +896,36 @@ pub fn build(b: *std.Build) void {
     body_checks_checks.addArgs(&.{ "python3", "-m", "unittest", "selfhost/tests/body_check_qualification_test.py", "selfhost/tests/performance_ratio_test.py" });
     body_checks_step.dependOn(&body_checks_checks.step);
     test_step.dependOn(body_checks_step);
+    const body_libraries_step = b.step("test-selfhost-body-libraries", "Require all compiler library fixtures, nine library roots and six test roots without profile skips");
+    const body_libraries_run = driver(b, "actual compiler library admission: 183 operations", rss.driver, "body_library_admission");
+    // External qualified seed receipts and installed package bytes must be
+    // reauthenticated even when a previous action receipt is available.
+    body_libraries_run.has_side_effects = true;
+    body_libraries_run.addArgs(&.{ "python3", "selfhost/tests/run_body_library_admission.py", "--zig", b.graph.zig_exe, "--builder" });
+    body_libraries_run.addArtifactArg(component_tool);
+    body_libraries_run.addArg("--compiler");
+    body_libraries_run.addArtifactArg(exe);
+    body_libraries_run.addArg("--component-dir");
+    body_libraries_run.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    body_libraries_run.addArg("--source-root");
+    body_libraries_run.addDirectoryArg(b.path("."));
+    body_libraries_run.addArg("--report");
+    _ = body_libraries_run.addOutputFileArg("body-library-admission.json");
+    body_libraries_step.dependOn(&body_libraries_run.step);
+    // These admission selfchecks need no compiler installation or seed build.
+    const body_libraries_checks = b.addSystemCommand(&.{ "python3", "selfhost/tests/body_library_admission_test.py" });
+    body_libraries_checks.setName("actual library admission: six adversarial selfchecks");
+    body_libraries_checks.setCwd(b.path("."));
+    body_libraries_checks.expectExitCode(0);
+    body_libraries_checks.step.max_rss = rss.script;
+    withTools(body_libraries_checks);
+    body_libraries_checks.has_side_effects = test_rerun;
+    body_libraries_checks.addFileInput(input_manifests.?.path(b, "body_library_admission_self.txt"));
+    body_libraries_checks.addFileInput(environment_manifest.?);
+    verification_registry.?.declared(&body_libraries_checks.step, "body_library_admission_self");
+    body_libraries_step.dependOn(&body_libraries_checks.step);
+    b.step("test-selfhost-body-libraries-self", "Check fail-closed compiler library admission accounting independently").dependOn(&body_libraries_checks.step);
+    test_step.dependOn(body_libraries_step);
     const selfhost_numeric_step = b.step("test-selfhost-numeric", "Compare bootstrap and live numeric token extents");
     const selfhost_numeric_run = driver(b, "python3 selfhost/tests/run_lexer_diff.py --compiler", rss.driver, "selfhost_numeric");
     selfhost_numeric_run.addArgs(&.{ "python3", "selfhost/tests/run_lexer_diff.py", "--compiler" });

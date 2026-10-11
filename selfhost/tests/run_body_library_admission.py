@@ -56,6 +56,15 @@ def require_tests(result, expected):
     return [{'name': test['name'], 'status': test['status']} for test in report['tests']]
 
 
+def deployment_identity(args):
+    return {'compiler_sha256': F.digest(args.compiler),
+            'packages': None if args.native_controls else D.packages(args.component_dir)}
+
+
+def require_deployment(args, expected):
+    F.require(deployment_identity(args) == expected, 'compiler/component deployment changed during library admission')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--compiler', type=Path, required=True)
@@ -70,7 +79,7 @@ def main():
     require_manifest(manifest)
     records = []
     modes = ['reference'] if args.native_controls else ['reference', 'shadow', 'component']
-    packages = None if args.native_controls else D.packages(args.component_dir)
+    identity = deployment_identity(args)
     seed_sha256 = None
     if not args.native_controls:
         F.require(args.builder is not None, 'selected library admission requires qualified-seed builder')
@@ -96,6 +105,7 @@ def main():
                             'stderr': result[2].decode('utf-8', 'replace')})
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(json.dumps({'complete': False, 'selected_admission': 'pending',
+                                               **identity,
                                                'records': records}, indent=2) + '\n')
             return result
         for name, spec in manifest.items():
@@ -103,7 +113,7 @@ def main():
             original = FIXTURES / Path(name).with_suffix('.input')
             F.require(F.digest(original) == spec['source_sha256'], 'fixture source digest changed: ' + name)
             shutil.copyfile(original, entry)
-            command = ['check-project', entry, '--diagnostics=json']
+            command = ['check-project', entry, '--no-cache', '--diagnostics=json']
             native = execute('reference', command, name)
             F.require(native[0] == spec['status'] and not native[1], 'native fixture status changed: ' + name)
             if 'diagnostics' in spec:
@@ -113,13 +123,13 @@ def main():
                 F.require(execute(mode, command, name) == native, 'selected body fixture differs: ' + name)
             if spec['status'] == 0:
                 for mode in modes:
-                    command = ['run-project', entry, '--release', '--verify-facts', '--print-result',
+                    command = ['run-project', entry, '--no-cache', '--release', '--verify-facts', '--print-result',
                                '--cache-dir', work / ('cache-' + mode), f'--zig={args.zig}']
                     F.require(execute(mode, command, name + '-runtime') == (7, b'7\n', b''), 'generated runtime differs: ' + name)
         if not args.native_controls:
             components = args.source_root / 'selfhost/components'
             for relative in LIBRARIES:
-                command = ['check', components / relative, '--diagnostics=json']
+                command = ['check', components / relative, '--no-cache', '--diagnostics=json']
                 native = execute('reference', command, relative)
                 F.require(native == (0, b'', b''), 'native actual library admission failed: ' + relative)
                 for mode in modes[1:]:
@@ -136,9 +146,10 @@ def main():
                         records[-1]['tests'] = verdict
     expected_fixture_runs = (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes)
     F.require(len(records) == expected_fixture_runs + (0 if args.native_controls else 63), 'incomplete operation accounting')
+    require_deployment(args, identity)
     report = {'complete': True, 'scope': 'native fixture controls' if args.native_controls else 'nine libraries and six test roots; seven package entries not admitted',
               'selected_admission': 'pending' if args.native_controls else 'passed',
-              'compiler_sha256': F.digest(args.compiler), 'packages': packages, 'qualified_seed_sha256': seed_sha256,
+              **identity, 'qualified_seed_sha256': seed_sha256,
               'fixtures': len(manifest), 'library_roots': 9, 'test_roots': 6,
               'helper_runs': 0 if args.native_controls else 63,
               'fixture_runs': (len(manifest) + sum(spec['status'] == 0 for spec in manifest.values())) * len(modes),
