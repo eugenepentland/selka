@@ -69,7 +69,7 @@ pub fn operation(catalog: value.Catalog, owner: typed.Type, result: typed.Type, 
     switch (kind) {
         .length => if (result != .i64) return error.ComponentProtocol,
         .iteration_check => {
-            if (mutable(catalog, owner) or result != .unit or arguments[0] != .i64) return error.ComponentProtocol;
+            if (result != .unit or arguments[0] != .i64) return error.ComponentProtocol;
         },
         .text_ord => if (!text or result != .i64) return error.ComponentProtocol,
         .join => {

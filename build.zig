@@ -37,10 +37,10 @@ const rss = struct {
     /// 2.5G keeps a measured ceiling with headroom.
     const shard_unit: u64 = 2560 * mib;
     /// One shard of the CLI root, including uncached component bootstrap.
-    /// The B6 pure-library body rebuild reported a 2,345,099,264-byte peak
-    /// (2026-10-11); reserve 2.5 GiB with measured headroom, matching the
-    /// unsharded CLI root and optimized component qualification drivers.
-    const shard_cli: u64 = 2560 * mib;
+    /// The B10 uncached bootstrap shard passed all 43 tests but reported a
+    /// 3,181,240,320-byte peak (2026-10-11), exceeding its old 2.5 GiB
+    /// reservation. Reserve 4 GiB for the sharded and unsharded CLI roots.
+    const shard_cli: u64 = 4096 * mib;
     /// The directory run of `tests/guest`. Observed on a clean cache
     /// (2026-09-23): `tests/guest` 1.33G.
     const guest_suite: u64 = 1536 * mib;
@@ -645,7 +645,7 @@ pub fn build(b: *std.Build) void {
     const compile_tests = b.step("test-compile", "Compile every Zig test without running the suite");
     compile_tests.dependOn(&unit.step);
     compile_tests.dependOn(&integration.step);
-    const run_integration = focused(b.addRunArtifact(integration), rss.suite);
+    const run_integration = focused(b.addRunArtifact(integration), rss.shard_cli);
     forwardFilters(b, run_integration, test_filters);
     const test_step = b.step("test", "Run the compiler, new-core, CLI, guest-language and tooling regression tests");
     b.step("test-interpreter", "Alias of test, kept for older scripts").dependOn(test_step);

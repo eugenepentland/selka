@@ -293,7 +293,8 @@ test "body pure closure rejects foreign text guards ord and rendering operands" 
     try buffers.operation(c, text, .unit, .iteration_check, &.{.i64}, false);
     try buffers.operation(c, bytes, .unit, .iteration_check, &.{.i64}, false);
     try buffers.operation(c, text, .i64, .text_ord, &.{}, false);
-    try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, buffer, .unit, .iteration_check, &.{.i64}, true));
+    try buffers.operation(c, buffer, .unit, .iteration_check, &.{.i64}, true);
+    try buffers.operation(c, buffer, .unit, .iteration_check, &.{.i64}, false);
     try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .unit, .iteration_check, &.{.bool}, false));
     try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .bool, .iteration_check, &.{.i64}, false));
     try std.testing.expectError(error.ComponentProtocol, buffers.operation(c, text, .unit, .iteration_check, &.{}, false));
@@ -316,6 +317,72 @@ fn corruptCapacity(a: std.mem.Allocator, f: GraphFixture, ty: typed.Type) !void 
         return validate.outcome(a, f.input, .{ .success = output });
     }
     return error.MissingOperation;
+}
+
+const iteration_text =
+    \\func value(buffer: byte_buffer, foreign: int) -> int:
+    \\    mut total = foreign
+    \\    for octet in buffer:
+    \\        total += octet
+    \\    for index, octet in enumerate(buffer):
+    \\        total += index + octet
+    \\    assert total >= 0
+    \\    return total
+    \\
+;
+fn iterationGuards(f: GraphFixture) usize {
+    var count: usize = 0;
+    for (f.output.batch.nodes) |node| {
+        if (node.data == .buffer_operation and node.data.buffer_operation.kind == .iteration_check) count += 1;
+    }
+    return count;
+}
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body buffers accept native readonly byte buffer iteration and enumeration guards" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try graphFixture(a, iteration_text);
+    const protocol = @import("body_check_protocol.zig");
+    const request = try protocol.request(a, f.input, @splat(7));
+    const encoded = try protocol.response(a, .{ .success = f.output }, request.identity);
+    var decoded = try protocol.reply(a, encoded, request.identity, f.input);
+    defer decoded.deinit();
+    try std.testing.expectEqual(@as(usize, 2), iterationGuards(f));
+    try std.testing.expectEqualDeep(f.output, decoded.outcome.success);
+}
+const IterationForgery = enum { result, bound, arity, owner };
+fn corruptIteration(a: std.mem.Allocator, f: GraphFixture, attack: IterationForgery) !void {
+    const nodes = try a.dupe(typed.Node, f.output.batch.nodes);
+    var output = f.output;
+    output.batch.nodes = nodes;
+    var boolean: ?typed.NodeId = null;
+    for (nodes, 0..) |node, i| if (node.ty == .bool) {
+        boolean = @fromBackingInt(i);
+        break;
+    };
+    for (nodes) |*node| {
+        if (node.data != .buffer_operation or node.data.buffer_operation.kind != .iteration_check) continue;
+        switch (attack) {
+            .result => node.ty = .bool,
+            .bound => node.data.buffer_operation.arguments = try a.dupe(typed.NodeId, &.{boolean orelse return error.MissingOperation}),
+            .arity => node.data.buffer_operation.arguments = &.{},
+            .owner => node.data.buffer_operation.owner = @fromBackingInt(1),
+        }
+        return validate.outcome(a, f.input, .{ .success = output });
+    }
+    return error.MissingOperation;
+}
+// spec-case: SELFHOST-BODY-BUFFERS-1
+test "body buffers reject forged iteration result bound arity and scalar owner" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const f = try graphFixture(a, iteration_text);
+    try std.testing.expectError(error.ComponentProtocol, corruptIteration(a, f, .result));
+    try std.testing.expectError(error.ComponentProtocol, corruptIteration(a, f, .bound));
+    try std.testing.expectError(error.ComponentProtocol, corruptIteration(a, f, .arity));
+    try std.testing.expectError(error.ComponentProtocol, corruptIteration(a, f, .owner));
 }
 
 // spec-case: SELFHOST-BODY-BUFFERS-1
