@@ -4,6 +4,7 @@ const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const value = @import("body_check_value.zig");
 const protocol = @import("body_check_protocol.zig");
+const component = @import("body_check_component.zig");
 const validate = @import("body_check_validate.zig");
 const diagnostic = @import("diagnostic.zig");
 const parser = @import("parser.zig");
@@ -34,6 +35,18 @@ fn rejects(a: std.mem.Allocator, input: value.Input, output: value.Output) !void
     const bytes = try protocol.response(a, .{ .success = output }, request.identity);
     defer a.free(bytes);
     try std.testing.expectError(error.ComponentProtocol, protocol.reply(a, bytes, request.identity, input));
+}
+// spec-case: SELFHOST-BODY-CHECK-1
+test "body check shadow comparison rejects changed diagnostic text" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const original: diagnostic.Diagnostic = .{ .code = "E_NAME", .span = .{ .start = 0, .end = 1 }, .message = "unknown name" };
+    var changed = original;
+    changed.message = "different name";
+    const expected: value.Outcome = .{ .failure = try value.diagnostics(arena.allocator(), &.{original}) };
+    const actual: value.Outcome = .{ .failure = try value.diagnostics(arena.allocator(), &.{changed}) };
+    try component.compare(std.testing.allocator, expected, expected);
+    try std.testing.expectError(error.ComponentShadowMismatch, component.compare(std.testing.allocator, actual, expected));
 }
 // spec: SELFHOST-BODY-CHECK-1
 test "body check full scalar batch survives capture and decode ownership" {
