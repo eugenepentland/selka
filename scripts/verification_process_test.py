@@ -159,6 +159,16 @@ class WatchdogTests(unittest.TestCase):
             with self.assertRaises(ProcessLookupError):
                 os.kill(int(pid_path.read_text()), 0)
 
+    def test_supervisor_reaps_zombie_only_success(self):
+        result = wait_owned(self.supervised('import os,time; pid=os.fork(); '
+                            '\nif pid == 0: os._exit(0)'
+                            '\nelse: time.sleep(.1); os._exit(0)'))
+        self.assertEqual(result.returncode, 0)
+
+    def test_supervisor_preserves_failed_worker_status(self):
+        result = wait_owned(self.supervised('import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True); raise SystemExit(7)'))
+        self.assertEqual(result.returncode, 7)
+
     def test_supervisor_leader_exit_is_incomplete(self):
         result = wait_owned(self.supervised('import subprocess; subprocess.Popen(["sleep","60"],start_new_session=True)'),
                             limits=ProcessLimits(1,.5))
@@ -219,6 +229,43 @@ class WatchdogTests(unittest.TestCase):
             release.set()
             child.stdout.close()
             child.stderr.close()
+
+    def test_full_tee_queue_stops_after_responsive_writer(self):
+        release = threading.Event()
+        class Tee:
+            def write(self, data):
+                release.wait()
+            def flush(self):
+                pass
+        with tempfile.TemporaryDirectory() as temporary:
+            logs = BoundedProcessLogs(Path(temporary)/'out', Path(temporary)/'err', stdout_tee=Tee())
+            child = self.spawn('import os; os.write(1,b"x"*2000000)', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            result = wait_owned(child, logs=logs)
+            self.assertEqual(result.returncode, 0)
+            release.set()
+            for _, thread in logs._tee_threads:
+                thread.join(timeout=1)
+                self.assertFalse(thread.is_alive())
+            child.stdout.close()
+            child.stderr.close()
+
+    def test_blocked_raw_console_does_not_hang_interpreter_exit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            worker_argv = [sys.executable, "-c", "import os; os.write(1,b'x'*2000000)"]
+            source = ('import subprocess,sys; from pathlib import Path; '
+                      'from scripts.verification_process import BoundedProcessLogs,wait_owned; '
+                      f'logs=BoundedProcessLogs(Path({temporary!r})/"out",Path({temporary!r})/"err",stdout_tee=sys.stdout.buffer); '
+                      f'p=subprocess.Popen({worker_argv!r},'
+                      'stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True); '
+                      'raise SystemExit(wait_owned(p,logs=logs).returncode)')
+            child = self.spawn(source, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:
+                self.assertEqual(child.wait(timeout=3), 0)
+            finally:
+                if child.poll() is None:
+                    terminate_owned(child)
+                child.stdout.close()
+                child.stderr.close()
 
     def test_interrupt_cleans_and_propagates(self):
         class Interrupt:

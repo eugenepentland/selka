@@ -102,12 +102,24 @@ class BoundedProcessLogs:
             if tee is not None:
                 def tee_pump(index=index, tee=tee):
                     try:
-                        while True:
-                            chunk = self._tee_queues[index].get()
-                            if chunk is None:
-                                return
-                            tee.write(chunk)
-                            tee.flush()
+                        try:
+                            tee_fd = tee.fileno()
+                        except (AttributeError, OSError, ValueError):
+                            tee_fd = None
+                        while not self._stop.is_set() or not self._tee_queues[index].empty():
+                            try:
+                                chunk = self._tee_queues[index].get(timeout=0.02)
+                            except queue.Empty:
+                                continue
+                            if tee_fd is None:
+                                tee.write(chunk)
+                                tee.flush()
+                            else:
+                                # Avoid holding Python buffered IO locks in a daemon
+                                # if a real console pipe blocks through shutdown.
+                                view = memoryview(chunk)
+                                while view:
+                                    view = view[os.write(tee_fd, view):]
                     except OSError as error:
                         self.capture_errors.append(str(error))
                 thread = threading.Thread(target=tee_pump, daemon=True)
@@ -159,10 +171,6 @@ class BoundedProcessLogs:
             if self._thread.is_alive():
                 self.capture_complete = False
         for index, thread in self._tee_threads:
-            try:
-                self._tee_queues[index].put_nowait(None)
-            except queue.Full:
-                pass
             thread.join(timeout=0.05)
             if thread.is_alive() and len(self.capture_errors) < 16:
                 self.capture_errors.append("live tee did not finish; file capture retained")
@@ -332,6 +340,16 @@ def _kill_identity(pid, birth):
         os.close(descriptor)
 
 
+def _reap_adopted():
+    while True:
+        try:
+            pid, _ = os.waitpid(-1, os.WNOHANG)
+            if pid == 0:
+                return
+        except ChildProcessError:
+            return
+
+
 def run_supervised(argv: list[str], env: dict[str, str]) -> int:
     """Run inside the admitted child, retaining and reaping its entire lineage.
 
@@ -356,6 +374,7 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
         while worker.poll() is None and not interrupted:
             time.sleep(0.01)
         status = worker.poll()
+        _reap_adopted()
         leftovers = _descendants(os.getpid())
         incomplete = status is not None and bool(leftovers)
         # Stop before kill so descendants cannot keep forking during shutdown.
@@ -363,13 +382,7 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
         while leftovers and time.monotonic() < deadline:
             for pid, birth in leftovers.items():
                 _kill_identity(pid, birth)
-            while True:
-                try:
-                    pid, _ = os.waitpid(-1, os.WNOHANG)
-                    if pid == 0:
-                        break
-                except ChildProcessError:
-                    break
+            _reap_adopted()
             leftovers = _descendants(os.getpid())
             if leftovers:
                 time.sleep(0.005)
@@ -378,7 +391,11 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
             worker.poll()
         if leftovers:
             return 125
-        return 130 if interrupted else 125 if incomplete else (128 - status if status < 0 else status)
+        if interrupted:
+            return 130
+        if incomplete and status == 0:
+            return 125
+        return 128 - status if status < 0 else status
     finally:
         for sig, handler in previous.items():
             signal.signal(sig, handler)
