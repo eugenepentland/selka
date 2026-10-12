@@ -8,7 +8,7 @@ ROOT=HERE.parents[3]
 
 def main():
     before=json.loads((HERE/'before.json').read_text()); latest={}
-    for folder in ('after-copies','after-manual','after-followup','after-final-local','after-final-name'):
+    for folder in ('after-copies','after-manual','after-followup','after-final-local','after-final-name', 'after-support5', 'after-support5-projection'):
         for path in sorted((HERE/folder).glob('batch-*.json')):
             report=json.loads(path.read_text())
             for row in report['cases']:

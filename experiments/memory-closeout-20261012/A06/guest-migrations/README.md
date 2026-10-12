@@ -5,10 +5,10 @@ C0: `fbfcaa7a923186a8e773c3760f81c10aa345a432`. The coordinator initially reserv
 batch retains all other 64 source identities. `originals.json` preserves the initial
 reservation; `ledger.json` and `original-sources/` cover exactly the final 64.
 
-At this checkpoint, 54 files changed, with 307 additional explicit `.copy()` sites,
+At the initial migration checkpoint, 54 files changed, with 307 additional explicit `.copy()` sites,
 521 added lines and 334 removed lines. These counts are source burden, not runtime
-copy counts. Thirty-eight current sources pass exploratory ownership checking;
-26 remain refused pending compiler fixes. This is not native qualification.
+copy counts. Thirty-eight sources passed exploratory ownership checking;
+26 remained refused pending compiler fixes. Later checkpoints are recorded below. This is not native qualification.
 Every assertion line and public test function remains unchanged and in order;
 `record.py` enforces both invariants and freezes lossless deterministic C0 archives.
 No failing source is removed from the denominator.
@@ -24,8 +24,7 @@ incorrect no-main refusal, before the coordinator directed reuse of A10's survey
 The `after-*` directories preserve every completed check, source hash, compiler
 hash, diagnostic and automatically applied copy edit. Later reports supersede
 prior source revisions only when the hashes agree. `ledger.json` explicitly
-reports whether the latest check matches each current source. Source checks use
-A10's command-support compiler, without the later A07/A01/A08 fixes.
+reports whether the latest check matches each current source. Each report records its own compiler identity; early checks used A10's command-support compiler and later checks use the named integrated Support compiler.
 
 ```sh
 scripts/build-slot.sh build python3 -B \
@@ -124,3 +123,27 @@ the release compiler rejected one with an invalid CFG edge and the other hit the
 native-object lifetime/link bug. `../evidence/C0-live-iteration-controls.json`
 preserves both failures and source/compiler hashes. There is no paired runtime
 result from those failed builds; the updated compiler must requalify the sources.
+
+
+## Support5 followups
+
+Support5 checks of the complete 64-source denominator preserve all diagnostics,
+including the tuple-copy compiler assertion routed to A01 and remaining nested
+writes routed to A07. Later focused reports apply only when their source hashes
+match the current file; `ledger.json` is authoritative for counts.
+
+`rc_tree_drains` copies the retained optional child at initialization and each
+advance, plus the separately retained name. This preserves all original outputs
+and assertions, but copying successive tails can increase work quadratically for
+long chains. The fixture bounds the chain at 30 nodes; this is explicit migration
+burden, not a compiler speedup. No shared tree representation is introduced.
+
+`rc_writeback_moves` copies independently edited projections, preserves owner
+snapshots before overlapping readonly/mutable calls, and captures scalar values
+before the mutable call that consumes them. Repeated publication inside a loop
+copies the still-live temporary because the following iteration must continue
+using it. Conditional publication, early return, break/continue and intervening
+owner reads retain their original behavior and assertions. These deliberate
+snapshot windows cannot all be replaced by direct mutable projections as in the
+unobserved `ce_cow` windows. Native checks on the fixed integrated compiler remain
+required; source admission alone is not qualification.

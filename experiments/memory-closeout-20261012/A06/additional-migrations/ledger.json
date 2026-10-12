@@ -2,9 +2,9 @@
   "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
   "reserved_sources": 23,
   "changed_sources": 23,
-  "added_lines": 203,
-  "removed_lines": 173,
-  "added_copy_sites": 165,
+  "added_lines": 204,
+  "removed_lines": 180,
+  "added_copy_sites": 162,
   "source_admitted_current": 18,
   "scope": "Source admission only; native behavior, counter-oracle migration and final gates remain required.",
   "sources": [
@@ -23,7 +23,7 @@
         "source": "test/core/ce2_effects.my",
         "source_sha256": "35fa15c69ea4cc28cc948ee06cd29c6219169b770625584050ae4e11e30d0671",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce2_effects.my",
           "--experimental-zero-rc",
@@ -32,34 +32,9 @@
         "status": 0,
         "stdout": "",
         "stderr": "",
-        "changes": [
-          {
-            "line": 352,
-            "before": "    mut wb = it.m",
-            "after": "    mut wb = it.m.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 354,
-            "before": "    mut keep = it",
-            "after": "    mut keep = it.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 366,
-            "before": "    mut wb = it.m",
-            "after": "    mut wb = it.m.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 389,
-            "before": "        trap = args[0]",
-            "after": "        trap = args[0].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          }
-        ],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-name/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "changes": [],
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -78,7 +53,7 @@
         "source": "test/core/ce2_results.my",
         "source_sha256": "2197f4c15ecabcbc14508f0e79d8d4767e2c4950bb0815b6263b2735a04b0857",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce2_results.my",
           "--experimental-zero-rc",
@@ -88,38 +63,48 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
     {
       "source": "test/core/ce_cow.my",
       "original_sha256": "b0f1a86b886b609ba870ecb5d5248a5327e76851f87a1235ffefa5f6eec858b3",
-      "migrated_sha256": "3cacf6b0c40e8ddf85488fb8914f5c6ef1610d021a4bd522f950eedb96647a52",
+      "migrated_sha256": "423128bd964643674ddc4eddd41ce3e18bd6433f5fe60cbaf7392c6a2f92d8ba",
       "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__ce_cow.my.gz",
       "changed": true,
-      "added_lines": 16,
-      "removed_lines": 14,
-      "added_copy_sites": 14,
+      "added_lines": 17,
+      "removed_lines": 21,
+      "added_copy_sites": 11,
       "assertions_preserved": true,
       "public_functions_preserved": true,
       "source_check": {
         "source": "test/core/ce_cow.my",
-        "source_sha256": "3cacf6b0c40e8ddf85488fb8914f5c6ef1610d021a4bd522f950eedb96647a52",
-        "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
-          "check",
-          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_cow.my",
-          "--experimental-zero-rc",
-          "--no-cache"
-        ],
+        "source_sha256": "423128bd964643674ddc4eddd41ce3e18bd6433f5fe60cbaf7392c6a2f92d8ba",
         "status": 0,
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/ce-cow-projection/after.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support5-migration-native-ce2/cache",
+          "--release",
+          "--experimental-zero-rc",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/ce-cow-projection/after",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/ce-cow-projection/after.ll"
+        ],
         "stdout": "",
-        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_cow.my:77:41: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n                  case Obj.instance(value=v):\n                                          ^\n",
-        "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/ce-cow-projection/after.my:75:41: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n                  case Obj.instance(value=v):\n                                          ^\n",
+        "evidence_kind": "native build with ownership checking; exact source bytes copied to private path",
+        "copy_changes": [],
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5-projection/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -138,7 +123,7 @@
         "source": "test/core/ce_elements.my",
         "source_sha256": "d41dd10f73f10300e9a928d595f99e9d63b0e41b3a6ae9757f7fa1d3a876e474",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_elements.my",
           "--experimental-zero-rc",
@@ -148,8 +133,8 @@
         "stdout": "",
         "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_elements.my:70:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          xs[i].name = xs[i].name + \"!\"\n          ^\n",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -168,7 +153,7 @@
         "source": "test/core/ce_records.my",
         "source_sha256": "41e006affad911c8630939737906ebdd7f3d991444dabab38e524b0a27e4fd6a",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_records.my",
           "--experimental-zero-rc",
@@ -178,8 +163,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -198,7 +183,7 @@
         "source": "test/core/f1_storeback.my",
         "source_sha256": "11d090328afa5b7e2b4320a59962827d4564b7624e2ad848990589458957e047",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/f1_storeback.my",
           "--experimental-zero-rc",
@@ -208,8 +193,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -228,7 +213,7 @@
         "source": "test/core/m_recursive_values.my",
         "source_sha256": "0c4c5d9efc1e78e3c19df9ede42c79d6137a4c432635005b318eb2cb4b955462",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/m_recursive_values.my",
           "--experimental-zero-rc",
@@ -238,8 +223,8 @@
         "stdout": "",
         "stderr": "m_recursive_values.my:181:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      values[0].scalar = 7\n      ^\n",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -258,7 +243,7 @@
         "source": "test/core/rc_field_take.my",
         "source_sha256": "2790ffc4c455df74b0204016b67f7ed966c67a325cd96f1711d8f152f86ff136",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/rc_field_take.my",
           "--experimental-zero-rc",
@@ -268,8 +253,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -288,7 +273,7 @@
         "source": "test/core/rc_phi_fields.my",
         "source_sha256": "da923ea124bf1d55896244124a7ae2d7cf3a55f69f38e8089b24bd0e61bdb518",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/rc_phi_fields.my",
           "--experimental-zero-rc",
@@ -298,8 +283,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -318,7 +303,7 @@
         "source": "test/core/row_cow.my",
         "source_sha256": "866ea84b8a3a0b4447ba6e040c560ae9070f84157e5554b41cb8f7045a6cf403",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_cow.my",
           "--experimental-zero-rc",
@@ -328,8 +313,8 @@
         "stdout": "",
         "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_cow.my:145:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          zs[i].n = 5\n          ^\n",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -348,7 +333,7 @@
         "source": "test/core/row_csv_aggregate.my",
         "source_sha256": "8c894effcd48ccc509d1b63495b411f28b53c127cc67ef4c92358d2bd4b247c2",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_csv_aggregate.my",
           "--experimental-zero-rc",
@@ -358,8 +343,8 @@
         "stdout": "",
         "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_csv_aggregate.my:92:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_csv_aggregate.my:108:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_csv_aggregate.my:111:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          mut cursor = seed + step\n              ^\n",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -378,7 +363,7 @@
         "source": "test/core/row_mutate_nested.my",
         "source_sha256": "7d57e2aaa9b5d8178178bdc074afc54511e2cf3a9e6ce228cba6496605b6d7d0",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_mutate_nested.my",
           "--experimental-zero-rc",
@@ -388,8 +373,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -408,7 +393,7 @@
         "source": "test/core/row_mutate_shared.my",
         "source_sha256": "663bfc89df67d6fea3986cc1bcf07a059e0434ce5a9f7d17424aeff806943025",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_mutate_shared.my",
           "--experimental-zero-rc",
@@ -418,8 +403,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -438,7 +423,7 @@
         "source": "test/core/row_record_reads.my",
         "source_sha256": "f93f5bc9a9a8afb4ecbc94350c74bdd64af72e4ce7e77e6402180ecdc3c796b7",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_record_reads.my",
           "--experimental-zero-rc",
@@ -448,8 +433,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -468,7 +453,7 @@
         "source": "test/core/row_word_count.my",
         "source_sha256": "31f260177a859ec2c99aec7da54f2ebe159cc18fff971c2ce6f0b3ce73a72a89",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_word_count.my",
           "--experimental-zero-rc",
@@ -478,8 +463,8 @@
         "stdout": "",
         "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_word_count.my:40:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_word_count.my:54:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -498,7 +483,7 @@
         "source": "test/core/u1_sink.my",
         "source_sha256": "db7a1a0231ac55d245635422788e7ed9e2693c8f5581750f0265f2e9cfede13f",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/u1_sink.my",
           "--experimental-zero-rc",
@@ -508,8 +493,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -528,7 +513,7 @@
         "source": "test/core/u1_state.my",
         "source_sha256": "ea5281fb7cb07defe94103f086438c2073ff07d25a8ae48df0a502917b076fb6",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/u1_state.my",
           "--experimental-zero-rc",
@@ -538,8 +523,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -558,7 +543,7 @@
         "source": "test/core/v_mut.my",
         "source_sha256": "e7da56453ad773120925ddb6b26d4ad276be4924ab00d627b54022f979aa63b1",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_mut.my",
           "--experimental-zero-rc",
@@ -568,8 +553,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -588,7 +573,7 @@
         "source": "test/core/v_mut_window.my",
         "source_sha256": "d7dc0b53c75f260875cb484e891085ed5deefb2cb5e75fc27a7b5af9e34ab99c",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_mut_window.my",
           "--experimental-zero-rc",
@@ -598,8 +583,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -618,7 +603,7 @@
         "source": "test/core/v_nested.my",
         "source_sha256": "3ad5d50235c2c44292005870e8c0177f893bbc77acdee5cb6bd729f097a06829",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_nested.my",
           "--experimental-zero-rc",
@@ -628,8 +613,8 @@
         "stdout": "",
         "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_nested.my:20:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      b.items[1].code = 77\n      ^\n",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -648,7 +633,7 @@
         "source": "test/core/v_row_cow.my",
         "source_sha256": "35cfeebcaadcbff0a1d2140a5a6dc70fb3fcf0be6db95f2fd9c45328f094c552",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_row_cow.my",
           "--experimental-zero-rc",
@@ -658,8 +643,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -678,7 +663,7 @@
         "source": "test/core/v_snapshot.my",
         "source_sha256": "83b001420922ec16368f8cc3d2188a9ab34c7f4b19d8b4a66fefd171a509bd38",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_snapshot.my",
           "--experimental-zero-rc",
@@ -688,8 +673,8 @@
         "stdout": "",
         "stderr": "",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     },
@@ -708,7 +693,7 @@
         "source": "test/core/v_wide_managed.my",
         "source_sha256": "9539e6ce2067b6598d1f6fe647799ab01dfe9c2bfb5376fb83aa9de2eeaa5f63",
         "command": [
-          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
           "check",
           "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_wide_managed.my",
           "--experimental-zero-rc",
@@ -718,8 +703,8 @@
         "stdout": "",
         "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_wide_managed.my:61:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      bigs[1].a = 50\n      ^\n",
         "changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-final-local/batch-0.json",
-        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
+        "report": "experiments/memory-closeout-20261012/A06/additional-migrations/after-support5/batch-0.json",
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
       },
       "source_check_matches_current": true
     }

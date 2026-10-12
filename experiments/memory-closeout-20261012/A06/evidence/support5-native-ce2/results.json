@@ -1,0 +1,64 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "harness_sha256": "c0ed7598829952fc2d5c66ecc7f1cda3a177aeff9c8e3428f06551195ad8a761",
+  "ownership": "zero",
+  "cases": {
+    "ce2_effects": {
+      "source_sha256": "35fa15c69ea4cc28cc948ee06cd29c6219169b770625584050ae4e11e30d0671",
+      "oracle": {
+        "source": "src/core/ce2_effects_test.zig",
+        "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "sha256": "c29f7953731976c2918c7402a4379f8ed7f93a7daddfc778e46083e3bc101ada",
+        "constants": [
+          "fields_expected",
+          "takes_expected",
+          "stores_expected"
+        ],
+        "stdout": "20 30 2 3\n3103 103\n110153 7 new\n8005 5\n44 4\n43 9 4\n300 4 -1\n9 5 i\n8 4 renamed\n413 7 3 1\n23 6 2 2 1\n6 1 4 2 t5 6m 0m 0m 0m\n8 1 4 1 i6 t7 8m 0m 0m 0m\n3 1 4 0 t24 3m 5c 0m 0m\n3 1 4 1 t26 3m 7c 0m 0m\n-2 0 4 1 big:3 3m 0m 0m 4m\n5 1 6 0 t2 t4 5m 0m 0m 0m 1m 3m\n6 1 2 1 t2 t5 6m 1m\n5 1 4 1 i1 i4 5m 0m 0m 0m\n6 1 4 0 m!5 t3 m!!6 6m!! 0m 0m 0m\n3 1 4 0 3m 0m 0m 0m\n-2 0 4 0 deep:2666 2m 6c 6c 6c\n6 f1u c1 f0w f0u c2\n"
+      },
+      "modes": {
+        "release": {
+          "build": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce2_effects.my",
+              "--zig",
+              "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support5-migration-native-ce2/cache",
+              "--release",
+              "--experimental-zero-rc",
+              "--counters",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support5-migration-native-ce2/ce2_effects/release/program",
+              "--emit-llvm",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support5-migration-native-ce2/ce2_effects/release/program.ll"
+            ],
+            "status": 0,
+            "elapsed_ns_including_admission": 726809196,
+            "stdout": "",
+            "stderr": ""
+          },
+          "admitted": true,
+          "binary_sha256": "42b96468afaa066b3b668acd1b131d3e55d236817e6d6a95b20e5bd0b311f7d9",
+          "llvm_sha256": "d062f0c71e70270bcaa8fd8377d4cac08e78d2ebeb24d650062ac7e484f1b062",
+          "structural_rc_free": true,
+          "run": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support5-migration-native-ce2/ce2_effects/release/program"
+            ],
+            "status": -6,
+            "elapsed_ns_including_admission": 1086801582,
+            "stdout": "",
+            "stderr": "free(): invalid size\n",
+            "correct": false
+          }
+        }
+      }
+    }
+  },
+  "scope": "Counted correctness only; no runtime or compile-time comparison."
+}

@@ -1,0 +1,89 @@
+{
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "harness_sha256": "f807849d9a4549a6170e692eb3c83ffaef358860fc859f0c963ce932ed9128b3",
+  "ownership": "zero",
+  "cases": [
+    {
+      "source": "tests/lang/rc_writeback_moves.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_writeback_moves.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "d063e77429ca8f5bd713daadc8e2c3914bf8bbf125d878dbdb7f0ec1095cf0df",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_writeback_moves.my:282:37: error[E_SINGLE_OWNER_MOVED]: 'other' was moved or is unavailable on this path; use .copy() when both values are needed\n      return it.rt.objects == [7] and other.objects == [7] and it.rt.label == \"o\"\n                                      ^\n",
+      "copy_changes": [
+        {
+          "line": 146,
+          "before": "        mut wb = local.rt",
+          "after": "        mut wb = local.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 184,
+          "before": "        mut wb = broken.rt",
+          "after": "        mut wb = broken.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 192,
+          "before": "        mut wb2 = skipped.rt",
+          "after": "        mut wb2 = skipped.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 211,
+          "before": "    mut wb = local.rt",
+          "after": "    mut wb = local.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 222,
+          "before": "        mut wb = n.inner.rt",
+          "after": "        mut wb = n.inner.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 226,
+          "before": "        mut inner = n.inner",
+          "after": "        mut inner = n.inner.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 227,
+          "before": "        mut rt = inner.rt",
+          "after": "        mut rt = inner.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 231,
+          "before": "    mut objects = n.inner.rt.objects",
+          "after": "    mut objects = n.inner.rt.objects.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 241,
+          "before": "        mut wb = rts[1]",
+          "after": "        mut wb = rts[1].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 246,
+          "before": "        mut h = holders[0]",
+          "after": "        mut h = holders[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 247,
+          "before": "        mut rt = h.rt",
+          "after": "        mut rt = h.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "cases": [
+    {
+      "source": "test/core/ce_cow.my",
+      "source_sha256": "423128bd964643674ddc4eddd41ce3e18bd6433f5fe60cbaf7392c6a2f92d8ba",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/ce-cow-projection/after.my",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support5-migration-native-ce2/cache",
+        "--release",
+        "--experimental-zero-rc",
+        "--counters",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/ce-cow-projection/after",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/ce-cow-projection/after.ll"
+      ],
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/ce-cow-projection/after.my:75:41: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n                  case Obj.instance(value=v):\n                                          ^\n",
+      "evidence_kind": "native build with ownership checking; exact source bytes copied to private path",
+      "copy_changes": []
+    }
+  ]
+}

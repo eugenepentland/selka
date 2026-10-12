@@ -412,3 +412,44 @@ test "zero RC whole parent snapshot survives sibling update before child writeba
     // control: both snapshots must stay independent and clean up exactly once.
     try counted(std.testing.allocator, snapshot_window_prefix ++ snapshot_window_suffix, "605 9 5 0\n");
 }
+
+// spec-case: NEW-CORE-CE2-EFFECTS-2
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC snapshot child lifetime survives a sibling update phi" {
+    try counted(std.testing.allocator,
+        \\record Machine:
+        \\    a: int
+        \\    b: int
+        \\    c: int
+        \\    stack: int[]
+        \\    top: int
+        \\
+        \\record Interp:
+        \\    m: Machine
+        \\    returned: int
+        \\    depth: int
+        \\
+        \\func take_pop(mut m: Machine) -> int:
+        \\    m.top = m.top - 1
+        \\    return m.stack[m.top]
+        \\
+        \\func snapshot_between(mut it: Interp, increase: bool) -> int:
+        \\    mut wb = it.m.copy()
+        \\    if increase:
+        \\        it.depth = it.depth + 1
+        \\    else:
+        \\        it.depth = it.depth + 2
+        \\    mut keep = it.copy()
+        \\    it.returned = take_pop(mut wb)
+        \\    it.m = wb
+        \\    return keep.m.top * 100 + keep.depth * 10 + it.m.top
+        \\
+        \\
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut left = Interp(m=Machine(a=0, b=0, c=0, stack=[4, 5, 6, 7, 8, 9], top=6), returned=0, depth=0)
+        \\    mut right = left.copy()
+        \\    const increase = len(args) != 0
+        \\    out.print(snapshot_between(mut left, increase), snapshot_between(mut right, not increase), left.depth, right.depth)
+        \\    return 0
+    , "625 615 2 1\n");
+}

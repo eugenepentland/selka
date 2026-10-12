@@ -1,0 +1,50 @@
+{
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "harness_sha256": "f807849d9a4549a6170e692eb3c83ffaef358860fc859f0c963ce932ed9128b3",
+  "ownership": "zero",
+  "cases": [
+    {
+      "source": "tests/lang/rc_tree_drains.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_tree_drains.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "9ddff0affdfa53305069a5fd1e0cfa19d2c17ea32d667e45f6c4ad24e9b0a893",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 57,
+          "before": "        current = current.next",
+          "after": "        current = current.next.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 66,
+          "before": "    mut names = labelled.name",
+          "after": "    mut names = labelled.name.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_writeback_moves.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_writeback_moves.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "bc68df5dcbabfe37843b90a6125def692606d5f6d7a703f7daf823eabf49c955",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_writeback_moves.my:111:36: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      mut first = step_alias(mut it, it)\n                                     ^\n",
+      "copy_changes": []
+    }
+  ]
+}

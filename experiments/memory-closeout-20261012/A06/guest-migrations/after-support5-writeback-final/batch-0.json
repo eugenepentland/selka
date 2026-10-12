@@ -1,0 +1,29 @@
+{
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "harness_sha256": "f807849d9a4549a6170e692eb3c83ffaef358860fc859f0c963ce932ed9128b3",
+  "ownership": "zero",
+  "cases": [
+    {
+      "source": "tests/lang/rc_writeback_moves.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_writeback_moves.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "0773f7f4a7a3ba0f3b649c4bc764020b98bbe893acb94a700a4b0f7eda75e19b",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_writeback_moves.my:334:55: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n                  push(mut wb, value + it.depth + total(wb))\n                                                        ^\n",
+      "copy_changes": [
+        {
+          "line": 289,
+          "before": "        mut items = bag.items",
+          "after": "        mut items = bag.items.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    }
+  ]
+}

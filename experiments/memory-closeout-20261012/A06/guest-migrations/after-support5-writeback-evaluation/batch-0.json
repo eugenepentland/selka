@@ -1,0 +1,29 @@
+{
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "harness_sha256": "f807849d9a4549a6170e692eb3c83ffaef358860fc859f0c963ce932ed9128b3",
+  "ownership": "zero",
+  "cases": [
+    {
+      "source": "tests/lang/rc_writeback_moves.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_writeback_moves.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "eefbd4971134d88d077d8514a222ec6770b7f0f0de5cc0e5a9e8e7e2636d26a3",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_writeback_moves.my:359:5: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      while i < n:\n      ^\n",
+      "copy_changes": [
+        {
+          "line": 348,
+          "before": "        mut objects = wb.objects",
+          "after": "        mut objects = wb.objects.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    }
+  ]
+}

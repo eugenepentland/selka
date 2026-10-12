@@ -145,11 +145,35 @@ original outputs, zero RC events and no managed leaks. `ce2_effects` builds and
 passes the linked-helper audit but aborts with `free(): invalid size` (status -6),
 before stdout/counters flush. This is a correctness blocker owned by A07, not a
 tradeoff or a qualified run. Raw results are in `evidence/support4-native-*`.
-Support5 requalification of the same source is pending; the Support4 failure is
-preserved. Native qualification remains required for all migrated fixtures.
+Support5 requalification of the same source reproduces the abort; `evidence/support5-native-ce2/` preserves its compiler/source hashes and raw build/run records. The Support4 failure is also preserved. Native qualification remains required for all migrated fixtures.
 
 Regression followups `928172f79` and `65026bad3` make the conservative array IR
 controls executable roots, call them with runtime input and restrict retain
 assertions to the intended function. Both passed Guardian 88/88; A07 owns running
 them against the production array-transfer patch. No unexecuted control is counted
 as passing.
+
+
+## Support5 safety reduction and interpreter migration
+
+Support5 reproduces the admitted `ce2_effects` native abort. Regression/evidence
+commit `935789ec2810b224e51070c3e1c3395c6649c290` passed Guardian 88/88 and
+preserves the full failing run plus a 29-line red/green reduction. A child record
+copy, a sibling scalar update, and a whole-parent snapshot are sufficient to expose
+incorrect shared memory homes. Removing the scalar update or shrinking the child
+out of memory passes; inlining the callee still fails. A07 owns the bounded
+region-origin fix in `emit_homes.zig`. The registered A06 test checks counted debug
+and verified release with and without that sibling update; a following dynamic
+branch regression exercises both phi outcomes. These tests need the fixed compiler.
+
+With coordinator approval and after A09 released its frozen-source lease,
+`ce_cow.my` replaces three whole-Runtime temporary patterns with direct mutable
+field calls. The original migrated source and its A09 evidence are preserved.
+Both source identities pass identical three-line native output and cleanup on the
+same Support5 release compiler. Cumulative allocation plus growth falls from
+1,661,693,688 to 4,914,944 bytes; managed peak stays 227,784 bytes. This is a source
+migration improvement, not a compiler-only or RSS/runtime claim. Exact source,
+compiler, Zig, binary, LLVM and harness hashes and raw evidence are in
+`evidence/ce-cow-projection/`. A09 owns the all-five-mode registered oracle checks.
+
+The final Support5 source checkpoint admits 55/64 reserved guest sources and 18/23 additional fixtures. All original assertion/public-test names remain unchanged. The initial group now has 348 added explicit copy sites, 569 added and 378 removed lines across 56 changed files. The additional group has 162 added copy sites, 204 added and 180 removed lines across all 23 files. Every remaining refusal stays in the denominator; Support6 must recheck the tuple and exact-slot fixes.

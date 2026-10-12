@@ -43,9 +43,7 @@ func allocate(mut rt: Runtime, obj: Obj) -> int:
 # through the record's list at an index that may count from the end.
 func instantiate(mut it: Interpreter, klass_ref: int) -> int:
     mut callee_slot = it.rt.top - 1
-    mut wb = it.rt.copy()
-    mut instance = allocate(mut wb, Obj.instance(value=klass_ref))
-    it.rt = wb
+    mut instance = allocate(mut it.rt, Obj.instance(value=klass_ref))
     it.rt.stack[callee_slot] = instance
     it.calls = it.calls + 1
     return instance
@@ -145,13 +143,9 @@ func main(out: Stream) -> int:
     for round in range(40):
         for k in range(500):
             total = total + instantiate(mut it, 0)
-            mut wb = it.rt.copy()
-            total = total + call_value(mut wb, 0)
-            it.rt = wb
-        mut wb2 = it.rt.copy()
-        mark_some(mut wb2, 3)
-        total = total + sweep(mut wb2) * 7
-        it.rt = wb2
+            total = total + call_value(mut it.rt, 0)
+        mark_some(mut it.rt, 3)
+        total = total + sweep(mut it.rt) * 7
     out.print(total, it.calls, len(it.rt.objects), len(it.rt.free_slots), it.rt.stack[3], len(kept), kept[3])
     out.print(snapshot_then_store(mut it, 2, 5), snapshot_then_store(mut it, -1, 9), it.rt.stack[2], it.rt.stack[3])
     mut b = Builder(comps={}, keys=["k0", "k1"], ref_inst={"a": 0, "b": 1, "c": 0})
