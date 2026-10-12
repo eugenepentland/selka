@@ -29,7 +29,12 @@ build panics on any other toolchain.
   the compiler's optimization mode does not choose the guest's build mode
   (`--release` does). `-Dcompiler-only=true` is accepted for older scripts and
   changes nothing.
-- Sharing the machine with other agents: run `zig build`, focused tests and gates
+- Sharing the machine with other agents: first `source ~/.config/mylang/dev-env.sh`
+  in the worktree (every build, focused test and gate). It pins Zig, sets the
+  worktree's `ZIG_LOCAL_CACHE_DIR` and `TMPDIR`, and sets `MYLANG_SLOT_DIR` to
+  `~/.cache/mylang/slots`, the admission directory every agent shares; without it
+  `build-slot.sh` uses `$XDG_RUNTIME_DIR/mylang-slots`, a separate admission domain.
+  Then run `zig build`, focused tests and gates
   through `scripts/build-slot.sh build|gate …`. It admits a job only when a slot
   and enough memory are free. Ordinary jobs use all allowed CPUs by default;
   `build-slot.sh timing …` stops new admissions, drains active jobs and runs an
@@ -38,8 +43,13 @@ build panics on any other toolchain.
   `ZIG_LOCAL_CACHE_DIR` and set `TMPDIR` on disk (`/tmp` has a per-user quota; a
   full quota makes test processes exit 70). See `docs/tooling/many-agents.md`.
 - Never point two source trees (a base checkout and a worktree) at one
-  `ZIG_LOCAL_CACHE_DIR`. Zig reuses the cached configure phase across them, and its
-  absolute paths name the first tree.
+  `ZIG_LOCAL_CACHE_DIR`. Zig reuses the cached configure phase across them, and the
+  project's absolute configure-time paths name the first tree.
+- While Guardian has findings, `zig build` does not install, so `zig-out/bin/mylang`
+  silently stays stale. `zig build affected-compiler` installs an ungated copy at
+  `zig-out/focus/mylang`. Do not use `./stage.sh`: it hard-codes `.zig-cache/o`
+  (wrong whenever `ZIG_LOCAL_CACHE_DIR` is set) and copies the newest `mylang`
+  across branches and optimize modes.
 
 ## Measuring guest programs
 
@@ -132,7 +142,9 @@ the live environment (recorded as a digest), or one of the repository files it
 reads changes; those files are declared per step in
 `build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
 test names a repository path its step does not declare. An unchanged `zig build test`
-takes seconds, and a `.my` or doc edit re-runs only what reads it. A cached step
+still reruns the core shards, and an unchanged complete verification through the
+coordinator takes about 34 to 37 s; a `.my` or doc edit re-runs only what reads it,
+and any `src/` edit reruns every step that runs the compiler. A cached step
 prints no test count, so the `Build Summary` total counts only what ran:
 `-Dtest-rerun=true` re-runs every test step (full counts, or to rule out a stale
 verdict you suspect). When a test starts reading a new fixture, declare it in
@@ -172,12 +184,15 @@ of stack under the ceiling); a test defaults to 1,000,000 steps, 1,024 frames an
 - Share Zig's global cache across worktrees:
   `export ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache`. Zig locks it
   per entry, so concurrent builds are safe.
-- Never share `.zig-cache` (`ZIG_LOCAL_CACHE_DIR`) between worktrees: Zig's configure
-  cache ignores the build root. Never share a `.mylang-cache` between worktrees running
+- Never share `.zig-cache` (`ZIG_LOCAL_CACHE_DIR`) between worktrees. Zig would allow
+  it; the project's own absolute configure-time paths (the build root realpath in
+  `build_identity.zig`, the test option paths in `build.zig`) tie it to one tree.
+  Never share a `.mylang-cache` between worktrees running
   different compilers: each compiler generation evicts the others' objects.
 - Reuse a merged, clean worktree for new work (`git switch -c <branch> main`) instead of
   creating one; remove a worktree you are done with (`git worktree remove <path>`).
-- `scripts/prune-caches.sh` (hourly on the dev box; dry run unless `--apply`) deletes the
+- `scripts/prune-caches.sh` (dry run unless `--apply`; it runs only when you schedule
+  it, and no timer or cron entry runs it on this box today) deletes the
   caches, `zig-out` and scratch binaries of worktrees idle for 3 days, and any
   `.zig-cache` over 15 GiB. Keep evidence as text, not in caches.
 - Versioned developer evidence uses `scripts/cache_retention.py`, whose collector
