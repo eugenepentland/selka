@@ -61,25 +61,33 @@ def main():
     with tarfile.open(destination / "raw-json.tar.gz", "w:gz") as archive:
         for path in sorted((run / "raw").rglob("*.json")):
             archive.add(path, arcname=str(path.relative_to(run)))
+    for name in ('manifest.json', 'census.py.snapshot'):
+        if (run / name).exists():
+            (destination / name).write_bytes((run / name).read_bytes())
     summary = result["summary"]
     compiler = result["identities"]["compiler"]
     lines = [f"# A03 {args.label} census", "", f"Compiler commit: `{compiler['commit']}`.",
              f"Compiler SHA-256: `{compiler['sha256']}`.",
              f"Ownership request: `{result['identities']['ownership']}`.", "",
              f"Executed {summary['executions']} guests; {summary['passed_executions']} passed output, exit, RC and managed-leak checks.",
-             f"Observed RC in {summary['executions_with_rc']} runs; managed exit leaks in {summary['executions_with_managed_leaks']} runs.", "",
-             "| Original 30, migrated workload | Allocate | Allocation-free | Execute RC | Refused | Failed | Unmeasured |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
+             f"Observed RC in {summary['executions_with_rc']} runs; managed exit leaks in {summary['executions_with_managed_leaks']} runs.", ""]
+    if summary['original_denominator']:
+        lines += ["| Original 30, migrated workload | Allocate | Allocation-free | Execute RC | Refused | Failed | Unmeasured |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    else:
+        lines += ["This supplemental manifest is separate from the original 30 and pinned 81-case matrix; its cases do not change either denominator.", ""]
     for count, row in summary["original_30"].items():
         lines.append(f"| n={count}; denominator 30 | {row['allocating']} | {row['allocation_free']} | {row['executed_rc']} | {row['refused']} | {row['failed']} | {row['unmeasured']} |")
     original = summary["original_source_checks"]
-    lines += ["", f"The original unmigrated source checks admitted {original['admitted']}, refused {original['refused']}, and left {original['unmeasured']} unmeasured.",
-              "These checks are a separate source-migration inventory; they are not counted as migrated execution successes.", "",
-              "| Configuration/status | Cases |", "| --- | ---: |"]
+    if summary['original_denominator']:
+        lines += ["", f"The original unmigrated source checks admitted {original['admitted']}, refused {original['refused']}, and left {original['unmeasured']} unmeasured.",
+                  "These checks are a separate source-migration inventory; they are not counted as migrated execution successes.", ""]
+    lines += ["| Configuration/status | Cases |", "| --- | ---: |"]
     for status, count in sorted(summary["case_status"].items()):
         lines.append(f"| {status} | {count} |")
-    lines += ["", "All following measurements are fresh release-mode input-11 observations. Workload totals exclude startup/teardown (`<outside>`).", "",
-              "| Original ID | Status | Workload blocks / reallocs | Workload cumulative bytes | Whole-program peak / exit-live bytes | Source cost classification |",
-              "| --- | --- | ---: | ---: | ---: | --- |"]
+    if summary['original_denominator']:
+        lines += ["", "All following measurements are fresh release-mode input-11 observations. Workload totals exclude startup/teardown (`<outside>`).", "",
+                  "| Original ID | Status | Workload blocks / reallocs | Workload cumulative bytes | Whole-program peak / exit-live bytes | Source cost classification |",
+                  "| --- | --- | ---: | ---: | ---: | --- |"]
     for case_id, case in result["cases"].items():
         if not case_id.startswith("census/"):
             continue

@@ -220,7 +220,9 @@ def lane(args, env, case, mode, audit, census):
     build = invoke(command, directory / "build", env, admitted=True)
     result = {"source": case["source"], "build": build, "runs": {}, "status": "refused"}
     if build["exit"] != 0:
-        if build["exit"] is None or build["exit"] < 0:
+        # Tool/native failures are not ownership refusals. Preserve their place
+        # in the denominator without misreporting an admission decision.
+        if build["exit"] is None or build["exit"] < 0 or "error[E_" not in build["stderr"]:
             result["status"] = "build_failed"
         return result
     result.update(status="failed", binary_sha256=digest(binary), structural=structural(binary, llvm, directory, env))
@@ -247,13 +249,13 @@ def lane(args, env, case, mode, audit, census):
     return result
 
 
-def summarize(result, cases):
+def summarize(result, cases, original_denominator=30):
     original = [case for case in cases if "original_id" in case]
-    summary = {"manifest_cases": len(cases), "original_denominator": 30,
+    summary = {"manifest_cases": len(cases), "original_denominator": original_denominator,
                "planned_builds": sum(len(case["modes"]) for case in cases),
                "planned_executions": sum(len(case["modes"]) * len(case["runs"]) for case in cases),
                "completed_builds": 0,
-               "case_status": {}, "original_30": {}, "original_source_checks": {"admitted": 0, "refused": 0, "unmeasured": 30},
+               "case_status": {}, "original_30": {}, "original_source_checks": {"admitted": 0, "refused": 0, "unmeasured": original_denominator},
                "executions": 0, "passed_executions": 0,
                "executions_with_rc": 0, "executions_with_managed_leaks": 0}
     for case in cases:
@@ -268,8 +270,8 @@ def summarize(result, cases):
                 if "audit" in run:
                     summary["executions_with_rc"] += not run["audit"]["observed_rc_free"]
                     summary["executions_with_managed_leaks"] += not run["audit"]["managed_leak_free"]
-    for n in ("4", "11"):
-        counts = dict(denominator=30, allocating=0, allocation_free=0, executed_rc=0, refused=0, failed=0, unmeasured=0)
+    for n in (("4", "11") if original_denominator else ()):
+        counts = dict(denominator=original_denominator, allocating=0, allocation_free=0, executed_rc=0, refused=0, failed=0, unmeasured=0)
         for case in original:
             release = result["cases"].get(case["id"], {}).get("modes", {}).get("release")
             if not release:
@@ -284,7 +286,7 @@ def summarize(result, cases):
                 counts["allocating" if workload["allocs"] or workload["reallocs"] else "allocation_free"] += 1
             if release and n in release["runs"] and "audit" in release["runs"][n]:
                 counts["executed_rc"] += not release["runs"][n]["audit"]["observed_rc_free"]
-        counts["unmeasured"] += 30 - len(original)
+        counts["unmeasured"] += original_denominator - len(original)
         summary["original_30"][n] = counts
     for case in original:
         checked = result["cases"].get(case["id"], {}).get("original_admission")
@@ -300,6 +302,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write-manifest", action="store_true")
     parser.add_argument("--compiler", type=Path)
+    parser.add_argument("--manifest", type=Path, default=HERE / "manifest.json")
     parser.add_argument("--compiler-commit")
     parser.add_argument("--zig", type=Path)
     parser.add_argument("--output", type=Path)
@@ -320,7 +323,9 @@ def main():
     for key in ("compiler", "zig", "output"):
         setattr(args, key, getattr(args, key).resolve())
     args.output.mkdir(parents=True, exist_ok=args.resume)
-    cases = read(str((HERE / "manifest.json").relative_to(ROOT)))["cases"]
+    manifest_data = json.loads(args.manifest.read_text())
+    cases = manifest_data["cases"]
+    original_denominator = manifest_data.get("original_denominator", 30)
     if args.case or args.family:
         cases = [case for case in cases if case["id"] in args.case or case["family"] in args.family]
     if not cases:
@@ -338,7 +343,7 @@ def main():
     census = load_helper("a03_historical_census", "experiments/rc-census-20261010/census.py")
     identities = {"compiler": {"path": str(args.compiler), "sha256": digest(args.compiler), "commit": args.compiler_commit},
                   "zig": {"path": str(args.zig), "sha256": digest(args.zig)}, "harness_sha256": digest(__file__),
-                  "manifest_sha256": digest(HERE / "manifest.json"), "ownership": args.ownership}
+                  "manifest_sha256": digest(args.manifest), "ownership": args.ownership}
     result_path = args.output / "results.json"
     if args.resume and result_path.exists():
         result = json.loads(result_path.read_text())
@@ -349,6 +354,8 @@ def main():
                                   "Admission receipts preserve queue wait separately; command receipts flag its exclusion. No compile/runtime speed claims.",
                                   "Emitted/runtime RC events can overlap and are not added.",
                                   "Original source refusals are recorded separately from migrated workload results."], "cases": {}}
+        (args.output / "manifest.json").write_bytes(args.manifest.read_bytes())
+        (args.output / "census.py.snapshot").write_bytes(Path(__file__).read_bytes())
     for case in cases:
         record = result["cases"].setdefault(case["id"], {"manifest": case, "modes": {}})
         if "original_id" in case and "original_admission" not in record:
@@ -363,7 +370,7 @@ def main():
             except Exception as error:
                 row = {"status": "harness_failed", "error": repr(error), "runs": {}}
             record["modes"][mode] = row
-            result["summary"] = summarize(result, cases)
+            result["summary"] = summarize(result, cases, original_denominator)
             save(result_path, result)
             print(row["status"], case["id"], mode, flush=True)
             if STOP_REQUESTED:

@@ -1,0 +1,100 @@
+func same(left: int[][], right: int[][]) -> bool:
+    return left == right
+
+
+func same_row(left: int[], right: int[]) -> bool:
+    return left == right
+
+
+record Wide:
+    a: str
+    b: str
+    c: int[]
+    d: bytes
+    e: int
+
+
+enum Chain:
+    end
+    link(label: str, rest: Chain)
+
+
+func nested(seed: int) -> int:
+    mut rows = [[seed], [seed + 1], [seed + 2]]
+    const before = rows.copy()
+    rows.insert(1, [seed + 9])
+    rows.insert(-999, [seed - 1])
+    rows.insert(999, [seed + 10])
+    rows.reverse()
+    assert same(rows, [[seed + 10], [seed + 2], [seed + 1], [seed + 9], [seed], [seed - 1]])
+    mut selected = rows.pop(-2)
+    rows.remove([seed + 9])
+    _ = rows.pop(0)
+    rows.reverse()
+    selected.append(seed + 3)
+    assert same(rows, [[seed - 1], [seed + 1], [seed + 2]])
+    assert same_row(selected, [seed, seed + 3])
+    assert same(before, [[seed], [seed + 1], [seed + 2]])
+    return len(rows) + len(selected)
+
+
+func wide(seed: int) -> bool:
+    mut values = [Wide(a="a" + str(seed), b="b" + str(seed), c=[seed], d=b"c" + b"d", e=seed)]
+    values.insert(-1, Wide(a="x" + str(seed), b="y" + str(seed), c=[seed + 1], d=b"e" + b"f", e=seed + 1))
+    values.reverse()
+    const chosen = values.pop(0)
+    values.clear()
+    return chosen.a == "a" + str(seed) and chosen.b == "b" + str(seed) and same_row(chosen.c, [seed]) and chosen.d == b"cd" and chosen.e == seed
+
+
+func recursive(seed: int) -> bool:
+    mut values: Chain[] = []
+    values.reverse()
+    values.insert(10, Chain.link(label="a" + str(seed), rest=Chain.end))
+    values.insert(-1, Chain.link(label="b" + str(seed), rest=Chain.link(label="c" + str(seed), rest=Chain.end)))
+    values.reverse()
+    const chosen = values.pop(0)
+    _ = values.pop(0)
+    values.reverse()
+    match chosen:
+        case Chain.link(label=label, rest=_):
+            return label == "a" + str(seed) and len(values) == 0
+        case Chain.end:
+            return False
+
+
+func unit_and_scalar() -> bool:
+    mut units: Unit[] = [(), ()]
+    units.insert(-1, ())
+    units.reverse()
+    units.remove(())
+    const popped = units.pop(0)
+    mut numbers = [3, 1, 2, 1]
+    numbers.insert(-1, 9)
+    numbers.reverse()
+    numbers.remove(1)
+    const selected = numbers.pop(-2)
+    return len(units) == 1 and f"{popped}" == "None" and same_row(numbers, [9, 2, 3]) and selected == 1
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) > 0:
+        mut rows = [[1], [2]]
+        if args[0] == "negative":
+            _ = rows.pop(-3)
+        if args[0] == "positive":
+            _ = rows.pop(2)
+        if args[0] == "empty":
+            rows.clear()
+            _ = rows.pop(0)
+        if args[0] == "missing":
+            rows.remove([3])
+        return 9
+    assert unit_and_scalar()
+    mut total = 0
+    for seed in range(100):
+        total += nested(seed)
+        assert wide(seed)
+        assert recursive(seed)
+    out.print(total)
+    return 0
