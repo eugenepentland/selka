@@ -174,6 +174,8 @@ fn writebackBase(access: Access) Access {
         else => .move,
     };
 }
+const PlaceStep = union(enum) { field: usize, index: typed.NodeId };
+const PlacePath = struct { root: usize = none, steps: std.ArrayList(PlaceStep) = .empty };
 const Loan = struct { root: usize, write: bool };
 const Loop = struct { id: usize, before: []const State };
 
@@ -689,6 +691,76 @@ const Checker = struct {
         }
     }
 
+    /// Recover a receiver's local field/index path without assuming distinct
+    /// dynamic indices. Hidden aliases follow only their checked borrow source.
+    fn collectionPath(c: *Checker, start: ?typed.NodeId, owner: usize) Error!?PlacePath {
+        var path: PlacePath = .{};
+        var node = start;
+        var slot: ?usize = if (start == null) owner else null;
+        var remaining = c.program.nodes.len + c.state.len + 1;
+        while (remaining != 0) : (remaining -= 1) {
+            if (slot) |binding| {
+                const state = c.state[binding];
+                if (c.temporary(binding) and state.borrowed and state.view_definition != null) {
+                    node = state.view_definition;
+                    slot = null;
+                    continue;
+                }
+                if (state.root != none) return null;
+                path.root = binding;
+                return path;
+            }
+            switch (c.program.nodes[@backingInt(node.?)].data) {
+                .local => |binding| slot = @backingInt(binding),
+                .field => |field| {
+                    try path.steps.append(c.a, .{ .field = field.index });
+                    node = field.base;
+                },
+                .index => |index| {
+                    try path.steps.append(c.a, .{ .index = index.index });
+                    node = index.base;
+                },
+                .block_value => |block| node = block.value,
+                .wrap, .unwrap, .cast => |value| node = value,
+                .buffer_operation => |operation| {
+                    if (operation.kind != .read or operation.arguments.len != 1) return null;
+                    try path.steps.append(c.a, .{ .index = operation.arguments[0] });
+                    slot = @backingInt(operation.owner);
+                },
+                else => return null,
+            }
+        }
+        return null;
+    }
+
+    /// Same-depth list paths are either the same block or distinct siblings;
+    /// runtime identity selects self-extension. Prefix overlap needs a snapshot.
+    fn independentExtension(c: *Checker, owner: usize, source: typed.NodeId, span: Span) Error!void {
+        const message = "extend cannot read an overlapping ancestor or ambiguous source; make an explicit .copy() before extending";
+        if (c.ambiguousBorrow(source)) return c.reject(span, overlap_error, message);
+        const root = c.origin(source) orelse return;
+        if (root != c.rootOf(owner)) return;
+        const destination = (try c.collectionPath(null, owner)) orelse return c.reject(span, overlap_error, message);
+        const input = (try c.collectionPath(source, none)) orelse return c.reject(span, overlap_error, message);
+        if (destination.root != input.root) return;
+        const shared = @min(destination.steps.items.len, input.steps.items.len);
+        for (0..shared) |offset| {
+            const left = destination.steps.items[destination.steps.items.len - 1 - offset];
+            const right = input.steps.items[input.steps.items.len - 1 - offset];
+            switch (left) {
+                .field => |field| switch (right) {
+                    .field => |other| if (field != other) return,
+                    .index => return c.reject(span, overlap_error, message),
+                },
+                .index => switch (right) {
+                    .index => {}, // Unknown indices can coincide, never imply a prefix is safe.
+                    .field => return c.reject(span, overlap_error, message),
+                },
+            }
+        }
+        if (destination.steps.items.len != input.steps.items.len) return c.reject(span, overlap_error, message);
+    }
+
     fn collection(c: *Checker, node: typed.Node, access: Access) Error!void {
         const operation = node.data.buffer_operation;
         if (c.zero_rc and (operation.kind == .snapshot or operation.kind == .view))
@@ -735,6 +807,8 @@ const Checker = struct {
                 } else operation.kind == .append or (operation.kind == .write and index == 1) or (operation.kind == .insert and index == 1);
                 const writeback = schema.collection.kind == .list and operation.kind == .write and index == 1 and c.sameSlotWriteback(operation.owner, operation.arguments[0], argument);
                 try c.expression(argument, if (writeback) .writeback else if (consumes) .move else .read);
+                if (c.zero_rc and schema.collection.kind == .list and operation.kind == .extend)
+                    try c.independentExtension(owner, argument, node.span);
             }
             // These methods implicitly duplicate elements. Nested owned
             // lists need an explicit deep copy, which .copy() provides.

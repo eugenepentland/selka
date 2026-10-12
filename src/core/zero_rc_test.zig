@@ -1865,3 +1865,43 @@ test "zero RC receiver preparation preserves parent identity across sibling borr
         try std.testing.expect(zero.emittedClean(result.llvm));
     }
 }
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC list extension refuses recursive ancestor sources" {
+    try refuses(std.testing.allocator,
+        \\record Node:
+        \\    value: int
+        \\    children: Node[]
+        \\func main() -> int:
+        \\    mut tree = Node(value=0, children=[Node(value=1, children=[])])
+        \\    tree.children[0].children.extend(tree.children)
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\record Node:
+        \\    value: int
+        \\    children: Node[]
+        \\func main(args: str[]) -> int:
+        \\    mut tree = Node(value=0, children=[Node(value=1, children=[])])
+        \\    const index = len(args) % 1
+        \\    tree.children[index].children.extend(tree.children)
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC list extension accepts independent copies of recursive ancestors" {
+    try executes(std.testing.allocator,
+        \\record Node:
+        \\    value: int
+        \\    children: Node[]
+        \\func main(out: Stream) -> int:
+        \\    mut tree = Node(value=0, children=[Node(value=1, children=[]), Node(value=2, children=[])])
+        \\    tree.children[1].children.extend(tree.children.copy())
+        \\    out.print(len(tree.children[1].children), len(tree.children[1].children[1].children))
+        \\    mut items = [1, 2]
+        \\    items.extend(items)
+        \\    out.print(len(items), items[2])
+        \\    return 0
+    , "2 0\n4 1\n");
+}
