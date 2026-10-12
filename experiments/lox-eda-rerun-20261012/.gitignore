@@ -1,0 +1,4 @@
+# Losslessly preserved in raw-evidence.tar.gz, with per-file hashes.
+/runtime/
+/counted/
+__pycache__/

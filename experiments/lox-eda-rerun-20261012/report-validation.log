@@ -1,0 +1,34 @@
+build-slot: FIFO ticket 2457, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2457 after 5s
+{
+  "groups": {
+    "lox/tree/": {
+      "go": 13,
+      "mylang-migrated-rc": 13,
+      "mylang-original-rc": 13,
+      "mylang-zero-rc": 1,
+      "rust": 13,
+      "zig-fast": 13,
+      "zig-safe": 13
+    },
+    "lox/vm/": {
+      "go": 13,
+      "mylang-migrated-rc": 13,
+      "mylang-original-rc": 13,
+      "mylang-zero-rc": 0,
+      "rust": 13,
+      "zig-fast": 13,
+      "zig-safe": 13
+    },
+    "eda/": {
+      "go": 34,
+      "mylang-migrated-rc": 34,
+      "mylang-original-rc": 34,
+      "mylang-zero-rc": 0,
+      "rust": 34,
+      "zig-fast": 34,
+      "zig-safe": 34
+    }
+  },
+  "identities_verified": 1702
+}

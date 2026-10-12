@@ -1,0 +1,30 @@
+{
+  "validated_utc": "2026-10-12T21:06:32.262215+00:00",
+  "cells": 60,
+  "checked_completed": 1,
+  "checked_warmup_cutoffs": 59,
+  "reference_control_completed_per_arm": 60,
+  "counted_rc_completed": 120,
+  "counted_checked_completed": 1,
+  "counted_checked_skipped": 59,
+  "deadline_policy": "min(120 seconds, 3 times the median of 5 fresh Zig ReleaseFast samples after 2 calibration warmups)",
+  "all_deadlines_equal_three_times_reference": true,
+  "all_completed_counted_exit_live_bytes_zero": true,
+  "completed_checked_rc_events_zero": true,
+  "identities": {
+    "status": "passed",
+    "unique_files": 1702,
+    "compiler_installation_files": 12
+  },
+  "timeout_regressions": {
+    "passed": 4,
+    "log": "timeout-tests.log"
+  },
+  "raw_archive": {
+    "sha256": "a5a1bc8992a9612bd820f21fd5c49c3065c13d41e52c3e38f528bf60b7a6113c",
+    "files": 1171,
+    "roundtrip": "passed"
+  },
+  "results_sha256": "6567466e5cee51848aafed2b901be321702107b3765b80b038269572606ac25c",
+  "production_source_matches_measured_compiler": true
+}
