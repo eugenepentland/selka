@@ -381,3 +381,14 @@ labelled separately from checked-ownership qualification. Lists/dictionaries and
 recursive providers already refuse in the frontend; the variant admits ordinary
 mode and must refuse checked ownership. General noncopy managed-get use has a
 separate source/check-build probe under `boundaries/`, without an execution claim.
+
+`qualify_exports.py --stage C1 --reports ... --output ...` combines explicit
+candidate receipts only. It requires one compiler revision/hash, current input
+hashes, five-mode execution references for each export, no overlay and the
+correct command selector for C1 versus C2/C3. A partial Support5 smoke check stays
+at 12/120 declarations; a mixed Support4/Support5 check refuses qualification
+entirely. The older `summarize.py` continues to report labelled interim references.
+This export report never substitutes for package, ABI, performance or full-gate
+qualification. Support5 readonly managed-get source check passes but native build
+refuses `E_ZERO_RC_LOWERING`; `evidence/support5-get-readonly.json` records both
+phases and explicitly records no execution.

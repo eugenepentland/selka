@@ -1,6 +1,8 @@
 # A05 provider and container audit
 
-Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432`. This is an audit request, not helper admission or execution qualification.
+Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432`. The initial sections preserve
+the C0 audit requests; they do not independently authorize helper admission.
+The current qualification status is recorded below.
 
 The existing zero-RC branches in `core_io.c` use direct destruction. Root capabilities own provider state; narrowed capabilities own copied scope bytes and borrow the named parent. File/resource blocks borrow the capability. `core_io_finalize` closes still-open handles before provider state is destroyed. The language must keep the named provider live through this cleanup; observing zero counters alone cannot establish that ordering.
 
@@ -68,3 +70,20 @@ storage growth, and remove/reinsert. It changes no runtime code. Managed
 from either the dictionary or a caller/temporary fallback; a dictionary-only view
 origin must not be inferred for it. A05's defaults and view-invalidation reproducers
 record the source-check and native-build outcomes separately.
+
+## Integrated status after Support5
+
+A07 audited and implemented the exact helper contracts together with affine
+resource/source lifetime checks, direct cleanup and generated callable-name
+validation. Support4 native network and binary stream fixtures pass; Support5
+passes storage, scoped capability and setdefault fixtures in all five modes.
+Those labelled receipts preserve RC0, managed exit-live0 and clean LLVM/symbol
+audits. The earlier generic-resource and callable-digest blockers above are
+historical audit context, not current Support5 failures.
+
+Bounded aggregate provider fields and explicit managed-get copy/view behavior
+still await Support6 qualification. General noncopy managed-get use remains a
+distinct lowering boundary: `len(items.get(key, fallback(key)))` passes Support5
+source checking but build refuses `E_ZERO_RC_LOWERING`. The phase-only receipt is
+`evidence/support5-get-readonly.json`; the source was never executed. This audit
+does not claim common-C1, ordinary-default or legacy-retirement qualification.
