@@ -1,0 +1,25 @@
+{
+  "head": "3c8c494758221d8d1f3dce6f65a05dce3ada5868",
+  "files": {
+    "src/a01_result_shapes_test.zig": "671f9a52179a2ccfe2542009603a58bedc8b21b8b39549d675a223452e0afdfb",
+    "src/core/a01_parallel_map_test.zig": "8456167b14d931c72b37024b081639c1a89e549d7b8f648ff0a943add57c76f7",
+    "src/generic_bodies.zig": "4f2fb7e00fcda06b3205c4c2cab9f58ca66fa4423f9d226110d505719d058b42",
+    "src/managed_lists_test.zig": "6b237eda3aff7993c5a80cedb1a70f893548af8894956de825cd7595be4f22bd",
+    "src/nominal_templates.zig": "53f3e79e3b464c90425d3b3ef85a9130ec89e0abc594692331e2986f1416ccb9",
+    "src/record_layouts.zig": "2b1762a374e1e18f7120470c728207a5440ea308cfda1af81cc8f49b175577c0",
+    "src/sema_calls.zig": "41ba49534fe2db47c52e306d1d0f915886cdabeebb4be0ced5fada175bbddb80",
+    "src/sema_collections.zig": "94e6963b9bdb082682af5bdf180df10d5970c5223ac1dffc54abc258154b22d0",
+    "src/sema_expressions.zig": "f1d1272031e38439652cd01d9b5bd468c7f7a78af26521542e9297cd7d515c2e",
+    "src/sema_gathers.zig": "f15d803c944d885804442b005b551c42191e66ca58c6f8831864063123ce6e0c",
+    "src/sema_loops.zig": "1d51bae738341916846c833b3acb0ad58e8cc9f70bd009ef900b0be1784f6f2e",
+    "src/sema_shared.zig": "aea7cfc6fc818db425fa4b7b8fcdb0343e169ce68646547c250464760dd75f99",
+    "src/stdlib/parallel.my": "8bb12cc4af967ec2ae8dc1ae276f2ef3497b78d063fc05c0facaa48830e82191",
+    "src/symbolic_shapes.zig": "f828aed2e1f97bce389a93c8a0386644d0c06651622738a860445e6d5c9480d7",
+    "src/symbolic_types.zig": "40d7704a886ffd0d1b5524c259cbc22f652e7e3edf7b46f0d9c62731f6f08aea",
+    "src/type_catalog.zig": "7c8734a4ff7bb7353b63e992df4a0e65a00e3df0e42bed296b0562716b052e6c",
+    "src/typed.zig": "b7414e23782df3611d294348b35f890e4b065df67c83bcdf699329024b2c80c0"
+  },
+  "compiler_sha256": "a0840db3f813f2bb4dd37447fd3778435ba826ea3d24101c4351c1e73f1beb7f",
+  "mutation_red_status": 1,
+  "restored_green_status": 0
+}

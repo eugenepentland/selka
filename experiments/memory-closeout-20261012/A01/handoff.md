@@ -76,6 +76,8 @@ managed-leak assertions.
 
 ## Expanded Result-list implementation
 
+Implementation commit: `3c8c494758221d8d1f3dce6f65a05dce3ada5868`.
+
 The user explicitly expanded scope to include stored Results and `parallel.map`
 callbacks returning Results. The complete source contract is in
 `result-list-contract.md`; the implementation separates storage eligibility from
@@ -109,8 +111,12 @@ cycle results are never memoized, while complete acyclic results remain cached.
 A07 approved this within the existing 100,000-work refusal bound. The final focused
 run passed five Core and eight frontend checks, including 64 repeated queries of
 mutually recursive generic list types with a pending field after the back edge.
-A mutation check, rebuilt v4 compiler, and final combined/Result/trap matrix are
-queued; their results must not be inferred from v3. A03's expanded census and A08's
+A controlled mutation proves the cycle regression fails with incomplete memoization
+restored and passes with the committed fix. The rebuilt v4 compiler at the exact
+feature commit passed all 54 combined/Result/trap executions, all 30 normal counted
+runs with zero RC/leaks, all 18 structural audits and all 9 TSan runs. Its SHA256 is
+`a0840db3f813f2bb4dd37447fd3778435ba826ea3d24101c4351c1e73f1beb7f`; raw evidence
+and identities are in `result-evidence-v4/`. A03's expanded census and A08's
 cross-compiler cache probe pin the Result source hash and await integrated C1.
 
 The A03 supplemental fixture SHA256 is
@@ -135,4 +141,3 @@ C2 checks, and active RC retirement remain pending. `qualify.py --ordinary` omit
 the prototype selector for C2/C3 and records that choice. No default or retirement
 milestone is claimed. Guest test migrations were explicitly transferred to A03;
 remaining local `tests/lang` diffs are excluded from A01 commits.
-
