@@ -1,0 +1,28 @@
+import parallel
+
+func square(value: int) -> int:
+    return value * value
+
+func expensive(value: int) -> int:
+    mut result = value
+    for i in range(1000 + value % 17):
+        result = (result * 17 + i) % 1000003
+    return result
+
+func main(out: Stream) -> int:
+    mut checksum = 0
+    for size in [0, 1, 2, 7, 8, 9, 31, 32, 33, 65, 257, 1025]:
+        mut values: int[] = []
+        for i in range(size):
+            values.append(i)
+        const squares = parallel.map(values, square)
+        const costly = parallel.map(values, expensive)
+        if len(squares) != size or len(costly) != size:
+            return 1
+        for i in range(size):
+            if squares[i] != square(i) or costly[i] != expensive(i):
+                return 2
+            checksum += squares[i]
+        _ = parallel.map(values, square)
+    out.print(checksum)
+    return 0

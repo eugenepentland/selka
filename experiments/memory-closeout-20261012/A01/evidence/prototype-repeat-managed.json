@@ -1,0 +1,4206 @@
+{
+  "qualification_sha256": "db8a3299c2974b443e99169e35c7b1a962747b6006815c8d4ea994dc27a13fc4",
+  "compiler_sha256": "1efd0c92cc0b98768a9a89961c50f0c1c554b5ae4635dcaa9f218217c50f5275",
+  "runs": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 0,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-0.json",
+        "counter_sha256": "f841a22e9f91f866e569e308a547157cef21ad390e54a6fb008ede1a5c06f31e",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 1,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-1.json",
+        "counter_sha256": "3d41402d21e5c626a4bb9691b6f924d18233680dc0ed7972aa5194f13d71f030",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 2,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-2.json",
+        "counter_sha256": "3d41402d21e5c626a4bb9691b6f924d18233680dc0ed7972aa5194f13d71f030",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 3,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-3.json",
+        "counter_sha256": "9d73cd897613be077d1392399847980a102bf4eaa546259632bdff95be57ae9e",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24144,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 4,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-4.json",
+        "counter_sha256": "a6abc738581e5343300dce148995c940348f8f4bc1d65c5638d8bb5a0d7738de",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24016,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 5,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-5.json",
+        "counter_sha256": "8fa8d7eb295fb48b9a69c7f43c63672dd84ba2168b33609026c5b827af822675",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 6,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-6.json",
+        "counter_sha256": "36451f805440143036f1670e19bab2b253b8b62f572b6110f910c36a64ef5711",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 7,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-7.json",
+        "counter_sha256": "54916394cfbc9d9474994c7685adecf57dd719268c6a13610910ec54bd39386a",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 8,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-8.json",
+        "counter_sha256": "5e54880b003836f8772a781224a19a3d7f60c42f5b57bbc60edb4f8fa2e02f76",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 9,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-9.json",
+        "counter_sha256": "9ca2d3c4b61d9e9eeaea4b5eec7ea7c27974762dc5f8f51cc68bb1208743c274",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 10,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-10.json",
+        "counter_sha256": "73c72304028c4d9875571c92f115aa28b6e75cd2c2004419b6ebf0a61dc82cba",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 11,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-11.json",
+        "counter_sha256": "3ed83c11be0a186e236359372cf7e0cb0c4902ae4f94a3ad289181d01f02c009",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 12,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-12.json",
+        "counter_sha256": "5e54880b003836f8772a781224a19a3d7f60c42f5b57bbc60edb4f8fa2e02f76",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 13,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-13.json",
+        "counter_sha256": "693fe3e5dbc5bb02f67d057e4055c754363b764f9570444239f70a490f6b2410",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24208,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 14,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-14.json",
+        "counter_sha256": "c9ed11257a4e70cf3f61430330ce9011efb392f97bc9ba674954d4944bbdf468",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 22864,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 15,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-15.json",
+        "counter_sha256": "95ae8d284d2482a500e8f59a6e21977672318dd23672eda51496fd0f02a8bb3f",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24272,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 16,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-16.json",
+        "counter_sha256": "b5a380c3e9988c5d19e20e60465b5aae611c4b02f07c7512bb990bc9d919ee83",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 17,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-17.json",
+        "counter_sha256": "b2cd681966a0a8c541c0de2a01df5a709f82c88f3897493019bd9f889bbfcfe7",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24144,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 18,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-18.json",
+        "counter_sha256": "6ddd0610ce3e6ab6d9126d091c045fefd234f7ef4a792f93eff5ce8cee751a3c",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23888,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 19,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-19.json",
+        "counter_sha256": "30f525ceec6944c70744f05f4db01983ba565dcbb5d51819c4ba63aa3c4da52f",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23184,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 20,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-20.json",
+        "counter_sha256": "b97b3baf2bde35da2488443614e19933788bd0e497e36f7e53ec308d0e09b1d3",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 21,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-21.json",
+        "counter_sha256": "8fa8d7eb295fb48b9a69c7f43c63672dd84ba2168b33609026c5b827af822675",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 22,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-22.json",
+        "counter_sha256": "f629d1d654902cfb922b461dad7848b8d43203eb52be5d3a46ba3509d23b39d2",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 23,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-23.json",
+        "counter_sha256": "cf19f18982f933d5b15876f600635204dc8c5290bfcf64da0bed127d1b809321",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 24,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-24.json",
+        "counter_sha256": "6b7e360a669e7288a59cb014ce056795be38e5fb0f9a50768ec985379df0240d",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 25,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-25.json",
+        "counter_sha256": "5e54880b003836f8772a781224a19a3d7f60c42f5b57bbc60edb4f8fa2e02f76",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 26,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-26.json",
+        "counter_sha256": "4bacff5925270b0331e5feb6620c89424a883e3a5967ba6395c31f9c34e37653",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 27,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-27.json",
+        "counter_sha256": "3ed83c11be0a186e236359372cf7e0cb0c4902ae4f94a3ad289181d01f02c009",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 28,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-28.json",
+        "counter_sha256": "c5c43f376d7a734ea6c35a3dddffcd86c4f0044915303be093c50529ac02241d",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 29,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-29.json",
+        "counter_sha256": "5e54880b003836f8772a781224a19a3d7f60c42f5b57bbc60edb4f8fa2e02f76",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 30,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-30.json",
+        "counter_sha256": "03d9e6563f2cd8f6a27d0f23997721de674b647cd758238fb3055782c8e302b1",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 31,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-31.json",
+        "counter_sha256": "95ae8d284d2482a500e8f59a6e21977672318dd23672eda51496fd0f02a8bb3f",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24272,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 32,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-32.json",
+        "counter_sha256": "40fa664f94ee7dc1618aaa2c704d1838daad823019c01f19f7188b777316bd68",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 33,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-33.json",
+        "counter_sha256": "b97b3baf2bde35da2488443614e19933788bd0e497e36f7e53ec308d0e09b1d3",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 34,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-34.json",
+        "counter_sha256": "13a9399544d9e9bd5337955e82a8014711d4affcfda6e0494b768dda06375787",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 35,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-35.json",
+        "counter_sha256": "5e54880b003836f8772a781224a19a3d7f60c42f5b57bbc60edb4f8fa2e02f76",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 36,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-36.json",
+        "counter_sha256": "4e94b74f2ea33e9ca00c4e7852dbeb606bee30dbdd38da88986fcce2a10197cd",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23888,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 37,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-37.json",
+        "counter_sha256": "f841a22e9f91f866e569e308a547157cef21ad390e54a6fb008ede1a5c06f31e",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 38,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-38.json",
+        "counter_sha256": "d8d90b4facf8c1e86799422b3a5868fd2ab48e60bd694d5c802c3eb0cf95dc22",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 39,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-39.json",
+        "counter_sha256": "160a9bd943d358e1302560434f8f1c7e342fb4b381d1612fc8e7d6f32e04f31a",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23376,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 40,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-40.json",
+        "counter_sha256": "c519bf4d9f6a8373aa1bfa745caf9041b5029c1199bb0b5d4f9f18725d344976",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 22928,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 41,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-41.json",
+        "counter_sha256": "b5a380c3e9988c5d19e20e60465b5aae611c4b02f07c7512bb990bc9d919ee83",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 42,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-42.json",
+        "counter_sha256": "742b94152de191bb1ed78001c48cb0260d410de40ea912d6c7f2406164e7f8f4",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24208,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 43,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-43.json",
+        "counter_sha256": "6fa29a915be120996e064de5cd5aa9723c8132017c7c3ca82b1c05a950a6045e",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 44,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-44.json",
+        "counter_sha256": "54916394cfbc9d9474994c7685adecf57dd719268c6a13610910ec54bd39386a",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 45,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-45.json",
+        "counter_sha256": "66e3fb2aa9d09d115d809163d8276140f0fe5384f8572e833aa18641a343a396",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 46,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-46.json",
+        "counter_sha256": "b68582f3d65a23c29c36e6d0b4ed14efae4a5091725ab940ce68d7dbbeca1013",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24208,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 47,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-47.json",
+        "counter_sha256": "07a27d33a5df691e3ea670d6220a1fd4c12bba5d56a0f059a86b9dd6cffd55ee",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23888,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 48,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-48.json",
+        "counter_sha256": "53c5acf5e6df26df7399f16eca1292dc64b3d002f58ca5af49b82b39d5f15493",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23056,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 49,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-49.json",
+        "counter_sha256": "b0e13e5a22646cf0e468b138811c41821e14c19ef1454cf2e6427f36b9473e95",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 50,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-50.json",
+        "counter_sha256": "430538828152315124de0b622ea33fd769ba221571c67d2578f14fb9ebeef6f6",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 51,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-51.json",
+        "counter_sha256": "b0094a203085399fbeb292972641b7496d5e2766b02eed65854857515a8b01d4",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23888,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 52,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-52.json",
+        "counter_sha256": "67beb2865e5c98ed3ecee4568d804ed6105de7f07764efa83f16946a30500817",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23120,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 53,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-53.json",
+        "counter_sha256": "73c72304028c4d9875571c92f115aa28b6e75cd2c2004419b6ebf0a61dc82cba",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 54,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-54.json",
+        "counter_sha256": "29c852fddfac33a20cc9405d903a43435c1ed529052e4332aae3ef443ae64894",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 55,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-55.json",
+        "counter_sha256": "e33d3485fe1969d6b7e7537a909d43f50668e61224bea0820259cd8a969aabd6",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23248,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 56,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-56.json",
+        "counter_sha256": "a60939c325c6a921ce105794a89349588708598133d5532acc24bead736972a6",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24016,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 57,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-57.json",
+        "counter_sha256": "f629d1d654902cfb922b461dad7848b8d43203eb52be5d3a46ba3509d23b39d2",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 58,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-58.json",
+        "counter_sha256": "ba2551e028d7f38f62bfb194cb1c486001734892b3adb6d8e3b8ba8e64f43982",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 59,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-59.json",
+        "counter_sha256": "9c7044a52d668386106ef4c34821d9f99f9321189988d4ad47b40a0cee9bdb9c",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 60,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-60.json",
+        "counter_sha256": "b97b3baf2bde35da2488443614e19933788bd0e497e36f7e53ec308d0e09b1d3",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 61,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-61.json",
+        "counter_sha256": "5d3672ac853b4eccbeb90450b3de3beca28aacd810778366b0d10222decfdbd9",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24080,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 62,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-62.json",
+        "counter_sha256": "f8cbd59e4d655d7a860408a730c226bd9c7a526fbf5db30d4462fa486aa86ba5",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 63,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-63.json",
+        "counter_sha256": "14f3a935ef2d2517cc6282b38d7765c0acebff1ff297effcd890350ab5315b7a",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 64,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-64.json",
+        "counter_sha256": "ae6118f76068361c38ebbcbac158c6e9b9a19140e95ca8e61c3e1c501f78a585",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 65,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-65.json",
+        "counter_sha256": "13a9399544d9e9bd5337955e82a8014711d4affcfda6e0494b768dda06375787",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 66,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-66.json",
+        "counter_sha256": "03d9e6563f2cd8f6a27d0f23997721de674b647cd758238fb3055782c8e302b1",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 67,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-67.json",
+        "counter_sha256": "08e9f1ccea458d30001df12b47a0d396c5d5e53aca40b908491b007c286de7e6",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 68,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-68.json",
+        "counter_sha256": "058f259e306c6fa4e94f441736710215b6ec405c40621c340d73838976e271ec",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 69,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-69.json",
+        "counter_sha256": "5e54880b003836f8772a781224a19a3d7f60c42f5b57bbc60edb4f8fa2e02f76",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 70,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-70.json",
+        "counter_sha256": "8d7fd55bc99767f5ddbe8c2f7510009faa80378efb4827a9a30e56d4f652d3fc",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23056,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 71,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-71.json",
+        "counter_sha256": "38cc84ab69df6eadeaf53249550ae7558589d5c26bfb7711c9404fb938b2321e",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 22864,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 72,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-72.json",
+        "counter_sha256": "5c3dce654ba3277406261a1f790a1a58632f9ebd59f1d09ced07fc5acf073ec1",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23312,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 73,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-73.json",
+        "counter_sha256": "bb6beae6f5d67ddefea9dcff2886e65853cefbcbd6b06bdcbd6d3856f3793423",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 74,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-74.json",
+        "counter_sha256": "ec4764ab8ae031dd851d20a969d6b54bd70306088bfef6c9d1d00b756e7c9340",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24208,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 75,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-75.json",
+        "counter_sha256": "4170d315808f294d0101a889ae3d14d400b27d08069084e66fd3c891bef7cf3b",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23696,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 76,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-76.json",
+        "counter_sha256": "e534b8ffed9bbc91fb94e781b8427258eadf390c7a90bd041b731690111be249",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 77,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-77.json",
+        "counter_sha256": "2a46f3b3252e9c8551ed30fbeb2181b7100606f7fb9866369e3e635844dc445f",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 78,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-78.json",
+        "counter_sha256": "32059bc0b101518bcb21a51793f8ba13b54674f1a3fff6cd59c60e03758e5c43",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 79,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-79.json",
+        "counter_sha256": "8732b9821f024fff2d4f73bb9b186de297f751a90af0fb0a41f4d4c641233511",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24144,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 80,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-80.json",
+        "counter_sha256": "9ca2d3c4b61d9e9eeaea4b5eec7ea7c27974762dc5f8f51cc68bb1208743c274",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 81,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-81.json",
+        "counter_sha256": "b97b3baf2bde35da2488443614e19933788bd0e497e36f7e53ec308d0e09b1d3",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 82,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-82.json",
+        "counter_sha256": "4bacff5925270b0331e5feb6620c89424a883e3a5967ba6395c31f9c34e37653",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 83,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-83.json",
+        "counter_sha256": "5e54880b003836f8772a781224a19a3d7f60c42f5b57bbc60edb4f8fa2e02f76",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 84,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-84.json",
+        "counter_sha256": "29c852fddfac33a20cc9405d903a43435c1ed529052e4332aae3ef443ae64894",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 85,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-85.json",
+        "counter_sha256": "54916394cfbc9d9474994c7685adecf57dd719268c6a13610910ec54bd39386a",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 86,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-86.json",
+        "counter_sha256": "b97b3baf2bde35da2488443614e19933788bd0e497e36f7e53ec308d0e09b1d3",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 87,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-87.json",
+        "counter_sha256": "b97b3baf2bde35da2488443614e19933788bd0e497e36f7e53ec308d0e09b1d3",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24464,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 88,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-88.json",
+        "counter_sha256": "73c72304028c4d9875571c92f115aa28b6e75cd2c2004419b6ebf0a61dc82cba",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 89,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-89.json",
+        "counter_sha256": "742b94152de191bb1ed78001c48cb0260d410de40ea912d6c7f2406164e7f8f4",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24208,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 90,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-90.json",
+        "counter_sha256": "b990203bcc628fbbb1819005e4354e1d000a4e3e6ba0c31cf8e8cceb65f48f6e",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24656,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 91,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-91.json",
+        "counter_sha256": "29c852fddfac33a20cc9405d903a43435c1ed529052e4332aae3ef443ae64894",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24528,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 92,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-92.json",
+        "counter_sha256": "18067eee699190545d87504363292d1e261676f3c79f15f0bb26935407d0f33c",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24336,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 93,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-93.json",
+        "counter_sha256": "be8953e512bf6c7e7736f8ff04078dc8d9b73b5617c491f66463924f54aaa8d9",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24208,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 94,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-94.json",
+        "counter_sha256": "9d6153eb97c55be70eb09bd5b45aa6d577ac1abb3ccc6fc2fe9d057c3a1d25da",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 95,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-95.json",
+        "counter_sha256": "28ab909e983f82421bff32e70ceb7389bdbaade54f4dd599987bf450e4705a24",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24592,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 96,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-96.json",
+        "counter_sha256": "1c656cbb5a115395e25cce407fd0f2fa253b31fc12f0bb5eaeadbe41dc6e6ae7",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 22992,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 97,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-97.json",
+        "counter_sha256": "41da8528ac878953b6462d18a253ac6d59530838bc1d09799ff53c45798407f6",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 23184,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 98,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-98.json",
+        "counter_sha256": "d8d90b4facf8c1e86799422b3a5868fd2ab48e60bd694d5c802c3eb0cf95dc22",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 24400,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-smoke/managed/release/program"
+      ],
+      "status": 0,
+      "stdout": "2016 item-0! 16\n",
+      "stderr": "",
+      "case": "managed",
+      "mode": "release",
+      "repetition": 99,
+      "binary_sha256": "d1994a35e6c6bf1e1a67210318b8f194a07b6bf53f3956341863e47cb27eed5b",
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/prototype-repeat-managed/counts-managed-release-99.json",
+        "counter_sha256": "6f2c08f5896a1cb72bdf789bb29a14a100ed2508f1a945233af6d0797af1d740",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 72,
+        "memory": {
+          "allocs": 688,
+          "alloc_bytes": 49776,
+          "frees": 688,
+          "reallocs": 0,
+          "peak_live_bytes": 22800,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    }
+  ]
+}

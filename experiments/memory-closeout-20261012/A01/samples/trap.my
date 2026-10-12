@@ -1,0 +1,12 @@
+import parallel
+
+func fail(value: int) -> int:
+    return 42 / (value - 17)
+
+func main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(65):
+        source.append(i)
+    const results = parallel.map(source, fail)
+    out.print(len(results))
+    return 0
