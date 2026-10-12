@@ -34,6 +34,13 @@ schema is proposed here. The `cost --counters` parser's synthetic historical
 RC-bearing document is a read-only report compatibility test, not guest execution
 or an RC selector. Final structural audits must classify this distinction.
 
+Core IR still names direct destruction `release`; checked emission selects
+`myl_core_drop_owned` without inspecting a reference count. The telemetry kind
+`release_unique` likewise records direct destruction and remains positively
+asserted. Only the legacy `release` telemetry kind and runtime RC event fields
+must be zero. The list-oracle review's earlier blanket ban on textual `release`
+was incorrect and has been corrected; the first failed test log is retained.
+
 Further count-test migration is staged separately from these five runtime hooks:
 current `.snapshot()`/single-owner compatibility coverage will give way to
 independent explicit-copy storage checks; experimental selectors disappear only

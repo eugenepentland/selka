@@ -176,3 +176,26 @@ records actual options, and supports a bounded enclosing build lease. Nine
 existing calibrated C0 binaries were reused with exact hashes/options preserved;
 negative selector/admission controls passed. These are harness checks, not final
 runtime pairs. All final-candidate measurement dependencies remain open.
+
+
+## Registered checked list oracles
+
+The six registered `ce_lists_test` tests now pass on continuation production
+inputs plus approved A07 safety/exact-slot dependencies. The oracle checks source
+ownership, IR and emitted LLVM, preserving direct destruction while rejecting
+actual RC. Four retained native fixtures pass all five affected pipelines with
+unchanged outputs, normal leak checks and exact bounds/memory-budget diagnostics.
+A06's final ce_cow migration is its owning commit `8c91c5091`; the source copy in
+this worker was borrowed and excluded from the A09 commit. The coordinator owns
+`build.zig`'s `core-test-binary` target and the SPEC change requested in
+`retirement/ce-lists-c1-spec-request.patch`.
+
+`raw/ce-lists-registered` contains exact compiler/test/source hashes and all failed
+preparation logs. The first oracle incorrectly forbade Core `release`, which is
+direct destruction under the owned ABI; the retirement review is corrected too.
+The initial trap-line216 expectation was also wrong: two migrated lines moved
+the historical names store215 to217; the preceding three-element scalar list
+accepts index2. Full/reduced debug/release LLVM and runs confirm correct ordering.
+No compiler diagnostic defect was found. The final selected registered run passes
+6/6. It uses explicitly staged Support5 components and does not claim installed
+package qualification, full verification or final C1 measurements.

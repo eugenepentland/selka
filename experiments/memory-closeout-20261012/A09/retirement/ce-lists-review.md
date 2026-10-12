@@ -17,7 +17,7 @@ small renderer local to its reserved test file.
 | --- | --- |
 | `field_stores` one in-place field store | Keep exact `list_set_field` counts and absence of whole-element get/set; copy borrowed replacement `s` explicitly and make `before` independent when retained across mutation. |
 | `whole_store` old child destruction | Keep one whole-element write, original children destroyed once, stored borrowed parameter copied explicitly; migrate reused `f` and `frame` source owners. |
-| `ce_cow` uniqueness-test/list-copy equality | Assert no uniqueness/retain/release operations; identify each intentional source `.copy()` and reject additional intermediate container copies. Exact counts depend on A06's final admitted migration. |
+| `ce_cow` uniqueness-test/list-copy equality | Assert no uniqueness/retain operations and no legacy RC LLVM symbols; Core `release` remains the required direct destruction operation in a checked module. Identify each intentional source `.copy()` and reject additional intermediate container copies. Exact counts depend on A06's final admitted migration. |
 | `snapshot_then_store` old-value independence | Keep independent explicit copy and unchanged output; do not claim a compiler-only reduction if source-copy semantics changed. |
 | `call_value` one retained match payload | Freeze independent selected-object snapshot before mutating `rt`; ensure no owner borrow crosses mutation and no whole runtime-list copy occurs. Count only the source-required object copy. |
 | `big_part` one retained wide element | Copy the selected element before a mutating call and assert selected-child copies/direct cleanup, not a retained memory count. |
