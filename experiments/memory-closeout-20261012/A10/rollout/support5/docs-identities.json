@@ -10,7 +10,7 @@
     "docs/managed-memory.md": {
       "original_sha256": "26058ad7d3c3061681445c9eaa3a8323aaa70f457374d800c4fbe57a3c5c2fcb",
       "draft": "experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
-      "draft_sha256": "1b181dac4ee6ac8f1b51c5e1f09600feebea7e0af72558c38141c0b9b2ce3101"
+      "draft_sha256": "35f6011bb134a2f1cb7bc037770c1b98324dda130375fa6dbb3a651a46cca00d"
     },
     "docs/performance.md": {
       "original_sha256": "44564ebdf830bd7c7392136486a14c1098fbdcc043e1eb1eaa30d691c762cc5d",
@@ -20,7 +20,7 @@
     "docs/python-syntax.md": {
       "original_sha256": "dd05bbf99769c9b78dae4ca337d30c789157ea516ec299f8cb12cc67c2bad1fb",
       "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
-      "draft_sha256": "3c4b0009fceb96501e5e190e9cee4764e2f96c492442bd1372f1345e05c260c1"
+      "draft_sha256": "7b3a9e4290c7151b54ea176d97c6037c1a438e98d256d089ff5cb071c45327e8"
     },
     "docs/tooling/cost.md": {
       "original_sha256": "676879498c1d4d0d052ae69572371d7d39bde96d2efd9dbf9a734d95008e89a4",
@@ -43,5 +43,5 @@
       "draft_sha256": "5a0cc322c3cc1fddf755370d5453539392b164e852819852506f8bc5234a00d1"
     }
   },
-  "patch_sha256": "a85dd96c46981117c9b11b269c47a0893d0fc98656fabeb0c5fdb1ccb2824fe5"
+  "patch_sha256": "c126cb15d4a21abe65c2161fbc10b6b83b90f43e407e260c6eef5c12f034205f"
 }

@@ -218,7 +218,7 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
  set, `byte_buffer` or function key is rejected with `E_DICT_KEY` naming the
  offending part. Values are any copyable storable
  type, including lists and other dictionaries. `counts[key]` traps with
-@@ -297,11 +285,12 @@
+@@ -297,17 +285,21 @@
  the value and `counts.pop(key, fallback)` answers the fallback when absent;
  `counts.update(other)` replaces existing values in place and appends new keys;
  `counts.setdefault(key, fallback)` returns the existing value or stores the
@@ -233,7 +233,18 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
  
  Dictionary views are ephemeral. Use `d.keys()`, `d.values()` and `d.items()`
  directly as loop or comprehension sources, or immediately with `len`, `in`,
-@@ -351,7 +340,7 @@
+ `list`, `set` or `sorted`. `enumerate(d.items())` is also a loop source.
+-They allocate no snapshot and observe value replacements as iteration reaches
+-each key. A size change during dictionary iteration traps.
++They allocate no snapshot and borrow the dictionary during iteration. Mutating
++or clearing that dictionary while the loop is active is rejected, even when its
++size would stay unchanged. Direct rebinding of the syntactic source root selects
++an independent entry snapshot; this applies to direct keys/values/items loops,
++not separately stored or escaping views. Copied keys and values remain independent.
+ 
+ Binding, returning, rebinding, storing or passing a view to a user function is
+ `E_VIEW_STORED`. `mylang fix` wraps a stored projection in `list(...)` where
+@@ -351,7 +343,7 @@
          return 3
      mut order: str[] = []
      for name in counts:
@@ -242,7 +253,7 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
      if order[0] != "pear":
          return 4
      if counts.get("plum", 0) != 0:
-@@ -359,7 +348,7 @@
+@@ -359,7 +351,7 @@
      mut keys: str[] = []
      mut total = 0
      for name, value in counts.items():
@@ -251,7 +262,28 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
          total += value
      if keys[0] != "pear" or keys[1] != "apple" or keys[2] != "fig":
          return 7
-@@ -437,7 +426,7 @@
+@@ -377,11 +369,15 @@
+ order. `for key, value in counts.items()` visits each dictionary entry, binding the
+ key and its value in insertion order. `for index, value in enumerate(source)` adds
+ the position, and
+-`for index in range(end)` or `range(start, end)` counts integers; there is no step
+-argument. `break` and `continue` carry their Python meanings. A loop fixes its
+-bound when it starts and rechecks it before each step, so changing the
+-collection's length through the iterated place during iteration traps with
+-`R_LIST_ITERATION_MUTATION` rather than reading past the end.
++`for index in range(end)`, `range(start, end)` or `range(start, end, step)`
++counts integers. `break` and `continue` carry their Python meanings. Iteration
++borrows a managed collection's root; element writes and mutating methods on that
++root are rejected while the loop is active. Direct assignment to the syntactic
++source root is different: the loop visits an independent entry snapshot while the
++root holds the new value. Such snapshots can require independent storage and are
++part of allocation costs. Use an explicit index loop when an algorithm must mutate
++its source, choosing initial or current length for the intended extent. Independent
++`.copy()` snapshots may be changed separately.
+ 
+ ```mylang
+ # doc: expect 19
+@@ -437,7 +433,7 @@
          return 2
      if 9 in left:
          return 3
@@ -260,7 +292,7 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
      mut twin: int[][] = [right]
      if nested != twin:
          return 4
-@@ -539,39 +528,44 @@
+@@ -539,39 +535,44 @@
      return doubled[0] + large[0] + widths[0] + widths[1]
  ```
  
@@ -324,7 +356,7 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
  `TextView` from a string or `ByteView` from bytes/a byte buffer. Endpoints use
  Unicode scalar positions for text and octet positions for bytes, with negative
  indices and clamping. A view holds a pointer and length. Creating or borrowing
-@@ -579,11 +573,13 @@
+@@ -579,11 +580,13 @@
  length and indexing scan UTF-8. Text character indexing returns an owned string
  and can allocate for non-ASCII characters. Byte indexing returns a scalar.
  
@@ -340,7 +372,7 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
      mut text = "aλz" + str(7)
      const full = text.borrow(0, len(text))
      const part = segment(full, 1)
-@@ -592,6 +588,7 @@
+@@ -592,6 +595,7 @@
      text += "!"
      out.print(saved)                # allowed
      # out.print(part)               # compile error: owner changed
@@ -348,7 +380,7 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
  ```
  
  The returned-view contract is visible in ordinary types: a function returning a
-@@ -600,7 +597,7 @@
+@@ -600,7 +604,7 @@
  The compiler keeps the backing owner alive through the last use of any derived
  view, including through function calls, without relying on inlining.
  
@@ -357,7 +389,7 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
  stored in containers, records, callbacks, or conditional-expression bindings.
  Use branch returns in a view-returning helper instead. A loop may create fresh
  views inside its body, but cannot invalidate a view created outside the loop.
-@@ -608,31 +605,34 @@
+@@ -608,31 +612,34 @@
  operations are `.borrow()`, indexing, `len()`, `.copy()`, and text printing.
  Byte-view printing requires `.copy()`; other methods and direct view iteration
  are not yet admitted. The original byte `.view()` operation remains distinct and
@@ -406,7 +438,7 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
  scheduler, and joins every task before returning the results in input order.
  The caller can use its input again immediately. A callback returning managed
  input data must explicitly copy it; returning new data transfers it to the
-@@ -641,7 +641,6 @@
+@@ -641,7 +648,6 @@
  
  This initial API takes a function value with one read-only parameter. It has no
  closure captures, detached work or escaping task handles, and does not support
@@ -550,7 +582,19 @@ diff --git a/docs/python-syntax.md b/docs/python-syntax.md
  Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
  `counts.keys()`, `counts.values()` and `counts.items()`. These return ephemeral typed
  views for direct loops and immediate `len`, `in`, `list`, `set` and `sorted`.
-@@ -225,15 +227,15 @@
+@@ -191,8 +193,9 @@
+ declarations; use a list type for a snapshot. Items yield records with `key` and `value`
+ fields and support `for key, value in counts.items()`.
+ `key in counts`, `value in items`, and `substring in text` support `not in` too.
+-Iterating a dictionary visits keys in insertion order; changing its size during
+-iteration traps. The [word-count example](../examples/python-word-count/main.my)
++Iterating a dictionary visits keys in insertion order and borrows its root.
++Element mutation and clearing during the loop are rejected even at the same size.
++Direct rebinding of the syntactic source root follows the entry-snapshot rule below. The [word-count example](../examples/python-word-count/main.my)
+ puts these operations together.
+ 
+ `[for name in items if condition yield value]` builds a list in one pass.
+@@ -225,15 +228,15 @@
  `{value for name in source}` a set. These forms retain Python-style nested iteration,
  destructuring and filters. The key is evaluated before the value, and a repeated key keeps its first
  position and its last value. An annotated destination gives the key, value or
@@ -569,7 +613,7 @@ diff --git a/docs/python-syntax.md b/docs/python-syntax.md
      return doubled["fig"] + squares[4] + paired["a"] + len({c for c in "hello"}) + 2
  ```
  
-@@ -275,32 +277,31 @@
+@@ -275,32 +278,35 @@
  `for index in range(end)` / `range(start, end)` / `range(start, end, step)` support
  `break` and `continue`. A [stepped range](range-iteration.md#stepped-ranges) counts
  down for a negative step.
@@ -588,11 +632,15 @@ diff --git a/docs/python-syntax.md b/docs/python-syntax.md
 -indexed managed ancestors trap. String length counts Unicode scalars.
 -Copies made before any loop remain independent. Non-place sources retain their
 -entry value.
-+A foreach over a managed collection borrows the root collection. Moving,
-+replacing or mutating that root during the loop is rejected, including a write to
-+a different constant index. Copies made before a loop remain independent and may
-+be changed separately. Managed loop elements borrow their container; use `.copy()`
-+when an independent element must escape.
++A foreach over a managed collection borrows the root collection. Element writes
++and mutating methods on that root are rejected during the loop, including a write
++to a different constant index. Direct assignment to the syntactic source root
++selects an independent entry snapshot for the loop while the root holds its new
++value. This also applies to direct dictionary keys/values/items projections, not
++separately stored or escaping views. Snapshot storage contributes to allocation
++costs. Copies made before a loop remain independent and may be changed separately.
++Managed loop elements borrow their container; use `.copy()` when an independent
++element must escape.
 +
 +Use an explicit index loop when the algorithm must change its source collection.
 +The example below tests the current length on every iteration, so appended values
@@ -618,7 +666,7 @@ diff --git a/docs/python-syntax.md b/docs/python-syntax.md
      assert total == 13
      assert saved == [1, 2]
      return 0
-@@ -308,8 +309,8 @@
+@@ -308,8 +314,8 @@
  
  Records declare **value records**, with annotated fields and named construction:
  `Node(value=42, children=[])`. They have no inheritance, methods, or implicit
@@ -629,7 +677,7 @@ diff --git a/docs/python-syntax.md b/docs/python-syntax.md
  local or a record held in a writable array slot.
  
  Enums declare closed cases with named payload fields. `Kind.first` constructs
-@@ -350,8 +351,8 @@
+@@ -350,8 +356,8 @@
  
  A tuple groups two to eight values without declaring a record: `(a, b)` builds one, the
  type is written `tuple[str, int]`, and the bare forms `return a, b` and `x, y = a, b`
@@ -640,7 +688,7 @@ diff --git a/docs/python-syntax.md b/docs/python-syntax.md
  pairs`, and bind `_` for a value you do not need. It compares structurally, prints as
  `(1, 'a')`, and is one structural type everywhere. See [tuples](tuples.md).
  
-@@ -661,14 +662,14 @@
+@@ -661,14 +667,14 @@
      score: float
  
  func by_name(player: Player) -> str:

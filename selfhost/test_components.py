@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Blackbox tests of the native component coordinator; Python is test-only."""
 import argparse
+import contextlib
 import hashlib
+import io
 import json
 import os
 import platform
@@ -12,6 +14,9 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+from unittest import mock
+import test_component_native as native_qualification
+from test_component_native import require_completed_tests
 
 BUILDER = None
 ZIG = None
@@ -306,6 +311,55 @@ class ComponentCacheTests(unittest.TestCase):
         binary.write_bytes(b"corrupt seed")
         self.invoke("--seed-only", success=False)
         self.assertEqual(self.calls("seed"), 1)
+
+
+class NativeQualificationTests(unittest.TestCase):
+    def report(self, statuses):
+        names = ("passed", "cached", "failed", "skipped", "unsupported")
+        return dict(version="native-tests-v1", tests=[dict(name=f"test_{index}", status=status)
+                    for index, status in enumerate(statuses)], **{name: statuses.count(name) for name in names})
+
+    def test_completed_native_tests_qualify(self):
+        require_completed_tests(json.dumps(self.report(["passed", "passed"])))
+
+    def test_unsupported_or_incomplete_native_tests_never_qualify(self):
+        for statuses in (["unsupported"], ["passed", "unsupported"], ["failed"], ["skipped"], []):
+            with self.subTest(statuses=statuses), self.assertRaises(RuntimeError):
+                require_completed_tests(json.dumps(self.report(statuses)))
+
+    def test_malformed_or_inconsistent_native_test_reports_refuse(self):
+        valid = self.report(["passed"])
+        for change in (dict(version="unknown"), dict(passed=0), dict(unsupported=None), dict(tests=[dict(status="unknown")])):
+            with self.subTest(change=change), self.assertRaises(RuntimeError):
+                require_completed_tests(json.dumps(dict(valid, **change)))
+
+    def test_owned_qualification_uses_one_pin_archive_and_installed_component_set(self):
+        with tempfile.TemporaryDirectory(prefix="component-qualification-routing-") as temporary:
+            directory = Path(temporary)
+            for name in ("test-index", "cache-plan"):
+                artifact = directory / name
+                artifact.write_bytes(name.encode())
+                (directory / f"{name}.json").write_text(json.dumps(dict(
+                    artifact=name, sha256=digest(artifact), memory_mode="zero-rc-v1")))
+            pin, archive = directory / "owned-pin.json", directory / "source.tar"
+            args = ["test_component_native.py", "--zig", "pinned-zig", "--builder", "independent-builder",
+                    "--component-dir", str(directory), "--owned-compiler-pin", str(pin), "--seed-source", str(archive)]
+            outputs = ["/qualified-source/zig-out/focus/mylang\n"] + [json.dumps(self.report(["passed"]))] * 4
+            with mock.patch.object(native_qualification.sys, "argv", args), \
+                 mock.patch.object(native_qualification.subprocess, "check_output", side_effect=outputs) as checked, \
+                 mock.patch.object(native_qualification.subprocess, "run") as executed, \
+                 contextlib.redirect_stdout(io.StringIO()):
+                native_qualification.main()
+            request = checked.call_args_list[0].args[0]
+            self.assertEqual(request[request.index("--owned-compiler-pin") + 1], pin)
+            self.assertEqual(request[request.index("--seed-source") + 1], archive)
+            for call in checked.call_args_list[1:]:
+                self.assertIn("--experimental-zero-rc", call.args[0])
+                self.assertIn("--json", call.args[0])
+                self.assertEqual(call.kwargs["env"]["MYLANG_COMPONENT_DIR"], str(directory))
+            self.assertEqual(executed.call_count, 6)
+            for call in executed.call_args_list:
+                self.assertEqual(call.kwargs["env"]["MYLANG_COMPONENT_DIR"], str(directory))
 
 
 if __name__ == "__main__":

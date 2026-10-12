@@ -38,12 +38,12 @@ pub const memory_budget = [_][]const u8{"src/memory_budget.zig"};
 
 /// `src/root_test.zig`, the unit root. Its guest programs also read the
 /// runtime sources the compiler embeds, which `src/` covers.
-pub const component_inputs = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json" };
+pub const component_inputs = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-*.json" };
 
 pub const unit = [_][]const u8{
     "selfhost/components/",
     "selfhost/*.zig",
-    "selfhost/component-seed.json",
+    "selfhost/component-*.json",
     "src/",
     "bench/parity/micro/dict_count.my",
     "bench/parity/suite/knucleotide.my",
@@ -71,7 +71,7 @@ pub const unit = [_][]const u8{
 pub const cli = [_][]const u8{
     "selfhost/components/",
     "selfhost/*.zig",
-    "selfhost/component-seed.json",
+    "selfhost/component-*.json",
     "src/",
     "examples/",
     "tests/guest/",
@@ -94,7 +94,7 @@ pub const zig_format = [_][]const u8{
 
 /// `test/golden_parity.zig` (`test-golden`): the golden corpora and the
 /// repository fixtures their entries name.
-pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "src/", "tests/goldens/", "examples/", "test/fixtures/" };
+pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-*.json", "src/", "tests/goldens/", "examples/", "test/fixtures/" };
 
 /// `tests/idiom_probes.py --compiler`: the probe corpus and its manifest.
 pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
@@ -245,10 +245,10 @@ pub const tooling_isolation = [_][]const u8{"tests/tooling_cache_isolation.py"};
 pub const selfhost_numeric = [_][]const u8{"selfhost/"};
 
 /// The independent component cache and qualification builder.
-pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/component-seed.json" };
+pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/test_component_native.py", "selfhost/component-*.json" };
 
 /// Qualified-seed pure tests and native protocol oracle.
-pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" };
+pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-*.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" };
 
 /// The live .my formatting corpus, selection script and deliberate exclusions.
 pub const my_format = [_][]const u8{

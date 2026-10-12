@@ -549,14 +549,20 @@ pub fn build(b: *std.Build) void {
     const install_component_tool = b.addInstallFileWithDir(component_tool.getEmittedBin(), .{ .custom = "tools" }, "selka-components");
     b.getInstallStep().dependOn(&install_component_tool.step);
     b.step("component-builder", "Build the native bootstrap coordinator without provisioning a seed").dependOn(&install_component_tool.step);
+    const component_owned_pin = b.option([]const u8, "component-owned-compiler-pin", "Independent checked-owned component compiler source pin (optional qualification route)");
+    const component_seed_source = b.option([]const u8, "component-seed-source", "Verified source archive for provisioning the selected component compiler pin");
     const component_build = b.addRunArtifact(component_tool);
     component_build.addArg("--root");
     component_build.addDirectoryArg2(b.path("."), .{ .make_absolute = true });
     component_build.addArgs(&.{ "--zig", b.graph.zig_exe, "--install-dir" });
     component_build.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
-    if (b.option([]const u8, "component-seed-source", "Verified source archive for provisioning the pinned component seed")) |archive| {
+    if (component_owned_pin) |pin| {
+        component_build.addArg("--owned-compiler-pin");
+        component_build.addFileArg(if (std.fs.path.isAbsolute(pin)) b.graph.cwdRelativePath(pin) else b.path(pin));
+    }
+    if (component_seed_source) |archive| {
         component_build.addArg("--seed-source");
-        component_build.addFileArg(b.path(archive));
+        component_build.addFileArg(if (std.fs.path.isAbsolute(archive)) b.graph.cwdRelativePath(archive) else b.path(archive));
     }
     component_build.setCwd(b.path("."));
     component_build.has_side_effects = true;
@@ -822,6 +828,14 @@ pub fn build(b: *std.Build) void {
     native_component_tests.addArtifactArg(component_tool);
     native_component_tests.addArgs(&.{ "--zig", b.graph.zig_exe, "--component-dir" });
     native_component_tests.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    if (component_owned_pin) |pin| {
+        native_component_tests.addArg("--owned-compiler-pin");
+        native_component_tests.addFileArg(if (std.fs.path.isAbsolute(pin)) b.graph.cwdRelativePath(pin) else b.path(pin));
+    }
+    if (component_seed_source) |archive| {
+        native_component_tests.addArg("--seed-source");
+        native_component_tests.addFileArg(if (std.fs.path.isAbsolute(archive)) b.graph.cwdRelativePath(archive) else b.path(archive));
+    }
     const component_test_step = b.step("test-components", "Test pure Selka, native protocol, cache and failure boundaries");
     const component_support_tests = b.addTest(.{
         .max_rss = rss.compile,

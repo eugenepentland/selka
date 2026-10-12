@@ -246,3 +246,27 @@ packaging route. No default or RC-retirement milestone is claimed here.
 The isolated preserved foreach check passed its negative oracle on Support5:
 status1 with `E_SINGLE_OWNER_OVERLAP`, exact source/compiler hashes and output in
 `rollout/live-foreach-support5-negative.json`.
+
+Optional real-pin forwarding followup: coordinator-authored root changes now
+accept `component-owned-compiler-pin` and pass the same optional pin/archive to
+provisioning and native qualification. Absolute paths work through cwd-relative
+LazyPaths; component manifest input recipes cover both old and eventual new
+manifests. No real new pin exists and the default historical selection is intact.
+`component-builder` passes 3/3 steps without provisioning. The complete fake-tool
+suite passes 25/25 (shared build tickets669/679; exact hashes and raw logs in
+`packaging-real-pin/validation.json`). Four new tests cover strict native verdict
+accounting and exact pin/archive/component-dir routing.
+
+Native qualification now explicitly uses the provisioned candidate component
+folder with the independent compiler, verifies installed hashes/owned mode and
+rejects empty, failed, skipped or unsupported pure-test reports. This fixes a
+qualification gap without changing the guest CLI exit policy. No installed host
+fallback or component-build cycle is introduced. C1 actual-source archive/pin,
+real protocols and installed ABI/symbol qualification remain coordinator/A08 work.
+
+A01/root clarified existing D1-LIVE-PLACE semantics: direct syntactic source-root
+rebinding selects an independent entry snapshot, also for direct dictionary
+keys/values/items projections. Mutating methods/element writes remain refused.
+Draft prose now distinguishes those cases and snapshot allocation costs; the
+live-length index migration and preserved negative remain unchanged. No code-block
+hash changed in this prose followup; the 47/51 Support5 evidence remains exact.

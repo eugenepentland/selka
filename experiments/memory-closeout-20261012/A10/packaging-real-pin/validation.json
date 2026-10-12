@@ -1,0 +1,36 @@
+{
+  "tests": {
+    "focused_native_qualification": {
+      "passed": 4,
+      "failed": 0
+    },
+    "complete_fake_tool_suite": {
+      "passed": 25,
+      "failed": 0,
+      "shared_build_ticket": 679,
+      "log": "final-fake-tool-tests.log"
+    },
+    "component_builder": {
+      "passed_steps": 3,
+      "failed_steps": 0,
+      "shared_build_ticket": 669,
+      "log": "component-builder.log",
+      "seed_or_component_provisioned": false
+    }
+  },
+  "root_patch_checks": [
+    "git apply --check against coordinator tree PASS",
+    "pinned zig fmt --check scratch files PASS"
+  ],
+  "real_source_pin": null,
+  "package_qualified": false,
+  "files": {
+    "build.zig": "435dcf89446c862457e73544e3f346f4522bb784bd3a71a345d681e075c8c692",
+    "build_test_inputs.zig": "201e2a2751cb7a3158b62a09b072b4886647f991a40582eb432e7e11bcda445d",
+    "selfhost/components.zig": "7d1625ae3a983585e3819ec92147a1911c5c463d4a20a85bbdae0c7a5e29f51a",
+    "selfhost/test_components.py": "a49825887a23b771af16c2f12f0849b12d289900436202d57ca31ba5b18d82b9",
+    "selfhost/test_component_native.py": "964e1b8eb7e5a888d2a5c3495ea882449b9a5b3ee2e724a16768b849b64ecfbb",
+    "selfhost/component-seed.json": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c",
+    ".tmp/memory-closeout/A10/real-pin-builder/tools/selka-components": "747a99b274ff6440db30aed62d3e13e6bd9c5bb76571a0bca43d3fee3abf5439"
+  }
+}

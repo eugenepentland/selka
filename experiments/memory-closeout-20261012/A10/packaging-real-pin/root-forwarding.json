@@ -1,0 +1,8 @@
+{
+  "status": "Coordinator applied shared root patch to A10 worktree; optional route compiled, actual source pin remains absent",
+  "source_files": {
+    "build.zig": "4e9204e276f90118401d089d4179585228606a83d742e9f3d8c7d802b00685cb",
+    "build_test_inputs.zig": "02c72f7241d2d6c95cedaf843a646bd78a594410d79fdd6a25dcfb628faba83c"
+  },
+  "patch_sha256": "4a2c7d070c8d8fa9cd3b4e9539f2b819e959938e8db0f2db4c1e5d4d25967594"
+}

@@ -193,8 +193,9 @@ return, field and collection element annotations, including unused generic
 declarations; use a list type for a snapshot. Items yield records with `key` and `value`
 fields and support `for key, value in counts.items()`.
 `key in counts`, `value in items`, and `substring in text` support `not in` too.
-Iterating a dictionary visits keys in insertion order; changing its size during
-iteration traps. The [word-count example](../examples/python-word-count/main.my)
+Iterating a dictionary visits keys in insertion order and borrows its root.
+Element mutation and clearing during the loop are rejected even at the same size.
+Direct rebinding of the syntactic source root follows the entry-snapshot rule below. The [word-count example](../examples/python-word-count/main.my)
 puts these operations together.
 
 `[for name in items if condition yield value]` builds a list in one pass.
@@ -277,11 +278,15 @@ func main() -> int:
 `for index in range(end)` / `range(start, end)` / `range(start, end, step)` support
 `break` and `continue`. A [stepped range](range-iteration.md#stepped-ranges) counts
 down for a negative step.
-A foreach over a managed collection borrows the root collection. Moving,
-replacing or mutating that root during the loop is rejected, including a write to
-a different constant index. Copies made before a loop remain independent and may
-be changed separately. Managed loop elements borrow their container; use `.copy()`
-when an independent element must escape.
+A foreach over a managed collection borrows the root collection. Element writes
+and mutating methods on that root are rejected during the loop, including a write
+to a different constant index. Direct assignment to the syntactic source root
+selects an independent entry snapshot for the loop while the root holds its new
+value. This also applies to direct dictionary keys/values/items projections, not
+separately stored or escaping views. Snapshot storage contributes to allocation
+costs. Copies made before a loop remain independent and may be changed separately.
+Managed loop elements borrow their container; use `.copy()` when an independent
+element must escape.
 
 Use an explicit index loop when the algorithm must change its source collection.
 The example below tests the current length on every iteration, so appended values

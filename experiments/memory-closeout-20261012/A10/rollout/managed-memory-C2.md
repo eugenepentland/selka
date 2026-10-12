@@ -295,8 +295,11 @@ independent dictionary. A `mut` parameter and marked call write back to a caller
 Dictionary views are ephemeral. Use `d.keys()`, `d.values()` and `d.items()`
 directly as loop or comprehension sources, or immediately with `len`, `in`,
 `list`, `set` or `sorted`. `enumerate(d.items())` is also a loop source.
-They allocate no snapshot and observe value replacements as iteration reaches
-each key. A size change during dictionary iteration traps.
+They allocate no snapshot and borrow the dictionary during iteration. Mutating
+or clearing that dictionary while the loop is active is rejected, even when its
+size would stay unchanged. Direct rebinding of the syntactic source root selects
+an independent entry snapshot; this applies to direct keys/values/items loops,
+not separately stored or escaping views. Copied keys and values remain independent.
 
 Binding, returning, rebinding, storing or passing a view to a user function is
 `E_VIEW_STORED`. `mylang fix` wraps a stored projection in `list(...)` where
@@ -366,11 +369,15 @@ a [byte string](bytes.md)'s octets as `int`, and a dictionary's keys in insertio
 order. `for key, value in counts.items()` visits each dictionary entry, binding the
 key and its value in insertion order. `for index, value in enumerate(source)` adds
 the position, and
-`for index in range(end)` or `range(start, end)` counts integers; there is no step
-argument. `break` and `continue` carry their Python meanings. A loop fixes its
-bound when it starts and rechecks it before each step, so changing the
-collection's length through the iterated place during iteration traps with
-`R_LIST_ITERATION_MUTATION` rather than reading past the end.
+`for index in range(end)`, `range(start, end)` or `range(start, end, step)`
+counts integers. `break` and `continue` carry their Python meanings. Iteration
+borrows a managed collection's root; element writes and mutating methods on that
+root are rejected while the loop is active. Direct assignment to the syntactic
+source root is different: the loop visits an independent entry snapshot while the
+root holds the new value. Such snapshots can require independent storage and are
+part of allocation costs. Use an explicit index loop when an algorithm must mutate
+its source, choosing initial or current length for the intended extent. Independent
+`.copy()` snapshots may be changed separately.
 
 ```mylang
 # doc: expect 19

@@ -56,11 +56,15 @@ s = s.replace('    return player.name\n', '    return player.name.copy()\n')
 s = s.replace('key=lambda p: (p.team, p.name)', 'key=lambda p: (p.team, p.name.copy())')
 start = s.index('Iteration over a place reads its current value on every step.')
 end = s.index('```mylang', start)
-s = s[:start] + """A foreach over a managed collection borrows the root collection. Moving,
-replacing or mutating that root during the loop is rejected, including a write to
-a different constant index. Copies made before a loop remain independent and may
-be changed separately. Managed loop elements borrow their container; use `.copy()`
-when an independent element must escape.
+s = s[:start] + """A foreach over a managed collection borrows the root collection. Element writes
+and mutating methods on that root are rejected during the loop, including a write
+to a different constant index. Direct assignment to the syntactic source root
+selects an independent entry snapshot for the loop while the root holds its new
+value. This also applies to direct dictionary keys/values/items projections, not
+separately stored or escaping views. Snapshot storage contributes to allocation
+costs. Copies made before a loop remain independent and may be changed separately.
+Managed loop elements borrow their container; use `.copy()` when an independent
+element must escape.
 
 Use an explicit index loop when the algorithm must change its source collection.
 The example below tests the current length on every iteration, so appended values
@@ -83,6 +87,7 @@ s = s.replace("""    for value in items:
             items.append(3)
         index += 1
 """)
+s = s.replace('Iterating a dictionary visits keys in insertion order; changing its size during\niteration traps.', 'Iterating a dictionary visits keys in insertion order and borrows its root.\nElement mutation and clearing during the loop are rejected even at the same size.\nDirect rebinding of the syntactic source root follows the entry-snapshot rule below.')
 save('python-syntax.md', s)
 
 s = load('current-language.md')
