@@ -3,7 +3,11 @@
 // child process receives. `src/environment_identity.zig` imports it at compile
 // time; `scripts/verification_environment.py` reads it with a strict parser.
 //
-//   keyed      NAME=VALUE enters every identity, and the variable is passed on.
+//   keyed      NAME=VALUE enters every identity, guest and host, and the
+//              variable is passed on.
+//   host       NAME=VALUE enters host-tool identities only (the build graph's
+//              verdicts, Python drivers, the coordinator), never a guest test
+//              receipt; the variable is passed on.
 //   placement  passed on, never keyed: where content-addressed storage or
 //              diagnostics live, how many jobs run, which process runs a test.
 //   dropped    removed from children and absent from every key. A name that
@@ -12,7 +16,7 @@
 //
 // An entry is an exact name or a prefix ending in `*`. Precedence: an exact
 // name beats every prefix, and among prefixes the longest wins. Each spelling
-// appears once in the whole file. Read docs/tooling/environment-identity.md
+// appears once across all four lists. Read docs/tooling/environment-identity.md
 // before adding a variable; the Python reader accepts only this subset of ZON
 // (comments, `.name = .{ "string", ... }`, trailing commas, no escapes).
 .{
@@ -21,16 +25,9 @@
         "MYL_*",
         "MYLANG_*",
         "SELKA_*",
-        // Locale and time, which change messages, collation and dates.
-        "LANG",
-        "LANGUAGE",
-        "LC_*",
-        "TZ",
         // Reproducible-output switches of the C toolchain and archivers.
         "SOURCE_DATE_EPOCH",
         "ZERO_AR_DATE",
-        // Interpreter settings of Python test drivers.
-        "PYTHON*",
         // Dynamic-loader overrides; a non-empty one also refuses receipts.
         "LD_*",
         // The C compiler and Zig toolchain inputs.
@@ -45,6 +42,15 @@
         "ZIG",
         "ZIG_LIB_DIR",
         "ZIG_LIBC",
+    },
+    .host = .{
+        // Host tooling only: locale, time zone and Python interpreter settings
+        // change Python drivers and host tools, never a guest build or test.
+        "PYTHON*",
+        "LANG",
+        "LANGUAGE",
+        "LC_*",
+        "TZ",
     },
     .placement = .{
         // Homes, scratch and the search path (tools are keyed by content).

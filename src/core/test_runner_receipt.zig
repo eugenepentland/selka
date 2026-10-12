@@ -716,18 +716,21 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
 }
 
 /// The toolchain variables the receipt keyed through its own list before the
-/// environment identity contract replaced it, and two `MYL_`/`MYLANG_` samples.
+/// environment identity contract replaced it, two `MYL_`/`MYLANG_` samples, and
+/// the `SELKA_` and `ZERO_AR_DATE` variables the contract's keyed class adds.
 const formerly_keyed = [_][]const u8{
     "CCC_OVERRIDE_OPTIONS", "COMPILER_PATH",     "CPATH",             "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "GCC_EXEC_PREFIX",
     "LIBRARY_PATH",         "OBJC_INCLUDE_PATH", "SOURCE_DATE_EPOCH", "ZIG",            "ZIG_LIB_DIR",        "ZIG_LIBC",
-    "MYL_CORE_TEXTWALK",    "MYLANG_OPTIONS",
+    "MYL_CORE_TEXTWALK",    "MYLANG_OPTIONS",    "SELKA_PROFILE",     "ZERO_AR_DATE",
 };
-/// The placement variables the receipt ignored before the contract, plus the
-/// verification telemetry directories that once invalidated every receipt.
+/// The placement variables the receipt ignored before the contract, the
+/// verification telemetry directories that once invalidated every receipt, and
+/// host-only variables (Python, locale, time zone) no guest outcome depends on.
 const never_keyed = [_][]const u8{
     "MYLANG_JOBS",                      "MYLANG_CORE_RUNTIME_CACHE", "MYLANG_COMPILER_SHARED_CACHE", tool_ticket.hint,
     "MYLANG_TEST_ISOLATE",              "MYLANG_TEST_CHILDREN",      options.shared_cache_variable,  "MYLANG_TEST_TELEMETRY_DIR",
-    "SELKA_VERIFICATION_TELEMETRY_DIR", "_",                         "OLDPWD",
+    "SELKA_VERIFICATION_TELEMETRY_DIR", "_",                         "OLDPWD",                       "PYTHONPATH",
+    "LANG",                             "TZ",
 };
 
 /// The first name whose `keyedVariable` answer differs from `expected`, or "".
@@ -744,7 +747,7 @@ fn settingsWith(context: Context, environment: *std.process.Environ.Map, names: 
 }
 
 // spec-case: ENV-IDENTITY-1
-test "receipt environment keys what the old lists keyed and never the placement or telemetry variables" {
+test "receipt environment keys what the old lists keyed and never placement, telemetry or host-only variables" {
     try std.testing.expectEqualStrings("", firstKeyedMismatch(&formerly_keyed, true));
     try std.testing.expectEqualStrings("", firstKeyedMismatch(&never_keyed, false));
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);

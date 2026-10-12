@@ -7,7 +7,8 @@ const identity = @import("environment_identity.zig");
 const environment_text = @embedFile("environment-identity/environment.txt");
 const classification_text = @embedFile("environment-identity/classification.txt");
 const tools_text = @embedFile("environment-identity/tools.txt");
-const digest_text = @embedFile("environment-identity/digest.txt");
+const guest_digest_text = @embedFile("environment-identity/digest-guest.txt");
+const host_digest_text = @embedFile("environment-identity/digest-host.txt");
 
 /// The fixture's `NAME=VALUE` lines, split at the first `=`, into `buffer`.
 fn fixtureVariables(buffer: []identity.Variable) []identity.Variable {
@@ -53,17 +54,17 @@ fn classCount(class: identity.Class) usize {
     return count;
 }
 
-/// The digest of `variables` with `name` set to `value` (added if absent).
-fn digestWith(variables: []identity.Variable, tools: []identity.Tool, name: []const u8, value: []const u8) [64]u8 {
+/// The `scope` digest of `variables` with `name` set to `value` (added if absent).
+fn digestWith(scope: identity.Scope, variables: []identity.Variable, tools: []identity.Tool, name: []const u8, value: []const u8) [64]u8 {
     var copy: [512]identity.Variable = undefined;
     @memcpy(copy[0..variables.len], variables);
     for (copy[0..variables.len]) |*variable| {
         if (!std.mem.eql(u8, variable.name, name)) continue;
         variable.value = value;
-        return identity.digest(copy[0..variables.len], tools);
+        return identity.digest(scope, copy[0..variables.len], tools);
     }
     copy[variables.len] = .{ .name = name, .value = value };
-    return identity.digest(copy[0 .. variables.len + 1], tools);
+    return identity.digest(scope, copy[0 .. variables.len + 1], tools);
 }
 
 // spec: ENV-IDENTITY-1
@@ -72,6 +73,7 @@ test "environment identity classifies all 200-plus fixture variables as the gold
     var buffer: [512]identity.Variable = undefined;
     try std.testing.expect(fixtureVariables(&buffer).len >= 200);
     try std.testing.expect(classCount(.keyed) > 0);
+    try std.testing.expect(classCount(.host) > 0);
     try std.testing.expect(classCount(.placement) > 0);
     try std.testing.expect(classCount(.dropped) > 0);
 }
@@ -89,7 +91,12 @@ test "environment identity precedence: exact names, then the longest prefix, els
     try std.testing.expectEqual(.placement, identity.classify("ZIG_LOCAL_CACHE_DIR"));
     try std.testing.expectEqual(.dropped, identity.classify("ZIG_VERBOSE_LINK"));
     try std.testing.expectEqual(.keyed, identity.classify("LD_PRELOAD"));
-    try std.testing.expectEqual(.keyed, identity.classify("LC_ALL"));
+    try std.testing.expectEqual(.host, identity.classify("LC_ALL"));
+    try std.testing.expectEqual(.host, identity.classify("PYTHONPATH"));
+    try std.testing.expectEqual(.host, identity.classify("LANG"));
+    try std.testing.expectEqual(.keyed, identity.classify("ZERO_AR_DATE"));
+    try std.testing.expect(!identity.keyed("TZ") and identity.hostKeyed("TZ") and identity.passedThrough("TZ"));
+    try std.testing.expect(identity.hostKeyed("MYLANG_OPTIONS") and !identity.hostKeyed("TMPDIR"));
     try std.testing.expectEqual(.dropped, identity.classify("CODEX_THREAD_ID"));
     try std.testing.expectEqual(.dropped, identity.classify("TERM"));
     try std.testing.expectEqual(.dropped, identity.classify("PWD"));
@@ -108,11 +115,13 @@ test "environment identity passes telemetry directories to children but never ke
 }
 
 // spec: ENV-IDENTITY-2
-test "environment identity digest reproduces the golden fixture digest" {
+test "environment identity digest reproduces the golden guest and host fixture digests" {
     var variables: [512]identity.Variable = undefined;
     var tools: [16]identity.Tool = undefined;
-    const digest = identity.digest(fixtureVariables(&variables), fixtureTools(&tools));
-    try std.testing.expectEqualStrings(std.mem.trimEnd(u8, digest_text, "\n"), &digest);
+    const digest = identity.digest(.guest, fixtureVariables(&variables), fixtureTools(&tools));
+    try std.testing.expectEqualStrings(std.mem.trimEnd(u8, guest_digest_text, "\n"), &digest);
+    const host = identity.digest(.host, fixtureVariables(&variables), fixtureTools(&tools));
+    try std.testing.expectEqualStrings(std.mem.trimEnd(u8, host_digest_text, "\n"), &host);
 }
 
 // spec-case: ENV-IDENTITY-2
@@ -121,15 +130,15 @@ test "environment identity digest ignores launcher and placement variables and i
     var tools: [16]identity.Tool = undefined;
     const fixture = fixtureVariables(&variables);
     const tool_list = fixtureTools(&tools);
-    const base = identity.digest(fixture, tool_list);
-    try std.testing.expectEqualStrings(&base, &digestWith(fixture, tool_list, "CODEX_THREAD_ID", "another-thread"));
-    try std.testing.expectEqualStrings(&base, &digestWith(fixture, tool_list, "TERM", "dumb"));
-    try std.testing.expectEqualStrings(&base, &digestWith(fixture, tool_list, "PWD", "/elsewhere"));
-    try std.testing.expectEqualStrings(&base, &digestWith(fixture, tool_list, "TMPDIR", "/other/tmp"));
-    try std.testing.expectEqualStrings(&base, &digestWith(fixture, tool_list, "MYLANG_TEST_TELEMETRY_DIR", "/request/7"));
+    const base = identity.digest(.guest, fixture, tool_list);
+    try std.testing.expectEqualStrings(&base, &digestWith(.guest, fixture, tool_list, "CODEX_THREAD_ID", "another-thread"));
+    try std.testing.expectEqualStrings(&base, &digestWith(.guest, fixture, tool_list, "TERM", "dumb"));
+    try std.testing.expectEqualStrings(&base, &digestWith(.guest, fixture, tool_list, "PWD", "/elsewhere"));
+    try std.testing.expectEqualStrings(&base, &digestWith(.guest, fixture, tool_list, "TMPDIR", "/other/tmp"));
+    try std.testing.expectEqualStrings(&base, &digestWith(.guest, fixture, tool_list, "MYLANG_TEST_TELEMETRY_DIR", "/request/7"));
     std.mem.reverse(identity.Variable, fixture);
     std.mem.reverse(identity.Tool, tool_list);
-    try std.testing.expectEqualStrings(&base, &identity.digest(fixture, tool_list));
+    try std.testing.expectEqualStrings(&base, &identity.digest(.guest, fixture, tool_list));
 }
 
 // spec-case: ENV-IDENTITY-2
@@ -138,11 +147,29 @@ test "environment identity digest changes with a keyed variable or a tool digest
     var tools: [16]identity.Tool = undefined;
     const fixture = fixtureVariables(&variables);
     const tool_list = fixtureTools(&tools);
-    const base = identity.digest(fixture, tool_list);
-    try std.testing.expect(!std.mem.eql(u8, &base, &digestWith(fixture, tool_list, "MYLANG_MEMORY_LIMIT", "1G")));
-    try std.testing.expect(!std.mem.eql(u8, &base, &digestWith(fixture, tool_list, "LD_PRELOAD", "/lib.so")));
+    const base = identity.digest(.guest, fixture, tool_list);
+    try std.testing.expect(!std.mem.eql(u8, &base, &digestWith(.guest, fixture, tool_list, "MYLANG_MEMORY_LIMIT", "1G")));
+    try std.testing.expect(!std.mem.eql(u8, &base, &digestWith(.guest, fixture, tool_list, "LD_PRELOAD", "/lib.so")));
     const other: [64]u8 = @splat('2');
     tool_list[0].digest = &other;
-    try std.testing.expect(!std.mem.eql(u8, &base, &identity.digest(fixture, tool_list)));
-    try std.testing.expect(!std.mem.eql(u8, &base, &identity.digest(fixture, tool_list[1..])));
+    try std.testing.expect(!std.mem.eql(u8, &base, &identity.digest(.guest, fixture, tool_list)));
+    try std.testing.expect(!std.mem.eql(u8, &base, &identity.digest(.guest, fixture, tool_list[1..])));
+}
+
+// spec-case: ENV-IDENTITY-2
+test "environment identity host digest keys host variables that the guest digest ignores" {
+    var variables: [512]identity.Variable = undefined;
+    var tools: [16]identity.Tool = undefined;
+    const fixture = fixtureVariables(&variables);
+    const tool_list = fixtureTools(&tools);
+    const guest = identity.digest(.guest, fixture, tool_list);
+    const host = identity.digest(.host, fixture, tool_list);
+    try std.testing.expect(!std.mem.eql(u8, &guest, &host));
+    try std.testing.expectEqualStrings(&guest, &digestWith(.guest, fixture, tool_list, "PYTHONPATH", "/other/site"));
+    try std.testing.expectEqualStrings(&guest, &digestWith(.guest, fixture, tool_list, "LANG", "de_DE.UTF-8"));
+    try std.testing.expect(!std.mem.eql(u8, &host, &digestWith(.host, fixture, tool_list, "PYTHONPATH", "/other/site")));
+    try std.testing.expect(!std.mem.eql(u8, &host, &digestWith(.host, fixture, tool_list, "LANG", "de_DE.UTF-8")));
+    try std.testing.expect(!std.mem.eql(u8, &host, &digestWith(.host, fixture, tool_list, "MYLANG_MEMORY_LIMIT", "1G")));
+    try std.testing.expectEqualStrings(&host, &digestWith(.host, fixture, tool_list, "CODEX_THREAD_ID", "another-thread"));
+    try std.testing.expectEqualStrings(&host, &digestWith(.host, fixture, tool_list, "TMPDIR", "/other/tmp"));
 }

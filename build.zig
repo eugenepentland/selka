@@ -628,7 +628,7 @@ pub fn build(b: *std.Build) void {
     addUserDocs(b, unit.root_module);
     // The environment identity golden fixture (ENV-IDENTITY-2) is embedded, so it
     // is a compile input of the unit binary rather than a path read at run time.
-    for ([_][]const u8{ "environment", "classification", "tools", "digest" }) |name| {
+    for ([_][]const u8{ "environment", "classification", "tools", "digest-guest", "digest-host" }) |name| {
         unit.root_module.addAnonymousImport(b.fmt("environment-identity/{s}.txt", .{name}), .{ .root_source_file = b.path(b.fmt("test/fixtures/environment-identity/{s}.txt", .{name})) });
     }
     // Unit tests build and run guest programs with `mylang`, which the root cannot

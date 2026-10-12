@@ -7,17 +7,8 @@ MYLANG_=bare prefix
 SELKA_FIXTURE_A=keyed prefix SELKA_ = one
 SELKA_B=x=y=z keyed
 SELKA_=bare prefix
-LANG=exact LANG value with spaces and = signs=1
-LANGUAGE=exact LANGUAGE value with spaces and = signs=1
-LC_FIXTURE_A=keyed prefix LC_ = one
-LC_B=x=y=z keyed
-LC_=bare prefix
-TZ=exact TZ value with spaces and = signs=1
 SOURCE_DATE_EPOCH=exact SOURCE_DATE_EPOCH value with spaces and = signs=1
 ZERO_AR_DATE=exact ZERO_AR_DATE value with spaces and = signs=1
-PYTHONFIXTURE_A=keyed prefix PYTHON = one
-PYTHONB=x=y=z keyed
-PYTHON=bare prefix
 LD_FIXTURE_A=keyed prefix LD_ = one
 LD_B=x=y=z keyed
 LD_=bare prefix
@@ -32,6 +23,15 @@ OBJC_INCLUDE_PATH=exact OBJC_INCLUDE_PATH value with spaces and = signs=1
 ZIG=exact ZIG value with spaces and = signs=1
 ZIG_LIB_DIR=exact ZIG_LIB_DIR value with spaces and = signs=1
 ZIG_LIBC=exact ZIG_LIBC value with spaces and = signs=1
+PYTHONFIXTURE_A=host prefix PYTHON = one
+PYTHONB=x=y=z host
+PYTHON=bare prefix
+LANG=exact LANG value with spaces and = signs=1
+LANGUAGE=exact LANGUAGE value with spaces and = signs=1
+LC_FIXTURE_A=host prefix LC_ = one
+LC_B=x=y=z host
+LC_=bare prefix
+TZ=exact TZ value with spaces and = signs=1
 HOME=exact HOME value with spaces and = signs=1
 XDG_CACHE_HOME=exact XDG_CACHE_HOME value with spaces and = signs=1
 XDG_RUNTIME_DIR=exact XDG_RUNTIME_DIR value with spaces and = signs=1

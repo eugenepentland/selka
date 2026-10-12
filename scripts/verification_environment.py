@@ -2,9 +2,10 @@
 """The environment identity contract (ENV-IDENTITY-1, ENV-IDENTITY-2) in Python.
 
 `src/environment_identity.zon` is the one definition of which environment
-variables are keyed (their `NAME=VALUE` enters every identity), placement
-(passed to children, never keyed) or dropped (removed from children and from
-every key). The compiler imports it at compile time through
+variables are keyed (their `NAME=VALUE` enters every identity), host (keyed by
+host tooling only, never by a guest test receipt), placement (passed to
+children, never keyed) or dropped (removed from children and from every key).
+A digest has a scope: "guest" keys the keyed class, "host" keys keyed and host. The compiler imports it at compile time through
 `src/environment_identity.zig`; this module reads the same file with a strict
 parser for the small ZON subset the contract uses, and classifies, projects
 and digests environments exactly as the Zig code does. The fixture under
@@ -24,7 +25,8 @@ from typing import Mapping
 
 CONTRACT_PATH = Path(__file__).resolve().parents[1] / "src" / "environment_identity.zon"
 DOMAIN = "environment-identity-v1"
-CLASSES = ("keyed", "placement", "dropped")
+CLASSES = ("keyed", "host", "placement", "dropped")
+SCOPES = ("guest", "host")
 
 _TOKEN = re.compile(r'\s+|//[^\n]*|\.\{|\}|=|,|\.[A-Za-z_][A-Za-z0-9_]*|"[^"\\\n]*"')
 
@@ -117,7 +119,7 @@ class Contract:
         self.prefixes.sort(key=lambda item: -len(item[0]))
 
     def classify(self, name: str) -> str:
-        """'keyed', 'placement' or 'dropped' for the variable `name`."""
+        """'keyed', 'host', 'placement' or 'dropped' for the variable `name`."""
         if name in self.exact:
             return self.exact[name]
         for prefix, kind in self.prefixes:
@@ -125,15 +127,22 @@ class Contract:
                 return kind
         return "dropped"
 
+    def host_keyed(self, name: str) -> bool:
+        """Whether host tooling keys `name` (the keyed and host classes)."""
+        return self.classify(name) in ("keyed", "host")
+
     def project(self, env: Mapping[str, str]) -> dict[str, str]:
-        """The environment a child receives: keyed and placement kept, dropped removed."""
+        """The environment a child receives: keyed, host and placement kept, dropped removed."""
         return {name: value for name, value in env.items() if self.classify(name) != "dropped"}
 
-    def digest(self, env: Mapping[str, str], tools: Mapping[str, str]) -> str:
-        """Lowercase hex SHA-256 of the keyed variables and tool digests (see the Zig `digest`)."""
+    def digest(self, env: Mapping[str, str], tools: Mapping[str, str], scope: str = "guest") -> str:
+        """Lowercase hex SHA-256 of the variables `scope` keys and the tool digests (see the Zig `digest`)."""
+        if scope not in SCOPES:
+            raise ValueError(f"unknown digest scope {scope!r}")
+        included = ("keyed",) if scope == "guest" else ("keyed", "host")
         hash = hashlib.sha256()
         _field(hash, DOMAIN.encode())
-        keyed = [(os.fsencode(name), os.fsencode(value)) for name, value in env.items() if self.classify(name) == "keyed"]
+        keyed = [(os.fsencode(name), os.fsencode(value)) for name, value in env.items() if self.classify(name) in included]
         for name, value in sorted(keyed):
             _field(hash, name)
             _field(hash, value)
@@ -157,8 +166,13 @@ CONTRACT = load()
 
 
 def classify(name: str) -> str:
-    """'keyed', 'placement' or 'dropped' for `name` under the checked-in contract."""
+    """'keyed', 'host', 'placement' or 'dropped' for `name` under the checked-in contract."""
     return CONTRACT.classify(name)
+
+
+def host_keyed(name: str) -> bool:
+    """Whether host tooling keys `name` under the checked-in contract."""
+    return CONTRACT.host_keyed(name)
 
 
 def project(env: Mapping[str, str]) -> dict[str, str]:
@@ -166,6 +180,6 @@ def project(env: Mapping[str, str]) -> dict[str, str]:
     return CONTRACT.project(env)
 
 
-def digest(env: Mapping[str, str], tools: Mapping[str, str]) -> str:
-    """The environment digest under the checked-in contract; identical to the Zig one."""
-    return CONTRACT.digest(env, tools)
+def digest(env: Mapping[str, str], tools: Mapping[str, str], scope: str = "guest") -> str:
+    """The environment digest for `scope` under the checked-in contract; identical to the Zig one."""
+    return CONTRACT.digest(env, tools, scope)

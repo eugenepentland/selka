@@ -4,27 +4,40 @@ Every cached verdict in this repository depends on some environment variables
 and must ignore the rest. A guest test receipt, a build-graph test verdict and a
 verification coordinator action all ask the same question: which variables can
 change an outcome, and which ones does a child process need? One file answers it
-for all of them, `src/environment_identity.zon` (ENV-IDENTITY-1). Nothing else lists environment variables for an identity.
+for all of them, `src/environment_identity.zon` (ENV-IDENTITY-1). Nothing else
+lists environment variables for an identity.
 
 - The compiler imports it at compile time through `src/environment_identity.zig`
   (no allocation, no I/O). The guest test receipts use it today: a receipt keys
-  exactly the keyed class (NEW-CORE-S4-TEST-5).
+  exactly the keyed class, never the host class (NEW-CORE-S4-TEST-5).
 - `scripts/verification_environment.py` reads the same file with a strict
   parser and offers the same classification, projection and digest to Python
   drivers and the verification coordinator.
 - The golden fixture under `test/fixtures/environment-identity/` (205 variables,
-  five tools, the expected class of every variable and the expected digest) is
+  five tools, the expected class of every variable and the expected guest and
+  host digests) is
   checked by both `src/environment_identity_test.zig` and
   `scripts/verification_environment_test.py`, so the two implementations cannot
   drift apart (ENV-IDENTITY-2).
 
-## The three classes
+## The four classes
 
 | Class | Children receive it | Enters identities | What belongs here |
 | --- | --- | --- | --- |
-| **keyed** | yes | `NAME=VALUE` | anything that can change what the compiler, a runtime or a test does |
+| **keyed** | yes | `NAME=VALUE`, guest and host | anything that can change what the compiler, a runtime or a guest test does |
+| **host** | yes | `NAME=VALUE`, host only | what changes host tooling (Python drivers, host tools) but never a guest build or test: `PYTHON*`, `LANG`, `LANGUAGE`, `LC_*`, `TZ` |
 | **placement** | yes | never | where content-addressed storage, scratch or diagnostics live; how many jobs run; which process runs a test |
 | **dropped** | no | never | everything else: shell, terminal, session, agent and credential variables |
+
+Guest test receipts key only the **keyed** class. Host tooling (the build
+graph's verdict manifest, Python drivers, the verification coordinator) keys
+**keyed** plus **host**. The host class exists because the compiler is Zig and
+the guest runtime formats numbers and text itself, so locale, time zone and
+Python settings cannot change a guest outcome, yet they differ between
+contexts: the coordinator sets `PYTHONNOUSERSITE`, `PYTHONDONTWRITEBYTECODE`
+and `PYTHONPYCACHEPREFIX` for its workers and a developer's shell does not.
+Keying them in guest receipts would stop the gate's receipts and hand-made ones
+from matching.
 
 A placement variable must be unable to change an outcome. A cache directory
 qualifies because every store under it is content-addressed; a job count
@@ -60,19 +73,23 @@ placement keyed dropped
 
 ## The environment digest
 
-`environment_identity.digest` (Zig) and `verification_environment.digest`
-(Python) compute the same lowercase hex SHA-256 (ENV-IDENTITY-2). Every field
+`environment_identity.digest(scope, variables, tools)` (Zig) and
+`verification_environment.digest(env, tools, scope="guest")` (Python) compute
+the same lowercase hex SHA-256 (ENV-IDENTITY-2). The scope chooses the
+variables: `guest` takes the keyed class (what a guest test receipt keys),
+`host` takes the keyed and host classes (what host tooling keys). Every field
 is a u64 little-endian length followed by the bytes, the form the receipt module
 already uses:
 
 1. `field("environment-identity-v1")`;
-2. for every **keyed** variable present, in bytewise order of name:
+2. for every variable present that the scope takes, in bytewise order of name:
    `field(NAME)`, `field(VALUE)`;
 3. for every tool in the caller's list, in bytewise order of name:
    `field("tool:" ++ NAME)`, `field(lowercase hex SHA-256 of the tool)`.
 
-Placement and dropped variables and the order of the inputs never change the
-digest. An empty value is still present and therefore keyed. The Zig function
+Placement and dropped variables and the order of the inputs never change
+either digest; host variables change only the host digest. An empty value is
+still present and therefore keyed. The Zig function
 sorts the caller's two slices in place and allocates nothing, so a host tool can
 collect an environment map and a tool list into its own buffers and digest them.
 
@@ -80,9 +97,9 @@ collect an environment map and a tool list into its own buffers and digest them.
 
 The same definition must both key an environment and project the environment a
 step actually runs in: if a variable is not keyed, the process must not see it
-(unless it is placement), or a dropped variable could change a verdict that a
-cache then replays. `verification_environment.project(env)` keeps the keyed and
-placement variables and removes the dropped ones. The compiler already follows
+(unless it is placement, or host for a guest), or a dropped variable could
+change a verdict that a cache then replays. `verification_environment.project(env)`
+keeps the keyed, host and placement variables and removes the dropped ones. The compiler already follows
 the rule for receipts: a guest test reads no environment, and a non-empty
 `LD_*` variable still refuses every receipt. The build graph (`build.zig`) and
 the verification coordinator adopt the projection in later lanes of the
@@ -127,34 +144,36 @@ appear only as C macros are not environment variables.)
 | `MYLANG_FRICTION_LOG` | placement | the friction log is append-only and a write failure never changes an exit status |
 | `MYLANG_S1_WORKDIR` | placement | scratch directory of a profiling script |
 
-Besides these, the keyed class holds the locale (`LANG`, `LANGUAGE`, `LC_*`),
-`TZ`, `SOURCE_DATE_EPOCH`, `ZERO_AR_DATE`, `PYTHON*`, `LD_*` and the C compiler
+Besides these, the keyed class holds `SOURCE_DATE_EPOCH`, `ZERO_AR_DATE`,
+`LD_*` and the C compiler
 and Zig toolchain variables (`CCC_OVERRIDE_OPTIONS`, `COMPILER_PATH`, `CPATH`,
 `C_INCLUDE_PATH`, `CPLUS_INCLUDE_PATH`, `GCC_EXEC_PREFIX`, `LIBRARY_PATH`,
 `OBJC_INCLUDE_PATH`, `ZIG`, `ZIG_LIB_DIR`, `ZIG_LIBC`). Placement also holds
 `HOME`, `XDG_CACHE_HOME`, `XDG_RUNTIME_DIR`, `TMPDIR`, `PATH`,
-`ZIG_LOCAL_CACHE_DIR` and `ZIG_GLOBAL_CACHE_DIR`.
+`ZIG_LOCAL_CACHE_DIR` and `ZIG_GLOBAL_CACHE_DIR`. The host class is `PYTHON*`,
+`LANG`, `LANGUAGE`, `LC_*` and `TZ`.
 
 Compared with the receipt code before the contract, receipts now also key
-`SELKA_*`, the locale, `TZ`, `ZERO_AR_DATE`, `PYTHON*` and empty `LD_*`
-variables, and no longer key the placement variables above, including both
-telemetry directories.
+`SELKA_*`, `ZERO_AR_DATE` and empty `LD_*` variables, and no longer key the
+placement variables above, including both telemetry directories. They still
+ignore the locale, `TZ` and `PYTHON*`, which are host.
 
 ## Adding a variable
 
 1. Decide the class with the questions above: can the value change what any
-   compiler, runtime, driver or test does (keyed), or only where things are
-   stored, how many run at once or which process runs them (placement)? When in
-   doubt, keyed: a needless key costs a cache miss, a missing one a stale verdict.
+   compiler, runtime or guest test does (keyed), only what a host tool or
+   Python driver does (host), or only where things are stored, how many run at
+   once or which process runs them (placement)? When in doubt, keyed: a
+   needless key costs a cache miss, a missing one a stale verdict.
 2. Add one line to `src/environment_identity.zon` in that class, as an exact
    name unless a whole family shares the class.
 3. Add the variable to the golden fixture: a `NAME=VALUE` line in
    `environment.txt` and a `NAME CLASS` line in `classification.txt`, then
-   regenerate `digest.txt` from the Python module and confirm the Zig test
-   reproduces it:
+   regenerate `digest-guest.txt` and `digest-host.txt` from the Python module
+   and confirm the Zig test reproduces them:
 
 ```console
-$ python3 -B -c 'import sys; sys.path.insert(0, "scripts"); import verification_environment as e; d = "test/fixtures/environment-identity/"; env = dict(l.split("=", 1) for l in open(d + "environment.txt").read().splitlines()); tools = dict(l.split(" ", 1) for l in open(d + "tools.txt").read().splitlines()); open(d + "digest.txt", "w").write(e.digest(env, tools) + "\n")'
+$ python3 -B -c 'import sys; sys.path.insert(0, "scripts"); import verification_environment as e; d = "test/fixtures/environment-identity/"; env = dict(l.split("=", 1) for l in open(d + "environment.txt").read().splitlines()); tools = dict(l.split(" ", 1) for l in open(d + "tools.txt").read().splitlines()); [open(d + "digest-" + s + ".txt", "w").write(e.digest(env, tools, s) + "\n") for s in e.SCOPES]'
 $ python3 -B scripts/verification_environment_test.py -v
 $ scripts/build-slot.sh build zig build test-units -Dtest-filter='environment identity'
 ```
