@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-a06/native/ce2_effects/verify/program"
+  ],
+  "status": 0,
+  "elapsed_ns_including_admission": 2334847,
+  "stdout": "20 30 2 3\n3103 103\n110153 7 new\n8005 5\n44 4\n43 9 4\n300 4 -1\n9 5 i\n8 4 renamed\n413 7 3 1\n23 6 2 2 1\n6 1 4 2 t5 6m 0m 0m 0m\n8 1 4 1 i6 t7 8m 0m 0m 0m\n3 1 4 0 t24 3m 5c 0m 0m\n3 1 4 1 t26 3m 7c 0m 0m\n-2 0 4 1 big:3 3m 0m 0m 4m\n5 1 6 0 t2 t4 5m 0m 0m 0m 1m 3m\n6 1 2 1 t2 t5 6m 1m\n5 1 4 1 i1 i4 5m 0m 0m 0m\n6 1 4 0 m!5 t3 m!!6 6m!! 0m 0m 0m\n3 1 4 0 3m 0m 0m 0m\n-2 0 4 0 deep:2666 2m 6c 6c 6c\n6 f1u c1 f0w f0u c2\n",
+  "stderr": ""
+}

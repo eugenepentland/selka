@@ -94,6 +94,12 @@
       "revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
       "sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
       "qualification": "Intermediate Debug compiler; historical RC-seed installed components. Not C1/package qualification."
+    },
+    {
+      "name": "support6",
+      "revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+      "sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+      "qualification": "Intermediate Debug installation retains legacy libexec. Separate exact-source RF29cfbd13 owned package qualifies42 pure tests +protocols; Debug/RF each688 counted suites. No release milestone."
     }
   ],
   "baseline_census": {
@@ -152,45 +158,168 @@
     },
     "libraries": "A04:80 functions/5 types,40 native mode lanes and3 negatives passed on Support4. A05:95 functions/25 types,20 native mode lanes passed on Support5. Common final compiler pending.",
     "applications": "Four shapes x five modes;20 binaries and60 counted executions passed on Support4. Final rerun pending.",
-    "cache": "Support5 passed40 interim probes. cache-plan owned component still refuses initial loop-record owner lowering.",
-    "commands": "Support5 main23/23, analysis15/15, followup6/6, cost8/8. Unsupported guest test counts inspected explicitly."
+    "cache": "Support5 40 probes passed; Support6 Debug and independent RF each pass688 real component protocols. New marker corruption and tuple producer tests pending.",
+    "commands": "Support5 main23/23, analysis15/15, followup6/6, cost8/8. Unsupported guest test counts inspected explicitly.",
+    "support6_a06": {
+      "source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+      "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+      "status": "intermediate qualification; no release milestone",
+      "component_boundary": "libexec copied byte-for-byte from Support5; historical RC-seed-built components. New compiler includes scalar ownership and numeric ABI fixes, but actual owned installed-component qualification remains pending.",
+      "source_checks": {
+        "guest-source": {
+          "cases": 64,
+          "admitted": 56,
+          "refused": [
+            "tests/lang/rc_owning_element_borrows.my",
+            "tests/lang/rc_semantic_publication.my",
+            "tests/lang/recursive_values.my",
+            "tests/lang/scalable_sorting.my",
+            "tests/lang/sets.my",
+            "tests/lang/generator_arguments.my",
+            "tests/lang/move_elision.my",
+            "tests/lang/properties.my"
+          ],
+          "receipt": "coordinator/support6/a06/guest-source/batch-0.json"
+        },
+        "additional-source": {
+          "cases": 23,
+          "admitted": 21,
+          "refused": [
+            "test/core/row_cow.my",
+            "test/core/v_nested.my"
+          ],
+          "receipt": "coordinator/support6/a06/additional-source/batch-0.json"
+        }
+      },
+      "native": {
+        "cases": [
+          "ce2_effects"
+        ],
+        "modes": [
+          "debug",
+          "verify"
+        ],
+        "passed": 2,
+        "receipt": "coordinator/support6/a06/native/results.json",
+        "scope": "Exact original registered C0 output, counted RC/live and structural checks. No performance comparison."
+      },
+      "operational": "Coordinator ran A06 followups after two agent turns failed before execution with a platform content flag. No checks were skipped or treated as successful."
+    },
+    "rss": "Old pilot RSS invalid due launcher high-water contamination; corrected separate guest-child GNU-time controls pass. Final paired measurements pending."
   },
   "current_blockers": [
     {
-      "owner": "A07",
+      "owner": "A07/A08",
       "item": "Owned cache-plan component",
-      "reproducer": "A08 Support5 incremental.my:241 initial loop-record retain lowering",
-      "status": "blocked"
+      "reproducer": "A08/cache-plan-reduction/README.md; Support5 incremental.my:241 initial loop-record retain",
+      "status": "intermediate_package_passed; final_common_revision_pending",
+      "fix": "9a9410dd6",
+      "latest_evidence": "A10 real owned Support6 RF pin; A08 Debug/RF 688 counted protocols each passed"
     },
     {
-      "owner": "A07/A06",
+      "owner": "A07/coordinator",
       "item": "Record home cleanup",
-      "reproducer": "ce2_effects snapshot_between; copied child home overlaps whole-owner snapshot",
-      "status": "blocked"
+      "reproducer": "A06/evidence/ce2-snapshot-reduction-support5/README.md; child snapshot across sibling scalar update",
+      "status": "intermediate_native_passed; final_common_revision_pending",
+      "fix": "160eb74aa"
     },
     {
       "owner": "A01/A07",
       "item": "Borrowed dictionary items",
-      "reproducer": "two-name and single-item dict.items public/doc fixtures",
-      "status": "blocked"
+      "reproducer": "single-item dict.items public and documentation fixtures",
+      "status": "fix_integrated_awaiting_qualification",
+      "worker_commit": "385ed7b1f5e02c937643495f8d5a09bd171ce488",
+      "two_name_fix": "3e6437ae9",
+      "integrated_commit": "9e9342d2a"
     },
     {
-      "owner": "A04",
+      "owner": "A07/A08",
+      "item": "Readonly managed dictionary get",
+      "reproducer": "managed get(key,fallback) must keep both eagerly evaluated possible owners alive; explicit .copy works but does not qualify readonly get",
+      "status": "integrated_focused_passed; cache_corruption_rerun_pending",
+      "latest_evidence": "A07 exact marker + CFG/dominance guards; integrated six source/native tests pass; allocator repair integrated"
+    },
+    {
+      "owner": "A01/A07/coordinator",
+      "item": "Complete owned tuple unpack",
+      "reproducer": "A03/guest-migrations/reproducers/managed_slot_swap.my; A05/samples/provider_tuple.my is mandatory provider contract",
+      "status": "integrated; combined_matrix_pending",
+      "latest_evidence": "A01 producer, A07 checker/Core, A08 semantic-cache-v8; full provider/Result/generic modes pending"
+    },
+    {
+      "owner": "A01",
+      "item": "Fresh managed field receiver",
+      "reproducer": "pick(cells,0).name.copy(); fresh call/invoke whole owner must live through borrowed field use",
+      "status": "worker_five_mode_passed; common_revision_pending",
+      "latest_evidence": "A01 exact five-mode native and six refusal regressions"
+    },
+    {
+      "owner": "A04/A08",
       "item": "Numeric formatter ABI",
-      "reproducer": "historical kind offset in core_number_text under zero-RC",
-      "status": "in_progress"
+      "reproducer": "historical kind offset in core_number_text under zero-RC; old native-object cache repair must be rerun",
+      "status": "support6_native_and_cache_repair_passed; common_revision_pending",
+      "fix": "219976fa7",
+      "latest_evidence": "A04 numeric native and A08 old-object repair evidence"
     },
     {
       "owner": "coordinator/A05",
       "item": "Aggregate providers",
-      "reproducer": "A05 record/tuple provider positives and negatives",
-      "status": "in_progress"
+      "reproducer": "A05 provider_record/provider_tuple/guest_capability_fields five-mode positives and ten negative boundaries",
+      "status": "fix_integrated_awaiting_qualification",
+      "fix": "15889a7a00f8b723e6ad13d4ec8fcc2b6a3c460f"
     },
     {
       "owner": "coordinator/A10/A08",
       "item": "Installed components",
-      "reproducer": "Support5 libexec still uses historical RC-seed components; independent owned pin required",
-      "status": "blocked"
+      "reproducer": "Support6 libexec is planned as byte-identical legacy Support5 components; independently qualified owned source pin and actual rebuilt artifacts are still required",
+      "status": "intermediate_owned_package_passed; default_selection_pending",
+      "latest_evidence": "A10 independently pinned source5167 ReleaseFast29cfbd13 and installed42 tests/protocols; historical seed unchanged"
+    },
+    {
+      "owner": "coordinator/A05/A07",
+      "item": "Named provider transfer into aggregate",
+      "reproducer": "tests/lang/capability_fields.my:24 five-provider Ports constructor; Support6 E_ZERO_RC_LOWERING",
+      "status": "named_provider_transfer_fix_integrated; common_native_matrix_pending",
+      "latest_evidence": "A05 width alone is not cause; named Ports moved into App retains obsolete source pin, fixed b3392bae0"
+    },
+    {
+      "owner": "coordinator/A10/A07",
+      "item": "Borrowed entry provider wrapper",
+      "reproducer": "A10 effects.md draft block12 constructs Context(fs=borrowed fs,env=borrowed env); Support6 E_SINGLE_OWNER_BORROW",
+      "status": "implementation_in_progress",
+      "latest_evidence": "A05 flat local readonly bundle rooted only in immutable parameter providers; no owning/borrowed mixture or escape"
+    },
+    {
+      "owner": "A02/A03/A07",
+      "item": "Nested mutable dictionary child",
+      "reproducer": "tests/lang/mut_dictionary_arguments.my:11; Support6 source admits then E_ZERO_RC_LOWERING",
+      "status": "worker_five_mode_and_integrated_focused_passed; common_revision_pending",
+      "latest_evidence": "A02 prepared interior mut paths50167; 15 checked native and six ordinary controls passed"
+    },
+    {
+      "owner": "A09/A01/A07",
+      "item": "Managed extrema",
+      "reproducer": "tests/lang/scalable_sorting.my:21 min(words).copy() hidden collection E_SINGLE_OWNER_MOVED",
+      "status": "list_fix_integrated; distinct_parent_selection_blocked",
+      "latest_evidence": "A04 scalar best-index list fix41e6ef2; min/max two strings and Optional.unwrap_or need explicit two-parent selection"
+    },
+    {
+      "owner": "A02/A07",
+      "item": "Scalar field write inside managed list record",
+      "status": "blocked",
+      "reproducer": "A03/transferred-a06/v-nested-repro: b.items[1].code = 77, source admits, native refuses in five modes"
+    },
+    {
+      "owner": "A09/A10",
+      "item": "Size-aligned C0 counted native linking",
+      "status": "blocked; exact manual adapter in preparation",
+      "reproducer": "A09/raw/size-aligned-C0/results.json: eight unique builds fail native-link object FileNotFound, 15 configurations retained"
     }
-  ]
+  ],
+  "next_interim_artifact": {
+    "name": "support7",
+    "status": "pending source freeze and complete installation",
+    "purpose": "Combined tuple/provider/readonly-default/list-extrema and source migration qualification; not C1",
+    "component_boundary": "Use actual qualified owned Support6 pin with recorded final-source component receipts; never copy legacy libexec."
+  }
 }

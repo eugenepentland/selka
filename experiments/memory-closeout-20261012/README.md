@@ -58,9 +58,45 @@ pending.
 
 Public-library and four-application fixtures have passing intermediate matrices;
 Support5 passes 40 cache probes and 52 command/analysis/cost rows. Each worker
-report identifies its artifact and refused cases. Installed cache-plan ownership,
-record-home cleanup, dictionary borrowing, numeric formatter ABI and aggregate
-provider qualification remain tracked work.
+report identifies its artifact and refused cases. Later integrated fixes cover
+single-item dictionary borrowing, readonly managed dictionary defaults, complete
+tuple staging, fresh field receivers, scalar field snapshots, numeric formatter
+ABI, slice lifetimes, interior mutable calls and named provider transfers.
+These focused results do not qualify a final common compiler.
+
+Support6 is source `5167c588be79dd43d21d5013c36db15110bf239b`, Debug compiler SHA256
+`bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4`. It is not C1.
+[Its original A06 checks](coordinator/support6/a06-summary.json) record 56/64
+guest sources, 21/23 additional sources, and both counted native `ce2_effects`
+modes passing. Refusals remain in the denominators. Later explicit-copy migrations
+pass five modes for borrowed elements and row snapshots; `v_nested` remains a
+native scalar-child-write blocker with a reduced reproducer in A03.
+
+A10 independently rebuilt a ReleaseFast compiler from that exact source, SHA256
+`29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26`. Both owned
+component protocol suites passed 688 counted executions on the Debug and this
+ReleaseFast compiler, with zero RC events and managed exit-live bytes. A10's
+actual installed owned components also passed 42 pure tests and protocol oracles.
+See [the package evidence](A10/packaging-support6-candidate/qualification-state.json).
+The original Support6 Debug installation retains its historical libexec; the new
+owned installation is separate. Normal component defaults remain unchanged.
+Explicit qualified pin options now allow development builds without invoking the
+immutable legacy seed's known native-object lifetime defect.
+
+Provider transfer, tuple and borrowed-default implementations are integrated but
+still need the next common-artifact library/application matrices. Remaining
+implementation work includes a local wrapper for borrowed entry providers,
+managed selection between distinct input owners, and scalar record-field writes
+inside lists. Source histories and failed cases remain visible in the ledger.
+
+A09 corrected a measured RSS harness defect: outer Python-child rusage included
+launcher memory before exec. New RSS-only GNU-time measurements discriminate
+small and large native children independently of a 256 MiB launcher allocation.
+Old pilot RSS observations are explicitly invalid; no final RSS claim uses them.
+The final schedule separates 330 runtime samples, 90 RSS samples, and 30
+size-aligned counted configurations from the 435-build/695-run census. Eight
+immutable C0 counted builds currently fail native linking; their 15 case slots
+remain blocked while a separately identified native-build adapter is reviewed.
 
 The exploratory full gate on `245e892f8518943ee44a0cc6009ab4b4fa6bca43` failed
 after 45 fresh actions (no reuse). Raw evidence remains in

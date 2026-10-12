@@ -1,0 +1,45 @@
+{
+  "source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "status": "intermediate qualification; no release milestone",
+  "component_boundary": "libexec copied byte-for-byte from Support5; historical RC-seed-built components. New compiler includes scalar ownership and numeric ABI fixes, but actual owned installed-component qualification remains pending.",
+  "source_checks": {
+    "guest-source": {
+      "cases": 64,
+      "admitted": 56,
+      "refused": [
+        "tests/lang/rc_owning_element_borrows.my",
+        "tests/lang/rc_semantic_publication.my",
+        "tests/lang/recursive_values.my",
+        "tests/lang/scalable_sorting.my",
+        "tests/lang/sets.my",
+        "tests/lang/generator_arguments.my",
+        "tests/lang/move_elision.my",
+        "tests/lang/properties.my"
+      ],
+      "receipt": "coordinator/support6/a06/guest-source/batch-0.json"
+    },
+    "additional-source": {
+      "cases": 23,
+      "admitted": 21,
+      "refused": [
+        "test/core/row_cow.my",
+        "test/core/v_nested.my"
+      ],
+      "receipt": "coordinator/support6/a06/additional-source/batch-0.json"
+    }
+  },
+  "native": {
+    "cases": [
+      "ce2_effects"
+    ],
+    "modes": [
+      "debug",
+      "verify"
+    ],
+    "passed": 2,
+    "receipt": "coordinator/support6/a06/native/results.json",
+    "scope": "Exact original registered C0 output, counted RC/live and structural checks. No performance comparison."
+  },
+  "operational": "Coordinator ran A06 followups after two agent turns failed before execution with a platform content flag. No checks were skipped or treated as successful."
+}

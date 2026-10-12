@@ -1,0 +1,967 @@
+{
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "harness_sha256": "f807849d9a4549a6170e692eb3c83ffaef358860fc859f0c963ce932ed9128b3",
+  "ownership": "zero",
+  "cases": [
+    {
+      "source": "tests/lang/rc_journal_types.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_journal_types.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "a7bc5a26bc785c196460d7f13caa7c90024287c2e5913cc08fc8e761d6f453d6",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_loop_operand_isolation.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_loop_operand_isolation.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "d083e37088b9834b4ad7e6e19faf424a5cdc4e542aee3e3acf57ad9cfb0daf1d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_loop_uniqueness.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_loop_uniqueness.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "2fbf032c6d15e449f93b59d1dd7491f5450a0f76d5ae0bfd69746d3755b6b6d2",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_loop_versions.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_loop_versions.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "093785f964829eecfad0f111001f1b0634584e8f7319d716b8a4abfdf1909649",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_mut_list_aliases.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_mut_list_aliases.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f0ab7f12985f3d8ef84e8205342ea928795bd3c3d2dc65ef236edbf8685dda68",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_mut_payload_snapshots.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_mut_payload_snapshots.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "ab8e6ff45a180c07c4b58beb93b5524f647261bdf03c2ed9ef2c02bf0962c26e",
+      "status": 0,
+      "stdout": "",
+      "stderr": "rc_mut_payload_snapshots.my:59:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          mut snapshot = parts.copy()\n              ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_mut_uniqueness.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_mut_uniqueness.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "24650576f6c856f19f853a0943a8095a120fdda1b9bfb2fc0627b375702b281e",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_named_record_writes.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_named_record_writes.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f62772684c326a7200df91def7c81ca80c5b4088f852d1cc679877eddb783ef7",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_owned_values.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_owned_values.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "6ca2d2da194ccf8cf99295a27552b487bd2006833240319df5dc6c60b293dc8b",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_owning_element_borrows.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_owning_element_borrows.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "1590198b404aff838777e6501d04550b1ab4a4cd08a3a7fc5524f5e7be02ae1d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_owning_element_borrows.my:128:18: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut before = pins[0]\n                   ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_aggregates.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_plain_aggregates.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "b8bd8435c2df588d719cc6fccd7326308b939371cf5a7fa88a24de2f42d31293",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_field_loans.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_plain_field_loans.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "956a3d5f472260df90c131fcb4a9976495300826467c4f43ed5acc52ade5a55f",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_list_writes.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_plain_list_writes.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "b42d1ba3add1a7b54f364b4a67df2b5ac2500591b595b5f18d9eb0a4bcac4104",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_record_writes.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_plain_record_writes.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "60742f3c7062ae824ee7d7d9e4d9024867cba15b7b5e4a4bb4f3d69c5269b4ed",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_range_key_anchors.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_range_key_anchors.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "b881a56c880036e482bbe01fa3ebb2f47971ec8831c0ee48a47869906ede2d97",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_read_list_versions.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_read_list_versions.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f1c1e447b9ec07d8fb571101f3c77bef1445d6c8b7ee1b1b2a5a0ff3d09f2671",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_calls.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_readonly_calls.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "905b83a94bccb7147e1fcbae3a4bd8ab5b8571554a6f7a135578a804c15b2ed4",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_managed_calls.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_readonly_managed_calls.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "62a9ba54f7e976e8cc26ebd028f0e4f376e70723520dcd9b2baddf61bef16469",
+      "status": 0,
+      "stdout": "",
+      "stderr": "rc_readonly_managed_calls.my:16:40: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func choose(index: int, first: Item[], second: Item[]) -> Item:\n                                         ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_record_field_reads.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_record_field_reads.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "8952c445a1a68ed0a4f179b78b0cbc962059884eda38438e61e1db52183c56cf",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_scalar_loops.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_scalar_loops.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "af846cd5d5593380794b895d27b6675304b166d082e9a003a9cc74fe6f3db534",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_semantic_publication.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_semantic_publication.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "39b1f3f52140749b7c3ea2b398b3f5bf58e6a4ac460288d58f718eaecc9516c5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_semantic_publication.my:5:27: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n          joined = joined + word.unwrap_or(\".\")\n                            ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_tree_drains.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_tree_drains.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "9ddff0affdfa53305069a5fd1e0cfa19d2c17ea32d667e45f6c4ad24e9b0a893",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_variant_reads.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_variant_reads.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "73ce3d60da1a2dc9e1b56995e30684f23de97ddd49dd6abe0cfffda9bd8e9d03",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_view_receivers.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_view_receivers.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "e06c0325b188b3719d5be2137a9f85b3e8a2ffb1a3b974c7abf3da175492d869",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_writeback_moves.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_writeback_moves.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "46031fa1a60f886c48c05a7da8e9949d6553cd518b7bbca67d958c7b51f5f8c3",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/record_field_snapshots.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/record_field_snapshots.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "396209e77b2f9e8aba0dc91020c12e102029bf5df05a27fbe43ed5c2feb52531",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/recursive_values.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/recursive_values.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "3ba89960ac71da5fa0a55326b1dfd2266998906453b08d93543dd6e98e50a5dd",
+      "status": 1,
+      "stdout": "",
+      "stderr": "recursive_values.my:88:19: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              const value, rest = pair.copy()\n                    ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/root_liveness.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/root_liveness.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "541ccfed4a18298e7d810effbaf05187b8637dd22a5ed1ddc1fb1527044e9d49",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/scalable_sorting.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/scalable_sorting.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "08c01a778b6ceb847dfd35b025c51d4bcdaf06a851c4924851df8b1ad98b83b8",
+      "status": 1,
+      "stdout": "",
+      "stderr": "scalable_sorting.my:21:12: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return min(words).copy()\n             ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/scalar_dictionary_publication.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/scalar_dictionary_publication.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f0f560f71e42fbdb4414ee713d82a2ed635fbf9e274a7653c6c37e50f5adfac8",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/sets.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/sets.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "cead8715e2c46a86830dbb3564d81e4d47f602c4916708d6c05e0f55bbd3f11c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "sets.my:64:16: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      mut keys = set({\"b\": 1, \"a\": 2})\n                 ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/stable_sorting.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/stable_sorting.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "8dc66d0c6ebf47e494626730c827eb325264db5d24ca4d1598b4137175a76837",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/value_equality.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/value_equality.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "9b3ae34e56a37dc4f8996933beb3bd482d37a9ca316876dd2f84f7da63d22a26",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/wide_signatures.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/wide_signatures.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "908f8ddf1d9b9641f0cf4f8c8088ce3154bf60dc9b1e3aa9a41b2017bdb58a2f",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/argument_evaluation_order.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/argument_evaluation_order.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "420f1c1bd790416b9d584d60c5ed96b254d18c873338da76e7ebaefb1454c17b",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/discard_names.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/discard_names.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "d4187db0080ecb899065ab8639b21f576f9002e7e70f17f763ae5153e88caea1",
+      "status": 0,
+      "stdout": "",
+      "stderr": "discard_names.my:85:23: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func generic_loops[T](value: T, count: int) -> int:\n                        ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/exclusive_ownership.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/exclusive_ownership.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "02a635e45ab8eee4dd133c7a724874e4bae64fea35fef6fac3bed69592f0a299",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/frontend_mut.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/frontend_mut.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "63f4c3fe8c95224fd28e5949e413efc43aa01550a2300bfc16be945fb23594e6",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/generator_arguments.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/generator_arguments.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "50eb60df08637500cc26f486561fdb465f1ff4156e8ce4d4c576cfca50436a29",
+      "status": 1,
+      "stdout": "",
+      "stderr": "generator_arguments.my:41:84: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      return min(x * 2 for x in xs) == -4 and max(x + 1 for x in xs) == 10 and max(w for w in words) == \"pear\" and min(len(w) for w in words) == 3 and max(x * 0.5 for x in xs) == 4.5\n                                                                                     ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/immutable_equal.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/immutable_equal.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "01abe1b809ddcb2ddf1971a38aabd6e6621d7edb285559fafeabed1b418da812",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/iteration_identity.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/iteration_identity.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "9265a1b7d2c1e8d0ce7f4839cb682021291183f6efbad1906c6c7a0b2a562933",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/lambda_sort_keys.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/lambda_sort_keys.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "0d7706f337900b9d0e084cec00d739433d65aa894a8ea5db2487c21096ccf561",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/live_place_iteration.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/live_place_iteration.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "7fb7b3b4ae150828c110cbd7b0868698686eb5ae2e016f498fbb630ab083501a",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/migrated/surface_statements.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/migrated/surface_statements.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "e73c5d3d6e90128bfa0c94a3a81b95e17da2efbd48820985f64ad5cb228c796d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/migrated/surface_statements_case_2.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/migrated/surface_statements_case_2.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "48546973725ae536313310c509f8e1e5049cd17d65979e40b3470d192fb1d0e5",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/move_elision.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/move_elision.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "6e634e3800fc3d67bab08f69b68e01e8ad0c733d3ed3a79fbb75c390ba8c858c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "move_elision.my:78:28: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      return both(p, replace(p, x=2)) == 102\n                             ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/properties.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/properties.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "633f6ed79183d22d2732bbb6c6632b176ac4fde70c221122e1e7323970cfa4a6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "properties.my:109:11: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const number, text = pair.copy()\n            ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/python_comprehension.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/python_comprehension.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "0af0792c14c6327a40a119ab5abfcad6faae4ee26a7e6c1e30491b76e04b3a42",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/python_core.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/python_core.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "1d1bad086fd43989903778114842e7a50312a4ada2a3251cf6be606917d2b487",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_call_lifetimes.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_call_lifetimes.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "ba4a5ef9061b8cac49863497fba9dde60a5b65f1688a150471f401e73e9ced1f",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_fresh_returns.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_fresh_returns.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "84198bc937033d5042394c55d185669df90bfbf609d41f8de4fd7cc03232e70a",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_named_releases.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_named_releases.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "9ac0926bd848932b26d9b8449d502b7edb11931dffc8b9c030acdf181792775d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_nested_read_loans.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_nested_read_loans.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "7eb51f5eb6a8d8bc42f75e31a8385f248b34cd1ed4b424ec63cc1a991c57dd9c",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_nonheld_captures.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_nonheld_captures.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "26f7c379f923d67b2624f4db9a4bcb0c55c8605573b3a368d0a5ac59d1ee1b93",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_pin_elide.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_pin_elide.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "d9d3c958d7eb444a6ad702d70a7479a9b9550848bf47a4676285d5743cf0b09b",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_appends.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_plain_appends.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "420bf54c85d6fb6ebc662aa71ef080becdf8d9f05e82ddad01ee3d2c60ff8380",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_replacements.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_plain_replacements.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "905ee61e37a2302570fa9e5e81d21429a28b744c654079b32be2f0f179bd3e54",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_read_loans.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_read_loans.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "c6fe0492c1e6c5967ad7ab4a051baf308c12b427f931dd1336d08fc602927bab",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_body.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_readonly_body.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f3681fd2b7a0cc555ce220f06f42e1a39e4f98f7e4c594a994d027b7f7b41955",
+      "status": 0,
+      "stdout": "",
+      "stderr": "rc_readonly_body.my:14:33: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          case Wrapped.leaf(value=values):\n                                  ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_scalar_replacements.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_scalar_replacements.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "ed3e72d4e6e69d53e469580debf52c75815ab9d163268e8290a1adf66ff11bfa",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_scope_inline.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_scope_inline.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "046856a7f00318160cb816bf73e207625eb281c06e94aef972fedfd9845167a7",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_semantic_history.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_semantic_history.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "e794e8361f35145924ae0b9f100e1ac22e17a859c3aba8a5d72d3b11facfbd5b",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_site_eliminations.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_site_eliminations.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "524d664c983ff941e68b42d9b36b2567bbadc67cb8dab44b8be93f3c70e76486",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_temporary_lifetimes.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support6/tests/lang/rc_temporary_lifetimes.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f00a593691b8733d32da6b7b1eab15d5aaad83a2d55f5ec89340fd9bf059449d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    }
+  ]
+}
