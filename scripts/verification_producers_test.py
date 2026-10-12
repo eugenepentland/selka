@@ -68,6 +68,10 @@ class ProducerTests(unittest.TestCase):
                 self.assertEqual(identity['mode'], mode)
         self.assertEqual(self.record['producers']['tooling-units']['mode'], 'debug')
 
+    def test_reviewed_closure_accepts_version_three_inventory_only(self):
+        self.assertEqual(self.qualify(dict(self.record, version=3)), self.qualify())
+        self.assertIsNone(self.qualify(dict(self.record, version=4)))
+
     def test_independent_compiler_edit_preserves_identity(self):
         before = self.qualify()
         (self.root / 'src/compiler.zig').write_text('unrelated compiler change')
@@ -203,6 +207,65 @@ class ProducerTests(unittest.TestCase):
         self.assertIsNotNone(identity)
         self.artifact.write_bytes(b'replaced before publication')
         self.assertFalse(all(snapshot.unchanged() for snapshot in (binary, sources)))
+
+
+
+class NativeProducerTests(unittest.TestCase):
+    """Version-3 recipe producers for the native roots (mylang, units, core, cli)."""
+
+    PRODUCER = {'recipes': ['src/', 'build.zig'], 'optimize': 'Debug', 'zig_version': '0.16.0',
+                'test_runner': 'guardian-zig-test-runner-v1'}
+
+    def record(self, entry=None, producers=None):
+        entry = {'path': '/abs/units', 'producer': copy.deepcopy(self.PRODUCER)} if entry is None else entry
+        return {'version': 3, 'artifacts': {'units': entry}, 'producers': producers or {}}
+
+    def test_declared_beside_the_artifact_or_in_producers(self):
+        self.assertEqual(producers.native_producer(self.record(), 'units'), (self.PRODUCER, ''))
+        listed = self.record('/abs/units', {'units': copy.deepcopy(self.PRODUCER)})
+        self.assertEqual(producers.native_producer(listed, 'units'), (self.PRODUCER, ''))
+        twice = self.record(producers={'units': copy.deepcopy(self.PRODUCER)})
+        self.assertEqual(producers.native_producer(twice, 'units'), (None, 'producer declared twice'))
+
+    def test_missing_or_malformed_producers_fall_back(self):
+        self.assertEqual(producers.native_producer(dict(self.record(), version=2), 'units')[0], None)
+        self.assertEqual(producers.native_producer(self.record('/abs/units'), 'units'), (None, 'no producer declared'))
+        # A reviewed closure in producers (no recipes) is not a native producer.
+        closure = self.record('/abs/units', {'units': {'version': 2, 'label': 'units'}})
+        self.assertEqual(producers.native_producer(closure, 'units'), (None, 'no producer declared'))
+        for change in ({'recipes': []}, {'recipes': ['/abs/src/']}, {'recipes': ['src/', 'src/']},
+                       {'recipes': 'src/'}, {'optimize': ''}, {'zig_version': None}, {'test_runner': ''},
+                       {'extra': 1}):
+            producer = dict(self.PRODUCER, **change)
+            with self.subTest(change=change):
+                found, reason = producers.native_producer(self.record({'path': '/abs/units', 'producer': producer}), 'units')
+                self.assertIsNone(found)
+                self.assertTrue(reason)
+        without = {name: value for name, value in self.PRODUCER.items() if name != 'test_runner'}
+        self.assertIsNone(producers.native_producer(self.record({'path': '/abs/units', 'producer': without}), 'units')[0])
+
+    def files(self, root):
+        return {'src/': [{'path': 'src/a.zig', 'sha256': 'a' * 64, 'size': 1, 'mode': 0o644, 'uid': root, 'gid': root}],
+                'build.zig': [{'path': 'build.zig', 'sha256': 'b' * 64, 'size': 2, 'mode': 0o644, 'uid': root, 'gid': root}]}
+
+    def test_identity_binds_content_and_producer_fields_but_no_location_or_owner(self):
+        first = producers.native_identity('units', self.PRODUCER, self.files(1).__getitem__)
+        self.assertEqual(first, producers.native_identity('units', self.PRODUCER, self.files(2).__getitem__))
+        self.assertEqual([row['path'] for row in first['sources']], ['build.zig', 'src/a.zig'])
+        self.assertNotIn('uid', first['sources'][0])
+        for change in ({'optimize': 'ReleaseFast'}, {'zig_version': '0.17.0'}, {'test_runner': 'other'}):
+            with self.subTest(change=change):
+                self.assertNotEqual(producers.native_identity('units', dict(self.PRODUCER, **change),
+                                                              self.files(1).__getitem__), first)
+        changed = self.files(1)
+        changed['src/'][0]['sha256'] = 'c' * 64
+        self.assertNotEqual(producers.native_identity('units', self.PRODUCER, changed.__getitem__), first)
+
+    def test_a_recipe_selecting_nothing_is_an_error_not_an_empty_identity(self):
+        selections = dict(self.files(1), **{'build.zig': []})
+        with self.assertRaisesRegex(producers.ProducerError, 'selects no watched input: build.zig'):
+            producers.native_identity('units', self.PRODUCER, selections.__getitem__)
+
 
 
 if __name__ == '__main__':

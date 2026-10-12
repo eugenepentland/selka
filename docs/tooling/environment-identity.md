@@ -13,7 +13,7 @@ lists environment variables for an identity.
 - `scripts/verification_environment.py` reads the same file with a strict
   parser and offers the same classification, projection and digest to Python
   drivers and the verification coordinator.
-- The golden fixture under `test/fixtures/environment-identity/` (205 variables,
+- The golden fixture under `test/fixtures/environment-identity/` (206 variables,
   five tools, the expected class of every variable and the expected guest and
   host digests) is
   checked by both `src/environment_identity_test.zig` and
@@ -101,10 +101,24 @@ step actually runs in: if a variable is not keyed, the process must not see it
 change a verdict that a cache then replays. `verification_environment.project(env)`
 keeps the keyed, host and placement variables and removes the dropped ones. The compiler already follows
 the rule for receipts: a guest test reads no environment, and a non-empty
-`LD_*` variable still refuses every receipt. The build graph (`build.zig`) and
-the verification coordinator adopt the projection in later lanes of the
-[output-keyed verification plan](../audits/output-keyed-shared-receipts-plan-2026-10-12.md);
-until then their own environment digests are unchanged.
+`LD_*` variable still refuses every receipt. The verification
+coordinator follows it too (below); the build graph (`build.zig`) adopts the
+projection in a later lane of the
+[output-keyed verification plan](../audits/output-keyed-shared-receipts-plan-2026-10-12.md).
+
+## In the coordinator
+
+`scripts/verify_cache.py` is host tooling, so it keys the `host` scope.
+`normalized_environment` projects the launcher environment with
+`verification_environment.project` and then applies the coordinator's constants
+(the `PYTHON*` pins, the fixed `GIT_*` isolation and identity, `PATH` limited to
+existing directories); workers run in exactly that environment. The `environment`
+field of every action key is `verification_environment.digest(env, tools,
+scope="host")`, where `tools` maps each tool the coordinator resolves to the
+content digest its tools snapshot already computed. `PWD` is dropped, not pinned,
+and the checkout path is in no key. Each action in `last-run.json` lists the
+names of the variables in its identity (`environment_variables`). See
+[receipt identities](development-loop.md#receipt-identities-schema-3).
 
 ## Audit of `MYL_`, `MYLANG_` and `SELKA_` variables
 
@@ -134,6 +148,7 @@ appear only as C macros are not environment variables.)
 | `MYLANG_RUNTIME`, `MYLANG_RC_SITES` | keyed | retired switches the compiler refuses |
 | `SELKA_*` (other than below) | keyed | reserved for the verification tools |
 | `MYLANG_CORE_RUNTIME_CACHE`, `MYLANG_COMPILER_SHARED_CACHE`, `MYLANG_TEST_SHARED_CACHE`, `MYLANG_FRONTEND_CACHE` | placement | locations of content-addressed stores |
+| `MYLANG_VERIFICATION_SHARED_CACHE` | placement | location of the verification coordinator's shared evidence store, whose receipts are content-keyed |
 | `MYLANG_COMPONENT_DIR` | placement | per-worktree directory of component artifacts, which are identified separately |
 | `MYLANG_JOBS`, `MYLANG_UNIT_JOBS`, `MYLANG_UNIT_SHARDS` | placement | job counts |
 | `MYLANG_TEST_ISOLATE`, `MYLANG_TEST_CHILDREN` | placement | which process runs a test (oracles of the batch runner) |

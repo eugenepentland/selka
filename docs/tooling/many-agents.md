@@ -170,7 +170,11 @@ empty templates; Python user-site loading and timestamp-bytecode reads are
 disabled. Shell startup hooks and exported Bash functions are removed, and PATH
 contains only the absolute, existing directories covered by the tool watches.
 These normalized
-settings are also the settings executed by workers.
+settings are also the settings executed by workers. Workers receive the launcher
+environment projected through the [environment identity contract](environment-identity.md)
+(keyed, host and placement variables only), and the key holds its host-scope
+digest and no checkout path, so another agent's session variables or a different
+`TMPDIR` share every receipt ([receipt identities](development-loop.md#receipt-identities-schema-3)).
 
 Reviewed cohorts can declare their own prepared artifact dependencies. A pure
 script check need not repeat because an unrelated native executable changed;
@@ -181,7 +185,7 @@ and the complete artifact snapshot remains watched through publication. The
 input-coverage checker stays fresh because it probes whether source-named paths
 exist, including paths outside its explicit source list.
 
-Evidence lives in `.mylang-cache/verification-v2/`. `last-run.json` records every
+Evidence lives in `.mylang-cache/verification-v3/`. `last-run.json` records every
 required cohort, the verdict, elapsed time, and admitted build/gate seconds.
 These durations include admission validation and are operational observations,
 not isolated performance benchmarks. Admission events separate wait/startup,
@@ -255,7 +259,13 @@ Developer verification, fuzz and Juice coordinators can share exact evidence
 through `--shared-cache-dir DIR`, separate from their private worktree caches.
 Use a dedicated directory outside checkouts. The shared store has process leases,
 retention pins and an explicit collector; see [cache retention](cache-retention.md).
-Path-sensitive action identities remain distinct across worktrees.
+The verification coordinator also reads `MYLANG_VERIFICATION_SHARED_CACHE` and has
+a per-user default that stays off until the rollout flips `DEFAULT_SHARING`
+([default store](cache-retention.md#the-verification-coordinators-default-store)).
+Its action keys hold no checkout path and ignore per-worktree placement such as
+`ZIG_LOCAL_CACHE_DIR` and `TMPDIR`; actions that depend on a native executable
+still identified by its bytes (whose debug information names the checkout) stay
+distinct across worktrees, and `last-run.json` marks them `path_free: false`.
 
 ```bash
 export ZIG_LOCAL_CACHE_DIR=$HOME/.cache/mylang/zig-local-cache-<lane>

@@ -38,10 +38,16 @@ if phase=='plan':
 elif phase=='prepare':
     artifacts={{}}
     values=json.loads((root/'.artifact-values.json').read_text()) if (root/'.artifact-values.json').exists() else {{}}
+    # .embed-root models DWARF: the bytes name the checkout. .producer holds a
+    # version-3 producer declared for every native root.
+    embedded=str(root).encode() if (root/'.embed-root').exists() else b''
     for name in ['mylang','units','cli','core']:
         path=root/'zig-out/bin'/name; path.parent.mkdir(parents=True,exist_ok=True)
-        path.write_bytes(b'fake-native-'+name.encode()+values.get(name,'').encode()); artifacts[name]=str(path)
-    (root/'zig-out/verification/artifacts.json').write_text(json.dumps({{'version':1,'artifacts':artifacts}}))
+        path.write_bytes(b'fake-native-'+name.encode()+values.get(name,'').encode()+embedded); artifacts[name]=str(path)
+    producer=json.loads((root/'.producer').read_text()) if (root/'.producer').exists() else None
+    record={{'version':1,'artifacts':artifacts}} if producer is None else {{'version':3,'producers':{{}},
+        'artifacts':{{name:{{'path':path,'producer':producer}} for name,path in artifacts.items()}}}}
+    (root/'zig-out/verification/artifacts.json').write_text(json.dumps(record))
     package=root/'zig-out/libexec/mylang/components'; package.mkdir(parents=True,exist_ok=True)
     for name in ['test-index','cache-plan']:
         (package/name).write_bytes(b'fake-component'+values.get('component:'+name,'').encode())
@@ -1291,6 +1297,226 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertGreater(timings[0]['admission_wait_seconds'], 0)
         self.assertEqual(list((slots / 'queue-gate').glob('*.wait')), [])
 
+
+
+    # Path- and environment-free identities (output-keyed verification plan, Lane D).
+
+    def keys(self, root=None):
+        report = coordinator.read_record((root or self.root) / '.receipts/last-run.json')
+        return {row['id']: row['action_key'] for row in report['actions']}
+
+    def launcher(self, **values):
+        """A launcher environment differing from the current one only in `values`."""
+        return patch.dict(os.environ, values)
+
+    def test_dropped_launcher_variables_leave_every_key_unchanged(self):
+        self.assertEqual(self.execute(), 0)
+        before = self.keys()
+        other_tmp = self.root / 'other-tmp'
+        other_tmp.mkdir()
+        seen = []
+
+        def admit(root, kind, argv, env, unchanged, **controls):
+            seen.append(env)
+            return self.admit(root, kind, argv, env, unchanged, **controls)
+        with self.launcher(CODEX_THREAD_ID='thread-b', TERM='xterm-kitty', PWD='/somewhere/else',
+                           TMPDIR=str(other_tmp)), patch.object(coordinator, 'run_admitted', side_effect=admit):
+            self.admissions.clear()
+            self.assertEqual(self.execute(), 0)
+            self.assertEqual(self.keys(), before)
+            self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+            self.assertEqual(self.admissions, [])
+            self.assertEqual(self.execute(force=True), 0)
+        self.assertTrue(seen)
+        for env in seen:
+            self.assertNotIn('CODEX_THREAD_ID', env)
+            self.assertNotIn('TERM', env)
+            self.assertNotIn('PWD', env)
+            self.assertEqual(env['TMPDIR'], str(other_tmp))
+
+    def test_keyed_memory_limit_changes_every_key(self):
+        self.assertEqual(self.execute(), 0)
+        before = self.keys()
+        with self.launcher(MYLANG_MEMORY_LIMIT='512M'):
+            self.assertEqual(self.execute(), 0)
+        after = self.keys()
+        self.assertTrue(all(before[name] != after[name] for name in before))
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+    def test_common_identity_holds_no_root_and_a_host_scope_environment_digest(self):
+        env = coordinator.normalized_environment(self.root, {'PATH': os.environ['PATH'], 'PWD': str(self.root),
+                                                             'CODEX_THREAD_ID': 'a', 'LANG': 'C.UTF-8',
+                                                             'MYLANG_VERIFICATION_SHARED_CACHE': '/elsewhere'})
+        self.assertNotIn('PWD', env)
+        self.assertNotIn('SHLVL', env)
+        self.assertNotIn('CODEX_THREAD_ID', env)
+        self.assertEqual(env['MYLANG_VERIFICATION_SHARED_CACHE'], '/elsewhere')
+        self.assertEqual(coordinator.identity_variables(env),
+                         ['LANG', 'PYTHONDONTWRITEBYTECODE', 'PYTHONNOUSERSITE', 'PYTHONPYCACHEPREFIX'])
+        moved = dict(env, MYLANG_VERIFICATION_SHARED_CACHE='/other', TMPDIR='/tmp/x')
+        self.assertEqual(coordinator.environment_identity(env, None, [], self.root),
+                         coordinator.environment_identity(moved, None, [], self.root))
+        self.assertNotEqual(coordinator.environment_identity(env, None, [], self.root),
+                            coordinator.environment_identity(dict(env, LANG='C'), None, [], self.root))
+        self.assertEqual(self.execute(), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        for row in report['actions']:
+            self.assertIn('ZIG', row['environment_variables'])
+            self.assertIn('PYTHONNOUSERSITE', row['environment_variables'])
+            self.assertNotIn('PATH', row['environment_variables'])
+            self.assertNotIn('TMPDIR', row['environment_variables'])
+            # The fixture's Zig lives inside the checkout, so ZIG names the root.
+            self.assertFalse(row['path_free'])
+
+    def test_tool_content_enters_the_environment_digest_by_snapshot_digest(self):
+        with Snapshot(self.root, [], [self.zig, self.tool]) as tools:
+            env = {'MYLANG_ZIG': 'zig'}
+            first = coordinator.environment_identity(env, tools, [self.zig, self.tool], self.root)
+            only_zig = coordinator.environment_identity(env, tools, [self.zig], self.root)
+        self.assertNotEqual(first, only_zig)
+        self.tool.write_text('changed tool')
+        with Snapshot(self.root, [], [self.zig, self.tool]) as tools:
+            self.assertNotEqual(coordinator.environment_identity(env, tools, [self.zig, self.tool], self.root), first)
+
+    def two_roots(self, producer):
+        """Two checkouts with identical contents at different absolute paths, sharing one Zig."""
+        self.plan['groups'].extend([dict(group('pure', ['inputs/docs/']), artifacts=[]),
+                                    dict(group('native', ['inputs/unit/']), artifacts=['units'])])
+        self.plan['coverage'].update(required_actions=4, registered_actions=4)
+        self.save_plan()
+        self.write('.embed-root', '')
+        if producer is not None:
+            self.write('.producer', json.dumps(producer))
+        shared = Path(self.stack.enter_context(tempfile.TemporaryDirectory(prefix='verification-tools-', dir=REPOSITORY / '.tmp')))
+        zig = shared / 'zig'
+        shutil.copy2(self.zig, zig)
+        other = Path(self.stack.enter_context(tempfile.TemporaryDirectory(prefix='verification-twin-', dir=REPOSITORY / '.tmp'))) / 'checkout'
+        shutil.copytree(self.root, other, symlinks=True)
+        self.stack.enter_context(patch.object(coordinator, 'tool_contract', return_value=([], [zig])))
+        reports = []
+        for root in (self.root, other):
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(coordinator.execute(root, root / '.receipts', zig, ['-j3']), 0)
+            reports.append(coordinator.read_record(root / '.receipts/last-run.json'))
+        return reports
+
+    def producer(self, recipes=('sources/', 'config.zig')):
+        return {'recipes': list(recipes), 'optimize': 'Debug', 'zig_version': '0.16.0',
+                'test_runner': 'guardian-zig-test-runner-v1'}
+
+    def test_two_roots_with_producers_share_every_action_key(self):
+        first, second = self.two_roots(self.producer())
+        self.assertNotEqual((self.root / 'zig-out/bin/units').read_bytes(),
+                            (Path(second['evidence_store']['root']).parent.parent / 'zig-out/bin/units').read_bytes())
+        self.assertEqual({row['id']: row['action_key'] for row in first['actions']},
+                         {row['id']: row['action_key'] for row in second['actions']})
+        identities = first['artifact_identities']
+        for label in ('mylang', 'units', 'cli', 'core'):
+            self.assertEqual(identities[label]['identity'], 'producer')
+            self.assertGreaterEqual(identities[label]['sources'], 2)
+        self.assertEqual(identities['components']['identity'], 'bytes')
+        self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
+                         {'unit': False, 'docs': False, 'pure': True, 'native': True})
+
+    def test_missing_producer_falls_back_to_reported_byte_identity(self):
+        first, second = self.two_roots(None)
+        first_keys = {row['id']: row['action_key'] for row in first['actions']}
+        second_keys = {row['id']: row['action_key'] for row in second['actions']}
+        self.assertEqual(first_keys['pure'], second_keys['pure'])
+        for name in ('unit', 'docs', 'native'):
+            self.assertNotEqual(first_keys[name], second_keys[name])
+        for label in ('mylang', 'units', 'cli', 'core', 'components'):
+            self.assertEqual(first['artifact_identities'][label],
+                             {'identity': 'bytes', 'reason': 'artifact inventory is not version 3'})
+        self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
+                         {'unit': False, 'docs': False, 'pure': True, 'native': False})
+
+    def test_producer_recipe_selecting_nothing_is_a_hard_error(self):
+        self.write('.producer', json.dumps(self.producer(('sources/', 'missing/'))))
+        with self.assertRaisesRegex(coordinator.VerificationError, 'selects no watched input: missing/'):
+            self.execute()
+        self.assertEqual(self.events('gate'), [])
+        self.assertEqual(self.receipts(), [])
+
+    def test_producer_source_change_invalidates_and_bytes_alone_do_not(self):
+        self.write('.producer', json.dumps(self.producer()))
+        self.plan['groups'].append(dict(group('native', ['inputs/unit/']), artifacts=['units']))
+        self.plan['coverage'].update(required_actions=3, registered_actions=3)
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        before = self.keys()
+        self.write('sources/compiler.txt', 'changed compiler source')
+        self.assertEqual(self.execute(), 0)
+        self.assertNotEqual(self.keys()['native'], before['native'])
+        self.assertEqual(self.states()['native'], 'execute')
+
+    def test_schema_two_receipts_are_never_read(self):
+        self.assertEqual(coordinator.CACHE_DIRECTORY, Path('.mylang-cache/verification-v3'))
+        self.assertEqual(self.execute(), 0)
+        for path in self.receipts():
+            path.write_text(json.dumps({'version': 2, 'kind': 'verification-success', 'key': path.stem}))
+        self.admissions.clear()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+        self.assertEqual(json.loads(self.receipts()[0].read_text())['version'], 3)
+
+    def test_shared_cache_location_switch_and_precedence(self):
+        home = {'HOME': '/home/agent'}
+        for switch in (False, True):
+            with self.subTest(default_sharing=switch), patch.object(coordinator, 'DEFAULT_SHARING', switch):
+                expected = (Path('/home/agent/.cache/mylang/verification-shared'), 'default') if switch else (None, 'none')
+                self.assertEqual(coordinator.shared_cache_location(None, home), expected)
+                xdg = dict(home, XDG_CACHE_HOME='/var/cache/agent')
+                self.assertEqual(coordinator.shared_cache_location(None, xdg),
+                                 (Path('/var/cache/agent/mylang/verification-shared'), 'default') if switch else (None, 'none'))
+                relative = dict(home, XDG_CACHE_HOME='relative')
+                self.assertEqual(coordinator.shared_cache_location(None, relative), expected)
+                named = dict(home, MYLANG_VERIFICATION_SHARED_CACHE='/srv/evidence')
+                self.assertEqual(coordinator.shared_cache_location(None, named), (Path('/srv/evidence'), 'environment'))
+                self.assertEqual(coordinator.shared_cache_location(None, dict(home, MYLANG_VERIFICATION_SHARED_CACHE='')),
+                                 (None, 'environment'))
+                self.assertEqual(coordinator.shared_cache_location('/flag', named), (Path('/flag'), 'flag'))
+                self.assertEqual(coordinator.shared_cache_location('', named), (None, 'flag'))
+        self.assertFalse(coordinator.DEFAULT_SHARING)
+
+    def test_unusable_default_store_warns_and_explicit_store_fails(self):
+        blocked = self.write('not-a-directory', 'file')
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            status = coordinator.execute(self.root, self.cache, self.zig, ['-j3'], False, blocked,
+                                         shared_cache_source='default')
+        self.assertEqual(status, 0)
+        self.assertEqual(stderr.getvalue().count('default shared evidence store'), 1)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['evidence_store']['shared'], False)
+        self.assertEqual(report['evidence_store']['source'], 'default')
+        for source in ('flag', 'environment'):
+            with self.subTest(source=source), self.assertRaises(OSError):
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    coordinator.execute(self.root, self.cache, self.zig, ['-j3'], False, blocked,
+                                        shared_cache_source=source)
+        shared = self.root / '.default-evidence'
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(coordinator.execute(self.root, self.cache, self.zig, ['-j3'], True, shared,
+                                                 shared_cache_source='default'), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['evidence_store']['shared'], True)
+        self.assertEqual(report['evidence_store']['source'], 'default')
+
+    def test_retained_session_reuses_across_launchers_differing_in_dropped_variables(self):
+        with RetainedSession() as session, session.activate():
+            self.assertEqual(self.execute(), 0)
+            before = self.keys()
+            self.admissions.clear()
+            with self.launcher(CODEX_THREAD_ID='another-agent', TERM='screen', SSH_CONNECTION='x', OLDPWD='/'):
+                self.assertEqual(self.execute(), 0)
+            report = coordinator.read_record(self.cache / 'last-run.json')
+            self.assertEqual(self.keys(), before)
+            self.assertEqual(self.admissions, [])
+            self.assertEqual(report['snapshot_statistics']['files_hashed'], 0)
+            with self.launcher(MYL_CORE_LEAKCHECK='1'):
+                self.assertEqual(self.execute(), 0)
+            self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
 
 
 class CallerAuthentication(unittest.TestCase):

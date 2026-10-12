@@ -65,6 +65,8 @@
         "MYLANG_CORE_RUNTIME_CACHE",
         "MYLANG_COMPILER_SHARED_CACHE",
         "MYLANG_TEST_SHARED_CACHE",
+        // The coordinator's shared verification evidence store.
+        "MYLANG_VERIFICATION_SHARED_CACHE",
         "MYLANG_FRONTEND_CACHE",
         "MYLANG_COMPONENT_DIR",
         // Parallelism and the process that runs a test.

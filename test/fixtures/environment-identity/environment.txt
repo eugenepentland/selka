@@ -42,6 +42,7 @@ ZIG_GLOBAL_CACHE_DIR=exact ZIG_GLOBAL_CACHE_DIR value with spaces and = signs=1
 MYLANG_CORE_RUNTIME_CACHE=exact MYLANG_CORE_RUNTIME_CACHE value with spaces and = signs=1
 MYLANG_COMPILER_SHARED_CACHE=exact MYLANG_COMPILER_SHARED_CACHE value with spaces and = signs=1
 MYLANG_TEST_SHARED_CACHE=exact MYLANG_TEST_SHARED_CACHE value with spaces and = signs=1
+MYLANG_VERIFICATION_SHARED_CACHE=exact MYLANG_VERIFICATION_SHARED_CACHE value with spaces and = signs=1
 MYLANG_FRONTEND_CACHE=exact MYLANG_FRONTEND_CACHE value with spaces and = signs=1
 MYLANG_COMPONENT_DIR=exact MYLANG_COMPONENT_DIR value with spaces and = signs=1
 MYLANG_JOBS=exact MYLANG_JOBS value with spaces and = signs=1
