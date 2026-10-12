@@ -1,0 +1,169 @@
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -41,7 +41,6 @@
+     _ = @import("python_comprehension_test.zig");
+     _ = @import("collections_fidelity_test.zig");
+     _ = @import("python_expressions_test.zig");
+-    _ = @import("format_spec_test.zig");
+     _ = @import("python_surface_test.zig");
+     _ = @import("unit_test.zig");
+     _ = @import("declarations_test.zig");
+@@ -191,11 +190,6 @@
+ }
+ 
+ test {
+-    _ = @import("number_text.zig");
+-    _ = @import("number_text_test.zig");
+-}
+-
+-test {
+     _ = @import("memory_budget");
+     _ = @import("memory_budget_frames_test.zig");
+ }
+--- a/build_test_inputs.zig
++++ b/build_test_inputs.zig
+@@ -33,6 +33,13 @@
+     "src/invalidation_test.zig", "src/invalidation.zig",
+ };
+ 
++/// Complete scalar-text implementation and embedded oracle closure.
++pub const text_scalar_unit = [_][]const u8{
++    "src/text_scalar_root_test.zig", "src/number_text.zig", "src/number_text_test.zig",
++    "src/number_grammar.txt", "src/format_spec.zig", "src/format_spec_test.zig",
++    "src/format_spec_cases.tsv",
++};
++
+ /// The independently gated named byte-ceiling module.
+ pub const memory_budget = [_][]const u8{"src/memory_budget.zig"};
+ 
+--- a/build.zig
++++ b/build.zig
+@@ -600,6 +600,18 @@
+         }),
+     });
+     guardian.enableTestDiagnostics(tooling_unit.root_module);
++    const text_scalar_unit = b.addTest(.{
++        .name = "text-scalar-unit-tests",
++        .max_rss = rss.compile,
++        .test_runner = guardian.testRunner(guardian_dep),
++        .filters = test_filters,
++        .root_module = b.createModule(.{
++            .root_source_file = b.path("src/text_scalar_root_test.zig"),
++            .target = target,
++            .optimize = optimize,
++        }),
++    });
++    guardian.enableTestDiagnostics(text_scalar_unit.root_module);
+     const unit = b.addTest(.{
+         .max_rss = rss.compile,
+         .test_runner = guardian.testRunner(guardian_dep),
+@@ -672,6 +684,22 @@
+     focused_tooling.has_side_effects = true;
+     forwardFilters(b, focused_tooling, test_filters);
+     b.step("test-tooling-units", "Run independent pure tooling tests, honouring -Dtest-filter").dependOn(&focused_tooling.step);
++    const run_text_scalar_unit = b.addRunArtifact(text_scalar_unit);
++    run_text_scalar_unit.step.max_rss = rss.script;
++    run_text_scalar_unit.setCwd(b.path("."));
++    run_text_scalar_unit.has_side_effects = test_rerun;
++    run_text_scalar_unit.addFileInput(input_manifests.?.path(b, "text_scalar_unit.txt"));
++    run_text_scalar_unit.addFileInput(environment_manifest.?);
++    forwardFilters(b, run_text_scalar_unit, test_filters);
++    verification_registry.?.declared(&run_text_scalar_unit.step, "text_scalar_unit");
++    test_step.dependOn(&run_text_scalar_unit.step);
++    compile_tests.dependOn(&text_scalar_unit.step);
++    const focused_text_scalar = b.addRunArtifact(text_scalar_unit);
++    focused_text_scalar.step.max_rss = rss.script;
++    focused_text_scalar.setCwd(b.path("."));
++    focused_text_scalar.has_side_effects = true;
++    forwardFilters(b, focused_text_scalar, test_filters);
++    b.step("test-text-scalar-units", "Run independent scalar text tests, honouring -Dtest-filter").dependOn(&focused_text_scalar.step);
+     const run_budget_unit = bounded(b.addRunArtifact(budget_unit), rss.driver);
+     cached(run_budget_unit, "memory_budget");
+     const budget_step = b.step("test-memory-budget", "Verify guest byte ceilings, kernel guards and fan-out bounds");
+@@ -693,6 +721,7 @@
+     const units_step = b.step("test-units", "Run compiler and pure tooling units; filters select the compiler root");
+     units_step.dependOn(&run_unit.step);
+     if (test_filters.len == 0) units_step.dependOn(&focused_tooling.step);
++    if (test_filters.len == 0) units_step.dependOn(&focused_text_scalar.step);
+     b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
+     // The same focused runs split into `-Dtest-shards` concurrent processes even
+     // under a filter, for `scripts/affected_tests.py`: its selections can name a
+@@ -700,6 +729,7 @@
+     // cached, so every run reports what it selected.
+     const units_sharded = b.step("test-units-sharded", "Run src/root_test.zig split into -Dtest-shards processes, honouring -Dtest-filter");
+     if (test_filters.len == 0) units_sharded.dependOn(&focused_tooling.step);
++    if (test_filters.len == 0) units_sharded.dependOn(&focused_text_scalar.step);
+     const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
+     dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = "", .whole = run_unit, .filters = test_filters, .cache = false }));
+     dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false }));
+@@ -708,6 +738,7 @@
+     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
+     boundedChecks(audit_runtime);
+     audit_runtime.dependOn(&focused_tooling.step);
++    audit_runtime.dependOn(&focused_text_scalar.step);
+     dependOnAll(audit_runtime, unit_runs);
+     dependOnAll(audit_runtime, cli_runs);
+     const intent_step = b.step("test-intent", "Verify requirement links, revisions and source-pinned evidence");
+@@ -1044,6 +1075,7 @@
+         .{ .label = "mylang", .binary = exe },
+         .{ .label = "units", .binary = unit },
+         .{ .label = "tooling-units", .binary = tooling_unit },
++        .{ .label = "text-scalar-units", .binary = text_scalar_unit },
+         .{ .label = "cli", .binary = integration },
+         .{ .label = "core", .binary = verification_core_binary.? },
+         .{ .label = "golden", .binary = golden_unit },
+@@ -1059,6 +1091,7 @@
+         verification_registry.?.artifactDependencies(id, &.{});
+     }
+     verification_registry.?.artifactDependencies("tooling_unit", &.{"tooling-units"});
++    verification_registry.?.artifactDependencies("text_scalar_unit", &.{"text-scalar-units"});
+     verification_registry.?.artifactDependencies("memory_budget", &.{ "memory-budget", "components" });
+     verification_registry.?.artifactDependencies("component-support", &.{"component-support"});
+     verification_registry.?.artifactDependencies("component_builder", &.{ "component-builder", "components" });
+--- a/tests/test_inputs_coverage.py
++++ b/tests/test_inputs_coverage.py
+@@ -30,6 +30,7 @@
+ INPUTS = ROOT / "build_test_inputs.zig"
+ # Cached Zig test roots and the list in build_test_inputs.zig that covers each.
+ ROOTS = {
++    "src/text_scalar_root_test.zig": "text_scalar_unit",
+     "src/tooling_root_test.zig": "tooling_unit",
+     "src/memory_budget.zig": "memory_budget",
+     "src/root_test.zig": "unit",
+--- a/scripts/affected_tests.py
++++ b/scripts/affected_tests.py
+@@ -73,6 +73,14 @@
+ # Paths owned by one build step. Checked in order; the first prefix that
+ # matches a changed path owns it.
+ HOST_STEPS = (
++    ("src/text_scalar_root_test.zig", "test-text-scalar-units"),
++    ("src/number_text.zig", "test-text-scalar-units"),
++    ("src/number_text_test.zig", "test-text-scalar-units"),
++    ("src/number_grammar.txt", "test-text-scalar-units"),
++    ("src/format_spec.zig", "test-text-scalar-units"),
++    ("src/format_spec_test.zig", "test-text-scalar-units"),
++    ("src/format_spec_cases.tsv", "test-text-scalar-units"),
++
+     ("scripts/juice", "test-juice"),
+     ("tests/test_juice.py", "test-juice"),
+     ("tests/test_juice_native.py", "test-juice"),
+--- a/scripts/focused_test.py
++++ b/scripts/focused_test.py
+@@ -38,7 +38,7 @@
+ ROOT = Path(__file__).resolve().parents[1]
+ LOG_DIR = ROOT / ".mylang-cache" / "focused-tests"
+ # Targets that honour `-Dtest-filter`. `full` is the whole gate, which does not.
+-FOCUSED = {"units": "test-units", "cli": "test-cli", "golden": "test-golden", "tooling": "test-tooling-units"}
++FOCUSED = {"text-scalar": "test-text-scalar-units", "units": "test-units", "cli": "test-cli", "golden": "test-golden", "tooling": "test-tooling-units"}
+ FULL = "full"
+ SELECTED = re.compile(r"(\d+)\s+test\(s\) selected")
+ RESULT = re.compile(r"guardian/test: RESULT (\{.*\})")
+@@ -157,7 +157,7 @@
+ 
+ def main(argv: list[str] | None = None) -> int:
+     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+-    parser.add_argument("target", help="units, tooling, cli, golden, or full")
++    parser.add_argument("target", help="units, tooling, text-scalar, cli, golden, or full")
+     parser.add_argument("filter", nargs="?", help="non-empty substring for a focused target")
+     parser.add_argument("--tail", type=int, default=60, help="log lines to show after a failure (default 60)")
+     args = parser.parse_args(argv)

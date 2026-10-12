@@ -1,0 +1,35 @@
+build-slot: build slot 1, FIFO ticket 3545 after 0s
+1/9 text_scalar_root_test.test_0...OK
+2/9 number_text_test.test.every shared vector answers the pinned grammar's value...expected 43, found 42
+FAIL (TestExpectedEqual)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x12a0d43 in expectEqualInner__anon_67491 (std.zig)
+                return error.TestExpectedEqual;
+                ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x12a0e27 in expectEqual (std.zig)
+    return expectEqualInner(T, expected, actual);
+    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:188:21: 0x12a0e80 in expectEqualInner__anon_67484 (std.zig)
+                    try expectEqual(expected_payload, actual_payload);
+                    ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x12ae1e8 in expectEqual (text_scalar_root_test.zig)
+    return expectEqualInner(T, expected, actual);
+    ^
+/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S03/.mylang-cache/s03-tmp/s03-oracle-naaked8p/number_text_test.zig:36:5: 0x12ae21e in checkInteger (text_scalar_root_test.zig)
+    return std.testing.expectEqual(@as(?i64, expected), actual);
+    ^
+/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S03/.mylang-cache/s03-tmp/s03-oracle-naaked8p/number_text_test.zig:29:5: 0x12ae4ab in check (text_scalar_root_test.zig)
+    return checkInteger(vector);
+    ^
+/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S03/.mylang-cache/s03-tmp/s03-oracle-naaked8p/number_text_test.zig:98:23: 0x12ae659 in test.every shared vector answers the pinned grammar's value (text_scalar_root_test.zig)
+    for (rows) |line| try check(line, &buffer);
+                      ^
+3/9 number_text_test.test.the grammar keeps the rounding horizon, the signed bound and the exponent bound...OK
+4/9 number_text_test.test.every shared vector answers the same through the UTF-8 octet entry points...OK
+5/9 format_spec_test.test.float format specifications render every CPython oracle row exactly...OK
+6/9 format_spec_test.test.integer and text format specifications render every CPython oracle row exactly...OK
+7/9 format_spec_test.test.round to n digits rounds the exact binary value with ties away from zero...OK
+8/9 format_spec_test.test.a specification the value family cannot take is rejected with CPython's reason...OK
+9/9 format_spec_test.test.a packed specification survives the runtime word unchanged...OK
+8 passed; 0 skipped; 1 failed.
+error: the following test command failed with exit code 1:
+.zig-cache/o/c0aac368b5c7d50f70dbd45482916ecf/test --seed=0xc0f420bb

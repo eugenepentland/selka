@@ -1,0 +1,1 @@
+{"mutation": "int|42|42 -> int|42|43", "returncode": 1, "expected": "scalar oracle test fails, eight remaining tests execute"}
