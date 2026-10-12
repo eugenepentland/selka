@@ -196,3 +196,17 @@ The expanded public-value constructor/copy fixture passes release on support2
 state, duration/instant, persistent options/value and durable Step/Request/Report
 construction all preserve snapshots. It calls no resource/digest helper and closes
 previously indirect public-type coverage while those helpers are pending.
+
+Coordinator support3 identity: source `0d17e4e130706639c0f49e78b60502bfb2151ebc`,
+compiler SHA256 `7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7`.
+Ten cases, including storage, all network paths, binary stream output, byte
+repetition and the original application/cache/resource migrations, now reach
+native linking. All ten fail there because the driver removes an uncacheable
+staged object before linking (`FileNotFound`). This is the independently reproduced
+baseline driver defect owned by A01, not a language refusal or an executable pass.
+`evidence/support3-native-link-failure.json` preserves every exact invocation,
+generated source identity and diagnostic. Native retries await the integrated fix.
+
+The harness now accepts `--ordinary-command` for later C2/C3 requalification; it
+omits the experimental selector and records that choice. Existing invocations
+remain explicit zero-RC requests. No default promotion or retirement is implied.

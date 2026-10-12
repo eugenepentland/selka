@@ -1,0 +1,44 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support2-install/bin/mylang",
+  "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+  "overlay": false,
+  "check_only": false,
+  "harness_sha256": "c1d95cd5ebafebeef8f59d2d17821e48c1a19133427086d88895ecdf33424c66",
+  "cases": {
+    "network_errors": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network_errors.my",
+        "original_sha256": "de5f5e058a85be4973815093144c9785cc2095dcb6679a0a46965ab61ee2f5fe",
+        "source_sha256": "de5f5e058a85be4973815093144c9785cc2095dcb6679a0a46965ab61ee2f5fe",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support2-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support2-network-errors/network_errors/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support2-network-errors/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support2-network-errors/network_errors/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support2-network-errors/network_errors/release/program.ll"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/network.my:71:12: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      return acquire_resource[Connected](net, request)\n             ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "de5f5e058a85be4973815093144c9785cc2095dcb6679a0a46965ab61ee2f5fe"
+        }
+      }
+    }
+  },
+  "compiler_source_revision": "245e892f8518943ee44a0cc6009ab4b4fa6bca43",
+  "failures": 1,
+  "status_classification": "Source refused at the previously recorded generic resource acquisition boundary. The imported network module is checked even when this fixture calls no acquisition."
+}

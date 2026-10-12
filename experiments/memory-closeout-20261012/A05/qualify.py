@@ -81,6 +81,8 @@ def main():
     p.add_argument('--zig', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--overlay', action='store_true')
+    p.add_argument('--ordinary-command', action='store_true',
+                   help='Use the ordinary command without the experimental ownership selector')
     p.add_argument('--admit', action='store_true')
     p.add_argument('--check-only', action='store_true')
     p.add_argument('--cases', nargs='*')
@@ -106,6 +108,7 @@ def main():
         return re.sub(r'^import (\w+)$',lambda m:'import a05_'+m[1]+' as '+m[1] if m[1] in modules else m[0],text,flags=re.M)
     report={'base':'fbfcaa7a923186a8e773c3760f81c10aa345a432','compiler':str(a.compiler),'compiler_sha256':digest(a.compiler),'overlay':a.overlay,'check_only':a.check_only,'harness_sha256':digest(__file__),'cases':{}}
     report['compiler_source_revision']=a.compiler_revision
+    report['ownership_selection']='ordinary-command' if a.ordinary_command else 'experimental-zero-rc'
     failures=0
     for name,(source,expected) in sources.items():
         if a.cases and name not in a.cases: continue
@@ -125,7 +128,9 @@ def main():
                 text=overlay(text)
             main=project/'main.my'; main.write_text(text)
             binary=directory/'program'; llvm=directory/'program.ll'
-            argv=[str(a.compiler),'check' if a.check_only else 'build',str(main),'--experimental-zero-rc','--cache-dir',str(a.output/'cache')]
+            argv=[str(a.compiler),'check' if a.check_only else 'build',str(main)]
+            if not a.ordinary_command: argv += ['--experimental-zero-rc']
+            argv += ['--cache-dir',str(a.output/'cache')]
             if not a.check_only: argv += ['--zig',str(a.zig),*MODES[mode],'--counters','-o',str(binary),'--emit-llvm',str(llvm)]
             ran=run_command(([str(ROOT/'scripts/build-slot.sh'),'build'] if a.admit else [])+argv,cwd=ROOT,env=env,capture_output=True,text=True,timeout=1800)
             result={'original_source':str(source.relative_to(ROOT)),'original_sha256':digest(source),'source_sha256':digest(main),'argv':argv,'build_status':ran.returncode,'build_stdout':ran.stdout,'build_stderr':ran.stderr,'expected_status':expected,'passed':False}

@@ -1,0 +1,14 @@
+# spec-case: NETWORK-SURFACE-1
+import network
+
+func main() -> int:
+    const net = network.denied()
+    with net.host("127.0.0.1:43781") as scoped:
+        assert network.denied_here() == 6
+        assert network.describe(1) == "no network authority is available"
+        assert network.describe(2) == "denied: outside the granted endpoints"
+        assert network.describe(4) == "too many connections are open"
+        assert network.describe(6) == "network access is denied in this context: this Network is a deterministic stand-in"
+        assert network.describe(3) == "failed: the endpoint could not be reached"
+        assert network.describe(999) == "failed: the endpoint could not be reached"
+    return 0
