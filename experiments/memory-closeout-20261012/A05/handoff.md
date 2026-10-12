@@ -411,3 +411,18 @@ construction/return and inline nesting compile, while named Ports-to-App transfe
 does not. No source workaround or execution claim is applied to those probes.
 The readonly managed-get probe still passes check and refuses build on Support6.
 All reports preserve exact source/compiler hashes; passing runs retain raw counters.
+
+The additional `pool_managed.my` public contract also passes all five Support6
+modes with RC0/live0 and clean LLVM/symbol audits. Dynamic text and nested bytes
+remain independent after seed destruction, pool replacement, slot removal/reuse,
+and destruction of both original/copied pools. Handles exercise valid, removed
+and regenerated slots. Release traffic is 119 allocations/7360 bytes, with managed
+peak 2560 bytes; these are current whole-program counters, not timing or RSS.
+Removing a pool slot still retains its old value storage until reuse or pool
+destruction, as the existing generic slot representation requires. No retention
+saving or production policy change is claimed. The coordinator received the C2
+SPEC.md correction request for the stale shared-pool wording.
+
+Exact coordinator-owned C2 replacement request (do not apply before promotion):
+
+> [STANDARD-POOL-1] A standard pool hands out copyable generational handles into a reusable slot store. Removing a slot advances its generation so every earlier handle stops matching; a stale or out-of-range handle reports absence and no handle traps, and released slots are reused before the store grows. An assignment can move a pool owner; `.copy()` creates an independent pool, including independent managed element storage. A handle names a slot and a generation rather than a pool, so callers keep it with the appropriate pool value.

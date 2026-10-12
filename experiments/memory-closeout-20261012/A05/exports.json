@@ -1068,7 +1068,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1083,7 +1084,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1098,7 +1100,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1113,7 +1116,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1128,7 +1132,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1143,7 +1148,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1158,7 +1164,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1173,7 +1180,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1188,7 +1196,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1203,7 +1212,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {
@@ -1218,7 +1228,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "src/stdlib/fixtures/pool.my"
+        "src/stdlib/fixtures/pool.my",
+        "experiments/memory-closeout-20261012/A05/samples/pool_managed.my"
       ]
     },
     {

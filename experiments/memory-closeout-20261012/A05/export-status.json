@@ -2184,6 +2184,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2203,6 +2248,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2222,6 +2312,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2241,6 +2376,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2260,6 +2440,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2279,6 +2504,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2298,6 +2568,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2317,6 +2632,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2336,6 +2696,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2355,6 +2760,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
@@ -2374,6 +2824,51 @@
           "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
           "overlay": false,
           "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "release",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "1a9f67c1bcdc86c9a505b5c4782ddc2cf76b2f40cb1b1db2df950ccffee129dd"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "6e8cac1c2020d088d813aa50e4c3a2708b77b372a0d7b02b6bb9026472bcbf59"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "verified",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "bda1558fc77722530ca14164100d38ba140a054f6bc7a55d0a644e9a6aa9fc54"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "optimized-debug",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "79f351f421433a9360ee6c1cceb9752d1d3918b2857985baf69fbdd8ab645a27"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support6-managed-pool.json",
+          "case": "pool_managed",
+          "mode": "no-facts",
+          "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+          "source_sha256": "ff81d74f30e6f2aaab3fff20fc84aafb4df504f72f3a5ef745d8b0019c845823",
+          "overlay": false,
+          "binary_sha256": "7e4065b3a9564395e3169cbf0e9a9a52aed18eb52901a3e94a6b1ed7e3fad2c9"
         }
       ],
       "final_C1_qualification": "pending",
