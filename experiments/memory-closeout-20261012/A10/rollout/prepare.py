@@ -1,11 +1,16 @@
 from pathlib import Path
-import difflib, hashlib, json, subprocess
+import argparse, difflib, hashlib, json, subprocess
+parser=argparse.ArgumentParser()
+parser.add_argument("--source-revision")
+parser.add_argument("--output-dir",type=Path)
+args=parser.parse_args()
 root=Path.cwd()
-evidence=root/'experiments/memory-closeout-20261012/A10/rollout'
+evidence=args.output_dir or root/'experiments/memory-closeout-20261012/A10/rollout'
+evidence.mkdir(parents=True,exist_ok=True)
 scratch=root/'.tmp/memory-closeout/A10/rollout-draft'
 base={}
 def get(path):
-    if path not in base: base[path]=(root/path).read_text()
+    if path not in base: base[path]=subprocess.check_output(['git','show',f'{args.source_revision}:{path}'],text=True) if args.source_revision else (root/path).read_text()
     return base[path]
 def replace(s,old,new,count=1):
     actual=s.count(old)
@@ -151,5 +156,5 @@ for stage,mapping in [('base',base),('C2',c2),('C3',c3)]:
         dest=scratch/stage/path
         dest.parent.mkdir(parents=True,exist_ok=True)
         dest.write_text(contents)
-(evidence/'draft-identities.json').write_text(json.dumps({'status':'UNAPPLIED; no default/retirement qualification claimed','source_revision':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'source_files':{path:hashlib.sha256(contents.encode()).hexdigest() for path,contents in base.items()},'C2_files':c2files,'C3_files':c3files,'patch_hashes':{name:hashlib.sha256((evidence/name).read_bytes()).hexdigest() for name in ['C2-default.patch','C3-cli-selector-retirement.patch']}},indent=2)+'\n')
+(evidence/'draft-identities.json').write_text(json.dumps({'status':'UNAPPLIED; no default/retirement qualification claimed','source_revision':args.source_revision or subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'source_files':{path:hashlib.sha256(contents.encode()).hexdigest() for path,contents in base.items()},'C2_files':c2files,'C3_files':c3files,'patch_hashes':{name:hashlib.sha256((evidence/name).read_bytes()).hexdigest() for name in ['C2-default.patch','C3-cli-selector-retirement.patch']}},indent=2)+'\n')
 print(json.dumps({'C2_files':c2files,'C3_files':c3files}))

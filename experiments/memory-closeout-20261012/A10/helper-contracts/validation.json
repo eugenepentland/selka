@@ -1,0 +1,32 @@
+{
+  "base_commit": "f77877af851277491d8f88e3ce9734c03b4b235c",
+  "source_hashes": {
+    "src/core/cost.zig": "355b7e3ef3184c652012a6114bfb243627a87f2b4a39ea6ed6082196ee99f7c5",
+    "src/core/cost_command.zig": "d0fe1aecf2dda1cf36bcf8a4670ed4d20ba141f33a9b63cf2c68e45f08d16434"
+  },
+  "test_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.zig-cache/o/e469554888c9813cdcaa76bf2b8436b0/test",
+  "test_binary_sha256": "4a8dd747157ef9b291b86a98daeb96caf30e0191e1dc3c6da701717a858791b3",
+  "runtime_audit": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/src/core/runtime/core_rt.c",
+    "body": "int64_t myl_core_owned_same_block(const myl_block *left, const myl_block *right) {\n    return left == right;\n}",
+    "body_sha256": "dedc10f725d115b88a46c56a1a40ea3d565fad2df643871781cb7b9fdc259a3b",
+    "contract": "Borrows both inputs; pointer equality only; no dereference, allocation, mutation or RC; A07 approved generated usage."
+  },
+  "focused": {
+    "passed": 3,
+    "failed": 0,
+    "filter": "zero RC allocation contracts",
+    "status": 0,
+    "log": "identity-noalloc-test.log"
+  },
+  "marker_patch": {
+    "status": "UNAPPLIED; coordinator applies atomically with aggregate_provider.zig after scalar identity followup",
+    "format": "PASS",
+    "apply_check": "PASS",
+    "execution": "not run; actual validator dependency absent in worker"
+  },
+  "rollout_tooling": {
+    "pin_support": "--source-revision + --output-dir; never reads another mutable worktree",
+    "validation": "Both patches reproduced byte-identically from committed f77877af8; every prior inventory call/hash reproduced after canonical ordering."
+  }
+}

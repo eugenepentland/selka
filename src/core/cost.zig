@@ -61,6 +61,7 @@ pub fn runtimeAllocationFree(symbol: []const u8) bool {
         "myl_core_span_starts",          "myl_core_span_ends",          "myl_core_span_contains",
         "myl_core_octets_compare",       "myl_core_dict_ordinal",       "myl_core_view_slice",
         "myl_core_view_chars",           "myl_core_view_index",         "myl_core_view_byte",
+        "myl_core_owned_same_block",
     };
     for (names) |name| if (std.mem.eql(u8, name, symbol)) return true;
     return false;

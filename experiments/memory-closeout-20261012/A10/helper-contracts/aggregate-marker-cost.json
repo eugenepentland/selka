@@ -1,0 +1,8 @@
+{
+  "status": "UNAPPLIED; requires coordinator aggregate_provider.zig and scalar identity followup first",
+  "source_sha256": {
+    "src/core/cost.zig": "355b7e3ef3184c652012a6114bfb243627a87f2b4a39ea6ed6082196ee99f7c5",
+    "src/core/cost_command.zig": "d0fe1aecf2dda1cf36bcf8a4670ed4d20ba141f33a9b63cf2c68e45f08d16434"
+  },
+  "patch_sha256": "7882aa2d036e49b186648e0356e6b66e86070d9065a93385597a868af8cddd1d"
+}

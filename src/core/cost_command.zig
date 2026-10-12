@@ -5,6 +5,7 @@ const project_entry = @import("project_entry.zig");
 const build = @import("build.zig");
 const passes = @import("passes.zig");
 const cost = @import("cost.zig");
+const ir = @import("ir.zig");
 const remarks = @import("cost_remarks.zig");
 const pipeline = @import("pipeline.zig");
 const driver = @import("driver.zig");
@@ -324,11 +325,33 @@ test "zero RC allocation contracts count independent encode and buffer reverse c
     const copied_program = try copying.checkLibraryProgram();
     const copies = try contracts.collectProgramWithOwnership(a, copied_program, copying.src, .{ .single_owner = true, .zero_rc = true });
     try std.testing.expectEqual(@as(usize, 1), copies.len);
-    const ir = @import("ir.zig");
     for ([_]bool{ false, true }) |zero_rc| {
         var module: ir.Module = .{ .single_owner = zero_rc, .zero_rc = zero_rc };
         try module.functions.append(a, .{ .name = "myl_core_buffer_reverse", .signature = .{ .params = &.{.byte_buffer}, .ret = .byte_buffer, .linkage = .runtime_c } });
         const function: ir.Function = .{ .name = "caller", .signature = .{ .params = &.{}, .ret = .void } };
         try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &function, .{ .op = .call, .a = @fromBackingInt(0), .ty = .byte_buffer }));
     }
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts audit borrowed identity queries without source extern authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+    const list = try module.intern(a, .{ .list = .i64 });
+    try module.functions.append(a, .{ .name = "myl_core_owned_same_block", .signature = .{ .params = &.{ list, list }, .ret = .i64, .linkage = .runtime_c } });
+    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .i64 };
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
+    // A source-spanned foreign declaration cannot claim the compiler's audit.
+    module.functions.items[0].signature.linkage = .extern_c;
+    module.functions.items[0].span = 13;
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
+    var foreign = try @import("mylang").Compilation.init(a, "foreign.my",
+        \\extern func myl_core_owned_same_block(host: Host) -> int effects(host)
+        \\func bounded(host: Host) -> int noalloc:
+        \\    return myl_core_owned_same_block(host)
+    );
+    try std.testing.expectError(error.SourceError, foreign.checkLibraryProgram());
+    try std.testing.expectEqualStrings("E_EXTERN_SYMBOL", foreign.diagnostics.items[0].code);
 }

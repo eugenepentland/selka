@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Inventory active Core ABI construction/calls; no compiler or source mutations."""
 from pathlib import Path
+import argparse
+import io
+import tarfile
 import collections
 import hashlib
 import json
@@ -8,7 +11,12 @@ import re
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[4]
-HERE = Path(__file__).resolve().parent
+parser = argparse.ArgumentParser()
+parser.add_argument("--source-revision")
+parser.add_argument("--output-dir", type=Path)
+args = parser.parse_args()
+HERE = args.output_dir or Path(__file__).resolve().parent
+HERE.mkdir(parents=True, exist_ok=True)
 APIS = {
     'build.zig': {'buildModule', 'buildRoots', 'buildModuleSource', 'buildExecutable', 'buildExecutableCached', 'buildRootsSource', 'buildRootsCached', 'coverage', 'coverageSource', 'coverageInput'},
     'emit_llvm.zig': {'emitModule', 'emitModuleWithScratch', 'emitUnitWithScratch'},
@@ -62,8 +70,13 @@ mode_sites=[]
 internal_calls=[]
 references=[]
 files={}
-for path in sorted((ROOT/'src').rglob('*.zig')):
-    source=path.read_text()
+if args.source_revision:
+    archive=subprocess.check_output(['git','archive',args.source_revision,'src'],cwd=ROOT)
+    with tarfile.open(fileobj=io.BytesIO(archive)) as tree:
+        sources={ROOT/member.name:tree.extractfile(member).read().decode() for member in tree if member.isfile() and member.name.endswith('.zig')}
+else:
+    sources={path:path.read_text() for path in (ROOT/'src').rglob('*.zig')}
+for path,source in sorted(sources.items()):
     masked=mask(source)
     relative=str(path.relative_to(ROOT))
     imports={}
@@ -115,7 +128,11 @@ for path in sorted((ROOT/'src').rglob('*.zig')):
             mode_sites.append({'path':relative,'line':line_no,'source':line.strip(),'context':enclosing(source,sum(len(x)+1 for x in source.splitlines()[:line_no-1]))})
     if any(row['path']==relative for row in records+constructors+mode_sites): files[relative]=hashlib.sha256(source.encode()).hexdigest()
 records.sort(key=lambda r:(r['path'],r['line'],r['method']))
-report={'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'scope':'Every src/**/*.zig import-qualified invocation of listed Core APIs; all imported type references and mode-field sites. Public API references and local unqualified implementation calls are enumerated separately. This lexical inventory does not infer the dataflow provenance of module/input variables; producers are reviewed in README. Historical experiment trees excluded. No call-site is evidence of a test pass.','apis':{k:sorted(v) for k,v in APIS.items()},'file_hashes':files,'calls':records,'internal_wrapper_calls':internal_calls,'api_value_references':references,'type_references':constructors,'mode_field_sites':mode_sites,'summary':{'calls':len(records),'internal_wrapper_calls':len(internal_calls),'api_value_references':len(references),'files_with_calls':len(set(r['path'] for r in records)),'type_references':len(constructors),'mode_field_sites':len(mode_sites),'by_api':dict(sorted(collections.Counter(r['module']+'.'+r['method'] for r in records).items()))}}
+internal_calls.sort(key=lambda r:(r['path'],r['line'],r['method']))
+constructors.sort(key=lambda r:(r['path'],r['line'],r['module'],r['type']))
+references.sort(key=lambda r:(r['path'],r['line'],r['module'],r['method']))
+mode_sites.sort(key=lambda r:(r['path'],r['line']))
+report={'source_revision':args.source_revision or subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'scope':'Every src/**/*.zig import-qualified invocation of listed Core APIs; all imported type references and mode-field sites. Public API references and local unqualified implementation calls are enumerated separately. This lexical inventory does not infer the dataflow provenance of module/input variables; producers are reviewed in README. Historical experiment trees excluded. No call-site is evidence of a test pass.','apis':{k:sorted(v) for k,v in APIS.items()},'file_hashes':files,'calls':records,'internal_wrapper_calls':internal_calls,'api_value_references':references,'type_references':constructors,'mode_field_sites':mode_sites,'summary':{'calls':len(records),'internal_wrapper_calls':len(internal_calls),'api_value_references':len(references),'files_with_calls':len(set(r['path'] for r in records)),'type_references':len(constructors),'mode_field_sites':len(mode_sites),'by_api':dict(sorted(collections.Counter(r['module']+'.'+r['method'] for r in records).items()))}}
 (HERE/'internal-api-calls.json').write_text(json.dumps(report,indent=2)+'\n')
 lines=['# Internal Core call sites','',f"Source revision: `{report['source_revision']}`. This is inventory, not qualification.",'', '| File | Calls | Required migration review |','| --- | ---: | --- |']
 for path in sorted(set(row['path'] for row in records)):

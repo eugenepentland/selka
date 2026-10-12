@@ -179,3 +179,21 @@ page drafts, an unexecuted65-row selector/guest-separator matrix, and an ordered
 retirement dependency plan. Production docs/defaults and legacy retirement remain
 unchanged. Actual integrated documentation tests, component qualification and
 C1/C2/C3 gates are still required; drafts are not implementation milestones.
+
+Followup helper audit: `myl_core_owned_same_block` borrows two list pointers and
+returns only pointer equality; it performs no dereference, allocation or RC.
+The cost allowlist now records that audit. The regression requires nonallocation
+for the generated helper, unresolved cost for a source-spanned extern lookalike,
+and source rejection of the reserved extern spelling. Focused allocation-contract
+suite passes3/3. `helper-contracts/validation.json` pins source/test-binary hashes
+and the exact native helper body audited in A02's tree. A02 owns native execution
+and the generated alias/self-extend branch qualification.
+
+The adjacent aggregate-provider-marker cost patch remains unapplied. It reuses
+the coordinator's complete validator, never an open symbol prefix; valid borrowed
+markers cost no allocation, malformed markers remain unresolved. It includes
+cost-specific wrong-mode/signature/ownership-mask/source-extern regressions, but
+execution waits for atomic integration of the actual utility. Rollout generation
+and API inventory now accept an immutable source revision and separate output
+path so support5/current-candidate drafts can be refreshed without editing another
+worker's tree or overwriting the previous evidence.
