@@ -66,6 +66,20 @@ removes redundant negative-index normalization but improves runtime only about
 large. The large common comparison includes one in its interval. This experiment
 has not closed the JSON gap; further narrowly scoped work is in progress.
 
+The subsequent [serializer change](json-serializer/handoff.md) uses borrowed
+dictionary-entry iteration to avoid looking up a value again under its stored
+key. It passed 176 native configuration checks and 100 unchanged text oracle
+probes; managed allocation/copy totals match the guard candidate. Its generated
+serializer no longer hashes or searches those keys. The production change and
+its independent ordering, ownership, and numeric regressions are integrated;
+combined timing is pending. The small private peek guard is also included in
+that tested source, with its isolated timing limitations retained above.
+
+A [read-only JSON audit](split/json-guard-readonly-deferred.md) records the
+serializer and byte-loop costs before these follow-ups. The broader dictionary
+lookup compiler transformation it outlines remains deferred. A narrower
+extension to the existing byte-index optimization is undergoing qualification.
+
 The [read-only CSV audit](split/csv-common001-readonly.md) records a separate,
 deferred bounds-check opportunity with required safety conditions.
 
