@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 748, position 6; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 748 after 55s
+..........................
+----------------------------------------------------------------------
+Ran 26 tests in 0.744s
+
+OK

@@ -1,0 +1,24 @@
+{
+  "state": "running; no completed package qualification claimed",
+  "source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "initial_debug_compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "initial_debug_component_protocols": {
+    "cache_plan": "A08 reports560 counted protocol outcomes pass, RC0/returnedexitlive0/LLVM+symbols clean",
+    "test_index": "A08 reports128 counted protocol outcomes pass, RC0/returnedexitlive0/LLVM+symbols clean"
+  },
+  "candidate_pin_sha256": "32f37baa2509b01c231a104d7e9ba224a7193399201d0f87ec8a5db8fa6f039b",
+  "builder_sha256": "c24cf61e5413599c8e147a0cf4d6eb132f09e2686bcfb29bd300ae85285af8bd",
+  "command": [
+    "bash",
+    "experiments/memory-closeout-20261012/A10/packaging-support6-candidate/qualify.sh",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-support6",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/private-seed-builder/tools/selka-components"
+  ],
+  "raw_log": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/support6-owned-package-qualification.log",
+  "provisioning_admission": {
+    "ticket": 756,
+    "queue_wait_seconds": 15
+  },
+  "selected_default_changed": false,
+  "historical_seed_changed": false
+}

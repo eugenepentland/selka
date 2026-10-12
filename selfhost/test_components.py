@@ -147,6 +147,25 @@ class ComponentCacheTests(unittest.TestCase):
         self.assertIn("zero-rc-v1", self.invoke("--owned-compiler-pin", str(path), success=False))
         self.assertFalse(self.log.exists())
 
+    def test_extracted_seed_cache_and_tmp_are_private_but_global_cache_is_preserved(self):
+        self.zig.write_text(self.zig.read_text().replace(
+            'build) ', 'build) test "$ZIG_LOCAL_CACHE_DIR" = "$PWD/.zig-cache" || exit 21; '
+            'test "$TMPDIR" = "$PWD/.tmp/component-compiler" || exit 22; '
+            'test -d "$TMPDIR" || exit 23; '
+            'test "$ZIG_GLOBAL_CACHE_DIR" = "$COMPONENT_FIXTURE_GLOBAL" || exit 24; '))
+        local = self.workspace / "caller-local"
+        temporary = self.workspace / "caller-tmp"
+        global_cache = self.workspace / "caller-global"
+        self.environment.update(ZIG_LOCAL_CACHE_DIR=str(local), TMPDIR=str(temporary),
+                                ZIG_GLOBAL_CACHE_DIR=str(global_cache), COMPONENT_FIXTURE_GLOBAL=str(global_cache))
+        binary = Path(self.invoke("--seed-only", "--owned-compiler-pin", str(self.owned_pin())))
+        receipt = json.loads((binary.parents[3] / "receipt.json").read_text())
+        self.assertEqual(receipt["recipe"]["build_environment"], "private-local-and-tmp-v1")
+        self.assertFalse(local.exists())
+        self.assertFalse(temporary.exists())
+        self.assertEqual(Path(self.invoke("--seed-only", "--owned-compiler-pin", str(self.owned_pin()))), binary)
+        self.assertEqual(self.calls("seed"), 1)
+
     def artifact(self, key):
         return self.cache / "artifacts" / key / "test-index"
 

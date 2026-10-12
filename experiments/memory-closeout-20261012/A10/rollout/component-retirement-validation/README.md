@@ -28,3 +28,9 @@ it. Those changes must land with this patch: an omitted pin now deliberately
 fails. A manifest marker is a selection guard, not proof of generated ABI,
 protocol behavior, absence of RC, or successful installed-package qualification.
 Those checks must use the actual pinned compiler and installed component outputs.
+
+Cache-isolation followup: the latest patch is rebased over the production
+private-local-and-tmp-v1 seed environment change and its regression. The27-test
+log above remains evidence for its exact earlier draft source hashes. The rebased
+patch has fresh application/format checks; its updated28-test native draft must
+be rerun before application. No earlier binary is relabeled as the updated one.

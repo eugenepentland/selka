@@ -1,0 +1,70 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "default": false,
+  "total_blocks": 17,
+  "expected_units": 1,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 364,
+      "source": "# doc: check\nrecord Context:\n    fs: Filesystem\n    env: Environment\n\nfunc read_note(ctx: Context, path: str) -> int:\n    match ctx.fs.read_text(path):\n        case Ok(text):\n            return len(text)\n        case Err(_):\n            return -1\n\nfunc main(fs: Filesystem, env: Environment) -> int:\n    mut ctx = Context(fs=fs, env=env)\n    return read_note(ctx, \"note.txt\") + len(ctx.env.names())\n",
+      "sha256": "cb4471d34b70ed9fdd4a43a8d8c7f6ff7bcd27258b01587ae4c2cd38011c87b1"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-support6-blockers-provider",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-support6-blockers-provider/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 1,
+  "stdout": "  README.md: 0 run, 0 checked, 0 skipped, 0 mis-tagged, 1 failed\nFAILED README.md:1: exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"a borrowed value cannot be stored or returned; make an explicit .copy()\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-050bc15c0d75867c/unit000/main.my\",\"start\":{\"line\":13,\"column\":26},\"end\":{\"line\":13,\"column\":28},\"bytes\":{\"start\":312,\"end\":314}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\nDoc examples: 1 files scanned, 1 blocks found, 0 run, 0 checked, 0 skipped, 0 mis-tagged, 1 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+    "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+    "totals": {
+      "run": 0,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 1
+    },
+    "files": {
+      "README.md": {
+        "blocks": 1,
+        "run": 0,
+        "checked": 0,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 1,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"a borrowed value cannot be stored or returned; make an explicit .copy()\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-050bc15c0d75867c/unit000/main.my\",\"start\":{\"line\":13,\"column\":26},\"end\":{\"line\":13,\"column\":28},\"bytes\":{\"start\":312,\"end\":314}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-050bc15c0d75867c/unit000/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-050bc15c0d75867c/unit000/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": false
+}

@@ -102,6 +102,20 @@ fn ownedPin(ctx: *Context, pin: Value) !void {
         !std.mem.eql(u8, try text(try get(recipe, "target")), "native"))
         return ctx.fail("owned component compiler requires zero-rc-v1 and independent native ReleaseFast seed-compiler recipe");
 }
+
+/// An extracted source tree must never adopt another checkout's Zig configure cache.
+fn seedEnvironment(ctx: *Context, source: []const u8) !std.process.Environ.Map {
+    var environment = std.process.Environ.Map.init(ctx.a);
+    errdefer environment.deinit();
+    var iterator = ctx.environ.iterator();
+    while (iterator.next()) |entry| try environment.put(entry.key_ptr.*, entry.value_ptr.*);
+    try environment.put("ZIG_LOCAL_CACHE_DIR", try ctx.path(&.{ source, ".zig-cache" }));
+    const temporary = try ctx.path(&.{ source, ".tmp", "component-compiler" });
+    try cwd().createDirPath(ctx.io, temporary);
+    try environment.put("TMPDIR", temporary);
+    return environment;
+}
+
 fn qualifySeed(ctx: *Context, config: Config) !Seed {
     const owned = config.bootstrap.owned_pin != null;
     const pin = try ctx.metadata(config.bootstrap.owned_pin orelse try ctx.path(&.{ config.root, "selfhost", "component-seed.json" }));
@@ -125,6 +139,7 @@ fn qualifySeed(ctx: *Context, config: Config) !Seed {
         .{ .name = "zig_sha256", .value = try ctx.hashValue(config.zig) },
         .{ .name = "zig_library_sha256", .value = files.string(try ctx.a.dupe(u8, &library_digest)) },
         .{ .name = "target", .value = files.string(target) },
+        .{ .name = "build_environment", .value = files.string("private-local-and-tmp-v1") },
     });
     const recipe_text = try files.canonical(ctx.a, recipe);
     defer ctx.a.free(recipe_text);
@@ -156,7 +171,9 @@ fn qualifySeed(ctx: *Context, config: Config) !Seed {
     if (!try files.exists(ctx.io, guardian)) return ctx.fail("seed build requires sibling guardian-zig dependency");
     const guardian_real = try cwd().realPathFileAlloc(ctx.io, guardian, ctx.a);
     try cwd().symLink(ctx.io, guardian_real, try ctx.path(&.{ directory, "guardian-zig" }), .{ .is_directory = true });
-    const output = try ctx.checked(&.{ config.zig, "build", if (owned) "seed-compiler" else "affected-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, null);
+    var build_environment = try seedEnvironment(ctx, source);
+    defer build_environment.deinit();
+    const output = try ctx.checked(&.{ config.zig, "build", if (owned) "seed-compiler" else "affected-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, &build_environment);
     if (output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, output);
     const qualification = try files.object(ctx.a, &.{
         .{ .name = "recipe", .value = recipe },

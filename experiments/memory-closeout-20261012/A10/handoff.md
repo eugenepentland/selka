@@ -299,3 +299,40 @@ This tests the orchestration patch; no actual final compiler pin or RC-free pack
 is manufactured or claimed. Root must atomically select a real qualified ordinary-owned
 compiler pin and default root forwarding at Stage4. Immutable old seed bytes remain
 unchanged. Source deletion is still unapplied.
+
+## Support6 candidate archive and extracted compiler build isolation
+
+The actual frozen source5167c588be79dd43d21d5013c36db15110bf239b is archived at
+`.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar`, SHA256
+0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27,
+1,517,547,520bytes. The candidate pin, exact input hashes and reviewed qualification
+script live under `packaging-support6-candidate`; no installed/default manifest
+was created. Archive creation waited486seconds in shared admission; this is not
+compiler or archive execution time.
+
+Real provisioning required isolating the extracted compiler local Zig cache and
+TMPDIR from the caller checkout. The native builder now sets those two paths
+inside its extracted source tree, preserves the shared global cache and unrelated
+environment, and binds private-local-and-tmp-v1 in the seed recipe identity. An
+initial compile detected a variable-name clash, fixed before the final passing
+build. The complete fake-tool suite passes26/26 including inherited-local-cache
+and TMPDIR refusal controls. The exact tested native builder is c24cf61e5413599c8e147a0cf4d6eb132f09e2686bcfb29bd300ae85285af8bd.
+
+After A08 Support6 Debug component protocol success (560cache-plan and128test-index
+expected outcomes with RC0/returnedexitlive0 and structural checks), root authorized
+actual independent ReleaseFast provisioning and native installed-component checks.
+That run is in progress under shared admission; its status is recorded separately
+and no success or package retirement is claimed.
+
+Support6 targeted docs rerun passes four formerly refused tuple/round examples. The
+existing entry-point Filesystem/Environment wrapper remains E_SINGLE_OWNER_BORROW
+at Context(fs=fs,env=env); source/authority is preserved as a coordinator/A07 support
+blocker. This is a five-case targeted result, not a relabeled full71-case run.
+
+The borrowed-selection cost companion is prepared for atomic integration with
+A07's exact validator. It has application/format checks and a focused source test,
+not a native test result yet. `allocation_contract.zig` ownership is transferred
+narrowly to A07 for Unsupported/noalloc handling; its narrow pipeline cache callback
+Unsupported-to-CacheMiss overlay is also authorized, preserving fresh refusal/OOM.
+The C3 component draft was rebased over cache isolation; prior27-test evidence is
+kept under original hashes, and updated28-test native qualification remains pending.

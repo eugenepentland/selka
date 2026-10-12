@@ -1,5 +1,5 @@
 {
-  "status": "isolated unapplied package-route draft qualification; not real guest package qualification",
+  "status": "prior isolated draft27-test evidence; latest rebased patch includes production cache-isolation followup and has apply/fmt checks only; native rerun pending",
   "source_revision": "50d86cfd5e48fff33205c95010246a323b0988e7",
   "draft_builder_sha256": "fdff46b1e9ebc3d1c89098153e76801fb17f936a91856fbdefe524b471459c61",
   "draft_sources": {
@@ -20,5 +20,6 @@
   "zig_fmt_check": "PASS",
   "actual_pin": null,
   "historical_pin_sha256": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c",
-  "required_integration": "Apply only at coordinator Stage4 with root default forwarding to real qualified checked-default-v1 compiler pin. Root forwarding and manifest are deliberately absent from this patch."
+  "required_integration": "Apply only at coordinator Stage4 with root default forwarding to real qualified checked-default-v1 compiler pin. Root forwarding and manifest are deliberately absent from this patch.",
+  "rebased_patch_requires_native_rerun": true
 }

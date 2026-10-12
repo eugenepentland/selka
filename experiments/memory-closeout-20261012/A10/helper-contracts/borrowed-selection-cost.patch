@@ -1,0 +1,55 @@
+diff --git a/src/core/cost.zig b/src/core/cost.zig
+--- a/src/core/cost.zig
++++ b/src/core/cost.zig
+@@ -32,6 +32,7 @@
+ }
+ 
+ fn calleeAllocation(module: *const ir.Module, callee: *const ir.Function) Allocation {
++    if (@import("borrow_selection.zig").declaration(module, callee) catch return .unresolved) return .never;
+     if (@import("aggregate_provider.zig").marker(module, callee) catch return .unresolved) return .never;
+     const allocation_free = runtimeAllocationFree(callee.name) or (!module.zero_rc and std.mem.eql(u8, callee.name, "myl_core_text_encode"));
+     return switch (callee.signature.linkage) {
+diff --git a/src/core/cost_command.zig b/src/core/cost_command.zig
+--- a/src/core/cost_command.zig
++++ b/src/core/cost_command.zig
+@@ -417,3 +417,40 @@
+     module.functions.items[0].name = "myl_core_round_float_unreviewed";
+     try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &module.functions.items[0], call));
+ }
++
++// spec-case: FRONTEND-CORE-NOALLOC-1
++test "zero RC allocation contracts require validated borrowed selection markers" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
++    const dictionary = try module.intern(a, .{ .dict = .{ .key = .i64, .value = .str } });
++    const marker: ir.Function = .{ .name = try @import("borrow_selection.zig").name(a, dictionary, .str), .signature = .{ .params = &.{ .str, dictionary, .str }, .ret = .str, .linkage = .runtime_c } };
++    try module.functions.append(a, marker);
++    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .str };
++    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
++    module.zero_rc = false;
++    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
++    module.zero_rc = true;
++    for (0..10) |invalid| {
++        module.functions.items[0] = marker;
++        const callee = &module.functions.items[0];
++        switch (invalid) {
++            0 => callee.signature.params = &.{ .str, dictionary },
++            1 => callee.signature.ret = .i64,
++            2 => callee.signature.owned = 1,
++            3 => callee.signature.consumes = 1,
++            4 => callee.signature.views = 1,
++            5 => {
++                callee.signature.linkage = .extern_c;
++                callee.span = 13;
++            },
++            6 => callee.name = "myl_core_borrow_select_v1_01_5",
++            7 => callee.name = "myl_core_borrow_select_v1_4294967295_5",
++            8 => callee.signature.params = &.{ .str, .i64, .str },
++            9 => try callee.blocks.append(a, .{}),
++            else => unreachable,
++        }
++        try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, callee, call));
++    }
++}

@@ -2,19 +2,19 @@
   "status": "UNAPPLIED; root must provide actual qualified checked-default-v1 compiler pin and default build forwarding atomically",
   "files": {
     "selfhost/components.zig": {
-      "original_sha256": "7d1625ae3a983585e3819ec92147a1911c5c463d4a20a85bbdae0c7a5e29f51a",
-      "draft_sha256": "3a385a4099ac8d42ed5e9e86f658718586e53f5c6609accda77447a553d24ed9"
+      "original_sha256": "b8ab3db2e32da7c55c6ef4aab7d0e2e37556f419b3a0c1fc818cc9073a94cb56",
+      "draft_sha256": "e7f4e83236c131cf6192e96e3568ff508434ac3060f4fee86ecc4e36bff84fba"
     },
     "selfhost/test_component_native.py": {
       "original_sha256": "964e1b8eb7e5a888d2a5c3495ea882449b9a5b3ee2e724a16768b849b64ecfbb",
       "draft_sha256": "c7adcfaa930cd469b22759322b2bdc06f6d3d4092a12e22183e03db87d1794c9"
     },
     "selfhost/test_components.py": {
-      "original_sha256": "a49825887a23b771af16c2f12f0849b12d289900436202d57ca31ba5b18d82b9",
-      "draft_sha256": "0b5896bbd23a2e20a167db0b7bec757e02b9ccd063c3356b036cc39ca12d538f"
+      "original_sha256": "0ef4477e8d772c965e8be178c4cab675d2f299f27da64307b52e14f1ab94db28",
+      "draft_sha256": "8ae5b5ad93f3830885628844eb1796fb1fb658d57bf27240d692f51a1b2feb5b"
     }
   },
-  "patch_sha256": "a17347479df50f45cbaf51d89dba57d441124bf700174413137c61876697da39",
+  "patch_sha256": "12d7b99aa17d1684c0514cf95822e57e63d50df3f4954dbc0c09964b7619a815",
   "historical_seed_unchanged": true,
   "real_package_qualified": false
 }

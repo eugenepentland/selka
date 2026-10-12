@@ -1,0 +1,12 @@
+{
+  "status": "unapplied companion for atomic integration with A07 borrowed-selection feature; native test pending",
+  "validator": "borrow_selection.declaration(module,function) Error!bool; exact canonical dictionary/value types and runtime_c borrowed signature, no helper body",
+  "classification": "validated declaration => never allocates; malformed matching marker => unresolved; source extern lookalike => unresolved",
+  "callsite_validation": "A07 validates exact get hit/fallback phi and both borrowed roots in passes; fresh malformed Core must refuse independently of cost classification",
+  "base_files": {
+    "src/core/cost.zig": "aafede94b81b7a8db8459272dc1013ce36a1ce0720ff79a96a96146396283010",
+    "src/core/cost_command.zig": "029d5031924df7e4893714078a13390657b08d682aebf26fd066a72b4fb47637"
+  },
+  "patch_sha256": "ede6bbc9d71dd4565053f869fd7296bef70d943837ba7fcb2af08a4e0ade70e6",
+  "test": "zero RC allocation contracts require validated borrowed selection markers; positive + old ABI + ten malformed declarations"
+}

@@ -37,9 +37,9 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
      const recipe = try get(pin, "recipe");
      if (!std.mem.eql(u8, try text(try get(pin, "memory_mode")), "zero-rc-v1") or
          !std.mem.eql(u8, try text(try get(recipe, "step")), "seed-compiler") or
-@@ -103,9 +108,8 @@
-         return ctx.fail("owned component compiler requires zero-rc-v1 and independent native ReleaseFast seed-compiler recipe");
+@@ -117,9 +122,8 @@
  }
+ 
  fn qualifySeed(ctx: *Context, config: Config) !Seed {
 -    const owned = config.bootstrap.owned_pin != null;
 -    const pin = try ctx.metadata(config.bootstrap.owned_pin orelse try ctx.path(&.{ config.root, "selfhost", "component-seed.json" }));
@@ -49,7 +49,7 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
      const expected_version = try text(try get(pin, "zig"));
      const version = try ctx.checked(&.{ config.zig, "version" }, null, null);
      if (!std.mem.eql(u8, std.mem.trim(u8, version, "\r\n \t"), expected_version)) return ctx.fail("seed requires the pinned Zig version");
-@@ -136,7 +140,7 @@
+@@ -151,7 +155,7 @@
      if (try files.exists(ctx.io, receipt)) {
          const qualification = try ctx.metadata(receipt);
          if (!try equals(ctx.a, try get(qualification, "recipe"), recipe) or !try digestEquals(ctx.io, binary, try text(try get(qualification, "sha256")))) return ctx.fail("qualified seed digest mismatch; remove corrupt seed cache and rebuild");
@@ -58,16 +58,16 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
      }
      try files.remove(ctx.io, directory);
      try cwd().createDirPath(ctx.io, source);
-@@ -156,7 +160,7 @@
-     if (!try files.exists(ctx.io, guardian)) return ctx.fail("seed build requires sibling guardian-zig dependency");
-     const guardian_real = try cwd().realPathFileAlloc(ctx.io, guardian, ctx.a);
+@@ -173,7 +177,7 @@
      try cwd().symLink(ctx.io, guardian_real, try ctx.path(&.{ directory, "guardian-zig" }), .{ .is_directory = true });
--    const output = try ctx.checked(&.{ config.zig, "build", if (owned) "seed-compiler" else "affected-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, null);
-+    const output = try ctx.checked(&.{ config.zig, "build", "seed-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, null);
+     var build_environment = try seedEnvironment(ctx, source);
+     defer build_environment.deinit();
+-    const output = try ctx.checked(&.{ config.zig, "build", if (owned) "seed-compiler" else "affected-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, &build_environment);
++    const output = try ctx.checked(&.{ config.zig, "build", "seed-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, &build_environment);
      if (output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, output);
      const qualification = try files.object(ctx.a, &.{
          .{ .name = "recipe", .value = recipe },
-@@ -164,7 +168,7 @@
+@@ -181,7 +185,7 @@
          .{ .name = "source_identity", .value = try files.tree(ctx.a, ctx.io, try ctx.path(&.{ source, "src" })) },
      });
      try files.atomicJson(ctx.a, ctx.io, receipt, qualification, 0o600);
@@ -76,7 +76,7 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
  }
  
  fn nativeTarget(ctx: *Context) !Value {
-@@ -223,7 +227,8 @@
+@@ -240,7 +244,8 @@
      try flags.append(files.string("debug"));
      try flags.append(files.string("fresh-private-cache"));
      try flags.append(files.string("private-zig-global-v1"));
@@ -86,7 +86,7 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
      const identity = try files.object(ctx.a, &.{
          .{ .name = "format", .value = files.integer(2) },
          .{ .name = "component", .value = files.string(descriptor.name) },
-@@ -274,7 +279,6 @@
+@@ -291,7 +296,6 @@
          try environment.put("ZIG_GLOBAL_CACHE_DIR", try ctx.path(&.{ work, "cache", "zig-global" }));
          var arguments: std.ArrayList([]const u8) = .empty;
          try arguments.appendSlice(ctx.a, &.{ seed.binary, "build", try ctx.path(&.{ copied, "main.my" }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) });
@@ -94,7 +94,7 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
          const compile_output = try ctx.checked(arguments.items, work, &environment);
          if (compile_output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, compile_output);
          const fresh = try files.object(ctx.a, &.{ .{ .name = "identity", .value = identity }, .{ .name = "sha256", .value = try ctx.hashValue(output) } });
-@@ -301,12 +305,13 @@
+@@ -318,12 +322,13 @@
      if (try files.exists(ctx.io, installed)) {
          if (!try digestEquals(ctx.io, installed, expected)) return ctx.fail("installed component digest mismatch");
      } else try files.copy(ctx.io, executable, installed, 0o555);
@@ -110,7 +110,7 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
      try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ config.install, try std.fmt.allocPrint(ctx.a, "{s}.json", .{descriptor.name}) }), manifest, 0o644);
      return ctx.a.dupe(u8, &key);
  }
-@@ -334,7 +339,7 @@
+@@ -351,7 +356,7 @@
      while (index < args.len) : (index += 1) {
          const arg = args[index];
          if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
@@ -119,7 +119,7 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
              return;
          }
          if (std.mem.eql(u8, arg, "--uncached")) {
-@@ -349,6 +354,7 @@
+@@ -366,6 +371,7 @@
          if (index >= args.len) return ctx.fail("option requires a value");
          if (std.mem.eql(u8, arg, "--root")) root = args[index] else if (std.mem.eql(u8, arg, "--zig")) zig = args[index] else if (std.mem.eql(u8, arg, "--cache-dir")) cache = args[index] else if (std.mem.eql(u8, arg, "--install-dir")) install = args[index] else if (std.mem.eql(u8, arg, "--seed-source")) source_archive = args[index] else if (std.mem.eql(u8, arg, "--owned-compiler-pin")) owned_pin = args[index] else return ctx.fail("unknown coordinator option");
      }
@@ -127,7 +127,7 @@ diff --git a/selfhost/components.zig b/selfhost/components.zig
      root = try cwd().realPathFileAlloc(ctx.io, root, ctx.a);
      const home = ctx.environ.get("HOME") orelse if (cache == null) return ctx.fail("HOME is unset; supply --cache-dir") else current;
      const config: Config = .{
-@@ -358,7 +364,7 @@
+@@ -375,7 +381,7 @@
          .install = try std.fs.path.resolve(ctx.a, &.{ current, install orelse try ctx.path(&.{ root, "zig-out", "libexec", "mylang", "components" }) }),
          .bootstrap = .{
              .source = if (source_archive) |path_name| try cwd().realPathFileAlloc(ctx.io, path_name, ctx.a) else null,
@@ -257,7 +257,7 @@ diff --git a/selfhost/test_components.py b/selfhost/test_components.py
  
      def test_owned_route_refuses_component_dependent_seed_recipe(self):
          path = self.owned_pin()
-@@ -340,7 +359,7 @@
+@@ -359,7 +378,7 @@
                  artifact = directory / name
                  artifact.write_bytes(name.encode())
                  (directory / f"{name}.json").write_text(json.dumps(dict(
@@ -266,7 +266,7 @@ diff --git a/selfhost/test_components.py b/selfhost/test_components.py
              pin, archive = directory / "owned-pin.json", directory / "source.tar"
              args = ["test_component_native.py", "--zig", "pinned-zig", "--builder", "independent-builder",
                      "--component-dir", str(directory), "--owned-compiler-pin", str(pin), "--seed-source", str(archive)]
-@@ -354,11 +373,14 @@
+@@ -373,11 +392,14 @@
              self.assertEqual(request[request.index("--owned-compiler-pin") + 1], pin)
              self.assertEqual(request[request.index("--seed-source") + 1], archive)
              for call in checked.call_args_list[1:]:

@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "commit": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "archive_sha256": "0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27",
+  "memory_mode": "zero-rc-v1",
+  "recipe": {
+    "optimize": "ReleaseFast",
+    "target": "native",
+    "step": "seed-compiler"
+  },
+  "qualification": "Local qualification must bind source, toolchain, compiler and component identities and record native protocol plus ownership/ABI checks before installation is selected."
+}
