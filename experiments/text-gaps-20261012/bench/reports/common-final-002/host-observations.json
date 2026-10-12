@@ -1,0 +1,143 @@
+{
+  "schema": "text-gap-host-observations-v1",
+  "snapshots": [
+    {
+      "cell": "csv_aggregate/large",
+      "snapshot": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/runs/common-final-002/results/csv_aggregate.large.host-before.json",
+      "sha256": "cf6b723958556ec9a42d0cc2cf7019691921f0806f05a8e4dd0f07b32f92679f",
+      "utc": "2026-10-12T19:36:40.702707+00:00",
+      "loadavg": [
+        6.72216796875,
+        12.54443359375,
+        12.013671875
+      ],
+      "topology_frequency": {
+        "topology/thread_siblings_list": "8-9",
+        "topology/core_id": "16",
+        "topology/physical_package_id": "0",
+        "cpufreq/scaling_governor": "powersave",
+        "cpufreq/scaling_cur_freq": "4059735",
+        "cpufreq/scaling_min_freq": "400000",
+        "cpufreq/scaling_max_freq": "4600000",
+        "cpufreq/cpuinfo_max_freq": "4600000"
+      },
+      "process_names_cpu": "    PID    PPID PSR %CPU COMMAND\n1701633 1701613  14  160 chrome\n1701707 1701614   4 48.0 chrome\n1701586 1701585  10  6.8 node\n1701606 1701586  12  4.3 chrome\n2677378       1  19  2.7 netdata\n1701698 1701614   4  2.1 chrome\n1701636 1701606  12  2.0 chrome\n 754507       1   8  1.9 codex\n2678065 2677477   2  1.8 apps.plugin\n3047625 3037180   4  1.6 2.1.295-8b2928c\n2116142 2115650   0  1.5 claude\n3334921 3037180   4  0.8 2.1.295-8b2928c\n1764181    3611   8  0.6 uvicorn\n2678011 2677477  13  0.5 go.d.plugin\n2678055 2677477  15  0.3 debugfs.plugin\n   3595       1   5  0.3 cloudflared\n2729514    3611  13  0.3 cloudflared\n4127395       2  16  0.3 kworker/u80:1-flush-252:0\n2729402    3611   2  0.3 cloudflared\n    147       2  14  0.3 kcompactd0\n1466958       2   0  0.2 kworker/u80:3-flush-252:0\n    166       2   8  0.2 kswapd0\n   1556       1   1  0.2 tailscaled\n   1169       2   8  0.2 irq/188-iwlwifi:default_queue",
+      "limitation": "Single read-only snapshot before cell calibration/warmup. ps CPU is a process-lifetime average. No arguments inspected, no processes/affinity/governor altered. Observation does not prove causal interference during samples."
+    },
+    {
+      "cell": "csv_aggregate/small",
+      "snapshot": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/runs/common-final-002/results/csv_aggregate.small.host-before.json",
+      "sha256": "3284d8bd6760685a229a6ce4a29f9242c846a9cc02ed49cd8cecd616d5264c09",
+      "utc": "2026-10-12T19:36:54.939065+00:00",
+      "loadavg": [
+        5.99560546875,
+        12.19677734375,
+        11.90576171875
+      ],
+      "topology_frequency": {
+        "topology/thread_siblings_list": "8-9",
+        "topology/core_id": "16",
+        "topology/physical_package_id": "0",
+        "cpufreq/scaling_governor": "powersave",
+        "cpufreq/scaling_cur_freq": "439426",
+        "cpufreq/scaling_min_freq": "400000",
+        "cpufreq/scaling_max_freq": "4600000",
+        "cpufreq/cpuinfo_max_freq": "4600000"
+      },
+      "process_names_cpu": "    PID    PPID PSR %CPU COMMAND\n1702379 1702290   6  105 chrome\n1702310 1702289   2 79.1 chrome\n1702565 1676489   0 33.3 python3\n1702261 1702260  16 13.9 node\n1702282 1702261  12 10.3 chrome\n1702371 1702290   9  7.0 chrome\n1702314 1702282  12  4.7 chrome\n2677378       1  19  2.7 netdata\n 754507       1   8  1.9 codex\n2678065 2677477   2  1.8 apps.plugin\n3047625 3037180   4  1.6 2.1.295-8b2928c\n2116142 2115650  10  1.5 claude\n3334921 3037180  19  0.8 2.1.295-8b2928c\n1764181    3611  14  0.6 uvicorn\n2678011 2677477  13  0.5 go.d.plugin\n1702407 1702290  18  0.5 chrome\n1702290 1702282  16  0.5 chrome\n2678055 2677477  13  0.3 debugfs.plugin\n   3595       1   5  0.3 cloudflared\n2729514    3611  13  0.3 cloudflared\n4127395       2  16  0.3 kworker/u80:1-flush-252:0\n2729402    3611   2  0.3 cloudflared\n    147       2  14  0.3 kcompactd0\n1466958       2  19  0.2 kworker/u80:3-ext4-rsv-conversion",
+      "limitation": "Single read-only snapshot before cell calibration/warmup. ps CPU is a process-lifetime average. No arguments inspected, no processes/affinity/governor altered. Observation does not prove causal interference during samples."
+    },
+    {
+      "cell": "json_transform/large",
+      "snapshot": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/runs/common-final-002/results/json_transform.large.host-before.json",
+      "sha256": "ed18985887189cb013638af57a957f275987049822586f72db2408471a4ac784",
+      "utc": "2026-10-12T19:37:08.619830+00:00",
+      "loadavg": [
+        4.9560546875,
+        11.6640625,
+        11.73583984375
+      ],
+      "topology_frequency": {
+        "topology/thread_siblings_list": "8-9",
+        "topology/core_id": "16",
+        "topology/physical_package_id": "0",
+        "cpufreq/scaling_governor": "powersave",
+        "cpufreq/scaling_cur_freq": "400000",
+        "cpufreq/scaling_min_freq": "400000",
+        "cpufreq/scaling_max_freq": "4600000",
+        "cpufreq/cpuinfo_max_freq": "4600000"
+      },
+      "process_names_cpu": "    PID    PPID PSR %CPU COMMAND\n1702310 1702289  18  128 chrome\n1703027 1676489   0 33.3 python3\n1702379 1702290  13 27.3 chrome\n1702261 1702260  12  4.3 node\n1702282 1702261   0  3.5 chrome\n2677378       1  19  2.7 netdata\n 754507       1   8  1.9 codex\n2678065 2677477   6  1.8 apps.plugin\n3047625 3037180   0  1.6 2.1.295-8b2928c\n2116142 2115650   0  1.5 claude\n1702371 1702290   9  1.4 chrome\n1702314 1702282  15  1.0 chrome\n3334921 3037180  19  0.8 2.1.295-8b2928c\n1764181    3611  13  0.6 uvicorn\n2678011 2677477  13  0.5 go.d.plugin\n2678055 2677477  13  0.3 debugfs.plugin\n   3595       1   5  0.3 cloudflared\n2729514    3611  13  0.3 cloudflared\n4127395       2  16  0.3 kworker/u80:1-flush-252:0\n2729402    3611   2  0.3 cloudflared\n    147       2   2  0.3 kcompactd0\n1466958       2  19  0.2 kworker/u80:3-flush-252:0\n    166       2   8  0.2 kswapd0\n   1556       1   1  0.2 tailscaled",
+      "limitation": "Single read-only snapshot before cell calibration/warmup. ps CPU is a process-lifetime average. No arguments inspected, no processes/affinity/governor altered. Observation does not prove causal interference during samples."
+    },
+    {
+      "cell": "json_transform/small",
+      "snapshot": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/runs/common-final-002/results/json_transform.small.host-before.json",
+      "sha256": "c10c98ed4ddabed426b3c9e41d4344a1a56b43c7057e3a50eca7ebc40080f5c1",
+      "utc": "2026-10-12T19:37:27.737079+00:00",
+      "loadavg": [
+        4.0537109375,
+        11.021484375,
+        11.52197265625
+      ],
+      "topology_frequency": {
+        "topology/thread_siblings_list": "8-9",
+        "topology/core_id": "16",
+        "topology/physical_package_id": "0",
+        "cpufreq/scaling_governor": "powersave",
+        "cpufreq/scaling_cur_freq": "400000",
+        "cpufreq/scaling_min_freq": "400000",
+        "cpufreq/scaling_max_freq": "4600000",
+        "cpufreq/cpuinfo_max_freq": "4600000"
+      },
+      "process_names_cpu": "    PID    PPID PSR %CPU COMMAND\n1703210 1703189  14  137 chrome\n1703755 1676489   2 33.3 python3\n1703279 1703190   4 30.7 chrome\n1703109 1703108  19  4.7 node\n1703181 1703109  13  3.8 chrome\n2677378       1  19  2.7 netdata\n 754507       1   8  1.9 codex\n2678065 2677477   4  1.8 apps.plugin\n3047625 3037180   6  1.6 2.1.295-8b2928c\n2116142 2115650  16  1.5 claude\n1703270 1703190  13  1.3 chrome\n1703213 1703181  12  1.1 chrome\n3334921 3037180  18  0.8 2.1.295-8b2928c\n1764181    3611  16  0.6 uvicorn\n2678011 2677477  13  0.5 go.d.plugin\n2678055 2677477  13  0.3 debugfs.plugin\n   3595       1   5  0.3 cloudflared\n2729514    3611  13  0.3 cloudflared\n4127395       2  16  0.3 kworker/u80:1-flush-252:0\n2729402    3611   2  0.3 cloudflared\n    147       2   2  0.3 kcompactd0\n1466958       2  14  0.2 kworker/u80:3-ext4-rsv-conversion\n    166       2   8  0.2 kswapd0\n   1556       1   1  0.2 tailscaled",
+      "limitation": "Single read-only snapshot before cell calibration/warmup. ps CPU is a process-lifetime average. No arguments inspected, no processes/affinity/governor altered. Observation does not prove causal interference during samples."
+    },
+    {
+      "cell": "string_split/large",
+      "snapshot": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/runs/common-final-002/results/string_split.large.host-before.json",
+      "sha256": "eca213ad2035bb683d0cc9d98476986702c48fcd06e3631d59bbd820d86cfa1a",
+      "utc": "2026-10-12T19:37:45.678368+00:00",
+      "loadavg": [
+        3.2666015625,
+        10.3876953125,
+        11.30224609375
+      ],
+      "topology_frequency": {
+        "topology/thread_siblings_list": "8-9",
+        "topology/core_id": "16",
+        "topology/physical_package_id": "0",
+        "cpufreq/scaling_governor": "powersave",
+        "cpufreq/scaling_cur_freq": "1326799",
+        "cpufreq/scaling_min_freq": "400000",
+        "cpufreq/scaling_max_freq": "4600000",
+        "cpufreq/cpuinfo_max_freq": "4600000"
+      },
+      "process_names_cpu": "    PID    PPID PSR %CPU COMMAND\n1704257 1676489   0 33.3 python3\n2677378       1  16  2.7 netdata\n 754507       1   8  1.9 codex\n2678065 2677477   4  1.8 apps.plugin\n3047625 3037180   6  1.6 2.1.295-8b2928c\n2116142 2115650   5  1.5 claude\n3334921 3037180  18  0.8 2.1.295-8b2928c\n1764181    3611   0  0.6 uvicorn\n2678011 2677477  13  0.5 go.d.plugin\n2678055 2677477  14  0.3 debugfs.plugin\n   3595       1   5  0.3 cloudflared\n2729514    3611  13  0.3 cloudflared\n2729402    3611   2  0.3 cloudflared\n4127395       2  16  0.3 kworker/u80:1-flush-252:0\n    147       2   2  0.3 kcompactd0\n    166       2   8  0.2 kswapd0\n1466958       2   6  0.2 kworker/u80:3-ext4-rsv-conversion\n   1556       1   1  0.2 tailscaled\n   1169       2   8  0.2 irq/188-iwlwifi:default_queue\n     15       2   1  0.2 rcu_preempt\n3919283 3919282   6  0.1 node\n2729400    3611  17  0.1 python\n2588660 2588464  18  0.1 copilot-runtime\n2729553    3611   0  0.1 node",
+      "limitation": "Single read-only snapshot before cell calibration/warmup. ps CPU is a process-lifetime average. No arguments inspected, no processes/affinity/governor altered. Observation does not prove causal interference during samples."
+    },
+    {
+      "cell": "string_split/small",
+      "snapshot": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/runs/common-final-002/results/string_split.small.host-before.json",
+      "sha256": "49dd540fb2055ed081fc83dfaa67b4efb7c7ab9cba41678ac66bb32d93583e40",
+      "utc": "2026-10-12T19:38:02.091285+00:00",
+      "loadavg": [
+        2.76416015625,
+        9.92724609375,
+        11.13623046875
+      ],
+      "topology_frequency": {
+        "topology/thread_siblings_list": "8-9",
+        "topology/core_id": "16",
+        "topology/physical_package_id": "0",
+        "cpufreq/scaling_governor": "powersave",
+        "cpufreq/scaling_cur_freq": "4541670",
+        "cpufreq/scaling_min_freq": "400000",
+        "cpufreq/scaling_max_freq": "4600000",
+        "cpufreq/cpuinfo_max_freq": "4600000"
+      },
+      "process_names_cpu": "    PID    PPID PSR %CPU COMMAND\n1704748 1676489   8 20.0 python3\n2677378       1  16  2.7 netdata\n 754507       1   8  1.9 codex\n2678065 2677477   0  1.8 apps.plugin\n3047625 3037180  15  1.6 2.1.295-8b2928c\n2116142 2115650   6  1.5 claude\n3334921 3037180  18  0.8 2.1.295-8b2928c\n1764181    3611  15  0.6 uvicorn\n2678011 2677477  13  0.5 go.d.plugin\n2678055 2677477  15  0.3 debugfs.plugin\n   3595       1   5  0.3 cloudflared\n2729514    3611  13  0.3 cloudflared\n2729402    3611   2  0.3 cloudflared\n4127395       2  16  0.3 kworker/u80:1-flush-252:0\n    147       2   2  0.3 kcompactd0\n    166       2   8  0.2 kswapd0\n1466958       2   4  0.2 kworker/u80:3-ext4-rsv-conversion\n   1556       1   1  0.2 tailscaled\n   1169       2   8  0.2 irq/188-iwlwifi:default_queue\n     15       2  10  0.2 rcu_preempt\n3919283 3919282  10  0.1 node\n2729400    3611  17  0.1 python\n2588660 2588464  18  0.1 copilot-runtime\n2729553    3611   0  0.1 node",
+      "limitation": "Single read-only snapshot before cell calibration/warmup. ps CPU is a process-lifetime average. No arguments inspected, no processes/affinity/governor altered. Observation does not prove causal interference during samples."
+    }
+  ]
+}

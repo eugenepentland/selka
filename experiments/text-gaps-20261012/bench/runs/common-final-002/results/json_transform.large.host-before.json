@@ -1,0 +1,44 @@
+{
+  "schema": "text-gap-host-before-v1",
+  "utc": "2026-10-12T19:37:08.619830+00:00",
+  "cpu": 8,
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "loadavg": [
+    4.9560546875,
+    11.6640625,
+    11.73583984375
+  ],
+  "topology_frequency": {
+    "topology/thread_siblings_list": "8-9",
+    "topology/core_id": "16",
+    "topology/physical_package_id": "0",
+    "cpufreq/scaling_governor": "powersave",
+    "cpufreq/scaling_cur_freq": "400000",
+    "cpufreq/scaling_min_freq": "400000",
+    "cpufreq/scaling_max_freq": "4600000",
+    "cpufreq/cpuinfo_max_freq": "4600000"
+  },
+  "process_names_cpu": "    PID    PPID PSR %CPU COMMAND\n1702310 1702289  18  128 chrome\n1703027 1676489   0 33.3 python3\n1702379 1702290  13 27.3 chrome\n1702261 1702260  12  4.3 node\n1702282 1702261   0  3.5 chrome\n2677378       1  19  2.7 netdata\n 754507       1   8  1.9 codex\n2678065 2677477   6  1.8 apps.plugin\n3047625 3037180   0  1.6 2.1.295-8b2928c\n2116142 2115650   0  1.5 claude\n1702371 1702290   9  1.4 chrome\n1702314 1702282  15  1.0 chrome\n3334921 3037180  19  0.8 2.1.295-8b2928c\n1764181    3611  13  0.6 uvicorn\n2678011 2677477  13  0.5 go.d.plugin\n2678055 2677477  13  0.3 debugfs.plugin\n   3595       1   5  0.3 cloudflared\n2729514    3611  13  0.3 cloudflared\n4127395       2  16  0.3 kworker/u80:1-flush-252:0\n2729402    3611   2  0.3 cloudflared\n    147       2   2  0.3 kcompactd0\n1466958       2  19  0.2 kworker/u80:3-flush-252:0\n    166       2   8  0.2 kswapd0\n   1556       1   1  0.2 tailscaled",
+  "limitation": "Single read-only snapshot before cell calibration/warmup. ps CPU is a process-lifetime average. No arguments inspected, no processes/affinity/governor altered. Observation does not prove causal interference during samples."
+}
