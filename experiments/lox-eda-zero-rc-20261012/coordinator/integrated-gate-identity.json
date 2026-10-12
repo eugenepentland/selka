@@ -1,0 +1,32 @@
+{
+  "source_commit": "4034a2fab29e3300b6f70549ce84727d647761db",
+  "benchmark_compiler_source_commit": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b",
+  "benchmark_compiler_sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d",
+  "gate_rebuilt_compiler_sha256": "8e58720cd72de8632aa48df373d18fc8238d46ec27010f8b182820a0eaaf10fa",
+  "production_compiler_sources_unchanged": true,
+  "source_bytes_match_qualified_applications": true,
+  "status": 0,
+  "success": true,
+  "inputs_stable": true,
+  "actions_by_state": {
+    "fresh": 11,
+    "execute": 22,
+    "reused": 12
+  },
+  "report_sha256": "896eb65b12be8989104d65fa50a3f846693598600e191af9736492734898e964",
+  "notes": [
+    "The final gate rebuilt the compiler executable; its hash differs from the compiler that built the benchmark guests.",
+    "Guest binaries were not rebuilt or relabelled; all measurements retain their original compiler and guest hashes.",
+    "The initial and final gates retain separate raw reports. The executable-hash difference is recorded without claiming code-section equality or relabelling measurements."
+  ],
+  "compiler_hash_audit": {
+    "source_scope": "src, build.zig, build_identity.zig, docs, selfhost",
+    "source_difference": "none",
+    "build_mode": "Debug in both gates",
+    "rebuilt_source_identity": "db59f6bc1b822dcb07f5d3a266422bd624dea0bbf871f05f50f285e34bcac5c6",
+    "observed": "Final gate recompiles the host, identity generator and helper objects; current ELF embeds generated cache paths in DWARF",
+    "cause": "Not proven; regenerated debug/object metadata is a plausible explanation, not an established section-equivalence claim",
+    "earlier_executable_copy": "Not found in the bounded cache/installation audit; recorded compiler identity and all frozen guest executables remain available",
+    "new_installation": "gate-installation.json"
+  }
+}

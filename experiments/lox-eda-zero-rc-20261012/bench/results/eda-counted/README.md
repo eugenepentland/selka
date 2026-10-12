@@ -1,0 +1,3 @@
+# EDA counted raw evidence
+
+All 34 designs and three mylang arms are retained. Large counter and summary JSON files are checked in as deterministic gzip files; the emitted originals remain local at their recorded paths. `compressed-raw-manifest.json` binds each compressed file to the original bytes. Decompression reconstructs the exact JSON. Qualification receipts, generated specs and progress journals remain ordinary JSON. The aggregate report is `../../eda-counted-summary.json` with its full-counter companion `../../eda-counted-summary.json.gz`. These instrumented runs are separate from runtime and RSS samples.

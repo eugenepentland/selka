@@ -1,0 +1,10 @@
+{
+  "integration_commit": "4034a2fab29e3300b6f70549ce84727d647761db",
+  "status": "pass",
+  "source_files": 122,
+  "my_modules": 121,
+  "manifest_sha256": "55edd1a352754b28311dbb0dc1359af314761728b0488a5799361b2ec514a3a4",
+  "all_integrated_source_bytes_match_frozen_compiler_inputs": true,
+  "compiler_sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d",
+  "production_compiler_sources_unchanged_since_frozen_commit": true
+}

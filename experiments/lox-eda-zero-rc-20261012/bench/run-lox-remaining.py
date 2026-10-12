@@ -3,7 +3,7 @@
 Initial tree/vm Fibonacci receipts are retained separately. This coordinator owns
 admission; run it directly, never inside another build-slot lease.
 """
-import argparse,json,pathlib,subprocess,sys
+import argparse,hashlib,json,pathlib,subprocess,sys,time
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--binaries',type=pathlib.Path,required=True,help='Frozen Lox binaries.json manifest')
 p.add_argument('--output',type=pathlib.Path,required=True)
@@ -12,6 +12,8 @@ p.add_argument('--guest-timeout',type=float,default=120)
 a=p.parse_args();root=pathlib.Path(__file__).resolve().parents[3]
 manifest=json.loads(a.binaries.read_text());arms=[]
 for name,key in [('mylang-original-rc','original-rc'),('mylang-migrated-rc','migrated-rc'),('mylang-zero-rc','zero')]:
+ binary=manifest['binaries'][key]
+ assert hashlib.sha256(pathlib.Path(binary['path']).read_bytes()).hexdigest()==binary['sha256']
  arms+=['--arm',name+'='+manifest['binaries'][key]['path']]
 cases=[]
 for path in sorted(a.specs.glob('*.json')):
@@ -31,3 +33,5 @@ for case in cases:
        '--guest-timeout',str(a.guest_timeout),*(['--prior-receipt',str(previous.resolve())] if previous else []),*arms,str(case)]
   subprocess.run(cmd,cwd=root,check=True)
   previous=receipt
+  # Give queued builds a chance to enter before requesting another timing lease.
+  time.sleep(2)

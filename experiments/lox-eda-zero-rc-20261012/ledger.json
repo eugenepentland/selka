@@ -4,7 +4,7 @@
   "items": [
     {
       "id": "sources",
-      "state": "in_progress",
+      "state": "integrated_source_identity_verified",
       "owner": "lox_owned,eda_owned",
       "requirement": "Frozen original and migrated full applications with source provenance"
     },
@@ -17,27 +17,35 @@
     },
     {
       "id": "correctness",
-      "state": "lox_qualified_eda_in_progress",
+      "state": "qualified",
       "owner": "lox_owned,eda_owned",
       "requirement": "All full-port tests plus 26 Lox performance cells and 34 EDA output goldens; no omitted failures",
       "lox_conformance_per_mode": "974/974 in5modes",
       "eda_original_tests": "310/310",
-      "eda_zero_rc": "export integration pending"
+      "eda_zero_rc": "310/310 verified release and 310/310 debug",
+      "eda_all_modules": "121/121 source checks",
+      "eda_goldens": "34/34 entire output sets across five builds",
+      "eda_errors": "9/9 error-path comparisons across five builds"
     },
     {
       "id": "runtime_rss",
       "state": "in_progress",
       "owner": "lox_eda_bench",
       "requirement": "Same-compiler original RC / migrated RC / migrated zeroRC, four reference arms; 2warmups9measured3RSS, bounded guest deadlines",
-      "completed_cells": 2,
+      "completed_cells": 44,
       "total_cells": 60,
-      "evidence": "bench/results/initial-fib"
+      "evidence": [
+        "bench/results/initial-fib",
+        "bench/results/lox-remaining",
+        "bench/results/eda-final"
+      ]
     },
     {
       "id": "managed_counters",
-      "state": "pending",
-      "owner": "lox_eda_bench",
-      "requirement": "Separate counted mylang builds: allocation traffic,reallocations,managed peak,exit-live,RC events"
+      "state": "in_progress",
+      "owner": "lox_owned,lox_eda_bench",
+      "requirement": "Separate counted mylang builds: allocation traffic,reallocations,managed peak,exit-live,RC events",
+      "smoke_evidence": "lox/evidence/counters (separate smaller inputs; not full-size performance cells)"
     },
     {
       "id": "history",
@@ -47,10 +55,10 @@
     },
     {
       "id": "verification",
-      "state": "compiler_gate_passed",
+      "state": "passed",
       "owner": "root",
       "requirement": "Focused ownership/native checks then complete registered gate on frozen integrated compiler",
-      "evidence": "coordinator/compiler-identity.json"
+      "evidence": "coordinator/integrated-gate-identity.json"
     }
   ],
   "compiler_implementation_commit": "466a1a5b7",
