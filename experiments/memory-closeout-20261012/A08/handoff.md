@@ -132,3 +132,41 @@ This is not C1: test-index advances past scope checking but refuses the unaudite
 payload path and sent the registry contract to A07. Cache-plan still refuses the
 comprehension in that older binary. Real zero-RC component protocol qualification
 remains pending an integrated compiler containing both fixes.
+
+## Managed sorting and list constructor follow-up
+
+The coordinator reserved `src/prelude_builtins.zig` to A08 after the initial
+comprehension commit. Unkeyed `sorted(values)` and `list(values)` now lower to
+the existing explicit deep-copy operation instead of a generated full slice
+whose append attempted to move borrowed managed children. The output remains
+independent, and input storage stays borrowed. A07 reviewed the two replacements.
+The existing keyed gather path is unchanged.
+
+Two registered regressions cover bytes, empty/singleton lists, ascending/reverse
+order, stable equal-key records, managed keys, nested children, input replacement,
+and input destruction. `sort-focused.log` passes all five A08 tests using Debug
+and verified release guest execution, leak checking and clean LLVM checks.
+`sort-ordinary.log` passes all eight selected sorting tests, including existing
+ordinary-mode alias/ordering, Unicode/bytes, NaN and signed-zero coverage.
+`sort-ordinary-v2.log` repeats all eight successfully after the pending-Result
+guards were added.
+
+A01's expanded Result-list work requires implicit `list(...)` and `sorted(...)`
+to reject pending elements with `E_RESULT_OPERATION`; these prelude guards are
+included. A01 owns the Result-list negative integration cases because the C0
+frontend in this worker still refuses Result-list construction itself.
+
+Additional ReleaseFast baseline-only measurements now include accepted match
+depth 96, field count 128, and recursive depth 16/64/128. Each passes all five
+cold/warm/receipt/replay/edit cases. Match depth 128 remains an explicit parser
+refusal. The schedule stopped before its unadmitted modules-16 timing lease
+during the coordinator's exploratory gate; no active measurement was killed.
+`c0-rf-modules-16.log` is only that cancelled queue, not timing evidence.
+
+`c0-rf-memory-fields64` is a separate memory-only run using A09's 10 ms sampled
+process-tree RSS wrapper. Cold peak summed RSS is 181,264,384 bytes; warm peak is
+12,357,632 bytes; edited-source peak is 137,072,640 bytes. Sampling can miss short
+peaks and summed process RSS double-counts shared pages. Replay finished before
+the sampler observed its compiler and its sampled peak is invalid; GNU time's
+individual-child high-water remains separate. These instrumented durations are
+not compile timing measurements and no candidate comparison exists yet.

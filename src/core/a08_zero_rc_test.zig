@@ -64,6 +64,49 @@ test "zero RC A08 comprehension element cannot escape or invalidate owner" {
     , "E_SINGLE_OWNER_OVERLAP");
 }
 
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC A08 sorted and list copies own managed children" {
+    try executes(std.testing.allocator,
+        \\func main(out: Stream) -> int:
+        \\    mut values = [b"bb", b"a", b"bb"]
+        \\    const ordered = sorted(values)
+        \\    const descending = sorted(values, reverse=True)
+        \\    const copied = list(values)
+        \\    values[0] = b"changed"
+        \\    values.clear()
+        \\    const empty: bytes[] = []
+        \\    const empty_sorted = sorted(empty)
+        \\    const single = sorted(["single-" + str(1)])
+        \\    out.print(ordered[0][0], ordered[1][0], descending[0][0], copied[0][0])
+        \\    out.print(len(empty_sorted), single[0])
+        \\    return 0
+    , "97 98 98 98\n0 single-1\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC A08 stable keyed sorting borrows callbacks and owns nested output" {
+    try executes(std.testing.allocator,
+        \\record Item:
+        \\    rank: int
+        \\    payload: str[]
+        \\func rank(item: Item) -> int:
+        \\    return item.rank
+        \\func text(item: Item) -> str:
+        \\    return item.payload[0].copy()
+        \\func main(out: Stream) -> int:
+        \\    mut values = [Item(rank=2, payload=["two"]), Item(rank=1, payload=["one"]), Item(rank=1, payload=["also"])]
+        \\    const ordered = sorted(values, key=rank)
+        \\    const descending = sorted(values, key=rank, reverse=True)
+        \\    const by_text = sorted(values, key=text)
+        \\    const copied = list(values)
+        \\    values[1].payload[0] = "changed"
+        \\    values.clear()
+        \\    out.print(ordered[0].payload[0], ordered[1].payload[0], descending[0].payload[0])
+        \\    out.print(by_text[0].payload[0], copied[1].payload[0])
+        \\    return 0
+    , "one also two\nalso one\n");
+}
+
 fn checked(a: std.mem.Allocator, source: []const u8) !language.typed.Program {
     var unit = try language.Compilation.init(a, "zero-rc.my", source);
     unit.check() catch |err| {

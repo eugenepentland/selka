@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 17, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 17 after 45s
+{"name": "recursive-16-cold", "status": 0, "passed": true, "elapsed_ns": 4606771411, "max_rss_kib": "122428"}
+{"name": "recursive-16-warm", "status": 0, "passed": true, "elapsed_ns": 103881468, "max_rss_kib": "10032"}
+{"name": "recursive-16-receipt", "status": 0, "passed": true, "elapsed_ns": 105632226, "max_rss_kib": "10216"}
+{"name": "recursive-16-replay", "status": 0, "passed": true, "elapsed_ns": 104215020, "max_rss_kib": "3940"}
+{"name": "recursive-16-edit", "status": 0, "passed": true, "elapsed_ns": 107231608, "max_rss_kib": "58108"}

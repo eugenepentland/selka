@@ -161,6 +161,7 @@ fn sequenceElement(comptime Checker: type, checker: *Checker, ty: typed.Type, sp
 
 const unsupported = "E_PRELUDE_TYPE";
 const eArity = "E_ARITY";
+const eResultOperation = "E_RESULT_OPERATION";
 
 /// Build one prelude builtin call, or null when a later recognizer owns this call.
 fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name: []const u8, arguments: []const typed.NodeId) Error!?typed.Node {
@@ -529,13 +530,15 @@ fn sortedCall(comptime Checker: type, checker: *Checker, call: SortedCall) Error
     const span = call.sort.span;
     const b = builder(Checker, checker, span);
     const element = try listElement(Checker, checker, nodeType(Checker, checker, call.input), span);
+    if (typed.requiresHandling(nodeType(Checker, checker, call.input), checker.catalog.records))
+        return checker.sink.fail(eResultOperation, span, "sorted cannot implicitly copy pending Results; handle the elements first");
     if (call.sort.key == null and (element == .bool or !orderedField(Checker, checker, element)))
         return checker.sink.fail(unsupported, span, "sorted requires a list of int, float, str or bytes values, or a key=callback that maps each element to one");
     const list = try collections.listType(&checker.catalog, element, span);
     const result = try b.local(list);
     var statements: std.ArrayList(typed.StatementId) = .empty;
     if (call.sort.key == null and call.sort.reverse == null) {
-        try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = result, .value = try retain(Checker, checker, span, try b.slice(call.input, null, null)) } }));
+        try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = result, .value = try retain(Checker, checker, span, try b.access(call.input, .copy, &.{}, false)) } }));
         try statements.append(checker.allocator, try b.stmt(.{ .discard = try b.operation(result, .sort, &.{}) }));
     } else {
         // A keyed copy is gathered already sorted from the original list into
@@ -786,7 +789,9 @@ fn copyListCall(comptime Checker: type, checker: *Checker, span: source.Span, in
     const sequence = ty.isAggregate() and checker.catalog.records[ty.recordIndex()].isCollection();
     if (!sequence or checker.catalog.records[ty.recordIndex()].collection.kind != .list)
         return checker.sink.fail(unsupported, span, "list requires a list, range, reversed source or dictionary view");
-    return b.slice(input, null, null);
+    if (typed.requiresHandling(ty, checker.catalog.records))
+        return checker.sink.fail(eResultOperation, span, "list cannot implicitly copy pending Results; use an explicit .copy() and handle both lists");
+    return b.access(input, .copy, &.{}, false);
 }
 
 /// Compare two texts the way `sort.compare_strs` does, by Unicode code point order.
