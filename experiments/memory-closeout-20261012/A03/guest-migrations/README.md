@@ -120,10 +120,34 @@ sources plus two positives executed in both debug and verified release, with
 native managed-leak checks and emitted LLVM RC audits. The earlier run passed
 all negative groups but both native positives hit the known C0 driver staging
 defect. The coordinator authorized the already-integrated driver dependency
-locally; the rerun then exited0 with7/7. The local duplicate driver commit
+locally; the rerun then exited 0 with 7/7 passing. The local duplicate driver commit
 `90ce40266e589598a6e98ac9a2c88ec26e0cb233` must not be integrated again. Exact
 test-source/test-runner identities and logs are retained in
 `boundaries-distinct-qualification.json` and `boundaries-distinct-focused.log`.
 A redundant queued CLI positive run was cancelled before admission, without
 starting a compiler, when broad Support4 sweeps paused; its cancellation receipt
 remains visible and it is not counted as a qualification run.
+
+A subsequent source review found seven missed explicit copies in three fixtures:
+four managed string keys returned by sort lambdas, two managed record
+snapshots before mutation, and a dictionary key projected into an owned text
+list. These are source migration omissions, not reasons
+to admit borrowed values as independent owned returns. The correction keeps
+all public test signatures, assertions, and expected values; it replaces seven
+lines and adds seven `.copy()` calls. Exact identities and the comparison are in
+`owned-key-snapshot-review.json`. Support5 qualification is recorded below.
+
+Support5 source-checks all 36 assigned files: 29 admit and seven still refuse.
+The targeted native release subset attempts 11 files; nine execute successfully,
+including 141 Boolean tests. Every execution matches output/exit, records zero RC
+and zero managed exit-live bytes, and passes emitted LLVM/linked-symbol checks.
+Only the fixed-array mutable child in `mut_argument_places.my:190` and the
+dictionary mutable child in `mut_dictionary_arguments.my:11` still refuse
+lowering. The renderer cases, copied sort keys, optional narrowing and previous
+provider-store panic now pass this targeted run. The other 25 files were not
+native-tested on Support5, and no earlier result is relabeled.
+`support5-summary.json` and the `migration-support5-*` archives retain the exact
+compiler identity, sources, harnesses, counters and all refusals. The additional
+key-list `.copy()` in `dictionary_views.my` was applied after the source sweep;
+its current binding refusal still requires A01/A07's compiler fix. Final C1
+qualification remains separate from this interim evidence.

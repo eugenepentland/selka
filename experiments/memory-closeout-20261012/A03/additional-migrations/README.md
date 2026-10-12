@@ -63,3 +63,13 @@ with normal and bounds-trap execution. All five checked-ownership modes recorded
 list copy/800 bytes and 21 allocations/frees. This reflects explicit deep-copy
 semantics and descriptor-driven child storage; it is not a zero-copy claim.
 The exact native oracle and its durable raw evidence belong to A09.
+
+Support5 resolves the unchanged `v_narrow.my` reproducer in all five required
+modes. All five native executions match the full original output and exit0,
+report zero RC and zero managed exit-live bytes, and pass LLVM/symbol audits.
+The selected scope is one of the eight assigned files; no other Support4 results
+are relabeled. `support5-narrow-qualification.json` pins source
+`a1f19edf255c8c0886731d8d7cce450d5f657720` and compiler SHA-256
+`8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789`.
+Adjacent compressed results/raw archives retain sources, harnesses and counters.
+This is a targeted interim regression result; final C1 qualification remains due.

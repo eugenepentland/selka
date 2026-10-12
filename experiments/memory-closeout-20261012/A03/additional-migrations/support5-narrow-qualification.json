@@ -1,0 +1,25 @@
+{
+  "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "assigned_files": 8,
+  "selected_files": [
+    "v_narrow"
+  ],
+  "modes": [
+    "release",
+    "debug",
+    "verify",
+    "optimized_debug",
+    "no_facts"
+  ],
+  "builds": 5,
+  "executions": 5,
+  "passed": true,
+  "source_sha256": "f0a41855714a7a2c6719f160719a5e0cd0dcfbe6f87d71cfec2a79018d3d2c23",
+  "fixture_unchanged": true,
+  "not_final_C1": true,
+  "archives": {
+    "support5-narrow-results.json.gz": "e32317743d31a47f779648a2b102ae7f33461acfb0887f6c9fff34faa5a13602",
+    "support5-narrow-raw.tar.gz": "1b6c1c3a201eedc409267ecd8f2f877f1ecd8d49b37bbc8f57769b9b0ac2456d"
+  }
+}

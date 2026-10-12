@@ -10,7 +10,7 @@
   covers the eight additional core fixtures in `additional-migrations/originals.json`.
 - Delivered commits: harness `d23f84d0c`, baseline `58fb3cf25`, first guest
   migration `448062611`, supplemental corpus `338fc9dd2`, additional core
-  migration `17a70623b`. Follow-up evidence and boundary updates are in progress.
+  migration `17a70623b`, follow-up boundary/corpus evidence `b89021c4e`.
 - Implemented: isolated failure-preserving census adapter; 81-case pinned
   manifest preserving the original 30 IDs and all historical 48 matrix cases.
 - Completed tests: all 81 C0 release cases / 131 executions; zero RC, no managed
@@ -98,5 +98,30 @@ sources and two positive sources executed in debug/verified release with native
 leak checking and emitted LLVM RC audits. The locally cherry-picked driver
 dependency `90ce40266e589598a6e98ac9a2c88ec26e0cb233` duplicates already-integrated
 `38dc781a8` and is explicitly excluded from A03's integration handoff. Guardian
-required a module doc for the expanded test file; it was added and all88 passed.
+required a module doc for the expanded test file; it was added and all 88 checks passed.
 Final integrated verification still must rerun this coverage.
+
+Follow-up integration commit: `b89021c4e` (88 Guardian checks; 7/7 focused tests). Skip its
+parent local driver duplicate `90ce40266`. The six new-API sources are pinned;
+main plus supplement require 435 final builds and 695 guest executions.
+
+Counter interpretation for the upcoming candidate: A09 commit `8ba337fd6` fixes
+missing recursive child-list copy telemetry. Its controlled debug/release fixture
+changes recorded list copies 1→2 and copied bytes 24→40 while every allocation/free
+byte total and managed peak 608 remains identical. This changes observability,
+not physical allocation traffic. Do not describe such a C0/candidate copy-counter
+increase as a new allocation or peak regression. Original 30 allocating predicates
+remain based on workload allocations/reallocations and are unaffected. A09 raw
+proof is under `A09/raw/counters/recursive-{before-support4,after-hook}.json.gz`.
+
+Support5 targeted requalification resolves `v_narrow.my` without source changes:
+all five native counted modes pass exact output, zero RC, zero exit-live and
+LLVM/symbol audits. Sources and raw evidence are under
+`additional-migrations/support5-narrow-*`. The guest migration source sweep
+admits 29/36 files, and targeted native qualification passes 9/11 files with
+141 Boolean assertions; the two mutable-place lowering failures remain recorded.
+The original-30 release sanity is running separately; none is final C1.
+Seven missing explicit copies in sort-key lambdas, record snapshots and an owned
+key-list comprehension have been
+corrected locally, preserving every assertion; the exact source burden is in
+`guest-migrations/owned-key-snapshot-review.json`.

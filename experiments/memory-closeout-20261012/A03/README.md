@@ -74,3 +74,12 @@ The adapter imports only the historical read-only counter summarizer and audit
 functions. Historical `measure.py`, `qualify.py`, and batch `capture` functions
 were inspected and deliberately not invoked: they write reports alongside
 themselves even when an alternate output directory is supplied.
+
+`compare.py --baseline PATH --candidate PATH --output NEW_JSON` produces a
+machine-readable comparison of two census result files (plain or compressed).
+It pairs only successful executions with identical source hashes and run
+contracts, retains unmatched/refused/unmeasured statuses, and subtracts only
+allocation traffic. Peak and exit-live memory remain separate observations.
+Recorded recursive list-copy traffic may increase after A09's instrumentation
+correction without any additional allocations or peak memory; the comparison
+keeps those counters separate from allocation deltas.
