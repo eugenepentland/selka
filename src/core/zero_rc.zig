@@ -61,7 +61,7 @@ pub fn contract(symbol: []const u8) ?Contract {
     if (std.mem.eql(u8, symbol, "myl_core_test_read_text") or std.mem.eql(u8, symbol, "myl_core_test_read_bytes")) return .{ .result = .fresh };
     if (callableDigest(symbol) or std.mem.startsWith(u8, symbol, @import("emit_values.zig").copy_prefix)) return .{ .result = .fresh };
     if (std.mem.eql(u8, symbol, "myl_core_view_slice")) return .{ .views = 1, .result = .borrowed };
-    for ([_][]const u8{ "myl_core_view_chars", "myl_core_view_index", "myl_core_view_byte" }) |name| {
+    for ([_][]const u8{ "myl_core_view_chars", "myl_core_view_index", "myl_core_view_byte", "myl_core_span_bytes_index_offset" }) |name| {
         if (std.mem.eql(u8, symbol, name)) return .{ .views = 1 };
     }
     for ([_][]const u8{ "myl_core_view_char", "myl_core_view_copy_text", "myl_core_view_copy_bytes" }) |name| {

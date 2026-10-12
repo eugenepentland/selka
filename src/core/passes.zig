@@ -644,6 +644,7 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
     else
         null;
     if (fusion_requests) |requests| @memset(requests, .empty);
+    _ = try @import("fuse_encode.zig").runRecording(arena, module, fusion_requests);
     _ = try @import("fuse_slice_key.zig").runRecording(arena, module, fusion_requests);
     if (cache) |context| try context.prepare(arena);
     if (shortcut) |*state| {

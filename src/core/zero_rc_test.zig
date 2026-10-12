@@ -451,6 +451,15 @@ test "zero RC test transport borrows writes and returns independent decoded bloc
     try std.testing.expect(zero.contract("myl_core_test_unreviewed") == null);
 }
 
+// spec-case: NEW-CORE-ZERO-RC-3
+test "zero RC encoded span offsets borrow octets and return a scalar" {
+    const signature = zero.contract("myl_core_span_bytes_index_offset").?;
+    try std.testing.expectEqual(@as(u64, 1), signature.views);
+    try std.testing.expectEqual(@as(u64, 0), signature.owned);
+    try std.testing.expectEqual(.scalar, signature.result);
+    try std.testing.expect(zero.contract("myl_core_span_bytes_index_offset_other") == null);
+}
+
 // spec-case: DICT-VIEWS-1
 test "zero RC immediate dictionary snapshots own keys values and item children" {
     try executes(std.testing.allocator,
