@@ -626,7 +626,11 @@ const DemandFinalLoader = struct {
         if (self.context.source.module.functions.items[index].signature.linkage != .internal or self.context.lazy.loaded[index]) return;
         var scratch = std.heap.ArenaAllocator.init(self.arena);
         defer scratch.deinit();
-        try passes.restoreDeferredFinal(self.arena, scratch.allocator(), self.context, index, self.result);
+        passes.restoreDeferredFinal(self.arena, scratch.allocator(), self.context, index, self.result) catch |err| switch (err) {
+            error.Unsupported => return error.CacheMiss,
+            error.OutOfMemory => return error.OutOfMemory,
+            error.CacheMiss => return error.CacheMiss,
+        };
         self.restored += 1;
     }
 };
@@ -1002,6 +1006,8 @@ test "optimizer demand missing nonidentity checkpoint falls back and eager recov
     const warm = try compileDemand(a, std.testing.allocator, edited, &storage, true);
     try equal(recovered.output, warm.output);
     try std.testing.expectEqual(@as(usize, 0), warm.output.statistics.active_functions);
+    // Successful repaired receipts must not invoke the deferred fallback again.
+    try std.testing.expectEqual(@as(usize, 0), warm.final_restored);
 }
 
 // spec-case: NEW-CORE-STAGE-CACHE-8
