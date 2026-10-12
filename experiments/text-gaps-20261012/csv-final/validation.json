@@ -20,5 +20,34 @@
   "limits": {
     "jobs": 4,
     "maxrss": 8589934592
+  },
+  "paired_timing": {
+    "report": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/reports/csv-final-trial-001/report.json",
+    "candidate_over_zig_fast": {
+      "large": [
+        0.8758,
+        0.867,
+        0.8875
+      ],
+      "small": [
+        0.9746,
+        0.97,
+        0.989
+      ]
+    },
+    "candidate_over_common": {
+      "large": [
+        0.9595,
+        0.9483,
+        0.9772
+      ],
+      "small": [
+        0.9668,
+        0.9608,
+        0.9833
+      ]
+    },
+    "noise_flags": false,
+    "integrated_gate": "pending coordinator"
   }
 }
