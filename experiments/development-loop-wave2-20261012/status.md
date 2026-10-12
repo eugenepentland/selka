@@ -119,3 +119,15 @@ private cold caches, preserving raw evidence and frozen artifacts.
 The full ordinary-edit target, calibrated hard policies, unsupported timing,
 remaining long qualification and self-hosting median/p95 acceptance remain
 explicit in the report. This ledger does not mark either entire roadmap complete.
+
+## Telemetry cache follow-up
+
+User-authorized investigation with coordinator, S01 and S10 confirmed that the
+random developer telemetry path invalidated native guest receipts. Source
+`fe7637e82f58430573d99473e5389a4369bbba7e` moves the owned diagnostic channel
+out of `MYLANG_` without changing compiler code or receipt rules. Complete
+verification passed all 46 groups; two unchanged requests each reused 3,616 guest
+results and executed the required 1,796, with gate occupancy 23.02/27.84 seconds.
+The inventory and compiler binary are unchanged. These two observations do not
+qualify p95 or close the remaining ordinary-edit/self-hosting milestones.
+See [the investigation](../telemetry-cache-invalidation-20261012/REPORT.md).

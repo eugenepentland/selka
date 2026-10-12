@@ -1931,12 +1931,13 @@
     "pure producer closures",
     "install graph"
   ],
-  "status": "explicitly reviewed; full candidate verification pending",
+  "status": "explicitly qualified; complete candidate and two unchanged complete requests passed",
   "changed_files": [
     {
       "path": "build.zig",
       "old": "ada57d367f6658c23512842b8360b05e92f907ca417ae48cdde643deec260754",
       "new": "d731d5b0eb932eb9d19b1aa4e6e9e0f4f49ee0adc222a2152a60d66c363a6c30"
     }
-  ]
+  ],
+  "qualified_source": "fe7637e82f58430573d99473e5389a4369bbba7e"
 }
