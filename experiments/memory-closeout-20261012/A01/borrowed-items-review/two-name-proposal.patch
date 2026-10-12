@@ -1,0 +1,31 @@
+--- a/src/sema_loops.zig
++++ b/src/sema_loops.zig
+@@ -160,13 +160,21 @@
+     if (iteration_check) |guarded| try iteration_statements.append(self.allocator, guarded);
+     const value = try iterationRead(Checker, self, b, owner, i, .{ .kind = kind, .fixed = fixed, .projection = if (projected) view else null });
+     if (unpack) {
+-        const pair = try b.local(element);
+-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value } }));
+-        const first_value = try b.node(first_type, .{ .field = .{ .base = try b.read(pair), .index = 0 } });
+-        const second_type = self.locals.items[@backingInt(second_slot)].ty;
+-        const second_value = try b.node(second_type, .{ .field = .{ .base = try b.read(pair), .index = 1 } });
+-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = first_value } }));
+-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = second_value } }));
++        // Immediate items() destructuring binds each borrowed field directly.
++        // A synthetic owning record would incorrectly consume these projections.
++        const values: [2]typed.NodeId = if (projected and view.? == .items) .{
++            try dictionary_views.at(Checker, self, stmt.span, owner, i, .keys),
++            try dictionary_views.at(Checker, self, stmt.span, owner, i, .values),
++        } else unpacked: {
++            const pair = try b.local(element);
++            try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value } }));
++            break :unpacked .{
++                try b.node(first_type, .{ .field = .{ .base = try b.read(pair), .index = 0 } }),
++                try b.node(self.locals.items[@backingInt(second_slot)].ty, .{ .field = .{ .base = try b.read(pair), .index = 1 } }),
++            };
++        };
++        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = values[0] } }));
++        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = values[1] } }));
+     } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value } }));
+     try appendRebinding(Checker, self, b, &iteration_statements, position, i);
+     try iteration_statements.append(self.allocator, body.id);
