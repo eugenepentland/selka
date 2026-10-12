@@ -63,6 +63,64 @@ func recursive(seed: int) -> bool:
             return False
 
 
+func unit_and_scalar() -> bool:
+    mut units: Unit[] = [(), ()]
+    units.insert(-1, ())
+    units.reverse()
+    units.remove(())
+    const popped = units.pop(0)
+    mut numbers = [3, 1, 2, 1]
+    numbers.insert(-1, 9)
+    numbers.reverse()
+    numbers.remove(1)
+    const selected = numbers.pop(-2)
+    return len(units) == 1 and f"{popped}" == "None" and same_row(numbers, [9, 2, 3]) and selected == 1
+
+
+enum Choice:
+    items(value: int[])
+    text(value: str)
+
+
+func choice_number(value: Choice) -> int:
+    match value:
+        case Choice.items(value=items):
+            return items[0]
+        case Choice.text(value=text):
+            return len(text)
+
+
+func independent_children() -> bool:
+    mut source = [[1], [2], [3], [4]]
+    mut bounded = source[1:3]
+    mut stepped = source[::-2]
+    mut target: int[][] = []
+    target.extend(source)
+    bounded[0].append(9)
+    stepped[0].append(8)
+    target[0].append(7)
+    assert same(source, [[1], [2], [3], [4]])
+    source.clear()
+    assert same(bounded, [[2, 9], [3]])
+    assert same(stepped, [[4, 8], [2]])
+    assert same(target, [[1, 7], [2], [3], [4]])
+    mut rows: int[][] = []
+    rows.extend(rows)
+    for value in range(20):
+        rows.append([value])
+    rows.extend(rows)
+    rows[0].append(99)
+    assert len(rows) == 40 and same_row(rows[20], [0]) and same_row(rows[39], [19])
+    mut choices = [Choice.items(value=[5]), Choice.text(value="copy-" + str(1))]
+    mut extended: Choice[] = []
+    extended.extend(choices)
+    const reversed = choices[::-1]
+    const first = choices[:1]
+    const empty = choices[2:2]
+    choices.clear()
+    return choice_number(extended[0]) == 5 and choice_number(reversed[0]) == 6 and choice_number(first[0]) == 5 and len(empty) == 0
+
+
 func main(args: str[], out: Stream) -> int:
     if len(args) > 0:
         mut rows = [[1], [2]]
@@ -76,6 +134,8 @@ func main(args: str[], out: Stream) -> int:
         if args[0] == "missing":
             rows.remove([3])
         return 9
+    assert unit_and_scalar()
+    assert independent_children()
     mut total = 0
     for seed in range(100):
         total += nested(seed)

@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 275, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 275 after 5s
+be4ae91cdd6def87976a8e8f66714008b811b7ceaaeaa383355226a1df109615
+0c0385cc00df19b3c1a4de6f32b44f36c7191cb402c03fa360c3e31e55ee1884
+test-core
++- verification action core member 0 w
+guardian/test: 1 test(s) selected by filter: "A02 list methods"
+guardian/test: SLOW  13.23s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps
+guardian/test: test wall 13.23s; slowest over 50ms:
+guardian/test:   13.23s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A02/zig-out/libexec/mylang/components ./.zig-cache/o/c9941e835eca0594f9836b4942a97bfb/test "--guardian-filter=A02 list methods" --cache-dir=./.zig-cache --seed=0xcfa1a954 --listen=-
+

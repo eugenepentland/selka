@@ -1,0 +1,5 @@
+func slice_resources(values: TextFile[]) -> TextFile[]:
+    return values[1:]
+
+func main() -> int:
+    return 0

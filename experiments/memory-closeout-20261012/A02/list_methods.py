@@ -21,7 +21,7 @@ def main():
         directory=args.output/mode;directory.mkdir(exist_ok=True);binary=directory/'program';llvm=directory/'program.ll';counts=directory/'counts.json'
         row=run([args.compiler,'build',source,'--experimental-zero-rc','--counters','--cache-dir',args.output/'cache','--zig',os.environ['ZIG'],'--emit-llvm',llvm,'-o',binary,*flags]);result['modes'][mode]=row
         if row['status']==0:
-            row.update(binary_sha256=sha(binary),llvm_sha256=sha(llvm));env=dict(os.environ,MYLANG_COUNTERS=str(counts),MYL_CORE_LEAKCHECK='1');row['run']=run([binary],env);row['counts']=json.loads(counts.read_text());row['traps']={name:run([binary,name]) for name in ['negative','positive','empty','missing']}
+            row.update(binary_sha256=sha(binary),llvm_sha256=sha(llvm));env=dict(os.environ,MYLANG_COUNTERS=str(counts),MYL_CORE_LEAKCHECK='1');row['run']=run([binary],env);row['counts']=json.loads(counts.read_text());row['traps']={name:run([binary,name], dict(os.environ, MYLANG_COUNTERS=str(directory/(name+'-counts.json')))) for name in ['negative','positive','empty','missing']}
             ir=llvm.read_text();row['llvm_clean']=all(s not in ir for s in ['@myl_core_retain','@myl_core_release','@myl_core_share(','@myl_core_free_block(']);row['methods_present']=all(s in ir for s in ['@myl_core_owned_list_rotate','@myl_core_owned_list_reverse'])
             symbols=run(['nm',binary])['stdout'];row['symbols_clean']=all(s not in symbols for s in ['myl_core_retain','myl_core_release','myl_core_share'])
             row['pass']=row['run']['status']==0 and row['run']['stdout']=='500\n' and row['run']['stderr']=='' and row['counts']['totals']['live_bytes_at_exit']==0 and row['llvm_clean'] and row['symbols_clean'] and row['methods_present']

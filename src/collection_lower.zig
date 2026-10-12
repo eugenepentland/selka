@@ -361,6 +361,11 @@ pub fn Builder(comptime Checker: type) type {
         /// Copy a bounded slice into a fresh list using existing checked loop instructions.
         pub fn slice(self: Self, base: typed.NodeId, start: ?typed.NodeId, end: ?typed.NodeId) Error!typed.Node {
             const ty = self.checker.nodes.items[@backingInt(base)].ty;
+            const element = self.checker.catalog.records[ty.recordIndex()].shape.buffer.?;
+            if (typed.requiresHandling(element, self.checker.catalog.records))
+                return self.checker.sink.fail("E_RESULT_OPERATION", self.span, "a list slice cannot duplicate pending result obligations");
+            if (typed.moveOnly(element, self.checker.catalog.records))
+                return self.checker.sink.fail(list_type_error, self.span, "a list slice cannot duplicate resource owners");
             const owner = try self.local(ty);
             const output = try self.local(ty);
             const index_slot = try self.local(.i64);
@@ -370,7 +375,12 @@ pub fn Builder(comptime Checker: type) type {
             const i = try self.read(index_slot);
             const loop_id = self.checker.loops.next;
             self.checker.loops.next += 1;
-            const body = try self.stmt(.{ .discard = try self.operation(output, .append, &.{try self.operation(owner, .read, &.{i})}) });
+            const child = try self.operation(owner, .read, &.{i});
+            const selected = if (element.isAggregate()) copied: {
+                const copy = try self.access(child, .copy, &.{}, false);
+                break :copied try self.node(copy.ty, copy.data);
+            } else child;
+            const body = try self.stmt(.{ .discard = try self.operation(output, .append, &.{selected}) });
             const step = try self.stmt(.{ .assign = .{ .slot = index_slot, .value = try self.binary(.add, i, try self.integer(1), .i64) } });
             return self.block(&.{
                 try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } }),

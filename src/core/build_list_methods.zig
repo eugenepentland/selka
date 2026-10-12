@@ -251,11 +251,13 @@ fn sliceCopy(comptime Context: type, b: Context, source: ir.Ref, plan: Slice, sp
     try b.branch(try compare(Context, b, .lt, counter, plan.count, span), body, end, span);
     try b.seal(body);
     b.enter(body);
-    const value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });
-    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, body), .b = value, .span = span });
-    try b.write(list_slot, body, pushed);
-    try b.write(counter_slot, body, try b.emit(.{ .op = .add, .ty = .u64, .a = counter, .b = try b.constant(.u64, 1), .span = span }));
-    try b.write(index_slot, body, try b.emit(.{ .op = .add, .ty = .i64, .a = index, .b = plan.step, .span = span }));
+    const borrowed = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });
+    const value = if (b.module().zero_rc) try @import("single_owner_copy.zig").copy(Context, b, borrowed, span) else borrowed;
+    const current = b.current.?;
+    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, current), .b = value, .span = span });
+    try b.write(list_slot, current, pushed);
+    try b.write(counter_slot, current, try b.emit(.{ .op = .add, .ty = .u64, .a = counter, .b = try b.constant(.u64, 1), .span = span }));
+    try b.write(index_slot, current, try b.emit(.{ .op = .add, .ty = .i64, .a = index, .b = plan.step, .span = span }));
     try b.jump(header);
     try b.seal(header);
     try b.seal(end);
@@ -282,10 +284,16 @@ fn compose(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, r
     try b.seal(body);
     b.enter(body);
     const selected = if (reverse) try b.emit(.{ .op = .sub, .ty = .u64, .a = try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span }), .b = index, .span = span }) else index;
-    const value = if (element == .void) try b.emit(.{ .op = .undef, .ty = .void }) else try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = selected, .check = .exact, .span = span });
-    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, body), .b = value, .span = span });
-    try b.write(list_slot, body, pushed);
-    try b.write(index_slot, body, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
+    // Self-extension reads the original prefix through the current owner: a
+    // previous push may have grown and freed the old outer block. Each child
+    // is independently copied once before insertion, including self-extension.
+    const input = if (b.module().zero_rc and b.function.resolve(source) == b.function.resolve(target)) try b.read(list_slot, body) else source;
+    const borrowed = if (element == .void) try b.emit(.{ .op = .undef, .ty = .void }) else try b.emit(.{ .op = .list_get, .ty = element, .a = input, .b = selected, .check = .exact, .span = span });
+    const value = if (b.module().zero_rc) try @import("single_owner_copy.zig").copy(Context, b, borrowed, span) else borrowed;
+    const current = b.current.?;
+    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, current), .b = value, .span = span });
+    try b.write(list_slot, current, pushed);
+    try b.write(index_slot, current, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
     try b.jump(header);
     try b.seal(header);
     try b.seal(exit);

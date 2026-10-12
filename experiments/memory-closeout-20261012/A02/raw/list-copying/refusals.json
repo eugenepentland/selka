@@ -1,0 +1,12 @@
+{
+  "resource-slice.my": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "resource-slice.my:1:22: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype\n  func slice_resources(values: TextFile[]) -> TextFile[]:\n                       ^\n"
+  },
+  "pending-slice.my": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "pending-slice.my:1:28: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations\n  func slice_pending(values: Result[int, str][]) -> Result[int, str][]:\n                             ^\n  note: pending-slice.my:1:1: type parameter requirements are declared here\n"
+  }
+}

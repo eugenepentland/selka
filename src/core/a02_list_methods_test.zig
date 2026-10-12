@@ -5,6 +5,7 @@ const zero = @import("zero_rc.zig");
 const fixture = @embedFile("a02_list_methods_fixture.my");
 
 // spec: OWNED-LIST-MUTATION-1
+// spec: OWNED-LIST-COPYING-1
 test "zero RC A02 list methods move nested wide recursive children and preserve traps" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -49,7 +50,7 @@ test "zero RC A02 list methods move nested wide recursive children and preserve 
             }
         }
         for ([_][]const u8{ "negative", "positive", "empty", "missing" }) |scenario| {
-            const failed = try std.process.run(a, io, .{ .argv = &.{ binary, scenario } });
+            const failed = try std.process.run(a, io, .{ .argv = &.{ binary, scenario }, .environ_map = &environment });
             if (failed.term != .exited or failed.term.exited != 1) std.debug.print("A02 trap {s}: {any} {s}{s}\n", .{ scenario, failed.term, failed.stdout, failed.stderr });
             try std.testing.expect(failed.term == .exited and failed.term.exited == 1);
             try std.testing.expect(std.mem.indexOf(u8, failed.stderr, if (std.mem.eql(u8, scenario, "missing")) "error[R_LIST_VALUE]" else "error[R_LIST_BOUNDS]") != null);

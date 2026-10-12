@@ -1,0 +1,5 @@
+func slice_pending(values: Result[int, str][]) -> Result[int, str][]:
+    return values[1:]
+
+func main() -> int:
+    return 0
