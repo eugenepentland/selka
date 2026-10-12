@@ -2,6 +2,7 @@
 const std = @import("std");
 const files = @import("component_files.zig");
 const archive = @import("component_archive.zig");
+const builder = @import("component_builder_identity.zig");
 const t = std.testing;
 
 // digest takes no allocator: even a large executable cannot enter an arena.
@@ -240,4 +241,37 @@ test "CPU metadata first block ends at separator and rejects its byte ceiling" {
     const boundary = try files.firstBlock(t.allocator, t.io, path);
     defer t.allocator.free(boundary);
     try t.expectEqual(@as(usize, 65535), boundary.len);
+}
+
+/// Count the imports and embeds of the builder's sources that name neither the
+/// standard library nor another listed builder source.
+fn unlistedBuilderInputs() usize {
+    var unlisted: usize = 0;
+    for (builder.sources) |source| {
+        for ([_][]const u8{ "@import(\"", "@embedFile(\"" }) |opener| {
+            var rest = source.bytes;
+            while (std.mem.indexOf(u8, rest, opener)) |start| {
+                rest = rest[start + opener.len ..];
+                const end = std.mem.indexOfScalar(u8, rest, '"') orelse return unlisted + 1;
+                const name = rest[0..end];
+                if (!std.mem.eql(u8, name, "std") and !std.mem.eql(u8, name, "builtin") and !listedBuilderSource(name)) unlisted += 1;
+            }
+        }
+    }
+    return unlisted;
+}
+
+fn listedBuilderSource(name: []const u8) bool {
+    for (builder.sources) |source| if (std.mem.eql(u8, source.name, name)) return true;
+    return false;
+}
+
+test "builder identity covers the builder's whole source closure without its location" {
+    try t.expectEqual(@as(usize, 0), unlistedBuilderInputs());
+    try t.expectEqualStrings("components.zig", builder.sources[builder.sources.len - 1].name);
+    try t.expectEqualStrings("selka-components-builder-v1", builder.domain);
+    const first = builder.sourcesDigest();
+    const second = builder.sourcesDigest();
+    try t.expectEqualStrings(&first, &second);
+    try t.expect(std.mem.indexOfScalar(u8, builder.target, '/') == null);
 }

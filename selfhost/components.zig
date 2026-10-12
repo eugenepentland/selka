@@ -4,6 +4,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const files = @import("component_files.zig");
 const archive = @import("component_archive.zig");
+const builder = @import("component_builder_identity.zig");
 const Value = std.json.Value;
 const Field = files.Field;
 const cwd = std.Io.Dir.cwd;
@@ -235,14 +236,14 @@ const components = [_]Component{
 fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) ![]const u8 {
     const version: i64 = if (std.mem.eql(u8, descriptor.name, "cache-plan")) 2 else 1;
     const sources = try ctx.path(&.{ config.root, "selfhost", "components", descriptor.source });
-    const tool = try std.process.executablePathAlloc(ctx.io, ctx.a);
     var flags = std.json.Array.init(ctx.a);
     try flags.append(files.string("debug"));
     try flags.append(files.string("fresh-private-cache"));
     try flags.append(files.string("private-zig-global-v1"));
+    try flags.append(files.string("stable-staging-v1"));
     if (seed.owned) try flags.append(files.string("zero-rc-v1"));
     const identity = try files.object(ctx.a, &.{
-        .{ .name = "format", .value = files.integer(2) },
+        .{ .name = "format", .value = files.integer(3) },
         .{ .name = "component", .value = files.string(descriptor.name) },
         .{ .name = "build_cache_root", .value = files.string(config.cache) },
         .{ .name = "protocol", .value = files.integer(version) },
@@ -251,7 +252,7 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         .{ .name = "flags", .value = .{ .array = flags } },
         .{ .name = "seed", .value = seed.qualification },
         .{ .name = "sources", .value = try files.tree(ctx.a, ctx.io, sources) },
-        .{ .name = "coordinator_sha256", .value = try ctx.hashValue(tool) },
+        .{ .name = "coordinator", .value = try builderIdentity(ctx) },
     });
     const identity_text = try files.canonical(ctx.a, identity);
     defer ctx.a.free(identity_text);
@@ -268,8 +269,11 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         if (!try equals(ctx.a, try get(metadata, "identity"), identity) or !try digestEquals(ctx.io, executable, try text(try get(metadata, "sha256")))) return ctx.fail("component cache digest mismatch");
     }
     if (!has_receipt or config.uncached) {
-        const build_name = try std.fmt.allocPrint(ctx.a, "{s}.build", .{key});
-        const work = try ctx.path(&.{ artifacts, build_name });
+        // One staging path for every key and every worktree: the seed embeds
+        // the paths of the sources and caches it compiles in the component's
+        // bytes, so a key-named or caller-named directory would make otherwise
+        // identical builds differ. The builder lock serializes its use.
+        const work = try ctx.path(&.{ config.cache, "staging", "component" });
         try files.remove(ctx.io, work);
         try cwd().createDirPath(ctx.io, work);
         defer files.discard(ctx.io, work);
@@ -289,6 +293,11 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         // Shared Zig CRT objects retain the directory of their first compilation
         // in DWARF. A deterministic private cache makes every byte reproducible.
         try environment.put("ZIG_GLOBAL_CACHE_DIR", try ctx.path(&.{ work, "cache", "zig-global" }));
+        // The caller's temporary and Zig local cache directories name its worktree.
+        const temporary = try ctx.path(&.{ work, "tmp" });
+        try cwd().createDirPath(ctx.io, temporary);
+        try environment.put("TMPDIR", temporary);
+        try environment.put("ZIG_LOCAL_CACHE_DIR", try ctx.path(&.{ work, "cache", "zig-local" }));
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(ctx.a, &.{ seed.binary, "build", try ctx.path(&.{ copied, "main.my" }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) });
         if (seed.owned) try arguments.append(ctx.a, "--experimental-zero-rc");
@@ -306,6 +315,7 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
             metadata = fresh;
             try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ work, "receipt.json" }), metadata, 0o600);
             try files.remove(ctx.io, try ctx.path(&.{ work, "cache" }));
+            try files.remove(ctx.io, temporary);
             try files.remove(ctx.io, copied);
             try files.remove(ctx.io, stored);
             try cwd().rename(work, cwd(), stored, ctx.io);
@@ -326,6 +336,21 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
     });
     try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ config.install, try std.fmt.allocPrint(ctx.a, "{s}.json", .{descriptor.name}) }), manifest, 0o644);
     return ctx.a.dupe(u8, &key);
+}
+
+/// The builder's location-free identity: its compiled source closure and the
+/// toolchain, mode, backend and target that built it. It replaces the digest of
+/// the builder executable, whose debug information names the worktree.
+fn builderIdentity(ctx: *Context) !Value {
+    const sources = builder.sourcesDigest();
+    return files.object(ctx.a, &.{
+        .{ .name = "domain", .value = files.string(builder.domain) },
+        .{ .name = "sources_sha256", .value = files.string(try ctx.a.dupe(u8, &sources)) },
+        .{ .name = "zig_version", .value = files.string(builder.zig_version) },
+        .{ .name = "optimize", .value = files.string(builder.optimize) },
+        .{ .name = "backend", .value = files.string(builder.backend) },
+        .{ .name = "target", .value = files.string(builder.target) },
+    });
 }
 
 fn findTool(ctx: *Context, name: []const u8) ![]const u8 {
