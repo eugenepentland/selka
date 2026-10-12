@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+    "check",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_list.my",
+    "--experimental-zero-rc"
+  ],
+  "exit": 1,
+  "stdout": "",
+  "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_list.my:5:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if len(values) == 2 and len(copied) == 3 else 1\n             ^\n",
+  "wall_ns_including_admission": 2009346,
+  "admission_receipt": "raw/admission/lease-1.json",
+  "wall_ns_excludes_admission_wait": true
+}

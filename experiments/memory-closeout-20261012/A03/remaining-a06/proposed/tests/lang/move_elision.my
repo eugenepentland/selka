@@ -1,0 +1,78 @@
+# Aggregate copies the ownership analysis proves unobserved are not emitted
+# (`QBE-MOVE-ELIDE-1`). Every case here writes a record where the old value
+# could still be observed if a skipped copy were not in fact dead, and checks
+# that every name keeps the value it would have had with the copies.
+public record Point:
+    x: int
+    y: int
+    tag: str
+    marks: int[]
+
+
+func point(x: int) -> Point:
+    return Point(x=x, y=x + 1, tag=f"p{x}", marks=[x])
+
+
+public func test_a_field_write_updates_only_its_own_record() -> bool:
+    mut p = point(1)
+    mut q = p.copy()
+    q.x = 10
+    q.tag = "q"
+    return p.x == 1 and p.tag == "p1" and q.x == 10 and q.y == 2 and q.tag == "q"
+
+
+public func test_field_writes_in_a_loop_accumulate_in_place() -> bool:
+    mut p = point(0)
+    for i in range(50):
+        p.x = p.x + i
+        p.tag = f"t{i}"
+        mut spare = point(i)
+        p.y = p.y + spare.y
+    return p.x == 1225 and p.tag == "t49" and p.y == 1 + 1275
+
+
+public func test_a_record_read_after_a_copy_is_written_keeps_its_value() -> bool:
+    mut p = point(3)
+    mut q = p.copy()
+    mut r = q.copy()
+    r.x = 99
+    return q.x == 3 and r.x == 99 and p.x == 3
+
+
+func bumped(p: Point) -> Point:
+    mut q = p.copy()
+    q.x = q.x + 1
+    return q
+
+
+public func test_a_parameter_the_callee_updates_is_the_callers_value_still() -> bool:
+    mut p = point(5)
+    mut q = bumped(p)
+    return p.x == 5 and q.x == 6 and q.tag == "p5"
+
+
+public func test_a_list_element_field_write_lands_in_that_element_only() -> bool:
+    mut ps = [point(0), point(1), point(2)]
+    mut kept = ps[1].copy()
+    for round in range(20):
+        for i in range(len(ps)):
+            ps[i].x = ps[i].x + i
+            ps[i].tag = f"r{round}"
+            _ = point(round)
+    return ps[0].x == 0 and ps[1].x == 21 and ps[2].x == 42 and ps[2].tag == "r19" and kept.x == 1 and kept.tag == "p1"
+
+
+public func test_a_negative_index_element_write_lands_in_the_same_element() -> bool:
+    mut ps = [point(0), point(1)]
+    ps[-1].x = ps[-1].x + 7
+    ps[-2].y = 40
+    return ps[1].x == 8 and ps[0].y == 40 and ps[0].x == 0
+
+
+func both(a: Point, b: Point) -> int:
+    return a.x * 100 + b.x
+
+
+public func test_an_argument_that_names_the_record_keeps_the_old_value() -> bool:
+    mut p = point(1)
+    return both(p, replace(p.copy(), x=2)) == 102

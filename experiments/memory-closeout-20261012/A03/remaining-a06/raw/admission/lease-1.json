@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A03/scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-u",
+    "-c",
+    "import sys; print('admitted', flush=True); sys.stdin.buffer.read()"
+  ],
+  "queue_wait_ns": 10095530864,
+  "limit_compiler_invocations": 10,
+  "release_after_ns": 60000000000,
+  "note": "Release happens at a safe command boundary; an individual compile may exceed 60 seconds.",
+  "release_status": 0,
+  "compiler_invocations": 7,
+  "admitted_work_ns": 34409869
+}

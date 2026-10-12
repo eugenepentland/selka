@@ -1,0 +1,146 @@
+{
+  "compiler_source": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "cases": {
+    "set_owner": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_owner.my",
+        "sha256": "3a7bfbcdd782be360addecede32bfa37b84ab1d3e9344cd8014fc28b3a7b1d9c"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_owner.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_owner.my:5:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if len(values) == 2 and len(copied) == 3 else 1\n             ^\n",
+        "wall_ns_including_admission": 1873811,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "set_list": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_list.my",
+        "sha256": "7ceb7446ae9564cf850336b71df08960bd4c46cb5affb9bee07bf98637bcee67"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_list.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_list.my:5:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if len(values) == 2 and len(copied) == 3 else 1\n             ^\n",
+        "wall_ns_including_admission": 2009346,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "set_copy_control": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_copy_control.my",
+        "sha256": "7c284aa158a1c9ee059a67eb63eee97adebc9da95344381668b9cb016e43db6f"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_copy_control.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/set_copy_control.my:5:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if len(values) == 2 and len(copied) == 3 else 1\n             ^\n",
+        "wall_ns_including_admission": 2564176,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "max_generator": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_generator.my",
+        "sha256": "2d66ea759269cb6822c3e7124fc0ae6c6383212cd48f36b74ba9f361b339a06c"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_generator.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_generator.my:5:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if selected == \"pear\" else 1\n             ^\n",
+        "wall_ns_including_admission": 2992763,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "max_generator_copy": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_generator_copy.my",
+        "sha256": "5f84d38ae647fe041375b0ccc294bc0136660321253cda345aa7ceefe7af41d1"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_generator_copy.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_generator_copy.my:5:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if selected == \"pear\" else 1\n             ^\n",
+        "wall_ns_including_admission": 3351233,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "max_list_control": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_list_control.my",
+        "sha256": "3cdbc4a0ca661ade64b047b7443a8286d6fae1664bb1f8c9f67840c5056eae04"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_list_control.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/reducers/max_list_control.my:5:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if selected == \"pear\" else 1\n             ^\n",
+        "wall_ns_including_admission": 3081836,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "move_elision_copy": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/proposed/tests/lang/move_elision.my",
+        "sha256": "1e9a6e470f1b1639ec7de74b89305ace4e5dc55cacf0f5738f9a75512873d81d"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/proposed/tests/lang/move_elision.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "wall_ns_including_admission": 11419942,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    }
+  }
+}

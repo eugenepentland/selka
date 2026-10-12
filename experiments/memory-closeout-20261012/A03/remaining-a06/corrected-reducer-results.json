@@ -1,0 +1,126 @@
+{
+  "compiler_source": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "cases": {
+    "max_generator": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_generator.my",
+        "sha256": "7f3708f700f6796fe3d5e74a35d565a7ca7b4c73c905d123b08bb6af22d0ea47"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_generator.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_generator.my:3:28: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      const selected = max(w for w in words)\n                             ^\n",
+        "wall_ns_including_admission": 5238481,
+        "admission_receipt": "raw/admission/lease-2.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "max_generator_copy": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_generator_copy.my",
+        "sha256": "87af161c0e77afd17b6cba28e66fc6a4143d47c3c027ed0676c3205a0401e25e"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_generator_copy.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_generator_copy.my:3:35: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      const selected = max(w.copy() for w in words)\n                                    ^\n",
+        "wall_ns_including_admission": 5024514,
+        "admission_receipt": "raw/admission/lease-2.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "max_list_control": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_list_control.my",
+        "sha256": "9f4adada5570fc10d8c61521afc60d1e76b689e679aefe76bea487716922fb15"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_list_control.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/max_list_control.my:3:22: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      const selected = max(words)\n                       ^\n",
+        "wall_ns_including_admission": 4678344,
+        "admission_receipt": "raw/admission/lease-2.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "set_copy_control": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/set_copy_control.my",
+        "sha256": "9585a72dcf9f115a13a979b6ca8cb012f754929c1fff609a82d6a63520726563"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/set_copy_control.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "wall_ns_including_admission": 4581537,
+        "admission_receipt": "raw/admission/lease-2.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "set_list": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/set_list.my",
+        "sha256": "b70fe92865a6e36ca5cba8e21a940a6650a866e8a61b062f3a70835341e9827f"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/set_list.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "wall_ns_including_admission": 3961187,
+        "admission_receipt": "raw/admission/lease-2.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    },
+    "set_owner": {
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/set_owner.my",
+        "sha256": "ce3e0cbc89fdaf84bfa088967fbc18375532ac9857f549b5ac032d829a17d78b"
+      },
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/set_owner.my",
+          "--experimental-zero-rc"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "wall_ns_including_admission": 4705904,
+        "admission_receipt": "raw/admission/lease-2.json",
+        "wall_ns_excludes_admission_wait": true
+      }
+    }
+  }
+}

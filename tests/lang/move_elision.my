@@ -75,4 +75,4 @@ func both(a: Point, b: Point) -> int:
 
 public func test_an_argument_that_names_the_record_keeps_the_old_value() -> bool:
     mut p = point(1)
-    return both(p, replace(p, x=2)) == 102
+    return both(p, replace(p.copy(), x=2)) == 102

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+    "check",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/remaining-a06/corrected-reducers/set_copy_control.my",
+    "--experimental-zero-rc"
+  ],
+  "exit": 0,
+  "stdout": "",
+  "stderr": "",
+  "wall_ns_including_admission": 4581537,
+  "admission_receipt": "raw/admission/lease-2.json",
+  "wall_ns_excludes_admission_wait": true
+}
