@@ -1,0 +1,41 @@
+{
+  "status": "prepared only; not applied to integration or worker sources",
+  "worker_revision": "5a62e26c473e4033626e6340a8c74e896e13bf8e",
+  "files": [
+    {
+      "path": "src/core/runtime/core_dict.c",
+      "before_sha256": "379da380517be9cb7e6ef0dba0a16dded8f1b18d836002409c4555a3d53e5ba1",
+      "after_sha256": "4f3beca353e7d0908e9f408568ee994aea0abc4da75bf49edfaf9039699115ed",
+      "changed": true,
+      "preview": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_dict.c"
+    },
+    {
+      "path": "src/core/runtime/core_sort.c",
+      "before_sha256": "85da826333d5f157d32cf396ea29579bc050d9b95bb6acc9744f84e778f9383b",
+      "after_sha256": "c45d05dcbf2a9eed86fd4c40dda1dd3ca7c4822d4cb9b10e5218fbe9c414b818",
+      "changed": true,
+      "preview": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_sort.c"
+    },
+    {
+      "path": "src/core/runtime/core_io.c",
+      "before_sha256": "f4a44d8a37abdc52f7b3ce2015979f59172d5778269d3d14b3db4a80ae458138",
+      "after_sha256": "ded0f00b113b78279afbae8d2f4c0fe77184621c5ddada4dc59f50899f360958",
+      "changed": true,
+      "preview": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_io.c"
+    },
+    {
+      "path": "src/core/runtime/core_host.c",
+      "before_sha256": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+      "after_sha256": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+      "changed": false,
+      "preview": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_host.c"
+    },
+    {
+      "path": "src/core/runtime/core_durable.c",
+      "before_sha256": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+      "after_sha256": "22c616f2a6bec0db2eebd5fa8dc3d645ce760d91d73d73e5dd5b2f08bf0dec7d",
+      "changed": true,
+      "preview": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_durable.c"
+    }
+  ]
+}

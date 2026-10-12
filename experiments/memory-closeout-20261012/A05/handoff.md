@@ -180,3 +180,13 @@ Coordinator support2 identity: source `245e892f8518943ee44a0cc6009ab4b4fa6bca43`
 compiler SHA256 `3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c`.
 Full memo assertions and minimized scalar-copy now pass all five modes against
 this compiler. No old failure was removed from the raw evidence.
+
+## Retirement preparation requested by coordinator
+
+`retirement/` contains exact unapplied runtime and native-fixture patches, source
+hash manifests, applicability checks, and a passed scratch native durable preview.
+No production runtime retirement was applied. The preview runtime removes the A05
+counted branches/legacy sort entrypoint while preserving owned layouts, native
+provider storage and direct drops. Its README states the A02/A07/header/emission,
+fixture reservation, cache and installed-component dependencies. Actual Stage4
+qualification remains mandatory after C2 approval.

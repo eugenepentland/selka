@@ -37,3 +37,11 @@ compiler/tool/target/CPU/build context and the transitive canonical implementati
 A07 must validate generated-name/finalization boundaries before the `.fresh`
 result contract is added; A05 did not change the registry. This helper currently
 blocks source persistence even after lexical directory-lock ownership passes.
+
+The public network wrappers have an affine source contract: `read`, `write` and
+`close` transfer their Connection parameter. The native read/write helpers borrow
+that transferred local only for the IO call, and wrapper destruction then releases
+it. This differs from ordinary data-parameter borrowing. `network.my` therefore
+uses three distinct connections and checks peer EOF after read, write and close;
+reusing a consumed Connection is an existing source error. No borrowing API change
+was introduced by this closeout.

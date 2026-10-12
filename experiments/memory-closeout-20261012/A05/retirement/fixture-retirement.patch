@@ -1,0 +1,230 @@
+--- a/src/core/durable_fixture.c
++++ b/src/core/durable_fixture.c
+@@ -73,9 +73,9 @@
+     myl_block *path = text(name), *input = octets(bytes);
+     myl_block *result = myl_core_durable_access(cap, kind, path, input, limit);
+     int status = (int)((uint64_t *)block_data(result))[0];
+-    myl_core_release(result);
+-    myl_core_release(input);
+-    myl_core_release(path);
++    myl_core_drop_owned(result);
++    myl_core_drop_owned(input);
++    myl_core_drop_owned(path);
+     return status;
+ }
+ static void read_exact(myl_block *cap, const char *expected) {
+@@ -86,9 +86,9 @@
+     myl_block *value = (myl_block *)(uintptr_t)fields[1];
+     assert((size_t)value->len == strlen(expected));
+     assert(!memcmp(block_data(value), expected, strlen(expected)));
+-    myl_core_release(result);
+-    myl_core_release(input);
+-    myl_core_release(path);
++    myl_core_drop_owned(result);
++    myl_core_drop_owned(input);
++    myl_core_drop_owned(path);
+ }
+ static myl_block *acquire_lock(myl_block *cap, int expected) {
+     myl_block *path = text(""), *input = octets("");
+@@ -96,10 +96,10 @@
+     uint64_t *fields = (uint64_t *)block_data(result);
+     assert((int)fields[0] == expected);
+     myl_block *owner = expected ? NULL : (myl_block *)(uintptr_t)fields[1];
+-    if (owner) core_io_retain(owner);
+-    myl_core_release(result);
+-    myl_core_release(input);
+-    myl_core_release(path);
++    if (owner) (void)myl_core_result_take_pointer(result, 1);
++    myl_core_drop_owned(result);
++    myl_core_drop_owned(input);
++    myl_core_drop_owned(path);
+     return owner;
+ }
+ static void basic(myl_block *cap) {
+@@ -117,13 +117,13 @@
+     assert(access_status(readonly, CORE_DURABLE_SYNC, "", "", 0) == 2);
+     assert(access_status(readonly, CORE_DURABLE_LOCK, "", "", 0) == 2);
+     assert(!access_status(readonly, CORE_DURABLE_READ, "data", "", 64));
+-    myl_core_release(readonly);
++    myl_core_drop_owned(readonly);
+     myl_block *provider = core_io_provider(2, 1, 0, NULL);
+     myl_block *memory = core_io_cap(2, 7, provider, NULL, NULL);
+-    myl_core_release(provider);
++    (void)provider;
+     assert(access_status(memory, CORE_DURABLE_ATOMIC, "data", "x", 0) == 1);
+     assert(access_status(memory, CORE_DURABLE_READ, "data", "", 64) == 1);
+-    myl_core_release(memory);
++    myl_core_drop_owned(memory);
+     puts("partial writes, exact bounded reads, permission and stand-in refusal");
+ }
+ static void failures(myl_block *cap) {
+@@ -169,7 +169,7 @@
+ static void scopes(myl_block *cap) {
+     myl_block *scope = text("directory");
+     myl_block *narrowed = core_io_cap(2, 7, core_io_authority(cap)->provider, cap, scope);
+-    myl_core_release(scope);
++    myl_core_drop_owned(scope);
+     assert(!access_status(narrowed, CORE_DURABLE_ATOMIC, "data", "scoped", 0));
+     read_exact(narrowed, "scoped");
+     read_exact(cap, "new");
+@@ -183,7 +183,7 @@
+     assert(!access_status(cap, CORE_DURABLE_READ, absolute, "", 64));
+     assert(access_status(narrowed, CORE_DURABLE_READ, absolute, "", 64) == 2);
+     core_io_real.roots[0].direct = 0;
+-    myl_core_release(narrowed);
++    myl_core_drop_owned(narrowed);
+     core_io_embedding = 1;
+     assert(access_status(cap, CORE_DURABLE_ATOMIC, "data", "x", 0) == 1);
+     core_io_embedding = 0;
+@@ -192,9 +192,9 @@
+     myl_block *result = myl_core_durable_access(cap, CORE_DURABLE_ATOMIC, path, input, 0);
+     assert(((uint64_t *)block_data(result))[0] == 3);
+     input->len = 1;
+-    myl_core_release(result);
+-    myl_core_release(input);
+-    myl_core_release(path);
++    myl_core_drop_owned(result);
++    myl_core_drop_owned(input);
++    myl_core_drop_owned(path);
+     read_exact(cap, "new");
+     assert(!mkdir("later", 0700));
+     assert(!access_status(cap, CORE_DURABLE_ATOMIC, "later/other", "later root", 0));
+@@ -208,7 +208,7 @@
+     assert(core_io_scoped_grant(&core_io_real, ".", 0));
+     myl_block *owner = acquire_lock(cap, 0);
+     assert(owner);
+-    myl_core_release(owner);
++    myl_core_drop_owned(owner);
+     close(core_io_real.roots[1].fd);
+     core_io_real.count = 1;
+ }
+@@ -235,9 +235,9 @@
+     for (int64_t i = 0; i < list->len; ++i)
+         if (items[i]->len == 7 && !memcmp(block_data(items[i]), ".hidden", 7)) hidden = true;
+     assert(hidden);
+-    myl_core_release(result);
+-    myl_core_release(input);
+-    myl_core_release(path);
++    myl_core_drop_owned(result);
++    myl_core_drop_owned(input);
++    myl_core_drop_owned(path);
+     injection = DIRECTORY_READ_ERROR;
+     directory_reads = 0;
+     assert(access_status(cap, CORE_DURABLE_LIST, "", "", 4096));
+@@ -310,9 +310,9 @@
+     unsigned char *bytes = block_data(value);
+     assert(bytes[0] == 'A' || bytes[0] == 'B');
+     for (size_t i = 1; i < 65536; ++i) assert(bytes[i] == bytes[0]);
+-    myl_core_release(result);
+-    myl_core_release(input);
+-    myl_core_release(path);
++    myl_core_drop_owned(result);
++    myl_core_drop_owned(input);
++    myl_core_drop_owned(path);
+ }
+ static void ownership(myl_block *cap) {
+     int ready[2];
+@@ -338,11 +338,11 @@
+     assert(waitpid(child, &status, 0) == child && WIFSIGNALED(status));
+     myl_block *owner = acquire_lock(cap, 0);
+     assert(owner && core_io_live_handles() == 1);
+-    myl_core_release(owner);
++    myl_core_drop_owned(owner);
+     assert(core_io_live_handles() == 0);
+     owner = acquire_lock(cap, 0);
+     assert(!core_io_complete(owner));
+-    myl_core_release(owner);
++    myl_core_drop_owned(owner);
+     assert(core_io_live_handles() == 0);
+     puts("competing process refused; SIGKILL, File drop and completion release directory ownership");
+ }
+@@ -354,7 +354,7 @@
+     core_io_initialized = 1;
+     myl_block *provider = core_io_provider(2, 0, 0, NULL);
+     myl_block *cap = core_io_cap(2, 7, provider, NULL, NULL);
+-    myl_core_release(provider);
++    (void)provider;
+     assert(argc == 2);
+     if (!strcmp(argv[1], "all")) {
+         basic(cap);
+@@ -370,7 +370,7 @@
+     else if (!strcmp(argv[1], "crashes")) crashes(cap);
+     else if (!strcmp(argv[1], "ownership")) ownership(cap);
+     else assert(0);
+-    myl_core_release(cap);
++    myl_core_drop_owned(cap);
+     assert(core_io_live_handles() == 0);
+     return myl_core_exit(0);
+ }
+--- a/src/core/durable_test.zig
++++ b/src/core/durable_test.zig
+@@ -3,37 +3,21 @@
+ const driver = @import("driver.zig");
+ const support = @import("test_support.zig");
+ 
+-/// Preserve fixture scenarios while transferring its explicit owners in the owned ABI.
+-fn fixtureSource(a: std.mem.Allocator, owned: bool) ![]u8 {
+-    const original = @embedFile("durable_fixture.c");
+-    if (!owned) return a.dupe(u8, original);
+-    const transferred = try std.mem.replaceOwned(u8, a, original, "if (owner) core_io_retain(owner);", "if (owner) (void)myl_core_result_take_pointer(result, 1);");
+-    defer a.free(transferred);
+-    const roots = try std.mem.replaceOwned(u8, a, transferred, "myl_core_release(provider);", "core_io_root_transferred(provider);");
+-    defer a.free(roots);
+-    return std.mem.replaceOwned(u8, a, roots, "myl_core_release(", "myl_core_drop_owned(");
+-}
+-
+-fn nativeFixture(a: std.mem.Allocator, owned: bool) !std.process.RunResult {
++fn nativeFixture(a: std.mem.Allocator) !std.process.RunResult {
+     var directory = std.testing.tmpDir(.{});
+     defer directory.cleanup();
+     const io = std.testing.io;
+     const root = try directory.dir.realPathFileAlloc(io, ".", a);
+     try directory.dir.writeFile(io, .{ .sub_path = "core_rt.c", .data = driver.runtime_source });
+-    const fixture = try fixtureSource(a, owned);
+-    defer a.free(fixture);
+-    try directory.dir.writeFile(io, .{ .sub_path = "fixture.c", .data = fixture });
++    try directory.dir.writeFile(io, .{ .sub_path = "fixture.c", .data = @embedFile("durable_fixture.c") });
+     var environment = try std.testing.environ.createMap(a);
+     defer environment.deinit();
+-    if (owned) try environment.put("MYL_CORE_LEAKCHECK", "1");
++    try environment.put("MYL_CORE_LEAKCHECK", "1");
+     try environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(a, &.{ root, "zig-local" }));
+     const binary = try std.fs.path.join(a, &.{ root, "fixture" });
+     const source = try std.fs.path.join(a, &.{ root, "fixture.c" });
+     const built = try std.process.run(a, io, .{
+-        .argv = if (owned)
+-            &.{ environment.get("ZIG") orelse "zig", "cc", "-O2", "-std=c11", "-pthread", "-DMYL_ZERO_RC", source, "-o", binary }
+-        else
+-            &.{ environment.get("ZIG") orelse "zig", "cc", "-O2", "-std=c11", "-pthread", source, "-o", binary },
++        .argv = &.{ environment.get("ZIG") orelse "zig", "cc", "-O2", "-std=c11", "-pthread", source, "-o", binary },
+         .environ_map = &environment,
+     });
+     try std.testing.expectEqualStrings("", built.stderr);
+@@ -41,26 +25,12 @@
+     return std.process.run(a, io, .{ .argv = &.{ binary, "all" }, .cwd = .{ .path = root }, .environ_map = &environment });
+ }
+ 
+-// spec: NEW-CORE-DURABLE-STORAGE-1
+-test "durable storage completes short writes refuses unsafe paths and recovers actual SIGKILL publication and ownership" {
+-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+-    defer arena.deinit();
+-    const ran = try nativeFixture(arena.allocator(), false);
+-    try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+-    try std.testing.expectEqualStrings("", ran.stderr);
+-    try std.testing.expect(std.mem.indexOf(u8, ran.stdout, "partial writes, exact bounded reads") != null);
+-    try std.testing.expect(std.mem.indexOf(u8, ran.stdout, "uncertain rename is explicit") != null);
+-    try std.testing.expect(std.mem.indexOf(u8, ran.stdout, "actual SIGKILL before and after publication") != null);
+-    try std.testing.expect(std.mem.indexOf(u8, ran.stdout, "SIGKILL, File drop and completion release directory ownership") != null);
+-    try std.testing.expect(std.mem.indexOf(u8, ran.stdout, "includes hidden entries beyond 256 and refuses partial readdir") != null);
+-}
+-
+ // spec-case: NEW-CORE-DURABLE-STORAGE-1
+ // spec-case: NEW-CORE-ZERO-RC-RESOURCES-1
+ test "zero RC durable native storage preserves fault crash and lease cleanup contracts" {
+     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+     defer arena.deinit();
+-    const ran = try nativeFixture(arena.allocator(), true);
++    const ran = try nativeFixture(arena.allocator());
+     try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
+     try std.testing.expectEqualStrings("", ran.stderr);
+     try std.testing.expect(std.mem.indexOf(u8, ran.stdout, "partial writes, exact bounded reads") != null);

@@ -8,7 +8,7 @@
       "module": "cache_record",
       "name": "Error",
       "kind": "enum",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Scalar Corrupt tag; copyable without managed storage; message returns immutable static text.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -101,7 +101,7 @@
       "module": "durable",
       "name": "Step",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns output/state byte storage. Callback inputs borrow; retained fields need independent owners or explicit copies.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -110,7 +110,7 @@
       "module": "durable",
       "name": "Request",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns input, chunk-list, initial-state and output-path storage. run borrows all fields and validates byte/chunk/path bounds before native storage.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -119,7 +119,7 @@
       "module": "durable",
       "name": "Report",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Independent owned output-digest and state plus scalar fresh/reused counts; remains valid after request replacement.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -128,7 +128,7 @@
       "module": "durable",
       "name": "Error",
       "kind": "enum",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Scalar failure tags or independently owned storage-detail text; message borrows and copies dynamic detail.",
       "baseline_executable_source_references": [
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
@@ -852,7 +852,7 @@
       "module": "memo",
       "name": "Key",
       "kind": "enum",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Tagged scalar number or owned text/bytes. Keys borrow during computation and are copied when retained in cache entries.",
       "baseline_executable_source_references": [
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
@@ -871,7 +871,7 @@
       "module": "memo",
       "name": "Error",
       "kind": "enum",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns capacity-error detail text; message borrows and returns an independent copy for dynamic detail.",
       "baseline_executable_source_references": [
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
@@ -999,7 +999,7 @@
       "module": "memo",
       "name": "Entry",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns key/value snapshots and stores a scalar callable pointer. Retention requires independent copies of borrowed inputs.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1008,7 +1008,7 @@
       "module": "memo",
       "name": "Cache",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns Entry list and scalar callable/capacity/FIFO state. create establishes valid bounds; explicit copy forks retained entries; clear mutates only its owner.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1017,7 +1017,7 @@
       "module": "memo",
       "name": "Lookup",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns an independent callback/hit value and scalar reused flag; retained cache contents cannot alias mutable descendants.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1121,7 +1121,7 @@
       "module": "network",
       "name": "Connection",
       "kind": "resource",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Affine native handle dependent on a live Network provider. Public read/write/close transfer the Connection. Read/write borrow it only inside their callee, then cleanup closes the handle; close returns ownership on failure.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1130,7 +1130,7 @@
       "module": "network",
       "name": "Chunk",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Fixed-size byte-array value with bounded length and EOF flag. Runtime provider results validate length against the static capacity.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1139,7 +1139,7 @@
       "module": "network",
       "name": "Connected",
       "kind": "result",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Fresh acquisition carrier transfers Connection on success; scalar error owns no native handle.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1148,7 +1148,7 @@
       "module": "network",
       "name": "Read",
       "kind": "result",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Fresh fixed-size Chunk or scalar error. Public network.read consumes Connection; native read_resource borrows it until wrapper cleanup releases it.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1157,7 +1157,7 @@
       "module": "network",
       "name": "Written",
       "kind": "result",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Scalar accepted-byte count or error. Public network.write consumes Connection; fixed input bytes and native IO operation borrow during the call.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1166,7 +1166,7 @@
       "module": "network",
       "name": "Failure",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns the uncompleted Connection and scalar code after completion failure; destruction must release exactly once while provider lives.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1175,7 +1175,7 @@
       "module": "network",
       "name": "Closed",
       "kind": "result",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Successful completion has scalar bool; failure transfers resource ownership in Failure. Neither branch permits a provider escape.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1220,7 +1220,7 @@
       "module": "network",
       "name": "read",
       "kind": "func",
-      "contract": "Reads a live dependent resource into an independent fixed-array result; resource path requires qualification.",
+      "contract": "Consumes its affine Connection, returns an independent fixed-size Chunk or scalar error, and closes the handle when its local owner is destroyed. No repeated use of the consumed caller variable.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1229,7 +1229,7 @@
       "module": "network",
       "name": "write",
       "kind": "func",
-      "contract": "Copies fixed-array data synchronously into provider scratch; resource path requires qualification.",
+      "contract": "Consumes its affine Connection and borrows fixed-size input; returns scalar count/error and closes the local owner at return. No repeated use of the consumed caller variable.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1247,7 +1247,7 @@
       "module": "persistent_memo",
       "name": "Options",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Scalar entry/byte retention bounds validated by call; zero entries computes without persistent storage.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1256,7 +1256,7 @@
       "module": "persistent_memo",
       "name": "Lookup",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns independent returned bytes and scalar reused flag; input/cache-record destruction must not invalidate value.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -1265,7 +1265,7 @@
       "module": "persistent_memo",
       "name": "Error",
       "kind": "enum",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Scalar Invalid or owned storage-detail text; message borrows and independently copies dynamic detail.",
       "baseline_executable_source_references": [
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
@@ -1384,7 +1384,7 @@
       "module": "pool",
       "name": "Pool",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns slot/generation/live/free/counter arrays. Public operations preserve parallel-array invariants from create; explicit copy forks managed children.",
       "baseline_executable_source_references": [
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
@@ -1403,7 +1403,7 @@
       "module": "pool",
       "name": "Handle",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Scalar slot/generation value. occupied/get/set/remove validate generation and slot; it is not a retained managed pointer.",
       "baseline_executable_source_references": [
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
@@ -1593,7 +1593,7 @@
       "module": "random",
       "name": "Random",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Owns the generator state list; constructors establish one u64 state word. Explicit copy forks state, next functions borrow mutably. Empty externally assembled state is invalid for indexed reads.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -2001,7 +2001,7 @@
       "module": "time",
       "name": "Duration",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Copyable scalar signed nanosecond interval; arithmetic APIs explicitly report signed-range overflow.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
@@ -2010,7 +2010,7 @@
       "module": "time",
       "name": "Instant",
       "kind": "record",
-      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "contract": "Copyable scalar Unix nanosecond time; no managed storage or provider lifetime is retained.",
       "baseline_executable_source_references": [],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."

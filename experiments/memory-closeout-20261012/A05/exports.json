@@ -10,7 +10,7 @@
       "line": 5,
       "signature": "public enum Error:",
       "source_sha256": "d12aae8879c0b3fdc07ff398d79d4daa44e5a45e33c6660bbecaeda7659fdd57",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Scalar Corrupt tag; copyable without managed storage; message returns immutable static text.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -71,7 +71,7 @@
       "line": 6,
       "signature": "public record Step:",
       "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns output/state byte storage. Callback inputs borrow; retained fields need independent owners or explicit copies.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -86,7 +86,7 @@
       "line": 14,
       "signature": "public record Request:",
       "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns input, chunk-list, initial-state and output-path storage. run borrows all fields and validates byte/chunk/path bounds before native storage.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -101,7 +101,7 @@
       "line": 23,
       "signature": "public record Report:",
       "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Independent owned output-digest and state plus scalar fresh/reused counts; remains valid after request replacement.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -114,7 +114,7 @@
       "line": 31,
       "signature": "public enum Error:",
       "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Scalar failure tags or independently owned storage-detail text; message borrows and copies dynamic detail.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -601,7 +601,7 @@
       "line": 3,
       "signature": "public enum Key:",
       "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Tagged scalar number or owned text/bytes. Keys borrow during computation and are copied when retained in cache entries.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -617,7 +617,7 @@
       "line": 10,
       "signature": "public enum Error:",
       "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns capacity-error detail text; message borrows and returns an independent copy for dynamic detail.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -649,7 +649,7 @@
       "line": 23,
       "signature": "public record Entry[V: equality + storable]:",
       "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns key/value snapshots and stores a scalar callable pointer. Retention requires independent copies of borrowed inputs.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -662,7 +662,7 @@
       "line": 31,
       "signature": "public record Cache[V: equality + storable]:",
       "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns Entry list and scalar callable/capacity/FIFO state. create establishes valid bounds; explicit copy forks retained entries; clear mutates only its owner.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -675,7 +675,7 @@
       "line": 39,
       "signature": "public record Lookup[V: equality + storable]:",
       "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns an independent callback/hit value and scalar reused flag; retained cache contents cannot alias mutable descendants.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -763,7 +763,7 @@
       "line": 2,
       "signature": "public resource Connection: network",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Affine native handle dependent on a live Network provider. Public read/write/close transfer the Connection. Read/write borrow it only inside their callee, then cleanup closes the handle; close returns ownership on failure.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -776,7 +776,7 @@
       "line": 6,
       "signature": "public record Chunk[const N: u64]:",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Fixed-size byte-array value with bounded length and EOF flag. Runtime provider results validate length against the static capacity.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -789,7 +789,7 @@
       "line": 13,
       "signature": "public result Connected:",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Fresh acquisition carrier transfers Connection on success; scalar error owns no native handle.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -805,7 +805,7 @@
       "line": 19,
       "signature": "public result Read[const N: u64]:",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Fresh fixed-size Chunk or scalar error. Public network.read consumes Connection; native read_resource borrows it until wrapper cleanup releases it.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -820,7 +820,7 @@
       "line": 25,
       "signature": "public result Written:",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Scalar accepted-byte count or error. Public network.write consumes Connection; fixed input bytes and native IO operation borrow during the call.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -835,7 +835,7 @@
       "line": 31,
       "signature": "public record Failure:",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns the uncompleted Connection and scalar code after completion failure; destruction must release exactly once while provider lives.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -848,7 +848,7 @@
       "line": 37,
       "signature": "public result Closed:",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Successful completion has scalar bool; failure transfers resource ownership in Failure. Neither branch permits a provider escape.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -924,7 +924,7 @@
       "line": 75,
       "signature": "public func read[const N: u64](connection: Connection) -> Read[N] effects(network):",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Reads a live dependent resource into an independent fixed-array result; resource path requires qualification.",
+      "ownership_contract": "Consumes its affine Connection, returns an independent fixed-size Chunk or scalar error, and closes the handle when its local owner is destroyed. No repeated use of the consumed caller variable.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -939,7 +939,7 @@
       "line": 81,
       "signature": "public func write[const N: u64](connection: Connection, data: FixedArray[u8, N]) -> Written effects(network):",
       "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
-      "ownership_contract": "Copies fixed-array data synchronously into provider scratch; resource path requires qualification.",
+      "ownership_contract": "Consumes its affine Connection and borrows fixed-size input; returns scalar count/error and closes the local owner at return. No repeated use of the consumed caller variable.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -969,7 +969,7 @@
       "line": 7,
       "signature": "public record Options:",
       "source_sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Scalar entry/byte retention bounds validated by call; zero entries computes without persistent storage.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -984,7 +984,7 @@
       "line": 13,
       "signature": "public record Lookup:",
       "source_sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns independent returned bytes and scalar reused flag; input/cache-record destruction must not invalidate value.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -997,7 +997,7 @@
       "line": 19,
       "signature": "public enum Error:",
       "source_sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Scalar Invalid or owned storage-detail text; message borrows and independently copies dynamic detail.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -1043,7 +1043,7 @@
       "line": 3,
       "signature": "public record Pool[T: copy + storable]:",
       "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns slot/generation/live/free/counter arrays. Public operations preserve parallel-array invariants from create; explicit copy forks managed children.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -1058,7 +1058,7 @@
       "line": 13,
       "signature": "public record Handle[T: copy + storable]:",
       "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Scalar slot/generation value. occupied/get/set/remove validate generation and slot; it is not a retained managed pointer.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
@@ -1208,7 +1208,7 @@
       "line": 2,
       "signature": "public record Random:",
       "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Owns the generator state list; constructors establish one u64 state word. Explicit copy forks state, next functions borrow mutably. Empty externally assembled state is invalid for indexed reads.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -1537,7 +1537,7 @@
       "line": 2,
       "signature": "public record Duration:",
       "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Copyable scalar signed nanosecond interval; arithmetic APIs explicitly report signed-range overflow.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
@@ -1550,7 +1550,7 @@
       "line": 7,
       "signature": "public record Instant:",
       "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
-      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "ownership_contract": "Copyable scalar Unix nanosecond time; no managed storage or provider lifetime is retained.",
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": []
