@@ -1,0 +1,88 @@
+{
+  "source": "src/stdlib/fixtures/json.my",
+  "source_sha256": "e64f4fd7109a902bdc65936974e22b0125a8140081761b72fa0becbc6af81ba6",
+  "function_deltas": {
+    "json::get": {
+      "list_copies": {
+        "C0": 0,
+        "Support7": 2
+      },
+      "list_copy_bytes": {
+        "C0": 0,
+        "Support7": 64
+      }
+    },
+    "json::array": {
+      "list_copies": {
+        "C0": 0,
+        "Support7": 2
+      },
+      "list_copy_bytes": {
+        "C0": 0,
+        "Support7": 48
+      }
+    },
+    "json::object": {
+      "list_copies": {
+        "C0": 0,
+        "Support7": 2
+      },
+      "list_copy_bytes": {
+        "C0": 0,
+        "Support7": 64
+      }
+    },
+    "json::as_list": {
+      "list_copies": {
+        "C0": 0,
+        "Support7": 1
+      },
+      "list_copy_bytes": {
+        "C0": 0,
+        "Support7": 16
+      }
+    },
+    "json::as_dict": {
+      "list_copies": {
+        "C0": 0,
+        "Support7": 1
+      },
+      "list_copy_bytes": {
+        "C0": 0,
+        "Support7": 32
+      }
+    },
+    "json::read_literal": {
+      "allocs": {
+        "C0": 0,
+        "Support7": 3
+      },
+      "alloc_bytes": {
+        "C0": 0,
+        "Support7": 192
+      },
+      "frees": {
+        "C0": 0,
+        "Support7": 3
+      },
+      "free_bytes": {
+        "C0": 0,
+        "Support7": 192
+      }
+    }
+  },
+  "allocation_attribution": {
+    "function": "json::read_literal",
+    "source": "src/stdlib/json.my:519",
+    "C0": "borrowed slice then span_eq",
+    "Support7": "owned bytes_slice then str_eq and direct drop",
+    "reason": "Bounded conservative slice-lifetime analysis sees a later parent Scanner owner transfer/update and retains independent storage. This particular comparison completes before that transfer; the whole-function scan conservatively adds a copy.",
+    "status": "Measured safety tradeoff pending coordinator review; no speculative general lifetime analysis added."
+  },
+  "copy_event_attribution": {
+    "commit": "1f894ddd3",
+    "file": "src/core/count_runtime.zig",
+    "reason": "Descriptor-driven recursive list copies now emit list_copy event counters. Existing allocations/cumulative bytes already counted at C0; subtype counter changes are not new copying."
+  },
+  "limitations": "No runtime/RSS measurement; allocation increase is three 64-byte allocations for this fixture, peak9952 unchanged. Historical per-lookup reductions are not relabeled as fresh measurements."
+}

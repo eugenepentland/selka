@@ -19,6 +19,8 @@ def flags(args):
 
 def lane(q, args, env, name, source, options, mode, expected, **kwargs):
     result = q.lane(args, env, name, source, options, mode, expected, **kwargs)
+    compiler_stderr = (args.output / name / mode / 'build.stderr').read_text()
+    assert 'error(SafeAllocator)' not in compiler_stderr, 'compiler allocator diagnostics are not a passing build'
     if args.default_ownership:
         # The historical helper keys these assertions on its experimental flag.
         # Requiring them here prevents flag retirement from weakening the audit.

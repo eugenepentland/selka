@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support7-01/v_buffer_mut/release/program"
+  ],
+  "status": 0,
+  "elapsed_ns": 20682155,
+  "stdout": "True False False False True\nTrue False False True\n8:3132334100cebb78 2\n8:3132334100cebb78 12:3132334100cebb7861626342\n14:3132334100cebb78616263423132\n1000000 137293856\n",
+  "stderr": ""
+}

@@ -1,0 +1,66 @@
+import json
+
+func expect_missing(value: json.Json?):
+    match value:
+        case Some(_):
+            assert False
+        case None:
+            return
+
+
+func render(value: json.Json?) -> str:
+    match value:
+        case Some(item):
+            return json.dumps(item)
+        case None:
+            return "missing"
+
+
+func object_value() -> json.Json:
+    return json.Json.object(value={"target": json.Json.array(value=[json.Json.object(value={"nested": json.Json.text(value="value-" + str(7))})]), "other": json.Json.text(value="other-" + str(8))})
+
+
+func array_value() -> json.Json:
+    return json.Json.array(value=[json.Json.object(value={"nested": json.Json.array(value=[json.Json.text(value="value-" + str(9))])}), json.integer(2)])
+
+
+func local_object() -> json.Json?:
+    const value = object_value()
+    return json.get(value, "target")
+
+
+func local_array() -> json.Json?:
+    const value = array_value()
+    return json.at(value, 0)
+
+
+func wrong_variants():
+    const values = [json.null_value(), json.boolean(True), json.integer(3), json.number(1.5), json.text("text")]
+    for value in values:
+        expect_missing(json.get(value, "target"))
+        expect_missing(json.at(value, 0))
+    expect_missing(json.get(json.array([]), "target"))
+    expect_missing(json.at(json.object({}), 0))
+
+
+func main(out: Stream) -> int:
+    wrong_variants()
+    mut object = object_value()
+    mut array = array_value()
+    expect_missing(json.get(object, "missing"))
+    expect_missing(json.at(array, 0 - 1))
+    expect_missing(json.at(array, 2))
+    expect_missing(json.at(array, 999999))
+    expect_missing(json.get(json.object({}), "target"))
+    expect_missing(json.at(json.array([]), 0))
+    const member = json.get(object, "target")
+    const element = json.at(array, 0)
+    assert json.dumps(object) == "{\"target\":[{\"nested\":\"value-7\"}],\"other\":\"other-8\"}"
+    assert json.dumps(array) == "[{\"nested\":[\"value-9\"]},2]"
+    out.print(render(json.get(json.object({"null": json.null_value()}), "null")), render(json.at(array, 1)))
+    object = json.object({"target": json.text("changed")})
+    array = json.array([json.text("changed")])
+    out.print(render(member), render(element))
+    out.print(render(local_object()), render(local_array()))
+    out.print(json.dumps(object), json.dumps(array))
+    return 0

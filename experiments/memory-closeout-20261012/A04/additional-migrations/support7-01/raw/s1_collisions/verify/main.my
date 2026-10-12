@@ -1,0 +1,83 @@
+# Equal-length key pairs with the same runtime span hash, differing only inside one
+# 4-octet window at the start, middle or end (experiments/s1-views-20261009/tools/
+# collisions.py, checked against the C hash): a probe of one after inserting the other
+# always reaches the key compare (NEW-CORE-S1-VIEW-3), in a small table and in an
+# indexed one. CPython's answers.
+func pairs() -> str[]:
+    return ["dVC", "K9Q", # 3 start
+        "X2E3", "Rqc2", # 4 start
+        "CzpCk", "vKFJk", # 5 start
+        "yHPpk", "gSv0k", # 5 middle
+        "kziNA", "kCIzs", # 5 end
+        "yFxqkk", "LfCzkk", # 6 start
+        "kGSEgk", "kykr5k", # 6 middle
+        "kkCt7J", "kkkNEm", # 6 end
+        "kIpRkkk", "4O2gkkk", # 7 start
+        "kkJ-3kk", "kCv4jkk", # 7 middle
+        "kkk8vj1", "kkkkA7o", # 7 end
+        "bnkzkkkk", "equ1kkkk", # 8 start
+        "kk2zRTkk", "kkUGtDkk", # 8 middle
+        "kkkkpvmd", "kkkk5JYE", # 8 end
+        "8qs2kkkkk", "OikFkkkkk", # 9 start
+        "kkZsx3kkk", "kkroNpkkk", # 9 middle
+        "kkkkkapmt", "kkkkkW10k", # 9 end
+        "lFmikkkkkk", "tOa8kkkkkk", # 10 start
+        "kkk0IeNkkk", "kkkOeFWkkk", # 10 middle
+        "kkkkkkdsCM", "kkkkkkbxkL", # 10 end
+        "Jc4Dkkkkkkk", "7WN_kkkkkkk", # 11 start
+        "kkkXirykkkk", "kkkZJoWkkkk", # 11 middle
+        "kkkkkkkFqkc", "kkkkkkkRuO3", # 11 end
+        "eBrLkkkkkkkk", "GAijkkkkkkkk", # 12 start
+        "kkkk7jcykkkk", "kkkk904Pkkkk", # 12 middle
+        "kkkkkkkkWlBE", "kkkkkkkkb90j", # 12 end
+        "YTmIkkkkkkkkk", "y6QDkkkkkkkkk", # 13 start
+        "kkkkbyZUkkkkk", "kkkkfE0rkkkkk", # 13 middle
+        "kkkkkkkkkZWeL", "kkkkkkkkkgOsD", # 13 end
+        "FOpWkkkkkkkkkk", "2nsKkkkkkkkkkk", # 14 start
+        "kkkkkAqD7kkkkk", "kkkkkcGT5kkkkk", # 14 middle
+        "kkkkkkkkkk5oNh", "kkkkkkkkkkJpcN", # 14 end
+        "B0wvkkkkkkkkkkk", "5zAbkkkkkkkkkkk", # 15 start
+        "kkkkkzzUukkkkkk", "kkkkkWkWfkkkkkk", # 15 middle
+        "kkkkkkkkkkkRoz5", "kkkkkkkkkkkbSNl", # 15 end
+        "IWwCkkkkkkkkkkkk", "aTbbkkkkkkkkkkkk", # 16 start
+        "kkkkkkf791kkkkkk", "kkkkkkRnnrkkkkkk", # 16 middle
+        "kkkkkkkkkkkkMLQE", "kkkkkkkkkkkkUVB9", # 16 end
+        "GCaFkkkkkkkkkkkkk", "VjnLkkkkkkkkkkkkk", # 17 start
+        "kkkkkkW3PRkkkkkkk", "kkkkkktfblkkkkkkk", # 17 middle
+        "kkkkkkkkkkkkkkopN", "kkkkkkkkkkkkkY9C_", # 17 end
+        "OE8Fkkkkkkkkkkkkkk", "_nz-kkkkkkkkkkkkkk", # 18 start
+        "kkkkkkk4pZvkkkkkkk", "kkkkkkkikVhkkkkkkk", # 18 middle
+        "kkkkkkkkkkkkkkwsXr", "kkkkkkkkkkkkkkqOOA", # 18 end
+        "V9Ywkkkkkkkkkkkkkkk", "t5bnkkkkkkkkkkkkkkk", # 19 start
+        "kkkkkkkJd-8kkkkkkkk", "kkkkkkk3XfUkkkkkkkk", # 19 middle
+        "kkkkkkkkkkkkkkkElmp", "kkkkkkkkkkkkkkkLi9B", # 19 end
+        "tysXkkkkkkkkkkkkkkkk", "Nuu2kkkkkkkkkkkkkkkk", # 20 start
+        "kkkkkkkkypSZkkkkkkkk", "kkkkkkkk_lHHkkkkkkkk", # 20 middle
+        "kkkkkkkkkkkkkkkkXyA3", "kkkkkkkkkkkkkkkklvFF" # 20 end
+        ]
+
+
+func check(keys: str[], filler: int) -> str:
+    mut out: str[] = []
+    for p in range(len(keys) // 2):
+        mut a = keys[2 * p].copy()
+        mut b = keys[2 * p + 1].copy()
+        mut d: dict[str, int] = {}
+        for f in range(filler):
+            d["f" + str(f)] = f
+        d[a.copy()] = 1
+        mut src = "<" + b + ">" + a
+        mut n = len(b)
+        mut miss = d.get(src[1:n + 1], 0)
+        d[src[1:n + 1]] = d.get(src[1:n + 1], 0) + 2
+        mut hit = d.get(src[n + 2:], 0)
+        out.append(str(miss) + str(d[a]) + str(d[b]) + str(hit) + str(len(d) - filler))
+    return ",".join(out)
+
+
+func main(out: Stream) -> int:
+    mut keys = pairs()
+    out.print(len(keys) // 2)
+    out.print(check(keys, 0))
+    out.print(check(keys, 20))
+    return 0

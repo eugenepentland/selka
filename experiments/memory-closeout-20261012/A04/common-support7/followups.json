@@ -1,0 +1,170 @@
+{
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "steps": {
+    "selections": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/selections/qualify.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--source-commit",
+        "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+        "--phase",
+        "support7-01"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/selections.log"
+    },
+    "formatting": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/formatting/qualify.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--source-commit",
+        "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+        "--phase",
+        "support7-01",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/formatting.log"
+    },
+    "repetition": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/repetition/qualify.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--source-commit",
+        "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+        "--phase",
+        "support7-01",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/repetition.log"
+    },
+    "rendering": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/rendering/qualify.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--source-commit",
+        "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+        "--phase",
+        "support7-01",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/rendering.log"
+    },
+    "slices": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/slices/qualify.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--source-commit",
+        "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+        "--phase",
+        "support7-01"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/slices.log"
+    },
+    "extrema": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/extrema/qualify.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--source-commit",
+        "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+        "--phase",
+        "support7-01"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/extrema.log"
+    },
+    "tuples": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/tuples/qualify.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--source-commit",
+        "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+        "--phase",
+        "support7-01"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/tuples.log"
+    },
+    "additional-migrations": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/additional-migrations/qualify.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--source-commit",
+        "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+        "--phase",
+        "support7-01",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/additional-migrations.log"
+    },
+    "migration-survey": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/migrations/check.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--phase",
+        "check-support7"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/migration-survey.log"
+    },
+    "migration-tests": {
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/migrations/run_tests.py",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "--survey",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/migrations/check-support7.json",
+        "--phase",
+        "execution-support7",
+        "--modes",
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "exit_status": 0,
+      "log": ".tmp/memory-closeout/A04/common-support7/migration-tests.log"
+    }
+  }
+}

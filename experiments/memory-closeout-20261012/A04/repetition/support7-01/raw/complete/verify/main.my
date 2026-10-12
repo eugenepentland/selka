@@ -1,0 +1,71 @@
+func repeat_text(value: str, count: int) -> str:
+    return value * count
+
+
+func repeat_bytes(value: bytes, count: int) -> bytes:
+    return count * value
+
+
+func mark_text(mut log: int[], tag: int) -> str:
+    log.append(tag)
+    return "é"
+
+
+func mark_count(mut log: int[], tag: int) -> int:
+    log.append(tag)
+    return 3
+
+
+record RepeatHolder:
+    values: int[]
+
+
+func repeat_list(values: str[], count: int) -> str[]:
+    return values * count
+
+
+func repeat_in_place(mut values: int[], count: int):
+    values *= count
+
+
+# spec-case: PY-REPEAT-1
+public func test_repetition_borrows_and_builds_independent_storage() -> bool:
+    mut text = "a" + "é"
+    const repeated = repeat_text(text, 3)
+    const raw = text.encode()
+    const repeated_raw = repeat_bytes(raw, 2)
+    if text != "aé" or raw != b"a\xc3\xa9":
+        return False
+    text = "replacement"
+    return repeated == "aéaéaé" and repeated_raw == b"a\xc3\xa9a\xc3\xa9"
+
+
+# spec-case: PY-REPEAT-1
+public func test_repetition_bounds_and_argument_order() -> bool:
+    mut log: int[] = []
+    const left = mark_count(mut log, 1) * mark_text(mut log, 2)
+    const right = mark_text(mut log, 3) * mark_count(mut log, 4)
+    const huge: u64 = 18446744073709551615
+    const empty_bytes: bytes = b""
+    return left == "ééé" and right == "ééé" and log == [1, 2, 3, 4] and repeat_text("a", -2) == "" and repeat_bytes(b"a", 0) == b"" and "" * huge == "" and huge * empty_bytes == b""
+
+
+# spec-case: PY-REPEAT-1
+public func test_repeated_managed_elements_and_mutable_writeback() -> bool:
+    mut values = ["a" + "b", "c" + "d"]
+    const repeated = repeat_list(values, 3)
+    values = ["replacement"]
+    mut numbers = [1, 2]
+    repeat_in_place(mut numbers, 2)
+    mut holder = RepeatHolder(values=[7])
+    repeat_in_place(mut holder.values, 2)
+    const empty: str[] = []
+    const huge: u64 = 18446744073709551615
+    return repeated == ["ab", "cd", "ab", "cd", "ab", "cd"] and numbers == [1, 2, 1, 2] and holder.values == [7, 7] and len(empty * huge) == 0 and len(repeat_list(values, -1)) == 0
+
+
+func main() -> int:
+    assert test_repetition_borrows_and_builds_independent_storage()
+    assert test_repetition_bounds_and_argument_order()
+    assert test_repeated_managed_elements_and_mutable_writeback()
+    return 0

@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support7-01/s1_bytes/verify/program"
+  ],
+  "status": 0,
+  "elapsed_ns": 1203726,
+  "stdout": "3 h\u00e9 2 False -1\n2 \u00e9 1 False -1\n1 !invalid UTF-8 in byte string 29 False -1\n0  0 False -1\n3 ell 3 True 1\n5 world 5 False 3\n3 w\u00f6 2 False -1\n4 !invalid UTF-8 in byte string 29 False 2\n13 h\u00e9llo w\u00f6rld 11 False 3\n3 hel 3 False 2\n10 3 3\nhelloh\u00e9 7 h 6 elloh\n",
+  "stderr": ""
+}

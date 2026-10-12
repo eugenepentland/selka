@@ -45,3 +45,10 @@ The coordinator authorized a separate worker-owned checkout at
 modifying the ongoing A04 common-artifact inputs. The next integrated compiler
 must consume the new library source and rerun affected qualification; Support7's
 original installed library and reports remain immutable.
+
+The replay adapter now takes explicit compiler path/hash, source commit and a new
+`--phase`, and reads the archived original/helper sources. It cannot accidentally
+turn the original control into the adopted implementation. The exact adapter used
+for the twelve measured lanes is preserved in `qualify-helper-used.txt`; its hash
+is the one recorded in those results. This adapter-only portability change does
+not relabel or rerun the existing evidence.

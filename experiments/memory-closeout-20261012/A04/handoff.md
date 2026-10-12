@@ -295,3 +295,45 @@ implementation; the obsolete RC branch disappears. A07 has the exact compiler
 patch and A02 has the exact runtime patch for isolated combined previews. These
 are evidence-only drafts; active production remains unchanged until C2 qualifies
 and coordinator C3 activation supplies mandatory OWN1 ABI/cache invalidation.
+
+## Common Support7 matrix complete
+
+All A04 common-artifact suites pass on source
+`bed11cf3bf3102ffec44487e431a1573fdf02ad5`, compiler SHA256
+`540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`, using the
+coordinator's full ReleaseFast installation with owned components.
+`common-support7/README.md` and `results.json` preserve every suite's denominator.
+The public library passes all 40 native lanes and three negative cases, retaining
+80 exports and five types. All 14 additional fixtures pass their 70 lanes. The
+original 19-source assignment has no refusals: 18 runnable files preserve all
+133 public tests, passing in each checked and ordinary mode (1,330 invocations),
+with zero unsupported tests. The helper remains covered through its importer.
+
+The overlapping suites contain 140 recorded counted normal-return checked runs;
+all have zero RC events, zero managed exit-live bytes and clean structural audits.
+The 12 fatal empty-list trap lanes retain their separate exit-live observations.
+Guest-test command assertions are not relabeled as RC/allocation counter results.
+This report makes no runtime/RSS claim and does not declare default or retirement
+complete. A07's supplemental lifecycle and A08's cache/storage evidence remain
+separate. No previously failing source was dropped.
+
+Eleven of twelve source-matched C0 counter pairs preserve allocations, cumulative
+bytes and managed peak exactly. JSON release adds three allocations/192 bytes,
+with unchanged 9,952-byte managed peak and zero exit-live bytes. Function counters
+and LLVM localize this to read_literal's conservative slice snapshot. Recursive
+list-copy event changes independently come from instrumentation commit 1f894ddd3.
+The separately qualified helper commit e5fa21135303705ca52fa594c69ebc4a6f823559
+restores those three optimized temporaries without changing the safety optimizer.
+Its evidence is not substituted for the original Support7 results. The next
+integrated candidate must consume that source and rerun affected evidence.
+
+Evidence and adapters are committed from the coordinator-authorized A04-json
+checkout, preserving the original worker's frozen inputs. The migration adapter
+now accepts all five modes while preserving its historical verified-only default.
+The counted adapter rejects compiler SafeAllocator diagnostics. The JSON replay
+adapter pins archived original/helper sources and takes an explicit compiler
+identity and fresh phase; the exact adapter used remains archived with its hash.
+
+C3 runtime/compiler patches remain isolated drafts. A10 now owns the narrow
+borrowed-equality changes in build_values/emit_values; the affected A04 C3 draft
+must be refreshed against that final implementation before retirement activation.

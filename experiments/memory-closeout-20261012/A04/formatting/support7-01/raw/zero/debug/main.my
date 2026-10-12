@@ -1,0 +1,37 @@
+func padded_number(value: float) -> str:
+    return f"{value:é^10.2f}"
+
+
+func padded_integer(value: int) -> str:
+    return f"{value:é^6d}"
+
+
+func rounded(value: float, digits: int) -> float:
+    return round(value, digits)
+
+
+# spec-case: NEW-CORE-S3-NUMBER-1
+public func test_numeric_formats_return_independent_unicode_owners() -> bool:
+    mut value = 1.25
+    const first = padded_number(value)
+    const second = padded_number(value + 1.0)
+    value = 99.0
+    mut copy = first.copy()
+    copy = copy + "!"
+    return first == "ééé1.25ééé" and second == "ééé2.25ééé" and len(first) == 10 and first[1] == "é" and first[-1] == "é" and len(copy) == 11 and value == 99.0
+
+
+# spec-case: NEW-CORE-S3-NUMBER-1
+public func test_integer_format_and_scalar_round_keep_their_contracts() -> bool:
+    mut value = 42
+    const padded = padded_integer(value)
+    value = 0
+    return padded == "éé42éé" and len(padded) == 6 and padded[1] == "é" and value == 0 and rounded(1.25, 1) == 1.3 and rounded(1.75, 1) == 1.8 and repr(-0.0) == "-0.0"
+
+
+func main() -> int:
+    if not test_numeric_formats_return_independent_unicode_owners():
+        return 1
+    if not test_integer_format_and_scalar_round_keep_their_contracts():
+        return 2
+    return 0

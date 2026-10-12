@@ -22,6 +22,10 @@ parser.add_argument("--compiler", type=Path, required=True)
 parser.add_argument("--survey", type=Path, required=True)
 parser.add_argument("--phase", required=True)
 parser.add_argument("--resume", action="store_true")
+MODES = {"release": ["--release"], "debug": ["--unoptimized"],
+         "verify": ["--release", "--verify-facts"], "optimized_debug": [],
+         "no_facts": ["--release", "--no-facts"]}
+parser.add_argument("--modes", nargs="+", choices=tuple(MODES), default=["verify"])
 args = parser.parse_args()
 report = HERE / (args.phase + ".json")
 digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
@@ -29,13 +33,15 @@ survey = json.loads(args.survey.read_text())
 assert survey["compiler_sha256"] == digest(args.compiler), "survey/compiler identity differs"
 assert survey.get("default_ownership", False) == args.default_ownership, "survey ownership mode differs"
 result = {"compiler": str(args.compiler), "compiler_sha256": digest(args.compiler), "survey": str(args.survey),
-          "default_ownership": args.default_ownership, "ownership_support_sha256": ownership.digest(), "rows": [], "admission": "at most two source files per shared build lease; each has ordinary and zero-RC guest-test execution"}
+          "default_ownership": args.default_ownership, "ownership_support_sha256": ownership.digest(), "guest_modes": args.modes,
+          "rows": [], "admission": "at most ten guest commands or two source files per shared build lease"}
 if report.exists():
     assert args.resume, "choose a new phase or --resume"
     previous = json.loads(report.read_text())
     assert 'summary' not in previous, 'completed evidence is immutable; choose a new phase'
     assert all(previous[key] == result[key] for key in ('compiler', 'compiler_sha256', 'survey')), "resume identity changed"
     assert previous.get("default_ownership", False) == args.default_ownership, "ownership mode changed"
+    assert previous.get("guest_modes", ["verify"]) == args.modes, "guest modes differ"
     result = previous
 recorded_sources = {row['source']: row for row in result['rows']}
 ready = []
@@ -56,15 +62,21 @@ for row in survey["rows"]:
     else:
         ready.append((row, names))
 env = dict(os.environ, MYL_CORE_LEAKCHECK="1")
-execution_modes = [("default", [])] if args.default_ownership else [("ordinary", []), ("zero_rc", ownership.flags(args))]
-for first in range(0, len(ready), 2):
+ownership_modes = [("default", [])] if args.default_ownership else [("ordinary", []), ("zero_rc", ownership.flags(args))]
+execution_modes = [(owner if args.modes == ["verify"] else owner + "/" + mode, [*flags, *MODES[mode]])
+                   for owner, flags in ownership_modes for mode in args.modes]
+batch = min(2, max(1, 10 // len(execution_modes)))
+for first in range(0, len(ready), batch):
     with admission("build"):
-        for row, names in ready[first:first + 2]:
+        for row, names in ready[first:first + batch]:
             recorded = {"source": row["source"], "source_sha256": row["source_sha256"], "public_tests": names, "modes": {}}
             for mode, flags in execution_modes:
-                command = [str(args.compiler), "test", str(ROOT / row["source"]), "--release", "--verify-facts", "--force", "--json", "--jobs", "1", *flags]
+                command = [str(args.compiler), "test", str(ROOT / row["source"]), "--force", "--json", "--jobs", "1", *flags]
                 ran = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=600)
-                counts = json.loads(ran.stdout) if ran.stdout.startswith('{') else {}
+                try:
+                    counts = json.loads(ran.stdout) if ran.stdout.startswith('{') else {}
+                except json.JSONDecodeError:
+                    counts = {}
                 executed_names = {test['name'].rsplit('::', 1)[-1] for test in counts.get('tests', [])}
                 qualified = ran.returncode == 0 and not ran.stderr and counts.get('passed') == len(names) and counts.get('failed') == 0 and counts.get('unsupported') == 0 and executed_names == set(names)
                 recorded["modes"][mode] = {"command": command, "status": ran.returncode, "stdout": ran.stdout, "stderr": ran.stderr,
@@ -83,9 +95,9 @@ for mode, _ in execution_modes:
     for row in result['rows']:
         if mode not in row.get('modes', {}):
             continue
-        data = json.loads(row['modes'][mode]['stdout'])
+        data = row['modes'][mode]
         for key in totals:
-            totals[key] += data[key]
+            totals[key] += data.get(key) or 0
     result['summary']['execution_totals'][mode] = totals
 report.write_text(json.dumps(result, indent=2) + "\n")
 print(result["summary"], flush=True)

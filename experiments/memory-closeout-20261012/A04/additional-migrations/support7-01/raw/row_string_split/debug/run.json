@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support7-01/row_string_split/debug/program",
+    "64",
+    "9",
+    "7"
+  ],
+  "status": 0,
+  "elapsed_ns": 1376663,
+  "stdout": "246546 101344\n",
+  "stderr": ""
+}
