@@ -1,0 +1,355 @@
+{
+  "baseline": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+    "sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+    "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  "candidate": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+    "sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+    "source_commit": "66890fbc5135a771e6a423724d13c30018ab717f"
+  },
+  "source_matched_lanes": [
+    {
+      "case": "strings",
+      "mode": "release",
+      "source_sha256": "48e88a4c0f6003e82ee2a938fe8e6b9a312f273d5f49b7b9b0d771c6fcc78a5e",
+      "baseline": {
+        "allocs": 103,
+        "alloc_bytes": 6816,
+        "frees": 103,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 352,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 103,
+        "alloc_bytes": 6816,
+        "frees": 103,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 352,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "path",
+      "mode": "release",
+      "source_sha256": "aecc9799c0e114e98c5f7c78e87227f309cff7ad2a19d17c197177a90bc4a19b",
+      "baseline": {
+        "allocs": 130,
+        "alloc_bytes": 8160,
+        "frees": 130,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 704,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 130,
+        "alloc_bytes": 8160,
+        "frees": 130,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 704,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "codecs",
+      "mode": "release",
+      "source_sha256": "15d1be0954ea2f46abe09cf679a19c866cc7840d8bfce596c3dd3c1264982eed",
+      "baseline": {
+        "allocs": 185,
+        "alloc_bytes": 31632,
+        "frees": 185,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 1896,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 185,
+        "alloc_bytes": 31632,
+        "frees": 185,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 1896,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "byte_builder",
+      "mode": "release",
+      "source_sha256": "0fd97544353fef9d959ad96979865701fda873eff9e9aa4ae71fbb30eb9b2ce0",
+      "baseline": {
+        "allocs": 93,
+        "alloc_bytes": 225000,
+        "frees": 93,
+        "reallocs": 7,
+        "realloc_added_bytes": 130048,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 331256,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 93,
+        "alloc_bytes": 225000,
+        "frees": 93,
+        "reallocs": 7,
+        "realloc_added_bytes": 130048,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 331256,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "json",
+      "mode": "release",
+      "source_sha256": "e64f4fd7109a902bdc65936974e22b0125a8140081761b72fa0becbc6af81ba6",
+      "baseline": {
+        "allocs": 538,
+        "alloc_bytes": 38720,
+        "frees": 538,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 9952,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 538,
+        "alloc_bytes": 38720,
+        "frees": 538,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 9952,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "release",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "baseline": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "debug",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "baseline": {
+        "allocs": 1347,
+        "alloc_bytes": 172336,
+        "frees": 1347,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 1347,
+        "alloc_bytes": 172336,
+        "frees": 1347,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "verify",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "baseline": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "optimized_debug",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "baseline": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "no_facts",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "baseline": {
+        "allocs": 1341,
+        "alloc_bytes": 171952,
+        "frees": 1341,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 1341,
+        "alloc_bytes": 171952,
+        "frees": 1341,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "json_lookup",
+      "mode": "release",
+      "source_sha256": "9c734b251643b28c10f0dc12ae215cc8a162f4b2cc08d1adddb53c7d0fb4215d",
+      "baseline": {
+        "allocs": 153,
+        "alloc_bytes": 12064,
+        "frees": 153,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 2080,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 153,
+        "alloc_bytes": 12064,
+        "frees": 153,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 2080,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    },
+    {
+      "case": "view_contracts",
+      "mode": "release",
+      "source_sha256": "0b8cd00ef02613419bce208f6232dacdc8913d4504fa2b99cd003cd7491c02da",
+      "baseline": {
+        "allocs": 10,
+        "alloc_bytes": 640,
+        "frees": 10,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 192,
+        "live_bytes_at_exit": 0
+      },
+      "candidate": {
+        "allocs": 10,
+        "alloc_bytes": 640,
+        "frees": 10,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "peak_live_bytes": 192,
+        "live_bytes_at_exit": 0
+      },
+      "changed_metrics": {}
+    }
+  ],
+  "limitations": "Instrumented same-source fixture counters only. alloc_bytes excludes realloc_added_bytes; peak is a separate live measurement, never traffic. No runtime/RSS/compile speed comparison.",
+  "summary": {
+    "matched_lanes": 12,
+    "lanes_with_changed_metrics": 0
+  }
+}

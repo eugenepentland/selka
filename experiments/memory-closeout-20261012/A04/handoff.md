@@ -133,3 +133,18 @@ A08 own the host approval and integrated rerun. No paired savings are claimed.
 The complete public-export matrix and migrated guest executions are still running
 against support4 and will be recorded separately. Their final-candidate rerun is
 required after integration, default promotion and retirement as affected.
+
+The full support4 public-export matrix is now complete: `support4-public/` records
+40/40 native lanes and 3/3 exact negative diagnostics, with all 80 functions and
+five public types retained. Counted execution has zero RC and zero managed exit
+bytes; LLVM and linked-symbol audits pass. The source-matched twelve C0 baseline
+lanes have unchanged allocation/reallocation/peak counters in
+`c0-support4-counter-comparison.json`. This is preserved behavior, not an
+allocation saving, RSS result or timing comparison. Support4 remains an interim
+artifact; the final integrated compiler must consume the full matrix again.
+
+The harness now batches each fixture's five modes under one build lease, validates
+completed sources before admission when resuming, and checks the three negative
+fixtures in one bounded lease. Completed native lanes were preserved across
+queued-only checkpoints when adopting the coordinator's shared build budget.
+No active compilation was interrupted during these support4 checkpoints.

@@ -1,0 +1,4 @@
+null 2
+[{"nested":"value-7"}] {"nested":["value-9"]}
+[{"nested":"value-7"}] {"nested":["value-9"]}
+{"target":"changed"} ["changed"]

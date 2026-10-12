@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Qualify every A04 export without writing historical reports.
 
-Owns shared build admission per lane. Compile durations are operational observations,
+Owns shared build admission for bounded groups of up to five mode lanes. Compile durations are operational observations,
 not controlled performance measurements. Scratch binaries remain outside evidence.
 """
 import argparse
@@ -107,38 +107,43 @@ def capture(args):
         if args.only and name not in args.only:
             continue
         lanes = result["cases"].setdefault(name, {})
+        pending = {}
         for mode, flags in modes.items():
             if args.baseline and name != "ownership_contracts" and mode != "release":
                 continue
             if mode in lanes:
                 assert lanes[mode]["source_sha256"] == digest(source), "completed source changed"
                 print(name, mode, "preserved", lanes[mode]["status"], flush=True)
-                continue
-            try:
-                with admission("build"):
-                    lanes[mode] = dict(q.lane(args, env, name, source, ["--experimental-zero-rc", *flags], mode, expected), status="passed")
-            except (AssertionError, subprocess.SubprocessError, OSError) as error:
-                failures += 1
-                lanes[mode] = {"status": "failed", "error": str(error), "source_sha256": digest(source)}
-            raw = args.output / name / mode
-            destination = args.evidence / "raw" / name / mode
-            destination.mkdir(parents=True, exist_ok=True)
-            for pattern in ("*.my", "*.json", "*.stdout", "*.stderr"):
-                for artifact in raw.glob(pattern):
-                    shutil.copyfile(artifact, destination / artifact.name)
-            save(result_path, result)
-            print(name, mode, lanes[mode]["status"], flush=True)
-    result["negative_cases"] = {}
-    for name, diagnostic in (("view_invalidated", "E_ZERO_RC_VIEW_INVALIDATED"), ("byte_view_invalidated", "E_ZERO_RC_VIEW_INVALIDATED"),
-                             ("view_escape", "E_ZERO_RC_VIEW_SIGNATURE")):
-        source = HERE / "samples" / (name + ".my")
-        command = [str(args.compiler), "check", str(source), "--experimental-zero-rc"]
+            else:
+                pending[mode] = flags
+        if not pending:
+            continue
         with admission("build"):
+            for mode, flags in pending.items():
+                try:
+                    lanes[mode] = dict(q.lane(args, env, name, source, ["--experimental-zero-rc", *flags], mode, expected), status="passed")
+                except (AssertionError, subprocess.SubprocessError, OSError) as error:
+                    failures += 1
+                    lanes[mode] = {"status": "failed", "error": str(error), "source_sha256": digest(source)}
+                raw = args.output / name / mode
+                destination = args.evidence / "raw" / name / mode
+                destination.mkdir(parents=True, exist_ok=True)
+                for pattern in ("*.my", "*.json", "*.stdout", "*.stderr"):
+                    for artifact in raw.glob(pattern):
+                        shutil.copyfile(artifact, destination / artifact.name)
+                save(result_path, result)
+                print(name, mode, lanes[mode]["status"], flush=True)
+    result["negative_cases"] = {}
+    with admission("build"):
+        for name, diagnostic in (("view_invalidated", "E_ZERO_RC_VIEW_INVALIDATED"), ("byte_view_invalidated", "E_ZERO_RC_VIEW_INVALIDATED"),
+                                 ("view_escape", "E_ZERO_RC_VIEW_SIGNATURE")):
+            source = HERE / "samples" / (name + ".my")
+            command = [str(args.compiler), "check", str(source), "--experimental-zero-rc"]
             ran = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
-        passed = ran.returncode == 1 and diagnostic in ran.stderr
-        result["negative_cases"][name] = {"command": command, "status": "passed" if passed else "failed", "exit_code": ran.returncode,
-                                          "stdout": ran.stdout, "stderr": ran.stderr, "source_sha256": digest(source), "expected_diagnostic": diagnostic}
-        failures += not passed
+            passed = ran.returncode == 1 and diagnostic in ran.stderr
+            result["negative_cases"][name] = {"command": command, "status": "passed" if passed else "failed", "exit_code": ran.returncode,
+                                              "stdout": ran.stdout, "stderr": ran.stderr, "source_sha256": digest(source), "expected_diagnostic": diagnostic}
+            failures += not passed
     result["summary"] = {"lanes": sum(len(rows) for rows in result["cases"].values()), "failed": failures,
                          "uncovered_functions": result["inventory"]["uncovered_functions"]}
     assert result["compiler"]["sha256"] == digest(args.compiler), "compiler changed during qualification"

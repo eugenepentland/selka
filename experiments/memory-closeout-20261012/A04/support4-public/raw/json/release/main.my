@@ -1,0 +1,195 @@
+import json
+
+func roundtrip(source: str) -> str:
+    match json.loads(source):
+        case Ok(value):
+            return json.dumps(value)
+        case Err(error):
+            return "!" + json.message(error)
+
+
+func rejects(source: str) -> bool:
+    match json.loads(source):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+func shapes() -> int:
+    if roundtrip("{\"a\":[1,2.5,true,null,\"x\"]}") != "{\"a\":[1,2.5,true,null,\"x\"]}":
+        return 1
+    if roundtrip("  \t[]  ") != "[]" or roundtrip("{}") != "{}":
+        return 2
+    if roundtrip("{\"b\":1,\"a\":2}") != "{\"b\":1,\"a\":2}":
+        return 3
+    if roundtrip("\"\\u0041\\u00e9\\ud83d\\ude00\"") != "\"Aé😀\"":
+        return 4
+    if roundtrip("\"a\\tb\\u0001\\/\"") != "\"a\\tb\\u0001/\"":
+        return 5
+    if roundtrip("-0.5e1") != "-5.0" or roundtrip("0") != "0":
+        return 6
+    if roundtrip("9223372036854775807") != "9223372036854775807":
+        return 7
+    if roundtrip("[[[1]]]") != "[[[1]]]":
+        return 8
+    return overflowing()
+
+
+func overflowing() -> int:
+    match json.loads("9223372036854775808"):
+        case Ok(value):
+            match json.as_int(value):
+                case Some(_):
+                    return 10
+                case None:
+                    _ = 0
+            match json.as_float(value):
+                case Some(amount):
+                    if amount != 9223372036854775808.0:
+                        return 11
+                case None:
+                    return 12
+        case Err(_):
+            return 13
+    return 0
+
+
+func refusals() -> int:
+    if not rejects("{\"a\":1,\"a\":2}"):
+        return 20
+    if not rejects("01") or not rejects("1.") or not rejects("1e") or not rejects("-"):
+        return 21
+    if not rejects("[1,]") or not rejects("{\"a\"1}") or not rejects("tru") or not rejects("nulll"):
+        return 22
+    if not rejects("[1] x") or not rejects("") or not rejects("\"a") or not rejects("[1"):
+        return 23
+    if not rejects("\"\\ud800\"") or not rejects("\"\\udc00\"") or not rejects("\"\\x\""):
+        return 24
+    if not rejects("{1:2}") or not rejects("[01]") or not rejects("\"a\nb\""):
+        return 25
+    if not rejects("\"\\u00\"") or not rejects("{\"a\":}"):
+        return 26
+    return 0
+
+
+func depth() -> int:
+    mut deep = ""
+    mut index = 0
+    while index < 70:
+        deep = deep + "["
+        index += 1
+    if not rejects(deep):
+        return 30
+    mut nested = ""
+    index = 0
+    while index < 60:
+        nested = nested + "["
+        index += 1
+    nested = nested + "1"
+    index = 0
+    while index < 60:
+        nested = nested + "]"
+        index += 1
+    if rejects(nested):
+        return 31
+    return 0
+
+
+func navigation() -> int:
+    match json.loads("{\"n\":{\"k\":[10,20]}}"):
+        case Ok(document):
+            if json.type_name(document) != "object":
+                return 40
+            match json.get(document, "missing"):
+                case Some(_):
+                    return 41
+                case None:
+                    _ = 0
+            match json.get(document, "n"):
+                case Some(inner):
+                    return reach(inner)
+                case None:
+                    return 42
+        case Err(_):
+            return 43
+
+
+func reach(inner: json.Json) -> int:
+    match json.get(inner, "k"):
+        case Some(items):
+            match json.at(items, 1):
+                case Some(second):
+                    match json.as_int(second):
+                        case Some(count):
+                            if count != 20:
+                                return 44
+                        case None:
+                            return 45
+                case None:
+                    return 46
+            match json.at(items, 9):
+                case Some(_):
+                    return 47
+                case None:
+                    _ = 0
+        case None:
+            return 48
+    return 0
+
+
+func accessors() -> int:
+    mut built: dict[str, json.Json] = {}
+    built["ok"] = json.boolean(True)
+    built["score"] = json.number(1.5)
+    built["tags"] = json.array([json.text("a"), json.null_value()])
+    if json.dumps(json.object(built)) != "{\"ok\":true,\"score\":1.5,\"tags\":[\"a\",null]}":
+        return 50
+    match json.as_float(json.integer(3)):
+        case Some(amount):
+            if amount != 3.0:
+                return 51
+        case None:
+            return 52
+    if not json.is_null(json.null_value()) or json.is_null(json.integer(0)):
+        return 53
+    match json.as_str(json.integer(1)):
+        case Some(_):
+            return 54
+        case None:
+            _ = 0
+    match json.as_bool(json.boolean(False)):
+        case Some(flag):
+            if flag:
+                return 55
+        case None:
+            return 56
+    match json.as_list(json.array([json.integer(1)])):
+        case Some(items):
+            if len(items) != 1:
+                return 57
+        case None:
+            return 58
+    match json.as_dict(json.object(built)):
+        case Some(fields):
+            if len(fields) != 3:
+                return 59
+        case None:
+            return 60
+    if json.dumps(json.number(0.0 / 0.0)) != "null" or json.dumps(json.number(1.0 / 0.0)) != "null":
+        return 61
+    if json.dumps(json.text("q\"\\")) != "\"q\\\"\\\\\"":
+        return 62
+    if json.dumps(json.text("a\nb\x00")) != "\"a\\nb\\u0000\"":
+        return 64
+    if json.max_depth() != 64:
+        return 63
+    return 0
+
+
+func main() -> int:
+    mut checks = [shapes(), refusals(), depth(), navigation(), accessors()]
+    for value in checks:
+        if value != 0:
+            return value
+    return 42
