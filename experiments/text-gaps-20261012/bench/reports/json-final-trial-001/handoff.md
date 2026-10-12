@@ -1,0 +1,7 @@
+# Qualified isolated trial
+
+This is a fresh seven-arm full two-cell trial: original C0 is checked-baseline, frozen common001 is checked-common, isolated candidate is checked-candidate. Allfour foreign arms retain pinned source/flags/toolchain identities. Threewarmups/fifteenpairedrounds/threeRSSobservations and separatecountedbinaries, exclusiveCPU8admission percell. Sevenarm rotation gives two/three observations perposition over15rounds; no carryoverbalance claim. No historical timing samples pooled.
+
+All checksum/identity/order/RSS/counter invariants pass, zeroRC/uniqueness/exitlive and no MAD/drift flags. Candidate/common compiler and source identities are pinned in separate receipts; common completeinstallationfilehashes are pinned in each cell. Both compared the exact same iterationcount within each cell. Reporter JSON includes direct candidate/common paired intervals alongside foreign intervals; REPORT.md lists foreign intervals for everycheckedarm and separate managed/RSSmetrics. Targetassessment distinguishes eachcell. Other workload specs are prepared but unmeasured; no allsixcell claim for thistrial. Fullintegrated compiler recheck remainsrequired before finaltarget claim.
+
+Allcounter totals include setup; managed traffic/peak are distinct from rawallocator calls/transients and processRSS. Nativeimplementation/layout changes may alter timing without changing counted storage. Candidateartifacts remainfrozen. Rawadmission logs retain gatewaiting time; no build/qualification or instrumented timing enters results.

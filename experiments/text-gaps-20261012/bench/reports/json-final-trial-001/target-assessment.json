@@ -1,0 +1,37 @@
+{
+  "schema": "text-gap-target-assessment-v1",
+  "report_sha256": "11193ff84e9d7edc118327a5da6cd9556821640bfe643a22d10975fd03ac2b32",
+  "criterion": "Allforeignpaired95%CIupperboundsbelow1 independentlyforeachcell",
+  "cells": [
+    {
+      "profile": "large",
+      "all_foreign_upper_ci_below_one": false,
+      "candidate_vs_common": {
+        "ratio": 0.991444494592879,
+        "ci95": [
+          0.9816511195276655,
+          1.0026946474606313
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 10000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "managed_totals_identical_to_common": true
+    },
+    {
+      "profile": "small",
+      "all_foreign_upper_ci_below_one": false,
+      "candidate_vs_common": {
+        "ratio": 0.9915239382973787,
+        "ci95": [
+          0.9608678118691456,
+          0.9948797792150677
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 10000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "managed_totals_identical_to_common": true
+    }
+  ]
+}

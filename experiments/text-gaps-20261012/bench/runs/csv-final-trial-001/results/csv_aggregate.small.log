@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 493, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 493 after 25s
+text-gaps/csv-final-trial-001/csv_aggregate/small {'checked-baseline': True, 'checked-common': True, 'checked-candidate': True, 'zig-safe': True, 'zig-fast': True, 'rust': True, 'go': True}
