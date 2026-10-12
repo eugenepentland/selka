@@ -1684,12 +1684,6 @@ def execute(ctx: Context, selected, allow_heavy: bool) -> int:
         return 2
     ctx.evidence.mkdir(parents=True, exist_ok=True)
     frozen = manifest(ctx)
-    summary_path = ctx.evidence / "summary.json"
-    try:
-        summary = json.loads(summary_path.read_text())
-    except (OSError, json.JSONDecodeError):
-        summary = {"schema": SCHEMA, "rows": {}}
-    summary.setdefault("rows", {})
     for row, subs in selected:
         row_dir = ctx.evidence / row.id
         row_dir.mkdir(parents=True, exist_ok=True)
@@ -1734,12 +1728,30 @@ def execute(ctx: Context, selected, allow_heavy: bool) -> int:
         row_record["finished"] = now()
         row_record["decision"] = aggregate([s["decision"] for s in row_record["subcases"].values()])
         (row_dir / "row.json").write_text(json.dumps(row_record, indent=1, sort_keys=True, default=str))
-        summary["rows"][row.id] = {"decision": row_record["decision"], "finished": row_record["finished"],
-                                   "tree_head": ctx.head,
-                                   "subcases": {name: value["decision"] for name, value in row_record["subcases"].items()}}
-    summary["last_manifest"] = frozen
-    summary_path.write_text(json.dumps(summary, indent=1, sort_keys=True, default=str))
+        write_summary(ctx.evidence, frozen)
+    summary = write_summary(ctx.evidence, frozen)
     return 0 if all(value["decision"] in (PASS, "skipped") for value in summary["rows"].values()) else 1
+
+
+def write_summary(evidence: Path, frozen: dict | None = None) -> dict:
+    """Rebuild summary.json from every row.json, so an interrupted invocation
+    never loses rows another invocation recorded."""
+    path = evidence / "summary.json"
+    try:
+        previous = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        previous = {}
+    rows = {}
+    for row_file in sorted(evidence.glob("*/row.json")):
+        record = json.loads(row_file.read_text())
+        subcases = record.get("subcases", {})
+        rows[record["id"]] = {"decision": aggregate([s["decision"] for s in subcases.values()]),
+                              "subcases": {name: value["decision"] for name, value in subcases.items()},
+                              "finished": record.get("finished")}
+    summary = {"schema": SCHEMA, "rows": rows,
+               "last_manifest": frozen if frozen is not None else previous.get("last_manifest")}
+    path.write_text(json.dumps(summary, indent=1, sort_keys=True, default=str))
+    return summary
 
 
 def main(argv: list[str]) -> int:
