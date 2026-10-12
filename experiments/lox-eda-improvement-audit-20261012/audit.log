@@ -1,0 +1,9 @@
+build-slot: build slot 1, FIFO ticket 2467 after 0s
+P1_vm_dispatch: 621,857,290,208 bytes; 93.52% (historical_vm_fib)
+P2_tree_evaluation: 2,092,800,704 bytes; 77.51% (fresh_tree_equality)
+P2_tree_evaluation_and_statements: 2,441,061,976 bytes; 90.41% (fresh_tree_equality)
+P3_object_reads: 58,352,007,736 bytes; 64.41% (historical_tree)
+P4_eda_ast: 10,131,334,840 bytes; 41.65% (historical_eda)
+P5_overlap_all_eda: 2,531,870,928 bytes; 10.41% (historical_eda)
+P5_overlap_rds3_flat: 1,123,681,184 bytes; 43.41% (historical_eda_rds3_flat)
+Validated 55 completed profiles, six historical missing VM profiles, and all 60 fresh runtime statuses.

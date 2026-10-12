@@ -1,0 +1,16 @@
+{
+  "audit_base_commit": "5f1701b13f243ca1fcc05c0b38ce73b8c9c3cd4d",
+  "attribution_sha256": "4ad43251100857f1975bc5e2fc874cb7cfa0639f6fd7566bf6f1e08dd8042843",
+  "input_hashes_verified": 82,
+  "relative_links_verified": 13,
+  "profile_validation": {
+    "function_traffic_matches_totals": true,
+    "completed_profiles_have_zero_exit_live_bytes": true,
+    "historical_unique_completed_profiles": 54,
+    "fresh_unique_completed_profiles": 1
+  },
+  "production_diff_vs_fresh_compiler_exit_code": 0,
+  "benchmark_executions": 0,
+  "compiler_full_gate": "Not rerun: documentation and existing-profile analysis only.",
+  "guardian": "Required repository pre-commit hook runs when these changes are committed."
+}
