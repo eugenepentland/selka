@@ -19,8 +19,12 @@ fn present(module: *const ir.Module, function: *const ir.Function) bool {
 pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const ir.Function) Error!void {
     if (!present(module, function)) return;
     try selection.validate(a, module, function);
+    // The general verifier owns scratch tables for one invocation, not the
+    // caller's lifetime. Some ownership/cache callers pass a backing allocator.
+    var scratch = std.heap.ArenaAllocator.init(a);
+    defer scratch.deinit();
     var failure: verify.Failure = .{};
-    verify.verifyFunction(a, module, function, &failure) catch |err| switch (err) {
+    verify.verifyFunction(scratch.allocator(), module, function, &failure) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.InvalidIr => return error.UnsupportedInstruction,
     };

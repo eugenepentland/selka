@@ -1,0 +1,16 @@
+{
+  "base": "2cb87014c5345593904d0bd9e1240c4a39aefb32",
+  "issue": "A08 backing-allocator cache tests passed assertions but leaked general verifier scratch; previous A07 arena-backed tests hid that leak.",
+  "fix": "Temporary ArenaAllocator around general verifyFunction, deinitialized on success/error; marker-local validator retains explicit backing deallocation.",
+  "tests": {
+    "focused_passed": 1,
+    "failed": 0,
+    "backing_allocator": "std.testing.allocator for valid and swapped-phi malformed paths",
+    "status": 0
+  },
+  "source_sha256": {
+    "src/core/marker_validation.zig": "6282a149bc54633aa43bc9f8dfc0c5437b77bbc8e35a7846baea40955df48255",
+    "src/core/zero_rc_test.zig": "4e7e8c184d3cc25dd3f9a2eb3b92dc8703bbe0098058cdb7943e518d10062885"
+  },
+  "remaining": "A08 full cache replay regression rerun on integrated fix"
+}

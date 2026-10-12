@@ -2082,6 +2082,8 @@ test "zero RC borrowed defaults reject malformed and consuming IR markers" {
             const selection = (try selections.call(&module, function, instruction.*)) orelse continue;
             found = true;
             try selections.validate(a, &module, function);
+            // Public ownership/cache callers can supply a backing allocator.
+            try @import("marker_validation.zig").validate(std.testing.allocator, &module, function);
             const original = instruction.*;
             instruction.data = std.math.maxInt(u64);
             try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
@@ -2107,7 +2109,7 @@ test "zero RC borrowed defaults reject malformed and consuming IR markers" {
             // Types and producer identities still match, but the hit value now
             // arrives on the miss edge where its definition does not dominate.
             try selections.validate(a, &module, function);
-            try std.testing.expectError(error.UnsupportedInstruction, @import("marker_validation.zig").validate(a, &module, function));
+            try std.testing.expectError(error.UnsupportedInstruction, @import("marker_validation.zig").validate(std.testing.allocator, &module, function));
             try std.testing.expectError(error.Unsupported, @import("own.zig").function(a, &module, function, .{}));
             std.mem.swap(@import("ir.zig").Ref, &incoming[0], &incoming[1]);
             try function.insts.append(a, .{ .op = .ret, .ty = .void, .a = phi });
