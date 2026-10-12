@@ -88,13 +88,17 @@ fn field(value: std.json.Value, path: []const []const u8) i64 {
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
 // spec-case: NEW-CORE-ZERO-RC-ABI-1
 test "zero RC nested writeback keeps snapshots and directly cleans early returns" {
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    try counted(std.testing.allocator, program, "603 12\n");
+}
+
+fn counted(parent: std.mem.Allocator, guest_source: []const u8, expected: []const u8) !void {
+    var arena = std.heap.ArenaAllocator.init(parent);
     defer arena.deinit();
     const a = arena.allocator();
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "nested.my", .data = program });
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "nested.my", .data = guest_source });
     const source = try std.fs.path.join(a, &.{ root, "nested.my" });
     const modes = [_][]const []const u8{
         &.{ "--unoptimized", "--experimental-zero-rc" },
@@ -114,7 +118,7 @@ test "zero RC nested writeback keeps snapshots and directly cleans early returns
         try environment.put("MYLANG_COUNTERS", path);
         const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{binary}, .environ_map = &environment });
         try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
-        try std.testing.expectEqualStrings("603 12\n", ran.stdout);
+        try std.testing.expectEqualStrings(expected, ran.stdout);
         try std.testing.expectEqualStrings("", ran.stderr);
         const text = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(16 << 20));
         const counts = try std.json.parseFromSliceLeaky(std.json.Value, a, text, .{});
@@ -129,4 +133,112 @@ test "zero RC nested writeback keeps snapshots and directly cleans early returns
         const llvm = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, llvm_path, a, .limited(16 << 20));
         try std.testing.expect(zero.emittedClean(llvm));
     }
+}
+
+const slot_records =
+    \\record Cell:
+    \\    value: int
+    \\    text: str
+    \\record Row:
+    \\    inner: Cell
+    \\    cells: FixedArray[Cell, 2]
+    \\
+;
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC list slot nested writeback preserves exact owner and index" {
+    try counted(std.testing.allocator, slot_records ++
+        \\func main(out: Stream) -> int:
+        \\    mut rows = [Row(inner=Cell(value=1, text="inner-" + str(1)), cells=FixedArray[Cell, 2]([Cell(value=2, text="left-" + str(2)), Cell(value=3, text="right-" + str(3))]))]
+        \\    const saved = rows.copy()
+        \\    rows[0].inner.value = 7
+        \\    rows[0].inner.text = "changed-" + str(4)
+        \\    rows[0].cells[1].value = 9
+        \\    rows[0].cells[0].text = "new-" + str(5)
+        \\    out.print(rows[0].inner.value, rows[0].cells[1].value, saved[0].inner.value, saved[0].cells[1].value, saved[0].cells[0].text)
+        \\    rows.clear()
+        \\    out.print(saved[0].inner.text)
+        \\    return 0
+    , "7 9 1 3 left-2\ninner-1\n");
+    try refuses(std.testing.allocator, records ++
+        \\func main() -> int:
+        \\    mut rows = [Inner(scalar=1, text="one"), Inner(scalar=2, text="two")]
+        \\    rows[0] = replace(rows[1], scalar=7)
+        \\    return rows[0].scalar
+    , "E_SINGLE_OWNER_BORROW");
+    try refuses(std.testing.allocator, records ++
+        \\func main() -> int:
+        \\    mut rows = [Inner(scalar=1, text="one")]
+        \\    mut other = [Inner(scalar=2, text="two")]
+        \\    rows[0] = replace(other[0], scalar=7)
+        \\    return rows[0].scalar
+    , "E_SINGLE_OWNER_BORROW");
+    try refuses(std.testing.allocator, records ++
+        \\func change(mut rows: Inner[]) -> int:
+        \\    rows.clear()
+        \\    return 7
+        \\func main() -> int:
+        \\    mut rows = [Inner(scalar=1, text="one")]
+        \\    rows[0] = replace(rows[0], scalar=change(mut rows))
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC explicit tuple copy owns every managed child" {
+    try counted(std.testing.allocator,
+        \\func clone(pair: tuple[int[], str]) -> tuple[int[], str]:
+        \\    return pair.copy()
+        \\func main(out: Stream) -> int:
+        \\    const owner = ([2, 3], "label-" + str(4))
+        \\    const copied = clone(owner)
+        \\    mut original_values, original_text = owner
+        \\    original_values.append(9)
+        \\    original_text = "changed-" + str(5)
+        \\    const values, text = copied
+        \\    out.print(values == [2, 3], original_values == [2, 3, 9], text, original_text)
+        \\    return 0
+    , "True True label-4 changed-5\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+// spec-case: NEW-CORE-ZERO-RC-VIEWS-1
+test "zero RC migrated traversal originals still reject invalidation and retained escape" {
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut items = [1, 2]
+        \\    mut total = 0
+        \\    for value in items:
+        \\        total += value
+        \\        items[1] = 9
+        \\    return total
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut values = {1: 10, 2: 20}
+        \\    for key in values:
+        \\        values[key] = values[key] + 1
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut items = [1]
+        \\    for value in items:
+        \\        items.append(value + 1)
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\func retained() -> bytes:
+        \\    const source = b"prefix-data-suffix" + b"!"
+        \\    return source.view(7, 11)
+        \\func main() -> int:
+        \\    return len(retained())
+    , "E_ZERO_RC_UNSUPPORTED");
+    try refuses(std.testing.allocator,
+        \\func escaped() -> ByteView:
+        \\    const source = b"prefix-data-suffix" + b"!"
+        \\    return source.borrow(7, 11)
+        \\func main() -> int:
+        \\    return len(escaped())
+    , "E_ZERO_RC_VIEW_SIGNATURE");
 }

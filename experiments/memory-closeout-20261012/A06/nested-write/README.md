@@ -27,3 +27,21 @@ analysis. The positive is refused at its first nested field assignment. The over
 negative currently fails earlier in its callee with the same field-write defect;
 after the fix it must reach the overlapping-call diagnostic. No passing native
 execution is claimed before the compiler fix is applied and the test is run.
+
+The follow-up `single-owner-slot-writeback.patch` extends source admission to
+list-slot field/fixed-array updates only. It records the exact synthetic initializer
+in the existing definition field, then matches the collection local and index node
+before granting `.writeback` access. The parent operation's loan remains active:
+only the proven reconstructed base can be read; arbitrary replacement operands
+still move normally and cannot mutate a borrowed owner. Dictionary slot keys are
+excluded because their storage-transfer contract requires a separate audit.
+A07 owns applying and qualifying this proposal, including the lowerer's transfer
+handling. Source admission alone is not an ABI or cleanup qualification.
+
+Additional counted tests cover list/fixed-array managed children and a borrowed
+managed tuple copied through a helper, unpacked and mutated independently. The
+tuple test depends on A01's narrow `.copy()` exception to the tuple method parser;
+its existing resource/move-only checks remain required. New negative cases retain
+the original list/dictionary live-mutation and escaping retained/borrowed-view
+boundaries from the source migration batch. These extension tests are prepared
+coverage until they execute against the integrated fixes.
