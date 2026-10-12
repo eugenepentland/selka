@@ -329,6 +329,7 @@ const Checker = struct {
         return switch (node.data) {
             .local => |slot| c.rootOf(@backingInt(slot)),
             .field => |field| c.origin(field.base),
+            .record => |fields| if (c.borrowedItem(fields)) |owner| c.rootOf(@backingInt(owner)) else null,
             .index => |index| if (c.freshCharacter(index.base)) null else c.origin(index.base),
             .cast => |value| if (c.zero_rc and c.program.nodes[@backingInt(value)].ty != node.ty) null else c.origin(value),
             .wrap, .unwrap => |value| c.origin(value),
@@ -532,7 +533,11 @@ const Checker = struct {
                 try c.expression(index.index, .read);
             },
             .array => |items| for (items) |item| try c.expression(item, .move),
-            .record => |fields| try c.recordFields(fields),
+            .record => |fields| {
+                if (access == .read and c.borrowedItem(fields) != null) {
+                    for (fields) |field| try c.expression(field.value, .read);
+                } else try c.recordFields(fields);
+            },
             .update => |update| {
                 try c.expression(update.base, writebackBase(access));
                 for (update.fields) |field| try c.expression(field.value, if ((access == .update or access == .writeback) and c.sameFieldWriteback(update.base, field)) access else .move);
@@ -589,6 +594,25 @@ const Checker = struct {
             .propagate => |value| try c.propagateResource(value.value, node.span),
             .variant => |variant| if (variant.value) |value| try c.expression(value, .move),
         }
+    }
+
+    /// A generated dictionary item is a pair of borrows from one entry. Source
+    /// record constructors cannot spell these internal projections, and copying
+    /// an item still follows the ordinary explicit deep-copy path.
+    fn borrowedItem(c: *const Checker, fields: []const typed.FieldInit) ?typed.LocalId {
+        if (!c.zero_rc or fields.len != 2) return null;
+        if (fields[0].index != 0 or fields[1].index != 1) return null;
+        const key = switch (c.program.nodes[@backingInt(fields[0].value)].data) {
+            .buffer_operation => |operation| operation,
+            else => return null,
+        };
+        const value = switch (c.program.nodes[@backingInt(fields[1].value)].data) {
+            .buffer_operation => |operation| operation,
+            else => return null,
+        };
+        if (key.kind != .key_at or value.kind != .value_at or key.owner != value.owner) return null;
+        if (key.arguments.len != 1 or value.arguments.len != 1) return null;
+        return if (key.arguments[0] == value.arguments[0]) key.owner else null;
     }
 
     fn recordFields(c: *Checker, fields: []const typed.FieldInit) Error!void {

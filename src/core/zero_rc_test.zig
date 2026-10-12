@@ -1929,3 +1929,74 @@ test "zero RC scalar field snapshots do not borrow a later loop owner" {
         \\    return 0
     , "1\n1 1\n");
 }
+
+// spec-case: DICT-VIEWS-1
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC single dictionary items borrow one entry and copies stay independent" {
+    try executes(std.testing.allocator,
+        \\func score(values: dict[str, int[]]) -> int:
+        \\    mut total = 0
+        \\    for item in values.items():
+        \\        total += len(item.key) + item.value[0]
+        \\    return total
+        \\func main(out: Stream) -> int:
+        \\    mut values = {"key-" + str(1): [7, 9], "key-" + str(2): [11]}
+        \\    out.print(score(values))
+        \\    mut saved: int[][] = []
+        \\    mut pairs: DictItem[str, int[]][] = []
+        \\    for item in values.items():
+        \\        saved.append(item.value.copy())
+        \\        pairs.append(item.copy())
+        \\    values.clear()
+        \\    out.print(saved[0][0], saved[1][0])
+        \\    out.print(pairs[0].key, pairs[1].value[0])
+        \\    return 0
+    , "28\n7 11\nkey-1 11\n");
+}
+
+// spec-case: DICT-VIEWS-1
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC single dictionary items cannot escape or invalidate their owner" {
+    try refuses(std.testing.allocator,
+        \\func escape(values: dict[str, int[]]) -> int[]:
+        \\    for item in values.items():
+        \\        return item.value
+        \\    return []
+        \\func main() -> int:
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut values = {"key": [7]}
+        \\    for item in values.items():
+        \\        values.clear()
+        \\        return item.value[0]
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut values = {"key": [7]}
+        \\    for item in values.items():
+        \\        values["key"] = [9]
+        \\        return item.value[0]
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: DICT-VIEWS-1
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC single dictionary items preserve enumeration and unit members" {
+    try executes(std.testing.allocator,
+        \\func main(out: Stream) -> int:
+        \\    const values = {"key-" + str(1): [7], "key-" + str(2): [11]}
+        \\    for index, item in enumerate(values.items()):
+        \\        out.print(index, item.key, item.value[0])
+        \\    const empty_values: dict[str, Unit] = {"empty-" + str(3): ()}
+        \\    for item in empty_values.items():
+        \\        out.print(item.key)
+        \\    const empty_keys: dict[Unit, str] = {(): "value-" + str(4)}
+        \\    for item in empty_keys.items():
+        \\        out.print(item.value)
+        \\    return 0
+    , "0 key-1 7\n1 key-2 11\nempty-3\nvalue-4\n");
+}

@@ -380,6 +380,10 @@ const Analysis = struct {
                     self.parent[i] = source;
                     break :blk .borrowed;
                 } else .owned,
+                .record_make => if (borrowedItem(self.module, f, instruction)) |parent| blk: {
+                    self.parent[i] = parent;
+                    break :blk .borrowed;
+                } else .owned,
                 .copy => .none,
                 .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of, .str_slice_view => blk: {
                     if (self.marks.owned_get.contains(@intCast(i))) break :blk .owned;
@@ -462,8 +466,9 @@ const Analysis = struct {
                     continue;
                 }
                 const operands = f.valueOperands(instruction);
+                const borrowed_item = borrowedItem(self.module, f, instruction) != null;
                 for (0..operands.len()) |k| {
-                    const consumes = consuming(instruction, k) or self.handedOver(instruction, k);
+                    const consumes = (!borrowed_item and consuming(instruction, k)) or self.handedOver(instruction, k);
                     try self.addUse(f.resolve(operands.get(k)), .{ .block = @intCast(b), .pos = @intCast(pos), .consume = @intFromBool(consumes), .borrow = @intFromBool(!consumes) });
                 }
             }
@@ -670,6 +675,58 @@ const Analysis = struct {
         return live;
     }
 };
+
+/// Only the generated key/value pair of one dictionary entry is a borrowed
+/// record. Every other record construction keeps its ordinary owning operands.
+fn borrowedItem(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst) ?ir.Ref {
+    if (!module.zero_rc or inst.op != .record_make) return null;
+    const fields = f.operands(inst.data);
+    if (fields.len != 2) return null;
+    const key = f.inst(f.resolve(fields[0]));
+    const value = f.inst(f.resolve(fields[1]));
+    if (flags.transferredRead(key) or flags.transferredRead(value)) return null;
+    if (key.op != .dict_entry_key or value.op != .dict_entry_value) return unitItemParent(module, f, key, value);
+    const owner = f.resolve(key.a);
+    if (owner != f.resolve(value.a) or !sameItemIndex(module, f, key.b, value.b)) return null;
+    return owner;
+}
+
+/// Unit members have no dictionary payload, but record storage represents
+/// them with a canonical false byte. The other member still borrows the table.
+fn unitItemParent(module: *const ir.Module, f: *const ir.Function, key: ir.Inst, value: ir.Inst) ?ir.Ref {
+    if (key.op == .dict_entry_key and unitItemField(value)) {
+        const owner = f.resolve(key.a);
+        if (module.compound(f.inst(owner).ty).dict.value == .void) return owner;
+    }
+    if (value.op == .dict_entry_value and unitItemField(key)) {
+        const owner = f.resolve(value.a);
+        if (module.compound(f.inst(owner).ty).dict.key == .bool) return owner;
+    }
+    return null;
+}
+
+fn unitItemField(inst: ir.Inst) bool {
+    return inst.op == .iconst and inst.ty == .bool and inst.data == 0;
+}
+
+/// The two source projections can each lower the same ordinal lookup. This
+/// helper only reads the same dictionary/ordinal; no general call equivalence
+/// or index algebra is used to classify the generated borrowed pair.
+fn sameItemIndex(module: *const ir.Module, f: *const ir.Function, left: ir.Ref, right: ir.Ref) bool {
+    const a = f.resolve(left);
+    const b = f.resolve(right);
+    if (a == b) return true;
+    const first = f.inst(a);
+    const second = f.inst(b);
+    if (first.op != .call or second.op != .call or first.a != second.a) return false;
+    const callee = module.functions.items[first.a.index()];
+    if (callee.signature.linkage == .internal or !std.mem.eql(u8, callee.name, "myl_core_dict_ordinal")) return false;
+    if (callee.signature.owned != 0 or callee.signature.consumes != 0 or callee.signature.ret != .i64) return false;
+    const x = f.operands(first.data);
+    const y = f.operands(second.data);
+    if (x.len != 2 or y.len != 2) return false;
+    return f.resolve(x[0]) == f.resolve(y[0]) and f.resolve(x[1]) == f.resolve(y[1]);
+}
 
 /// Whether parameter `index` of a function with `signature` is passed owned.
 fn ownedParameter(signature: ir.Signature, index: u64) bool {
@@ -1436,7 +1493,7 @@ fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.F
     for (f.insts.items, 0..) |record, i| {
         const kind = module.kind(record.ty);
         if ((kind != .record and kind != .array) or !module.managed(record.ty)) continue;
-        if (!ownedRecord(f, record) and !marks.owned_get.contains(@intCast(i))) continue;
+        if (!ownedRecord(module, f, record) and !marks.owned_get.contains(@intCast(i))) continue;
         const ref: ir.Ref = @fromBackingInt(@intCast(i));
         const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
         if (kind == .array) {
@@ -1593,7 +1650,7 @@ const Taking = struct {
             chain[len] = current;
             len += 1;
             const earlier = f.resolve(inst.a);
-            if (!ownedRecord(f, f.inst(earlier)) and !self.marks.owned_get.contains(@backingInt(earlier))) return;
+            if (!ownedRecord(self.module, f, f.inst(earlier)) and !self.marks.owned_get.contains(@backingInt(earlier))) return;
             const def_block = if (f.inst(earlier).op == .param) 0 else self.graph.block_of[earlier.index()];
             var reads: std.ArrayList(ir.Ref) = .empty;
             for (self.graph.uses[earlier.index()].items) |user| {
@@ -1877,7 +1934,8 @@ fn arrayIndex(f: *const ir.Function, left: ir.Ref, right: ir.Ref) enum { same, d
 
 /// Whether a record value is owned where it is defined: built, updated, joined,
 /// returned by a call, or a `mut` parameter.
-fn ownedRecord(f: *const ir.Function, record: ir.Inst) bool {
+fn ownedRecord(module: *const ir.Module, f: *const ir.Function, record: ir.Inst) bool {
+    if (borrowedItem(module, f, record) != null) return false;
     return switch (record.op) {
         .record_make, .record_set, .array_set, .phi, .call, .union_take, .box_take => true,
         .param => ownedParameter(f.signature, record.data),
