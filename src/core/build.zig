@@ -678,6 +678,7 @@ const FnBuilder = struct {
     }
 
     fn prepareParent(self: *FnBuilder, base: ir.Ref, span: u32) Error!ir.Ref {
+        if (self.module().zero_rc) return base;
         const ty = self.typeOfRef(base);
         const kind = self.mb.module.kind(ty);
         if (kind == .list or kind == .dict) return self.emit(.{ .op = if (kind == .dict) .dict_copy else .list_copy, .ty = ty, .a = base, .data = flags.place_copy, .span = span });
@@ -1275,7 +1276,7 @@ const FnBuilder = struct {
         const indexed = kind == .list or kind == .dict;
         // Ownership chooses identity, count-tested detach, or copy before the
         // child read. The child can then take the slot's existing owner.
-        const parent = if (indexed) try self.emit(.{ .op = if (kind == .dict) .dict_copy else .list_copy, .ty = self.typeOfRef(base), .a = base, .data = flags.place_copy, .span = span }) else base;
+        const parent = try self.prepareParent(base, span);
         const child = try self.stepGet(parent, steps[0], span);
         if (indexed and self.mb.module.managed(self.typeOfRef(child))) self.function.insts.items[child.index()].data = flags.place_read;
         const inner = try self.storeInto(child, steps[1..], value, span);

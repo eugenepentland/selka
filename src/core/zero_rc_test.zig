@@ -1754,3 +1754,67 @@ test "zero RC conditional branch storage transfers owners instead of receiver lo
         \\    return len(owner) + len(selected)
     , "E_SINGLE_OWNER_MOVED");
 }
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC rejects shallow managed container copies in IR and emission" {
+    const ir = @import("ir.zig");
+    const verify = @import("verify_ir.zig");
+    for (0..3) |shape| {
+        var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+        defer arena.deinit();
+        const a = arena.allocator();
+        var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+        const ty = try module.intern(a, switch (shape) {
+            0 => .{ .list = .str },
+            1 => .{ .dict = .{ .key = .i64, .value = .str } },
+            else => .{ .dict = .{ .key = .str, .value = .i64 } },
+        });
+        var h = try support.Hand.init(a, &module, "main", .{ .params = &.{}, .ret = .i64 });
+        const source = try h.emit(.{ .op = if (shape == 0) .list_new else .dict_new, .ty = ty, .a = try h.int(.u64, 0) });
+        _ = try h.emit(.{ .op = if (shape == 0) .list_copy else .dict_copy, .ty = ty, .a = source });
+        _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+        _ = try h.finish();
+        var failure: verify.Failure = .{};
+        try std.testing.expectError(error.InvalidIr, verify.verifyModule(a, &module, &failure));
+        try std.testing.expect(std.mem.indexOf(u8, failure.reason, "shallow container copy") != null);
+        try std.testing.expectError(error.UnsupportedInstruction, support.runOwned(a, &module, .{ .own = false, .check_ir = false, .main = .{} }));
+    }
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC receiver preparation preserves parent identity across sibling borrows" {
+    const ir = @import("ir.zig");
+    const flags = @import("flags.zig");
+    for ([_]bool{ false, true }) |release| {
+        var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+        defer arena.deinit();
+        const a = arena.allocator();
+        var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+        const row = try module.intern(a, .{ .list = .i64 });
+        const rows = try module.intern(a, .{ .list = row });
+        var h = try support.Hand.init(a, &module, "main", .{ .params = &.{.cap}, .ret = .i64 });
+        const zero_index = try h.int(.u64, 0);
+        const one = try h.int(.u64, 1);
+        const empty = try h.emit(.{ .op = .list_new, .ty = rows, .a = try h.int(.u64, 2) });
+        const left = try h.emit(.{ .op = .list_new, .ty = row, .a = zero_index });
+        const right = try h.emit(.{ .op = .list_new, .ty = row, .a = zero_index });
+        const first = try h.emit(.{ .op = .list_push, .ty = rows, .a = empty, .b = left });
+        const parent = try h.emit(.{ .op = .list_push, .ty = rows, .a = first, .b = right });
+        const borrowed = try h.emit(.{ .op = .list_get, .ty = row, .a = parent, .b = one, .check = .exact });
+        const prepared = try h.emit(.{ .op = .list_copy, .ty = rows, .a = parent, .data = flags.place_copy });
+        const target = try h.emit(.{ .op = .list_get, .ty = row, .a = prepared, .b = zero_index, .data = flags.place_read, .check = .exact });
+        const grown = try h.emit(.{ .op = .list_push, .ty = row, .a = target, .b = try h.int(.i64, 42) });
+        const length = try h.emit(.{ .op = .list_len, .ty = .u64, .a = borrowed });
+        const updated = try h.emit(.{ .op = .list_set, .ty = rows, .a = prepared, .b = zero_index, .data = try h.extra(&.{grown}), .check = .exact });
+        const selected = try h.emit(.{ .op = .list_get, .ty = row, .a = updated, .b = zero_index, .check = .exact });
+        const value = try h.emit(.{ .op = .list_get, .ty = .i64, .a = selected, .b = zero_index, .check = .exact });
+        try h.printValues(try h.param(0), &.{ length, value });
+        _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+        _ = try h.finish();
+        const result = try support.runOwned(a, &module, .{ .release = release });
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("0 42\n", result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        try std.testing.expect(zero.emittedClean(result.llvm));
+    }
+}

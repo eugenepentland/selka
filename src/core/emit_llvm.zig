@@ -2020,6 +2020,7 @@ const FunctionEmitter = struct {
     }
 
     fn instruction(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+        if (zero_rc.shallowManagedCopy(self.state.module, inst)) return error.UnsupportedInstruction;
         const name = try std.fmt.allocPrint(self.a(), "%v{d}", .{ref.index()});
         if (self.count_fn != null) try self.countBefore(out, inst);
         switch (inst.op) {

@@ -10,6 +10,7 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const vector = @import("vector.zig");
 const elements = @import("elements.zig");
+const flags = @import("flags.zig");
 
 /// Verification only allocates, or finds the IR malformed.
 pub const Error = error{ OutOfMemory, InvalidIr };
@@ -183,6 +184,8 @@ const Verifier = struct {
                 const inst = self.f.inst(ref);
                 if (inst.op == .copy) continue;
                 try self.signature(b, ref, inst);
+                if (inst.data != flags.place_copy and @import("zero_rc.zig").shallowManagedCopy(self.module, inst))
+                    return self.fail(b, ref, "zero-RC managed children cannot be duplicated by a shallow container copy", .{});
                 try self.dominance(b, @intCast(at), ref, inst);
             }
         }
@@ -502,8 +505,8 @@ const Verifier = struct {
             .buffer_copy, .buffer_pop => inst.ty == .byte_buffer and s.a == .byte_buffer,
             .buffer_push => inst.ty == .byte_buffer and s.a == .byte_buffer and s.b == switch (inst.data) {
                 0 => ir.Type.u8,
-                @import("flags.zig").buffer_append_int => ir.Type.i64,
-                @import("flags.zig").buffer_append_float => ir.Type.f64,
+                flags.buffer_append_int => ir.Type.i64,
+                flags.buffer_append_float => ir.Type.f64,
                 else => return false,
             },
             .buffer_set => inst.ty == .byte_buffer and s.a == .byte_buffer and isInteger(s.b) and self.typesMatch(s.extra, &.{.u8}),

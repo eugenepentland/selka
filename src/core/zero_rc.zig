@@ -1,5 +1,6 @@
 //! Admitted runtime boundary for the zero-RC prototype. Unlisted helpers refuse.
 const std = @import("std");
+const ir = @import("ir.zig");
 const rc_symbols = [_][]const u8{ "@myl_core_retain", "@myl_core_release", "@myl_core_share(", "@myl_core_free_block(" };
 
 /// Keep common allocator templates, removing the legacy count initialization
@@ -161,4 +162,18 @@ pub fn emittedClean(text: []const u8) bool {
         }
     }
     return true;
+}
+
+/// Native container copies duplicate only slots. Managed children require the
+/// explicit recursive-copy helpers, never a residual ownership-pass COW copy.
+pub fn shallowManagedCopy(module: *const ir.Module, inst: ir.Inst) bool {
+    if (!module.zero_rc or !module.valid(inst.ty)) return false;
+    return switch (inst.op) {
+        .list_copy => if (module.kind(inst.ty) == .list) module.managed(module.compound(inst.ty).list) else false,
+        .dict_copy => if (module.kind(inst.ty) == .dict) blk: {
+            const dict = module.compound(inst.ty).dict;
+            break :blk module.managed(dict.key) or module.managed(dict.value);
+        } else false,
+        else => false,
+    };
 }
