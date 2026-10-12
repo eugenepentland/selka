@@ -1,0 +1,56 @@
+func score(text: str) -> int:
+    mut raw = text.encode()
+    mut result = len(raw)
+    for value in raw:
+        result += value
+    return result
+
+
+func fold(text: str, separator: str) -> int:
+    mut parts = text.split(separator)
+    mut result = len(parts) * 7
+    for part in parts:
+        result += score(part)
+    return result
+
+
+func owned(text: str, separator: str) -> str[]:
+    return text.split(separator)
+
+
+func first(text: str, separator: str) -> str:
+    for part in text.split(separator):
+        return part.copy()
+    return "missing"
+
+
+func unstable(text: str, separator: str) -> int:
+    mut source = text.copy()
+    mut parts = source.split(separator)
+    mut result = len(parts) * 7
+    for part in parts:
+        source += "changed"
+        result += score(part)
+    return result
+
+
+func unstable_separator(text: str) -> int:
+    mut separator = "|"
+    mut parts = text.split(separator)
+    mut result = len(parts) * 7
+    for part in parts:
+        separator += "changed"
+        result += score(part)
+    return result
+
+
+func main(out: Stream) -> int:
+    out.print(fold("", "::"), fold("a||é|", "|"), fold("é::😀::::", "::"), fold("abc", "::"))
+    mut source = "a|b|c"
+    mut parts = owned(source, "|")
+    mut token = first(source, "|")
+    source += "changed"
+    assert parts == ["a", "b", "c"]
+    assert token == "a"
+    out.print(unstable("a|b|c", "|"), unstable_separator("a|b|c"))
+    return 0

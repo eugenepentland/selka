@@ -1,0 +1,80 @@
+{
+  "C0": "78b4bb5934748d5942389b12dfe66cb0031cafdc",
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/candidate04/install/bin/mylang",
+  "compiler_sha256": "ff1dc02b223dc9a0b14eb3168ee6b37041f4c0dd3f4bf394567848682b639371",
+  "qualification": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/candidate04/counted/qualification.json",
+  "entries": [
+    {
+      "group": "text",
+      "arm": "split-candidate-zero-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/candidate04/text-runtime",
+      "sha256": "07506845e5ce6d0c5e6bac8accd631fe77db761952862584b5af6ffbf12a08de",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/guest-cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime.ll"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/guest-cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime.ll"
+      ],
+      "built_binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime",
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "group": "text",
+      "arm": "split-candidate-zero-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/candidate04/text-counted",
+      "sha256": "aa5e54ee2c3fc9c9136b52d1edfa842e83cec9324af09ce2fb8bb15cb99ba595",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/guest-cache",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-counted",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/guest-cache",
+        "--counters"
+      ],
+      "built_binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-counted",
+      "status": "ok",
+      "returncode": 0
+    }
+  ]
+}

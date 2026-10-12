@@ -1,0 +1,11 @@
+func read_past(items: int[]) -> int:
+    mut total = 0
+    for i in range(len(items) + 1):
+        total += items[i]
+    return total
+
+
+func main(out: Stream) -> int:
+    out.print("before")
+    out.print(read_past([4, 9]))
+    return 0

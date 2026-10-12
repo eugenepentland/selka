@@ -1,0 +1,81 @@
+{
+  "C0": "78b4bb5934748d5942389b12dfe66cb0031cafdc",
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/candidate02/install/bin/mylang",
+  "compiler_sha256": "442ee0cb0d8360c32abe0bfd9fb4ca8658ec2c453a0eb820afe120b2437fc443",
+  "qualification": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/qualification-counted.json",
+  "entries": [
+    {
+      "group": "text",
+      "arm": "split-candidate-zero-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/candidate02/text-runtime",
+      "sha256": "19bf8254f120ecf3024d05c04c9a0f6b678f3bd0961280e1ee962dc0ed5be6bd",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/guest-cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime.ll"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/guest-cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime.ll"
+      ],
+      "status": "ok",
+      "returncode": 0,
+      "built_binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime"
+    },
+    {
+      "group": "text",
+      "arm": "split-candidate-zero-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/candidate02/text-counted",
+      "sha256": "43b26b51c6c49099f6595fdb0f6686480fe811c3e498e9aa6d912e3d8cdcd8f5",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/guest-cache",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-counted",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/guest-cache",
+        "--counters"
+      ],
+      "status": "ok",
+      "returncode": 0,
+      "built_binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-counted"
+    }
+  ],
+  "note": "Immutable archive of exact qualified artifact bytes; command and original output paths retained."
+}

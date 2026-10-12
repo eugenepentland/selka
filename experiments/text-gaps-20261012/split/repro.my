@@ -1,0 +1,19 @@
+func score(text: str) -> int:
+    mut raw = text.encode()
+    mut result = len(raw)
+    for value in raw:
+        result += value
+    return result
+
+
+func split_fold(text: str, separator: str) -> int:
+    mut parts = text.split(separator)
+    mut result = len(parts) * 7
+    for part in parts:
+        result += score(part)
+    return result
+
+
+func main(out: Stream) -> int:
+    out.print(split_fold("a||é|", "|"))
+    return 0

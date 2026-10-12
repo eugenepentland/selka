@@ -1,0 +1,21 @@
+diff --git a/src/core/runtime/core_text.c b/src/core/runtime/core_text.c
+index 0aa9779dc..24e59d002 100644
+--- a/src/core/runtime/core_text.c
++++ b/src/core/runtime/core_text.c
+@@ -497,9 +497,15 @@ bool myl_core_str_ends(myl_block *text, myl_block *needle) { return needle->len
+ 
+ static const int32_t core_text_list_layout[] = {8, 1, 0, 0, 0};
+ /* Offset-only lists are private to a compiler-proven nonescaping split. */
++static uint64_t core_split_initial_capacity(uint64_t len, uint64_t separator_len) {
++    /* Clamp before adding: even UINT64_MAX input cannot wrap the capacity.
++       Sparse large inputs reserve at most 128 pairs, never a text-sized list. */
++    const uint64_t maximum = len / separator_len;
++    return maximum < 128 ? maximum + 1 : 128;
++}
+ myl_block *myl_core_span_split_offsets(const unsigned char *text, uint64_t len, const unsigned char *separator, uint64_t separator_len) {
+     if (!separator_len) myl_core_s2_unsupported(-1);
+-    myl_block *list = myl_core_list_new_slow(0, 16);
++    myl_block *list = myl_core_list_new_slow((int64_t)core_split_initial_capacity(len, separator_len), 16);
+     int64_t at = 0;
+     for (;;) {
+         int64_t hit = core_span_find(text, (int64_t)len, separator, (int64_t)separator_len, at);
