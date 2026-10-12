@@ -1,0 +1,15 @@
+# doc: check
+record Context:
+    fs: Filesystem
+    env: Environment
+
+func read_note(ctx: Context, path: str) -> int:
+    match ctx.fs.read_text(path):
+        case Ok(text):
+            return len(text)
+        case Err(_):
+            return -1
+
+func main(fs: Filesystem, env: Environment) -> int:
+    mut ctx = Context(fs=fs, env=env)
+    return read_note(ctx, "note.txt") + len(ctx.env.names())

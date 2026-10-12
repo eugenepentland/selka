@@ -1,5 +1,5 @@
 {
-  "state": "running; no completed package qualification claimed",
+  "state": "PASS: exact independent ReleaseFast compiler, owned installed components, pure tests, native protocols and counted/structural companion qualification",
   "source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
   "initial_debug_compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
   "initial_debug_component_protocols": {
@@ -14,11 +14,85 @@
     "/home/epentland/ai/canopy/mylang-memory-20261012-support6",
     "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/private-seed-builder/tools/selka-components"
   ],
-  "raw_log": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/support6-owned-package-qualification.log",
+  "raw_log": "native-qualification.log",
   "provisioning_admission": {
     "ticket": 756,
     "queue_wait_seconds": 15
   },
   "selected_default_changed": false,
-  "historical_seed_changed": false
+  "historical_seed_changed": false,
+  "exit_status": 0,
+  "compiler_sha256": "29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26",
+  "raw_log_sha256": "6d1dea764668a658d4e763771e4b78960444230884e8cbd645a1273ae7318050",
+  "native_admission": {
+    "ticket": 769,
+    "queue_wait_seconds": 155
+  },
+  "pure_tests": {
+    "reports": 4,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0,
+    "unsupported": 0,
+    "modes": [
+      "debug verified",
+      "release verified"
+    ],
+    "report_passes": [
+      6,
+      6,
+      15,
+      15
+    ]
+  },
+  "protocols": {
+    "test-index": [
+      "fresh release verified",
+      "exact installed binary"
+    ],
+    "cache-plan": [
+      "fresh release verified",
+      "exact installed binary"
+    ],
+    "all_passed": true
+  },
+  "counted_companion": {
+    "path": "../A08/components-owned-pin-support6.json",
+    "sha256": "abf3fea2cab5f68c45c02ffc035d7d6d421080cf66a675be895c542911618797",
+    "instrumentation": "separate counted binaries built by the exact same RF compiler from identical component source hashes; installed binaries are uninstrumented",
+    "rows": [
+      {
+        "component": "cache_plan",
+        "binary_sha256": "44cf164990de93468addf576e18af792ebcbd593f95748aa8059b388e1766f7f",
+        "all_observed_rc_free": true,
+        "returned_runs_leak_free": true,
+        "llvm_rc_clean": true,
+        "symbols_rc_clean": true,
+        "runs": 560,
+        "statuses": {
+          "2": 36,
+          "0": 523,
+          "1": 1
+        }
+      },
+      {
+        "component": "test_index",
+        "binary_sha256": "1734efefa37d2f17678dca227d51401c269a5028b4e6867bf91535989e79c28a",
+        "all_observed_rc_free": true,
+        "returned_runs_leak_free": true,
+        "llvm_rc_clean": true,
+        "symbols_rc_clean": true,
+        "runs": 128,
+        "statuses": {
+          "2": 21,
+          "0": 106,
+          "1": 1
+        }
+      }
+    ]
+  },
+  "performance_claim": "None. Native oracle wall times are incidental correctness-run output under build admission; queue waits are not compiler or guest runtime.",
+  "package_scope": "Private explicit-pin installation only. Integration install/default selection, whole registered gate, C2 default and C3 active RC retirement remain separate.",
+  "historical_seed_sha256": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c"
 }

@@ -1,0 +1,38 @@
+{
+  "scope": "source contract reproducer only; no runtime authority or input semantics substituted",
+  "owner": "coordinator/A07",
+  "source": "experiments/memory-closeout-20261012/A10/fixtures/borrowed_entry_context.my",
+  "source_sha256": "cb4471d34b70ed9fdd4a43a8d8c7f6ff7bcd27258b01587ae4c2cd38011c87b1",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "rows": [
+    {
+      "mode": "ordinary-control",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A10/fixtures/borrowed_entry_context.my",
+        "--no-cache",
+        "--diagnostics=json"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "mode": "checked-owned",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A10/fixtures/borrowed_entry_context.my",
+        "--no-cache",
+        "--diagnostics=json",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"a borrowed value cannot be stored or returned; make an explicit .copy()\",\"location\":{\"path\":\"experiments/memory-closeout-20261012/A10/fixtures/borrowed_entry_context.my\",\"start\":{\"line\":14,\"column\":26},\"end\":{\"line\":14,\"column\":28},\"bytes\":{\"start\":325,\"end\":327}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    }
+  ],
+  "expected_resolution": "Both ordinary and checked-owned source admission for the original entry-capability wrapper contract; no default qualification while refused"
+}

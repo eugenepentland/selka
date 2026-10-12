@@ -336,3 +336,25 @@ narrowly to A07 for Unsupported/noalloc handling; its narrow pipeline cache call
 Unsupported-to-CacheMiss overlay is also authorized, preserving fresh refusal/OOM.
 The C3 component draft was rebased over cache isolation; prior27-test evidence is
 kept under original hashes, and updated28-test native qualification remains pending.
+
+
+## Independent ReleaseFast component qualification completed
+
+The extracted compiler build isolation and candidate inputs shipped in
+`c30a557ec1cacd9a4a68501d8f6587eb4b353e9b`; shared-gate Guardian passed all 88
+checks. Its independently provisioned source5167c588 compiler
+`29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26` passed all
+42 pure-test executions (four debug/release verified reports), fresh release and
+installed protocol oracles, and installed RC symbol checks. A08's separate fresh
+counted688 executions from this same compiler passed with RC0, returned exitlive0,
+and clean LLVM/symbol audits. The exact source/compiler/installed/counted identities
+and raw output remain separate in `packaging-support6-candidate/qualification-state.json`
+and `provisioned-identities.json`. This qualifies the explicit independent pin route
+for these component inputs, not the final integration package/default/retirement.
+The historical seed digest and active root selection remain unchanged.
+
+The borrowed entry capability wrapper is now also preserved as standalone
+`fixtures/borrowed_entry_context.my`: ordinary Support6 check exits0, checked-owned
+check exits1/E_SINGLE_OWNER_BORROW at Context(fs=fs,env=env). The exact paired
+diagnostic report is `rollout/borrowed-entry-context-support6.json`. Coordinator/A07
+own resolution; no replacement authority, external I/O or source semantics was used.
