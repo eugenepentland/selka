@@ -1,0 +1,2632 @@
+[
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "bin",
+    "target": "usr/bin"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "boot"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "dev"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "etc"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/bindresvport.blacklist",
+    "sha256": "63229551ffc257f56e3df60ca97e1f2963f3ab2128ce27a0f398b4418fa454d0"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/debian_version",
+    "sha256": "dba3470eb84e6f4891a6ce11d6eb010af7ab6ee30544e8ccd1ad9fe5f1ff7ee3"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "etc/default"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/default/nss",
+    "sha256": "836614e9d4d501d0af43087c9c9300365a38d53f24f845efcf0b2ad8194cbaa0"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "etc/dpkg"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "etc/dpkg/origins"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/dpkg/origins/debian",
+    "sha256": "bd81f9756beb90195877d808492a55d66c7155b1017679ced60fb278d378b55a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/gai.conf",
+    "sha256": "76a5771adee7b9f36c7ae66eae78d72f325557500269107f2d98a7e3560a1808"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/host.conf",
+    "sha256": "380f5fe21d755923b44203b58ca3c8b9681c485d152bd5d7e3914f67d821d32a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/issue",
+    "sha256": "3ba7bf07910930e9e943e6131ece3f3182f1d3be607a0a4cbf21ce665e5c43a2"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/issue.net",
+    "sha256": "b4cb3e2b1f5988029f7f48824d4d5d530319bee894a0f9380d414a3b42e5499f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/ld.so.cache",
+    "sha256": "e89a171831da2084092baac36b0af6d096de3a7e09b8e40b267ee2f170926086"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/ld.so.conf",
+    "sha256": "d4b198c463418b493208485def26a6f4c57279467b9dfa491b70433cedb602e8"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "etc/ld.so.conf.d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/ld.so.conf.d/libc.conf",
+    "sha256": "90d4c7e43e7661cd116010eb9f50ad5817e43162df344bd1ad10898851b15d41"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "etc/ld.so.conf.d/x86_64-linux-gnu.conf",
+    "sha256": "f03e4740e6922b4f4a1181cd696b52f62f9f10d003740a8940f7121795c59c98"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "etc/os-release",
+    "target": "../usr/lib/os-release"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "etc/profile.d"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "etc/skel"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "etc/update-motd.d"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "etc/update-motd.d/10-uname",
+    "sha256": "1dca09550a75048731bbd17f17e027cc71ae50a86e0d911a8b3813e88d9b5ab6"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "home"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "lib",
+    "target": "usr/lib"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "lib64",
+    "target": "usr/lib64"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "opt"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "opt/selka"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "opt/selka/components"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "opt/selka/mylang",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "opt/selka/toolchain"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "proc"
+  },
+  {
+    "kind": "directory",
+    "mode": 448,
+    "path": "root"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "run"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "sbin",
+    "target": "usr/sbin"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "sys"
+  },
+  {
+    "kind": "directory",
+    "mode": 1023,
+    "path": "tmp"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/bin"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/getconf",
+    "sha256": "294c7c37360039a661143ffacb5db31d9722c844536284479927a4d8b1d422af"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/getent",
+    "sha256": "15e94df587fe67e13e9b4255163d5d5c854d48272aff771a1773eeb222f41fb5"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/iconv",
+    "sha256": "ddab17b038fba9b2a5ba69544283f96b4b65a903afbde089bdf142b73b099b9a"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "usr/bin/ld.so",
+    "target": "../lib64/ld-linux-x86-64.so.2"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/ldd",
+    "sha256": "7bcd61a279946cb376d36fd91f4938ab4f4aba48e793c652a9797319d23f8dd3"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/locale",
+    "sha256": "1318a683d19837cd6dcfd9ea43244f76dda82d9d91cd50e9c27548666516b53f"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/localedef",
+    "sha256": "6f1190173873a9d4864fc90e498ef151dac61835468a2f96a28be30170e245b9"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/pldd",
+    "sha256": "6758f3ad520d944938ed995210eefc281307c1f77e729aa5217d3a473c41be67"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/tzselect",
+    "sha256": "5c21847c25c2b011f791a89551ec454fe2574f693b4570d941bb228f36616c23"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/bin/zdump",
+    "sha256": "9468f69aa5d9da6099b68a4a36edfe4fba20867c7803bdb6854ad73a98d73555"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/games"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/include"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/lib"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/lib/locale"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/lib/locale/C.utf8"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_ADDRESS",
+    "sha256": "26e2800affab801cb36d4ff9625a95c3abceeda2b6553a7aecd0cfcf34c98099"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_COLLATE",
+    "sha256": "47a5f5359a8f324abc39d69a7f6241a2ac0e2fbbeae5b9c3a756e682b75d087b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_CTYPE",
+    "sha256": "1257597210f43630e7c8a745ae95127e96b93a43515ac5163cab459ddc1664b3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_IDENTIFICATION",
+    "sha256": "38a1d8e5271c86f48910d9c684f64271955335736e71cec35eeac942f90eb091"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_MEASUREMENT",
+    "sha256": "bb14a6f2cbd5092a755e8f272079822d3e842620dd4542a8dfa1e5e72fc6115b"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/lib/locale/C.utf8/LC_MESSAGES"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_MESSAGES/SYS_LC_MESSAGES",
+    "sha256": "f9ad02f1d8eba721d4cbd50c365b5c681c39aec008f90bfc2be2dc80bfbaddcb"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_MONETARY",
+    "sha256": "bfd9e9975443b834582493fe9a8d7aefcd989376789c17470a1e548aee76fd55"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_NAME",
+    "sha256": "14507aad9f806112e464b9ca94c93b2e4d759ddc612b5f87922d7cac7170697d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_NUMERIC",
+    "sha256": "f5976e6b3e6b24dfe03caad6a5b98d894d8110d8bd15507e690fd60fd3e04ab2"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_PAPER",
+    "sha256": "cde048b81e2a026517cc707c906aebbd50f5ee3957b6f0c1c04699dffcb7c015"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_TELEPHONE",
+    "sha256": "f4caf0d12844219b65ba42edc7ec2f5ac1b2fc36a3c88c28887457275daca1ee"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/locale/C.utf8/LC_TIME",
+    "sha256": "0910b595d1d5d4e52cc0f415bbb1ff07c015d6860d34aae02505dd9973a63154"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/os-release",
+    "sha256": "e249e69c32d81350fdd6b05ac5575255f14e380ba14b8454acea14e49f088bfa"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/lib/x86_64-linux-gnu"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/lib/x86_64-linux-gnu/gconv"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ANSI_X3.110.so",
+    "sha256": "e58d2988a4cf4a218316bc0ea3bcbafdaf5d8744c2e949a27fd9090b514ebe33"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ARMSCII-8.so",
+    "sha256": "aaa47092d6fd3fed204ed88f26d74b418c9752b7f70ff041a0a293404acb1bfd"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ASMO_449.so",
+    "sha256": "5ec748e35844215110c76834d5923027e5e0f75a817bf64903961998e21ec6ae"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/BIG5.so",
+    "sha256": "91608eab8ff8375af26ac859dca3902a3d123ece2cbf52a0bb5d0120828209c6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/BIG5HKSCS.so",
+    "sha256": "7ffe016fc08dd559b922a9f52404b727995008a2ad52d0b889859ed0f0e33781"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/BRF.so",
+    "sha256": "a74ad726ed7b6a51f4a7122892cc578221abe4691f5f2cc324df3e942b9916fe"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP10007.so",
+    "sha256": "e2f4cf219d4180cd58bfb2b9e90a458684f57c5812e36618bb27c60eb8e07f71"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1125.so",
+    "sha256": "53a969d066ba48e6b4d4fdf19bf5ff3632308d78b051d7f56c8a6204a021100c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1250.so",
+    "sha256": "d1916250beaea62de79ba12b053e01be25eae0f1ec2070d389932c7a99ab8dc3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1251.so",
+    "sha256": "e807ce3338626032489d567e6da8a8be39f58cbd5451a1e31526be66a5aa9927"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1252.so",
+    "sha256": "a7e4f10c06774a2e7433fc184c9e0dfc8ea4d5d19c3141c455570e0438fbd931"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1253.so",
+    "sha256": "ed593da5dd07ce8ddab6b7c74cf3daaa3fb1008ab8adb1b59d5b64057d334aac"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1254.so",
+    "sha256": "27348671fa5b673902d5492da56793baa93e1ebcbf6af6f1e59715097a20e100"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1255.so",
+    "sha256": "c3ee55c360c1b8eae88d48a227bc85aebea5aee6e78ad1406d422932b219b14f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1256.so",
+    "sha256": "724a4a680a1063e401d2658d0134b5ff61df05c5981ab18c4e55cbfc0f8bf2f1"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1257.so",
+    "sha256": "3285be92143e0ada72e088e0bfb80bf456fea1cc7143b1362fbd9ad5b2bbfec5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP1258.so",
+    "sha256": "96fdcae9de486b486b13bf24b935b377eff5f3310fec40dfe9b92f465335b023"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP737.so",
+    "sha256": "1332bfb05549ec362559437ae467baf72ab85d5e7d40965815d1c0ad0234a75a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP770.so",
+    "sha256": "3e8da1092eaf71baf5bbd0297b078d1d071a84932b6b77dee09642e653cb001e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP771.so",
+    "sha256": "3cc68fc9ce8e582f2f668242e8604a8c762f5bb177e3f6b22bbc72a7266c5cad"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP772.so",
+    "sha256": "79e7de5ec746f3e915eebb2657cf11aadc9a9f1dcdcc101b0b1c14daa791564e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP773.so",
+    "sha256": "82465548d4ddd27958aa6cd884a20d5b0da4be546f8a6d433797e1090ebde107"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP774.so",
+    "sha256": "e2c37414a0b8ebc6270c75f20f0919ed0cf713a433459863f09e001af1c3851c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP775.so",
+    "sha256": "667184980d8352ed6499f078aae4966958d1fde9be5d0ea25cf27b96628afc92"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CP932.so",
+    "sha256": "d51d3ba81ef637f161de9dbd0a50632497a8e387120d4867587923722ee6616b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CSN_369103.so",
+    "sha256": "bcbac7965309cd91812a6904bc2ff8a08cca2448ef2e600c55b84bed89dfaba6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/CWI.so",
+    "sha256": "e26272714850ecdf98ceffdc8b0ac0c5998a97aa7227bc4bc8e9dccda1f157a3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/DEC-MCS.so",
+    "sha256": "b59c308b0c3f2136cc9ce3ba8bc7bea3384e602c5d91de623363754162f52920"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-AT-DE-A.so",
+    "sha256": "10e94047578cb92cc676bbb5463eafa3837b4d75f5687272fce604414f93c5d0"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-AT-DE.so",
+    "sha256": "4d9b35adabd929f31814e02af3f56335e0e56d9a7bb98646b209bc43a0249f4b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-CA-FR.so",
+    "sha256": "70573cd0ccb5e6a772bb0af263ea8df29945a5985678a43231b145091e3ca1fd"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-DK-NO-A.so",
+    "sha256": "d73e32860a0154c082d1624b8078ca806a2cbc3f6cd0350776578a8375f459d0"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-DK-NO.so",
+    "sha256": "ee06fa24f5e6089b61ea704100e09af8467d29508b8fd85b4f48f617b3fdd98a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-ES-A.so",
+    "sha256": "132f99628e62d098d8ada51117770c08d40120905ef8cfb722b26d0f7df6b394"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-ES-S.so",
+    "sha256": "44af96ccb4e825c745144cac21882fb68770d408b079c910f2a0df7fa881c6ba"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-ES.so",
+    "sha256": "739d7c7ca0d36b56f78e475e357303e9a565e413d15b3e39e3d7cb19e4f08457"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-FI-SE-A.so",
+    "sha256": "d6405ab52c1f4469a184133db42c0c0af03fabe51fcc412760ab0df7408658f5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-FI-SE.so",
+    "sha256": "20a40eaf8a1b341d89837c414c851c0e5e99a6600d27419cd36f4a33fce65e98"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-FR.so",
+    "sha256": "f8dcc0d6134b9fe179062ae28b070ed946e846978a2ab240e0e7a47d4ec4652c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-IS-FRISS.so",
+    "sha256": "0bcec30aa379d8c175cdfdac5327b01c02a7ad3e16cda28f0d7f53283fad371f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-IT.so",
+    "sha256": "caf8ddc85afcd01fd499eb93e819a26726d098f85f7ae8b1a054ce0ae0c35dfb"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-PT.so",
+    "sha256": "4cf43cdd21a45efc725d3db3bc879f383e947a3692c9a2be7a7ed86d1d1ba568"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-UK.so",
+    "sha256": "a17fb36c4bf143a27eb53e5c48e65764ee1eab05d7805ccca626884f3e89ff0b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EBCDIC-US.so",
+    "sha256": "70096433e004457f37b6992a64358251227cde58a611f9915a7b3c36e7266440"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ECMA-CYRILLIC.so",
+    "sha256": "04cd8ce0ee64a5c908388b298e07b6a36a4887a980c853e74dd9603772889f25"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EUC-CN.so",
+    "sha256": "18d2be2fcbc1ac01d8fda96234e9805d7f3f4969413dae4b7caaf77a9429ee42"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EUC-JISX0213.so",
+    "sha256": "e5fc7cc8db10482f2c53e7a7287e88b10f070d41dea488a9d9473b525dc98166"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EUC-JP-MS.so",
+    "sha256": "a6d956357113b4e06e98d14a9c83d8e0e34de5f3ae233e1a88df97cb58cd229c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EUC-JP.so",
+    "sha256": "7a9eaaa6573c3662f1e7c73e9c0f0842e3d7601ae5a31046f12a8f77cbdc7c11"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EUC-KR.so",
+    "sha256": "1dc61de18c8e52b3d72d0776de32f42e8c3c648eb72a19e503ef1feb8542514a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/EUC-TW.so",
+    "sha256": "a1e5c97968285bb4e6e1d049313b1bd2c375b5d13f78fc6ebd870590c4ac8b08"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GB18030.so",
+    "sha256": "84e871c7cb56813f2dbdfac73073f3ef529864fc9b3eb72841724a684ca68969"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GBBIG5.so",
+    "sha256": "356f3a208fdfec9e9ec298a7c4a33452779c2d0b3c5937ed4fbafee3659e5725"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GBGBK.so",
+    "sha256": "f2b5fceee2709a31433bfac3a5c5c2ece12423c1158775615ef366445eba4c70"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GBK.so",
+    "sha256": "6958227a6aabc422a6e27b49cbfeb7bd5b4084974153cc7d3e664c64ccd97f80"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GEORGIAN-ACADEMY.so",
+    "sha256": "5e5b9a49e1a1e4e8a2df1ff93322acbc94188ad859a6ef6ebfa54117294aff22"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GEORGIAN-PS.so",
+    "sha256": "24525e63d7a89bbb80b210f223fd181370f2f27ef325f265462d3dc0e461555b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GOST_19768-74.so",
+    "sha256": "712aabcd59557b6c0fa8359391382f6598e2ad73266e2a4d3b4d6b41b9d64e09"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GREEK-CCITT.so",
+    "sha256": "d8d20c6759a30aaf73421af0d4ef38bb5c14a0aa046134720c056c0ea39b2a19"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GREEK7-OLD.so",
+    "sha256": "29bcf94ca2287bf14391ae7c8e77bff49689536646eb2f435876552f72912643"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/GREEK7.so",
+    "sha256": "3b687f9fcfcba56240728eedcf19b2610e78a990499dfa3417a9f43713e63650"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/HP-GREEK8.so",
+    "sha256": "8f4032709ac3b5fe67371e2a8d8539ed0e2b857e3fc9e7420650392f443dc5b7"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/HP-ROMAN8.so",
+    "sha256": "e3b513b5b9aa26a31f10c55ec3072fd1996cabf9b1683933fcd5a1a4cb42092c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/HP-ROMAN9.so",
+    "sha256": "15f28c0c5265c0956934cff296f7df45b1ab5d2d0cb9bbc76f153e6a008c1be9"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/HP-THAI8.so",
+    "sha256": "26e5c8b0645237c7d9d997b398e30f17bad0f041c6c3c1d99282f1ff383e0b85"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/HP-TURKISH8.so",
+    "sha256": "25f68539b4652e0d2b70c33e8c69470e4ce0f4e952a80ff5f5ecdaa237b47e4f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM037.so",
+    "sha256": "033ac388f50f9b929b8a396a08c38f5c97170c9d5ebb433fd850ed5c3b3b8149"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM038.so",
+    "sha256": "c657486f03011eb9aea5a8c203fb0d2f0697cfcb3e38097bdee81df6ed27bf18"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1004.so",
+    "sha256": "93554cf5a614cf0bcf77fba236e6e449898439de1f43026727b8f2ed9a30da11"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1008.so",
+    "sha256": "5be7214a50f34bb3e08d3efbdd86da8cc6d3dabf14727c22eab9482b96a071ce"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1008_420.so",
+    "sha256": "f2952c35c0116467fa5186ac0341b6587e7bff28a290a3a41c9979735fab89fb"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1025.so",
+    "sha256": "5372506c44982084cbce9294eb961a1a447c5f7718da0af5137ab4385c58b371"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1026.so",
+    "sha256": "d3aeb5bdf988ead99f6bc1f863b6fd99bdd367c4c55ce6abe58baa480a191c1f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1046.so",
+    "sha256": "ab7e498dabee390af73ea661412808e140c7ccf9c39d8734a51993ad7a1cc11e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1047.so",
+    "sha256": "5a09c46c6f92071fece090ff59bf636aa21f07a16236babb3502a7eb56fea39f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1097.so",
+    "sha256": "56186e37b7d789511e9a65f46e09d40dca4a6d368f479e822cf8539f892ab6fe"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1112.so",
+    "sha256": "21b4a0d4afdfae4c03ac7111e5cd4bd558ea35fc128262aad094ddd292e49aa4"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1122.so",
+    "sha256": "d43ddc2bd5e4ebc44017ea008b7f6cf31b9c0f96fa3811e6f70d8162947cc02a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1123.so",
+    "sha256": "39384a981653a6e7e4b9b1d7100a690496b90cd0a0c578c0e27492f9e6fc1748"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1124.so",
+    "sha256": "33e573392b11a3dc474a87b2cf3b31c560e52a986591bb8a7a8aa77ef617c582"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1129.so",
+    "sha256": "88cadb4f89c8db11341a9c746d6644590a714a6473a48b0a1ee0fd2e3036a972"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1130.so",
+    "sha256": "9b053459bc9ae3a58b038340a3088a22e2dd2fc2fdfc759c8439a3d7f1c3abbf"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1132.so",
+    "sha256": "a18ce6aa7872b6f22d25d2013da65cc92e49703e03f37d699ac72af10c040dc8"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1133.so",
+    "sha256": "257b91933c7906a31f4fb363fc8da0b26486481bd31c496163f3aa637b759dd9"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1137.so",
+    "sha256": "6a13e8df1625e188eb2a6e4c5690af91406abd0b2d7167d28b5456a998290dc9"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1140.so",
+    "sha256": "5a002fdc77a4ed0ab8123a903c901e2ebf7ed1f9ea5955232b02488234ea493d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1141.so",
+    "sha256": "955a0f186e8ad867c990e0900ed2a893688b3064402f6e81b117d8a356d626a5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1142.so",
+    "sha256": "07de501b5fa47e4fae5a4a877aa60693706e13b9468896e55f0c359e773e0c7e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1143.so",
+    "sha256": "0d70aa6b466ec4e7dc0a36b4236431a9175588cba5592a7fb053767f36e26181"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1144.so",
+    "sha256": "db517626bd9ed4fc86b103b1fde35a7f29fceb7414d4bfefea6a80ebb13105b5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1145.so",
+    "sha256": "3163ff8fcdba538c2a1cfe13677b5f030a62a1c1def51dd5395c8298ab5b2400"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1146.so",
+    "sha256": "629789be4a9198f0a2fcd8abadaef29fb14d30e124edda5f12de750a04760241"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1147.so",
+    "sha256": "d4919f811e61b5008cea45b13c61f11ac79cb1af4e3d23a26ede042fdd8771c5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1148.so",
+    "sha256": "4846509a28e14b6e20b3559cf264540712a8cc4c0c96e85bfaa8b6c0e1c084d6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1149.so",
+    "sha256": "e345fc5946b7f3b07196899fb6a91d39a7453bacd9464ad1da005851fbc0f56c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1153.so",
+    "sha256": "c891543eb9147c7b5208f1451e38e3296aa6daa73ca6c179f9d3580087bbf52f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1154.so",
+    "sha256": "10aa14338c5d5eae5ee89609433bc1e1ecb6314606e04a293939f17454e408e4"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1155.so",
+    "sha256": "af6318672277e5d4730e149a835df2eab4e8f1ff8e973894cf658870d7b4569e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1156.so",
+    "sha256": "3d4effd3011764c3784ddbe5bf4cbfdd3cb8f1a63f49ddc42e091d7ad0df98e7"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1157.so",
+    "sha256": "b63b6ed1b2dff2dbf6816c18631c1e50533d8ff1b7ae1584bf4882b71b7e7836"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1158.so",
+    "sha256": "a21ccd08470e3ba5debff55c464a4e30f446e54de7f1bf140ca1b645e691a3a1"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1160.so",
+    "sha256": "ff466b4bb64af82f6e7e7edf2fd7e1c4ecbd8ad3e8286a356803444c903e94bf"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1161.so",
+    "sha256": "5eaad89ef19ddf83362ec4f7ac6d0236ef6b4900555039fb8077b3aa26a7709a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1162.so",
+    "sha256": "5fb9b9000358f6e7a4246e0a7ba18cf18a39e49033a797d43d653e4fbd7d7dab"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1163.so",
+    "sha256": "9846925b3c31a757595123931b844bfe2c8484087ef5ff56521b2fe19084157c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1164.so",
+    "sha256": "860f8c2808d6e7a8d7d81f36addf89db502f182d6fb33b09a5216562c0257768"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1166.so",
+    "sha256": "1f40c23548de2293b85b3eb231bb61f2cb2cf6a8ea8f3090493f123ace938818"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1167.so",
+    "sha256": "529a8720b7b17ac047d17ff2ee5435ef17a9f6555a161b3fd3125c5f3bd84c0f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM12712.so",
+    "sha256": "da26a4e05647304a49bb04f09eaee11c732655e74253d86f166314d733e6275c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1364.so",
+    "sha256": "d260be0182b8051244c3624f2c8c743efec15cf2051528b78b27902619dbe83a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1371.so",
+    "sha256": "289352b738fc49bbaf5dd09d15f0eff60c7a64f493fe7b113cb8151266becd4f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1388.so",
+    "sha256": "1bb14ff10a8b30a2f1331fb34024abedd396105df19cd50958573b3121cbcde4"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1390.so",
+    "sha256": "f351a6491163142536db032d61de465c1d780571f6e0add6df6b2f11b2c02950"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM1399.so",
+    "sha256": "eb156a2296ff5d9305a84df9d48708a0a24df9af3ea433d67e22ed7bfa5a4f15"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM16804.so",
+    "sha256": "42f80a8f60deb074584192b60d375f2efed2ffae256f6ee57efe750724ba4d10"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM256.so",
+    "sha256": "09fa3a62807aae3b2967bac2944da62f55ade98ba4bec05060a6cb9a05e0a50b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM273.so",
+    "sha256": "118769ca637c8124ac915db684f531974744e1eed3df66f22a8288ea6caef838"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM274.so",
+    "sha256": "263fd97ea526aa1a849c53020badba421cc9f6fc444102aedb747163f8dca2c3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM275.so",
+    "sha256": "4bc32802efce603c36431dc8a9327d56b8a211682a5ff8d45f966a69c048492c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM277.so",
+    "sha256": "62f37eb545944d418372746f579d58a2d0f58cc11f66f8ede794a5990e390dc0"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM278.so",
+    "sha256": "3e412558a8afbc50f23fad805f921e12bb83c9555eb34db7bd7afbb40e694a23"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM280.so",
+    "sha256": "ff4c94e3f0e562ae54f46cd0d986bd8981bef87531d3fcf5f932fdc1397bd247"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM281.so",
+    "sha256": "a70d52ec168a70c5b7f72442d2827f07b1c7309b20be5d3335f49fd015cfac2f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM284.so",
+    "sha256": "ef5ee216fb6636be57cba26601fc17c36b24969029ef208988027f0281728f0a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM285.so",
+    "sha256": "8943a58cd5cff6c4cd63f3ca4dfe5ed962757dc77093ab23c5243484093250af"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM290.so",
+    "sha256": "aca119bc72f1b397faf0560197cfd22cc710c02cd5303f743ab38f6b94904434"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM297.so",
+    "sha256": "b777e66aafb5195bb560d8109dd1220f3b45d9eddd9483fbc77eb93aacd83644"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM420.so",
+    "sha256": "ff8dfcb53c43715f49ef5c4baa0500cfb7030cb71eb780abf0f628d6d3753eeb"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM423.so",
+    "sha256": "9fd918e55809f34ed432d043a737e1bc11120b904822ed93685cfba8e320a9af"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM424.so",
+    "sha256": "fa47a9e167792839427512094edfccf3edf17cfb3a600fc926f74a06b19446fe"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM437.so",
+    "sha256": "36f728a060f497ef57e678df69114b0086169dfdd94875ab9aabed93709049ef"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM4517.so",
+    "sha256": "8724449662200f8b0084e01d0dac8401c56fa4d19cad7bfd591a8eec8ab5648f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM4899.so",
+    "sha256": "e673714e43abc94684bf3afff057da0f7eb8eb6e971260989930f6d9221cc825"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM4909.so",
+    "sha256": "43149beed4b0ca817a56a393c48fc9176c1934d4d6fe69fea5c48e43e87c2e93"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM4971.so",
+    "sha256": "dabe86a15636213b15146523680e0bca626991a7735fc503b93d52a424425dae"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM500.so",
+    "sha256": "cca8bb74bccd616cd127b23028663f43afae477c731d6fd9d399cbdb1e0abb55"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM5347.so",
+    "sha256": "d906941ad9617bca7d3bf09cbddd7b9ff0cb7165f217c017b17e80f98b25abdf"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM803.so",
+    "sha256": "ca7e68cfd18a5b345f05fa498ff2c32b943530755652480785c97ac425c88060"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM850.so",
+    "sha256": "da6e5c601274437452c2b8a21270f40e97ca22b279f1e98cede2267d99bf78f0"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM851.so",
+    "sha256": "81888b71e02ec5eb2d5614ffda7e6b4222f1d9cb5d41c73a14ebf19375decd80"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM852.so",
+    "sha256": "166dc5444392d3c6e2b9d5c0dd43cbdf0bd4f84a4e8c8a9771c5526718e011ce"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM855.so",
+    "sha256": "cbded6e8fcdee65524f141ccc20e7a6bac41cb55353fd485aa38d6e936a5e4e1"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM856.so",
+    "sha256": "2a517ae2da467a82457f65ed1f79d66723f24bfde04efa03fc1355d934ef569e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM857.so",
+    "sha256": "784ac8c1db9a8f92ea052921d0cfa761d2cd6b0337803ac5d3b2a9d0996d0b9e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM858.so",
+    "sha256": "832b1f5fbd44ff8c9d6fd7b66faf5250a9ae8d0d3342586153c2942cbebdaf59"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM860.so",
+    "sha256": "b33c5a26a89aa53d2a16bfc86e6c858d0f793601d114ae8fd482873e8c7de0b6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM861.so",
+    "sha256": "9c919ef7ffd7a73053bc8f5b55e8972e2f9d0d9069f25c4836085f4dfe260da5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM862.so",
+    "sha256": "d6345e334e2acdab00a1a107854a627da4146d80c4a817f41e46580579060253"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM863.so",
+    "sha256": "921bb0f951e4acdedb5bbc226f68722f926c5e2125b4753a36b3222f35f357f1"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM864.so",
+    "sha256": "66d3ff69023bc1876407b4afc6ab778cbac7ea7a384d4d6abaa1d4a5a6ac149f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM865.so",
+    "sha256": "70b98100e1da6a9a44c2f8c68a0fa29dc74ab4f2769198ecaf9c949d733af4cc"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM866.so",
+    "sha256": "07b451d1e93f089a5cb17bc85aaa2e949e79fa0c449105c308d6e9fc4b20ba51"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM866NAV.so",
+    "sha256": "c7153de9865b93a1c17cbfe897fe930861a7b3184e23dc055f681671a8b2e0aa"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM868.so",
+    "sha256": "88fe9fd2b4ea4763c71e8c0b301cb7a0f860db027286ef94386c3d6d00dbc0aa"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM869.so",
+    "sha256": "f5a8a31bf2893ae82369f7a9351f4816f7ee5a48fd93d5e9ad8be47c9e21b312"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM870.so",
+    "sha256": "5af2732b4db42b781b248e0b03b078545c35d5064fa6c9e1e638715a6d665433"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM871.so",
+    "sha256": "eb18003eb0426cdc8d689174b3418412d70b754e5f73f05f37fbee5ed9f3b927"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM874.so",
+    "sha256": "7fc09be281ffce89b1bbb281411c9feefc99cfaefe4ecd3d2bf56bad9b8e9004"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM875.so",
+    "sha256": "a404f6fecb2beb9715d30f6ac6ec4e2757b45bbed7fa9a02d88431bad403ccba"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM880.so",
+    "sha256": "4ac22519e7fa042c4dae29b0663716d60a0628fa6ed274c9ff0cefedbc41243f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM891.so",
+    "sha256": "c8f25fdd49bcd7531f6ce2cb911a1a4a93fd9909fd816a7706601986f990893e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM901.so",
+    "sha256": "63826094a47fc2013e3f7f283461e6bccc13516c0da5cd618d54d6e70e7c5839"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM902.so",
+    "sha256": "866e0e46b2887e5d50c0a7f169fd634c033346ed6e2d13f47d0808cb8aaf4589"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM903.so",
+    "sha256": "afa6c1caba18f9def1094147f9bf1c1f0ce98cdfbdaf4833c7ec80108a3cf74f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM9030.so",
+    "sha256": "0ca5e8f3ee7b5e650004719bed25d5ded746d6bfacc4ca6f264648dff1dc9587"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM904.so",
+    "sha256": "e9a29af1370dcaf7ee431fdf98c4a42adb55f27a89cd8d3421a7a6b32a1d34c4"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM905.so",
+    "sha256": "e2ee8ef0de594613c3cea9ba8313034cdca3157df0381b4c18b3dd440e7c3360"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM9066.so",
+    "sha256": "b62820c43dd716fafb4a7edd2846a310da43a15cbd8f532434147478f9d9373c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM918.so",
+    "sha256": "218f9cf5c594a43008a93167ef06df6f1df76d4894bad1dbeb7afa80437c7557"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM921.so",
+    "sha256": "f1f3f0c6d050e242f1473bfdbd110be45fdf19154106cfeaa2a93e603eb12604"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM922.so",
+    "sha256": "9854bf4ff660699937ad6bacc6e0914c746d7ee2ae88ac5f00b9e529c07f0728"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM930.so",
+    "sha256": "30179d90f15b255b147e0a0c755fefc0afda36266dcb2d1c3940bce4b841f607"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM932.so",
+    "sha256": "c8694e0657a3db89207109883f6ab62e85e93da35a1c722ee1c44baa0a173ae5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM933.so",
+    "sha256": "f30cd57e7e437a9a3e89696a39186e9f3dbd06967ae9e9a91b25b270bcbf01e1"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM935.so",
+    "sha256": "93f1a2965e537bb9252a4730d071bb75432c92d074317fec112532b47a7a274a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM937.so",
+    "sha256": "c9c11885a1842bd7b227eb29d7a225fce03b25a5e75739bd76288ebd93149d59"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM939.so",
+    "sha256": "b680f4de415e82ee90c44ae31255b0a868457d43d93081b5acde727bdb618277"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM943.so",
+    "sha256": "02178977bdf18be62c4c747a505e665b55dfee8bc56803c5c2cea6d4c6f7da24"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IBM9448.so",
+    "sha256": "7c432e306b4e3802580a31d2de99526f92efb8123f6f38c8bf2774d09a1587be"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/IEC_P27-1.so",
+    "sha256": "d505419b51efd57f610b4d82920a9c4ca079f332ef8159969992db3873fa5eff"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/INIS-8.so",
+    "sha256": "85b465b27825677a7940961411761767449e76cd573e9772d592b3e44e0a4cee"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/INIS-CYRILLIC.so",
+    "sha256": "edae8f05397e5a89b14601e20468442e036e209c20550d0ee5c8707ae04621ad"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/INIS.so",
+    "sha256": "f98343e0095e0c600fa821cbb9151be372d973de832a757d8ac2dd908b4800ae"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISIRI-3342.so",
+    "sha256": "09de04ba35ec7070d9fbe9a8e2af94c354532fc9d988ca889dd516edfabdf669"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO-2022-CN-EXT.so",
+    "sha256": "24d5bc05c04999eebdbe991f4b322944c3ec611bb69482f38c820e60069f7160"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO-2022-CN.so",
+    "sha256": "569b1bcb0454ef36e7751e4aa4036d358ec41a056df420b5bf1f9f0b13eb1331"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO-2022-JP-3.so",
+    "sha256": "5bf6ee8f89ef60ecf14a1fc789df42287302bdd83dc8173f3d43c221f6ed5466"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO-2022-JP.so",
+    "sha256": "7a848f6def00c1b3f456cfaf7dc73bde2698b496da3d832cefa6ec7365683b94"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO-2022-KR.so",
+    "sha256": "e6b50be50b48c5d59d25cb67f8bd2e0ac940ed2dfdb60f30ed3a8b4d247662c2"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO-IR-197.so",
+    "sha256": "58276e382f8bc4b20725c98bde49b3a25d08990456b61393ce561e4a78262e66"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO-IR-209.so",
+    "sha256": "009af31aeb3a26d93e9a6eec6d0c69d15599fc2e7ff68fd96e97aba824059e52"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO646.so",
+    "sha256": "580acf11686e1ca61d1fe087006c7366af376fc7185c7f2006c42319f74b8b58"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-1.so",
+    "sha256": "fc07dae1cba2a02ab7f211755ba574d31d7a160b7a39dd3cc098ef34dd2c099f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-10.so",
+    "sha256": "4d5054ab7db7c7bffecd9dc2b7c6f6d2b2bbffb60383b9b0c14e2fe3dc4ffbd2"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-11.so",
+    "sha256": "b7c3ba18684f5ea6d4c51de7b89619f724b253ffc7d8eedae8dd9b830a1621e2"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-13.so",
+    "sha256": "0ab3aa71227e79091eca46355d4d36ec9cdf8e0f7b7ffe4c688ced8c4fc0ccfd"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-14.so",
+    "sha256": "81634ebc7bd6eda25fedd90523d1ee4fbc4cf2228dca87019ea28cdfa6aa2442"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-15.so",
+    "sha256": "54ce28cd8886cf89263d884c16d6b067d5c350c84d33d2891f8e241293c36c70"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-16.so",
+    "sha256": "a88710af24174df740595d735017c1380879fb845d2932e683205c5dfd18850a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-2.so",
+    "sha256": "f2c1588f32cccf8843799141abec01fb315bddce6acfe578491db7059178a827"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-3.so",
+    "sha256": "7bbc3e42d65db3ff04edb3e286867920b32e623362c6c83704f0921258213cba"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-4.so",
+    "sha256": "725bb0798943ecb1d39f85b323c311da3b7e7b2be82b7fe0dd2da112f2042f78"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-5.so",
+    "sha256": "a80467af2bc70d1e05959bfdcc731816233b11249930a1f35851a2cf34eab533"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-6.so",
+    "sha256": "d50bdf3aa4aec3625508a44af74234210c5816d4193534022e8a736538e9625a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-7.so",
+    "sha256": "b574c9400584d1951d9a36d2a2fe9c4e0250a5696b46de4c878eb01b14990e1c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-8.so",
+    "sha256": "45e6ca7abf51020d23ca5e7dfb077bcf6bc0aab53827d102c624d8acff5e8441"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-9.so",
+    "sha256": "fdab5dd1cded14ee73741f0fc751177b6caa6fd1f6eb6f6ede4f636e099c559a"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO8859-9E.so",
+    "sha256": "26ae9b9e26c710ae8ab624faa7beebaed30e2c4f708d876c47e6f46506f2f745"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO_10367-BOX.so",
+    "sha256": "d5565f09cccb4eb836fc151c0407b597b333ad310bfd3e094311afd71ae1d557"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO_11548-1.so",
+    "sha256": "dabd628cbcb716e38e79b491161d965dda74d1fe94d759f2ebb745cc2fe319e6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO_2033.so",
+    "sha256": "ee91d9e64ab9401a69c21455e2c6c0cfdd4b0904fca34c0bce11da7b09a12b8d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO_5427-EXT.so",
+    "sha256": "b2cf328743558d2b86c0fe811418d86d8b734cc09d4fa18d3f8c9f378993d24e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO_5427.so",
+    "sha256": "a6d9bf12c874487921530a46e4bbd79e7cf2738c12452a44b03527889d2ba508"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO_5428.so",
+    "sha256": "d399f74d866bf2410954972563da377edcb327103d97fe77063de5c8308e86fd"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO_6937-2.so",
+    "sha256": "bd5c8d43b1f5b454f5496832cd51aab7f4b276d7148fc2bb7b926295cbfe0b98"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/ISO_6937.so",
+    "sha256": "d16b1853d3b611a48b791b3acb29b401583e4194e07839cdd54c728bdb81c554"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/JOHAB.so",
+    "sha256": "b3174731deaece8e19ca570a85fa5d22956d39ea334c562f9cafcdefea55f64b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/KOI-8.so",
+    "sha256": "8819002bd3f6807ad31b1d73da241059351489fd5f79303dd0f6bcc5261178d2"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/KOI8-R.so",
+    "sha256": "3ec2cb0ff2e821c487aa90202238e8063696552c909085fc3c66629dd804406b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/KOI8-RU.so",
+    "sha256": "f563e63262004f07e6ac1aa1c8880e982473d7e2dec8e51d6ea001ce298188d9"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/KOI8-T.so",
+    "sha256": "fce14296d8c2c11e667a646ebd8738f617ea8a031b243b5d88d6018bcae92138"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/KOI8-U.so",
+    "sha256": "612808557dcc0d143c7c3f2d0ccbeab5ddada523b23af38e4b27d145fbc75b4f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/LATIN-GREEK-1.so",
+    "sha256": "f648655a189f12e86ca0be72416b36d4180a5eb811ca4b2f3c9394f98168c470"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/LATIN-GREEK.so",
+    "sha256": "ec4127b8698f00aee8a0353b7ed92bc92b5d8771ce45888021665fb016a152a6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/MAC-CENTRALEUROPE.so",
+    "sha256": "95de9971c001720f0ff3b8ea4af5bd2d8fb92dcd03c8a83507b4712c9f23d624"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/MAC-IS.so",
+    "sha256": "5ead40c344a44356540e4ba5b44a37a678a7ed7b3b91433349201eb8ca598822"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/MAC-SAMI.so",
+    "sha256": "75e68b08aa25ce566bc098e2b18536a2100d20c040799d7a7c07291d67337cc5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/MAC-UK.so",
+    "sha256": "3aa60bba7943c6b6e355ca404ee23281af71fc9d2ae2ba48c6df16ff6940adfa"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/MACINTOSH.so",
+    "sha256": "cb10592e125a4ff6b05a04fdaeade0ad1cbc1a62afb4034fa376b08c1710c5a3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/MIK.so",
+    "sha256": "f343af1c880d42490ca73a3cb910aa08bd39376480a04b327e30705fb339a4f7"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/NATS-DANO.so",
+    "sha256": "139aa4eeadbe508205ecdc5b1d840d3292652baea527ce21d50f8528de89b355"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/NATS-SEFI.so",
+    "sha256": "fb41775fb7295465ccffb036aa5f7b44bd0c358572b563745607437d54d68941"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/PT154.so",
+    "sha256": "3b7e6c5f1aa0d63f682d49012744b21b3c58f155cdbea14028698c1deb94f8af"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/RK1048.so",
+    "sha256": "b6165b2e772999db5f9453944b68e2c65f1a0c8b7baf6af9a86f2094e1fce288"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/SAMI-WS2.so",
+    "sha256": "b4df932851d3f05aff0bb022da9e7906ca1522861adcd73bc1a008dc02c78d1b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/SHIFT_JISX0213.so",
+    "sha256": "b365d330945888688970188f33a3fa34ff9eb2303110d31ab354dca8dd56714d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/SJIS.so",
+    "sha256": "7648f651781d6991e839dbaae14e076d49b370b315c89df1e2adf317b07aa747"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/T.61.so",
+    "sha256": "aad256e5b493a78d07dbf2dd508f06bbf912ff0fcbe2ab82df79f19aea1396e8"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/TCVN5712-1.so",
+    "sha256": "f3f70dfb3e70633eb5a4dcb4187864e7e3137f1e95b57fffa50a33a1436a0507"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/TIS-620.so",
+    "sha256": "6491028f368a34197a2e7a3566a6e0452780e18459f042388086c73ffb31ee40"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/TSCII.so",
+    "sha256": "3946ea12c04a508fe6f12c7e91bb776bfaa3d110f788752d7ef6340136672192"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/UHC.so",
+    "sha256": "ffddebb6d64d0b55094b248a6074b06b071e5c04ec0b36049f8d93b1021b9cf7"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/UNICODE.so",
+    "sha256": "0b74c2fc3e378d0bcadb0e508ec807476dbcc1dedb28462ece7d2b189b84433d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/UTF-16.so",
+    "sha256": "087c724e3b8cc770ec441332e88d7fad25c1ce18aed3d05781d2df91d134f419"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/UTF-32.so",
+    "sha256": "bc0e60272831091d9e88e92632b8f50dfc0d99ee2c3a17c7100a26a74023ba82"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/UTF-7.so",
+    "sha256": "dc28571bf13abffa1a28b9acbeaf03218d33467ba391e17b369afff03c6998ff"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/VISCII.so",
+    "sha256": "6e04639267d063f6e0638449608d2cf0bede50ea543125cb66097d7ed0534efa"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/gconv-modules",
+    "sha256": "ca370833ebc1ec0283a3e6b66cea63d5b1d2e118272e963d2a25c891564aa89d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache",
+    "sha256": "52c227df9d53248238602c1ddaccd2c8ddc4cc6a61aa45d7c425af590b8806a5"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/gconv-modules.d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/gconv-modules.d/gconv-modules-extra.conf",
+    "sha256": "efd92404c912b44689b96e311c2d827944c54df21f1509985d122495bda6f9aa"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/libCNS.so",
+    "sha256": "59d40439986bad483c26989b5eae66f775f6a280130a31e8eb3209a9b96e1f2f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/libGB.so",
+    "sha256": "812b4dbd4c0a6ce993262dfefb2c84f418ce6a7656d502e7b9c4b5922f4bf273"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/libISOIR165.so",
+    "sha256": "52a6bdb62b40bc0e09f55bb996434c1a93a98b263c12f088bdbbecb2a0fb8162"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/libJIS.so",
+    "sha256": "57e54466909cc2e7b0f1103def7376e5666b081ccfc92a51c0d608f82042cbe7"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/libJISX0213.so",
+    "sha256": "88b6bb839b182419e52dbe70ce66f2dd41a0a584a8b45c8262fa6cccca61ea06"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/gconv/libKSC.so",
+    "sha256": "f92ec9e14b4e340c8d7bc639a4b9a2ceab898f1c9c23cacd1b09f2652d90defa"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+    "sha256": "c8438e4fde1934e61c88311633f00949ff645d5c04cdb8671fa3d78164d2f307"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libBrokenLocale.so.1",
+    "sha256": "8f8229e3a72a97b608673315a5b7eaffbc13549add9437ba9828974e83d38e81"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libanl.so.1",
+    "sha256": "f4d70be0af174f80a2c700f8a690b86ea3da867d10803e8641f7c11c11a4925d"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/lib/x86_64-linux-gnu/libc.so.6",
+    "sha256": "9792e3cbb541c8f44c7acf5f14f4022ea62998ecc787d326bed4d8b6547dfd92"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libc_malloc_debug.so.0",
+    "sha256": "c9cad01c6334afa750c0b81b5818e3a643ff41860a4a4c802aa7f203c2372953"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libdl.so.2",
+    "sha256": "295fa521a03cd2faa99974f378c9e23dd622021ec7d32bcad4f8ea61aec8a872"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+    "sha256": "30c61ab012a4241bed033725a09b61f5fdd3bb7df95ee852d0b096520524c7af"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libm.so.6",
+    "sha256": "6d567d53e895273ca14a1f9dc164fc6c8d39aed2f60aa46a733c2784228915f3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libmemusage.so",
+    "sha256": "2ca7f9e467e94976217bee7805578a448f35c9d18dd7ddc74ca2f9eb5938f4cd"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libmvec.so.1",
+    "sha256": "cd2f99df70ed0fa44f79bd6322396180d19eaa1fb527b1b6e2aec9cdfc034d9d"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libnsl.so.1",
+    "sha256": "559152811dc708d3626b1861bd6fb705f63ad36bc2360a1c678ef746a8042482"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libnss_compat.so.2",
+    "sha256": "1e3f5cf8f1a868301de80638546142205d90ea0e0606c9adae8254fd95ea6740"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libnss_dns.so.2",
+    "sha256": "d6ff05b8003825fbef5ad779b5e2f870f179953e4fb560697b6f261010efe8d4"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libnss_files.so.2",
+    "sha256": "8c93b2ae43dac3c2d688d227609d713f71620d3f0980ebf6bbb371c6eb542108"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libnss_hesiod.so.2",
+    "sha256": "8da91b801b5349aca633ffb8cb33e7b9f17cf949624623ea9882406c5779512f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libpcprofile.so",
+    "sha256": "c2897cb6591f3cf50a43c0406d04bbcf665feec52e3b68eea5b3f23dd4e23e9b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libpthread.so.0",
+    "sha256": "85e21f7dba0394411d00959176fd18b470e575b0b05f1f4f41e5636802ce0500"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libresolv.so.2",
+    "sha256": "d41dd4adacf5a35df426461dd8a92d7bdd5ba29bb61a1c3531bec0ada386f8dd"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/librt.so.1",
+    "sha256": "7b7b84d1aedda0e0b2bdfc68844362782132180b8f02be1300e21e77572e514b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libthread_db.so.1",
+    "sha256": "5becc66927b75fe505e93ece4bb42bbf919f35d2e8bd8d477bdaa40f3d21ea6e"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/lib/x86_64-linux-gnu/libutil.so.1",
+    "sha256": "e3981d10efd152a53f083e38f5f9ddde7a049c85d0ab388a5eec91b52fc98a11"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/lib64"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "usr/lib64/ld-linux-x86-64.so.2",
+    "target": "../lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/sbin"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/sbin/iconvconfig",
+    "sha256": "7603ae51cced63c78ad4892b2b1dbf0911d153e2910086c7bc42606f889ce637"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/sbin/ldconfig",
+    "sha256": "3a5ca649454250c3b725f0a68f2bac65f929a2060d423ba9f9cbe1a62620cce1"
+  },
+  {
+    "kind": "file",
+    "mode": 493,
+    "path": "usr/sbin/zic",
+    "sha256": "e55aae815d66c8cf4f7d55e10ee45ccc8171f0abeddaaee56973956a04b10455"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/base-files"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/base-files/dot.bashrc",
+    "sha256": "3dee894213fc1183318d254b1b3fcb21f41e7fc879ba81d39252f7996b67f980"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/base-files/dot.profile",
+    "sha256": "996f60727f48cbe1496fa20bffd5a434a190407db2cafc2c1bfdf54d3bfc0372"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/base-files/dot.profile.md5sums",
+    "sha256": "70c70cffea32e8a79118d592f94727b24e9cf36c82ed8abca536d59224147b92"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/base-files/info.dir",
+    "sha256": "c58a258cb9c410c29486aa8fa37f4e5b738bfeedc2b8e97be1cd6cff1df28459"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/base-files/motd",
+    "sha256": "a378977155fb42bb006496321cbe31f74cbda803c3f6ca590f30e76d1afad921"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/base-files/profile",
+    "sha256": "8fec28102e0c371e6f2ecb949b95c1ba802260766b18c2445882b082418428b9"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/base-files/profile.md5sums",
+    "sha256": "c8a3222782665785755e9a58a61468f3aaf6e2bfd62101b7ac80c3b4f8984532"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/base-files/staff-group-for-usr-local",
+    "sha256": "24f49f765b6363ba8326121b46cabad2ac5c34532cc8322a645d60afe158c4f0"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/common-licenses"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/AGPL-3.0",
+    "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/Apache-2.0",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/Artistic",
+    "sha256": "dd90d4f42e4dcadf5a7c09eea0189d93c7b37ae560c91f0f6d5233ed3b9292a2"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/Artistic-2.0",
+    "sha256": "5c29658b80a9cbb016dfe238ece8b86b5e63761355df8b872126d35bebce4303"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/BSD",
+    "sha256": "5d588eb3b157d52112afea935c88a7ff9efddc1e2d95a42c25d3b96ad9055008"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/BSL-1.0",
+    "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/CC-BY-3.0",
+    "sha256": "e6bc9e9c474700b708f568bac9e5a8a9bcb2b1dad53442f5ba449fcb848b8e76"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/CC-BY-4.0",
+    "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/CC-BY-SA-3.0",
+    "sha256": "3f941b3b89cf7b8370ceb83cc76d2120d471b58735d8ca60238a751a48d7f72f"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/CC-BY-SA-4.0",
+    "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/CC0-1.0",
+    "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "usr/share/common-licenses/GFDL",
+    "target": "GFDL-1.3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/GFDL-1.1",
+    "sha256": "1040f0fffcf5a73398512aaa3f7cf89b7e4bb8feb13c661ad71184e015c7fcb6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/GFDL-1.2",
+    "sha256": "2652c22ba086f92e55ae4a9f9c890ad4766ffd7814a73d318e22a597edf857a4"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/GFDL-1.3",
+    "sha256": "110535522396708cea37c72a802c5e7e81391139f5f7985631c93ef242b206a4"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "usr/share/common-licenses/GPL",
+    "target": "GPL-3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/GPL-1",
+    "sha256": "49c007bafb5ad6dd9f9d4dae4d3ac0461975498150c05d684c551f0914ab486c"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/GPL-2",
+    "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/GPL-3",
+    "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "usr/share/common-licenses/LGPL",
+    "target": "LGPL-3"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/LGPL-2",
+    "sha256": "cc535c21133c895b56b374c8a1dc1eb948d99003ed2b47372069456b62f42b24"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/LGPL-2.1",
+    "sha256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/LGPL-3",
+    "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/MPL-1.1",
+    "sha256": "f849fc26a7a99981611a3a370e83078deb617d12a45776d6c4cada4d338be469"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/MPL-2.0",
+    "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/common-licenses/OFL-1.1",
+    "sha256": "1d361a8f8e8ce6e68457dcd93fb56e162e6baa3bbb7e7573a290d44399f6b57e"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/dict"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/doc"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/doc/base-files"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "usr/share/doc/base-files/FAQ",
+    "target": "README"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/base-files/NEWS.Debian.gz",
+    "sha256": "2d5dcea919681d92d097ef4f0556224d05fbda98d2ee73e1294121627f367cd8"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/base-files/README",
+    "sha256": "95552e3c597929b3c436a2de2225c3685f740484212e3f944726c3c937447aba"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/base-files/README.FHS",
+    "sha256": "099e7f4bdeb4ff34ee8d4ef7f158a21adbc59db46a354fd2051f6d1959e70fbc"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/base-files/changelog.gz",
+    "sha256": "d858207516af145dde222add11f2613c3f26cdfbee6583e4cc764a5416437fa6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/base-files/copyright",
+    "sha256": "c84c664bce3a83eaa327bb9e354c0df588bc535b5e95474aab7ca3cce74937cd"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/doc/gcc-14-base"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/gcc-14-base/README.Debian.amd64.gz",
+    "sha256": "5296d3b2adbab4b6dcc733d125a93eb1122f9c7905f24d1b2cab5e89c49a5510"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/gcc-14-base/TODO.Debian",
+    "sha256": "aba726eeeafd7ae426552559759c83ee93249d0d9c4e3e19f146fde6d2cde448"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/gcc-14-base/changelog.Debian.gz",
+    "sha256": "96566a2df70b85708bd8edf8a41c5dc87eca402199f2480df23abe4be4a92757"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/gcc-14-base/copyright",
+    "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/doc/libc-bin"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc-bin/changelog.Debian.gz",
+    "sha256": "25071dfbbf4631cd5c20b189463e37aadffbbda443d46e15199793d9baf1d689"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc-bin/changelog.gz",
+    "sha256": "b66db2deaee0257c5a456c17ee3058e014b51d596466b8454da17936a38d7e88"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc-bin/copyright",
+    "sha256": "f5788886720a2605a946e81d571e6c8162b09f58d2e2ceb8d36e5768fccd850d"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/doc/libc6"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc6/NEWS.Debian.gz",
+    "sha256": "f410947e3ddd98dbdf630b23ce93a014f09a79789c7c1319fe511241bceb8826"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc6/NEWS.gz",
+    "sha256": "c4124e2ca1ee602b27e1275cb5c1ce905d8018a48f5fe96d40933426ae26e126"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc6/README.Debian.gz",
+    "sha256": "103388d45c31c59534c3c71378dd532a69d90b6fa0618cf41cdc123613d463ac"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc6/README.hesiod.gz",
+    "sha256": "13e364163184406285935cea0fd0555aba252dc92e85ef72988c4c7e7617a0cb"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc6/changelog.Debian.gz",
+    "sha256": "9847644969b76d150301885e17baf0dc38ddab640fe09e9c036b5d6830fa7971"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc6/changelog.gz",
+    "sha256": "b66db2deaee0257c5a456c17ee3058e014b51d596466b8454da17936a38d7e88"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/doc/libc6/copyright",
+    "sha256": "f5788886720a2605a946e81d571e6c8162b09f58d2e2ceb8d36e5768fccd850d"
+  },
+  {
+    "kind": "symlink",
+    "mode": 511,
+    "path": "usr/share/doc/libgcc-s1",
+    "target": "gcc-14-base"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/info"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/libc-bin"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/libc-bin/nsswitch.conf",
+    "sha256": "eec30745bade42a3f3f792e4d4192e57d2bcfe8e472433b1de426fe39a39cddb"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/lintian"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/lintian/overrides"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/lintian/overrides/base-files",
+    "sha256": "02120b9c96091120933c60555f951a206cfd75fd70d5aabe388202033eddd2fc"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/lintian/overrides/libc-bin",
+    "sha256": "63c1c2e5a851bfeb05f10bdb0c8a9ccf3e84220366b53fa3eb9ce002641b2767"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/lintian/overrides/libc6",
+    "sha256": "0897b1b340b6588f122f63908fb930a292c0b533de1ccaa588ae4b9aa0927b2b"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/lintian/overrides/libgcc-s1",
+    "sha256": "eed87afa7d83880a25ae5a41ba9d98d89a1fc2e2e3bba0f4d5c3cdda21a457a4"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/man"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/man/man1"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/man/man1/getconf.1.gz",
+    "sha256": "4745793c5e7b5422af68469bf8dc36e8db0bc2ff79f4021c1d1a3d5260069221"
+  },
+  {
+    "kind": "file",
+    "mode": 420,
+    "path": "usr/share/man/man1/tzselect.1.gz",
+    "sha256": "1cd78837dba577698f3060b2610873ff1cea8de753315c571a8e233b9dda8658"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/share/misc"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "usr/src"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/backups"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/cache"
+  },
+  {
+    "kind": "directory",
+    "mode": 448,
+    "path": "var/cache/ldconfig"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/lib"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/lib/dpkg"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/lib/misc"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/local"
+  },
+  {
+    "kind": "directory",
+    "mode": 1023,
+    "path": "var/lock"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/log"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/run"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "var/spool"
+  },
+  {
+    "kind": "directory",
+    "mode": 1023,
+    "path": "var/tmp"
+  },
+  {
+    "kind": "directory",
+    "mode": 493,
+    "path": "work"
+  }
+]

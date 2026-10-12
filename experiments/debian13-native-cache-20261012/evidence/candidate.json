@@ -1,0 +1,17 @@
+{
+  "base": "dff9304b9cd7bc72e66f9feb20f1b05281d67333",
+  "driver_fix": "79c6f874a0c25f09f9f8b02e135ead1a28cc886a",
+  "files": {
+    ".zigversion": "55514671f203f691ba0fae90c7b7d8740256222cfa6f7512b71b04cd1316eb2d",
+    "build.zig": "32c92d0dfa4d93c3de349a4a1fbe93c5e5ffd8b9904e82a655f90c1bebdbdab5",
+    "src/config_core_tool_platform.zig": "81034fbce9dcf14c5e5dce2ad9d45bbd28ab07bc89c115e5e8b96ee6a6f71333",
+    "src/core/tool_identity.zig": "ac0f675c5a8de829d92760ed21cc9d6c3d1cab3216db4f8aae496830c54039b3",
+    "src/core/tool_discovery.zig": "fb5d61256487510287783f40ce5f296a628e39e0acfaaaaf80e7695103999d70",
+    "src/core/driver.zig": "651e45d1c19b31ce19541c13495f696b6a2868ee0c6dfa59edb09ac165ecf401",
+    "src/core/root_test.zig": "91239634b41ffa7df62ff94755d20840b7c9f71bde20538629e784168df5ea1e",
+    "src/core/a01_native_driver_test.zig": "83ad8067fef31ed0b2e2de0d5af722539bec857577792588765127403e72fdd7",
+    "scripts/native-bundle.sh": "fe086e4cca66eda852eb302fd437c8ffefdc5696b4d3096f7bcaab2237fc3aa4",
+    "scripts/native_platform_bundle.py": "4e2fb56da9218fb8f825371a35513b5f736e3b18ce9347b914628ffcd825b37d",
+    "scripts/native-platform/debian13/manifest.json": "c62d3739151e91a8320d9f2a927cec12ae04a9df40879ca89645c211d9cd0472"
+  }
+}

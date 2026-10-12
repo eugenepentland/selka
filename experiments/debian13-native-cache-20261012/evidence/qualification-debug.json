@@ -1,0 +1,139 @@
+{
+  "compiler_sha256": "2b4b8d1998ff8426727fce54a5c73a8659ce86dfd9bcd88578ccb789103c3f0b",
+  "commands": [
+    {
+      "label": "fresh",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/scripts/native-bundle.sh",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/bundle-umask077",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/debug/bin/mylang",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/qualification-debug/project",
+        "--",
+        "build",
+        "app.my",
+        "-o",
+        "program",
+        "--cache-dir",
+        "cache",
+        "--report"
+      ],
+      "environment_changes": {},
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":4,\"reused\":0,\"compiled\":4,\"verified\":0,\"processes\":6,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":4741601,\"lowering\":1365570,\"optimizer\":4852819,\"emission\":5197596,\"native\":44895164271,\"linker\":2837804302,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":680499,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":1059178,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":66217,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":87334,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":307044,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1391,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":5335,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":52836,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":396287,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":2421,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":140774,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":500,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":220443,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":83261,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":828630,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2498602,\"inclusive\":true}]},\"frontend\":{\"checked\":3,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":3,\"stored\":3,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":3,\"deferred\":0,\"fallbacks\":0,\"materialized\":3,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[3,3,3,3,3,3,0],\"bypassed\":0,\"active_functions\":3,\"fresh_work\":3,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":3},\"emission\":{\"units\":4,\"reused\":0,\"rendered\":4,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":3,\"work\":{\"receipts_checked\":0,\"keys_built\":4,\"llvm_loaded_bytes\":24807,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":3592330,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":11974,\"save_bytes_prepared\":34126,\"sequence_locks\":35}}}}\n"
+    },
+    {
+      "label": "unchanged",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/scripts/native-bundle.sh",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/bundle-umask077",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/debug/bin/mylang",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/qualification-debug/project",
+        "--",
+        "build",
+        "app.my",
+        "-o",
+        "program",
+        "--cache-dir",
+        "cache",
+        "--report"
+      ],
+      "environment_changes": {},
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"replayed\",\"units\":0,\"reused\":0,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":null,\"storage\":null}\n"
+    },
+    {
+      "label": "deleted-replay",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/scripts/native-bundle.sh",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/bundle-umask077",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/debug/bin/mylang",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/qualification-debug/project",
+        "--",
+        "build",
+        "app.my",
+        "-o",
+        "program",
+        "--cache-dir",
+        "cache",
+        "--report"
+      ],
+      "environment_changes": {},
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"reused\",\"units\":4,\"reused\":4,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":5219803,\"lowering\":788300,\"optimizer\":1853155,\"emission\":2846876,\"native\":18189514,\"linker\":0,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":690823,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":378652,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":58651,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":129269,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":232376,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1199,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":42505,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":257578,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":2627,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":77856,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":682,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":251001,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":56592,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":11022,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":1491061,\"inclusive\":true}]},\"frontend\":{\"checked\":0,\"reused\":3,\"summaries\":2,\"syntax_hits\":3,\"syntax_misses\":0,\"stored\":0,\"damaged\":0},\"lowering\":{\"reused\":3,\"lowered\":0,\"deferred\":2,\"fallbacks\":0,\"materialized\":3,\"unloaded\":0},\"optimizer\":{\"hits\":[1,1,1,1,1,3,0],\"misses\":[0,0,0,0,0,0,0],\"bypassed\":2,\"active_functions\":3,\"fresh_work\":0,\"restores\":{\"final\":3,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":3},\"emission\":{\"units\":4,\"reused\":4,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":3,\"work\":{\"receipts_checked\":0,\"keys_built\":4,\"llvm_loaded_bytes\":24807,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":692908,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":8869,\"decoded_bytes\":37822,\"blocks_decoded\":2,\"payload_bytes_returned\":32789,\"block_cache_hits\":18,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":1517,\"save_bytes_prepared\":1817,\"sequence_locks\":4}}}}\n"
+    },
+    {
+      "label": "edited-leaf",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/scripts/native-bundle.sh",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/bundle-umask077",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/debug/bin/mylang",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/qualification-debug/project",
+        "--",
+        "build",
+        "app.my",
+        "-o",
+        "program",
+        "--cache-dir",
+        "cache",
+        "--report"
+      ],
+      "environment_changes": {},
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":4,\"reused\":3,\"compiled\":1,\"verified\":0,\"processes\":2,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":6130193,\"lowering\":1416540,\"optimizer\":2140471,\"emission\":2741894,\"native\":65656744,\"linker\":17951810,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":612566,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":647599,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":605937,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":148089,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":282222,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":402852,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":1353,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":26027,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":311198,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":125439,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":1928,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":83693,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":629,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":180470,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":45316,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":419265,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2387600,\"inclusive\":true}]},\"frontend\":{\"checked\":1,\"reused\":2,\"summaries\":1,\"syntax_hits\":2,\"syntax_misses\":1,\"stored\":1,\"damaged\":0},\"lowering\":{\"reused\":2,\"lowered\":1,\"deferred\":1,\"fallbacks\":0,\"materialized\":3,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,1,1,0,2,0],\"misses\":[2,2,1,1,2,1,0],\"bypassed\":1,\"active_functions\":3,\"fresh_work\":1,\"restores\":{\"final\":2,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":3},\"emission\":{\"units\":4,\"reused\":3,\"rendered\":1,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":3,\"work\":{\"receipts_checked\":0,\"keys_built\":4,\"llvm_loaded_bytes\":24842,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":2001702,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":10057,\"decoded_bytes\":39863,\"blocks_decoded\":3,\"payload_bytes_returned\":23489,\"block_cache_hits\":10,\"publication\":{\"filename_lookups\":4,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":6671,\"save_bytes_prepared\":11829,\"sequence_locks\":17}}}}\n"
+    },
+    {
+      "label": "guest-output",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/scripts/native-bundle.sh",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/bundle-umask077",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/debug/bin/mylang",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/qualification-debug/project",
+        "--",
+        "run",
+        "app.my",
+        "--cache-dir",
+        "cache"
+      ],
+      "environment_changes": {},
+      "status": 0,
+      "stdout": "30 4\n",
+      "stderr": ""
+    },
+    {
+      "label": "debug-tests-fresh",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/scripts/native-bundle.sh",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/bundle-umask077",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/debug/bin/mylang",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/qualification-debug/project",
+        "--",
+        "test",
+        "tests.my",
+        "--json",
+        "--cache-dir",
+        "test-cache-debug"
+      ],
+      "environment_changes": {},
+      "status": 2,
+      "stdout": "",
+      "stderr": "mylang: component spawn child failed: AccessDenied\nmylang: cache-plan run planner failed: AccessDenied\nerror: cache-plan component: ComponentIo\n"
+    }
+  ],
+  "checks": {
+    "fresh": "passed",
+    "unchanged_replay": "passed",
+    "object_reuse_after_deleted_replay": "passed",
+    "one_affected_unit": "passed",
+    "guest_output": "passed"
+  }
+}

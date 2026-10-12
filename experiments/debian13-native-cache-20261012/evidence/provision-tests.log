@@ -1,0 +1,9 @@
+test_cached_package_tampering_is_rejected_before_use (native_platform_bundle_test.BundleTests.test_cached_package_tampering_is_rejected_before_use) ... ok
+test_hash_and_size_are_independent_checks (native_platform_bundle_test.BundleTests.test_hash_and_size_are_independent_checks) ... ok
+test_release_signature_still_required_if_manifest_digest_changes (native_platform_bundle_test.BundleTests.test_release_signature_still_required_if_manifest_digest_changes) ... ok
+test_tree_records_absent_members_additions_and_symlink_targets (native_platform_bundle_test.BundleTests.test_tree_records_absent_members_additions_and_symlink_targets) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.013s
+
+OK

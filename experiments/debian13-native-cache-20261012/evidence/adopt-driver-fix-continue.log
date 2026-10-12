@@ -1,0 +1,13 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10083 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/debian13-native-cache-20261012 79c6f874a] fix: keep uncached native unit objects alive through linking
+ Date: Mon Oct 12 01:47:09 2026 +0000
+ 6 files changed, 152 insertions(+), 2 deletions(-)
+ create mode 100644 experiments/memory-closeout-20261012/A01/native-driver/README.md
+ create mode 100644 experiments/memory-closeout-20261012/A01/native-driver/final-focused.log
+ create mode 100644 experiments/memory-closeout-20261012/A01/native-driver/focused.log
+ create mode 100644 src/core/a01_native_driver_test.zig

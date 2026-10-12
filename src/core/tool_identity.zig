@@ -14,7 +14,8 @@ const memo_length = magic.len + 96;
 // v4 adds a validated directory-role byte (Input codec v2), retains all old
 // full-stat/content inputs, and keys the additive reviewed discovery policy.
 // v5 records each library root as one input instead of its whole tree.
-const hint_magic = "core-tool-inventory-v5\x00";
+// v6 binds the complete reviewed profile catalog and inventories its union.
+const hint_magic = "core-tool-inventory-v6\x00";
 const hint_limit = 32 << 20;
 const lib_directory = "ZIG_LIB_DIR";
 const approval_magic = "core-tool-approval-v3\x00";
@@ -24,8 +25,6 @@ const approval_length = approval_magic.len + 65;
 const approved_zig = "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f";
 const approved_library = "e6b4a1cd237963366bfba71c9e3b33d3b052274e4963d9a85d26fda3c9adf3f6";
 const platform = @import("core_tool_platform");
-const runtime_files = platform.runtime_files;
-const preload_path = platform.preload_path;
 
 /// Borrowed command resources. Returned paths have allocator lifetime.
 pub const Request = struct {
@@ -34,7 +33,16 @@ pub const Request = struct {
     environment: *const std.process.Environ.Map,
     executable: []const u8,
     cache: []const u8,
+    /// Owned test fixtures only; production has no profile override capability.
+    test_profiles: if (builtin.is_test) ?*?[]const platform.Profile else void = if (builtin.is_test) null else {},
 };
+
+fn profilesFor(request: Request) []const platform.Profile {
+    if (builtin.is_test) {
+        if (request.test_profiles) |slot| if (slot.*) |profiles| return profiles;
+    }
+    return &platform.profiles;
+}
 
 /// Content and generation identities must both survive a command unchanged.
 pub const Identity = struct {
@@ -107,7 +115,7 @@ pub fn lookupReplayCandidate(request: Request) Error!?Identity {
     const old = candidateExecutable(inputs, path) orelse return null;
     const info = std.Io.Dir.cwd().statFile(request.io, path, .{}) catch return null;
     if (!sameStat(old, info)) return null;
-    const identity = inventoryDigest(inputs, cpu);
+    const identity = inventoryDigest(request, inputs, cpu);
     if (!safeEnvironment(request.environment)) return null;
     if ((try approvalMemo(request, identity)) != true) return null;
     const content = (try memo(request, identity)) orelse return null;
@@ -130,7 +138,7 @@ fn captureMode(request: Request, provisional: bool) Error!Identity {
     const known = try inventoryHint(request, path, cpu);
     const first = if (known) |inputs| (try refresh(request, inputs, cpu)) orelse try inventory(request, path, cpu) else try inventory(request, path, cpu);
     const found = try memo(request, first.generation);
-    const content = found orelse try contents(request, first.inputs, cpu);
+    const content = found orelse try contents(request, path, first.inputs, cpu);
     const cacheable = try approvedClosure(request, path, first, cpu);
     const may_lend = provisional and found != null and cacheable;
     if (!may_lend) {
@@ -199,20 +207,25 @@ fn inventory(request: Request, path: []const u8, cpu: Digest) Error!Inventory {
         const absolute = try absolutePath(request, override);
         try libraryRoot(request, &inputs, &visited, absolute);
     }
-    for (runtime_files) |input| _ = try addInput(request, &inputs, input.path);
-    _ = try addInput(request, &inputs, preload_path);
-    for (try discovery.paths(request.arena, path)) |entry| {
+    for (profilesFor(request)) |profile| {
+        for (profile.runtime.files) |input| {
+            if (namedInput(inputs.items, input.path) == null) _ = try addInput(request, &inputs, input.path);
+        }
+        if (namedInput(inputs.items, profile.runtime.preload) == null) _ = try addInput(request, &inputs, profile.runtime.preload);
+    }
+    for (try discovery.catalogPaths(request.arena, path, profilesFor(request))) |entry| {
         // An already inventoried library/runtime path retains its full guard.
         if (namedInput(inputs.items, entry.name) != null) continue;
         try inputs.append(request.arena, try snapshot(request, entry.name, entry.role));
     }
     std.mem.sort(Input, inputs.items, {}, before);
-    return .{ .inputs = inputs.items, .generation = inventoryDigest(inputs.items, cpu) };
+    return .{ .inputs = inputs.items, .generation = inventoryDigest(request, inputs.items, cpu) };
 }
 
-fn inventoryDigest(inputs: []const Input, cpu: Digest) Digest {
+fn inventoryDigest(request: Request, inputs: []const Input, cpu: Digest) Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-tool-generations-v3");
+    field(&hash, "core-tool-generations-v4");
+    discovery.profilePolicy(std.crypto.hash.Blake3, &hash, profilesFor(request));
     field(&hash, &cpu);
     for (inputs) |input| generation(&hash, input);
     var digest: Digest = undefined;
@@ -239,7 +252,7 @@ fn refresh(request: Request, inputs: []const Input, cpu: Digest) Error!?Inventor
         }
         input.* = .{ .path = old.path, .resolved = old.resolved, .info = info, .role = old.role };
     }
-    return .{ .inputs = current, .generation = inventoryDigest(current, cpu), .hinted = true };
+    return .{ .inputs = current, .generation = inventoryDigest(request, current, cpu), .hinted = true };
 }
 
 /// The root of a library tree as one input; an absent root is an absent input.
@@ -289,10 +302,17 @@ fn snapshot(request: Request, path: []const u8, role: discovery.Role) Error!Inpu
     return .{ .path = path, .resolved = resolved, .info = info, .role = role };
 }
 
-fn contents(request: Request, inputs: []const Input, cpu: Digest) Error!Digest {
+fn contents(request: Request, path: []const u8, inputs: []const Input, cpu: Digest) Error!Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-tool-content-v3");
+    field(&hash, "core-tool-content-v4");
+    discovery.profilePolicy(std.crypto.hash.Blake3, &hash, profilesFor(request));
     field(&hash, &cpu);
+    // Profile membership can differ while every enumerated file is identical.
+    // Bind the observed state under each profile ID, not just the allowlist.
+    for (profilesFor(request)) |profile| {
+        field(&hash, profile.id);
+        field(&hash, &try discovery.profileState(request.arena, request.io, path, profile.discovery));
+    }
     for (inputs) |input| {
         field(&hash, input.path);
         field(&hash, input.resolved);
@@ -388,8 +408,7 @@ fn hintKey(request: Request, path: []const u8, cpu: Digest) Error!Digest {
     field(&hash, hint_magic);
     field(&hash, path);
     field(&hash, &cpu);
-    runtimePolicy(&hash);
-    discovery.policy(&hash);
+    discovery.profilePolicy(std.crypto.hash.Blake3, &hash, profilesFor(request));
     if (request.environment.get(lib_directory)) |override| {
         field(&hash, try absolutePath(request, override));
     } else field(&hash, "");
@@ -564,31 +583,21 @@ fn safeEnvironment(environment: *const std.process.Environ.Map) bool {
     return true;
 }
 
-fn approvalKey(identity: Digest) Digest {
+fn approvalKey(request: Request, identity: Digest) Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
     field(&hash, approval_magic);
     field(&hash, &identity);
     field(&hash, approved_zig);
     field(&hash, approved_library);
-    runtimePolicy(&hash);
-    discovery.policy(&hash);
+    discovery.profilePolicy(std.crypto.hash.Blake3, &hash, profilesFor(request));
     field(&hash, if (builtin.is_test) "owned-test-fixtures-v1" else "production");
     var digest: Digest = undefined;
     hash.final(&digest);
     return digest;
 }
 
-fn runtimePolicy(hash: *std.crypto.hash.Blake3) void {
-    for (runtime_files) |input| {
-        field(hash, input.path);
-        field(hash, input.resolved);
-        field(hash, input.sha256);
-    }
-    field(hash, preload_path);
-}
-
 fn approvalPath(request: Request, identity: Digest) Error![]const u8 {
-    return std.fmt.allocPrint(request.arena, "{s}/approval-v3/{s}.memo", .{ try cacheRoot(request), std.fmt.bytesToHex(approvalKey(identity), .lower) });
+    return std.fmt.allocPrint(request.arena, "{s}/approval-v3/{s}.memo", .{ try cacheRoot(request), std.fmt.bytesToHex(approvalKey(request, identity), .lower) });
 }
 
 fn approvalMemo(request: Request, identity: Digest) Error!?bool {
@@ -597,7 +606,7 @@ fn approvalMemo(request: Request, identity: Digest) Error!?bool {
         return null;
     };
     if (bytes.len != approval_length or !std.mem.eql(u8, bytes[0..approval_magic.len], approval_magic)) return null;
-    if (!std.mem.eql(u8, bytes[approval_magic.len..][0..32], &approvalKey(identity))) return null;
+    if (!std.mem.eql(u8, bytes[approval_magic.len..][0..32], &approvalKey(request, identity))) return null;
     if (bytes[approval_magic.len + 32] > 1) return null;
     var checksum: Digest = undefined;
     std.crypto.hash.Blake3.hash(bytes[0 .. bytes.len - 32], &checksum, .{});
@@ -608,7 +617,7 @@ fn approvalMemo(request: Request, identity: Digest) Error!?bool {
 fn publishApproval(request: Request, identity: Digest, approved: bool) Error!void {
     var bytes: [approval_length]u8 = undefined;
     @memcpy(bytes[0..approval_magic.len], approval_magic);
-    @memcpy(bytes[approval_magic.len..][0..32], &approvalKey(identity));
+    @memcpy(bytes[approval_magic.len..][0..32], &approvalKey(request, identity));
     bytes[approval_magic.len + 32] = @intFromBool(approved);
     std.crypto.hash.Blake3.hash(bytes[0 .. bytes.len - 32], bytes[bytes.len - 32 ..], .{});
     try publishBytes(request, try approvalPath(request, identity), &bytes);
@@ -657,8 +666,7 @@ fn reviewClosure(request: Request, path: []const u8, inputs: []const Input) Erro
     if (request.environment.get(lib_directory)) |override| {
         if (!try approvedLibrary(request, inputs, try absolutePath(request, override))) return false;
     }
-    if (!try approvedRuntime(request, inputs)) return false;
-    return discovery.approved(request.arena, request.io, path);
+    return approvedProfiles(request, path, inputs, profilesFor(request));
 }
 
 fn namedInput(inputs: []const Input, path: []const u8) ?Input {
@@ -666,10 +674,22 @@ fn namedInput(inputs: []const Input, path: []const u8) ?Input {
     return null;
 }
 
+fn approvedProfiles(request: Request, path: []const u8, inputs: []const Input, profiles: []const platform.Profile) Error!bool {
+    for (profiles) |profile| {
+        if (!try approvedRuntimeProfile(request, inputs, profile.runtime)) continue;
+        if (try discovery.approvedProfile(request.arena, request.io, path, profile.discovery)) return true;
+    }
+    return false;
+}
+
 fn approvedRuntime(request: Request, inputs: []const Input) Error!bool {
-    const preload = namedInput(inputs, preload_path) orelse return false;
+    return approvedRuntimeProfile(request, inputs, profilesFor(request)[0].runtime);
+}
+
+fn approvedRuntimeProfile(request: Request, inputs: []const Input, runtime: platform.Runtime) Error!bool {
+    const preload = namedInput(inputs, runtime.preload) orelse return false;
     if (preload.info) |info| if (info.kind != .file or info.size != 0) return false;
-    for (runtime_files) |expected| {
+    for (runtime.files) |expected| {
         const input = namedInput(inputs, expected.path) orelse return false;
         const info = input.info orelse return false;
         if (info.kind != .file) return false;
@@ -773,6 +793,7 @@ const Fixture = struct {
     temporary: std.testing.TmpDir,
     arena: std.heap.ArenaAllocator,
     environment: std.process.Environ.Map,
+    profiles: ?[]const platform.Profile = null,
 
     fn init(allocator: std.mem.Allocator) Fixture {
         return .{ .temporary = std.testing.tmpDir(.{}), .arena = .init(allocator), .environment = .init(allocator) };
@@ -786,7 +807,7 @@ const Fixture = struct {
         const a = self.arena.allocator();
         const root = try self.temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
         try self.environment.put("PATH", root);
-        return .{ .arena = a, .io = std.testing.io, .environment = &self.environment, .executable = "zig", .cache = try std.fs.path.join(a, &.{ root, "cache" }) };
+        return .{ .arena = a, .io = std.testing.io, .environment = &self.environment, .executable = "zig", .cache = try std.fs.path.join(a, &.{ root, "cache" }), .test_profiles = &self.profiles };
     }
     fn tool(self: *Fixture, bytes: []const u8) !void {
         try self.temporary.dir.writeFile(std.testing.io, .{ .sub_path = "zig", .data = bytes });
@@ -808,6 +829,17 @@ const Fixture = struct {
         try self.tool(&bytes);
         try self.temporary.dir.createDirPath(std.testing.io, "lib/std");
         try self.temporary.dir.writeFile(std.testing.io, .{ .sub_path = "lib/std/std.zig", .data = "first" });
+        if (self.profiles == null) {
+            const request_value = try self.request();
+            const root = std.fs.path.dirname(request_value.cache).?;
+            const runtime = try std.fs.path.join(request_value.arena, &.{ root, "native-runtime" });
+            const distro = try std.fs.path.join(request_value.arena, &.{ root, "native-distro" });
+            try self.temporary.dir.writeFile(std.testing.io, .{ .sub_path = "native-runtime", .data = "owned runtime" });
+            try self.temporary.dir.writeFile(std.testing.io, .{ .sub_path = "native-distro", .data = "owned distro" });
+            const profiles = try request_value.arena.alloc(platform.Profile, 1);
+            profiles[0] = try ownedProfile(request_value, try resolve(request_value), runtime, distro);
+            self.profiles = profiles;
+        }
     }
 
     fn replaceSnapshot(inputs: []Input, path: []const u8, resolved: []const u8, info: ?std.Io.File.Stat) void {
@@ -1131,8 +1163,9 @@ test "approvedRuntime refuses missing unknown preload and SourceChanged runtime 
     const request = try fixture.request();
     try fixture.staticTool(1);
     const captured = try inventory(request, try resolve(request), try nativeTarget(request.io));
-    for (runtime_files) |expected| try std.testing.expect(namedInput(captured.inputs, expected.path) != null);
-    try std.testing.expect(namedInput(captured.inputs, preload_path) != null);
+    const runtime = profilesFor(request)[0].runtime;
+    for (runtime.files) |expected| try std.testing.expect(namedInput(captured.inputs, expected.path) != null);
+    try std.testing.expect(namedInput(captured.inputs, runtime.preload) != null);
     try std.testing.expect(try approvedRuntime(request, captured.inputs));
     try std.testing.expect(!try approvedRuntime(request, &.{}));
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "native-input", .data = "unreviewed runtime" });
@@ -1140,12 +1173,12 @@ test "approvedRuntime refuses missing unknown preload and SourceChanged runtime 
     const native_path = try std.fs.path.join(request.arena, &.{ std.fs.path.dirname(try resolve(request)).?, "native-input" });
     const native = try addInput(request, &private, native_path);
     const modified = try request.arena.dupe(Input, captured.inputs);
-    Fixture.replaceSnapshot(modified, preload_path, native.resolved, native.info);
+    Fixture.replaceSnapshot(modified, runtime.preload, native.resolved, native.info);
     try std.testing.expect(!try approvedRuntime(request, modified));
     @memcpy(modified, captured.inputs);
-    Fixture.replaceSnapshot(modified, runtime_files[0].path, native.resolved, native.info);
+    Fixture.replaceSnapshot(modified, runtime.files[0].path, native.resolved, native.info);
     try std.testing.expect(!try approvedRuntime(request, modified));
-    Fixture.replaceSnapshot(modified, runtime_files[0].path, runtime_files[0].resolved, native.info);
+    Fixture.replaceSnapshot(modified, runtime.files[0].path, runtime.files[0].resolved, native.info);
     try std.testing.expectError(error.SourceChanged, approvedRuntime(request, modified));
 }
 
@@ -1166,7 +1199,7 @@ test "runtime generation refresh refuses changed bytes absence and alias retarge
     _ = try addInput(request, &inputs, absent);
     _ = try addInput(request, &inputs, alias);
     const cpu = try nativeTarget(request.io);
-    const original = inventoryDigest(inputs.items, cpu);
+    const original = inventoryDigest(request, inputs.items, cpu);
     const info = try fixture.temporary.dir.statFile(request.io, "libc.so.6", .{});
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "libc.so.6", .data = "other" });
     try fixture.temporary.dir.setTimestamps(request.io, "libc.so.6", .{ .modify_timestamp = .init(info.mtime) });
@@ -1196,7 +1229,7 @@ test "discovery predicates tolerate output neighbors but membership guards refus
     _ = try addInput(request, &inputs, try std.fs.path.join(request.arena, &.{ root, "versions" }));
     inputs.items[1].role = .membership;
     const cpu = try nativeTarget(request.io);
-    const original = inventoryDigest(inputs.items, cpu);
+    const original = inventoryDigest(request, inputs.items, cpu);
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "query/native-output", .data = "owned staging" });
     const output = (try refresh(request, inputs.items, cpu)).?;
     try std.testing.expectEqual(original, output.generation);
@@ -1218,7 +1251,7 @@ test "discovery file restored mtime and absent resource invalidate provisional g
     _ = try addInput(request, &inputs, try std.fs.path.join(request.arena, &.{ root, "resource" }));
     inputs.items[1].role = .predicate;
     const cpu = try nativeTarget(request.io);
-    const original = inventoryDigest(inputs.items, cpu);
+    const original = inventoryDigest(request, inputs.items, cpu);
     const info = try fixture.temporary.dir.statFile(request.io, "distro", .{});
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "distro", .data = "other" });
     try fixture.temporary.dir.setTimestamps(request.io, "distro", .{ .modify_timestamp = .init(info.mtime) });
@@ -1254,6 +1287,9 @@ test "discovery higher priority resource addition refuses old replay and unknown
     try fixture.temporary.dir.setFilePermissions(request.io, "tool/distribution/zig", .executable_file, .{});
     try fixture.temporary.dir.writeFile(request.io, .{ .sub_path = "tool/distribution/lib/std/std.zig", .data = "first" });
     request.executable = try std.fs.path.join(request.arena, &.{ std.fs.path.dirname(try resolve(request)).?, "tool/distribution/zig" });
+    const copied_profiles = try request.arena.dupe(platform.Profile, profilesFor(request));
+    copied_profiles[0].discovery.state = try request.arena.dupe(u8, &std.fmt.bytesToHex(try discovery.profileState(request.arena, request.io, request.executable, copied_profiles[0].discovery), .lower));
+    fixture.profiles = copied_profiles;
     const initial = try capture(request);
     try std.testing.expect(initial.cacheable);
     try std.testing.expect((try lookupReplayCandidate(request)) != null);
@@ -1291,4 +1327,97 @@ test "discovery NotDir fallback retains parent contents and old content refusal"
     try std.Io.Dir.cwd().setTimestamps(request.io, parent_path, .{ .modify_timestamp = .init(info.mtime) });
     try std.testing.expect(!try unchanged(request, initial));
     try std.testing.expect(!std.mem.eql(u8, &initial.digest, &(try capture(request)).digest));
+}
+
+fn ownedProfile(request: Request, path: []const u8, runtime_path: []const u8, discovery_path: []const u8) !platform.Profile {
+    const files = try request.arena.alloc(platform.RuntimeFile, 1);
+    const info = try std.Io.Dir.cwd().statFile(request.io, runtime_path, .{});
+    const runtime_hash = try fileHash(std.crypto.hash.sha2.Sha256, request, .{ .path = runtime_path, .resolved = runtime_path, .info = info });
+    files[0] = .{ .path = runtime_path, .resolved = runtime_path, .sha256 = try request.arena.dupe(u8, &std.fmt.bytesToHex(runtime_hash, .lower)) };
+    const discovery_files = try request.arena.alloc(platform.DiscoveryFile, 1);
+    discovery_files[0] = .{ .path = discovery_path };
+    const prefix = std.fs.path.dirname(runtime_path).?;
+    var profile: platform.Profile = .{
+        .id = runtime_path,
+        .runtime = .{ .files = files, .preload = try std.fs.path.join(request.arena, &.{ prefix, "absent-preload" }) },
+        .discovery = .{ .state = "", .files = discovery_files, .predicates = &.{}, .installation = prefix, .system_prefix = prefix, .installation_predicates = &.{} },
+    };
+    profile.discovery.state = try request.arena.dupe(u8, &std.fmt.bytesToHex(try discovery.profileState(request.arena, request.io, path, profile.discovery), .lower));
+    return profile;
+}
+
+// spec: CORE-TOOL-PROFILES-1
+test "reviewed profiles reject mixed runtime and discovery closures" {
+    var fixture = Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    const request = try fixture.request();
+    const root = std.fs.path.dirname(request.cache).?;
+    const path = try std.fs.path.join(request.arena, &.{ root, "zig" });
+    const runtime = try std.fs.path.join(request.arena, &.{ root, "runtime" });
+    const distro = try std.fs.path.join(request.arena, &.{ root, "distro" });
+    try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = runtime, .data = "runtime-A" });
+    try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = distro, .data = "distro-A" });
+    const first = try ownedProfile(request, path, runtime, distro);
+    var inputs: std.ArrayList(Input) = .empty;
+    _ = try addInput(request, &inputs, runtime);
+    _ = try addInput(request, &inputs, first.runtime.preload);
+    try std.testing.expect(try approvedProfiles(request, path, inputs.items, &.{first}));
+    try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = runtime, .data = "runtime-B" });
+    try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = distro, .data = "distro-B" });
+    const second = try ownedProfile(request, path, runtime, distro);
+    inputs.clearRetainingCapacity();
+    _ = try addInput(request, &inputs, runtime);
+    _ = try addInput(request, &inputs, second.runtime.preload);
+    try std.testing.expect(try approvedProfiles(request, path, inputs.items, &.{ first, second }));
+    try std.Io.Dir.cwd().writeFile(request.io, .{ .sub_path = distro, .data = "distro-A" });
+    try std.testing.expect(!try approvedProfiles(request, path, inputs.items, &.{ first, second }));
+    try std.testing.expect(!try approvedProfiles(request, path, &.{}, &.{ first, second }));
+}
+
+// spec-case: CORE-TOOL-PROFILES-1
+test "profile policy edits isolate warm content approvals and replay candidates" {
+    var fixture = Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    const request = try fixture.request();
+    try fixture.staticTool(1);
+    const original = try capture(request);
+    try std.testing.expect(original.cacheable);
+    try std.testing.expect((try lookupReplayCandidate(request)) != null);
+    const changed = try request.arena.dupe(platform.Profile, profilesFor(request));
+    changed[0].id = "owned-replacement-profile";
+    fixture.profiles = changed;
+    try std.testing.expect((try lookupReplayCandidate(request)) == null);
+    try std.testing.expect(!try unchanged(request, original));
+    const replacement = try capture(request);
+    try std.testing.expect(replacement.cacheable);
+    try std.testing.expect(!replacement.memo_hit);
+    try std.testing.expect(!std.mem.eql(u8, &original.digest, &replacement.digest));
+    try std.testing.expect(!std.mem.eql(u8, &original.generation, &replacement.generation));
+}
+
+// spec-case: CORE-TOOL-PROFILES-1
+test "approved profile membership changes isolate semantic content identities" {
+    var fixture = Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    const request = try fixture.request();
+    try fixture.staticTool(1);
+    const path = try resolve(request);
+    const profiles = try request.arena.alloc(platform.Profile, 2);
+    profiles[0] = profilesFor(request)[0];
+    profiles[0].discovery.system_prefix = try std.fs.path.join(request.arena, &.{ std.fs.path.dirname(path).?, "host" });
+    try fixture.temporary.dir.createDirPath(request.io, "host/lib/gcc/x86_64-linux-gnu/14");
+    profiles[0].discovery.state = try request.arena.dupe(u8, &std.fmt.bytesToHex(try discovery.profileState(request.arena, request.io, path, profiles[0].discovery), .lower));
+    profiles[1] = profiles[0];
+    profiles[1].id = "owned-additional-gcc-profile";
+    try fixture.temporary.dir.createDirPath(request.io, "host/lib/gcc/x86_64-linux-gnu/15");
+    profiles[1].discovery.state = try request.arena.dupe(u8, &std.fmt.bytesToHex(try discovery.profileState(request.arena, request.io, path, profiles[1].discovery), .lower));
+    try fixture.temporary.dir.deleteTree(request.io, "host/lib/gcc/x86_64-linux-gnu/15");
+    fixture.profiles = profiles;
+    const first = try capture(request);
+    try std.testing.expect(first.cacheable);
+    try fixture.temporary.dir.createDirPath(request.io, "host/lib/gcc/x86_64-linux-gnu/15");
+    const second = try capture(request);
+    try std.testing.expect(second.cacheable);
+    try std.testing.expect(!try unchanged(request, first));
+    try std.testing.expect(!std.mem.eql(u8, &first.digest, &second.digest));
 }

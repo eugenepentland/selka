@@ -33,11 +33,6 @@ const biarch_aliases = [_][]const u8{
     "i586-suse-linux",                    "i686-montavista-linux",
     "x86_64-linux-gnux32",                "x86_64-pc-linux-gnux32",
 };
-const host_predicates = platform.discovery_predicates;
-const reviewed_installation = platform.discovery_installation;
-const installation_predicates = [_][]const u8{
-    "", "include/c++", "include/g++-v15", "include/g++-v15.-1",
-};
 const multilib_suffixes = [_][]const u8{ "", "64", "32", "x32", "sparcv8plus" };
 
 const Builder = struct {
@@ -45,7 +40,11 @@ const Builder = struct {
     entries: std.ArrayList(Path) = .empty,
 
     fn add(self: *Builder, name: []const u8, role: Role) Error!void {
-        for (self.entries.items) |entry| if (std.mem.eql(u8, entry.name, name)) return;
+        for (self.entries.items) |*entry| {
+            if (!std.mem.eql(u8, entry.name, name)) continue;
+            if (strength(role) > strength(entry.role)) entry.role = role;
+            return;
+        }
         try self.entries.append(self.arena, .{ .name = name, .role = role });
     }
 
@@ -71,18 +70,43 @@ const Builder = struct {
 /// Generate every permitted discovery branch without inspecting command outputs
 /// or traversing their parents. Missing enclosing roots guard deeper candidates.
 pub fn paths(arena: std.mem.Allocator, executable: []const u8) Error![]const Path {
+    return catalogPaths(arena, executable, &platform.profiles);
+}
+
+/// Inventory all candidates with the strongest guard for overlapping paths.
+pub fn catalogPaths(arena: std.mem.Allocator, executable: []const u8, profiles: []const platform.Profile) Error![]const Path {
+    var builder: Builder = .{ .arena = arena };
+    for (profiles) |profile| {
+        for (try profilePaths(arena, executable, profile.discovery)) |entry|
+            try builder.add(entry.name, entry.role);
+    }
+    std.mem.sort(Path, builder.entries.items, {}, before);
+    return builder.entries.items;
+}
+
+fn strength(role: Role) u8 {
+    return switch (role) {
+        .predicate => 0,
+        .membership => 1,
+        .discovery_file => 2,
+        .content => 3,
+    };
+}
+
+/// Generate one complete profile's branches, independently of other profiles.
+pub fn profilePaths(arena: std.mem.Allocator, executable: []const u8, config: platform.Discovery) Error![]const Path {
     var builder: Builder = .{ .arena = arena };
     const tool_directory = std.fs.path.dirname(executable) orelse return error.ReadFailed;
     const parent = std.fs.path.dirname(tool_directory) orelse return error.ReadFailed;
     try builder.add(tool_directory, .predicate);
     try builder.prefix(parent);
-    try builder.prefix(platform.discovery_system_prefix);
-    for (platform.discovery_files) |file| try builder.add(file.path, .discovery_file);
-    for (host_predicates) |path| try builder.add(path, .predicate);
-    for (installation_predicates) |suffix|
-        try builder.add(try std.fs.path.join(arena, &.{ reviewed_installation, suffix }), .predicate);
+    try builder.prefix(config.system_prefix);
+    for (config.files) |file| try builder.add(file.path, .discovery_file);
+    for (config.predicates) |path| try builder.add(path, .predicate);
+    for (config.installation_predicates) |suffix|
+        try builder.add(try std.fs.path.join(arena, &.{ config.installation, suffix }), .predicate);
     for (multilib_suffixes) |suffix|
-        try builder.add(try std.fs.path.join(arena, &.{ reviewed_installation, suffix, "crtbegin.o" }), .discovery_file);
+        try builder.add(try std.fs.path.join(arena, &.{ config.installation, suffix, "crtbegin.o" }), .discovery_file);
     std.mem.sort(Path, builder.entries.items, {}, before);
     return builder.entries.items;
 }
@@ -101,19 +125,49 @@ fn frame(hash: anytype, bytes: []const u8) void {
 /// Bind collector branch descriptors and exact approved discovery state to both
 /// hint and approval keys, including the distinction between directory roles.
 pub fn policy(hash: anytype) void {
-    frame(hash, "core-native-discovery-v1");
-    frame(hash, platform.discovery_state);
-    frame(hash, platform.discovery_system_prefix);
+    profilePolicy(@TypeOf(hash.*), hash, &platform.profiles);
+}
+
+/// Bind complete profile tuples and collector semantics, including catalog edits.
+pub fn profilePolicy(comptime Hash: type, hash: *Hash, profiles: []const platform.Profile) void {
+    frame(hash, "core-native-discovery-profiles-v2");
     for (std.meta.tags(Role)) |role| frame(hash, @tagName(role));
     for (directory_suffixes) |part| frame(hash, part);
     for (gcc_families) |family| frame(hash, family);
     for (native_aliases) |alias| frame(hash, alias);
     for (biarch_aliases) |alias| frame(hash, alias);
-    for (host_predicates) |path| frame(hash, path);
-    frame(hash, reviewed_installation);
-    for (installation_predicates) |suffix| frame(hash, suffix);
     for (multilib_suffixes) |suffix| frame(hash, suffix);
-    for (platform.discovery_files) |file| frame(hash, file.path);
+    frameCount(Hash, hash, profiles.len);
+    for (profiles) |profile| {
+        frame(hash, profile.id);
+        frame(hash, profile.runtime.preload);
+        frameCount(Hash, hash, profile.runtime.files.len);
+        for (profile.runtime.files) |file| {
+            frame(hash, file.path);
+            frame(hash, file.resolved);
+            frame(hash, file.sha256);
+        }
+        frame(hash, "end-runtime");
+        const config = profile.discovery;
+        frame(hash, config.state);
+        frame(hash, config.system_prefix);
+        frame(hash, config.installation);
+        frameCount(Hash, hash, config.predicates.len);
+        for (config.predicates) |path| frame(hash, path);
+        frame(hash, "end-predicates");
+        frameCount(Hash, hash, config.installation_predicates.len);
+        for (config.installation_predicates) |suffix| frame(hash, suffix);
+        frame(hash, "end-installation");
+        frameCount(Hash, hash, config.files.len);
+        for (config.files) |file| frame(hash, file.path);
+        frame(hash, "end-profile");
+    }
+}
+
+fn frameCount(comptime Hash: type, hash: *Hash, value: usize) void {
+    var count: [8]u8 = undefined;
+    std.mem.writeInt(u64, &count, value, .little);
+    frame(hash, &count);
 }
 
 fn relative(arena: std.mem.Allocator, path: []const u8, executable: []const u8) Error![]const u8 {
@@ -176,11 +230,17 @@ fn readError(err: anyerror) Error {
     return if (err == error.OutOfMemory) error.OutOfMemory else error.ReadFailed;
 }
 
+/// First-profile compatibility state for retained qualification probes.
 /// Reviewed content/type/alias/membership state independent of directory mtimes
 /// and physical tool-copy location. Full input generations separately guard
 /// reads before/after review and compilation, including restored-mtime edits.
 pub fn state(arena: std.mem.Allocator, io: std.Io, executable: []const u8) Error!Digest {
-    const entries = try paths(arena, executable);
+    return profileState(arena, io, executable, platform.profiles[0].discovery);
+}
+
+/// Capture exactly one reviewed profile independently of the inventory union.
+pub fn profileState(arena: std.mem.Allocator, io: std.Io, executable: []const u8, config: platform.Discovery) Error!Digest {
+    const entries = try profilePaths(arena, executable, config);
     const normalized = try arena.alloc(Normalized, entries.len);
     for (entries, normalized) |entry, *row| row.* = .{ .name = try relative(arena, entry.name, executable), .entry = entry };
     std.mem.sort(Normalized, normalized, {}, normalizedBefore);
@@ -198,11 +258,17 @@ fn normalizedBefore(_: void, left: Normalized, right: Normalized) bool {
     return std.mem.lessThan(u8, left.name, right.name);
 }
 
+/// First-profile compatibility approval; production checks coherent profiles.
 /// Unknown discovery layouts/contents refuse persistent reuse. This approval
 /// is additional to exact executable/library/runtime content approval.
 pub fn approved(arena: std.mem.Allocator, io: std.Io, executable: []const u8) Error!bool {
-    const current = std.fmt.bytesToHex(try state(arena, io, executable), .lower);
-    return std.mem.eql(u8, &current, platform.discovery_state);
+    return approvedProfile(arena, io, executable, platform.profiles[0].discovery);
+}
+
+/// Approval belongs only to this profile's exact discovery descriptors and state.
+pub fn approvedProfile(arena: std.mem.Allocator, io: std.Io, executable: []const u8, config: platform.Discovery) Error!bool {
+    const current = std.fmt.bytesToHex(try profileState(arena, io, executable, config), .lower);
+    return std.mem.eql(u8, &current, config.state);
 }
 
 const Fixture = struct {
@@ -309,4 +375,45 @@ test "discovery unreachable descendants retain non-directory parent selection" {
     try std.testing.expectEqual(child, try fixture.signature("lib/gcc", .membership));
     try fixture.temporary.dir.symLink(std.testing.io, "loop", "loop", .{});
     try std.testing.expectError(error.ReadFailed, fixture.signature("loop/gcc", .membership));
+}
+
+fn catalogDigest(profiles: []const platform.Profile) Digest {
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    profilePolicy(std.crypto.hash.sha2.Sha256, &hash, profiles);
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+// spec-case: CORE-TOOL-PROFILES-1
+test "profile policy binds runtime and discovery approval changes" {
+    const original = platform.profiles[0];
+    var changed = original;
+    changed.id = "other-reviewed-profile";
+    try std.testing.expect(!std.mem.eql(u8, &catalogDigest(&.{original}), &catalogDigest(&.{changed})));
+    changed = original;
+    changed.discovery.state = "unreviewed";
+    try std.testing.expect(!std.mem.eql(u8, &catalogDigest(&.{original}), &catalogDigest(&.{changed})));
+    changed = original;
+    changed.runtime.preload = "different-preload";
+    try std.testing.expect(!std.mem.eql(u8, &catalogDigest(&.{original}), &catalogDigest(&.{changed})));
+    changed = original;
+    changed.discovery.installation_predicates = &.{ "", "include/g++-v14" };
+    try std.testing.expect(!std.mem.eql(u8, &catalogDigest(&.{original}), &catalogDigest(&.{changed})));
+}
+
+// spec-case: CORE-TOOL-PROFILES-1
+test "profile inventory overlapping paths retain strongest generation guard" {
+    var fixture = Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    var builder: Builder = .{ .arena = fixture.arena.allocator() };
+    const path = try fixture.path("shared");
+    try builder.add(path, .predicate);
+    try builder.add(path, .membership);
+    try builder.add(path, .predicate);
+    try std.testing.expectEqual(Role.membership, builder.entries.items[0].role);
+    try builder.add(path, .discovery_file);
+    try builder.add(path, .content);
+    try std.testing.expectEqual(Role.content, builder.entries.items[0].role);
+    try std.testing.expectEqual(@as(usize, 1), builder.entries.items.len);
 }

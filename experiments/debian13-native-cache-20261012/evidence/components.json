@@ -1,0 +1,78 @@
+{
+  "source": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components",
+  "source_branch": "codex/selka-bootstrap-20261011",
+  "source_head": "dff9304b9cd7bc72e66f9feb20f1b05281d67333",
+  "usage": "Existing component manifests and artifact hashes validated; component rebuilding remains blocked by pinned seed missing-object failure. These are fixtures for native-cache qualification, not evidence of fresh component production.",
+  "components": [
+    {
+      "manifest": "body-check.json",
+      "artifact": "body-check-7315dd5a865de4b0650f259fde22f1403455ec9c8050541607c4881db3abee95",
+      "component": "body-check",
+      "format": 1,
+      "key": "2aecdc37b7171ffcc2318d4e92e5cd7c15356a0683ef9a9da4c99716aca5d450",
+      "protocol": 1,
+      "schema": 10,
+      "sha256": "7315dd5a865de4b0650f259fde22f1403455ec9c8050541607c4881db3abee95"
+    },
+    {
+      "manifest": "cache-plan.json",
+      "artifact": "cache-plan-6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "636922f37986e139ad7b03c4842bfa795bd9aac76484777de09c8106bae87a66",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794"
+    },
+    {
+      "manifest": "declaration-index.json",
+      "artifact": "declaration-index-5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696",
+      "component": "declaration-index",
+      "format": 1,
+      "key": "abd37cad83dfefdf977fc25f1d88debc7410047ad0def0c3186bb3660bf9aea1",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696"
+    },
+    {
+      "manifest": "lexer-pilot.json",
+      "artifact": "lexer-pilot-35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938",
+      "component": "lexer-pilot",
+      "format": 1,
+      "key": "f0cb6c124ae9541ef5ca389872a5d81b6fac1a4033912755a3e37f3a7eebae36",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938"
+    },
+    {
+      "manifest": "parser-pilot.json",
+      "artifact": "parser-pilot-9039e9de6ea48f91469f8ba2fad4e0401248e50d3a02522db79caf5a729c44ac",
+      "component": "parser-pilot",
+      "format": 1,
+      "key": "76de49ce3877bba2b194daa1684814d3ceba5925aad7ebfa55a03028d730eed8",
+      "protocol": 1,
+      "schema": 2,
+      "sha256": "9039e9de6ea48f91469f8ba2fad4e0401248e50d3a02522db79caf5a729c44ac"
+    },
+    {
+      "manifest": "test-index.json",
+      "artifact": "test-index-268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530",
+      "component": "test-index",
+      "format": 1,
+      "key": "9d1b1240f2a85a2e56a500485df15efe828a04caa6f1d5a9ce1b216f2cf06278",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530"
+    },
+    {
+      "manifest": "type-interface.json",
+      "artifact": "type-interface-b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717",
+      "component": "type-interface",
+      "format": 1,
+      "key": "4f1de862972c0bcfcfa79d0cd96f8b9914e7a803d8ada8fba68d901e7d1e6577",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717"
+    }
+  ]
+}

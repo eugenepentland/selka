@@ -1,0 +1,29 @@
+{
+  "runs": [
+    {
+      "compiler_mode": "debug",
+      "compiler_sha256": "2b4b8d1998ff8426727fce54a5c73a8659ce86dfd9bcd88578ccb789103c3f0b",
+      "planner_mode": "reference",
+      "status": "not qualified",
+      "reason": "Canceled before execution after over six minutes in shared admission queue; diagnostic fallback did not run. Default component-mode failure and focused passes are recorded separately.",
+      "exit_code": 143,
+      "log": "qualification-debug-reference.log"
+    },
+    {
+      "compiler_mode": "release",
+      "compiler_sha256": "34629facdae3beb694652a761344cbd6e3908b26ab671af0c40892ba3693c56d",
+      "planner_mode": "reference",
+      "status": "not qualified",
+      "reason": "Canceled before execution after over six minutes in shared admission queue; diagnostic fallback did not run. Default component-mode failure and focused passes are recorded separately.",
+      "exit_code": 143,
+      "log": "qualification-release-reference.log"
+    }
+  ],
+  "outstanding": [
+    "debug and release guest test receipt reuse",
+    "owned bundle/tool/environment tampering integration",
+    "corrupt object integration",
+    "complete gate after seed repair",
+    "default component execution inside target VM namespace"
+  ]
+}

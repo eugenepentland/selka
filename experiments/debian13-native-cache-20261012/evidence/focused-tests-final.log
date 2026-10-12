@@ -1,0 +1,17 @@
+build-slot: FIFO ticket 1578, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1578 after 25s
+guardian/test: 35 test(s) selected by filter: "tool_"
+All 35 tests passed.
+guardian/test: test wall 2.60s; slowest over 50ms:
+guardian/test:   0.40s  tool_identity.test.library edits additions removals and an override invalidate tool identity
+guardian/test:   0.30s  tool_identity.test.PATH selection and linked library content are command dependencies
+guardian/test:   0.21s  tool_identity.test.inventoryHint corruption rediscovers libraries and invalid library roots refuse reuse
+guardian/test:   0.20s  tool_identity.test.discovery NotDir fallback retains parent contents and old content refusal
+guardian/test:   0.20s  tool_identity.test.tool memo is reusable and corruption is a content rehash
+guardian/test:   0.18s  tool_identity.test.same-size executable edit with restored mtime invalidates tool identity
+guardian/test:   0.12s  tool_identity.test.approval rejects uncaptured compiler environment paths without publishing trust
+guardian/test:   0.12s  tool_identity.test.closure approval refuses unknown static executables and unknown library contents
+guardian/test:   0.11s  tool_identity.test.approved profile membership changes isolate semantic content identities
+guardian/test:   0.11s  tool_identity.test.discovery higher priority resource addition refuses old replay and unknown copy reuse
+guardian/test: PASS — 35 passed
+guardian/test: RESULT {"passed":35,"failed":0,"skipped":0}

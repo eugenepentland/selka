@@ -1,0 +1,75 @@
+{
+  "schema": "selka-native-bundle-v1",
+  "id": "debian13-amd64-minimal-20260912-v1",
+  "architecture": "amd64",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "archive": "https://deb.debian.org/debian/",
+  "release_sha256": "0584fba32e13e0ab8285fb16c27adea1ec03a73669c18702821094fd6ca86675",
+  "release_date": "2026-09-12",
+  "index": {
+    "path": "main/binary-amd64/Packages.xz",
+    "sha256": "7778d3e3f303b7ddb8ce0fe7c8d57473a076c6bf2e8f241f75421d2396352498",
+    "size": 9678380
+  },
+  "keys": [
+    {
+      "file": "archive-key-12.asc",
+      "fingerprint": "B8B80B5B623EAB6AD8775C45B7C5D7D6350947F8",
+      "sha256": "c2a9a16fde95e037bafd0fa6b7e31f41b4ff1e85851de5558f19a2a2f0e955e2"
+    },
+    {
+      "file": "archive-key-13.asc",
+      "fingerprint": "04B54C3CDCA79751B16BC6B5225629DF75B188BD",
+      "sha256": "6f1d277429dd7ffedcc6f8688a7ad9a458859b1139ffa026d1eeaadcbffb0da7"
+    },
+    {
+      "file": "release-13.asc",
+      "fingerprint": "41587F7DB8C774BCCF131416762F67A0B2C39DE4",
+      "sha256": "4d097bb93f83d731f475c5b92a0c2fcf108cfce1d4932792fca72d00b48d198b"
+    }
+  ],
+  "packages": [
+    {
+      "Package": "base-files",
+      "Version": "13.8+deb13u7",
+      "Architecture": "amd64",
+      "Filename": "pool/main/b/base-files/base-files_13.8+deb13u7_amd64.deb",
+      "Size": "88296",
+      "SHA256": "fcd42bb5cb63f7bfc4326a92541247872206d60a192fdff65ca14eb83ed408b9"
+    },
+    {
+      "Package": "gcc-14-base",
+      "Version": "14.2.0-19",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gcc-14/gcc-14-base_14.2.0-19_amd64.deb",
+      "Size": "49432",
+      "SHA256": "5b6825de4263824b78c4c51f6476414f3b4e89c2ab63e81dc8b9b5501e867cf6"
+    },
+    {
+      "Package": "libc6",
+      "Version": "2.41-12+deb13u4",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/glibc/libc6_2.41-12+deb13u4_amd64.deb",
+      "Size": "2846580",
+      "SHA256": "967aa62605721081c3eb2a17650611a792aa802d76a6511d1840242623d204c9"
+    },
+    {
+      "Package": "libc-bin",
+      "Version": "2.41-12+deb13u4",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/glibc/libc-bin_2.41-12+deb13u4_amd64.deb",
+      "Size": "638452",
+      "SHA256": "dc8c79647fe3a5f37f72a400414f70263d0212f010ff2c09f990e30d91e38d1c"
+    },
+    {
+      "Package": "libgcc-s1",
+      "Version": "14.2.0-19",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gcc-14/libgcc-s1_14.2.0-19_amd64.deb",
+      "Size": "72772",
+      "SHA256": "3c71917b490d1a17aed43196a2787a256ecf060526cdb20216a74bedc061b150"
+    }
+  ],
+  "loader_cache_sha256": "e89a171831da2084092baac36b0af6d096de3a7e09b8e40b267ee2f170926086",
+  "tree_sha256": "92498b5c2eb4436897432eaeebe70e9c2f713ab0ddba0afb91f4060fce1efd61"
+}

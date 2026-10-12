@@ -1,0 +1,34 @@
+build-slot: FIFO ticket 1621, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1621 after 10s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94: 119/697 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 4 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 2451 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 1 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1d202d41bfff888ee91354f706cb74e860dc4b94, 119 file(s) in scope
+error: failed to open object /home/epentland/.cache/mylang/components/artifacts/b7292e11c50b0443bee1541e48497ca57086cb11f53206a2936fe5e961ae9094.build/cache/native-link-102a763e2b8265de8e6fd7813a67597c/4292805a27bc2ec4837a2b5df9b60cdd2bd59c198054ac95594ef020a66ef11b.o: FileNotFound
+components: command failed (exit 2): /home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang
+install
++- run exe selka-components failure
+error: process exited with code 1
+failed command: cd . && ./.zig-cache-debian13/o/11fa9b5b8c947dffe1a04e1c1a19d274/selka-components --root /home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/. --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --install-dir /home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/debian13-native/debug/libexec/mylang/components
+
+Build Summary: 12/14 steps succeeded (1 failed)
+install transitive failure
++- install mylang success
+|  +- compile exe mylang debug native success 4s MaxRSS:573M
+|  |  +- WriteFile cached
+|  |  +- compile obj component_sha256 safe native cached 6ms MaxRSS:41M
+|  |  +- compile obj component_sha256 safe native (reused)
+|  |  +- run exe build-identity (build_identity) success 35ms
+|  |  |  +- compile exe build-identity debug native cached 4ms MaxRSS:41M
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:42M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 1s
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- install generated to selka-components cached
+|  +- compile exe selka-components safe native cached 4ms MaxRSS:42M
++- run exe selka-components failure
+|  +- compile exe selka-components safe native (reused)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)

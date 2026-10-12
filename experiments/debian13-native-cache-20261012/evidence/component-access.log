@@ -1,0 +1,5 @@
+build-slot: build slot 2, FIFO ticket 1651 after 0s
+mylang: component spawn child failed: AccessDenied
+mylang: cache-plan run planner failed: AccessDenied
+error: cache-plan component: ComponentIo
+strace: Exit of unknown pid 2075565 ignored
