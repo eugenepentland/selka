@@ -1,0 +1,83 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "overlay": true,
+  "check_only": false,
+  "harness_sha256": "4c69a33f0384074f93e1859dd89ca717d77f5f9b0c460a13acac0d1a6dc1cb59",
+  "cases": {
+    "storage": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "original_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+        "source_sha256": "0c6c631c86493f669b77388ce5608c379dbbb9f327f8967af8c41666376bf58e",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-release-batch2/storage/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-release-batch2/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-release-batch2/storage/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-release-batch2/storage/release/program.ll"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:163:5: error[E_ZERO_RC_UNSUPPORTED]: open a dependent scope directly from a named provider in this prototype\n      with try lock_directory(fs, \"\") as lease:\n      ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "0c6c631c86493f669b77388ce5608c379dbbb9f327f8967af8c41666376bf58e"
+        }
+      }
+    },
+    "memo_fixture": {
+      "release": {
+        "original_source": "tests/lang/memo_cache.my",
+        "original_sha256": "a6d7d945b0f5d7a2a62c1363900fd381dad9caedb059c6de8c3806902234439f",
+        "source_sha256": "72fd8163c254bd62c9c149988bf972ba505bbb0dc38e269e92b312d3db1fe103",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-release-batch2/memo_fixture/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-release-batch2/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-release-batch2/memo_fixture/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-release-batch2/memo_fixture/release/program.ll"
+        ],
+        "build_status": -6,
+        "build_stdout": "",
+        "build_stderr": "thread 1798729 panic: reached unreachable code\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/debug.zig:442:14: 0x1278ea9 in assert (std.zig)\n    if (!ok) unreachable; // assertion failure\n             ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_expressions.zig:1109:25: 0x1e8248a in expressionWithTemporaries__anon_122137 (compiler.zig)\n        std.debug.assert(temporaries.items.len >= consumed);\n                        ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_expressions.zig:57:50: 0x1e7f941 in expressionWithTemporaries (compiler.zig)\n            return impl.expressionWithTemporaries(Checker, self, root, inherited);\n                                                 ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:971:46: 0x1e7f36b in expression (compiler.zig)\n        return self.expressionWithTemporaries(root, &.{});\n                                             ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1095:42: 0x1e7dfd8 in expressionExpected (compiler.zig)\n        const value = try self.expression(id);\n                                         ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/frontend_failures.zig:33:46: 0x21a9249 in checkReturn__anon_144883 (compiler.zig)\n    const value = try self.expressionExpected(expression, expected);\n                                             ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:562:52: 0x21a595c in statementRet__anon_143348 (compiler.zig)\n    const value = try frontend_failures.checkReturn(Checker, self, expr, stmt.span);\n                                                   ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:662:40: 0x2147e14 in statement__anon_142951 (compiler.zig)\n        .ret => |expr| try statementRet(Checker, self, stmt, expr, &flow),\n                                       ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:124:37: 0x21ae4fc in statementBlock__anon_143313 (compiler.zig)\n        const result = try statement(Checker, self, child);\n                                    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:657:48: 0x214785d in statement__anon_142951 (compiler.zig)\n        .block => |children| try statementBlock(Checker, self, stmt, children, &flow),\n                                               ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:517:36: 0x21acb21 in statementBranch__anon_143330 (compiler.zig)\n    const then_body = try statement(Checker, self, branch.then_body);\n                                   ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:660:48: 0x2147bd7 in statement__anon_142951 (compiler.zig)\n        .branch => |branch| try statementBranch(Checker, self, stmt, branch, &flow),\n                                               ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:124:37: 0x21ae4fc in statementBlock__anon_143313 (compiler.zig)\n        const result = try statement(Checker, self, child);\n                                    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:657:48: 0x214785d in statement__anon_142951 (compiler.zig)\n        .block => |children| try statementBlock(Checker, self, stmt, children, &flow),\n                                               ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:45:34: 0x219d053 in statement (compiler.zig)\n            return impl.statement(Checker, self, statement_id);\n                                 ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_loops.zig:147:36: 0x217ec3a in statementForEach__anon_144206 (compiler.zig)\n    const body = try self.statement(each.body);\n                                   ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_loops.zig:49:41: 0x217699c in statementForEach (compiler.zig)\n            return impl.statementForEach(Checker, self, stmt, each);\n                                        ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:671:54: 0x2148327 in statement__anon_142951 (compiler.zig)\n        .for_each => |each| try self.statementForEach(stmt, each),\n                                                     ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:124:37: 0x21ae4fc in statementBlock__anon_143313 (compiler.zig)\n        const result = try statement(Checker, self, child);\n                                    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:657:48: 0x214785d in statement__anon_142951 (compiler.zig)\n        .block => |children| try statementBlock(Checker, self, stmt, children, &flow),\n                                               ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:45:34: 0x219d053 in statement (compiler.zig)\n            return impl.statement(Checker, self, statement_id);\n                                 ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:336:38: 0x22759c6 in checkFunction (compiler.zig)\n        var body = try self.statement(function.body);\n                                     ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1572:57: 0x226e41b in checkInstance (compiler.zig)\n    const function = reused orelse checker.checkFunction(i) catch |err| switch (err) {\n                                                        ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1604:48: 0x1e662e1 in checkBodies (compiler.zig)\n            const function = (try checkInstance(step)) orelse {\n                                               ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1846:34: 0x1c567f0 in checkProgram (compiler.zig)\n    const functions = checkBodies(.{\n                                 ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1747:33: 0x1c2e122 in checkCore (compiler.zig)\n    const checked = checkProgram(allocator, src, program, sink, options) catch |err| {\n                                ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1708:21: 0x1c2d8d4 in checkCached (compiler.zig)\n    return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });\n                    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/project_compile.zig:88:40: 0x1c2c259 in checkWithCache (compiler.zig)\n        self.program = sema.checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache) catch |err| retry: {\n                                       ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/frontend.zig:265:46: 0x2b849d1 in checkDeclared (cli.zig)\n        self.graph.compilation.checkWithCache(self.semanticCache()) catch |err| switch (err) {\n                                             ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/frontend.zig:243:34: 0x2b840eb in check (cli.zig)\n        return self.checkDeclared(allocator, report);\n                                 ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/frontend.zig:195:30: 0x2b7fd9b in checkFile (cli.zig)\n            return self.check(allocator, self.graph.settings.entry orelse entryOf(path).module, report);\n                             ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/pipeline.zig:173:42: 0x35f876a in buildAttempt (cli.zig)\n        const checked = session.checkFile(allocator, if (options.show.diagnostics == .errors) entry.path else path, report) catch |err| switch (err) {\n                                         ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/pipeline.zig:134:28: 0x35f6462 in attempt (cli.zig)\n        return buildAttempt(self.init, self.path, self.options, self.budget, self.report, lazy);\n                           ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/build_retry.zig:7:19: 0x35f5ce3 in run__anon_362979 (cli.zig)\n    return attempt(context, true) catch |err| {\n                  ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/pipeline.zig:123:42: 0x35f4fad in buildWith (cli.zig)\n    return @import(\"build_retry.zig\").run(request, report, BuildRequest.attempt);\n                                         ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/pipeline.zig:106:21: 0x364f98d in build (cli.zig)\n    return buildWith(init, path, options, null, report);\n                    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/cli.zig:175:34: 0x364ee78 in buildCommand (cli.zig)\n    const status = pipeline.build(compilation_init, request.path, options, &report) catch |err| switch (err) {\n                                 ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/cli.zig:107:148: 0x3210af2 in dispatch (cli.zig)\n        if (std.mem.eql(u8, command, \"build\")) break :status if (developerBuild(rest)) try core_main.buildCommand(init, rest) else try buildCommand(init, rest);\n                                                                                                                                                   ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/main.zig:263:33: 0x1472fb8 in dispatch (main.zig)\n    if (try mylang_core.dispatch(process, args)) |status| return status;\n                                ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/main.zig:159:28: 0x1475dc8 in dispatchCommandLine (main.zig)\n    const status = dispatch(init) catch |err| status: {\n                           ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/wiring/process_start.zig:41:9: 0x14332fa in run__anon_32056 (main.zig)\n    body(.{ .minimal = minimal, .arena = &arena, .gpa = gpa, .io = threaded.io(), .environ_map = &environ_map, .preopens = preopens });\n        ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/main.zig:148:22: 0x1432f11 in main (main.zig)\n    process_start.run(minimal, dispatchCommandLine);\n                     ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x143280f in callMain (std.zig)\n    if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{\n                                                                                       ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14321e1 in _start (std.zig)\n    asm volatile (switch (native_arch) {\n    ^\n",
+        "expected_status": 42,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "72fd8163c254bd62c9c149988bf972ba505bbb0dc38e269e92b312d3db1fe103"
+        }
+      }
+    }
+  },
+  "failures": 2
+}

@@ -1,0 +1,103 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "overlay": false,
+  "check_only": true,
+  "harness_sha256": "aa2206649c52d854862e9de7f6f99ba34435ca414fc6100f317335cc854e1580",
+  "cases": {
+    "memo": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/memo.my",
+        "original_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+        "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-v2/memo/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-v2/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/memo.my:18:20: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n              return detail\n                     ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e"
+        }
+      }
+    },
+    "network": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network.my",
+        "original_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+        "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-v2/network/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-v2/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/network.my:71:12: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      return acquire_resource[Connected](net, request)\n             ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7"
+        }
+      }
+    },
+    "providers": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/providers.my",
+        "original_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-v2/providers/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-v2/cache"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f"
+        }
+      }
+    },
+    "storage": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "original_sha256": "84704f9229b42de30d1148bacf5334829ef22aaaf30ba5b724371c1532511449",
+        "source_sha256": "84704f9229b42de30d1148bacf5334829ef22aaaf30ba5b724371c1532511449",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-v2/storage/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-v2/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:10:20: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n              return str(value).encode()\n                     ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "84704f9229b42de30d1148bacf5334829ef22aaaf30ba5b724371c1532511449"
+        }
+      }
+    }
+  },
+  "failures": 3
+}

@@ -37,12 +37,12 @@ public enum Error:
 
 
 # Describe failure without treating uncertain publication as success.
-public func message(error: Error) -> str effects():
+public func message(error: Error) -> str effects(managed_allocation):
     match error:
         case Error.Invalid:
             return "invalid durable request or step bounds"
         case Error.Storage(value=detail):
-            return detail
+            return detail.copy()
         case Error.Corrupt:
             return "corrupt or missing committed durable evidence"
         case Error.Incompatible:
@@ -51,10 +51,7 @@ public func message(error: Error) -> str effects():
             return "durable callback has no qualified persistent identity"
 
 
-func valid(request: Request) -> bool:
-    if request.max_bytes < 1 or request.max_bytes > 8388608 or len(request.chunks) > 1024:
-        return False
-    const path = request.output_path
+func valid_output_path(path: str) -> bool:
     if len(path) == 0 or len(path) > 128 or path == "." or path == ".." or path == "run.json":
         return False
     if path.startswith("chunk-") or path.startswith(".myl-durable-"):
@@ -62,6 +59,14 @@ func valid(request: Request) -> bool:
     for character in path:
         if character == "/" or character == "\\" or ord(character) == 0:
             return False
+    return True
+
+
+func valid(request: Request) -> bool:
+    if request.max_bytes < 1 or request.max_bytes > 8388608 or len(request.chunks) > 1024:
+        return False
+    if not valid_output_path(request.output_path):
+        return False
     if len(request.input) > request.max_bytes or len(request.initial_state) > request.max_bytes:
         return False
     mut total = 0
@@ -73,7 +78,7 @@ func valid(request: Request) -> bool:
 
 
 func request_descriptor(request: Request, identity: str) -> str:
-    mut fields = ["durable-request-v1", identity, hashes.sha256(request.input), request.initial_state.hex(), request.output_path, str(request.max_bytes)]
+    mut fields = ["durable-request-v1", identity.copy(), hashes.sha256(request.input), request.initial_state.hex(), request.output_path.copy(), str(request.max_bytes)]
     for chunk in request.chunks:
         fields.append(hashes.sha256(chunk))
     return hashes.sha256(cache_record.encode(fields))
@@ -84,9 +89,9 @@ func artifact_name(index: int) -> str:
 
 
 func journal(descriptor: str, phase: str, output: str, artifacts: str[]) -> bytes:
-    mut fields = ["durable-journal-v1", descriptor, phase, output]
+    mut fields = ["durable-journal-v1", descriptor.copy(), phase.copy(), output.copy()]
     for artifact in artifacts:
-        fields.append(artifact)
+        fields.append(artifact.copy())
     return cache_record.encode(fields)
 
 
@@ -170,7 +175,7 @@ public func run(fs: Filesystem, request: Request, compute: func(bytes, bytes) ->
             if fields[2] != "running" and fields[2] != "published":
                 return Err(Error.Corrupt)
             published = fields[2] == "published"
-            expected_output = fields[3]
+            expected_output = fields[3].copy()
             artifacts = fields[4:]
             if len(artifacts) > len(request.chunks):
                 return Err(Error.Corrupt)
@@ -178,7 +183,7 @@ public func run(fs: Filesystem, request: Request, compute: func(bytes, bytes) ->
                 return Err(Error.Corrupt)
             if not published and len(expected_output) != 0:
                 return Err(Error.Corrupt)
-        mut state = request.initial_state
+        mut state = request.initial_state.copy()
         mut output = byte_builder.create()
         mut output_size = 0
         for index in range(len(artifacts)):
@@ -193,23 +198,22 @@ public func run(fs: Filesystem, request: Request, compute: func(bytes, bytes) ->
                 return Err(Error.Corrupt)
             byte_builder.append(mut output, step.output)
             output_size += len(step.output)
-            state = step.state
+            state = step.state.copy()
         _ = try collect(fs, names, len(artifacts))
         if "run.json" not in names:
             _ = try atomic_write_file(fs, "run.json", journal(root, "running", "", artifacts))
         const reused = len(artifacts)
         for index in range(reused, len(request.chunks)):
-            const chunk = request.chunks[index]
-            const step = compute(chunk, state)
+            const step = compute(request.chunks[index], state)
             if len(step.output) > request.max_bytes - output_size or len(step.state) > request.max_bytes:
                 return Err(Error.Invalid)
-            const data = cache_record.encode(["durable-step-v1", root, str(index), hashes.sha256(chunk), hashes.sha256(state), step.output.hex(), step.state.hex()])
+            const data = cache_record.encode(["durable-step-v1", root.copy(), str(index), hashes.sha256(request.chunks[index]), hashes.sha256(state), step.output.hex(), step.state.hex()])
             _ = try atomic_write_file(fs, artifact_name(index), data)
             artifacts.append(hashes.sha256(data))
             _ = try atomic_write_file(fs, "run.json", journal(root, "running", "", artifacts))
             byte_builder.append(mut output, step.output)
             output_size += len(step.output)
-            state = step.state
+            state = step.state.copy()
         const completed = byte_builder.finish(output)
         const digest = hashes.sha256(completed)
         if published and expected_output != digest:

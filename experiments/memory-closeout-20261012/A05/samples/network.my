@@ -1,0 +1,49 @@
+import network
+
+func first(net: Network) -> int:
+    match network.connect(net):
+        case network.Connected.err(_):
+            return 1
+        case network.Connected.ok(resource):
+            match network.read[4](resource):
+                case network.Read.err(_):
+                    return 2
+                case network.Read.ok(chunk):
+                    if chunk.length != 2u64 or chunk.bytes[0] != 97u8 or chunk.bytes[1] != 98u8:
+                        return 3
+                    return 0
+
+func second(net: Network) -> int:
+    match network.connect(net):
+        case network.Connected.err(_):
+            return 4
+        case network.Connected.ok(resource):
+            const data = FixedArray[u8, 2]([99u8, 100u8])
+            match network.write(resource, data):
+                case network.Written.err(_):
+                    return 5
+                case network.Written.ok(length):
+                    if length != 2u64:
+                        return 6
+                    return 0
+
+func third(net: Network) -> int:
+    match network.connect(net):
+        case network.Connected.err(_):
+            return 7
+        case network.Connected.ok(resource):
+            match network.close(resource):
+                case network.Closed.ok(closed):
+                    return if (closed) then (0) else (8)
+                case network.Closed.err(_):
+                    return 9
+
+func main(net: Network) -> int:
+    with net.host("127.0.0.1:43781") as scoped:
+        const one = first(scoped)
+        if one != 0:
+            return one
+        const two = second(scoped)
+        if two != 0:
+            return two
+        return third(scoped)

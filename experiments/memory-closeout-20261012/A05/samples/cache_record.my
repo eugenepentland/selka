@@ -1,0 +1,36 @@
+import cache_record
+import hashes
+
+func main() -> int:
+    if hashes.sha256(b"abc") != "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad":
+        return 1
+    mut fields = ["dynamic-" + str(7), "", "é"]
+    const encoded = cache_record.encode(fields)
+    match cache_record.decode(encoded):
+        case Ok(decoded):
+            if decoded != fields:
+                return 2
+        case Err(_):
+            return 3
+    match cache_record.decode(b"invalid"):
+        case Ok(_):
+            return 4
+        case Err(error):
+            if len(cache_record.message(error)) == 0:
+                return 5
+    if hashes.sha256(b"") != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855":
+        return 6
+    fields[0] = "replaced"
+    match cache_record.decode(encoded):
+        case Ok(decoded):
+            if decoded[0] != "dynamic-7":
+                return 7
+        case Err(_):
+            return 8
+    const corrupted = b"X" + encoded[1:]
+    match cache_record.decode(corrupted):
+        case Ok(_):
+            return 9
+        case Err(_):
+            pass
+    return 0

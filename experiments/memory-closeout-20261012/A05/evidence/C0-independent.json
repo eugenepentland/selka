@@ -1,0 +1,77 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "overlay": false,
+  "check_only": false,
+  "harness_sha256": "762e145d19e37fa96ee906d032e475a98b41c1249b88b1af07badc6e9217dc82",
+  "cases": {
+    "cache_record": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/cache_record.my",
+        "original_sha256": "47033e03923a805716ee4c41855732d2df6573cba4df8e8c6cd6232eddc86aa0",
+        "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-independent/cache_record/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-independent/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-independent/cache_record/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-independent/cache_record/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "build-slot: FIFO ticket 79, position 12; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 79, position 6; earlier build tickets must run first; waiting (60s so far)\nbuild-slot: FIFO ticket 79, position 5; earlier build tickets must run first; waiting (121s so far)\nbuild-slot: FIFO ticket 79, position 5; earlier build tickets must run first; waiting (181s so far)\nbuild-slot: FIFO ticket 79, position 5; earlier build tickets must run first; waiting (241s so far)\nbuild-slot: FIFO ticket 79, position 5; earlier build tickets must run first; waiting (301s so far)\nbuild-slot: build slot 2, FIFO ticket 79 after 341s\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stderr": "",
+        "binary_sha256": "bc575e912cfa4392f737bda3f80c50892a531f4403185c7897b8cc409b30c340",
+        "llvm_sha256": "d70a72a02bd156d808e8bdc0dc49f0bee7cfefcdd14765f822060bb87ddded06",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/C0-independent/cache_record/release/counts.json",
+          "counter_sha256": "6579e764addef28dcd63ab25c44b93068242534d78991be21357056701973e6e",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 61,
+          "memory": {
+            "allocs": 97,
+            "alloc_bytes": 8352,
+            "frees": 97,
+            "reallocs": 0,
+            "peak_live_bytes": 928,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    }
+  }
+}

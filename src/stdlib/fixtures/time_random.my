@@ -4,7 +4,7 @@ import time
 func streams() -> int:
     mut generator = random.seeded(42)
     mut first = random.next_word(mut generator)
-    mut snapshot = generator
+    mut snapshot = generator.copy()
     mut second = random.next_word(mut snapshot)
     if first == second:
         return 1

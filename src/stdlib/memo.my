@@ -12,10 +12,10 @@ public enum Error:
 
 
 # The human-readable reason a cache could not be created.
-public func message(error: Error) -> str effects():
+public func message(error: Error) -> str effects(managed_allocation):
     match error:
         case Error.InvalidCapacity(value=detail):
-            return detail
+            return detail.copy()
 
 
 # A completed value and the actual callable that produced it. Function identity
@@ -57,11 +57,11 @@ public func call[V: equality + storable](mut cache: Cache[V], key: Key) -> Looku
     const compute = cache.compute
     for entry in cache.entries:
         if entry.key == key and same_function(entry.compute, compute):
-            return Lookup[V](value=entry.value, reused=True)
+            return Lookup[V](value=entry.value.copy(), reused=True)
     const value = compute(key)
     if cache.max_entries == 0:
         return Lookup[V](value=value, reused=False)
-    const completed = Entry[V](compute=compute, key=key, value=value)
+    const completed = Entry[V](compute=compute, key=key.copy(), value=value.copy())
     if len(cache.entries) < cache.max_entries:
         cache.entries.append(completed)
     else:

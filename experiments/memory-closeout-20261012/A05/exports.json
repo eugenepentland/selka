@@ -1,0 +1,1794 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "scope": "All public declarations in A05-owned remaining standard-library modules; builtin methods catalogued separately by source API tests.",
+  "exports": [
+    {
+      "module": "cache_record",
+      "name": "Error",
+      "kind": "enum",
+      "source": "src/stdlib/cache_record.my",
+      "line": 5,
+      "signature": "public enum Error:",
+      "source_sha256": "d12aae8879c0b3fdc07ff398d79d4daa44e5a45e33c6660bbecaeda7659fdd57",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "cache_record",
+      "name": "message",
+      "kind": "func",
+      "source": "src/stdlib/cache_record.my",
+      "line": 10,
+      "signature": "public func message(error: Error) -> str effects():",
+      "source_sha256": "d12aae8879c0b3fdc07ff398d79d4daa44e5a45e33c6660bbecaeda7659fdd57",
+      "ownership_contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/cache_record.my",
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "cache_record",
+      "name": "encode",
+      "kind": "func",
+      "source": "src/stdlib/cache_record.my",
+      "line": 18,
+      "signature": "public func encode(fields: str[]) -> bytes:",
+      "source_sha256": "d12aae8879c0b3fdc07ff398d79d4daa44e5a45e33c6660bbecaeda7659fdd57",
+      "ownership_contract": "Borrows string list; returns independent canonical checksummed bytes.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/cache_record.my",
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "cache_record",
+      "name": "decode",
+      "kind": "func",
+      "source": "src/stdlib/cache_record.my",
+      "line": 27,
+      "signature": "public func decode(data: bytes) -> Result[str[], Error]:",
+      "source_sha256": "d12aae8879c0b3fdc07ff398d79d4daa44e5a45e33c6660bbecaeda7659fdd57",
+      "ownership_contract": "Borrows input bytes; returns independently owned decoded strings or scalar error.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/cache_record.my",
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "durable",
+      "name": "Step",
+      "kind": "record",
+      "source": "src/stdlib/durable.my",
+      "line": 6,
+      "signature": "public record Step:",
+      "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "durable",
+      "name": "Request",
+      "kind": "record",
+      "source": "src/stdlib/durable.my",
+      "line": 14,
+      "signature": "public record Request:",
+      "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "durable",
+      "name": "Report",
+      "kind": "record",
+      "source": "src/stdlib/durable.my",
+      "line": 23,
+      "signature": "public record Report:",
+      "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "durable",
+      "name": "Error",
+      "kind": "enum",
+      "source": "src/stdlib/durable.my",
+      "line": 31,
+      "signature": "public enum Error:",
+      "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "durable",
+      "name": "message",
+      "kind": "func",
+      "source": "src/stdlib/durable.my",
+      "line": 40,
+      "signature": "public func message(error: Error) -> str effects():",
+      "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
+      "ownership_contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "durable",
+      "name": "run",
+      "kind": "func",
+      "source": "src/stdlib/durable.my",
+      "line": 151,
+      "signature": "public func run(fs: Filesystem, request: Request, compute: func(bytes, bytes) -> Step effects(managed_allocation)) -> Result[Report, Error]:",
+      "source_sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
+      "ownership_contract": "Borrows capability/request/callback; scoped directory lease and bounded publication; returns independent state/digest or owned error.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "environment",
+      "name": "fixed",
+      "kind": "func",
+      "source": "src/stdlib/environment.my",
+      "line": 6,
+      "signature": "public func fixed(values: dict[str, str]) -> Environment:",
+      "source_sha256": "b2cefe6fd13933d1980d5d09740293465662875b4c35e513a650373f18ecd064",
+      "ownership_contract": "Borrows dictionary; creates owned root provider with copied name/value bytes.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "filesystem",
+      "name": "memory",
+      "kind": "func",
+      "source": "src/stdlib/filesystem.my",
+      "line": 6,
+      "signature": "public func memory() -> Filesystem:",
+      "source_sha256": "454813fbe04d42fced7a9efde1813231a70fac3063c1bc259a36deab78310f67",
+      "ownership_contract": "Creates an owned root provider with independent in-memory filesystem storage.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "hashes",
+      "name": "sha256",
+      "kind": "func",
+      "source": "src/stdlib/hashes.my",
+      "line": 66,
+      "signature": "public func sha256(data: bytes) -> str:",
+      "source_sha256": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+      "ownership_contract": "Borrows input bytes; returns independent digest text.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/cache_record.my",
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "pi",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 7,
+      "signature": "public func pi() -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my",
+        "experiments/memory-closeout-20261012/A05/samples/math_extra.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "e",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 12,
+      "signature": "public func e() -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "nan",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 17,
+      "signature": "public func nan() -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "infinity",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 22,
+      "signature": "public func infinity() -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "is_nan",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 27,
+      "signature": "public func is_nan(value: float) -> bool effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "is_inf",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 32,
+      "signature": "public func is_inf(value: float) -> bool effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "is_finite",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 37,
+      "signature": "public func is_finite(value: float) -> bool effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "fabs",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 42,
+      "signature": "public func fabs(value: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my",
+        "experiments/memory-closeout-20261012/A05/samples/math_extra.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "sign",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 51,
+      "signature": "public func sign(value: float) -> int effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "trunc",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 60,
+      "signature": "public func trunc(value: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "floor",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 69,
+      "signature": "public func floor(value: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "ceil",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 77,
+      "signature": "public func ceil(value: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "round",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 85,
+      "signature": "public func round(value: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "sqrt",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 100,
+      "signature": "public func sqrt(value: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "sin",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 111,
+      "signature": "public func sin(value: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/math_extra.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "cos",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 120,
+      "signature": "public func cos(value: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/math_extra.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "pow",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 151,
+      "signature": "public func pow(base: float, exponent: int) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "fmin",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 161,
+      "signature": "public func fmin(a: float, b: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "fmax",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 170,
+      "signature": "public func fmax(a: float, b: float) -> float effects():",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "min",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 179,
+      "signature": "public func min[T: integer](a: T, b: T) -> T noalloc:",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my",
+        "src/stdlib/fixtures/integer_extrema.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "max",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 186,
+      "signature": "public func max[T: integer](a: T, b: T) -> T noalloc:",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my",
+        "src/stdlib/fixtures/integer_extrema.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "clamp",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 193,
+      "signature": "public func clamp[T: integer](value: T, low: T, high: T) -> T noalloc:",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my",
+        "src/stdlib/fixtures/integer_extrema.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "abs",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 204,
+      "signature": "public func abs(value: int) -> Result[int, str]:",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "gcd",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 213,
+      "signature": "public func gcd(a: int, b: int) -> Result[int, str]:",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "lcm",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 224,
+      "signature": "public func lcm(a: int, b: int) -> Result[int, str]:",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "math",
+      "name": "isqrt",
+      "kind": "func",
+      "source": "src/stdlib/math.my",
+      "line": 237,
+      "signature": "public func isqrt(value: int) -> Result[int, str]:",
+      "source_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/math.my"
+      ]
+    },
+    {
+      "module": "memo",
+      "name": "Key",
+      "kind": "enum",
+      "source": "src/stdlib/memo.my",
+      "line": 3,
+      "signature": "public enum Key:",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+      ]
+    },
+    {
+      "module": "memo",
+      "name": "Error",
+      "kind": "enum",
+      "source": "src/stdlib/memo.my",
+      "line": 10,
+      "signature": "public enum Error:",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+      ]
+    },
+    {
+      "module": "memo",
+      "name": "message",
+      "kind": "func",
+      "source": "src/stdlib/memo.my",
+      "line": 15,
+      "signature": "public func message(error: Error) -> str effects():",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+      ]
+    },
+    {
+      "module": "memo",
+      "name": "Entry",
+      "kind": "record",
+      "source": "src/stdlib/memo.my",
+      "line": 23,
+      "signature": "public record Entry[V: equality + storable]:",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "memo",
+      "name": "Cache",
+      "kind": "record",
+      "source": "src/stdlib/memo.my",
+      "line": 31,
+      "signature": "public record Cache[V: equality + storable]:",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "memo",
+      "name": "Lookup",
+      "kind": "record",
+      "source": "src/stdlib/memo.my",
+      "line": 39,
+      "signature": "public record Lookup[V: equality + storable]:",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "memo",
+      "name": "create",
+      "kind": "func",
+      "source": "src/stdlib/memo.my",
+      "line": 46,
+      "signature": "public func create[V: equality + storable](max_entries: int, compute: func(Key) -> V effects(managed_allocation)) -> Result[Cache[V], Error]:",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Borrows callback; returns independent empty cache or owned error.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+      ]
+    },
+    {
+      "module": "memo",
+      "name": "call",
+      "kind": "func",
+      "source": "src/stdlib/memo.my",
+      "line": 56,
+      "signature": "public func call[V: equality + storable](mut cache: Cache[V], key: Key) -> Lookup[V]:",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Mutably borrows cache; borrows key and callback input; retained key/value and returned value are independent owned snapshots.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+      ]
+    },
+    {
+      "module": "memo",
+      "name": "clear",
+      "kind": "func",
+      "source": "src/stdlib/memo.my",
+      "line": 75,
+      "signature": "public func clear[V: equality + storable](mut cache: Cache[V]) -> Unit:",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Mutably borrows cache; destroys only its owned entries; independent copies survive.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+      ]
+    },
+    {
+      "module": "memo",
+      "name": "count",
+      "kind": "func",
+      "source": "src/stdlib/memo.my",
+      "line": 81,
+      "signature": "public func count[V: equality + storable](cache: Cache[V]) -> int effects():",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+      ]
+    },
+    {
+      "module": "memo",
+      "name": "capacity",
+      "kind": "func",
+      "source": "src/stdlib/memo.my",
+      "line": 86,
+      "signature": "public func capacity[V: equality + storable](cache: Cache[V]) -> int effects():",
+      "source_sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "Connection",
+      "kind": "resource",
+      "source": "src/stdlib/network.my",
+      "line": 2,
+      "signature": "public resource Connection: network",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "network",
+      "name": "Chunk",
+      "kind": "record",
+      "source": "src/stdlib/network.my",
+      "line": 6,
+      "signature": "public record Chunk[const N: u64]:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "network",
+      "name": "Connected",
+      "kind": "result",
+      "source": "src/stdlib/network.my",
+      "line": 13,
+      "signature": "public result Connected:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network_denied.my",
+        "experiments/memory-closeout-20261012/A05/samples/network.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "Read",
+      "kind": "result",
+      "source": "src/stdlib/network.my",
+      "line": 19,
+      "signature": "public result Read[const N: u64]:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "Written",
+      "kind": "result",
+      "source": "src/stdlib/network.my",
+      "line": 25,
+      "signature": "public result Written:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "Failure",
+      "kind": "record",
+      "source": "src/stdlib/network.my",
+      "line": 31,
+      "signature": "public record Failure:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "network",
+      "name": "Closed",
+      "kind": "result",
+      "source": "src/stdlib/network.my",
+      "line": 37,
+      "signature": "public result Closed:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "denied",
+      "kind": "func",
+      "source": "src/stdlib/network.my",
+      "line": 45,
+      "signature": "public func denied() -> Network:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Creates an owned deterministic denied root provider.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network_denied.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "denied_here",
+      "kind": "func",
+      "source": "src/stdlib/network.my",
+      "line": 50,
+      "signature": "public func denied_here() -> int:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network_denied.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "describe",
+      "kind": "func",
+      "source": "src/stdlib/network.my",
+      "line": 55,
+      "signature": "public func describe(code: int) -> str:",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network_denied.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "connect",
+      "kind": "func",
+      "source": "src/stdlib/network.my",
+      "line": 69,
+      "signature": "public func connect(net: Network) -> Connected effects(network):",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Acquires one resource dependent on the Network provider; resource-result path requires qualification.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network_denied.my",
+        "experiments/memory-closeout-20261012/A05/samples/network.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "read",
+      "kind": "func",
+      "source": "src/stdlib/network.my",
+      "line": 75,
+      "signature": "public func read[const N: u64](connection: Connection) -> Read[N] effects(network):",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Reads a live dependent resource into an independent fixed-array result; resource path requires qualification.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "write",
+      "kind": "func",
+      "source": "src/stdlib/network.my",
+      "line": 81,
+      "signature": "public func write[const N: u64](connection: Connection, data: FixedArray[u8, N]) -> Written effects(network):",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Copies fixed-array data synchronously into provider scratch; resource path requires qualification.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network.my"
+      ]
+    },
+    {
+      "module": "network",
+      "name": "close",
+      "kind": "func",
+      "source": "src/stdlib/network.my",
+      "line": 87,
+      "signature": "public func close(connection: Connection) -> Closed effects(network):",
+      "source_sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "ownership_contract": "Completes handle on success or returns live resource in failure; source/IR ownership path requires qualification.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network.my"
+      ]
+    },
+    {
+      "module": "persistent_memo",
+      "name": "Options",
+      "kind": "record",
+      "source": "src/stdlib/persistent_memo.my",
+      "line": 7,
+      "signature": "public record Options:",
+      "source_sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "persistent_memo",
+      "name": "Lookup",
+      "kind": "record",
+      "source": "src/stdlib/persistent_memo.my",
+      "line": 13,
+      "signature": "public record Lookup:",
+      "source_sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "persistent_memo",
+      "name": "Error",
+      "kind": "enum",
+      "source": "src/stdlib/persistent_memo.my",
+      "line": 19,
+      "signature": "public enum Error:",
+      "source_sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "persistent_memo",
+      "name": "message",
+      "kind": "func",
+      "source": "src/stdlib/persistent_memo.my",
+      "line": 25,
+      "signature": "public func message(error: Error) -> str effects():",
+      "source_sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
+      "ownership_contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "persistent_memo",
+      "name": "call",
+      "kind": "func",
+      "source": "src/stdlib/persistent_memo.my",
+      "line": 83,
+      "signature": "public func call(fs: Filesystem, options: Options, compute: func(memo.Key) -> bytes effects(managed_allocation), key: memo.Key) -> Result[Lookup, Error]:",
+      "source_sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
+      "ownership_contract": "Borrows capability/key/callback; scoped directory lease joins cleanup; returns independent result snapshot or owned error.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "Pool",
+      "kind": "record",
+      "source": "src/stdlib/pool.my",
+      "line": 3,
+      "signature": "public record Pool[T: copy + storable]:",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "Handle",
+      "kind": "record",
+      "source": "src/stdlib/pool.my",
+      "line": 13,
+      "signature": "public record Handle[T: copy + storable]:",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "create",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 24,
+      "signature": "public func create[T: copy + storable](values: T[]) -> Pool[T]:",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Borrows source list and copies each value into independent pool slots.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "occupied",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 39,
+      "signature": "public func occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effects():",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "insert",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 48,
+      "signature": "public func insert[T: copy + storable](mut store: Pool[T], value: T) -> Handle[T]:",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Mutably borrows pool, borrows value and copies it into a slot; returns scalar generational handle.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "get",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 64,
+      "signature": "public func get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> T?:",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Borrows pool/handle; returns independently copied optional value.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "set",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 71,
+      "signature": "public func set[T: copy + storable](mut store: Pool[T], handle: Handle[T], value: T) -> bool:",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Mutably borrows pool, borrows value and independently copies replacement; returns false for stale handles.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "remove",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 79,
+      "signature": "public func remove[T: copy + storable](mut store: Pool[T], handle: Handle[T]) -> bool:",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Mutably borrows pool; invalidates generation and retains slot capacity; returns false for stale handles.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "count",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 96,
+      "signature": "public func count[T: copy + storable](store: Pool[T]) -> int effects():",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "capacity",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 101,
+      "signature": "public func capacity[T: copy + storable](store: Pool[T]) -> int effects():",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "pool",
+      "name": "handles",
+      "kind": "func",
+      "source": "src/stdlib/pool.my",
+      "line": 106,
+      "signature": "public func handles[T: copy + storable](store: Pool[T]) -> Handle[T][]:",
+      "source_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "Random",
+      "kind": "record",
+      "source": "src/stdlib/random.my",
+      "line": 2,
+      "signature": "public record Random:",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "random",
+      "name": "from_word",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 20,
+      "signature": "public func from_word(word: u64) -> Random:",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "seeded",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 27,
+      "signature": "public func seeded(seed: int) -> Random:",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "from_entropy",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 32,
+      "signature": "public func from_entropy(capability: Entropy) -> Result[Random, str]:",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random_provider.my",
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "seeded_entropy",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 47,
+      "signature": "public func seeded_entropy(seed: int) -> Entropy:",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Creates an owned deterministic root provider.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "next_word",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 52,
+      "signature": "public func next_word(mut generator: Random) -> u64 effects(mutation):",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Mutable arguments transfer into the call and write back; ordinary arguments borrow; returned managed values must own independent storage.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "random",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 61,
+      "signature": "public func random(mut generator: Random) -> float effects(mutation):",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Mutable arguments transfer into the call and write back; ordinary arguments borrow; returned managed values must own independent storage.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "randint",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 92,
+      "signature": "public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Mutable arguments transfer into the call and write back; ordinary arguments borrow; returned managed values must own independent storage.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "choice",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 102,
+      "signature": "public func choice[T: copy + storable](mut generator: Random, items: T[]) -> T? effects(mutation, managed_allocation):",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Mutably borrows generator; borrows source list; returns copied optional selected value.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "random",
+      "name": "shuffle",
+      "kind": "func",
+      "source": "src/stdlib/random.my",
+      "line": 113,
+      "signature": "public func shuffle[T: copy + storable](mut generator: Random, mut items: T[]) effects(mutation, managed_allocation):",
+      "source_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "ownership_contract": "Mutably borrows generator/list; preserves independent managed elements while permuting.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "compare_strs",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 2,
+      "signature": "public func compare_strs(a: str, b: str) -> int effects():",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "sort_ints",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 11,
+      "signature": "public func sort_ints(values: int[]) -> int[]:",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Borrows input; returns independent owned list and managed elements.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "sort_floats",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 18,
+      "signature": "public func sort_floats(values: float[]) -> float[]:",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Borrows input; returns independent owned list and managed elements.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "sort_strs",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 25,
+      "signature": "public func sort_strs(values: str[]) -> str[]:",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Borrows input; returns independent owned list and managed elements.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "sort_by_key",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 35,
+      "signature": "public func sort_by_key[T: copy + storable](values: T[], key: func(T) -> int effects()) -> T[]:",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Borrows input; returns independent owned list and managed elements.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "is_sorted_ints",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 40,
+      "signature": "public func is_sorted_ints(values: int[]) -> bool effects():",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "binary_search",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 50,
+      "signature": "public func binary_search(values: int[], target: int) -> int? effects():",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "min_int",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 65,
+      "signature": "public func min_int(values: int[]) -> int? effects():",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "max_int",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 76,
+      "signature": "public func max_int(values: int[]) -> int? effects():",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "min_str",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 87,
+      "signature": "public func min_str(values: str[]) -> str?:",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "unique_ints",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 98,
+      "signature": "public func unique_ints(values: int[]) -> int[]:",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Borrows input; returns independent owned list and managed elements.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "sort",
+      "name": "unique_strs",
+      "kind": "func",
+      "source": "src/stdlib/sort.my",
+      "line": 109,
+      "signature": "public func unique_strs(values: str[]) -> str[]:",
+      "source_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "ownership_contract": "Borrows input; returns independent owned list and managed elements.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/sort.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "Duration",
+      "kind": "record",
+      "source": "src/stdlib/time.my",
+      "line": 2,
+      "signature": "public record Duration:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "time",
+      "name": "Instant",
+      "kind": "record",
+      "source": "src/stdlib/time.my",
+      "line": 7,
+      "signature": "public record Instant:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": []
+    },
+    {
+      "module": "time",
+      "name": "nanoseconds",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 23,
+      "signature": "public func nanoseconds(count: int) -> Duration effects():",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my",
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "microseconds",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 28,
+      "signature": "public func microseconds(count: int) -> Result[Duration, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "milliseconds",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 33,
+      "signature": "public func milliseconds(count: int) -> Result[Duration, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "seconds",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 38,
+      "signature": "public func seconds(count: int) -> Result[Duration, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "sum",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 51,
+      "signature": "public func sum(first: Duration, second: Duration) -> Result[Duration, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "difference",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 60,
+      "signature": "public func difference(first: Duration, second: Duration) -> Result[Duration, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "compare",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 67,
+      "signature": "public func compare(first: Duration, second: Duration) -> int effects():",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "to_seconds",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 76,
+      "signature": "public func to_seconds(value: Duration) -> float effects():",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "to_milliseconds",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 81,
+      "signature": "public func to_milliseconds(value: Duration) -> int effects():",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "now",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 90,
+      "signature": "public func now(clock: Clock) -> Result[Instant, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random_provider.my",
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "simulated_clock",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 105,
+      "signature": "public func simulated_clock(start: Instant) -> Clock:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Creates an owned deterministic root provider.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "advance",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 111,
+      "signature": "public func advance(clock: Clock, duration: Duration) -> Result[Unit, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "from_unix_nanoseconds",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 121,
+      "signature": "public func from_unix_nanoseconds(count: int) -> Instant effects():",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my",
+        "experiments/memory-closeout-20261012/A05/samples/providers.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "after",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 126,
+      "signature": "public func after(start: Instant, duration: Duration) -> Result[Instant, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "elapsed",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 135,
+      "signature": "public func elapsed(start: Instant, end: Instant) -> Result[Duration, str]:",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "module": "time",
+      "name": "expired",
+      "kind": "func",
+      "source": "src/stdlib/time.my",
+      "line": 144,
+      "signature": "public func expired(deadline: Instant, current: Instant) -> bool effects():",
+      "source_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "ownership_contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "qualification": "pending executable coverage",
+      "evidence": [],
+      "source_coverage": [
+        "src/stdlib/fixtures/time_random.my"
+      ]
+    }
+  ]
+}
