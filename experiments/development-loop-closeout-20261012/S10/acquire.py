@@ -11,6 +11,7 @@ import time
 ROOT = Path(os.environ.get('S10_SOURCE_ROOT', Path(__file__).resolve().parents[3])).resolve()
 OUT = Path(os.environ.get('S10_OUTPUT_DIR', Path(__file__).resolve().parent / 'raw')).resolve()
 OUT.mkdir(parents=True, exist_ok=True)
+LABEL = os.environ.get('S10_RUN_LABEL', 'C0')
 ZIG = Path('/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig')
 
 def run(name, argv):
@@ -37,7 +38,7 @@ if sys.argv[1] == 'identity':
             'baseline_modes': ['Debug', 'ReleaseFast']}
     (OUT / 'C0-identity.json').write_text(json.dumps(info, indent=2) + '\n')
 elif sys.argv[1] == 'release':
-    sys.exit(run('C0-release-build', ['scripts/build-slot.sh', 'build', str(ZIG), 'build', '-Doptimize=ReleaseFast', '--prefix', str(ROOT / '.tmp-s10/frozen-release')]))
+    sys.exit(run(LABEL + '-release-build', ['scripts/build-slot.sh', 'build', str(ZIG), 'build', '-Doptimize=ReleaseFast', '--prefix', str(Path(os.environ.get('S10_INSTALL_PREFIX', ROOT / '.tmp-s10/frozen-release')).resolve())]))
 elif sys.argv[1] == 'complete':
     sys.exit(run('C0-complete', [sys.executable, 'scripts/verify_cache.py', '--zig', str(ZIG), '--force']))
 elif sys.argv[1] == 'fixture':

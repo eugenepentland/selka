@@ -1,0 +1,361 @@
+{
+  "members": [
+    {
+      "group": "tooling_unit",
+      "member": 0,
+      "counts": {
+        "pass": 28,
+        "total": 28
+      },
+      "elapsed_seconds": 0.11800000000000001,
+      "peak_rss": "5M"
+    },
+    {
+      "group": "memory_budget",
+      "member": 0,
+      "counts": {
+        "pass": 7,
+        "total": 7
+      },
+      "elapsed_seconds": 0.042,
+      "peak_rss": "7M"
+    },
+    {
+      "group": "unit",
+      "member": 1,
+      "counts": {
+        "pass": 135,
+        "skip": 1406,
+        "total": 1541
+      },
+      "elapsed_seconds": 32.0,
+      "peak_rss": "73M"
+    },
+    {
+      "group": "unit",
+      "member": 2,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 20.0,
+      "peak_rss": "71M"
+    },
+    {
+      "group": "unit",
+      "member": 3,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 36.0,
+      "peak_rss": "68M"
+    },
+    {
+      "group": "unit",
+      "member": 4,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 120.0,
+      "peak_rss": "67M"
+    },
+    {
+      "group": "unit",
+      "member": 5,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "66M"
+    },
+    {
+      "group": "unit",
+      "member": 6,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 44.0,
+      "peak_rss": "142M"
+    },
+    {
+      "group": "unit",
+      "member": 7,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 34.0,
+      "peak_rss": "67M"
+    },
+    {
+      "group": "unit",
+      "member": 8,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 21.0,
+      "peak_rss": "66M"
+    },
+    {
+      "group": "unit",
+      "member": 9,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 40.0,
+      "peak_rss": "67M"
+    },
+    {
+      "group": "unit",
+      "member": 10,
+      "counts": {
+        "pass": 128,
+        "skip": 1413,
+        "total": 1541
+      },
+      "elapsed_seconds": 28.0,
+      "peak_rss": "99M"
+    },
+    {
+      "group": "unit",
+      "member": 11,
+      "counts": {
+        "pass": 127,
+        "skip": 1414,
+        "total": 1541
+      },
+      "elapsed_seconds": 22.0,
+      "peak_rss": "93M"
+    },
+    {
+      "group": "unit",
+      "member": 12,
+      "counts": {
+        "pass": 127,
+        "skip": 1414,
+        "total": 1541
+      },
+      "elapsed_seconds": 27.0,
+      "peak_rss": "67M"
+    },
+    {
+      "group": "cli",
+      "member": 1,
+      "counts": {
+        "pass": 48,
+        "skip": 222,
+        "total": 270
+      },
+      "elapsed_seconds": 8.0,
+      "peak_rss": "65M"
+    },
+    {
+      "group": "cli",
+      "member": 2,
+      "counts": {
+        "pass": 45,
+        "skip": 225,
+        "total": 270
+      },
+      "elapsed_seconds": 9.0,
+      "peak_rss": "64M"
+    },
+    {
+      "group": "cli",
+      "member": 3,
+      "counts": {
+        "pass": 45,
+        "skip": 225,
+        "total": 270
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "169M"
+    },
+    {
+      "group": "cli",
+      "member": 4,
+      "counts": {
+        "pass": 44,
+        "skip": 226,
+        "total": 270
+      },
+      "elapsed_seconds": 5.0,
+      "peak_rss": "64M"
+    },
+    {
+      "group": "cli",
+      "member": 5,
+      "counts": {
+        "pass": 44,
+        "skip": 226,
+        "total": 270
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "177M"
+    },
+    {
+      "group": "cli",
+      "member": 6,
+      "counts": {
+        "pass": 44,
+        "skip": 226,
+        "total": 270
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "292M"
+    },
+    {
+      "group": "golden",
+      "member": 0,
+      "counts": {
+        "pass": 2,
+        "total": 2
+      },
+      "elapsed_seconds": 28.0,
+      "peak_rss": "72M"
+    },
+    {
+      "group": "component-support",
+      "member": 0,
+      "counts": {
+        "pass": 10,
+        "total": 10
+      },
+      "elapsed_seconds": 6.0,
+      "peak_rss": "5M"
+    },
+    {
+      "group": "core",
+      "member": 0,
+      "counts": {
+        "pass": 129,
+        "skip": 896,
+        "total": 1025
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "286M"
+    },
+    {
+      "group": "core",
+      "member": 1,
+      "counts": {
+        "pass": 128,
+        "skip": 897,
+        "total": 1025
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "282M"
+    },
+    {
+      "group": "core",
+      "member": 2,
+      "counts": {
+        "pass": 128,
+        "skip": 897,
+        "total": 1025
+      },
+      "elapsed_seconds": 58.0,
+      "peak_rss": "289M"
+    },
+    {
+      "group": "core",
+      "member": 3,
+      "counts": {
+        "pass": 128,
+        "skip": 897,
+        "total": 1025
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "293M"
+    },
+    {
+      "group": "core",
+      "member": 4,
+      "counts": {
+        "pass": 128,
+        "skip": 897,
+        "total": 1025
+      },
+      "elapsed_seconds": 50.0,
+      "peak_rss": "281M"
+    },
+    {
+      "group": "core",
+      "member": 5,
+      "counts": {
+        "pass": 128,
+        "skip": 897,
+        "total": 1025
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "286M"
+    },
+    {
+      "group": "core",
+      "member": 6,
+      "counts": {
+        "pass": 128,
+        "skip": 897,
+        "total": 1025
+      },
+      "elapsed_seconds": 54.0,
+      "peak_rss": "570M"
+    },
+    {
+      "group": "core",
+      "member": 7,
+      "counts": {
+        "pass": 128,
+        "skip": 897,
+        "total": 1025
+      },
+      "elapsed_seconds": 60.0,
+      "peak_rss": "290M"
+    }
+  ],
+  "groups": {
+    "tooling_unit": {
+      "selected_pass": 28,
+      "run_members": 1
+    },
+    "memory_budget": {
+      "selected_pass": 7,
+      "run_members": 1
+    },
+    "unit": {
+      "selected_pass": 1541,
+      "run_members": 12
+    },
+    "cli": {
+      "selected_pass": 270,
+      "run_members": 6
+    },
+    "golden": {
+      "selected_pass": 2,
+      "run_members": 1
+    },
+    "component-support": {
+      "selected_pass": 10,
+      "run_members": 1
+    },
+    "core": {
+      "selected_pass": 1025,
+      "run_members": 8
+    }
+  },
+  "interpretation": "sum selected passes across disjoint native shards; skip counts include sharding exclusions and are not guest/real skipped cases; durations overlap, never summed"
+}

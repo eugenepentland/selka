@@ -1,0 +1,129 @@
+{
+  "records": {
+    "C0": {
+      "artifacts": [
+        {
+          "id": "cli",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/81accfd8f387cade06c8b468528ada80/test",
+          "bytes": 31202424,
+          "sha256": "31cc9c996381bee8f983d2c87edfd7af3d5e862355cf38f2a758fed87d23da34"
+        },
+        {
+          "id": "component-builder",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components",
+          "bytes": 4501808,
+          "sha256": "8dd469a31922fa982ea83735c17c0ee479e9c3206739148a20b7a6e10ae150fd"
+        },
+        {
+          "id": "component-support",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/a02d279d693720dfeedd4fa28ea5266a/test",
+          "bytes": 20469944,
+          "sha256": "c3305673f0d8dc8d271bc791ed684c3d2901bfb253b49bdf2e68f6df09b14cdb"
+        },
+        {
+          "id": "core",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/1ebf4ab083b4d997c8be4352d1880215/test",
+          "bytes": 188731578,
+          "sha256": "033bf6eed1ac93932ec0940267bc2ca939ef1aeea679789853a755e93f3438bb"
+        },
+        {
+          "id": "golden",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/1faab5dea6ab5a2f13b3a8d285062406/test",
+          "bytes": 20247544,
+          "sha256": "6294989a64362cf21313e839f7c02b52e792aa99dec951291438f8eb07200924"
+        },
+        {
+          "id": "memory-budget",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/84f0f8e3a4ce27b559e415112ce09cee/test",
+          "bytes": 17553464,
+          "sha256": "384cb66a5693ba08078901d56e23a8436bbebb31f75adc471530a603a8f35b7d"
+        },
+        {
+          "id": "mylang",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/d352aaf4e8f448ac11328cb1b9b05767/mylang",
+          "bytes": 238915874,
+          "sha256": "7755a47e1e3f3eae11073effa41f4716fa7a99c818a4d836b8965c549fd0b57f"
+        },
+        {
+          "id": "tooling-units",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/454f7b509922319895added2987002af/tooling-unit-tests",
+          "bytes": 21692045,
+          "sha256": "01d916b43753f16c3e4f8db8e8bcd4f7cab2da526052fa14d48c95cde8fdd56c"
+        },
+        {
+          "id": "units",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/4710ab805a877ced54992b8a8c32cd45/test",
+          "bytes": 222203490,
+          "sha256": "8587fb50b8374fc4ac340ea023c1d0342db67177dd12d013ba0efce9a2377aa1"
+        }
+      ],
+      "total_bytes": 765518171
+    },
+    "C1": {
+      "artifacts": [
+        {
+          "id": "cli",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/9804372280908306504c82cc10666570/test",
+          "bytes": 31202424,
+          "sha256": "ee17108889bdb59ccef79cc8f9eb7ddd3885fedc6e859af02de12e9dac2c6a7c"
+        },
+        {
+          "id": "component-builder",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components",
+          "bytes": 4501824,
+          "sha256": "d05d9330e0985c80ebce86e06e24413d4f0a4a7af09474c2347e5aada973345c"
+        },
+        {
+          "id": "component-support",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/a02d279d693720dfeedd4fa28ea5266a/test",
+          "bytes": 20474040,
+          "sha256": "a2721a196a6df59b8834f650972e4c30aab03502c9c3dc34ee0b16f2845a9548"
+        },
+        {
+          "id": "core",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/9f903896c467b4c06d1a899ba68bfa93/test",
+          "bytes": 188704314,
+          "sha256": "bd520b4a55858672781be7bedae620d7cba35ba48f0c3c00dbcc48eedc52fa25"
+        },
+        {
+          "id": "golden",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/05f1bf59679b987333dbc0d0562e875f/test",
+          "bytes": 20390925,
+          "sha256": "8a030c8f94a01db94d4feb7adac45a124455e331797a4d82b8a242c25baf5755"
+        },
+        {
+          "id": "memory-budget",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/84f0f8e3a4ce27b559e415112ce09cee/test",
+          "bytes": 17553464,
+          "sha256": "727ade16fbfd01b560ec2f0edbed5dab0dd56826866b8dcd8e75d36fe12d4a52"
+        },
+        {
+          "id": "mylang",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/071fb6fccb2d2cb3e05a067a7d7e7c46/mylang",
+          "bytes": 239001890,
+          "sha256": "e018f4dc02cba5020dcdb9c74a8bdd4354d11b49d2dfaacf5030b0aa82f176f3"
+        },
+        {
+          "id": "text-scalar-units",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/c97f8a3001b35f1c023916ea815df301/text-scalar-unit-tests",
+          "bytes": 21109922,
+          "sha256": "9d7d2ba52b1f2c8633fabdbaa98b8f2dc0624697984f382a3e2d0d97e2f9f83a"
+        },
+        {
+          "id": "tooling-units",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/454f7b509922319895added2987002af/tooling-unit-tests",
+          "bytes": 21692045,
+          "sha256": "1880445ac053cd84575b3aa4b8bd983cc646b11978cb26a969cfa1ac693cdd50"
+        },
+        {
+          "id": "units",
+          "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/b9adb3011362bcbe89304cd117380a7e/test",
+          "bytes": 226794424,
+          "sha256": "7970b4128b4327f17a9cd6f4aed27583fa962034d80677cfca30cebbf3b2cf48"
+        }
+      ],
+      "total_bytes": 791425272
+    }
+  },
+  "qualification": "actual prepared artifact size/hash inventory; no cold compile/link/RSS inference; variants have distinct source/debug paths"
+}

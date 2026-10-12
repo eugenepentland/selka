@@ -1,0 +1,81 @@
+[
+  {
+    "request": {
+      "id": "retained-0",
+      "command": "verify",
+      "args": [
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--force"
+      ]
+    },
+    "response": {
+      "id": "retained-0",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 28837,
+        "bytes_hashed": 2328923316,
+        "digest_reuses": 0,
+        "directories_enumerated": 2283,
+        "metadata_observations": 759254,
+        "validation_calls": 53,
+        "snapshot_reuses": 0
+      }
+    },
+    "elapsed_seconds_including_queue": 1012.5895649688318
+  },
+  {
+    "request": {
+      "id": "retained-1",
+      "command": "verify",
+      "args": [
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ]
+    },
+    "response": {
+      "id": "retained-1",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175816,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    },
+    "elapsed_seconds_including_queue": 73.38548871618696
+  },
+  {
+    "request": {
+      "id": "retained-2",
+      "command": "verify",
+      "args": [
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ]
+    },
+    "response": {
+      "id": "retained-2",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 175816,
+        "validation_calls": 31,
+        "snapshot_reuses": 6
+      }
+    },
+    "elapsed_seconds_including_queue": 101.24781398009509
+  }
+]

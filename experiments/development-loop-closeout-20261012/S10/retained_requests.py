@@ -33,7 +33,7 @@ with (output/'stderr.log').open('wb') as errors:
             (output/'responses.json').write_text(json.dumps(responses,indent=2)+'\n')
             source=root/'.mylang-cache/verification-v1/last-run.json'
             if source.exists():
-                label = 'report-%d.json'%index if response.get('status') == 0 else 'report-%d-stale-prior.json'%index
+                label = 'report-%d.json'%index if response.get('status') == 0 else 'report-%d-observed-failure.json'%index
                 shutil.copyfile(source,output/label)
             inventory = root/'zig-out/verification/inventory.json'
             if inventory.exists():shutil.copyfile(inventory,output/('inventory-%d.json'%index))

@@ -1,27 +1,33 @@
 # C1 required matrix accounting
 
-Frozen source: a9a3208a4f3edbf17170cfc18d57f5f999af49c3. Final retained forced
-complete gate plus two unchanged requests is running. Every fixture verdict below
-is pending that gate; focused worker passes alone do not certify this candidate.
-A safety fixture proves its stated bounded contract, not every live repository edit.
+Frozen source a9a3208a4f3edbf17170cfc18d57f5f999af49c3 passed a forced complete
+request and two unchanged retained requests. Independent review confirms exact
+46 groups/101 members, stable inputs and status 0 for each. All 286 observed Python
+cases passed;90 members have unknown per-test telemetry. A passed bounded fixture
+proves its stated contract; unavailable broader live/timing proof stays visible.
 
-| Required case | Verdict now | Evidence to qualify on C1 | Limits kept visible |
+| Required case | Verdict | Real and fixture evidence | Remaining limits |
 | --- | --- | --- | --- |
-| Unchanged retained and one-shot requests | Not qualified | Real C1 forced and two retained responses/reports; profiles edited-session/one-shot receipt-decision fixture | C0 retained startup canceled143; no paired baseline warm or independent final one-shot complete execution |
-| Test-only and fixture edits | Not qualified | verify_cache added/renamed/member/recipe fixtures; S03 actual native mutated oracle failure and exact8+wrapper parity | Full live repository add/delete/rename timing matrix unavailable |
-| Documentation, tooling and pure-helper edits | Not qualified | embedded documentation preparation input test; producer independent compiler edit; adopted scalar/memory producer actual v2 caller | Narrow fixture selection proofs need final execution; no new warm edit latency qualification |
-| Semantic rule, runtime, lifetime/mode and ABI edits | Not qualified | producer mode/seed/ABI/schema/tool and transitive semantic mutation tests; conservative fallback and current compiler identity | No memory-team semantics merged or attributed; no paired live lifetime/ABI change cohort |
-| Component implementation, seed and protocol edits | Not qualified | producer artifact replacement/source-ABA/publication tests; component seed/mode fixtures; S09 timing bridge7/7 | External compiler port stages, full bootstrap and strict ratios unqualified |
-| Revert and compatible second worktree | Not qualified | producer equivalent second-worktree and semantic revert tests; cache/fuzz/Juice revert fixtures | Fixtures are real temporary trees; no full final gate in a second source checkout |
-| Cold verification versus cold compilation/bootstrap | Not qualified | C0 fresh private receipt/local tiers with explicit shared warmth; C1 forced execution; native cold controls retained | No isolated private-global cold compiler/bootstrap pair; never wipe shared stores |
-| Concurrent requests and subscribers | Not qualified | process cancellation-isolation tests; native/store claims and retention lease fixtures | Matching live full requests/subscriber-owned continuation not demonstrated independently |
-| Timeout, crash, publication interruption | Not qualified | process timeout during publication/detached tree cleanup; verify failed refresh/late mutation/retry tests; real C0 cancellation143 with no new success | Synthetic controlled failures plus actual canceled retained request; full live final publication crash matrix absent |
-| Corruption, eviction and watch failure | Not qualified | malformed receipt/corrupt inventory; snapshot bounds/eviction/lost/overflow watches; shared lease/pin collector fixtures | Source candidate-specific fixtures need complete final execution; no uncontrolled shared cache deletion |
-| Source ABA, symlink/PATH and negative lookup changes | Not qualified | snapshot membership/ABA/alias/metadata fallback; earlier PATH shadow and queued mutation tests | Actual temporary filesystem operations, not edits to frozen integration; unsupported dirty causes remain unknown |
-| Quick/complete/long profiles, fuzz and Juice | Not qualified | actual inventory46groups/101members; quick→complete/long partial tests; fuzz/Juice work-cap/threshold reevaluation tests; S05 output/unit smoke | Long qualification missing bootstrap/timing; instruction counts never satisfy wall ratio |
-| Large inputs and cold preparation | Not qualified | isolated20repeat S06 paired discovery with small/shared regressions (rejected); S03 oracle inventories; S07 corpus byte/work counts | No paired integrated cold compile/RSS/fd/retained-artifact measurement cohort |
-| Adopted self-hosted compiler stages | Not qualified | S09 source/seed/ABI contract and authenticated native component tests | Full ownership/seed→stage1→stage2→stage3/parity/36-row median+p95<=1.5× still open |
+| Unchanged retained and one-shot requests | Not qualified for full row | Real C1 force+warm 2 all PASS;35 eligible groups reused,11 fresh; warm hash/enumeration 0. Profile/session one-shot decision fixtures pass | C0 startup canceled 143; no paired baseline warm, stable p95, or final independent one-shot complete execution |
+| Test-only and fixture edits | Passed bounded dependency/native cases | C1 coordinator added/renamed/member/recipe invalidation fixtures pass. S03 actual mutated oracle fails; exact 8 named+wrapper preserved, broad 1532+scalar 9 matches C0 1541 | Full live repository edit latency cohort not qualified |
+| Documentation, tooling and pure-helper edits | Passed bounded dependency/producer cases | Embedded-doc preparation test, independent compiler edit test and actual tooling/scalar v 2 writer/provider/caller qualification pass | No named warm-edit latency or paired cold cost qualification |
+| Semantic rule, runtime, lifetime/mode and ABI edits | Passed bounded identity/fallback cases | Producer mode/seed/ABI/schema/tool/transitive semantic fixtures pass, including failure/rebuild and source revert; conservative fallback preserved | No live memory/lifetime semantic merge tested or attributed to tooling; broader live ABI edit cohort absent |
+| Component implementation, seed and protocol edits | Not qualified for full row | Native component tests and producer replacement/ABA/publication fixtures pass; S09 authenticated bridge fixtures 7/7 | External full compiler stages/bootstrap/strict performance requirements remain open |
+| Revert and compatible second worktree | Not qualified for full row | Producer equivalent temporary second-tree/revert fixtures and fuzz/Juice revert tests pass | No complete final gate in a second source worktree or live cross-tree action-reuse cohort |
+| Cold verification versus cold compilation/bootstrap | Not qualified | C0 fresh private receipt/local tiers explicitly retain shared global/runtime warmth; final force executes all 46 groups; native cold controls pass | No isolated private-global cold compile/bootstrap pair; shared stores never wiped |
+| Concurrent requests and subscribers | Not qualified for full row | Process cancellation isolation, native/store claims and active lease fixtures pass; real canceled request releases admission | Matching complete live requests/subscriber-owned continuation not independently demonstrated |
+| Timeout, crash, publication interruption | Passed bounded adversarial cases | All 33 process tests pass (CPU loop/blocked/detached descendants/startup cancel/publication timeout);74 coordinator tests prove failed refresh/late mutation/retry; real C0 cancel 143 publishes no success | Controlled process/temporary producer fixtures, not an uncontrolled live final publication crash |
+| Corruption, eviction and watch failure | Passed bounded adversarial cases |74 snapshot tests pass; malformed receipt/corrupt inventory, eviction/reset/fork/active borrower/lost/overflow authority tests pass; shared lease/pin guards preserved | No destructive corruption of shared production stores |
+| Source ABA, symlink/PATH and negative lookup changes | Passed bounded filesystem cases | Actual temporary filesystem ABA/alias/membership/metadata tests and earlier-PATH/queued mutation guards pass on C1; unsupported dirty causes remain unknown | Frozen integration source was not mutated during its gate |
+| Quick/complete/long profiles, fuzz and Juice | Passed bounded coverage/work controls | Exact 46/101 inventory, quick→complete/filtered/long partial tests, fuzz/Juice work-cap/threshold reevaluation and output/completed-work smoke pass | Long bootstrap/scaling/timing qualifications incomplete; instruction counts do not satisfy wall ratios |
+| Large inputs and cold preparation | Not qualified | Isolated 20 repeat rejected discovery shows 8 test/shared-root regressions; S03 oracle rows and S07 unchanged corpus counters pass. Actual prepared artifact sizes 765518171→791425272 bytes archived | No paired integrated cold compile/link/RSS/fd/retained-memory cohort; size inventory is not latency acceptance |
+| Adopted self-hosted compiler stages | Not qualified | Native seed/component contracts and S09 bridge evidence preserved | Full ownership/seed→stage 1→stage 2→stage 3/parity/36-row median+p95<=1.5× remain open |
 
-After the complete gate, bounded fixture execution will be listed as passed or
-failed alongside each row. A row with an unmet broader proof remains not-qualified;
-a successful gate is never used to erase its missing timing or live scenario.
+Known telemetry covers 11 Python unittest members/286 selected and timed cases;
+90 members are unknown. Native selected inventories are independently reconciled
+with S03's exact frozen names/wrappers/source/oracle audit. Warm totals 73.310 s and
+101.175 s (gate 65.862 s/91.618 s) are operational, not stable p95 or an improvement over
+historical 28–37 s. Both warm requests performed 175816 metadata observations with
+zero hashing/enumeration. Source/flags/cache tiers and parallel RF build are
+recorded; no contention cause is inferred. Ordinary 5 s/15 s feedback/p95 and reduced
+unchanged-floor targets remain unqualified or not demonstrated.

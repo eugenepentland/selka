@@ -1,0 +1,23 @@
+{
+  "source": "a9a3208a4f3edbf17170cfc18d57f5f999af49c3",
+  "mode": "ReleaseFast",
+  "path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang",
+  "sha256": "75935fabfbde64f8045d0aaba92122b304d344bee06839699b7b21563dcae9b1",
+  "bytes": 68298936,
+  "evidence_store": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.mylang-cache/s10-frozen-artifacts-v1",
+  "pin": "0cec0778714aa70c1ff09bee7ed5ea0971238376feeb666bff74b6d6e1571c0d",
+  "ordered_chunks": [
+    "3e5c7ac5060914eb7c4eb209936fbe3248b4f9101190ae754c1cef7cf2077f8f",
+    "8b1854c4b4b40e3e8aada32deb0dd99780e959c82a8cfebf127c7d440f86740e",
+    "6f8a6b13657774fee5e756f076a846a7ef96520d50cdc4c115a59b76f09323c7",
+    "7459e912c01500af53734dfa70f502a5f134952042d7c13a1228ca4d89fdaa6b",
+    "c92890edcfcb744a2c22ef1d6f85f697140a6dd8f0dcf806791c1090aedbfba1",
+    "a345143a3e9d6bd2f36419c4600f2a4989c64d183097e1b2e370a73c226cfe5a",
+    "a07b1dea31bdf4df3fd19d63b3c02514eafcfda8f3bbb3f968cde821c84070a1",
+    "b3c7e8c81050ab2e7bce42014d5ca257856e65d97e5c6f29e01960854b633ad2",
+    "fd91577b0e8ef7809c3b82ba37c483f9d76d4966c6f206311cfa7084fa4bc8b7"
+  ],
+  "prune_protection": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.prune-keep",
+  "validity": "artifact identity only; complete verification separately reported",
+  "artifact_prune_protection": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.prune-keep"
+}
