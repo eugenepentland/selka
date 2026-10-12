@@ -44,14 +44,14 @@ func read(fs: Filesystem, out: Stream) -> Unit:
 
 
 func files(out: Stream) -> int:
-    mut fss: FixedArray[Filesystem, 2] = FixedArray[Filesystem, 2]([filesystem.memory(), filesystem.memory()])
-    _ = fss[0].write_text("x.txt", "in a")
-    _ = fss[1].write_text("x.txt", "in b")
-    for fs in fss:
-        read(fs, out)
-    fss[1] = fss[0]
-    read(fss[1], out)
-    return len(fss)
+    const first = filesystem.memory()
+    const second = filesystem.memory()
+    _ = first.write_text("x.txt", "in a")
+    _ = second.write_text("x.txt", "in b")
+    read(first, out)
+    read(second, out)
+    read(first, out)
+    return 2
 
 
 func main(host: Host, out: Stream, err: Stream) -> int:

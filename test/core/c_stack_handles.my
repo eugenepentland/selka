@@ -17,6 +17,7 @@ func nested(net: Network, depth: int) -> bool:
 
 
 func main(net: Network, host: Host) -> int:
-    if not nested(net.host("127.0.0.1:1234"), 300):
-        return 1
+    with net.host("127.0.0.1:1234") as scoped:
+        if not nested(scoped, 300):
+            return 1
     return final_status(host)

@@ -9,7 +9,7 @@ func change(mut d: dict[int, int], value: int):
 
 func test_order_copy_remove_reinsert() -> bool:
     mut d: dict[int, int] = {2: 7, 1: 9}
-    mut saved = d
+    mut saved = d.copy()
     d[2] = 13
     mut deleted = d.pop(1)
     d[1] = deleted + 1
@@ -40,16 +40,16 @@ func test_managed_values_and_nested_places() -> bool:
     d[1] = [for j in range(2) yield 3]
     d[2] = [for j in range(1) yield 4]
     mut h = Holder(values=d)
-    mut saved = h
+    mut saved = h.copy()
     h.values[1].append(9)
     mut before = h.values.pop(2)
-    h.values[2] = before
+    h.values[2] = before.copy()
     return len(saved.values[1]) == 2 and len(h.values[1]) == 3 and h.values[1][2] == 9 and before[0] == 4
 
 
 func test_mut_whole_rebind() -> bool:
     mut d: dict[int, int] = {2: 3}
-    mut saved = d
+    mut saved = d.copy()
     change(mut d, 19)
     return len(saved) == 1 and saved[2] == 3 and len(d) == 2 and d[7] == 19
 
@@ -60,7 +60,7 @@ func test_set_and_defaults() -> bool:
     values.add(1)
     values.add(3)
     values.discard(7)
-    mut other = values
+    mut other = values.copy()
     values.discard(1)
     return len(other) == 2 and len(values) == 1 and 3 in values and 1 in other
 
@@ -92,7 +92,7 @@ public func test_structural_hashes_ignore_padding_and_inactive_payloads() -> boo
         points.add(PlainKey(high=u64(i % 9), low=i16(i % 5)))
     mut texts: dict[TextKey, int] = {TextKey(label="ab" + "c", number=7): 13}
     mut choices: dict[Choice, int] = {Choice.Empty: 1, Choice.Number(value=3): 2, Choice.Named(value=TextKey(label="key", number=8)): 3}
-    mut saved = choices
+    mut saved = choices.copy()
     choices[Choice.Number(value=3)] = 17
     _ = choices.pop(Choice.Named(value=TextKey(label="ke" + "y", number=8)))
     return len(points) == 45 and PlainKey(high=u64(8), low=i16(4)) in points and texts[TextKey(label="abc", number=7)] == 13 and choices[Choice.Empty] == 1 and choices[Choice.Number(value=3)] == 17 and len(saved) == 3 and saved[Choice.Number(value=3)] == 2

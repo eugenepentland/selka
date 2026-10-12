@@ -210,3 +210,25 @@ generated source identity and diagnostic. Native retries await the integrated fi
 The harness now accepts `--ordinary-command` for later C2/C3 requalification; it
 omits the experimental selector and records that choice. Existing invocations
 remain explicit zero-RC requests. No default promotion or retirement is implied.
+
+## Additional registered fixture migrations
+
+The coordinator reserved thirteen more `test/core` and `test/fixtures` sources.
+All thirteen pass source checking on support3; executable qualification awaits
+the native driver fix and the final registered suite. `additional-migrations.json`
+records each original C0 identity, migrated hash, line burden and explicit copies.
+The checked commands and diagnostics are in `evidence/additional-support3-check.json`.
+
+Dictionary snapshots and retained keys now copy explicitly. Capability narrowing
+uses lexical `with` scopes, including recursive network handles and trapped cleanup.
+The attenuation fixture delegates the read operation inside nested directory/read-only
+scopes, so its provider remains live through cleanup. Application persistence keeps
+its original assertions/output protocol and transfers the complete fresh Step value.
+
+The coordinator explicitly approved replacing only `v_capability_arrays.files()`
+with two named providers and the same writes/reads (`a`, `b`, `a`) and return value.
+Its Stream/Host array, record and union tests remain unchanged. The exact original
+C0 source is retained as `negative/capability_array.my`, and refuses with
+`E_ZERO_RC_UNSUPPORTED`; owning capability arrays remain an explicit boundary.
+This does not replace the separate capability-field method contract or claim that
+owning capability aggregates are supported.

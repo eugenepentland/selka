@@ -5,10 +5,10 @@ func batch_result(size: int, batch: int, seed: int, values: int[], keys: str[], 
     mut total = 0
     mut text_mapping: dict[str, int] = {}
     for j in range(size):
-        text_mapping[keys[j]] = values[j]
+        text_mapping[keys[j].copy()] = values[j]
     for j in range(size * 2):
         mut key = (seed + j * 17 + batch) % (size * 2)
-        text_mapping[keys[key]] = (text_mapping.get(keys[key], 17) + j + batch + 1) % 1000003
+        text_mapping[keys[key].copy()] = (text_mapping.get(keys[key], 17) + j + batch + 1) % 1000003
     for j in range(size * 2):
         if keys[j] in text_mapping:
             total += j + text_mapping[keys[j]]
