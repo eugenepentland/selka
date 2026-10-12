@@ -1,0 +1,314 @@
+{
+  "schema": "text-gap-target-assessment-v1",
+  "report_sha256": "a6ecfb6c355d62d8ac0627aff3367edc7f3fcecd4f88859661cbb8b28d63e97c",
+  "criterion": "Every foreign paired95%CI upper bound below1 separately in every cell",
+  "cells": [
+    {
+      "case": "csv_aggregate",
+      "profile": "large",
+      "comparisons": {
+        "zig-safe": {
+          "ratio": 0.731413628402914,
+          "ci95": [
+            0.726616418721728,
+            0.740601189979015
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "zig-fast": {
+          "ratio": 0.9103979049117632,
+          "ci95": [
+            0.8945525220430594,
+            0.9180670240514239
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "rust": {
+          "ratio": 0.7120773065079214,
+          "ci95": [
+            0.702547416624653,
+            0.7211622426228882
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "go": {
+          "ratio": 0.5958619362180777,
+          "ci95": [
+            0.5863306585467477,
+            0.6008748242497182
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        }
+      },
+      "all_foreign_upper_ci_below_one": true
+    },
+    {
+      "case": "csv_aggregate",
+      "profile": "small",
+      "comparisons": {
+        "zig-safe": {
+          "ratio": 0.7935581150654256,
+          "ci95": [
+            0.7808516537157731,
+            0.8018675694724126
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "zig-fast": {
+          "ratio": 1.0016140194134577,
+          "ci95": [
+            0.9661212034220065,
+            1.0131547584471876
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "uncertain"
+        },
+        "rust": {
+          "ratio": 0.7191329684640151,
+          "ci95": [
+            0.7087047623919818,
+            0.729571812286668
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "go": {
+          "ratio": 0.5667969289803136,
+          "ci95": [
+            0.5574312141008534,
+            0.5757073871810708
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        }
+      },
+      "all_foreign_upper_ci_below_one": false
+    },
+    {
+      "case": "json_transform",
+      "profile": "large",
+      "comparisons": {
+        "zig-safe": {
+          "ratio": 0.5712992759860178,
+          "ci95": [
+            0.5645943965856689,
+            0.5755708287466725
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "zig-fast": {
+          "ratio": 0.7416617432858281,
+          "ci95": [
+            0.7265057679102462,
+            0.7457425021365388
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "rust": {
+          "ratio": 1.0886267830211405,
+          "ci95": [
+            1.075131830386858,
+            1.0959901091738182
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "above-one"
+        },
+        "go": {
+          "ratio": 0.2473513016647871,
+          "ci95": [
+            0.24322848692317228,
+            0.250215663475819
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        }
+      },
+      "all_foreign_upper_ci_below_one": false
+    },
+    {
+      "case": "json_transform",
+      "profile": "small",
+      "comparisons": {
+        "zig-safe": {
+          "ratio": 0.6595935849154503,
+          "ci95": [
+            0.652154935325092,
+            0.6668603336706859
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "zig-fast": {
+          "ratio": 0.9247284282670387,
+          "ci95": [
+            0.9159503818124448,
+            0.9330293842112963
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "rust": {
+          "ratio": 1.0864116894417397,
+          "ci95": [
+            1.0662453834557901,
+            1.1052342510760529
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "above-one"
+        },
+        "go": {
+          "ratio": 0.2543997747690394,
+          "ci95": [
+            0.25085768043773177,
+            0.2563232728234644
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        }
+      },
+      "all_foreign_upper_ci_below_one": false
+    },
+    {
+      "case": "string_split",
+      "profile": "large",
+      "comparisons": {
+        "zig-safe": {
+          "ratio": 0.4456650932915741,
+          "ci95": [
+            0.44269996336895384,
+            0.4491532607920496
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "zig-fast": {
+          "ratio": 0.47487420746060494,
+          "ci95": [
+            0.4730692203436322,
+            0.47877491625862284
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "rust": {
+          "ratio": 0.9625003755167413,
+          "ci95": [
+            0.9401811794107577,
+            0.9725978120199767
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "go": {
+          "ratio": 0.4071957667819519,
+          "ci95": [
+            0.40501797734014927,
+            0.4106085977845095
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        }
+      },
+      "all_foreign_upper_ci_below_one": true
+    },
+    {
+      "case": "string_split",
+      "profile": "small",
+      "comparisons": {
+        "zig-safe": {
+          "ratio": 0.4432410735355908,
+          "ci95": [
+            0.43401996310332674,
+            0.4553653695053276
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "zig-fast": {
+          "ratio": 0.48482982178764916,
+          "ci95": [
+            0.4747876914251023,
+            0.4962645604414678
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "rust": {
+          "ratio": 0.7935696702033304,
+          "ci95": [
+            0.7744617006995511,
+            0.8182698474742772
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        },
+        "go": {
+          "ratio": 0.4337839783396407,
+          "ci95": [
+            0.41912597630815446,
+            0.4453905781152869
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly",
+          "assessment": "below-one"
+        }
+      },
+      "all_foreign_upper_ci_below_one": true
+    }
+  ],
+  "all_cells_meet_target": false
+}

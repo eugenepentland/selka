@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (60s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (120s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (181s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (241s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (301s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (361s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (422s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (482s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (542s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (603s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (663s so far)
+build-slot: FIFO ticket 485, position 1; draining active work (gate1.lock); waiting (723s so far)
+build-slot: timing slot 1, FIFO ticket 485 after 743s
+text-gaps/common-final-001/csv_aggregate/large {'checked-baseline': True, 'checked-candidate': True, 'zig-safe': True, 'zig-fast': True, 'rust': True, 'go': True}

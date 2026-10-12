@@ -1,0 +1,2 @@
+build-slot: timing slot 1, FIFO ticket 486 after 0s
+text-gaps/common-final-001/csv_aggregate/small {'checked-baseline': True, 'checked-candidate': True, 'zig-safe': True, 'zig-fast': True, 'rust': True, 'go': True}

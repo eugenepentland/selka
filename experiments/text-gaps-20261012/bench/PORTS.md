@@ -7,7 +7,8 @@ policies and do not isolate identical underlying allocations.
 
 - `string_split`: Rust materializes `Vec<&str>` and Zig materializes an array of
   borrowed byte slices, then folds every field. Go uses `strings.Split` and
-  folds the string results. Checked MyLang returns independent owned fragments.
+  folds the string results. MyLang split returns owned results at the API level; optimized immediate
+  consumers can eliminate fragment materialization.
   The canonical contract permits normal native representations. Matching this
   benchmark's observable fold does not make these full ownership APIs identical;
   no port was changed to copy or drop fragments merely to influence timing.

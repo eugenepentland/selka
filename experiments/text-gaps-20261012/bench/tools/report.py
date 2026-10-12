@@ -123,7 +123,7 @@ def main():
     report = dict(schema='text-gap-report-v1', cells=cells, reporter_sha256=measure.digest(__file__), artifact_relocations=artifact_map,
                   limitations=['Exploratory single-session paired bootstrap intervals, ratio of medians; matched round indices resampled jointly.',
                                'Managed counters include setup and exclude allocator overhead; foreign managed counters unavailable. Process RSS is separate.',
-                               'Representation/library policies differ, including owned MyLang split fragments versus borrowed Rust/Zig slices. Ports remain unchanged.',
+                               'Representation/library policies differ. MyLang split returns owned results at the API level; optimized immediate consumers can eliminate fragment materialization. Rust/Zig use borrowed slices. Ports remain unchanged.',
                                'Historical ratios are not used; all comparisons use fresh same-round guest runs. No aggregate score.'])
     lines = ['# Fresh text-gap comparison', '', f'All {len(cells)} selected cells passed oracle, identity, round-order, RSS and counted ownership validation.', '',
              'Ratios compare checked elapsed time with the named reference; below one is faster. CIs are paired exploratory 95% bootstrap intervals.', '',
