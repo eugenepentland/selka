@@ -1,0 +1,7 @@
+{
+  "worktree": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012",
+  "head": "1da0ed8fafc72b1e3bd97272274ffc12e87e2974",
+  "status": " M src/stdlib/json.my\n?? experiments/text-gaps-20261012/json-quotes/\n?? tests/lang/textgap_json_quotes.my\n",
+  "integrated": false,
+  "timed": false
+}

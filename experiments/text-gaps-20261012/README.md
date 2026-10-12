@@ -1,110 +1,125 @@
-# Text microbenchmark improvements
+# Text microbenchmark checkpoint
 
-Local `main` was fast-forwarded to
-`1994cb76e266080d971be6f41e98fba5707234dd`, preserving all five pre-existing
-documentation edits. This is the development lineage, not GitHub's unrelated
-`origin/main` snapshot. Nothing was pushed.
+Further performance optimization stopped at the user's request on 2026-10-12.
+The measured combined changes are preserved on
+`codex/text-gaps-main-final-20261012`. String splitting and CSV meet the
+below-one target at both sizes. JSON small remains above Rust; JSON large is
+uncertain around parity. The target is achieved in four of six cells.
 
-The merged source passed complete registered verification: 147/147 build steps,
-3,109 selected native tests, all 46 required verification actions, and all 88
-Guardian checks. Gate inputs were stable. See
-[qualification](coordinator/main-integration/qualified-summary.json),
-[raw gate evidence](coordinator/gate-04/), and
-[main preservation and merge proof](coordinator/main-integration/local-main-fast-forward.json).
-This does not claim zero-RC default promotion or legacy RC retirement.
+## Final measured result
 
-## Merged compiler comparison
+The [full comparison](bench/reports/common-final-002/REPORT.md),
+[paired assessment](bench/reports/common-final-002/ASSESSMENT.md), and
+[machine-readable target assessment](bench/reports/common-final-002/target-assessment.json)
+retain all six cases and every sample. Ratios below one favor MyLang.
 
-The common compiler was built from the exact merged commit. Its installation,
-compiler, guests, inputs, and qualification are pinned in the
-[common receipt](coordinator/common-001/build-receipt.json). All comparisons use
-the unchanged text benchmark source and unchanged foreign ports and oracles.
+| Workload | Small ratio [95% CI] | Large ratio [95% CI] | Fastest foreign arm |
+| --- | --- | --- | --- |
+| String splitting | 0.847 [0.840, 0.858] | 0.969 [0.956, 0.982] | Rust |
+| JSON transformation | 1.036 [1.011, 1.058] | 1.015 [0.933, 1.028] | Rust |
+| CSV aggregation | 0.973 [0.962, 0.993] | 0.868 [0.857, 0.889] | Zig ReleaseFast |
 
-The [complete common report](bench/reports/common-final-001/REPORT.md) includes
-all raw samples, paired intervals, counters and RSS. Each of six cells used three
-warmups and fifteen alternating measured rounds on CPU 8 under exclusive shared
-timing admission. Instrumented counter runs and three RSS runs are separate from
-runtime samples. Admission wait is excluded from runtime measurements.
+The report includes separate Zig ReleaseSafe, Zig ReleaseFast, Rust and Go
+comparisons. JSON is faster than both Zig arms and Go in these measurements.
+All six cases passed oracle, binary/source identity, sample ordering, counters
+and RSS validation. No case triggered the predefined MAD/drift noise flags;
+raw ranges remain available. These are exploratory intervals from one session.
 
-Ratios below one favor MyLang. The fastest foreign implementation in each cell
-is shown; the report retains all Zig ReleaseSafe/ReleaseFast, Rust, and Go arms.
+Against the original checked-ownership text baseline, runtime is about 59–60%
+lower for splitting, 49–52% lower for JSON, and 32–33% lower for CSV. Relative
+to the already-merged compiler, JSON improves another 4.8–5.8%, CSV improves
+1.6–5.3%, and splitting is unchanged within uncertainty.
 
-| Workload | Small ratio | Large ratio | Fastest foreign arm |
-| --- | ---: | ---: | --- |
-| String splitting | 0.794 | 0.963 | Rust |
-| JSON transformation | 1.086 | 1.089 | Rust |
-| CSV aggregation | 1.002 | 0.910 | Zig ReleaseFast |
+## Memory and allocation
 
-Split passes the requested below-one target at both sizes. JSON still needs an
-improvement. Small CSV is uncertain: its paired 95% interval is 0.966–1.013, so
-the target is not established. No noise flags were raised; two calibrations
-landed just below the 50 ms target and are disclosed in the report.
+Managed peak and process RSS are distinct observations. The following values
+compare original text C0 with the final candidate in the same campaign.
+RSS values are medians of three separate process runs, in KiB.
 
-Against the frozen checked-ownership C0 compiler, merged runtime is about
-60–62% lower for splitting, 46–49% lower for JSON, and 30% lower for CSV.
-C0 in these text comparisons is
-`78b4bb5934748d5942389b12dfe66cb0031cafdc`; it is the later microbenchmark
-baseline, distinct from the original memory-closeout plan's starting revision.
-JSON managed peak is about 26% lower; process RSS is reported independently.
-The small split reserve policy raises managed peak from 7,528 to 7,944 bytes.
-All counted cells have zero runtime RC events and zero managed live bytes at
-exit. These are workload-specific measurements, not package-wide RC claims.
+| Workload / size | Managed peak bytes: C0 → final | RSS KiB: C0 → final |
+| --- | ---: | ---: |
+| Split / small | 7,528 → 7,944 | 1,860 → 1,852 |
+| Split / large | 401,440 → 401,312 | 2,340 → 2,328 |
+| JSON / small | 18,592 → 13,728 | 2,052 → 1,992 |
+| JSON / large | 287,408 → 213,464 | 2,372 → 2,152 |
+| CSV / small | 8,192 → 8,096 | 1,892 → 1,832 |
+| CSV / large | 118,160 → 118,064 | 2,052 → 1,992 |
 
-## Follow-up experiments
+JSON managed peak is about 26% lower. The small split reserve policy raises
+managed peak by 5.5%; that tradeoff is retained. Whole-program allocation
+counts, including setup at matched iteration counts, are 98.5–99.9% lower for
+splitting, 73–75% lower for JSON, and 43–44% lower for CSV. Raw allocation
+counts, cumulative bytes, reallocations and copies are retained in the report.
+Managed counters omit native allocator overhead and some nonmanaged storage;
+foreign managed counters are unavailable. No RSS saving is inferred from
+managed counters. All counted checked runs have zero RC events and zero
+managed live bytes at exit. Follow-up changes leave managed allocation,
+growth, copy and peak totals unchanged versus the merged compiler.
 
-Post-merge work stays on `codex/text-gaps-main-final-20261012` while isolated
-JSON and CSV candidates are measured against both the merged compiler and C0.
-The isolated CSV trial has passed the runtime target and its production change
-has been integrated on that branch; combined qualification remains pending.
+## Code and qualification
 
-The [CSV trial](bench/reports/csv-final-trial-001/REPORT.md) measures the helper
-that keeps general UTF-8 capture work out of the ASCII path. Candidate/Zig
-ReleaseFast ratios are 0.975 [0.970, 0.989] small and 0.876 [0.867, 0.888] large.
-All foreign-target intervals are below one. Against the merged common compiler,
-runtime is 3.3% lower small and 4.1% lower large; managed totals are unchanged.
+The combined compiler was built from
+`8b7d59eba868775b1b8d7f64c54b07abdd23d470`; the complete installation,
+host/guest hashes, source and flags are pinned in the
+[common-002 receipt](coordinator/common-002/build-receipt.json).
+Its runtime and counted binaries passed 100 independent oracle probes.
 
-The [private JSON cursor guard trial](bench/reports/json-final-trial-001/REPORT.md)
-removes redundant negative-index normalization but improves runtime only about
-1%. Candidate/Rust remains 1.078 [1.061, 1.100] small and 1.064 [1.056, 1.076]
-large. The large common comparison includes one in its interval. This experiment
-has not closed the JSON gap; further narrowly scoped work is in progress.
+The follow-up changes separate general UTF-8 append work from CSV's ASCII
+path, iterate JSON dictionary entries directly, guard the private JSON
+cursor, and forward proven nonnegative borrowed byte indices. The latter
+keeps exact runtime/receiver contracts, bounds checks and fixed analysis
+limits. Its eight focused tests cover seven native modes and matching
+uncached/cold/warm LLVM. See [span qualification](span-index/handoff.md),
+[serializer qualification](json-serializer/handoff.md), and
+[actual combined native code](coordinator/common-002/native-audit.json).
 
-The subsequent [serializer change](json-serializer/handoff.md) uses borrowed
-dictionary-entry iteration to avoid looking up a value again under its stored
-key. It passed 176 native configuration checks and 100 unchanged text oracle
-probes; managed allocation/copy totals match the guard candidate. Its generated
-serializer no longer hashes or searches those keys. The production change and
-its independent ordering, ownership, and numeric regressions are integrated;
-combined timing is pending. The small private peek guard is also included in
-that tested source, with its isolated timing limitations retained above.
+Complete registered verification passed on
+`12ae2cb9b09d765dbb7861618efe1819103c5fe1`: 115/115 gate build steps,
+3,060 selected native tests and zero failures. All 46 required actions are
+covered: 30 executed and 16 reused valid receipts; 27,068 reported skips are
+shard exclusions. The language suite passed 1,596 tests and retained its one
+pre-existing unsupported view-copy case in ordinary mode. Inputs were stable.
+All 88 whole-tree Guardian checks passed. See the [final summary](coordinator/final-closeout/summary.json),
+[raw complete gate](coordinator/gate-05/), and [Guardian log](coordinator/final-closeout/guardian.log).
+Production and verification source files match the measured compiler revision;
+subsequent commits add evidence only. Complete verification does not include
+full application/performance qualification.
 
-The [standalone serializer trial](bench/reports/json-serializer-trial-001/REPORT.md)
-subsequently measured 0.968 [0.959, 0.981] against common on the stable small
-case, but 1.055 [1.040, 1.072] against Rust. It does not establish the requested
-target. All seven arms of the large case triggered noise flags; its broad
-intervals are inconclusive. Every sample is retained. A post-cell observation
-found heavy browser CPU activity; it is contemporaneous context, not proof of
-the cause of variation during individual samples. No standalone repeat or
-selective sample removal was performed.
+## Method and boundaries
 
-A [read-only JSON audit](split/json-guard-readonly-deferred.md) records the
-serializer and byte-loop costs before these follow-ups. The broader dictionary
-lookup compiler transformation it outlines remains deferred.
+Text C0 is `78b4bb5934748d5942389b12dfe66cb0031cafdc`, the later
+microbenchmark baseline rather than the original memory-closeout plan base.
+Common-001 is the merged compiler at
+`1994cb76e266080d971be6f41e98fba5707234dd`. The campaign uses unchanged
+benchmark source, foreign ports and oracles: three warmups, fifteen
+alternating paired rounds, three separate RSS runs, and independent counted
+executions. CPU 8 and shared exclusive timing admission are used; queue wait
+is excluded. Per-cell read-only host snapshots and all artifact hashes are
+preserved. Build logs include admission and are not paired compile-time
+performance evidence.
 
-The narrower [span-index extension](span-index/handoff.md) has passed eight focused
-tests, seven native modes, cold/warm cache equivalence, and all 88 Guardian
-checks. It forwards only proven nonnegative indices with the exact borrowed
-receiver and runtime contract; bounds traps remain covered. Analysis has fixed
-size and candidate limits. The combined compiler is frozen at
-`8b7d59eba868775b1b8d7f64c54b07abdd23d470` in the
-[common-002 receipt](coordinator/common-002/build-receipt.json). Its runtime
-and counted guests passed 100 oracle probes, including zero RC and zero
-exit-live checks. The [native audit](coordinator/common-002/native-audit.json)
-confirms removal of the quoted-string normalization call and serializer key
-hash/search calls. Combined timing and complete verification remain pending.
+Local `main` was fast-forwarded to `1994cb76e266080d971be6f41e98fba5707234dd`
+before these follow-ups. All five pre-existing documentation edits were
+preserved byte-for-byte. See [merge and preservation proof](coordinator/main-integration/local-main-fast-forward.json).
+The follow-up branch is separate; nothing was pushed and GitHub's unrelated
+`origin/main` was untouched.
 
-The [read-only CSV audit](split/csv-common001-readonly.md) records a separate,
-deferred bounds-check opportunity with required safety conditions.
+The two-line quote-writing experiment remains unintegrated and unmeasured in
+the JSON worker tree; its already-running checks finished, and no timing was
+submitted. Its handoff is recorded in the final closeout evidence. No further
+performance experiment or full Lox/EDA benchmark is pending in this session.
+The next optimization decision and application campaign are deferred to the
+user's review.
 
-Full Lox/EDA application benchmarking remains deferred for the user's review
-of these microbenchmark results.
+This checkpoint does not claim complete public-library/corpus qualification,
+zero-RC default promotion, or legacy RC retirement. Those broader memory
+milestones remain unfinished. The prior numeric/iteration test flakes and
+their diagnostic improvements remain documented in the main integration
+evidence; no cause is asserted for those unreproduced failures.
+
+Earlier measurements remain available in [common-001](bench/reports/common-final-001/REPORT.md),
+the [CSV trial](bench/reports/csv-final-trial-001/REPORT.md),
+the [JSON guard trial](bench/reports/json-final-trial-001/REPORT.md), and
+the [serializer trial](bench/reports/json-serializer-trial-001/REPORT.md).
+The serializer trial's noisy large case remains inconclusive and is not
+pooled with the final campaign.

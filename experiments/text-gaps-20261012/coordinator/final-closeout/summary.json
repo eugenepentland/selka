@@ -1,0 +1,272 @@
+{
+  "schema": "text-gap-closeout-v1",
+  "stop_reason": "User requested wrap-up; further optimization and application benchmarking deferred.",
+  "tested_commit": "12ae2cb9b09d765dbb7861618efe1819103c5fe1",
+  "measured_source_commit": "8b7d59eba868775b1b8d7f64c54b07abdd23d470",
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "runtime_binaries": [
+    {
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/text-runtime",
+      "sha256": "c6e1d18bece4f98d0a0a56d04e5d1afbfe51170625a2a82aa12b4fc6c5381626",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/cache-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/text-runtime",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/cache-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/text-runtime",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": "ok"
+    },
+    {
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/text-counted",
+      "sha256": "e6ca870e06e2b308b85f8726f9e4f087fc7d3d4a81a5700d476bf577727d3c95",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/cache-counted",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/text-counted",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--counters"
+      ],
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/cache-counted",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/text-counted",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--counters"
+      ],
+      "status": "ok"
+    }
+  ],
+  "production_and_verification_sources_identical": true,
+  "identity_compared_paths": [
+    "src",
+    "scripts",
+    "tests",
+    "test",
+    "build.zig",
+    "build_test_inputs.zig",
+    "build_verification.zig"
+  ],
+  "local_main": "1994cb76e266080d971be6f41e98fba5707234dd",
+  "integration_branch": "codex/text-gaps-main-final-20261012",
+  "pushed": false,
+  "verification": {
+    "status": "passed",
+    "report_sha256": "618eea3f57a5af643f1012bdfafead1aab79be8ad0d6542c5c1a5240f2721a26",
+    "profile_coverage": {
+      "complete_qualification": false,
+      "complete_verification": true,
+      "counts": {
+        "executed": 30,
+        "outstanding": 0,
+        "required": 46,
+        "reused": 16
+      },
+      "filtered_inventory": false,
+      "heuristic": false,
+      "inputs_stable": true,
+      "outstanding": [],
+      "profile": "complete",
+      "qualification_outstanding": [],
+      "required": [
+        "component-preparation",
+        "input-discovery",
+        "environment-discovery",
+        "core",
+        "tooling_unit",
+        "text_scalar_unit",
+        "memory_budget",
+        "unit",
+        "cli",
+        "golden",
+        "idioms_self",
+        "idioms",
+        "incremental",
+        "interfaces",
+        "interface_oracle",
+        "parser_hints",
+        "friction",
+        "tooling_isolation",
+        "application_cache",
+        "component_builder",
+        "component_native",
+        "component-support",
+        "selfhost_numeric",
+        "spec-history",
+        "juice_pure",
+        "juice",
+        "juice-runtime",
+        "identity-qualification",
+        "affected",
+        "coverage_self",
+        "coverage",
+        "manifest_self",
+        "verification_cache",
+        "verification_session",
+        "fuzz_campaign",
+        "juice_cache",
+        "doc-coverage",
+        "guest",
+        "language",
+        "doctest",
+        "zig-format",
+        "my_format",
+        "my_format_self",
+        "noalloc_lint",
+        "embedded_migration",
+        "guardian"
+      ],
+      "status": "complete",
+      "version": "verification-profile-v2"
+    },
+    "action_states": {
+      "fresh": 11,
+      "execute": 19,
+      "reused": 16
+    },
+    "build_summaries": [
+      "Build Summary: 38/38 steps succeeded",
+      "Build Summary: 115/115 steps succeeded; 3060/30128 tests passed (27068 skipped)"
+    ],
+    "native_selected_passed": 3060,
+    "native_failed": 0,
+    "native_skipped": 0,
+    "native_shard_exclusions": 27068,
+    "elapsed_seconds_including_admission": 854.1136356010102,
+    "whole_tree_guardian_passed": 88,
+    "language_suite": "1596 passed, zero failed; one pre-existing unsupported view-copy case in ordinary mode, explicitly retained in raw logs"
+  },
+  "performance": {
+    "report": "../../bench/reports/common-final-002/REPORT.md",
+    "assessment": "../../bench/reports/common-final-002/target-assessment.json",
+    "report_sha256": "84eaf3ac38caf8345b16d488056077aa717dfee7bda980025069f0fdb72737c6",
+    "all_cells_meet_target": false,
+    "cells_meeting_all_foreign_ci_targets": 4,
+    "total_cells": 6,
+    "json_small_vs_rust": 1.035893465851571,
+    "note": "Read exact ratios and intervals in target-assessment.json; JSON small remains above Rust and large is uncertain. No samples removed."
+  },
+  "main_user_edits": [
+    {
+      "status": " M",
+      "path": "docs/README.md",
+      "sha256": "519dec9d6d5fb7e8b75f4893e102d8fc155803dae2f38bf5deda07b286b0d29f",
+      "current_sha256": "519dec9d6d5fb7e8b75f4893e102d8fc155803dae2f38bf5deda07b286b0d29f",
+      "preserved": true
+    },
+    {
+      "status": " M",
+      "path": "docs/audits/zero-rc-closeout-10-agent-plan-2026-10-11.md",
+      "sha256": "9b95c29c5bb7eab44e49cfb8428f8d76a5141b5ea4e3b1e6f958522d2e5f7d76",
+      "current_sha256": "9b95c29c5bb7eab44e49cfb8428f8d76a5141b5ea4e3b1e6f958522d2e5f7d76",
+      "preserved": true
+    },
+    {
+      "status": "??",
+      "path": "docs/audits/development-loop-audit-2026-10-12.md",
+      "sha256": "9cddf7763d0f09c07e22ee0b04a4d08710374cf0b09c9436d539d13910c7b078",
+      "current_sha256": "9cddf7763d0f09c07e22ee0b04a4d08710374cf0b09c9436d539d13910c7b078",
+      "preserved": true
+    },
+    {
+      "status": "??",
+      "path": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+      "sha256": "db64fe4ce3d3e047939e2fc6f9ad5b89e9d5c85340b7e43b5360c089dd46e22f",
+      "current_sha256": "db64fe4ce3d3e047939e2fc6f9ad5b89e9d5c85340b7e43b5360c089dd46e22f",
+      "preserved": true
+    },
+    {
+      "status": "??",
+      "path": "docs/audits/zero-rc-closeout-10-agent-plan-2026-10-12.md",
+      "sha256": "501bb081390cb0b870851b2b30fd97035b662bac39f31793ee8bfdc3cd0550f6",
+      "current_sha256": "501bb081390cb0b870851b2b30fd97035b662bac39f31793ee8bfdc3cd0550f6",
+      "preserved": true
+    }
+  ],
+  "items": [
+    {
+      "item": "CSV ASCII leaf helper",
+      "status": "shipped_on_followup_branch"
+    },
+    {
+      "item": "JSON borrowed item iteration and private cursor guard",
+      "status": "shipped_on_followup_branch"
+    },
+    {
+      "item": "bounded nonnegative span-index forwarding",
+      "status": "shipped_on_followup_branch"
+    },
+    {
+      "item": "six-case runtime/allocation/RSS evidence",
+      "status": "shipped_on_followup_branch"
+    },
+    {
+      "item": "small split retained capacity",
+      "status": "measured_tradeoff",
+      "note": "Managed peak 7528 to 7944 bytes versus text C0; RSS separately measured."
+    },
+    {
+      "item": "JSON below-one target",
+      "status": "deferred_per_user",
+      "owner": "JSON performance track",
+      "reproducer": "Unchanged expanded/migrated/text.my json_transform, size16 or256, seed42; full command, binaries and iterations in common-final-002 specs."
+    },
+    {
+      "item": "two-line quote experiment",
+      "status": "unintegrated_unmeasured",
+      "worktree": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012",
+      "note": "Dirty source and untracked fixture/evidence preserved; all worker commands stopped."
+    },
+    {
+      "item": "full Lox/EDA benchmark campaign",
+      "status": "deferred_per_user"
+    },
+    {
+      "item": "full memory-management qualified implementation",
+      "status": "not_claimed",
+      "note": "Complete public-export, original corpus and broader qualification not closed by this text checkpoint."
+    },
+    {
+      "item": "zero-RC default promotion",
+      "status": "unfinished"
+    },
+    {
+      "item": "legacy guest RC retirement",
+      "status": "unfinished"
+    }
+  ],
+  "remaining_native_flake_note": "Earlier numeric/iteration failures were not reproduced in final gate; existing diagnostics and prior evidence retained without an asserted cause."
+}
