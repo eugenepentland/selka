@@ -39,6 +39,9 @@ pub fn contract(symbol: []const u8) ?Contract {
     if (std.mem.eql(u8, symbol, "myl_core_owned_sort_keyed")) return .{ .owned = 3, .result = .transferred };
     if (std.mem.eql(u8, symbol, "myl_core_owned_map")) return .{ .owned = 64, .result = .transferred };
     if (std.mem.eql(u8, symbol, "myl_core_owned_task_submit")) return .{ .owned = 4 };
+    // The item marker writes only thread-local diagnostic context. Task entry
+    // saves/restores this context, including when a worker runs a nested map.
+    if (std.mem.eql(u8, symbol, "myl_core_task_item")) return .{};
     if (std.mem.eql(u8, symbol, "myl_core_owned_group_end")) return .{ .owned = 1 };
     if (std.mem.eql(u8, symbol, "myl_core_group_open") or std.mem.eql(u8, symbol, "myl_core_owned_group_take")) return .{ .result = .fresh };
     if (std.mem.eql(u8, symbol, "myl_core_owned_file_scope_end") or std.mem.eql(u8, symbol, "myl_core_owned_cap_scope_end")) return .{ .owned = 1 };

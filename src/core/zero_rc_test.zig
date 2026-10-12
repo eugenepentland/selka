@@ -371,6 +371,15 @@ test "zero RC runtime admission and emitted count operations fail closed" {
     try std.testing.expect(std.mem.indexOf(u8, refusal.reason, "unaudited zero-RC runtime helper") != null);
 }
 
+// spec-case: NEW-CORE-ZERO-RC-TASKS-1
+test "zero RC task item diagnostics do not transfer managed ownership" {
+    const marker = zero.contract("myl_core_task_item").?;
+    try std.testing.expectEqual(@as(u64, 0), marker.owned);
+    try std.testing.expectEqual(@as(u64, 0), marker.views);
+    try std.testing.expectEqual(.scalar, marker.result);
+    try std.testing.expect(zero.contract("myl_core_task_submit") == null);
+}
+
 // spec-case: NEW-CORE-ZERO-RC-1
 test "zero RC CLI mode is distinct from earlier single owner mode" {
     const args = @import("cli_args.zig");
