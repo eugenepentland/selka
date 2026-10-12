@@ -1,0 +1,55 @@
+{
+  "scope": "read-only source ownership diagnosis; no production change or post-fix/native qualification",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "dump_admission": {
+    "ticket": 1099,
+    "wait_seconds": 100,
+    "timing_claim": false
+  },
+  "dump_commands": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/recursive-values/owned-option.my",
+        "main"
+      ],
+      "exit": 0,
+      "source_sha256": "2f3bb99c33300d4a5822f77b1d9aca298c1011b504b6b0e74a371d9080cf52ca",
+      "stdout": "owned-option.typed",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/recursive-values/copied-option.my",
+        "main"
+      ],
+      "exit": 0,
+      "source_sha256": "bcfeffe9890e4d14670e75c004116b906da3a411f545109726ca84c96490fb77",
+      "stdout": "copied-option.typed",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/recursive-values/scalar-option-control.my",
+        "main"
+      ],
+      "exit": 0,
+      "source_sha256": "ac6085167b58777000a4f57904bb16d4b688bc15b5656593059fdf9196169495",
+      "stdout": "scalar-option-control.typed",
+      "stderr": ""
+    }
+  ],
+  "artifacts": {
+    "a03-source-checks.json": "c590074bdb4900d46741ec338a461101749ac668c2a13d71ac432fbf3b977ecb",
+    "copied-option.typed": "149e747b43da8ac76307b31b07805b9d217aac723faca47182d03bb0b22d9208",
+    "owned-option.typed": "1aecbb12014735e9e0fe8fd5579c82d6dd81de7f7d4ff85b98a2c67728f30fd4",
+    "scalar-option-control.typed": "6c465fde9bd977c6485aa93e74a62c7aca69e46e63f2ccd02303e2f0da1d04e5"
+  }
+}
