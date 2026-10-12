@@ -45,7 +45,7 @@ flags and build commands. All candidate benchmark source bytes must match the
 baseline. These commands validate everything before reserving a new destination.
 Never overwrite a run or report; use a new suffix.
 
-Run `tools/schedule.py RUN/specs RUN/results --cpu8` after sourcing the shared
+Run `tools/schedule.py RUN/specs RUN/results --cpu 8` after sourcing the shared
 dev environment. It acquires one timing lease per cell; do not wrap it in another
 lease. Use `--cell csv_aggregate.large --cell csv_aggregate.small` for a focused
 trial. `tools/report.py RUN OUTPUT --check-artifacts` requires all six cells;
@@ -61,3 +61,17 @@ are embedded in specs and checked before and after each cell. Its six measured
 cells all validated. Harness tests6/6 and report tests2/2 passed, including
 mutation rejection for six corruption classes. Stored earlier evidence remains
 unchanged.
+
+Root-authorized exploratory screens use `tools/screen.py`: three arms (checked
+baseline, candidate, fastest immutable reference), one warmup and five paired
+rounds, fixed fresh-baseline iteration counts, no RSS/count phase.
+`tools/screen_report.py` validates them under a separate schema. They cannot
+replace or be pooled with full fifteen-round final evidence.
+
+CSV01 initially supplied mutable working artifact paths. Before subsequent
+builds, the exact six measured CSV inputs were archived by SHA256. Its explicit
+`artifact-relocations.json` maps original measured identities to byte-identical
+archives. Revalidate with `--artifact-map PATH`; hash mismatches are still fatal,
+and the report records every relocation. Future candidates start with immutable
+archive paths. The initial trial reporter is retained as
+`tools/report_trials_initial.py` to preserve its recorded source identity.

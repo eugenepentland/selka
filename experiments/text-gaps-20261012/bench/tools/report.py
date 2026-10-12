@@ -25,13 +25,17 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def analyze(path, spec, bootstrap, check_artifacts):
+def analyze(path, spec, bootstrap, check_artifacts, artifact_map=None):
     d = json.loads(path.read_text())
     require(d['schema'] == 'text-gap-cell-v1' and d['spec'] == spec, 'receipt/spec mismatch')
     require(d['identities'] == d['identities_after'], 'inputs changed during timing')
     if check_artifacts:
         for p, sha in d['identities'].items():
-            require(measure.digest(p) == sha, 'artifact changed: ' + p)
+            if Path(p).exists() and measure.digest(p) == sha:
+                continue
+            relocated = (artifact_map or {}).get('inputs', {}).get(p)
+            require(relocated and relocated['sha256'] == sha and measure.digest(relocated['archived_path']) == sha,
+                    'artifact changed without identical explicit archive: ' + p)
     n = d['iterations']
     require(isinstance(n, int) and n > 0, 'invalid iteration count')
     expected = measure.registry.checksum(spec['case'], spec['size'], n, spec['seed'])
@@ -103,18 +107,20 @@ def main():
     p.add_argument('run', type=Path)
     p.add_argument('output', type=Path)
     p.add_argument('--check-artifacts', action='store_true')
+    p.add_argument('--artifact-map', type=Path, help='Explicit content-identical archive relocation map; hashes must equal measured pins')
     p.add_argument('--bootstrap', type=int, default=10000)
     p.add_argument('--case', action='append', help='Explicit trial subset; default requires all six cells')
     a = p.parse_args()
     require(not a.output.exists(), 'never overwrite a report')
+    artifact_map = json.loads(a.artifact_map.read_text()) if a.artifact_map else None
     cells = []
     for spec_path in sorted((a.run / 'specs').glob('*.json')):
         spec = json.loads(spec_path.read_text())
         if a.case and spec['case'] not in a.case:
             continue
-        cells.append(analyze(a.run / 'results' / spec_path.name, spec, a.bootstrap, a.check_artifacts))
+        cells.append(analyze(a.run / 'results' / spec_path.name, spec, a.bootstrap, a.check_artifacts, artifact_map))
     require(len(cells) == 2 * len(set(a.case)) if a.case else len(cells) == 6, 'expected all selected small/large cells')
-    report = dict(schema='text-gap-report-v1', cells=cells, reporter_sha256=measure.digest(__file__),
+    report = dict(schema='text-gap-report-v1', cells=cells, reporter_sha256=measure.digest(__file__), artifact_relocations=artifact_map,
                   limitations=['Exploratory single-session paired bootstrap intervals, ratio of medians; matched round indices resampled jointly.',
                                'Managed counters include setup and exclude allocator overhead; foreign managed counters unavailable. Process RSS is separate.',
                                'Representation/library policies differ, including owned MyLang split fragments versus borrowed Rust/Zig slices. Ports remain unchanged.',

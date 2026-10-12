@@ -1,0 +1,2 @@
+build-slot: timing slot 1, FIFO ticket 454 after 0s
+text-gaps/split-trial-001/string_split/small {'checked-baseline': True, 'checked-candidate': True, 'zig-safe': True, 'zig-fast': True, 'rust': True, 'go': True}
