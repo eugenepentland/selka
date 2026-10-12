@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1050, position 12; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1050, position 4; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 1050 after 90s
+array normal/manual output and exact counters match
+parallel_cheap_1 normal/manual output and exact counters match

@@ -1,0 +1,17 @@
+build-slot: FIFO ticket 992, position 11; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 992, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 992 after 75s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/manual-native/manual_native.py", line 238, in <module>
+    if __name__=="__main__":main()
+                            ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/manual-native/manual_native.py", line 233, in main
+    if args.command=="prepare":result=prepare(args.repository,args.revision,args.compiler,args.zig,args.directory)
+                                      ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/manual-native/manual_native.py", line 135, in prepare
+    embedded.runtime(base)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/manual-native/manual_native.py", line 63, in runtime
+    address, size = self.symbols["driver.runtime_source"]
+                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'driver.runtime_source'

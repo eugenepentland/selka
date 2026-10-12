@@ -414,3 +414,24 @@ identities are visible in last-run.json. All73 coordinator tests pass, including
 seven new adversarial tests. Production files remain coordinator-owned and
 unmodified here; root applies and records this harness revision separately from
 the frozen compiler. Full registered verification remains root-owned and pending.
+
+## Support7 exact package and optimized-compiler counter follow-up
+
+Support7 source bed11cf3 / ReleaseFast compiler540283317dab qualified through
+all42 pure component tests (debug/release with checked ownership and verified
+facts), both fresh and installed protocol suites, and installed symbol audits.
+All12 commands passed; installed artifact manifests/full independent compiler
+receipts and component source identities were unchanged throughout. Full records
+are in support7-qualification/package-results.json and compressed raw evidence.
+A08 separately owns fresh688 counted component executions at765988210. These
+remain exact intermediate Support7 results, requiring rerun after later changes.
+
+ReleaseFast removes the symbols used by the old counter adapter. New independent
+v2 adapter7b10b6b6 verifies unique complete Git runtime and exact frozen-build
+number-object bytes inside read-only ELF segments, validates the ET_REL extent
+and helper exports, and passes8 provenance regressions. C0 v1/v2 runtime and
+object hashes match exactly; Support7 normal/manual JSON/task full counter
+documents match with RC0/live0. A09 subsequently passed fresh full15 C0 and
+Support7 v2 replays and owns their complete paired report. Original v1 evidence,
+C0 ordinary native build failures and the initial RF extraction failure remain
+preserved. No native policy override, historical seed change or C2/C3 activation.

@@ -1,0 +1,99 @@
+build-slot: FIFO ticket 1036, position 16; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1036, position 9; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1036, position 2; earlier build tickets must run first; waiting (120s so far)
+build-slot: build slot 3, FIFO ticket 1036 after 130s
+{
+  "method": "counted-release-native-replay-v2",
+  "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "source_inputs_sha256": {
+    "src/core/driver.zig": "56a8781c82157354f06d4eaa3d1a234e680d918d7ba6a48cdc5f513478f9fe27",
+    "src/core/runtime/core_rt.c": "09bebd4ba75c24b98f82d99defdffc26a79912132687e1f5a38be3bf5f10c1d6",
+    "src/core/runtime/core_dict.c": "379da380517be9cb7e6ef0dba0a16dded8f1b18d836002409c4555a3d53e5ba1",
+    "src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "src/core/runtime/core_text.c": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+    "src/core/runtime/core_sort.c": "85da826333d5f157d32cf396ea29579bc050d9b95bb6acc9744f84e778f9383b",
+    "src/core/runtime/core_number.c": "24134473bbeb81ca4896e37c86ff662f0e1f2524bd9a6b3db8599b9e61ac9143",
+    "src/core/runtime/core_io.c": "302102d37d20192ccba6a176c389f28b05278ecda5683c6914802088d2200ef7",
+    "src/core/runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+    "src/core/runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "src/core/runtime/core_bytes.c": "a4740e070873ff1acb2730ea75b0994b2b3bf2b91b230ea4bd0e093e2a861c09",
+    "src/core/runtime/core_values.c": "26dd1195c8974fb3493645947b812ce6af5904c7fb0e619c6621ccdbbe066123",
+    "src/core/runtime/core_owned_copy.c": "9f0fc3f83cd0a06f8171edb2f23867ef4a1f9213a5554625078df58dda86d450",
+    "src/core/runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+    "src/core/runtime/core_tasks.c": "e3d291ab113bd9f31c0b352761ab2523da20af08800c2010c44240bd5c622b85",
+    "src/core/count_runtime.zig": "190ee3130adb72d24d0f7a1eeec9544cf037ebab5b9e4e50f414746d317d72c7",
+    "src/core/runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+    "src/core/runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+    "src/core/target.zig": "ddce9416c892f018ce4a8836d6d68e516a8071fb6bf857b596c840a3d088ddff",
+    "src/core/number_runtime.zig": "da162a909996d5a0f88d3eb4bcdc8626c08514987f6ba8632d8bed76a531a037",
+    "src/core/flags.zig": "0d755cfaf8459362b87a12d41b4ad3e4e61e605b9cec9d7daafb4e1781981c8c",
+    "src/core/build_mode.zig": "b41d9edd6a3dbdaa47de372a62d7f939288cd3210c4d97474225996ae062174f",
+    "src/core/emit_units.zig": "611af1ce861b1a4dc6b3f613ed198a735721646ff6a6a3d680728b6d49d9b029",
+    "src/core/pipeline.zig": "187187d7bbbccb79ede606eb1ed1fa9d36cead65faa31fb6fd1a0a5463c3ce7e"
+  },
+  "runtime_fragment_order": [
+    "runtime/core_rt.c",
+    "runtime/core_dict.c",
+    "runtime/core_unicode_data.h",
+    "runtime/core_text.c",
+    "runtime/core_sort.c",
+    "runtime/core_number.c",
+    "runtime/core_io.c",
+    "runtime/core_durable.c",
+    "runtime/core_host.c",
+    "runtime/core_bytes.c",
+    "runtime/core_values.c",
+    "runtime/core_owned_copy.c",
+    "runtime/core_test.c",
+    "runtime/core_tasks.c"
+  ],
+  "target": "x86_64-linux-gnu.2.31",
+  "cpu_flags": [
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6"
+  ],
+  "embedded_runtime_matches_git": true,
+  "embedded_number_extracted": true,
+  "number_symbols": [
+    "myl_core_str_from_f64",
+    "myl_core_buffer_append_f64",
+    "myl_core_format_number",
+    "myl_core_format_float",
+    "myl_core_format_text",
+    "myl_core_parse_float_range",
+    "myl_core_round_float"
+  ],
+  "embedded_input_provenance": {
+    "runtime": {
+      "selection": "named-symbol-v1",
+      "size": 439061,
+      "sha256": "d5c393bd561ad2ca363d983209b187d4d823e5f2de7e13312a7f6ce6f960f36e"
+    },
+    "number": {
+      "selection": "named-symbol-v1",
+      "size": 409072,
+      "sha256": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0"
+    }
+  },
+  "files_sha256": {
+    "base.c": "d5c393bd561ad2ca363d983209b187d4d823e5f2de7e13312a7f6ce6f960f36e",
+    "count_runtime.zig": "190ee3130adb72d24d0f7a1eeec9544cf037ebab5b9e4e50f414746d317d72c7",
+    "runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+    "runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+    "number.o": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0",
+    "export.zig": "dbf49f76f2c990c102024655b80240c30775065ada58593e688dd40a77527cbf",
+    "export": "2e5bfb5b68c25d388aaacb59629b55631ace709ef1973cb3f19c837250ecaee9",
+    "counted.c": "ff1957e1db368eb0fc42bfa9d85f66871fb0eb9928f1f3799df8b8b2e1815574",
+    "runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5"
+  },
+  "environment": {
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/zig-local",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/zig-global"
+  }
+}

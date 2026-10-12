@@ -1,0 +1,107 @@
+build-slot: FIFO ticket 1035, position 15; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1035, position 8; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1035, position 1; waiting for measurement or memory-accounting settle delay; waiting (120s so far)
+build-slot: build slot 2, FIFO ticket 1035 after 125s
+{
+  "method": "counted-release-native-replay-v2",
+  "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "number_object_input": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-support7/.zig-cache/o/38d22d1e4461e413e446fb42adf284b2/core_number_text.o",
+    "sha256": "7cafd8f15b9d865346ab77b26e254d55d93520ffcef564c1f9968dab5085f249"
+  },
+  "source_inputs_sha256": {
+    "src/core/driver.zig": "8b990d67466be745c04313e77f9fa21291e5b0d5b4def7e91a2a844df45df766",
+    "src/core/runtime/core_rt.c": "83449a8fdd78d5f4c23147b709b848929ae1e6ae4c3e0dcdfe6f806a70adc361",
+    "src/core/runtime/core_dict.c": "379da380517be9cb7e6ef0dba0a16dded8f1b18d836002409c4555a3d53e5ba1",
+    "src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "src/core/runtime/core_text.c": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+    "src/core/runtime/core_sort.c": "85da826333d5f157d32cf396ea29579bc050d9b95bb6acc9744f84e778f9383b",
+    "src/core/runtime/core_number.c": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+    "src/core/runtime/core_io.c": "f4a44d8a37abdc52f7b3ce2015979f59172d5778269d3d14b3db4a80ae458138",
+    "src/core/runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+    "src/core/runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "src/core/runtime/core_bytes.c": "3e776dd1d693c638d661086b1c375988e59a124bb132cc132c02bb531af05d96",
+    "src/core/runtime/core_values.c": "f14e1aa4dcddbf644925f7d49ffa9310e977c624046565c8a53d1e63ec16f996",
+    "src/core/runtime/core_owned_copy.c": "9f0fc3f83cd0a06f8171edb2f23867ef4a1f9213a5554625078df58dda86d450",
+    "src/core/runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+    "src/core/runtime/core_tasks.c": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded",
+    "src/core/count_runtime.zig": "1f98dd5f443cb411cb12a5adae0fdc2107342932089d1dc4b90b72de8d7870cc",
+    "src/core/runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+    "src/core/runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+    "src/core/target.zig": "ddce9416c892f018ce4a8836d6d68e516a8071fb6bf857b596c840a3d088ddff",
+    "src/core/number_runtime.zig": "da162a909996d5a0f88d3eb4bcdc8626c08514987f6ba8632d8bed76a531a037",
+    "src/core/flags.zig": "0d755cfaf8459362b87a12d41b4ad3e4e61e605b9cec9d7daafb4e1781981c8c",
+    "src/core/build_mode.zig": "b41d9edd6a3dbdaa47de372a62d7f939288cd3210c4d97474225996ae062174f",
+    "src/core/emit_units.zig": "611af1ce861b1a4dc6b3f613ed198a735721646ff6a6a3d680728b6d49d9b029",
+    "src/core/pipeline.zig": "5b75d0f8920d74b0d12fa47fbced5a537309d41cd0396ca66de3bc38e104b4b4"
+  },
+  "runtime_fragment_order": [
+    "runtime/core_rt.c",
+    "runtime/core_dict.c",
+    "runtime/core_unicode_data.h",
+    "runtime/core_text.c",
+    "runtime/core_sort.c",
+    "runtime/core_number.c",
+    "runtime/core_io.c",
+    "runtime/core_durable.c",
+    "runtime/core_host.c",
+    "runtime/core_bytes.c",
+    "runtime/core_values.c",
+    "runtime/core_owned_copy.c",
+    "runtime/core_test.c",
+    "runtime/core_tasks.c"
+  ],
+  "target": "x86_64-linux-gnu.2.31",
+  "cpu_flags": [
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6"
+  ],
+  "embedded_runtime_matches_git": true,
+  "embedded_number_extracted": true,
+  "number_symbols": [
+    "myl_core_str_from_f64",
+    "myl_core_buffer_append_f64",
+    "myl_core_format_number",
+    "myl_core_format_float",
+    "myl_core_format_text",
+    "myl_core_parse_float_range",
+    "myl_core_round_float"
+  ],
+  "embedded_input_provenance": {
+    "runtime": {
+      "selection": "unique-complete-input-v1",
+      "offset": 1326549,
+      "size": 443129,
+      "sha256": "708fa431a33bf24033471c1a912ca0e8cd3f0ef4d5b0e48f59e6608021ebee59"
+    },
+    "number": {
+      "selection": "unique-complete-input-v1",
+      "offset": 620952,
+      "size": 409160,
+      "sha256": "7cafd8f15b9d865346ab77b26e254d55d93520ffcef564c1f9968dab5085f249",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-support7/.zig-cache/o/38d22d1e4461e413e446fb42adf284b2/core_number_text.o",
+      "exact_elf_extent": 409160
+    }
+  },
+  "files_sha256": {
+    "base.c": "708fa431a33bf24033471c1a912ca0e8cd3f0ef4d5b0e48f59e6608021ebee59",
+    "count_runtime.zig": "1f98dd5f443cb411cb12a5adae0fdc2107342932089d1dc4b90b72de8d7870cc",
+    "runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+    "runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+    "number.o": "7cafd8f15b9d865346ab77b26e254d55d93520ffcef564c1f9968dab5085f249",
+    "export.zig": "dbf49f76f2c990c102024655b80240c30775065ada58593e688dd40a77527cbf",
+    "export": "b446bd2b663952b606896f266bc49a5f2666b339dfb3012ed38c2040ef5de950",
+    "counted.c": "88d03fa41fd150f8a050c9627cfabe08c39b55eca53f11931ef7a8bbb66ffa57",
+    "runtime.o": "dffd08d6b8928fbef55a40c1a937e5cd167e548a48ba94157ea2a7d8804adf69"
+  },
+  "environment": {
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-support7/zig-local",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-support7/zig-global"
+  }
+}
