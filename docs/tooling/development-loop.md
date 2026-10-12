@@ -75,7 +75,7 @@ descriptors used by admission and child tooling. Admission's memory-settle helpe
 has separate ownership and retains its original delay after a worker finishes or
 is cancelled.
 
-`.mylang-cache/verification-v2/last-run.json` records admission wait, input validation,
+`.mylang-cache/verification-v3/last-run.json` records admission wait, input validation,
 worker duration, final validation, publication, selected/reused actions and the
 advisory loop target. Preparation failures also record their stage and status.
 Per-action `invalidation` compares exact selected file identities and common
@@ -166,8 +166,53 @@ qualified ordinary-edit latency, broader useful boundaries and full self-hosting
 define the larger work and ownership. The active self-hosting branch owns compiler
 porting; this tooling pass preserves its completion and performance requirements.
 
-Receipt schema 2 and the `verification-v2` directory separate canonical loaded-code
-identities from older marshal-based identities. Report schema remains 1. The
-canonical encoder binds actual loaded code, typed constants and source locations;
-retained bootstrap guards separately authenticate its source. This migration does
-not change deterministic fuzz seed derivation or rewrite existing content stores.
+## Receipt identities (schema 3)
+
+Receipts are schema 3 under `.mylang-cache/verification-v3/`; each receipt
+records `"version": 3` and every action key starts from the domain
+`selka-verification-action-v6`. Schema-2 receipts in `verification-v2` are never
+opened, and a schema-2 record found under a v3 key is a miss, so the first
+request after the change reruns every action once. Report schema remains 1.
+
+An action key is path- and environment-free by construction:
+
+- **Environment.** `normalized_environment` projects the launcher environment
+  through the [environment identity contract](environment-identity.md): workers
+  receive only keyed, host and placement variables, then the coordinator's
+  constants (the `PYTHON*` pins, fixed `GIT_*` identity and config isolation,
+  `PATH` limited to existing directories). `PWD`, `SHLVL`, `TERM`, `CODEX_*` and
+  every other dropped variable never reach a worker; a worker's working directory
+  comes from the process. The `environment` field of the common identity is the
+  contract's host-scope digest of that environment plus the content digest of
+  every tool `tool_contract` resolves, named by its snapshot label and taken from
+  the tools snapshot. Two launchers that differ only in dropped or placement
+  variables (another agent's `CODEX_THREAD_ID`, `TERM`, `PWD`, `TMPDIR`) share
+  every key; a keyed change such as `MYLANG_MEMORY_LIMIT` changes every key.
+- **Paths.** The common identity holds no checkout path. The checkout lock and the
+  shared store's coordinator lock still use the real path, for mutual exclusion only.
+- **Prepared artifacts.** Native executables embed the checkout path in their debug
+  information, so their bytes differ between worktrees. When
+  `zig-out/verification/artifacts.json` (version 3) declares a `producer` for an
+  artifact, the coordinator identifies it by what produced it instead: the
+  content of every file of the preparation and build-configuration snapshots its
+  `recipes` select, the recipes, `optimize`, `zig_version` and `test_runner`.
+  An installed copy (`zig-out/bin/mylang`) must have the produced bytes. A recipe
+  that selects no watched file fails the request. An artifact without a valid
+  producer keeps its byte identity. The two reviewed independent roots keep their
+  closure metadata, which still binds executable bytes.
+
+`last-run.json` names the choice per provider in `artifact_identities`
+(`{"identity": "producer", "sources": N}` or `{"identity": "bytes", "reason": ...}`)
+and, per action, `path_free` (true when the checkout path occurs in no part of
+the key and every provider the action depends on has a producer identity) and
+`environment_variables` (the sorted names, never values, of the keyed and host
+variables in its identity). A retained `cache_session.py` restores its startup
+environment before each request and the coordinator projects it the same way,
+so its retained snapshots and receipts serve launchers that differ only in
+dropped variables.
+
+Schema 2 separated canonical loaded-code identities from older marshal-based
+identities; schema 3 keeps that encoder. The canonical encoder binds actual
+loaded code, typed constants and source locations; retained bootstrap guards
+separately authenticate its source. Neither migration changes deterministic fuzz
+seed derivation or rewrites existing content stores.

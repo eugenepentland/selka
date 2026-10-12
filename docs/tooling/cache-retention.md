@@ -19,13 +19,31 @@ python3 scripts/juice_cache.py capture suite.json --compiler /path/to/mylang \
 These are developer commands. Building, installing and using the native compiler
 continues to require no Python.
 
+### The verification coordinator's default store
+
+`verify_cache.py` resolves its shared store in this order: `--shared-cache-dir DIR`,
+then `MYLANG_VERIFICATION_SHARED_CACHE=DIR` (a placement variable: its value never
+enters a key), then the per-user default `$XDG_CACHE_HOME/mylang/verification-shared`,
+else `~/.cache/mylang/verification-shared`. The default applies only while the
+module constant `DEFAULT_SHARING` in `scripts/verify_cache.py` is true; it is
+`False` until the week-3 rollout of the
+[output-keyed verification plan](../audits/output-keyed-shared-receipts-plan-2026-10-12.md),
+whose trust boundary is the same Unix user on the same machine. An explicitly
+empty flag or variable disables sharing. An unusable default store prints one
+warning and verification proceeds without sharing; an unusable store named by
+the flag or the variable is an error. `last-run.json` reports the choice as
+`evidence_store.source` (`flag`, `environment`, `default` or `none`).
+
 ## What can be shared
 
 Storage location is independent of action identity. Identical bytes deduplicate
 even when their producers have different action keys. A receipt authorizes reuse
-only for its exact existing dependency and execution contract. Workspace paths,
-debug paths, environment, host context and physical executable layout still
-invalidate actions that observe them. This does not normalize paths inside
+only for its exact existing dependency and execution contract. Verification action
+keys hold no checkout path and only the keyed and host environment classes, and
+identify native executables by their producer recipes where `artifacts.json`
+declares them ([receipt identities](development-loop.md#receipt-identities-schema-3));
+host context and any provider still identified by its bytes still invalidate
+actions that observe them. This does not normalize paths inside
 results or promise that two different checkout paths have interchangeable tests.
 An unchanged retained revision can recover its original receipts after an edit
 and revert.
