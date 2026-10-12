@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "cc",
+    "-O2",
+    "-std=c11",
+    "-pthread",
+    "-DMYL_ZERO_RC=1",
+    "-I",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native",
+    "-c",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/retirement/integration-c749ad5a9/count-member-negative.c",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/forbidden-count.o"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/retirement/integration-c749ad5a9/count-member-negative.c:2:41: error: no member named 'count' in 'myl_block'\n    2 | int retired_count_member(void) { return offsetof(myl_block, count); }\n      |                                         ^                   ~~~~~\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/include/__stddef_offsetof.h:16:24: note: expanded from macro 'offsetof'\n   16 | #define offsetof(t, d) __builtin_offsetof(t, d)\n      |                        ^                     ~\n1 error generated.\n",
+  "runtime_sha256": "041d616cf7c9907e3b2a576c2555359264457960d7e3cd58fa385646b46a70ef",
+  "pass": true
+}

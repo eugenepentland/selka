@@ -1,0 +1,271 @@
+{
+  "scope": "Scratch A02/A05 runtime retirement preview; MYL_ZERO_RC still selects peer owned branches. Not C3 production qualification.",
+  "base_commit": "c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "runtime_sha256": "041d616cf7c9907e3b2a576c2555359264457960d7e3cd58fa385646b46a70ef",
+  "inputs": {
+    "src/core/runtime/core_rt.c": {
+      "sha256": "70aa3232adfa6b673fbc6a75d09cf810c1789351e80b5f779485d9616e9e6684",
+      "origin": "A02 unapplied retirement candidate"
+    },
+    "src/core/runtime/core_dict.c": {
+      "sha256": "4f3beca353e7d0908e9f408568ee994aea0abc4da75bf49edfaf9039699115ed",
+      "origin": "A05 paired unapplied retirement candidate"
+    },
+    "src/core/runtime/core_unicode_data.h": {
+      "sha256": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+      "origin": "unchanged pinned integration source"
+    },
+    "src/core/runtime/core_text.c": {
+      "sha256": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+      "origin": "unchanged pinned integration source"
+    },
+    "src/core/runtime/core_sort.c": {
+      "sha256": "c45d05dcbf2a9eed86fd4c40dda1dd3ca7c4822d4cb9b10e5218fbe9c414b818",
+      "origin": "A05 paired unapplied retirement candidate"
+    },
+    "src/core/runtime/core_number.c": {
+      "sha256": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+      "origin": "unchanged pinned integration source"
+    },
+    "src/core/runtime/core_io.c": {
+      "sha256": "ded0f00b113b78279afbae8d2f4c0fe77184621c5ddada4dc59f50899f360958",
+      "origin": "A05 paired unapplied retirement candidate"
+    },
+    "src/core/runtime/core_durable.c": {
+      "sha256": "22c616f2a6bec0db2eebd5fa8dc3d645ce760d91d73d73e5dd5b2f08bf0dec7d",
+      "origin": "A05 paired unapplied retirement candidate"
+    },
+    "src/core/runtime/core_host.c": {
+      "sha256": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+      "origin": "A05 paired unapplied retirement candidate"
+    },
+    "src/core/runtime/core_bytes.c": {
+      "sha256": "e9dea0f02d73aa7601d1a278ac40b9d467df99f67f68f3fa8f5221feeddcf363",
+      "origin": "A02 unapplied retirement candidate"
+    },
+    "src/core/runtime/core_values.c": {
+      "sha256": "f14e1aa4dcddbf644925f7d49ffa9310e977c624046565c8a53d1e63ec16f996",
+      "origin": "unchanged pinned integration source"
+    },
+    "src/core/runtime/core_owned_copy.c": {
+      "sha256": "9f0fc3f83cd0a06f8171edb2f23867ef4a1f9213a5554625078df58dda86d450",
+      "origin": "unchanged pinned integration source"
+    },
+    "src/core/runtime/core_test.c": {
+      "sha256": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+      "origin": "unchanged pinned integration source"
+    },
+    "src/core/runtime/core_tasks.c": {
+      "sha256": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded",
+      "origin": "unchanged pinned integration source"
+    }
+  },
+  "selectors_remaining": {
+    "src/core/runtime/core_text.c": [
+      310,
+      595
+    ],
+    "src/core/runtime/core_values.c": [
+      337
+    ],
+    "src/core/runtime/core_tasks.c": [
+      128,
+      272,
+      309,
+      324,
+      331
+    ]
+  },
+  "fixtures": {
+    "capacity": {
+      "source_sha256": "225837fa55fa8e5954af608aa604cd9b76be57ef93a9527224988420a5fc3c9b",
+      "build": {
+        "argv": [
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "cc",
+          "-O2",
+          "-std=c11",
+          "-pthread",
+          "-DMYL_ZERO_RC=1",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity.c",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "0"
+          ],
+          "status": 0,
+          "stdout": "preserved\n",
+          "stderr": "",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "1"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "2"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "3"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "4"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "5"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "6"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "7"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "8"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "9"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "10"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "11"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/capacity",
+            "12"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "fatal: out of memory\n",
+          "pass": true
+        }
+      ],
+      "pass": true,
+      "binary_sha256": "fff7b5cdb0c744d71d79e2a4004d89b5c5d5c05203676ad942f19278d9ae0cc7",
+      "forbidden_symbols": []
+    },
+    "owned": {
+      "source_sha256": "30181bbeade3a87373590ddeca89e0a8ece67cb7cb70d4a1048553c703d66430",
+      "build": {
+        "argv": [
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "cc",
+          "-O2",
+          "-std=c11",
+          "-pthread",
+          "-DMYL_ZERO_RC=1",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/owned.c",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/owned"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/owned.c:24:72: warning: adding 'int64_t' (aka 'long') to a string does not append to the string [-Wstring-plus-int]\n   24 |         ((myl_block **)block_data(list))[list->len++] = str_from(\"abc\" + i, 1);\n      |                                                                  ~~~~~~^~~\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/owned.c:24:72: note: use array indexing to silence this warning\n   24 |         ((myl_block **)block_data(list))[list->len++] = str_from(\"abc\" + i, 1);\n      |                                                                        ^  \n      |                                                                  &     [  ]\n1 warning generated.\n"
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-c749ad5a9/native/owned"
+          ],
+          "status": 0,
+          "stdout": "owned layout copy rotate reverse transfer drop preserved\n",
+          "stderr": "",
+          "pass": true
+        }
+      ],
+      "pass": true,
+      "binary_sha256": "dd90a21847b8494c2c5c063d988bbf847ad64b0fcddc2748fee4e3e893f3b1a1",
+      "forbidden_symbols": []
+    }
+  },
+  "pass": true
+}

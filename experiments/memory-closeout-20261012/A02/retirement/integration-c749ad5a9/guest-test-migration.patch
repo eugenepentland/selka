@@ -1,0 +1,53 @@
+--- a/src/core/a02_list_methods_test.zig
++++ b/src/core/a02_list_methods_test.zig
+@@ -22,7 +22,7 @@
+     const modes = [_][]const []const u8{ &.{"--release"}, &.{"--unoptimized"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--release", "--no-facts" } };
+     for (modes) |mode| {
+         var argv: std.ArrayList([]const u8) = .empty;
+-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
++        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
+         try argv.appendSlice(a, mode);
+         const built = try std.process.run(a, io, .{ .argv = argv.items });
+         if (built.term != .exited or built.term.exited != 0) std.debug.print("A02 list methods build: {s}{s}\n", .{ built.stdout, built.stderr });
+--- a/src/core/a02_mut_call_test.zig
++++ b/src/core/a02_mut_call_test.zig
+@@ -21,7 +21,7 @@
+     const modes = [_][]const []const u8{ &.{"--release"}, &.{"--unoptimized"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--release", "--no-facts" } };
+     for (modes) |mode| {
+         var argv: std.ArrayList([]const u8) = .empty;
+-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
++        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
+         try argv.appendSlice(a, mode);
+         const built = try std.process.run(a, io, .{ .argv = argv.items });
+         if (built.term != .exited or built.term.exited != 0) std.debug.print("A02 interior mut calls build: {s}{s}\n", .{ built.stdout, built.stderr });
+@@ -77,7 +77,7 @@
+     try dir.dir.writeFile(io, .{ .sub_path = "overlap.my", .data = source });
+     const root = try dir.dir.realPathFileAlloc(io, ".", a);
+     const path = try std.fs.path.join(a, &.{ root, "overlap.my" });
+-    const checked = try std.process.run(a, io, .{ .argv = &.{ options.core_path, "check", path, "--experimental-zero-rc" } });
++    const checked = try std.process.run(a, io, .{ .argv = &.{ options.core_path, "check", path } });
+     try std.testing.expect(checked.term == .exited and checked.term.exited == 1);
+     try std.testing.expect(std.mem.indexOf(u8, checked.stderr, "E_SINGLE_OWNER_OVERLAP") != null);
+ }
+--- a/src/core/a02_scalar_child_test.zig
++++ b/src/core/a02_scalar_child_test.zig
+@@ -29,7 +29,7 @@
+     const modes = [_][]const []const u8{ &.{release_flag}, &.{"--unoptimized"}, &.{ release_flag, "--verify-facts" }, &.{"--optimize-debug"}, &.{ release_flag, "--no-facts" } };
+     for (modes) |mode| {
+         var argv: std.ArrayList([]const u8) = .empty;
+-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
++        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
+         try argv.appendSlice(a, mode);
+         const built = try std.process.run(a, io, .{ .argv = argv.items });
+         if (built.term != .exited or built.term.exited != 0) report("A02 scalar child writes build: {s}{s}\n", .{ built.stdout, built.stderr });
+--- a/src/core/a02_public_constructors_test.zig
++++ b/src/core/a02_public_constructors_test.zig
+@@ -27,7 +27,7 @@
+     const modes = [_][]const []const u8{ &.{release_flag}, &.{"--unoptimized"}, &.{ release_flag, "--verify-facts" }, &.{"--optimize-debug"}, &.{ release_flag, "--no-facts" } };
+     for (modes) |mode| {
+         var argv: std.ArrayList([]const u8) = .empty;
+-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
++        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
+         try argv.appendSlice(a, mode);
+         const built = try std.process.run(a, io, .{ .argv = argv.items });
+         if (built.term != .exited or built.term.exited != 0) report("A02 public constructors build: {s}{s}\n", .{ built.stdout, built.stderr });
