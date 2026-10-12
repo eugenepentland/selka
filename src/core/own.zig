@@ -182,6 +182,12 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     try hoistTests(arena, scratch, module, f, &marks);
     var phase_a = try Analysis.of(scratch, arena, module, f, &marks);
     try phase_a.analyze();
+    if (try elideDeadCopies(&phase_a)) {
+        // Forwarded copies change the source's lifetime; all subsequent ownership
+        // decisions use a fresh analysis, including borrowed child liveness.
+        phase_a = try Analysis.of(scratch, arena, module, f, &marks);
+        try phase_a.analyze();
+    }
     try copyOnWrite(&phase_a, options, &stats);
     var phase_b = try Analysis.of(scratch, arena, module, f, &marks);
     try phase_b.analyze();
@@ -191,6 +197,33 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     stats.retains -= stats.elided;
     stats.releases -= stats.elided;
     return stats;
+}
+
+/// A checked owner whose final use is an independent copy can move into the
+/// result. Any later use of it or a borrowed child keeps the explicit copy.
+fn elideDeadCopies(a: *Analysis) Error!bool {
+    const f = a.f;
+    if (!a.module.zero_rc or f.insts.items.len > 4096) return false;
+    const Site = struct { ref: ir.Ref, source: ir.Ref };
+    var sites: std.ArrayList(Site) = .empty;
+    var candidates: usize = 0;
+    outer: for (f.blocks.items, 0..) |block, b| {
+        if (!a.present(b)) continue;
+        for (block.insts.items, 0..) |ref, pos| {
+            const source = @import("inline_snapshot.zig").source(a.module, f, f.inst(ref)) orelse continue;
+            if (candidates == 32) break :outer;
+            candidates += 1;
+            if (a.class[source.index()] != .owned or a.promoted[source.index()]) continue;
+            if (a.marks.stack.contains(@intCast(source.index())) or a.live[source.index()] == null or
+                a.liveAfter(source, @intCast(b), @intCast(pos))) continue;
+            try sites.append(a.storage.scratch, .{ .ref = ref, .source = source });
+        }
+    }
+    for (sites.items) |site| {
+        const old = f.inst(site.ref);
+        f.insts.items[site.ref.index()] = .{ .op = .copy, .ty = old.ty, .a = site.source, .span = old.span };
+    }
+    return sites.items.len != 0;
 }
 
 /// Reserve known counted fills after stack promotion. Only detached i64/u64

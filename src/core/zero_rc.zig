@@ -61,10 +61,10 @@ pub fn contract(symbol: []const u8) ?Contract {
     if (std.mem.eql(u8, symbol, "myl_core_test_read_text") or std.mem.eql(u8, symbol, "myl_core_test_read_bytes")) return .{ .result = .fresh };
     if (callableDigest(symbol) or std.mem.startsWith(u8, symbol, @import("emit_values.zig").copy_prefix)) return .{ .result = .fresh };
     if (std.mem.eql(u8, symbol, "myl_core_view_slice")) return .{ .views = 1, .result = .borrowed };
-    for ([_][]const u8{ "myl_core_view_chars", "myl_core_view_index", "myl_core_view_byte", "myl_core_span_bytes_index_offset" }) |name| {
+    for ([_][]const u8{ "myl_core_view_chars", "myl_core_view_index", "myl_core_view_byte", "myl_core_span_bytes_index_offset", "myl_core_span_utf8_count" }) |name| {
         if (std.mem.eql(u8, symbol, name)) return .{ .views = 1 };
     }
-    for ([_][]const u8{ "myl_core_view_char", "myl_core_view_copy_text", "myl_core_view_copy_bytes" }) |name| {
+    for ([_][]const u8{ "myl_core_view_char", "myl_core_view_copy_text", "myl_core_view_copy_bytes", "myl_core_span_decode_text" }) |name| {
         if (std.mem.eql(u8, symbol, name)) return .{ .views = 1, .result = .fresh };
     }
     const readers = [_][]const u8{
@@ -132,11 +132,18 @@ pub fn contract(symbol: []const u8) ?Contract {
         "myl_core_bytes_to_list",
     };
     for (constructors) |name| if (std.mem.eql(u8, symbol, name)) return .{ .result = .fresh };
+    if (bufferSpanContract(symbol)) |boundary| return boundary;
     const mutations = [_][]const u8{
         "myl_core_buffer_push_checked", "myl_core_buffer_append_checked",
         "myl_core_buffer_append_i64",   "myl_core_buffer_append_f64",
     };
     for (mutations) |name| if (std.mem.eql(u8, symbol, name)) return .{ .owned = 1, .result = .transferred };
+    return null;
+}
+
+fn bufferSpanContract(symbol: []const u8) ?Contract {
+    if (std.mem.eql(u8, symbol, "myl_core_span_buffer_range_valid")) return .{ .views = 1 };
+    if (std.mem.eql(u8, symbol, "myl_core_buffer_append_span_checked")) return .{ .views = 2, .owned = 1, .result = .transferred };
     return null;
 }
 

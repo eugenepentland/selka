@@ -5,7 +5,8 @@ const slices = @import("fuse_slice_key.zig");
 
 /// Borrow complete local octet read sets, recording runtime declarations for the cache.
 pub fn runRecording(a: std.mem.Allocator, module: *ir.Module, requests: ?[]std.ArrayList(u32)) std.mem.Allocator.Error!u32 {
-    if (!module.zero_rc or !offsetAvailable(module)) return 0;
+    if (!module.zero_rc) return 0;
+    if (!offsetAvailable(module) or !bufferHelpersAvailable(module)) return 0;
     var changed: u32 = 0;
     const count = module.functions.items.len;
     for (0..count) |fi| {
@@ -41,6 +42,12 @@ pub fn runRecording(a: std.mem.Allocator, module: *ir.Module, requests: ?[]std.A
                     f.insts.items[j].a = callee;
                     try recordRequest(a, requests, fi, callee);
                 }
+                if (bufferReader(module, &f, use)) |form| {
+                    if (f.resolve(f.operands(use.data)[form.source]) != ref) continue;
+                    const callee = try bufferCallee(a, module, form);
+                    f.insts.items[j].a = callee;
+                    try recordRequest(a, requests, fi, callee);
+                }
             }
             changed += 1;
         }
@@ -69,10 +76,66 @@ fn reads(module: *const ir.Module, f: *const ir.Function, ref: ir.Ref) bool {
             found = true;
             if (at == 0 and (inst.op == .list_len or (inst.op == .list_get and inst.ty == .u8))) continue;
             if (at == 0 and named(module, inst, "myl_core_bytes_index_offset") and f.operands(inst.data).len == 2) continue;
+            if (bufferReader(module, f, inst)) |form| if (at == form.source) continue;
             return false;
         }
     }
     return found;
+}
+
+const BufferForm = struct {
+    original: []const u8,
+    symbol: []const u8,
+    params: []const ir.Type,
+    ret: ir.Type,
+    source: usize,
+    owned: u64,
+};
+const buffer_forms = [_]BufferForm{
+    .{ .original = "myl_core_buffer_range_valid", .symbol = "myl_core_span_buffer_range_valid", .params = &.{ .bytes, .i64, .i64 }, .ret = .bool, .source = 0, .owned = 0 },
+    .{ .original = "myl_core_buffer_append_checked", .symbol = "myl_core_buffer_append_span_checked", .params = &.{ .byte_buffer, .bytes, .i64, .i64 }, .ret = .byte_buffer, .source = 1, .owned = 1 },
+};
+
+fn bufferSignature(sig: ir.Signature, form: BufferForm, span: bool) bool {
+    if (sig.linkage != .runtime_c or sig.ret != form.ret or sig.owned != form.owned or sig.consumes != 0) return false;
+    if (sig.views != @as(u64, if (span) @as(u64, 1) << @intCast(form.source) else 0) or sig.params.len != form.params.len) return false;
+    for (sig.params, form.params, 0..) |actual, expected, at| {
+        if (actual != (if (span and at == form.source) ir.Type.str else expected)) return false;
+    }
+    return true;
+}
+
+fn bufferReader(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst) ?BufferForm {
+    if (inst.op != .call or inst.a.index() >= module.functions.items.len) return null;
+    const callee = module.functions.items[inst.a.index()];
+    for (buffer_forms) |form| {
+        if (std.mem.eql(u8, callee.name, form.original) and bufferSignature(callee.signature, form, false) and f.operands(inst.data).len == form.params.len) return form;
+    }
+    return null;
+}
+
+fn bufferHelpersAvailable(module: *const ir.Module) bool {
+    for (module.functions.items) |f| for (buffer_forms) |form| {
+        if (std.mem.eql(u8, f.name, form.symbol) and !bufferSignature(f.signature, form, true)) return false;
+    };
+    return true;
+}
+
+fn bufferCallee(a: std.mem.Allocator, module: *ir.Module, form: BufferForm) !ir.Ref {
+    for (module.functions.items, 0..) |f, i| {
+        if (std.mem.eql(u8, f.name, form.symbol)) return @fromBackingInt(@intCast(i));
+    }
+    const params = try a.dupe(ir.Type, form.params);
+    params[form.source] = .str;
+    const ref: ir.Ref = @fromBackingInt(@intCast(module.functions.items.len));
+    try module.functions.append(a, .{ .name = form.symbol, .signature = .{
+        .params = params,
+        .ret = form.ret,
+        .linkage = .runtime_c,
+        .owned = form.owned,
+        .views = @as(u64, 1) << @intCast(form.source),
+    } });
+    return ref;
 }
 
 fn offsetCallee(a: std.mem.Allocator, module: *ir.Module) !ir.Ref {

@@ -139,6 +139,13 @@ comptime {
     _ = @import("iteration_test.zig");
     _ = @import("text_test.zig");
     _ = @import("fuse_encode_test.zig");
+    _ = @import("textgap_split_test.zig");
+    _ = @import("textgap_csv_test.zig");
+    _ = @import("textgap_decode_test.zig");
+    _ = @import("textgap_buffer_span_test.zig");
+    _ = @import("textgap_snapshot_test.zig");
+    _ = @import("textgap_literal_test.zig");
+    _ = @import("textgap_key_copy_test.zig");
     _ = @import("s1_views_test.zig");
     _ = @import("byte_index_test.zig");
     _ = @import("function_build_test.zig");

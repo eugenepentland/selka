@@ -449,6 +449,7 @@ const Verifier = struct {
             const admitted = switch (s.inst.op) {
                 .str_from_view, .str_len, .list_len, .str_parse_int, .str_view_of, .copy => i == 0,
                 .list_get => i == 0 and s.inst.ty == .u8,
+                .buffer_append => self.module.zero_rc and i == 1,
                 .ret, .print => self.module.zero_rc,
                 .dict_find => i == 1 and if (self.compoundOf(s.a, .dict)) |dict| dict.key == .str else false,
                 .call => s.inst.a.index() < self.module.functions.items.len and admittedView(self.module.functions.items[s.inst.a.index()].signature, i),
@@ -574,7 +575,7 @@ const Verifier = struct {
             .list_set => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and isInteger(s.b) and s.extra.len == 1 and self.typeOf(s.extra[0]) == element else false,
             .list_get_field => self.fieldSignature(s),
             .list_set_field => self.setFieldSignature(s),
-            .buffer_append => inst.ty == .byte_buffer and s.a == .byte_buffer and (s.b == .bytes or s.b == .byte_buffer) and s.extra.len == 2 and self.typeOf(s.extra[0]) == .i64 and self.typeOf(s.extra[1]) == .i64,
+            .buffer_append => self.bufferAppendSignature(s),
             .union_make, .union_tag, .union_payload, .union_take => self.unionSignature(s),
             .record_make => if (self.compoundOf(inst.ty, .record)) |fields| self.typesMatch(s.extra, fields) else if (self.compoundOf(inst.ty, .array)) |array| blk: {
                 if (s.extra.len != array.n) break :blk false;
@@ -592,6 +593,13 @@ const Verifier = struct {
             .err_trace => inst.ty == .void and inst.data <= 4 and if (inst.data == 3) inst.a != .none and s.a == .str else inst.a == .none,
             else => null,
         };
+    }
+
+    fn bufferAppendSignature(self: *Verifier, s: Shape) bool {
+        if (s.inst.ty != .byte_buffer or s.a != .byte_buffer or s.extra.len != 2) return false;
+        const span = self.module.zero_rc and s.b == .str_view;
+        if (s.b != .bytes and s.b != .byte_buffer and !span) return false;
+        return self.typeOf(s.extra[0]) == .i64 and self.typeOf(s.extra[1]) == .i64;
     }
 
     /// Calls, printing and terminators.

@@ -158,6 +158,16 @@ myl_block *myl_core_buffer_append_checked(myl_block *buffer, myl_block *source, 
     buffer = core_buffer_owned(buffer);
     return myl_core_buffer_append_spelled(buffer, block_data(source) + start, (size_t)(end - start));
 }
+/* Synchronous immutable octets: the destination is the sole transferred owner. */
+bool myl_core_span_buffer_range_valid(const unsigned char *data, uint64_t length, int64_t start, int64_t end) {
+    (void)data;
+    return start >= 0 && end >= start && (uint64_t)end <= length;
+}
+myl_block *myl_core_buffer_append_span_checked(myl_block *buffer, const unsigned char *data, uint64_t length, int64_t start, int64_t end) {
+    if (start < 0 || end <= start || (uint64_t)end > length) return buffer;
+    buffer = core_buffer_owned(buffer);
+    return myl_core_buffer_append_spelled(buffer, data + start, (size_t)(end - start));
+}
 /* `buffer.append_byte(value)`: one octet when `value` is in 0..255, else nothing. */
 myl_block *myl_core_buffer_push_checked(myl_block *buffer, int64_t value) {
     if (value < 0 || value > 255) return buffer;

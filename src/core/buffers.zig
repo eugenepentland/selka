@@ -18,6 +18,7 @@ pub const Error = std.mem.Allocator.Error;
 
 /// The runtime append the builder calls, and the slow path of `buffer_append`.
 pub const append_symbol = "myl_core_buffer_append_checked";
+pub const append_span_symbol = "myl_core_buffer_append_span_checked";
 /// The runtime range test the builder calls.
 const valid_symbol = "myl_core_buffer_range_valid";
 
@@ -38,7 +39,10 @@ pub fn appends(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Functi
             // A buffer appended to itself stays a call: the call retains the source it borrows
             // (the same block it takes over), so the runtime copies the buffer before growing it.
             const into_itself = arguments.len == 4 and f.resolve(arguments[0]) == f.resolve(arguments[1]);
-            if (std.mem.eql(u8, callee.name, append_symbol) and arguments.len == 4 and !into_itself) {
+            const span_append = spanHelper(callee, append_span_symbol, 2, 1);
+            const span_valid = spanHelper(callee, "myl_core_span_buffer_range_valid", 1, 0);
+            const append_call = std.mem.eql(u8, callee.name, append_symbol) or span_append;
+            if (append_call and arguments.len == 4 and !into_itself) {
                 // Copied out first: appending may move `f.extra`, which `arguments` points into.
                 const operands = [4]ir.Ref{ arguments[0], arguments[1], arguments[2], arguments[3] };
                 const extra: u32 = @intCast(f.extra.items.len);
@@ -46,7 +50,7 @@ pub fn appends(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Functi
                 f.insts.items[ref.index()] = .{ .op = .buffer_append, .ty = .byte_buffer, .a = operands[0], .b = operands[1], .data = (ir.ExtraSlice{ .start = extra, .len = 2 }).pack(), .span = inst.span };
                 rewritten += 1;
                 changed = true;
-            } else if (std.mem.eql(u8, callee.name, valid_symbol) and arguments.len == 3 and inst.ty == .bool) {
+            } else if ((std.mem.eql(u8, callee.name, valid_symbol) or span_valid) and arguments.len == 3 and inst.ty == .bool) {
                 try rangeTest(arena, f, .{ .ref = ref, .source = arguments[0], .start = arguments[1], .end = arguments[2], .span = inst.span }, &rebuilt);
                 changed = true;
                 continue;
@@ -56,6 +60,11 @@ pub fn appends(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Functi
         if (changed) block.insts = rebuilt;
     }
     return rewritten;
+}
+
+fn spanHelper(callee: ir.Function, name: []const u8, views: u64, owned: u64) bool {
+    if (!std.mem.eql(u8, callee.name, name) or callee.signature.linkage != .runtime_c) return false;
+    return callee.signature.views == views and callee.signature.owned == owned and callee.signature.consumes == 0;
 }
 
 /// One range test to expand in place of its call.
@@ -68,7 +77,7 @@ fn rangeTest(arena: std.mem.Allocator, f: *ir.Function, t: Test, into: *std.Arra
     const source_type = f.inst(f.resolve(t.source)).ty;
     const nonnegative = try emit(arena, f, into, .{ .op = .cmp, .ty = .bool, .a = t.start, .b = zero, .data = @backingInt(ir.Predicate.ge), .span = t.span });
     const ordered = try emit(arena, f, into, .{ .op = .cmp, .ty = .bool, .a = t.end, .b = t.start, .data = @backingInt(ir.Predicate.ge), .span = t.span });
-    const length = try emit(arena, f, into, .{ .op = if (source_type == .str) .str_len else .list_len, .ty = .u64, .a = t.source, .span = t.span });
+    const length = try emit(arena, f, into, .{ .op = if (source_type == .str or source_type == .str_view) .str_len else .list_len, .ty = .u64, .a = t.source, .span = t.span });
     const wide = try emit(arena, f, into, .{ .op = .convert, .ty = .i64, .a = length, .span = t.span });
     const inside = try emit(arena, f, into, .{ .op = .cmp, .ty = .bool, .a = t.end, .b = wide, .data = @backingInt(ir.Predicate.le), .span = t.span });
     const both = try emit(arena, f, into, .{ .op = .bit_and, .ty = .bool, .a = nonnegative, .b = ordered, .span = t.span });

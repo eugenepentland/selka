@@ -72,11 +72,12 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
             const callee = &module.functions.items[call.a.index()];
             if (@import("borrowed_provider.zig").contains(module, callee)) continue;
             const helper = cfg.qualifies(callee);
+            const reader = @import("inline_reader.zig").qualifies(module, callee);
             if (!helper) {
+                // Readers and constructors share one fixed cloning budget.
                 // Each clone adds at most the callee's instructions and a jump.
-                // Do not let many small builders cause unbounded caller growth.
                 if (callee.insts.items.len + 1 > destination.max_caller_instructions - constructor_instructions) continue;
-                const constructs = try destination.qualifies(trials.allocator(), module, callee);
+                const constructs = reader or @import("inline_snapshot.zig").qualifies(module, callee) or try destination.qualifies(trials.allocator(), module, callee);
                 _ = trials.reset(.retain_capacity);
                 if (!constructs) continue;
             }
@@ -87,6 +88,7 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
             break;
         }
     }
+    _ = try @import("inline_reader.zig").cleanup(arena, module, caller);
     return count;
 }
 

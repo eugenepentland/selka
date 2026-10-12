@@ -99,8 +99,11 @@ pub fn literal(comptime Context: type, context: Context, items: []const typed.No
     }
     const index = context.mb.module.strings.items.len;
     try context.mb.module.strings.append(context.allocator(), try bytes.toOwnedSlice(context.allocator()));
+    // Immutable octets use the existing static byte-literal layout. No writable
+    // buffer or independently requested copy aliases this storage.
+    if (context.module().zero_rc) return context.detached(.{ .op = .str_const, .ty = .bytes, .data = index, .span = span });
     const source = try context.detached(.{ .op = .str_const, .ty = .str, .data = index });
-    return if (context.module().zero_rc) context.effectCall(encode_symbol, &.{.str}, .bytes, &.{source}, span) else context.runtimeCall(encode_symbol, &.{.str}, .bytes, &.{source}, span);
+    return context.runtimeCall(encode_symbol, &.{.str}, .bytes, &.{source}, span);
 }
 
 /// Index a non-place string/bytes expression; the offset helper normalizes negatives.

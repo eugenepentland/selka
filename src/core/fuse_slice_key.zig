@@ -63,8 +63,31 @@ pub fn rewriteFunction(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Func
 fn rewriteRecording(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Function, requests: ?*std.ArrayList(u32)) std.mem.Allocator.Error!u32 {
     var changed: u32 = 0;
     const count = f.insts.items.len;
+    var copies: u32 = 0;
     for (0..count) |index| {
         const inst = f.insts.items[index];
+        // An explicit snapshot used solely for reads can borrow under the same
+        // complete-use and parent-stability proof as a slice. Inserts still
+        // construct an independent key on their miss path below.
+        if (module.zero_rc and count <= 4096 and copies < 32 and inst.ty == .str) {
+            if (@import("inline_snapshot.zig").source(module, f, inst)) |source| {
+                copies += 1;
+                const ref: ir.Ref = @fromBackingInt(@intCast(index));
+                if (!onlyReads(f, module, ref) or try updated(arena, f, module, source)) continue;
+                const zero: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
+                try f.insts.append(arena, .{ .op = .iconst, .ty = .u64 });
+                const len: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
+                try f.insts.append(arena, .{ .op = .str_len, .ty = .u64, .a = source, .span = inst.span });
+                try before(arena, f, ref, zero);
+                try before(arena, f, ref, len);
+                const start: u32 = @intCast(f.extra.items.len);
+                try f.extra.append(arena, len);
+                f.insts.items[index] = .{ .op = .str_view_of, .ty = .str_view, .a = source, .b = zero, .data = (ir.ExtraSlice{ .start = start, .len = 1 }).pack(), .span = inst.span };
+                try rewriteUsesRecording(arena, f, module, ref, requests);
+                changed += 1;
+                continue;
+            }
+        }
         if (inst.op == .str_from_view and onlyReads(f, module, @fromBackingInt(@intCast(index)))) {
             if (module.zero_rc and try updated(arena, f, module, f.resolve(inst.a))) continue;
             f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };
@@ -253,6 +276,7 @@ fn spanForm(module: *const ir.Module, call: ir.Inst) ?SpanForm {
     if (call.a.index() >= module.functions.items.len) return null;
     const callee = module.functions.items[call.a.index()];
     const signature = callee.signature;
+    if (decodeForm(module, callee)) |form| return form;
     if (signature.linkage == .internal or signature.owned != 0) return null;
     for (signature.params) |param| if (param != .str and param != .bytes) return null;
     for (span_forms) |form| {
@@ -264,6 +288,33 @@ fn spanForm(module: *const ir.Module, call: ir.Inst) ?SpanForm {
         if (offsets) return if (module.kind(signature.ret) == .list) form else null;
         const ret: ir.Type = if (std.mem.eql(u8, form.text, "myl_core_str_chars")) .u64 else .bool;
         return if (signature.ret == ret) form else null;
+    }
+    return null;
+}
+
+// Validation borrows exactly the selected octets; successful decoding constructs
+// an independent string. Admit only compiler-declared one-argument readers.
+fn decodeForm(module: *const ir.Module, callee: ir.Function) ?SpanForm {
+    const sig = callee.signature;
+    if (!module.zero_rc or sig.linkage != .runtime_c) return null;
+    if (sig.owned != 0 or sig.consumes != 0) return null;
+    const forms = [_]SpanForm{
+        .{ .text = "myl_core_bytes_utf8_count", .span = "myl_core_span_utf8_count" },
+        .{ .text = "myl_core_bytes_decode_text", .span = "myl_core_span_decode_text" },
+    };
+    for (forms, 0..) |form, i| {
+        const span = std.mem.eql(u8, callee.name, form.span);
+        if (!span and !std.mem.eql(u8, callee.name, form.text)) continue;
+        const ret: ir.Type = if (i == 0) .i64 else .str;
+        if (sig.ret != ret or sig.views != @as(u64, if (span) 1 else 0)) return null;
+        if (!std.mem.eql(ir.Type, sig.params, if (span) &.{.str} else &.{.bytes})) return null;
+        for (module.functions.items) |decl| {
+            if (!std.mem.eql(u8, decl.name, form.span)) continue;
+            const candidate = decl.signature;
+            if (candidate.linkage != .runtime_c or candidate.owned != 0 or candidate.consumes != 0) return null;
+            if (candidate.views != 1 or candidate.ret != ret or !std.mem.eql(ir.Type, candidate.params, &.{.str})) return null;
+        }
+        return form;
     }
     return null;
 }

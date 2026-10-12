@@ -147,7 +147,10 @@ fn appendFragment(comptime Context: type, context: Context, node: Operation, spa
     const start = if (node.kind == .buffer_append_range) try context.expression(node.arguments[1]) else try context.constant(.i64, 0);
     const stop = if (node.kind == .buffer_append_range) try context.expression(node.arguments[2]) else try context.emit(.{ .op = if (context.typeOfRef(source) == .str) .str_len else .list_len, .ty = .u64, .a = source, .span = span });
     const end = if (context.typeOfRef(stop) == .i64) stop else try context.emit(.{ .op = .convert, .ty = .i64, .a = stop, .span = span });
-    const valid = try context.runtimeCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span);
+    const valid = if (context.module().zero_rc)
+        try context.effectCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span)
+    else
+        try context.runtimeCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span);
     // Text is encoded once; the encoding borrows the text's own octets.
     const octets = if (context.typeOfRef(source) == .str) encoded: {
         if (context.module().zero_rc) break :encoded try context.effectCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span);
@@ -163,6 +166,8 @@ fn appendFragment(comptime Context: type, context: Context, node: Operation, spa
 /// runtime updates the buffer in place when it holds the only reference and copies it
 /// otherwise, and returns the updated buffer.
 fn handedOver(comptime Context: type, context: Context, symbol: []const u8, params: []const ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
+    if (context.module().zero_rc and @import("std").mem.eql(u8, symbol, "myl_core_buffer_append_checked"))
+        return context.effectCall(symbol, params, .byte_buffer, arguments, span);
     const callee = try context.mb.runtimeFunction(symbol, params, .byte_buffer, .extern_c);
     context.mb.module.functions.items[callee].signature.owned = 1;
     return context.emit(.{ .op = .call, .ty = .byte_buffer, .a = @fromBackingInt(callee), .data = try context.extraSlice(arguments), .span = span });
