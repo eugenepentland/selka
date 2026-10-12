@@ -14,23 +14,25 @@ parallel development. These are planning suggestions, not tested minimums.
 The commands below start conservatively with four build jobs and an 8 GiB Zig
 scheduling budget. First-time compiler seed provisioning takes several minutes.
 
-## Before the first GitHub-only setup
+## Which branch and dependencies to use
 
-The maintainer must first complete [Publish the setup inputs](#publish-the-setup-inputs).
-At the time this guide was written:
+Use the **`development` branch** of
+[eugenepentland/selka](https://github.com/eugenepentland/selka/tree/development)
+for the current compiler, memory-management prototype, and development tools.
+GitHub's `main` is an independently published Selka-branded snapshot. The current
+development line still uses the `mylang` executable, `.my` files, and
+`mylang.json`. The clone commands below name the local branch `main`, tracking
+`origin/development`, so tools that compare changes against local `main` work
+normally. This does not change GitHub's `main`.
 
-- The repository is [eugenepentland/selka](https://github.com/eugenepentland/selka).
-  Its GitHub `main` did not yet contain the locally merged `441a96465` changes,
-  and the local clone had no Git remote configured.
-- The Guardian revision used by the passing integrated gate,
-  `ae1ae2899cc60b575e9e1b9212d73eddf9e2df72`, was not available on GitHub.
-- The upstream download URL for Zig `0.17.0-dev.1683+5ceec001b` returned 404.
-  The working distribution therefore needs to be preserved as a release asset.
+The setup uses Guardian commit `ae1ae2899cc60b575e9e1b9212d73eddf9e2df72`,
+published as tag `mylang-dev-2026-10-11`, and the complete Zig distribution in
+the repository's `zig-0.17.0-dev.1683+5ceec001b` release. The original upstream
+nightly download URL returned 404; use the preserved release assets below.
 
-The steps below use that exact Guardian revision and a GitHub release containing
-the complete pinned Zig distribution. They do not assume that the latest
-Guardian or a newer Zig version is compatible. Update this guide's pins and the
-release assets together after validating a toolchain upgrade.
+The latest Guardian or a newer Zig version is not an automatic substitute.
+Maintainers updating these inputs should follow
+[Publish the setup inputs](#publish-the-setup-inputs) and validate the pins together.
 
 ## 1. Install the development tools
 
@@ -71,7 +73,8 @@ must be siblings because `build.zig.zon` uses `../guardian-zig`.
 MYLANG_GITHUB_REPO=eugenepentland/selka
 mkdir -p "$HOME/src"
 cd "$HOME/src"
-gh repo clone "$MYLANG_GITHUB_REPO" mylang -- --branch main
+gh repo clone "$MYLANG_GITHUB_REPO" mylang -- --branch development
+git -C mylang switch -c main --track origin/development
 gh repo clone eugenepentland/guardian-zig guardian-zig
 git -C guardian-zig fetch origin ae1ae2899cc60b575e9e1b9212d73eddf9e2df72
 git -C guardian-zig checkout --detach ae1ae2899cc60b575e9e1b9212d73eddf9e2df72
@@ -254,15 +257,17 @@ Start with a clean main checkout, after committing or otherwise preserving work:
 
 ```bash
 git switch main
-git pull --ff-only origin main
+git pull --ff-only origin development
 . "$HOME/.config/mylang/dev-env.sh"
 ```
 
 If `.zigversion` or the Guardian pin in this guide changes, install the matching
 toolchain/revision before building. Then repeat the build and complete gate.
 Changes to the environment file in this guide need to be applied to the local
-copy too. Keep feature changes on branches; publish them with ordinary Git push
-and merge workflows.
+copy too. Keep feature changes on branches; push a feature branch and target
+`development` when opening its pull request. The local `main` tracks
+`origin/development`; an explicit `git push origin main:development` updates
+that remote branch.
 
 ## Troubleshooting
 
@@ -279,18 +284,18 @@ and merge workflows.
 
 ## Publish the setup inputs
 
-These are **one-time maintainer commands on the existing development machine**,
-before another machine can follow the GitHub-only instructions. They publish
+These are **maintainer commands on the existing development machine** for
+publishing or updating the GitHub setup inputs. They publish
 Selka source, the required Guardian revision, and a toolchain asset to GitHub.
 The documentation change itself does not publish anything.
 
 1. Commit this guide and the intended compiler changes on `main`. In the mylang clone, configure
-   `origin` if it has none, then push `main` with its full ancestry:
+   `origin` if it has none, then push local `main` to `development` with its full ancestry:
 
    ```bash
    MYLANG_GITHUB_REPO=eugenepentland/selka
    git remote add origin "git@github.com:${MYLANG_GITHUB_REPO}.git"
-   git push -u origin main
+   git push -u origin main:development
    ```
 
    If `origin` already exists, check `git remote -v` and skip `remote add`.
@@ -324,7 +329,7 @@ The documentation change itself does not publish anything.
    scripts/build-slot.sh build tar -C "$(dirname "$MYLANG_ZIG_SOURCE")" \
      -cJf "$zig_assets/$zig_archive" "$zig_version"
    (cd "$zig_assets" && sha256sum "$zig_archive" > "$zig_archive.sha256")
-   gh release create "zig-$zig_version" --repo "$MYLANG_GITHUB_REPO" --target main \
+   gh release create "zig-$zig_version" --repo "$MYLANG_GITHUB_REPO" --target development \
      --title "Pinned Linux x86-64 Zig $zig_version" \
      --notes 'Complete development toolchain, including libraries and license. Verify the SHA-256 checksum before extracting.' \
      "$zig_assets/$zig_archive" "$zig_assets/$zig_archive.sha256"
