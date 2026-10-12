@@ -1,0 +1,148 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+  "compiler_sha256": "b9e97d47272877d051e11287fbda6b2e3e5c9c147ce919911578ec69d1cecafb",
+  "cases": {
+    "flat": {
+      "source_sha256": "ff34de9d3c7d07bda2607e47b2a154f0f28f0fcc00606c348be47e664ff0b3d7",
+      "raw": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "dump-ir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/flat.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "fn main() -> i64\nb0:\n  %1 = list_new list[str] 1:i64\n  %4 = call str myl_core_str_from_i64(1:i64)\n  %5 = str_append str str0, %4\n  %6 = list_push list[str] %1, %5\n  %7 = record_make record{list[str]} %6\n  %8 = record_get list[str] %7, field0\n  %9 = record_get list[str] %7, field0\n  %10 = record_get list[str] %7, field0\n  %11 = call i64 myl_core_owned_same_block(%10, %9)\n  %13 = cmp.ne bool %11, 0:i64\n  branch %13, b1, b2\nb1: ; preds b0\n  %15 = list_len u64 %10\n  jump b4\nb2: ; preds b0\n  %29 = list_len u64 %9\n  jump b7\nb3: ; preds b6 b9\n  %43 = phi list[str] %21, %37\n  %44 = record_set record{list[str]} %7, field0, %43\n  %45 = record_get list[str] %44, field0\n  %47 = list_new list[str] 2:i64\n  %49 = list_push list[str] %47, str1\n  %51 = list_push list[str] %49, str2\n  %52 = list_len u64 %45\n  %53 = list_len u64 %51\n  %54 = cmp.eq bool %52, %53\n  branch %54, b12, b11\nb4: ; preds b1 b5\n  %18 = phi u64 0:u64, %26\n  %21 = phi list[str] %10, %24\n  %19 = cmp.lt bool %18, %15\n  branch %19, b5, b6\nb5: ; preds b4\n  %22 = list_get.exact str %21, %18\n  %23 = call str myl_core_owned_octets_copy(%22)\n  %24 = list_push list[str] %21, %23\n  %26 = add u64 %18, 1:u64\n  jump b4\nb6: ; preds b4\n  jump b3\nb7: ; preds b2 b8\n  %32 = phi u64 0:u64, %40\n  %37 = phi list[str] %10, %38\n  %33 = cmp.lt bool %32, %29\n  branch %33, b8, b9\nb8: ; preds b7\n  %35 = list_get.exact str %9, %32\n  %36 = call str myl_core_owned_octets_copy(%35)\n  %38 = list_push list[str] %37, %36\n  %40 = add u64 %32, 1:u64\n  jump b7\nb9: ; preds b7\n  jump b3\nb10: ; preds b12 b15\n  %58 = phi u64 0:u64, %66\n  %59 = cmp.lt bool %58, %52\n  branch %59, b13, b14\nb11: ; preds b3 b16 b14\n  %72 = phi bool %54, 0:bool, 1:bool\n  branch %72, b18, b17\nb12: ; preds b3\n  jump b10\nb13: ; preds b10\n  %61 = list_get str %45, %58\n  %62 = list_get str %51, %58\n  %63 = call bool myl_core_str_eq(%61, %62)\n  branch %63, b15, b16\nb14: ; preds b10\n  jump b11\nb15: ; preds b13\n  %66 = add u64 %58, 1:u64\n  jump b10\nb16: ; preds b13\n  jump b11\nb17: ; preds b11\n  unreachable\nb18: ; preds b11\n  ret 0:i64\nfn myl_core_str_from_i64(i64) -> str extern\nfn myl_core_owned_same_block(list[str], list[str]) -> i64 extern\nfn myl_core_owned_octets_copy(str) -> str extern\nfn myl_core_str_eq(str, str) -> bool runtime\n",
+        "stderr": ""
+      },
+      "facts": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "dump-ir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/flat.my",
+          "--experimental-zero-rc",
+          "--facts"
+        ],
+        "status": 0,
+        "stdout": "fn main() -> i64\nb0:\n  %1 = list_new list[str] 1:i64\n  %4 = call str myl_core_str_from_i64(1:i64)\n  %78 = str_len u64 str0\n  %79 = str_view_of str_view str0, 0:u64, %78\n  %80 = str_from_view str %79\n  %5 = str_append str %80, %4\n  release %4\n  %6 = list_push list[str] %1, %5\n  %7 = record_make record{list[str]} %6\n  %8 = record_get list[str] %7, field0\n  %11 = call i64 myl_core_owned_same_block(%8, %8)\n  %13 = cmp.ne bool %11, 0:i64\n  branch %13, b1, b2\nb1: ; preds b0\n  %15 = list_len u64 %8\n  jump b4\nb2: ; preds b0\n  %29 = list_len u64 %8\n  retain %8\n  jump b7\nb3: ; preds b6 b9\n  %43 = phi list[str] %21, %37\n  %44 = record_set record{list[str]} %7, field0, %43\n  %45 = record_get list[str] %44, field0\n  %47 = list_new list[str] 2:i64\n  %49 = list_push list[str] %47, str1\n  %51 = list_push list[str] %49, str2\n  %52 = list_len u64 %45\n  %53 = list_len u64 %51\n  %54 = cmp.eq bool %52, %53\n  branch %54, b12, b19\nb4: ; preds b1 b5\n  %18 = phi u64 0:u64, %26\n  %21 = phi list[str] %8, %24\n  %19 = cmp.lt bool %18, %15\n  branch %19, b5, b6\nb5: ; preds b4\n  %22 = list_get.exact str %21, %18\n  %23 = call str myl_core_owned_octets_copy(%22)\n  %24 = list_push list[str] %21, %23\n  %26 = add u64 %18, 1:u64\n  jump b4\nb6: ; preds b4\n  jump b3\nb7: ; preds b2 b8\n  %32 = phi u64 0:u64, %40\n  %37 = phi list[str] %8, %38\n  %33 = cmp.lt bool %32, %29\n  branch %33, b8, b9\nb8: ; preds b7\n  %35 = list_get.proven str %8, %32\n  %36 = call str myl_core_owned_octets_copy(%35)\n  %38 = list_push list[str] %37, %36\n  %40 = add u64 %32, 1:u64\n  jump b7\nb9: ; preds b7\n  release %8\n  jump b3\nb10: ; preds b12 b15\n  %58 = phi u64 0:u64, %66\n  %59 = cmp.lt bool %58, %52\n  branch %59, b13, b14\nb11: ; preds b19 b16 b14\n  %72 = phi bool %54, 0:bool, 1:bool\n  branch %72, b18, b17\nb12: ; preds b3\n  jump b10\nb13: ; preds b10\n  %61 = list_get str %45, %58\n  %62 = list_get str %51, %58\n  %63 = call bool myl_core_str_eq(%61, %62)\n  branch %63, b15, b16\nb14: ; preds b10\n  release %45\n  release %51\n  jump b11\nb15: ; preds b13\n  %66 = add u64 %58, 1:u64\n  jump b10\nb16: ; preds b13\n  release %45\n  release %51\n  jump b11\nb17: ; preds b11\n  unreachable\nb18: ; preds b11\n  ret 0:i64\nb19: ; preds b3\n  release %45\n  release %51\n  jump b11\nfn myl_core_str_from_i64(i64) -> str extern\nfn myl_core_owned_same_block(list[str], list[str]) -> i64 extern\nfn myl_core_owned_octets_copy(str) -> str extern\nfn myl_core_str_eq(str, str) -> bool runtime\nfacts main: %11=[-9223372036854775808,9223372036854775807] %13=[0,1] %15=[0,140737488355328] %18=[0,140737488355328] %19=[0,1] %26=[1,140737488355328] %29=[0,140737488355328] %32=[0,140737488355328] %33=[0,1] %40=[1,140737488355328] %52=[0,140737488355328] %53=[2,2] %54=[0,1] %58=[0,140737488355328] %59=[0,1] %63=[0,1] %66=[1,140737488355328] %72=[0,1]\nlist main %1: settled=true length=%-1 len=[0,0]\nlist main %6: settled=true length=%-1 len=[1,1]\nlist main %21: settled=true length=%-1\nlist main %22: settled=true length=%-1\nlist main %24: settled=true length=%-1\nlist main %35: settled=true length=%-1\nlist main %37: settled=true length=%-1\nlist main %38: settled=true length=%-1\nlist main %43: settled=true length=%-1\nlist main %47: settled=true length=%-1 len=[0,0]\nlist main %49: settled=true length=%-1 len=[1,1]\nlist main %51: settled=true length=%-1 len=[2,2]\nlist main %61: settled=true length=%-1\nlist main %62: settled=true length=%-1\n",
+        "stderr": ""
+      },
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/flat.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-self/flat-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-self/flat"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/flat.my:7:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      parent.items += parent.items\n      ^\n"
+      }
+    },
+    "nested": {
+      "source_sha256": "cf467957cd55b7aaaf6a42dbccb0c5089ba2ba102c44ec733ace56a77cf38086",
+      "raw": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "dump-ir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/nested.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "fn main() -> i64\nb0:\n  %1 = list_new list[str] 1:i64\n  %4 = call str myl_core_str_from_i64(1:i64)\n  %5 = str_append str str0, %4\n  %6 = list_push list[str] %1, %5\n  %7 = record_make record{list[str]} %6\n  %8 = record_make record{record{list[str]}} %7\n  %9 = record_get record{list[str]} %8, field0\n  %10 = record_get list[str] %9, field0\n  %11 = record_get record{list[str]} %8, field0\n  %12 = record_get list[str] %11, field0\n  %13 = record_get record{list[str]} %8, field0\n  %14 = record_get list[str] %13, field0\n  %15 = call i64 myl_core_owned_same_block(%14, %12)\n  %17 = cmp.ne bool %15, 0:i64\n  branch %17, b1, b2\nb1: ; preds b0\n  %19 = list_len u64 %14\n  jump b4\nb2: ; preds b0\n  %33 = list_len u64 %12\n  jump b7\nb3: ; preds b6 b9\n  %47 = phi list[str] %25, %41\n  %48 = record_set record{list[str]} %13, field0, %47\n  %49 = record_set record{record{list[str]}} %8, field0, %48\n  %50 = record_get record{list[str]} %49, field0\n  %51 = record_get list[str] %50, field0\n  %53 = list_new list[str] 2:i64\n  %55 = list_push list[str] %53, str1\n  %57 = list_push list[str] %55, str2\n  %58 = list_len u64 %51\n  %59 = list_len u64 %57\n  %60 = cmp.eq bool %58, %59\n  branch %60, b12, b11\nb4: ; preds b1 b5\n  %22 = phi u64 0:u64, %30\n  %25 = phi list[str] %14, %28\n  %23 = cmp.lt bool %22, %19\n  branch %23, b5, b6\nb5: ; preds b4\n  %26 = list_get.exact str %25, %22\n  %27 = call str myl_core_owned_octets_copy(%26)\n  %28 = list_push list[str] %25, %27\n  %30 = add u64 %22, 1:u64\n  jump b4\nb6: ; preds b4\n  jump b3\nb7: ; preds b2 b8\n  %36 = phi u64 0:u64, %44\n  %41 = phi list[str] %14, %42\n  %37 = cmp.lt bool %36, %33\n  branch %37, b8, b9\nb8: ; preds b7\n  %39 = list_get.exact str %12, %36\n  %40 = call str myl_core_owned_octets_copy(%39)\n  %42 = list_push list[str] %41, %40\n  %44 = add u64 %36, 1:u64\n  jump b7\nb9: ; preds b7\n  jump b3\nb10: ; preds b12 b15\n  %64 = phi u64 0:u64, %72\n  %65 = cmp.lt bool %64, %58\n  branch %65, b13, b14\nb11: ; preds b3 b16 b14\n  %78 = phi bool %60, 0:bool, 1:bool\n  branch %78, b18, b17\nb12: ; preds b3\n  jump b10\nb13: ; preds b10\n  %67 = list_get str %51, %64\n  %68 = list_get str %57, %64\n  %69 = call bool myl_core_str_eq(%67, %68)\n  branch %69, b15, b16\nb14: ; preds b10\n  jump b11\nb15: ; preds b13\n  %72 = add u64 %64, 1:u64\n  jump b10\nb16: ; preds b13\n  jump b11\nb17: ; preds b11\n  unreachable\nb18: ; preds b11\n  ret 0:i64\nfn myl_core_str_from_i64(i64) -> str extern\nfn myl_core_owned_same_block(list[str], list[str]) -> i64 extern\nfn myl_core_owned_octets_copy(str) -> str extern\nfn myl_core_str_eq(str, str) -> bool runtime\n",
+        "stderr": ""
+      },
+      "facts": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "dump-ir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/nested.my",
+          "--experimental-zero-rc",
+          "--facts"
+        ],
+        "status": 0,
+        "stdout": "fn main() -> i64\nb0:\n  %1 = list_new list[str] 1:i64\n  %4 = call str myl_core_str_from_i64(1:i64)\n  %84 = str_len u64 str0\n  %85 = str_view_of str_view str0, 0:u64, %84\n  %86 = str_from_view str %85\n  %5 = str_append str %86, %4\n  release %4\n  %6 = list_push list[str] %1, %5\n  %7 = record_make record{list[str]} %6\n  %8 = record_make record{record{list[str]}} %7\n  %9 = record_get record{list[str]} %8, field0\n  %10 = record_get list[str] %9, field0\n  %15 = call i64 myl_core_owned_same_block(%10, %10)\n  %17 = cmp.ne bool %15, 0:i64\n  branch %17, b1, b2\nb1: ; preds b0\n  %19 = list_len u64 %10\n  jump b4\nb2: ; preds b0\n  %33 = list_len u64 %10\n  retain %10\n  jump b7\nb3: ; preds b6 b9\n  %47 = phi list[str] %25, %41\n  %48 = record_set record{list[str]} %9, field0, %47\n  %49 = record_set record{record{list[str]}} %8, field0, %48\n  %50 = record_get record{list[str]} %49, field0\n  %51 = record_get list[str] %50, field0\n  %53 = list_new list[str] 2:i64\n  %55 = list_push list[str] %53, str1\n  %57 = list_push list[str] %55, str2\n  %58 = list_len u64 %51\n  %59 = list_len u64 %57\n  %60 = cmp.eq bool %58, %59\n  branch %60, b12, b19\nb4: ; preds b1 b5\n  %22 = phi u64 0:u64, %30\n  %25 = phi list[str] %10, %28\n  %23 = cmp.lt bool %22, %19\n  branch %23, b5, b6\nb5: ; preds b4\n  %26 = list_get.exact str %25, %22\n  %27 = call str myl_core_owned_octets_copy(%26)\n  %28 = list_push list[str] %25, %27\n  %30 = add u64 %22, 1:u64\n  jump b4\nb6: ; preds b4\n  jump b3\nb7: ; preds b2 b8\n  %36 = phi u64 0:u64, %44\n  %41 = phi list[str] %10, %42\n  %37 = cmp.lt bool %36, %33\n  branch %37, b8, b9\nb8: ; preds b7\n  %39 = list_get.proven str %10, %36\n  %40 = call str myl_core_owned_octets_copy(%39)\n  %42 = list_push list[str] %41, %40\n  %44 = add u64 %36, 1:u64\n  jump b7\nb9: ; preds b7\n  release %10\n  jump b3\nb10: ; preds b12 b15\n  %64 = phi u64 0:u64, %72\n  %65 = cmp.lt bool %64, %58\n  branch %65, b13, b14\nb11: ; preds b19 b16 b14\n  %78 = phi bool %60, 0:bool, 1:bool\n  branch %78, b18, b17\nb12: ; preds b3\n  jump b10\nb13: ; preds b10\n  %67 = list_get str %51, %64\n  %68 = list_get str %57, %64\n  %69 = call bool myl_core_str_eq(%67, %68)\n  branch %69, b15, b16\nb14: ; preds b10\n  release %51\n  release %57\n  jump b11\nb15: ; preds b13\n  %72 = add u64 %64, 1:u64\n  jump b10\nb16: ; preds b13\n  release %51\n  release %57\n  jump b11\nb17: ; preds b11\n  unreachable\nb18: ; preds b11\n  ret 0:i64\nb19: ; preds b3\n  release %51\n  release %57\n  jump b11\nfn myl_core_str_from_i64(i64) -> str extern\nfn myl_core_owned_same_block(list[str], list[str]) -> i64 extern\nfn myl_core_owned_octets_copy(str) -> str extern\nfn myl_core_str_eq(str, str) -> bool runtime\nfacts main: %15=[-9223372036854775808,9223372036854775807] %17=[0,1] %19=[0,140737488355328] %22=[0,140737488355328] %23=[0,1] %30=[1,140737488355328] %33=[0,140737488355328] %36=[0,140737488355328] %37=[0,1] %44=[1,140737488355328] %58=[0,140737488355328] %59=[2,2] %60=[0,1] %64=[0,140737488355328] %65=[0,1] %69=[0,1] %72=[1,140737488355328] %78=[0,1]\nlist main %1: settled=true length=%-1 len=[0,0]\nlist main %6: settled=true length=%-1 len=[1,1]\nlist main %25: settled=true length=%-1\nlist main %26: settled=true length=%-1\nlist main %28: settled=true length=%-1\nlist main %39: settled=true length=%-1\nlist main %41: settled=true length=%-1\nlist main %42: settled=true length=%-1\nlist main %47: settled=true length=%-1\nlist main %53: settled=true length=%-1 len=[0,0]\nlist main %55: settled=true length=%-1 len=[1,1]\nlist main %57: settled=true length=%-1 len=[2,2]\nlist main %67: settled=true length=%-1\nlist main %68: settled=true length=%-1\n",
+        "stderr": ""
+      },
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/nested.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-self/nested-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-self/nested"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/nested.my:7:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      parent.child.items += parent.child.items\n      ^\n"
+      }
+    },
+    "method": {
+      "source_sha256": "cda3dcfdaa83f3cedaebe5a4e70230f2e34f03b0795e05c397a9db50a2955568",
+      "raw": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "dump-ir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/method.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "fn main() -> i64\nb0:\n  %1 = list_new list[str] 1:i64\n  %4 = call str myl_core_str_from_i64(1:i64)\n  %5 = str_append str str0, %4\n  %6 = list_push list[str] %1, %5\n  %7 = record_make record{list[str]} %6\n  %8 = record_make record{record{list[str]}} %7\n  %9 = record_get record{list[str]} %8, field0\n  %10 = record_get list[str] %9, field0\n  %11 = record_get record{list[str]} %8, field0\n  %12 = record_get list[str] %11, field0\n  %13 = record_get record{list[str]} %8, field0\n  %14 = record_get list[str] %13, field0\n  %15 = call i64 myl_core_owned_same_block(%14, %12)\n  %17 = cmp.ne bool %15, 0:i64\n  branch %17, b1, b2\nb1: ; preds b0\n  %19 = list_len u64 %14\n  jump b4\nb2: ; preds b0\n  %33 = list_len u64 %12\n  jump b7\nb3: ; preds b6 b9\n  %47 = phi list[str] %25, %41\n  %48 = record_set record{list[str]} %13, field0, %47\n  %49 = record_set record{record{list[str]}} %8, field0, %48\n  %50 = record_get record{list[str]} %49, field0\n  %51 = record_get list[str] %50, field0\n  %53 = list_new list[str] 2:i64\n  %55 = list_push list[str] %53, str1\n  %57 = list_push list[str] %55, str2\n  %58 = list_len u64 %51\n  %59 = list_len u64 %57\n  %60 = cmp.eq bool %58, %59\n  branch %60, b12, b11\nb4: ; preds b1 b5\n  %22 = phi u64 0:u64, %30\n  %25 = phi list[str] %14, %28\n  %23 = cmp.lt bool %22, %19\n  branch %23, b5, b6\nb5: ; preds b4\n  %26 = list_get.exact str %25, %22\n  %27 = call str myl_core_owned_octets_copy(%26)\n  %28 = list_push list[str] %25, %27\n  %30 = add u64 %22, 1:u64\n  jump b4\nb6: ; preds b4\n  jump b3\nb7: ; preds b2 b8\n  %36 = phi u64 0:u64, %44\n  %41 = phi list[str] %14, %42\n  %37 = cmp.lt bool %36, %33\n  branch %37, b8, b9\nb8: ; preds b7\n  %39 = list_get.exact str %12, %36\n  %40 = call str myl_core_owned_octets_copy(%39)\n  %42 = list_push list[str] %41, %40\n  %44 = add u64 %36, 1:u64\n  jump b7\nb9: ; preds b7\n  jump b3\nb10: ; preds b12 b15\n  %64 = phi u64 0:u64, %72\n  %65 = cmp.lt bool %64, %58\n  branch %65, b13, b14\nb11: ; preds b3 b16 b14\n  %78 = phi bool %60, 0:bool, 1:bool\n  branch %78, b18, b17\nb12: ; preds b3\n  jump b10\nb13: ; preds b10\n  %67 = list_get str %51, %64\n  %68 = list_get str %57, %64\n  %69 = call bool myl_core_str_eq(%67, %68)\n  branch %69, b15, b16\nb14: ; preds b10\n  jump b11\nb15: ; preds b13\n  %72 = add u64 %64, 1:u64\n  jump b10\nb16: ; preds b13\n  jump b11\nb17: ; preds b11\n  unreachable\nb18: ; preds b11\n  ret 0:i64\nfn myl_core_str_from_i64(i64) -> str extern\nfn myl_core_owned_same_block(list[str], list[str]) -> i64 extern\nfn myl_core_owned_octets_copy(str) -> str extern\nfn myl_core_str_eq(str, str) -> bool runtime\n",
+        "stderr": ""
+      },
+      "facts": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "dump-ir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/method.my",
+          "--experimental-zero-rc",
+          "--facts"
+        ],
+        "status": 0,
+        "stdout": "fn main() -> i64\nb0:\n  %1 = list_new list[str] 1:i64\n  %4 = call str myl_core_str_from_i64(1:i64)\n  %84 = str_len u64 str0\n  %85 = str_view_of str_view str0, 0:u64, %84\n  %86 = str_from_view str %85\n  %5 = str_append str %86, %4\n  release %4\n  %6 = list_push list[str] %1, %5\n  %7 = record_make record{list[str]} %6\n  %8 = record_make record{record{list[str]}} %7\n  %9 = record_get record{list[str]} %8, field0\n  %10 = record_get list[str] %9, field0\n  %15 = call i64 myl_core_owned_same_block(%10, %10)\n  %17 = cmp.ne bool %15, 0:i64\n  branch %17, b1, b2\nb1: ; preds b0\n  %19 = list_len u64 %10\n  jump b4\nb2: ; preds b0\n  %33 = list_len u64 %10\n  retain %10\n  jump b7\nb3: ; preds b6 b9\n  %47 = phi list[str] %25, %41\n  %48 = record_set record{list[str]} %9, field0, %47\n  %49 = record_set record{record{list[str]}} %8, field0, %48\n  %50 = record_get record{list[str]} %49, field0\n  %51 = record_get list[str] %50, field0\n  %53 = list_new list[str] 2:i64\n  %55 = list_push list[str] %53, str1\n  %57 = list_push list[str] %55, str2\n  %58 = list_len u64 %51\n  %59 = list_len u64 %57\n  %60 = cmp.eq bool %58, %59\n  branch %60, b12, b19\nb4: ; preds b1 b5\n  %22 = phi u64 0:u64, %30\n  %25 = phi list[str] %10, %28\n  %23 = cmp.lt bool %22, %19\n  branch %23, b5, b6\nb5: ; preds b4\n  %26 = list_get.exact str %25, %22\n  %27 = call str myl_core_owned_octets_copy(%26)\n  %28 = list_push list[str] %25, %27\n  %30 = add u64 %22, 1:u64\n  jump b4\nb6: ; preds b4\n  jump b3\nb7: ; preds b2 b8\n  %36 = phi u64 0:u64, %44\n  %41 = phi list[str] %10, %42\n  %37 = cmp.lt bool %36, %33\n  branch %37, b8, b9\nb8: ; preds b7\n  %39 = list_get.proven str %10, %36\n  %40 = call str myl_core_owned_octets_copy(%39)\n  %42 = list_push list[str] %41, %40\n  %44 = add u64 %36, 1:u64\n  jump b7\nb9: ; preds b7\n  release %10\n  jump b3\nb10: ; preds b12 b15\n  %64 = phi u64 0:u64, %72\n  %65 = cmp.lt bool %64, %58\n  branch %65, b13, b14\nb11: ; preds b19 b16 b14\n  %78 = phi bool %60, 0:bool, 1:bool\n  branch %78, b18, b17\nb12: ; preds b3\n  jump b10\nb13: ; preds b10\n  %67 = list_get str %51, %64\n  %68 = list_get str %57, %64\n  %69 = call bool myl_core_str_eq(%67, %68)\n  branch %69, b15, b16\nb14: ; preds b10\n  release %51\n  release %57\n  jump b11\nb15: ; preds b13\n  %72 = add u64 %64, 1:u64\n  jump b10\nb16: ; preds b13\n  release %51\n  release %57\n  jump b11\nb17: ; preds b11\n  unreachable\nb18: ; preds b11\n  ret 0:i64\nb19: ; preds b3\n  release %51\n  release %57\n  jump b11\nfn myl_core_str_from_i64(i64) -> str extern\nfn myl_core_owned_same_block(list[str], list[str]) -> i64 extern\nfn myl_core_owned_octets_copy(str) -> str extern\nfn myl_core_str_eq(str, str) -> bool runtime\nfacts main: %15=[-9223372036854775808,9223372036854775807] %17=[0,1] %19=[0,140737488355328] %22=[0,140737488355328] %23=[0,1] %30=[1,140737488355328] %33=[0,140737488355328] %36=[0,140737488355328] %37=[0,1] %44=[1,140737488355328] %58=[0,140737488355328] %59=[2,2] %60=[0,1] %64=[0,140737488355328] %65=[0,1] %69=[0,1] %72=[1,140737488355328] %78=[0,1]\nlist main %1: settled=true length=%-1 len=[0,0]\nlist main %6: settled=true length=%-1 len=[1,1]\nlist main %25: settled=true length=%-1\nlist main %26: settled=true length=%-1\nlist main %28: settled=true length=%-1\nlist main %39: settled=true length=%-1\nlist main %41: settled=true length=%-1\nlist main %42: settled=true length=%-1\nlist main %47: settled=true length=%-1\nlist main %53: settled=true length=%-1 len=[0,0]\nlist main %55: settled=true length=%-1 len=[1,1]\nlist main %57: settled=true length=%-1 len=[2,2]\nlist main %67: settled=true length=%-1\nlist main %68: settled=true length=%-1\n",
+        "stderr": ""
+      },
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/method.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-self/method-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-self/method"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/method.my:7:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      parent.child.items.extend(parent.child.items)\n      ^\n"
+      },
+      "baseline": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/method.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-self/baseline-cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-self/baseline"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-self/method.my:7:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      parent.child.items.extend(parent.child.items)\n      ^\n"
+      }
+    }
+  }
+}

@@ -52,8 +52,10 @@ pub fn operation(comptime Context: type, b: Context, node: Operation, result_ty:
 
 /// Append each source element once; a nested receiver can alias a distinct read.
 pub fn extend(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, span: u32) Error!ir.Ref {
-    if (!b.module().zero_rc or b.function.resolve(target) == b.function.resolve(source))
+    if (!b.module().zero_rc)
         return compose(Context, b, target, source, false, span);
+    if (sameRecordProjection(&b.function, target, source))
+        return compose(Context, b, target, target, false, span);
     const ty = b.typeOfRef(target);
     const identical = try b.runtimeCall("myl_core_owned_same_block", &.{ ty, ty }, .i64, &.{ target, source }, span);
     const result = try b.synthetic(ty);
@@ -74,6 +76,22 @@ pub fn extend(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref
     try b.seal(end);
     b.enter(end);
     return b.read(result, end);
+}
+
+/// Exact immutable record projections can name one list before read merging.
+/// Unknown producers and paths deeper than 64 fields retain the runtime test.
+fn sameRecordProjection(function: *const ir.Function, target: ir.Ref, source: ir.Ref) bool {
+    var left = function.resolve(target);
+    var right = function.resolve(source);
+    for (0..64) |_| {
+        if (left == right) return true;
+        const first = function.inst(left);
+        const second = function.inst(right);
+        if (first.op != .record_get or second.op != .record_get or first.ty != second.ty or first.data != second.data) return false;
+        left = function.resolve(first.a);
+        right = function.resolve(second.a);
+    }
+    return left == right;
 }
 
 fn length(comptime Context: type, b: Context, source: ir.Ref, span: u32) Error!ir.Ref {

@@ -1,0 +1,40 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+  "compiler_sha256": "b9e97d47272877d051e11287fbda6b2e3e5c9c147ce919911578ec69d1cecafb",
+  "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/sibling-write.my",
+  "source_sha256": "1f68034c0c23f521d87457bbe3f23f3efadab2805abd8d73bb0e6b9ec5dc53b8",
+  "runs": [
+    {
+      "mode": "ordinary_release",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/sibling-write.my",
+          "--release",
+          "--counters",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/candidate-sibling-write-followup/ordinary_release/program.ll",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/candidate-sibling-write-followup/ordinary_release/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/candidate-sibling-write-followup/ordinary_release/program"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/sibling-write.my:10:28: error[E_MUTATION_OVERLAP]: receiver `owner.items` overlaps `mut owner` evaluated in this statement; make the call `changed(mut owner)` in its own statement first, save its result in a local, then update the receiver using that local\n      owner.items += changed(mut owner)\n                             ^\n  note: /home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/sibling-write.my:10:5: the assignment or update receiver names an overlapping place\n"
+      }
+    }
+  ],
+  "zero_check": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+      "check",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/sibling-write.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/sibling-write.my:10:28: error[E_MUTATION_OVERLAP]: receiver `owner.items` overlaps `mut owner` evaluated in this statement; make the call `changed(mut owner)` in its own statement first, save its result in a local, then update the receiver using that local\n      owner.items += changed(mut owner)\n                             ^\n  note: /home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/sibling-write.my:10:5: the assignment or update receiver names an overlapping place\n"
+  }
+}

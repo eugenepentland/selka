@@ -1,0 +1,53 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/fixture-ordinary.my",
+  "source_sha256": "ce97d7d985fcf468cde8b771eabce96da7282a8fbe58019360d625c7ada066da",
+  "runs": [
+    {
+      "mode": "ordinary_release",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/fixture-ordinary.my",
+          "--release",
+          "--counters",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/baseline-fixture-ordinary-followup/ordinary_release/program.ll",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/baseline-fixture-ordinary-followup/ordinary_release/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/baseline-fixture-ordinary-followup/ordinary_release/program"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/fixture-ordinary.my:23:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func main(args: str[], out: Stream) -> int:\n            ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/fixture-ordinary.my:27:5: error[E_CORE_UNSUPPORTED]: the new core does not support write to a receiver's place while its arguments are evaluated yet\n"
+      },
+      "pass": false
+    },
+    {
+      "mode": "ordinary_debug",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/fixture-ordinary.my",
+          "--unoptimized",
+          "--counters",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/baseline-fixture-ordinary-followup/ordinary_debug/program.ll",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/baseline-fixture-ordinary-followup/ordinary_debug/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/baseline-fixture-ordinary-followup/ordinary_debug/program"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/fixture-ordinary.my:23:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func main(args: str[], out: Stream) -> int:\n            ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/fixture-ordinary.my:27:5: error[E_CORE_UNSUPPORTED]: the new core does not support write to a receiver's place while its arguments are evaluated yet\n"
+      },
+      "pass": false
+    }
+  ],
+  "pass": false
+}

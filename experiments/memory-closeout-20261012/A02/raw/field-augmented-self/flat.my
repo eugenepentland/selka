@@ -1,0 +1,9 @@
+record Leaf:
+    items: str[]
+record Parent:
+    child: Leaf
+func main() -> int:
+    mut parent = Leaf(items=["a" + str(1)])
+    parent.items += parent.items
+    assert parent.items == ["a1", "a1"]
+    return 0

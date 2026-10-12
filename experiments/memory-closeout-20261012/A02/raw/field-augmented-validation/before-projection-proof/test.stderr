@@ -1,0 +1,17 @@
+guardian/test: 2 test(s) selected by filter: "zero RC A02 field augmentation"
+A02 field augmentation build: /home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/tmp/DtL032QrLTpfQmuy/methods.my:39:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+      parent.child.items += parent.child.items
+      ^
+
+1 a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1281079 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_field_augmented_test.zig:28:9: 0x1292d31 in test.zero RC A02 field augmentation preserves exact receiver ownership (root_test.zig)
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        ^
+1 passed; 0 skipped; 1 failed.
+guardian/test: test wall 0.18s; slowest over 50ms:
+guardian/test:   0.16s  a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership
+guardian/test: FAIL — 1 failed of 2
+guardian/test: RESULT {"passed":1,"failed":1,"skipped":0}

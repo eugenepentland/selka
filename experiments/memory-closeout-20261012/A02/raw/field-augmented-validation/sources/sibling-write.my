@@ -1,0 +1,12 @@
+record Controlled:
+    items: int[]
+    marker: int
+
+func changed(mut owner: Controlled) -> int[]:
+    owner.marker = 7
+    return [2]
+func main(out: Stream) -> int:
+    mut owner = Controlled(items=[1], marker=0)
+    owner.items += changed(mut owner)
+    out.print(owner.items, owner.marker)
+    return 0

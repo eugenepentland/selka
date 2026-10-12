@@ -1,0 +1,7 @@
+record Controlled:
+    items: int[]
+func bad(owner: Controlled) -> int[]:
+    return owner.items
+func main() -> int:
+    mut owner = Controlled(items=[1])
+    return len(bad(owner))

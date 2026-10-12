@@ -387,15 +387,13 @@ fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, 
     try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
     const extending = assignment.op == .add and expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCollection() and self.catalog.records[expected.recordIndex()].collection.kind == .list;
     if (extending) {
-        // Capture the field before the RHS, extend that value, then publish it
-        // through the same refreshed destination as other augmented fields.
+        // Capture the field before the RHS. The mutating collection operation
+        // writes its result through this exact receiver path, as field.extend
+        // does; rebuilding the record again would move a borrowed field loan.
         const receiver = try b.local(expected);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = receiver, .value = current } }));
         try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(receiver, .extend, try self.allocator.dupe(typed.NodeId, &.{value})) }));
-        const stored = try b.local(expected);
-        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = stored, .value = try b.read(receiver) } }));
-        if (destination.refresh) |refresh| try statements.append(self.allocator, refresh);
-        value = try b.read(stored);
+        return b.block(statements.items, try b.node(.unit, .unit));
     }
     if (assignment.op != .set and !extending) {
         // `target.field op= value` reads the field through the same once-evaluated

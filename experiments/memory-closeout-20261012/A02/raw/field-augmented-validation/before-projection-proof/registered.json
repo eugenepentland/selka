@@ -1,0 +1,54 @@
+{
+  "base": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "source_sha256": {
+    "src/sema_places.zig": "ffbc3805c220fa45d89f5f9b1cf2de65178c8d7c48f20cec055f911206edda5e",
+    "src/core/a02_field_augmented_test.zig": "6b9aef49dba88c8a9b1f283d6d2202dfaf7a1cfd2897af4ee3bcdeb80feea676",
+    "src/core/a02_field_augmented_fixture.my": "2e38ef6d5ff2bff2f3af949bc28d98114ca26e167636827402600624a98f25a9",
+    "src/core/root_test.zig": "65e958519bb7a3e5862dca5a1020e29b1eb646c2edbb7ed4286a5c6e451a21bf"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 field augmentation",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 4.30738262902014,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 field augmentation"
+      ],
+      "status": 1,
+      "elapsed_admitted_seconds": 0.19269559695385396,
+      "stdout": "",
+      "stderr": "guardian/test: 2 test(s) selected by filter: \"zero RC A02 field augmentation\"\nA02 field augmentation build: /home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/tmp/DtL032QrLTpfQmuy/methods.my:39:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      parent.child.items += parent.child.items\n      ^\n\n1 a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership...FAIL (TestUnexpectedResult)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1281079 in expect (std.zig)\n    if (!ok) return error.TestUnexpectedResult;\n             ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_field_augmented_test.zig:28:9: 0x1292d31 in test.zero RC A02 field augmentation preserves exact receiver ownership (root_test.zig)\n        try std.testing.expect(built.term == .exited and built.term.exited == 0);\n        ^\n1 passed; 0 skipped; 1 failed.\nguardian/test: test wall 0.18s; slowest over 50ms:\nguardian/test:   0.16s  a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership\nguardian/test: FAIL \u2014 1 failed of 2\nguardian/test: RESULT {\"passed\":1,\"failed\":1,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+    "sha256": "b9e97d47272877d051e11287fbda6b2e3e5c9c147ce919911578ec69d1cecafb",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/28696a44a44ad87d599b3b631c114d0d/options.zig"
+  },
+  "test_binary_sha256": "11be4dcfb690ecdde03579c28972fd536e6826b98110ad72346057a1b96ea332",
+  "pass": false
+}

@@ -1,0 +1,116 @@
+fn main() -> i64
+b0:
+  %1 = list_new list[str] 1:i64
+  %4 = call str myl_core_str_from_i64(1:i64)
+  %84 = str_len u64 str0
+  %85 = str_view_of str_view str0, 0:u64, %84
+  %86 = str_from_view str %85
+  %5 = str_append str %86, %4
+  release %4
+  %6 = list_push list[str] %1, %5
+  %7 = record_make record{list[str]} %6
+  %8 = record_make record{record{list[str]}} %7
+  %9 = record_get record{list[str]} %8, field0
+  %10 = record_get list[str] %9, field0
+  %15 = call i64 myl_core_owned_same_block(%10, %10)
+  %17 = cmp.ne bool %15, 0:i64
+  branch %17, b1, b2
+b1: ; preds b0
+  %19 = list_len u64 %10
+  jump b4
+b2: ; preds b0
+  %33 = list_len u64 %10
+  retain %10
+  jump b7
+b3: ; preds b6 b9
+  %47 = phi list[str] %25, %41
+  %48 = record_set record{list[str]} %9, field0, %47
+  %49 = record_set record{record{list[str]}} %8, field0, %48
+  %50 = record_get record{list[str]} %49, field0
+  %51 = record_get list[str] %50, field0
+  %53 = list_new list[str] 2:i64
+  %55 = list_push list[str] %53, str1
+  %57 = list_push list[str] %55, str2
+  %58 = list_len u64 %51
+  %59 = list_len u64 %57
+  %60 = cmp.eq bool %58, %59
+  branch %60, b12, b19
+b4: ; preds b1 b5
+  %22 = phi u64 0:u64, %30
+  %25 = phi list[str] %10, %28
+  %23 = cmp.lt bool %22, %19
+  branch %23, b5, b6
+b5: ; preds b4
+  %26 = list_get.exact str %25, %22
+  %27 = call str myl_core_owned_octets_copy(%26)
+  %28 = list_push list[str] %25, %27
+  %30 = add u64 %22, 1:u64
+  jump b4
+b6: ; preds b4
+  jump b3
+b7: ; preds b2 b8
+  %36 = phi u64 0:u64, %44
+  %41 = phi list[str] %10, %42
+  %37 = cmp.lt bool %36, %33
+  branch %37, b8, b9
+b8: ; preds b7
+  %39 = list_get.proven str %10, %36
+  %40 = call str myl_core_owned_octets_copy(%39)
+  %42 = list_push list[str] %41, %40
+  %44 = add u64 %36, 1:u64
+  jump b7
+b9: ; preds b7
+  release %10
+  jump b3
+b10: ; preds b12 b15
+  %64 = phi u64 0:u64, %72
+  %65 = cmp.lt bool %64, %58
+  branch %65, b13, b14
+b11: ; preds b19 b16 b14
+  %78 = phi bool %60, 0:bool, 1:bool
+  branch %78, b18, b17
+b12: ; preds b3
+  jump b10
+b13: ; preds b10
+  %67 = list_get str %51, %64
+  %68 = list_get str %57, %64
+  %69 = call bool myl_core_str_eq(%67, %68)
+  branch %69, b15, b16
+b14: ; preds b10
+  release %51
+  release %57
+  jump b11
+b15: ; preds b13
+  %72 = add u64 %64, 1:u64
+  jump b10
+b16: ; preds b13
+  release %51
+  release %57
+  jump b11
+b17: ; preds b11
+  unreachable
+b18: ; preds b11
+  ret 0:i64
+b19: ; preds b3
+  release %51
+  release %57
+  jump b11
+fn myl_core_str_from_i64(i64) -> str extern
+fn myl_core_owned_same_block(list[str], list[str]) -> i64 extern
+fn myl_core_owned_octets_copy(str) -> str extern
+fn myl_core_str_eq(str, str) -> bool runtime
+facts main: %15=[-9223372036854775808,9223372036854775807] %17=[0,1] %19=[0,140737488355328] %22=[0,140737488355328] %23=[0,1] %30=[1,140737488355328] %33=[0,140737488355328] %36=[0,140737488355328] %37=[0,1] %44=[1,140737488355328] %58=[0,140737488355328] %59=[2,2] %60=[0,1] %64=[0,140737488355328] %65=[0,1] %69=[0,1] %72=[1,140737488355328] %78=[0,1]
+list main %1: settled=true length=%-1 len=[0,0]
+list main %6: settled=true length=%-1 len=[1,1]
+list main %25: settled=true length=%-1
+list main %26: settled=true length=%-1
+list main %28: settled=true length=%-1
+list main %39: settled=true length=%-1
+list main %41: settled=true length=%-1
+list main %42: settled=true length=%-1
+list main %47: settled=true length=%-1
+list main %53: settled=true length=%-1 len=[0,0]
+list main %55: settled=true length=%-1 len=[1,1]
+list main %57: settled=true length=%-1 len=[2,2]
+list main %67: settled=true length=%-1
+list main %68: settled=true length=%-1
