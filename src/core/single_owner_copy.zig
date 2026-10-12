@@ -10,7 +10,7 @@ pub const Error = error{ OutOfMemory, Unsupported };
 pub fn copy(comptime Context: type, b: Context, value: ir.Ref, span: u32) Error!ir.Ref {
     const ty = b.typeOfRef(value);
     if (!single_owner.containsList(b.module(), ty)) return value;
-    if (b.module().zero_rc and (ty == .str or ty == .bytes)) return b.runtimeCall("myl_core_owned_octets_copy", &.{ty}, ty, &.{value}, span);
+    if (b.module().zero_rc and (ty == .str or ty == .bytes)) return b.effectCall("myl_core_owned_octets_copy", &.{ty}, ty, &.{value}, span);
     if (b.module().zero_rc and ty == .byte_buffer) return b.emit(.{ .op = .buffer_copy, .ty = ty, .a = value, .span = span });
     switch (b.module().compound(ty)) {
         .list => |element| {

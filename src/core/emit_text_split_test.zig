@@ -135,12 +135,19 @@ test "private whitespace split defers checked key copies and refuses escaping co
     var refusal: build.Refusal = .{};
     var module = try build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
     try fusion.run(a, &module);
+    var authorized_copy = false;
     var words_views: usize = 0;
     var words_copies: usize = 0;
     var escaped_splits: usize = 0;
     var changed_splits: usize = 0;
     var separator_splits: usize = 0;
     for (module.functions.items) |function| {
+        if (std.mem.eql(u8, function.name, "myl_core_owned_octets_copy")) {
+            try std.testing.expectEqual(.runtime_c, function.signature.linkage);
+            try std.testing.expectEqual(@as(u64, 0), function.signature.owned);
+            try std.testing.expectEqual(@as(u64, 0), function.signature.consumes);
+            authorized_copy = true;
+        }
         for (function.insts.items) |inst| {
             if (std.mem.eql(u8, function.name, "words")) {
                 if (inst.op == .str_view_of) words_views += 1;
@@ -152,6 +159,7 @@ test "private whitespace split defers checked key copies and refuses escaping co
         }
     }
     try std.testing.expectEqual(@as(usize, 1), words_views);
+    try std.testing.expect(authorized_copy);
     try std.testing.expectEqual(@as(usize, 0), words_copies);
     try std.testing.expectEqual(@as(usize, 1), escaped_splits);
     try std.testing.expectEqual(@as(usize, 1), changed_splits);
