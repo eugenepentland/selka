@@ -83,3 +83,11 @@ allocation traffic. Peak and exit-live memory remain separate observations.
 Recorded recursive list-copy traffic may increase after A09's instrumentation
 correction without any additional allocations or peak memory; the comparison
 keeps those counters separate from allocation deltas.
+
+The interim [Support5 original-30 sanity pass](Support5-original30/REPORT.md)
+passes all 30 release builds and 72 executions on compiler source
+`a1f19edf255c8c0886731d8d7cce450d5f657720`. The original allocation and source
+admission denominators remain unchanged. All 72 paired C0/Support5 observations
+have identical workload and whole-program allocation traffic and managed peaks.
+These results qualify the requested sanity check; the other 51 expanded cases
+and the final five-mode integrated matrix remain due.

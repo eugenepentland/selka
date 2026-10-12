@@ -120,8 +120,15 @@ LLVM/symbol audits. Sources and raw evidence are under
 `additional-migrations/support5-narrow-*`. The guest migration source sweep
 admits 29/36 files, and targeted native qualification passes 9/11 files with
 141 Boolean assertions; the two mutable-place lowering failures remain recorded.
-The original-30 release sanity is running separately; none is final C1.
+The original-30 release sanity passes all 30 builds/72 executions, with zero RC,
+zero managed exit-live and clean LLVM/symbols. Its 23 allocating/7 allocation-free
+count and 21 admitted/9 refused original-source checks match C0. Every paired
+allocation-traffic/peak observation is identical; see `Support5-original30/`.
+None of these results is final C1.
 Seven missing explicit copies in sort-key lambdas, record snapshots and an owned
 key-list comprehension have been
 corrected locally, preserving every assertion; the exact source burden is in
 `guest-migrations/owned-key-snapshot-review.json`.
+
+The seven-copy correction and Support5 migration evidence were delivered in
+`546ef247609681cf1474a4ec378fe1b5c14574a0`; all 88 Guardian checks passed.
