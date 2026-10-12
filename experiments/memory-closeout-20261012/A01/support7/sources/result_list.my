@@ -1,0 +1,69 @@
+import parallel
+
+func attempt(value: int) -> Result[str, str]:
+    if value % 2 == 0:
+        return Ok("ok-" + str(value))
+    return Err("bad-" + str(value))
+
+func size(value: Result[str, str]) -> int:
+    match value:
+        case Ok(text):
+            return len(text)
+        case Err(text):
+            return len(text)
+
+func nested(value: int) -> Result[Result[str, str], str]:
+    if value % 2 == 0:
+        return Ok(attempt(value))
+    return Err("outer-" + str(value))
+
+func nested_size(value: Result[Result[str, str], str]) -> int:
+    match value:
+        case Ok(inner):
+            return size(inner)
+        case Err(text):
+            return len(text)
+
+func row(value: int) -> Result[str, str][]:
+    return parallel.map([value, value + 1], attempt)
+
+func main(out: Stream) -> int:
+    mut values = parallel.map([0, 1, 2, 3], attempt)
+    const saved = values.copy()
+    mut total = len(values)
+    for value in values:
+        total += size(value)
+    match values.pop():
+        case Ok(text):
+            total += len(text)
+        case Err(text):
+            total += len(text)
+    _ = values
+    const sizes = parallel.map(saved, size)
+    out.print(total, sizes[0], sizes[1], sizes[2], sizes[3])
+    mut checksum = 0
+    for count in [0, 1, 2, 7, 33, 257]:
+        mut inputs: int[] = []
+        for index in range(count):
+            inputs.append(index)
+        const results = parallel.map(inputs, attempt)
+        for result in results:
+            checksum += size(result)
+        _ = results
+        const nested_results = parallel.map(inputs, nested)
+        for result in nested_results:
+            checksum += nested_size(result)
+        _ = nested_results
+        _ = parallel.map(inputs, attempt)
+    const rows = parallel.map([3, 8, 11], row)
+    for results in rows:
+        for result in results:
+            checksum += size(result)
+        _ = results
+    _ = rows
+    const produced = [for value in [2, 5, 9] yield attempt(value)]
+    const lengths = [for value in produced yield size(value)]
+    checksum += lengths[0] + lengths[1] + lengths[2]
+    _ = produced
+    out.print(checksum)
+    return 0

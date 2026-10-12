@@ -192,3 +192,15 @@ The directory records ownership boundaries, exact hashes, C2 authorization and
 shared ABI dependencies, and the required final reruns. Evidence is committed from
 the coordinator-created clean A01 validation checkout at `67348fc8c`; the old
 worker's validation overlays and transferred guest migrations remain untouched.
+
+Common Support7 A01 qualification is archived in `support7/`, pinned to source
+`bed11cf3bf3102ffec44487e431a1573fdf02ad5` and compiler SHA256
+`540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`.
+All 30 counted source builds/90 executions and eight refusal controls passed;
+all four source TSan builds/12 executions passed. Exact common compiler-emitted
+runtime C also passed owned scheduler stress/lazy/take-twice checks in 12 executions
+(counted at 1/2/8, TSan at 8). Successful counted runs have RC0/live0 and structural audits
+pass. The separate ordinary RC tuple compatibility control passed with actual
+2 retains / 6 releases and live0, so it is excluded from count-free/default evidence.
+No private compiler or retirement runtime draft was used. Full release milestones,
+paired performance evidence and post-default/retirement reruns remain pending.

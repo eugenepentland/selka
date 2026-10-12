@@ -1,0 +1,5 @@
+func borrowed(pair: tuple[str, str]) -> int:
+    const left, right = pair
+    return len(left) + len(right)
+func main() -> int:
+    return borrowed(("a" + str(1), "b" + str(2)))

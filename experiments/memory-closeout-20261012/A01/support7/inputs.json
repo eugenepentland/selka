@@ -1,0 +1,56 @@
+{
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "frozen_source_root": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+  "source_hashes": {
+    "experiments/memory-closeout-20261012/A01/qualify.py": "fb2ebd2617604ba1a5f92651b0b78fc77c49c002280623f7a666f0f7e53e9722",
+    "experiments/zero-rc-20261011/audit.py": "36e0707f6622782d94df1df6489064c4ec2928ef55fc65efa4a0d5eaa6ce1bdb",
+    "src/core/a01_owned_scheduler_fixture.c": "a4a8e185ebe71ed40a92578c79d18892c2e386742ec19788a686bdad1e5ba603",
+    "src/core/driver.zig": "8b990d67466be745c04313e77f9fa21291e5b0d5b4def7e91a2a844df45df766",
+    "src/core/count_runtime.zig": "1f98dd5f443cb411cb12a5adae0fdc2107342932089d1dc4b90b72de8d7870cc",
+    "experiments/memory-closeout-20261012/A01/samples/combined.my": "f3707f8855163fbdc522dc1112566119ebc138a7f6f3df318611e9a7b7809630",
+    "experiments/memory-closeout-20261012/A01/samples/result_list.my": "6c5ad78bda5b1908889e1a32956456bacbf615ecbc5d36b2fbc7100875865cf6",
+    "experiments/memory-closeout-20261012/A01/samples/result_direct.my": "88d7d9ccaaf916082fae55bd5a3d30e89f42d33ca978c35ce18fceeabc91a9c7",
+    "experiments/memory-closeout-20261012/A01/samples/tuple_unpack.my": "f5c60778dd6048af32f2ecc37ebea1b110b670c6a60516f9b0dd8abdbad38f58",
+    "experiments/memory-closeout-20261012/A01/samples/tuple_generic.my": "bace27f035ed485fc988e7516c70e6747096ac55d70542eaf934cdad1b138275",
+    "experiments/memory-closeout-20261012/A01/samples/trap.my": "27438fa0319cd0ae1383f45094f81caf03a673d30f092ab1d628a1c2b13c1ece",
+    "experiments/memory-closeout-20261012/A01/samples/result_list_unhandled.my": "19f18c90cc78152c736e93118d76225cce07f1dcc06d37ba3a9698a887d14049",
+    "experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/borrowed_unpack.my": "e8107525146eb7899d7a15cc1750db53cf95d213f34d1fd72f34fcdae74f499e",
+    "experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/use_whole_after.my": "c9f951670ff0ff3c6ef20bdb58d33dae0f8047aea7573c12056450693900c967",
+    "experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/partial_field.my": "2193d3cdc96ba3bcec66d6488c1b07b16b9a67327bf1f2a4eeced5bb9dbd1243",
+    "experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/unhandled_field.my": "5f383a06a310dabc5ccb543605f3db155c27b74abf5768d3357450323c0435b7",
+    "experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/overwrite_field.my": "6766981ce520cbc84b0aedb140d0fd9bf08b6c17eab73df09a64e5f4a76160e5",
+    "experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/copied_obligation.my": "42e9a3fe1f10e238c9495051cecbee6bdf7aea032749adea06562deb4c6afd04",
+    "experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/duplicate_result_destination.my": "5f44a58167065c159abfc3e8cc7c4d26c6a74e1194b6325ba1fb0d087dad7596",
+    "experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/ordinary_borrow.my": "42e390ac056c113222782c56a9aee5677b1711001cf106ccccd88691bc5a1f86"
+  },
+  "counted_modes": [
+    "release",
+    "debug",
+    "verify",
+    "optimized_debug",
+    "no_facts"
+  ],
+  "counted_cases": [
+    "combined",
+    "result_list",
+    "result_direct",
+    "tuple_unpack",
+    "tuple_generic",
+    "trap"
+  ],
+  "tsan_cases": [
+    "combined",
+    "result_list",
+    "result_direct",
+    "trap"
+  ],
+  "workers": [
+    1,
+    2,
+    8
+  ],
+  "status": "inputs frozen; qualification starting",
+  "runtime_cache": "/home/epentland/ai/canopy/mylang-memory-20261012-A01-validation/.tmp/memory-closeout/A01/support7/runtime-cache"
+}

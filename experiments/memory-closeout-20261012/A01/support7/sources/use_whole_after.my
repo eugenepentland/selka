@@ -1,0 +1,6 @@
+func main() -> int:
+    const whole = ("a" + str(1), "b" + str(2))
+    const left, right = whole
+    const duplicate = whole.copy()
+    _ = duplicate
+    return len(left) + len(right)
